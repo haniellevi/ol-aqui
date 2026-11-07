@@ -11,6 +11,9 @@
 --  * Logs de IP, data/hora e user-agent em toda criação/alteração
 --    (Marco Civil da Internet, art. 15: guarda mínima de 6 meses).
 --  * Documentos de verificação ficam numa tabela sem leitura pública.
+--  * Login pelo Clerk (Google + celular). O Supabase recebe o token do Clerk
+--    (third-party auth): o id do usuário é texto ("user_2ab...") e vem de
+--    public.usuario_id(), que lê o 'sub' do token. Não usamos auth.users.
 -- =====================================================================
 
 create extension if not exists pg_trgm;
@@ -55,6 +58,11 @@ create or replace function public.user_agent_requisicao()
 returns text language sql stable
 as $$ select left(nullif(current_setting('request.headers', true), '')::json->>'user-agent', 500) $$;
 
+-- Id do usuário logado no Clerk (claim 'sub' do token). Null para visitante.
+create or replace function public.usuario_id()
+returns text language sql stable
+as $$ select nullif(auth.jwt() ->> 'sub', '') $$;
+
 create or replace function public.tocar_atualizado_em()
 returns trigger language plpgsql
 as $$ begin new.atualizado_em := now(); return new; end $$;
@@ -68,20 +76,21 @@ create table public.microrregioes (
   nome          text not null,
   uf            char(2) not null,
   cidades       text[] not null default '{}',
-  franqueado_id uuid,                                  -- dono da franquia (perfis.id), opcional
+  franqueado_id text,                                  -- dono da franquia (perfis.id), opcional
   ativa         boolean not null default true,
   criado_em     timestamptz not null default now()
 );
 
 -- ---------------------------------------------------------------------
--- 1. Perfis (1:1 com auth.users)
+-- 1. Perfis (1:1 com o usuário do Clerk)
 -- ---------------------------------------------------------------------
 create table public.perfis (
-  id              uuid primary key references auth.users(id) on delete cascade,
+  id              text primary key check (id ~ '^user_[A-Za-z0-9]+$'),   -- id do Clerk
   microrregiao_id uuid not null references public.microrregioes(id),
   nome            text not null check (char_length(nome) between 2 and 120),
   tipo_pessoa     public.tipo_pessoa not null default 'pf',
   whatsapp        text check (whatsapp ~ '^55[1-9][0-9]9?[0-9]{8}$'),   -- E.164 sem '+', ex.: 5534999998888
+  whatsapp_verificado_em timestamptz,      -- celular confirmado no Clerk (só o sistema grava)
   cidade          text,
   bairro          text,
   avatar_url      text,
@@ -102,12 +111,12 @@ alter table public.microrregioes
 -- Dados sensíveis de verificação: NUNCA expostos a outros usuários.
 create table public.perfis_verificacoes (
   id              uuid primary key default gen_random_uuid(),
-  perfil_id       uuid not null references public.perfis(id) on delete cascade,
+  perfil_id       text not null references public.perfis(id) on delete cascade,
   tipo            text not null check (tipo in ('documento', 'selfie', 'email', 'telefone', 'cnpj')),
   arquivo_path    text,                    -- caminho no bucket privado 'verificacoes'
   valor_hash      text,                    -- hash do CPF/CNPJ/telefone, nunca o valor puro
   status          public.status_verificacao not null default 'pendente',
-  analisado_por   uuid references public.perfis(id),
+  analisado_por   text references public.perfis(id),
   analisado_em    timestamptz,
   motivo_recusa   text,
   criado_em       timestamptz not null default now(),
@@ -120,7 +129,7 @@ create index perfis_verificacoes_perfil_idx on public.perfis_verificacoes (perfi
 -- ---------------------------------------------------------------------
 create table public.vitrines_lojas (
   id              uuid primary key default gen_random_uuid(),
-  dono_id         uuid not null unique references public.perfis(id) on delete cascade,
+  dono_id         text not null unique references public.perfis(id) on delete cascade,
   microrregiao_id uuid not null references public.microrregioes(id),
   slug            text not null check (slug ~ '^[a-z0-9-]{3,60}$'),     -- olaki.com.br/loja/<slug>
   nome            text not null check (char_length(nome) between 2 and 80),
@@ -147,7 +156,7 @@ create table public.vitrines_lojas (
 create index vitrines_microrregiao_idx on public.vitrines_lojas (microrregiao_id);
 
 -- Plano pago e em dia? (base do bloqueio do Radar)
-create or replace function public.tem_plano_pago(uid uuid default auth.uid())
+create or replace function public.tem_plano_pago(uid text default public.usuario_id())
 returns boolean language sql stable security definer
 set search_path = public
 as $$
@@ -173,7 +182,7 @@ as $$
   end
 $$;
 
-create or replace function public.e_admin(uid uuid default auth.uid())
+create or replace function public.e_admin(uid text default public.usuario_id())
 returns boolean language sql stable security definer
 set search_path = public
 as $$ select coalesce((select e_admin from public.perfis where id = uid), false) $$;
@@ -283,7 +292,7 @@ create trigger anuncios_microrregiao before insert or update of vitrine_id on pu
 -- ---------------------------------------------------------------------
 create table public.radar_pedidos (
   id              uuid primary key default gen_random_uuid(),
-  comprador_id    uuid not null references public.perfis(id) on delete cascade,
+  comprador_id    text not null references public.perfis(id) on delete cascade,
   microrregiao_id uuid not null references public.microrregioes(id),
   categoria       public.categoria_anuncio not null default 'geral',
   titulo          text not null check (char_length(titulo) between 8 and 120),  -- "Procuro trator traçado"
@@ -326,7 +335,7 @@ select p.id, p.microrregiao_id, p.categoria, p.titulo, p.detalhes, p.preco_max_c
        split_part(pf.nome, ' ', 1)     as comprador_primeiro_nome,
        exists (select 1 from public.radar_propostas rp
                  join public.vitrines_lojas v on v.id = rp.vitrine_id
-                where rp.pedido_id = p.id and v.dono_id = auth.uid()) as ja_propus
+                where rp.pedido_id = p.id and v.dono_id = public.usuario_id()) as ja_propus
 from public.radar_pedidos p
 join public.perfis pf on pf.id = p.comprador_id
 where p.status = 'aberto' and p.expira_em > now();
@@ -345,14 +354,14 @@ declare
   v_fone    text;
   v_texto   text;
 begin
-  if auth.uid() is null then
+  if public.usuario_id() is null then
     raise exception 'Faça login para propor um produto.' using errcode = '28000';
   end if;
-  if not public.tem_plano_pago(auth.uid()) then
+  if not public.tem_plano_pago(public.usuario_id()) then
     raise exception 'O Radar de Negócios é exclusivo dos Planos Slim e Full.' using errcode = '42501';
   end if;
 
-  select * into v_vitrine from public.vitrines_lojas where dono_id = auth.uid();
+  select * into v_vitrine from public.vitrines_lojas where dono_id = public.usuario_id();
   select * into v_pedido  from public.radar_pedidos where id = p_pedido_id for update;
 
   if v_pedido.id is null or v_pedido.status <> 'aberto' or v_pedido.expira_em <= now() then
@@ -361,7 +370,7 @@ begin
   if v_pedido.microrregiao_id <> v_vitrine.microrregiao_id then
     raise exception 'Este pedido é de outra região.' using errcode = '42501';
   end if;
-  if v_pedido.comprador_id = auth.uid() then
+  if v_pedido.comprador_id = public.usuario_id() then
     raise exception 'Você não pode propor no seu próprio pedido.' using errcode = 'P0001';
   end if;
 
@@ -389,7 +398,7 @@ end $$;
 -- 5. Favoritos
 -- ---------------------------------------------------------------------
 create table public.favoritos (
-  usuario_id  uuid not null references public.perfis(id) on delete cascade,
+  usuario_id  text not null references public.perfis(id) on delete cascade,
   anuncio_id  uuid not null references public.anuncios(id) on delete cascade,
   criado_em   timestamptz not null default now(),
   primary key (usuario_id, anuncio_id)
@@ -421,7 +430,7 @@ create table public.logs_atividade (
   tabela       text not null,
   registro_id  text not null,
   acao         text not null check (acao in ('INSERT', 'UPDATE', 'DELETE')),
-  usuario_id   uuid,
+  usuario_id   text,
   ip           inet,
   user_agent   text,
   dados_antes  jsonb,
@@ -439,7 +448,7 @@ declare
   reg jsonb := to_jsonb(coalesce(new, old));
 begin
   insert into public.logs_atividade (tabela, registro_id, acao, usuario_id, ip, user_agent, dados_antes, dados_depois)
-  values (tg_table_name, reg->>'id', tg_op, auth.uid(), public.ip_requisicao(), public.user_agent_requisicao(),
+  values (tg_table_name, reg->>'id', tg_op, public.usuario_id(), public.ip_requisicao(), public.user_agent_requisicao(),
           case when tg_op <> 'INSERT' then to_jsonb(old) end,
           case when tg_op <> 'DELETE' then to_jsonb(new) end);
   return null;
@@ -474,6 +483,8 @@ begin
   if tg_table_name = 'perfis' then
     new.selo_negociador_certificado := old.selo_negociador_certificado;
     new.e_admin := old.e_admin;
+    -- trocar o número pelo site exige confirmar de novo (a confirmação vem do Clerk)
+    new.whatsapp_verificado_em := case when new.whatsapp is distinct from old.whatsapp then null else old.whatsapp_verificado_em end;
     new.microrregiao_id := old.microrregiao_id;
   elsif tg_table_name = 'vitrines_lojas' then
     new.plano := old.plano;  new.status := old.status;
@@ -524,68 +535,69 @@ create policy "microrregioes leitura" on public.microrregioes
 
 -- Perfis: cada um vê e edita o seu. Dados públicos do vendedor saem pela vitrine.
 create policy "perfil proprio leitura" on public.perfis
-  for select using (id = auth.uid() or public.e_admin());
+  for select using (id = public.usuario_id() or public.e_admin());
 create policy "perfil proprio criar" on public.perfis
-  for insert with check (id = auth.uid() and selo_negociador_certificado = false and e_admin = false);
+  for insert with check (id = public.usuario_id() and selo_negociador_certificado = false and e_admin = false
+                         and whatsapp_verificado_em is null);
 create policy "perfil proprio editar" on public.perfis
-  for update using (id = auth.uid()) with check (id = auth.uid());
+  for update using (id = public.usuario_id()) with check (id = public.usuario_id());
 
 -- Verificações: só o dono envia e acompanha; análise via service_role/admin
 create policy "verificacao propria leitura" on public.perfis_verificacoes
-  for select using (perfil_id = auth.uid() or public.e_admin());
+  for select using (perfil_id = public.usuario_id() or public.e_admin());
 create policy "verificacao propria envio" on public.perfis_verificacoes
-  for insert with check (perfil_id = auth.uid() and status = 'pendente');
+  for insert with check (perfil_id = public.usuario_id() and status = 'pendente');
 
 -- Vitrines: públicas quando ativas (cnpj e gateway ficam fora via view abaixo)
 create policy "vitrines leitura publica" on public.vitrines_lojas
-  for select using (status = 'ativa' or dono_id = auth.uid() or public.e_admin());
+  for select using (status = 'ativa' or dono_id = public.usuario_id() or public.e_admin());
 create policy "vitrine propria criar" on public.vitrines_lojas
-  for insert with check (dono_id = auth.uid() and plano = 'teste' and selo_loja_verificada = false);
+  for insert with check (dono_id = public.usuario_id() and plano = 'teste' and selo_loja_verificada = false);
 create policy "vitrine propria editar" on public.vitrines_lojas
-  for update using (dono_id = auth.uid()) with check (dono_id = auth.uid());
+  for update using (dono_id = public.usuario_id()) with check (dono_id = public.usuario_id());
 
 -- Anúncios: públicos quando ativos/vendidos; dono vê todos os seus
 create policy "anuncios leitura publica" on public.anuncios
   for select using (
     status in ('ativo', 'vendido')
-    or exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = auth.uid())
+    or exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = public.usuario_id())
     or public.e_admin());
 create policy "anuncio proprio criar" on public.anuncios
   for insert with check (
-    exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = auth.uid())
+    exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = public.usuario_id())
     and status <> 'congelado');
 create policy "anuncio proprio editar" on public.anuncios
-  for update using (exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = auth.uid()))
-  with check (exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = auth.uid()));
+  for update using (exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = public.usuario_id()))
+  with check (exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = public.usuario_id()));
 create policy "anuncio proprio excluir" on public.anuncios
-  for delete using (exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = auth.uid()));
+  for delete using (exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = public.usuario_id()));
 
 -- Radar: qualquer logado lê os abertos (pela view, sem contato). Comprador gerencia os seus.
 create policy "radar leitura" on public.radar_pedidos
   for select using (
-    (auth.uid() is not null and status = 'aberto' and expira_em > now())
-    or comprador_id = auth.uid() or public.e_admin());
+    (public.usuario_id() is not null and status = 'aberto' and expira_em > now())
+    or comprador_id = public.usuario_id() or public.e_admin());
 create policy "radar criar" on public.radar_pedidos
-  for insert with check (comprador_id = auth.uid() and status = 'aberto' and total_propostas = 0);
+  for insert with check (comprador_id = public.usuario_id() and status = 'aberto' and total_propostas = 0);
 create policy "radar editar proprio" on public.radar_pedidos
-  for update using (comprador_id = auth.uid()) with check (comprador_id = auth.uid());
+  for update using (comprador_id = public.usuario_id()) with check (comprador_id = public.usuario_id());
 
 -- Propostas: lojista vê as suas; comprador vê as recebidas. Inserção só pela função.
 create policy "propostas leitura" on public.radar_propostas
   for select using (
-    exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = auth.uid())
-    or exists (select 1 from public.radar_pedidos p where p.id = pedido_id and p.comprador_id = auth.uid())
+    exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = public.usuario_id())
+    or exists (select 1 from public.radar_pedidos p where p.id = pedido_id and p.comprador_id = public.usuario_id())
     or public.e_admin());
 
 -- Favoritos: só os próprios
 create policy "favoritos proprios" on public.favoritos
-  for all using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+  for all using (usuario_id = public.usuario_id()) with check (usuario_id = public.usuario_id());
 
 -- O perfil do comprador é privado, mas a view radar_feed precisa do primeiro nome
 -- e do selo. Liberamos só essas colunas via grant de coluna + policy específica.
 create policy "perfil comprador no radar" on public.perfis
   for select using (
-    auth.uid() is not null and exists (
+    public.usuario_id() is not null and exists (
       select 1 from public.radar_pedidos p
       where p.comprador_id = perfis.id and p.status = 'aberto' and p.expira_em > now()));
 
@@ -597,7 +609,7 @@ grant select (id, microrregiao_id, nome, tipo_pessoa, cidade, bairro, avatar_url
 create or replace function public.meu_perfil()
 returns setof public.perfis language sql stable security definer
 set search_path = public
-as $$ select * from public.perfis where id = auth.uid() $$;
+as $$ select * from public.perfis where id = public.usuario_id() $$;
 
 revoke select on public.vitrines_lojas from anon, authenticated;
 grant select (id, dono_id, microrregiao_id, slug, nome, descricao, logo_url, capa_url, whatsapp,

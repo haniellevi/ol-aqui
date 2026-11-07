@@ -2,8 +2,8 @@
 // Server Component: busca os pedidos e decide, NO SERVIDOR, o que o usuário pode ver.
 // Quem não tem acesso ao Radar nunca recebe detalhes nem nome do comprador no HTML.
 // Preços dos planos vêm da tabela `planos` (editável no painel), nunca do código.
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { garantirPerfil } from "@/lib/perfil";
 import { RadarDeNegocios, type PedidoRadar, type PlanoResumo } from "@/components/radar/radar-de-negocios";
 
 export const metadata = {
@@ -12,16 +12,14 @@ export const metadata = {
 };
 
 export default async function RadarPage() {
+  // o middleware já exige login nesta rota
+  const userId = await garantirPerfil();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/entrar?voltar=/radar");
 
   const [{ data: acesso }, { data: restantes }, { data: perfil }, { data: planos }] = await Promise.all([
     supabase.rpc("tem_plano_pago"),
     supabase.rpc("propostas_restantes"),
-    supabase.from("perfis").select("microrregiao_id").eq("id", user.id).single(),
+    supabase.from("perfis").select("microrregiao_id").eq("id", userId!).single(),
     supabase
       .from("planos")
       .select("codigo, nome, preco_centavos")

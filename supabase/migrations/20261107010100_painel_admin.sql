@@ -54,7 +54,7 @@ create table public.planos (
   ativo                  boolean not null default true,
   asaas_descricao        text,
   atualizado_em          timestamptz not null default now(),
-  atualizado_por         uuid references public.perfis(id)
+  atualizado_por         text references public.perfis(id)
 );
 alter table public.planos enable row level security;
 create policy "planos leitura" on public.planos for select using (ativo or public.e_admin());
@@ -75,7 +75,7 @@ alter table public.vitrines_lojas alter column plano set default 'teste';
 alter table public.vitrines_lojas add constraint vitrines_plano_fk foreign key (plano) references public.planos(codigo);
 drop type public.plano_vitrine;
 create policy "vitrine propria criar" on public.vitrines_lojas
-  for insert with check (dono_id = auth.uid() and plano = 'teste' and selo_loja_verificada = false);
+  for insert with check (dono_id = public.usuario_id() and plano = 'teste' and selo_loja_verificada = false);
 
 -- ---------------------------------------------------------------------
 -- 3. Configurações gerais (chave → valor), com override por microrregião
@@ -89,7 +89,7 @@ create table public.configuracoes (
   grupo           text not null default 'geral',      -- organiza as abas do painel
   publico         boolean not null default false,     -- true = o site pode ler sem login
   atualizado_em   timestamptz not null default now(),
-  atualizado_por  uuid references public.perfis(id)
+  atualizado_por  text references public.perfis(id)
 );
 create unique index configuracoes_chave_regiao on public.configuracoes (chave, coalesce(microrregiao_id, '00000000-0000-0000-0000-000000000000'));
 alter table public.configuracoes enable row level security;
@@ -165,7 +165,7 @@ begin
 end $$;
 
 -- Acesso ao Radar: plano pago em dia OU teste com propostas sobrando
-create or replace function public.tem_plano_pago(uid uuid default auth.uid())
+create or replace function public.tem_plano_pago(uid text default public.usuario_id())
 returns boolean language sql stable security definer
 set search_path = public
 as $$
@@ -175,7 +175,7 @@ as $$
 $$;
 
 -- Propostas que a vitrine ainda pode fazer no mês (null = ilimitado)
-create or replace function public.propostas_restantes(uid uuid default auth.uid())
+create or replace function public.propostas_restantes(uid text default public.usuario_id())
 returns integer language plpgsql stable security definer
 set search_path = public
 as $$
@@ -256,7 +256,7 @@ create index pagamentos_vitrine_idx on public.pagamentos (vitrine_id, criado_em 
 create index pagamentos_regiao_idx  on public.pagamentos (microrregiao_id, status, pago_em);
 alter table public.pagamentos enable row level security;
 create policy "pagamentos leitura" on public.pagamentos for select using (
-  exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = auth.uid()) or public.e_admin());
+  exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = public.usuario_id()) or public.e_admin());
 
 -- Webhook do Asaas chama isto (service_role) quando um pagamento é confirmado
 create or replace function public.confirmar_pagamento(p_asaas_cobranca_id text, p_payload jsonb default null)
@@ -308,16 +308,17 @@ alter table public.radar_propostas
   add column foto_url       text,
   add column escolhida      boolean not null default false;   -- comprador marcou "quero falar com esta loja"
 
--- Comprador confirmou o celular por código? (Supabase Auth: login por telefone/OTP)
-create or replace function public.whatsapp_confirmado(uid uuid default auth.uid())
+-- Comprador confirmou o celular? (o Clerk confirma por código; o servidor grava
+-- perfis.whatsapp_verificado_em a partir dos dados do Clerk, nunca o navegador)
+create or replace function public.whatsapp_confirmado(uid text default public.usuario_id())
 returns boolean language sql stable security definer
-set search_path = public, auth
-as $$ select exists (select 1 from auth.users u where u.id = uid and u.phone_confirmed_at is not null) $$;
+set search_path = public
+as $$ select exists (select 1 from public.perfis p where p.id = uid and p.whatsapp is not null and p.whatsapp_verificado_em is not null) $$;
 
 drop policy "radar criar" on public.radar_pedidos;
 create policy "radar criar" on public.radar_pedidos
   for insert with check (
-    comprador_id = auth.uid() and status in ('aberto', 'em_analise')   -- em_analise: o filtro automático segurou
+    comprador_id = public.usuario_id() and status in ('aberto', 'em_analise')   -- em_analise: o filtro automático segurou
     and total_propostas = 0
     and public.whatsapp_confirmado()
     and (modo_contato = 'whatsapp_direto' or propostas_ate > now()));
@@ -353,14 +354,14 @@ declare
   v_fone    text;
   v_rest    integer;
 begin
-  if auth.uid() is null then
+  if public.usuario_id() is null then
     raise exception 'Faça login para propor um produto.' using errcode = '28000';
   end if;
-  if not public.tem_plano_pago(auth.uid()) then
+  if not public.tem_plano_pago(public.usuario_id()) then
     raise exception 'O Radar de Negócios é exclusivo dos planos com Radar.' using errcode = '42501';
   end if;
 
-  select * into v_vitrine from public.vitrines_lojas where dono_id = auth.uid();
+  select * into v_vitrine from public.vitrines_lojas where dono_id = public.usuario_id();
   select * into v_pedido  from public.radar_pedidos where id = p_pedido_id for update;
 
   if v_pedido.id is null or v_pedido.status <> 'aberto' or v_pedido.expira_em <= now() then
@@ -372,12 +373,12 @@ begin
   if v_pedido.microrregiao_id <> v_vitrine.microrregiao_id then
     raise exception 'Este pedido é de outra região.' using errcode = '42501';
   end if;
-  if v_pedido.comprador_id = auth.uid() then
+  if v_pedido.comprador_id = public.usuario_id() then
     raise exception 'Você não pode propor no seu próprio pedido.' using errcode = 'P0001';
   end if;
 
   if not exists (select 1 from public.radar_propostas where pedido_id = p_pedido_id and vitrine_id = v_vitrine.id) then
-    v_rest := public.propostas_restantes(auth.uid());
+    v_rest := public.propostas_restantes(public.usuario_id());
     if v_rest is not null and v_rest <= 0 then
       raise exception 'Você usou todas as propostas do seu plano. Assine um plano maior para continuar.' using errcode = '42501';
     end if;
@@ -426,7 +427,7 @@ declare
 begin
   select * into rp from public.radar_propostas where id = p_proposta_id;
   select * into p  from public.radar_pedidos where id = rp.pedido_id;
-  if p.comprador_id is distinct from auth.uid() then
+  if p.comprador_id is distinct from public.usuario_id() then
     raise exception 'Esta proposta não é do seu pedido.' using errcode = '42501';
   end if;
   select * into v from public.vitrines_lojas where id = rp.vitrine_id;
@@ -447,7 +448,7 @@ select p.id, p.microrregiao_id, p.categoria, p.titulo, p.detalhes, p.preco_max_c
        split_part(pf.nome, ' ', 1)     as comprador_primeiro_nome,
        exists (select 1 from public.radar_propostas rp
                  join public.vitrines_lojas v on v.id = rp.vitrine_id
-                where rp.pedido_id = p.id and v.dono_id = auth.uid()) as ja_propus
+                where rp.pedido_id = p.id and v.dono_id = public.usuario_id()) as ja_propus
 from public.radar_pedidos p
 join public.perfis pf on pf.id = p.comprador_id
 where p.status = 'aberto' and p.expira_em > now()
@@ -530,11 +531,11 @@ create table public.denuncias (
   id             uuid primary key default gen_random_uuid(),
   alvo_tipo      text not null check (alvo_tipo in ('anuncio', 'pedido', 'vitrine')),
   alvo_id        uuid not null,
-  denunciante_id uuid references public.perfis(id) on delete set null,
+  denunciante_id text references public.perfis(id) on delete set null,
   motivo         text not null check (motivo in ('golpe', 'proibido', 'falso', 'ofensivo', 'duplicado', 'outro')),
   detalhes       text check (char_length(detalhes) <= 1000),
   status         text not null default 'aberta' check (status in ('aberta', 'procedente', 'improcedente')),
-  resolvido_por  uuid references public.perfis(id),
+  resolvido_por  text references public.perfis(id),
   resolvido_em   timestamptz,
   criado_em      timestamptz not null default now(),
   criado_ip      inet default public.ip_requisicao(),
@@ -543,9 +544,9 @@ create table public.denuncias (
 create index denuncias_fila_idx on public.denuncias (status, criado_em);
 alter table public.denuncias enable row level security;
 create policy "denunciar" on public.denuncias for insert
-  with check (denunciante_id = auth.uid() and status = 'aberta');
+  with check (denunciante_id = public.usuario_id() and status = 'aberta');
 create policy "denuncias leitura" on public.denuncias for select
-  using (denunciante_id = auth.uid() or public.e_admin());
+  using (denunciante_id = public.usuario_id() or public.e_admin());
 create policy "denuncias admin" on public.denuncias for update
   using (public.e_admin()) with check (public.e_admin());
 
@@ -593,7 +594,7 @@ as $$
 declare reg jsonb := to_jsonb(coalesce(new, old));
 begin
   insert into public.logs_atividade (tabela, registro_id, acao, usuario_id, ip, user_agent, dados_antes, dados_depois)
-  values (tg_table_name, coalesce(reg->>'id', reg->>'codigo'), tg_op, auth.uid(), public.ip_requisicao(), public.user_agent_requisicao(),
+  values (tg_table_name, coalesce(reg->>'id', reg->>'codigo'), tg_op, public.usuario_id(), public.ip_requisicao(), public.user_agent_requisicao(),
           case when tg_op <> 'INSERT' then to_jsonb(old) end,
           case when tg_op <> 'DELETE' then to_jsonb(new) end);
   return null;

@@ -21,7 +21,7 @@ async function fecharDenuncias(
 }
 
 export async function decidirAnuncio(form: FormData): Promise<void> {
-  const { supabase, user } = await exigirAdmin();
+  const { supabase, userId } = await exigirAdmin();
   const id = String(form.get("id"));
   const decisao = String(form.get("decisao")) as Decisao;
   const motivo = String(form.get("motivo") ?? "").trim();
@@ -40,12 +40,12 @@ export async function decidirAnuncio(form: FormData): Promise<void> {
       .eq("id", id);
     if (error) throw new Error(error.message);
   }
-  await fecharDenuncias(supabase, user.id, "anuncio", id, decisao !== "aprovar");
+  await fecharDenuncias(supabase, userId, "anuncio", id, decisao !== "aprovar");
   revalidatePath("/admin", "layout");
 }
 
 export async function decidirPedido(form: FormData): Promise<void> {
-  const { supabase, user } = await exigirAdmin();
+  const { supabase, userId } = await exigirAdmin();
   const id = String(form.get("id"));
   const aprovar = form.get("decisao") === "aprovar";
   const motivo = String(form.get("motivo") ?? "").trim();
@@ -54,15 +54,15 @@ export async function decidirPedido(form: FormData): Promise<void> {
     .update(aprovar ? { status: "aberto", motivo_analise: null } : { status: "encerrado", motivo_analise: `Recusado: ${motivo || "fora das regras"}` })
     .eq("id", id);
   if (error) throw new Error(error.message);
-  await fecharDenuncias(supabase, user.id, "pedido", id, !aprovar);
+  await fecharDenuncias(supabase, userId, "pedido", id, !aprovar);
   revalidatePath("/admin", "layout");
 }
 
 export async function resolverDenuncia(form: FormData): Promise<void> {
-  const { supabase, user } = await exigirAdmin();
+  const { supabase, userId } = await exigirAdmin();
   const { error } = await supabase
     .from("denuncias")
-    .update({ status: form.get("procedente") === "sim" ? "procedente" : "improcedente", resolvido_por: user.id, resolvido_em: new Date().toISOString() })
+    .update({ status: form.get("procedente") === "sim" ? "procedente" : "improcedente", resolvido_por: userId, resolvido_em: new Date().toISOString() })
     .eq("id", String(form.get("id")));
   if (error) throw new Error(error.message);
   revalidatePath("/admin", "layout");

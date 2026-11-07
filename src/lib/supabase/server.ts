@@ -1,19 +1,14 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import "server-only";
+import { auth } from "@clerk/nextjs/server";
+import { createClient as criar } from "@supabase/supabase-js";
 
-/** Cliente Supabase para Server Components, Server Actions e Route Handlers (usa a sessão do usuário). */
+/**
+ * Cliente Supabase com a sessão do usuário do Clerk (integração "third-party auth").
+ * O token do Clerk vai em cada requisição; o banco lê o id pelo 'sub' (public.usuario_id())
+ * e as regras de RLS valem normalmente. Visitante sem login usa o papel anon.
+ */
 export async function createClient() {
-  const cookieStore = await cookies();
-  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-    cookies: {
-      getAll: () => cookieStore.getAll(),
-      setAll: (lista) => {
-        try {
-          lista.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        } catch {
-          // Chamado de um Server Component: o middleware renova a sessão.
-        }
-      },
-    },
+  return criar(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+    accessToken: async () => (await auth()).getToken(),
   });
 }

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
+import { ptBR } from "@clerk/localizations";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -19,8 +21,23 @@ export const viewport: Viewport = { themeColor: "#ff6a13", width: "device-width"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={poppins.variable}>
-      <body className="font-sans antialiased">{children}</body>
-    </html>
+    <ClerkProvider
+      localization={ptBR}
+      signInUrl="/entrar"
+      signUpUrl="/entrar"
+      appearance={{
+        variables: {
+          colorPrimary: "#ff6a13",
+          colorPrimaryForeground: "#1b2a4a", // contraste acessível (texto marinho no laranja)
+          colorText: "#1b2a4a",
+          fontFamily: "var(--font-poppins), system-ui, sans-serif",
+          borderRadius: "0.75rem",
+        },
+      }}
+    >
+      <html lang="pt-BR" className={poppins.variable}>
+        <body className="font-sans antialiased">{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

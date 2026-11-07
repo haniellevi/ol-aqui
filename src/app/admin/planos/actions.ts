@@ -24,13 +24,13 @@ function lerPlano(form: FormData) {
 
 export async function salvarPlano(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   try {
-    const { supabase, user } = await exigirAdmin();
+    const { supabase, userId } = await exigirAdmin();
     const codigo = String(form.get("codigo"));
     const dados = lerPlano(form);
     if (!dados.nome) return { erro: "Dê um nome ao plano." };
     const { error } = await supabase
       .from("planos")
-      .update({ ...dados, atualizado_em: new Date().toISOString(), atualizado_por: user.id })
+      .update({ ...dados, atualizado_em: new Date().toISOString(), atualizado_por: userId })
       .eq("codigo", codigo);
     if (error) return { erro: error.message };
     revalidatePath("/admin", "layout");
@@ -43,7 +43,7 @@ export async function salvarPlano(_: EstadoForm, form: FormData): Promise<Estado
 
 export async function criarPlano(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   try {
-    const { supabase, user } = await exigirAdmin();
+    const { supabase, userId } = await exigirAdmin();
     const codigo = String(form.get("codigo") ?? "")
       .trim()
       .toLowerCase()
@@ -54,7 +54,7 @@ export async function criarPlano(_: EstadoForm, form: FormData): Promise<EstadoF
     if (!/^[a-z0-9_]{2,30}$/.test(codigo)) return { erro: "Código inválido. Use letras, números e _ (ex.: ouro)." };
     const dados = lerPlano(form);
     if (!dados.nome) return { erro: "Dê um nome ao plano." };
-    const { error } = await supabase.from("planos").insert({ codigo, ...dados, atualizado_por: user.id });
+    const { error } = await supabase.from("planos").insert({ codigo, ...dados, atualizado_por: userId });
     if (error) return { erro: error.code === "23505" ? "Já existe um plano com esse código." : error.message };
     revalidatePath("/admin/planos");
     return { ok: `Plano "${dados.nome}" criado.` };
