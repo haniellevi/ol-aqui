@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* Tokens do OLAKI (docs/DESIGN-SYSTEM.md, seção 6).
+   Botão primário = fundo laranja + texto beringela (4,95:1). Branco sobre laranja reprova (2,87:1). */
+@theme {
+  --color-beringela: #4b1248;
+  --color-laranja: #ff6a13;
+  --color-laranja-escuro: #c2410c;
+  --color-laranja-claro: #fff4ec;
+  --color-verde: #12a150;
+  --color-verde-escuro: #0e7a3d;
+  --color-fundo: #f6f4f7;
+  --color-cartao: #ffffff;
+  --color-texto: #4b1248;
+  --color-texto-suave: #5e5266;
+  --color-borda: #e6e0e9;
+  --color-perigo: #b91c1c;
+  --color-aviso: #b45309;
+  --color-aviso-fundo: #fffbeb;
+  --color-patrocinado-fundo: #ffe4d1;
+
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
+
+  --radius-campo: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-folha: 1.25rem;
+
+  --shadow-1: 0 1px 2px rgb(75 18 72 / 0.08);
+  --shadow-2: 0 -2px 12px rgb(75 18 72 / 0.12);
+
+  --spacing-toque: 3rem; /* 48px, área mínima de toque */
+}
+
+body {
+  background: var(--color-fundo);
+  color: var(--color-texto);
+  -webkit-tap-highlight-color: transparent;
+}
