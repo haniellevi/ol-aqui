@@ -80,7 +80,7 @@ src/lib/dados           leituras do banco para as telas (busca, anúncio, conta,
 src/components          telas públicas (anuncio, busca, vitrine), anunciar, conta e ui
 supabase/migrations     banco de dados
 docs/                   decisões de produto e plano do painel
-public/logo             logos (opção 1: pin no "i"; opção 2: balão "ol")
+public/logo             logos (OLAKI em caixa alta, pin sobre o I; claro, fundo escuro e ícone do app "AKI")
 ```
 
 ## Regra de ouro

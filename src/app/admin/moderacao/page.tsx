@@ -63,7 +63,7 @@ export default async function ModeracaoPage() {
                   <p className="text-sm text-neutral-600">
                     {a.preco_centavos != null ? reais(a.preco_centavos) : "A combinar"} · {a.cidade} · {loja?.nome ?? "—"}
                   </p>
-                  <p className="mt-1 inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">{a.motivo_analise}</p>
+                  <p className="mt-1 inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">{a.motivo_analise}</p>
                 </div>
               </div>
               {a.descricao && <p className="mt-3 line-clamp-3 text-sm text-neutral-600">{a.descricao}</p>}
@@ -96,7 +96,7 @@ export default async function ModeracaoPage() {
           <Cartao key={p.id}>
             <p className="font-semibold">{p.titulo}</p>
             <p className="text-sm text-neutral-600">{p.cidade} · {quando(p.criado_em)}</p>
-            <p className="mt-1 inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">{p.motivo_analise}</p>
+            <p className="mt-1 inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">{p.motivo_analise}</p>
             {p.detalhes && <p className="mt-2 text-sm text-neutral-600">{p.detalhes}</p>}
             <form action={decidirPedido} className="mt-4 space-y-2">
               <input type="hidden" name="id" value={p.id} />
