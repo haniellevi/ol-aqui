@@ -245,6 +245,12 @@ insert into loja_secoes (vitrine_id, nome) values (:'vpf', 'Minhas coisas');
 \echo '[12b] ERRO ESPERADO: foto no banner da pessoa fisica'
 update vitrines_lojas set banner_tipo = 'foto', banner_url = 'https://abc.supabase.co/storage/v1/object/public/anuncios/user_pf70/vitrine/b.webp' where id = :'vpf';
 select pode_enviar_foto('user_pf70/vitrine/b.webp') as pf_envia;
+\echo '[12c] ERRO ESPERADO: pessoa fisica nao fixa anuncio'
+insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, fotos) values
+ (:'vpf', :'cat_moveis', 'Rack de sala usado', 'Corrente', 20000, '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_pf70/x/1.webp}') returning id as p1 \gset
+select fixar_anuncio(:'p1');
+\echo '[12d] pessoa fisica: endereco exato e localizacao nunca ficam gravados'
+update vitrines_lojas set endereco = 'Rua da minha casa, 10', lat = -10.4, lng = -45.1 where id = :'vpf' returning endereco is null as sem_endereco, lat is null as sem_lat;
 
 \echo '[13] loja suspensa: some para o visitante, o dono ainda ve'
 reset role; update vitrines_lojas set status = 'suspensa' where id = :'v71';
@@ -282,9 +288,15 @@ update planos set vitrine_fixados_max = 5, vitrine_foto_fachada = true where cod
 reset role; select acao, usuario_id, dados_depois->>'vitrine_fixados_max' as fixados from logs_atividade where tabela = 'planos' and registro_id = 'full' and usuario_id = 'user_ad70';
 set role authenticated; select set_config('request.jwt.claim.sub','user_lj70',false) \g /dev/null
 update planos set vitrine_secoes_max = null where codigo = 'teste' returning codigo;
-\echo '[15a] ERRO ESPERADO: segundo plano recomendado'
+\echo '[15a] marcar o Full como recomendado desmarca o Slim (so um por vez; os dois ficam no log)'
 select set_config('request.jwt.claim.sub','user_ad70',false) \g /dev/null
 update planos set recomendado = true where codigo = 'full';
+select codigo, recomendado from planos where codigo in ('slim','full') order by ordem;
+reset role; select registro_id, dados_depois->>'recomendado' as recomendado from logs_atividade
+ where tabela = 'planos' and usuario_id = 'user_ad70' and dados_antes->>'recomendado' is distinct from dados_depois->>'recomendado' order by id;
+\echo '[15b] ERRO ESPERADO: limite negativo de secoes'
+set role authenticated; select set_config('request.jwt.claim.sub','user_ad70',false) \g /dev/null
+update planos set vitrine_secoes_max = -1 where codigo = 'full';
 
 \echo '[16] visitante nao usa as funcoes do dono nem grava (ERRO ESPERADO em cada uma: permissao)'
 set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null

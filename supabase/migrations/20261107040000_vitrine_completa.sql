@@ -40,13 +40,29 @@ alter table public.planos
   add column vitrine_secoes_max   integer default 0 check (vitrine_secoes_max >= 0),    -- null = sem limite
   add column vitrine_fixados_max  integer default 0 check (vitrine_fixados_max >= 0),   -- null = sem limite
   add column recomendado          boolean not null default false;                       -- destaque na página /planos
--- Só um plano recomendado por vez
+-- Só um plano recomendado por vez: marcar um desmarca o outro (o painel não precisa
+-- fazer em dois passos; a troca do outro plano também fica no log pelo gatilho log_planos).
 create unique index planos_um_recomendado on public.planos (recomendado) where recomendado;
+create or replace function public.planos_um_recomendado()
+returns trigger language plpgsql
+set search_path = public, extensions
+as $$
+begin
+  if new.recomendado and (tg_op = 'INSERT' or not old.recomendado) then
+    update public.planos set recomendado = false where recomendado and codigo <> new.codigo;
+  end if;
+  return new;
+end $$;
+create trigger planos_0_recomendado before insert or update of recomendado on public.planos
+  for each row execute function public.planos_um_recomendado();
 
 -- Valores iniciais (o admin muda no painel). Teste e grátis: vitrine básica.
+-- O log do painel fica desligado só aqui: semente da migração não é mudança de ninguém.
+alter table public.planos disable trigger log_planos;
 update public.planos set vitrine_foto_fachada = false, vitrine_secoes_max = 0,  vitrine_fixados_max = 0 where codigo in ('teste', 'pf_gratis');
 update public.planos set vitrine_foto_fachada = true,  vitrine_secoes_max = 3,  vitrine_fixados_max = 3, recomendado = true where codigo = 'slim';
 update public.planos set vitrine_foto_fachada = true,  vitrine_secoes_max = 10, vitrine_fixados_max = 6 where codigo = 'full';
+alter table public.planos enable trigger log_planos;
 
 -- ---------------------------------------------------------------------
 -- 2. Utilitários
@@ -146,6 +162,19 @@ begin
   return query select p.vitrine_foto_fachada, p.vitrine_secoes_max, p.vitrine_fixados_max;
 end $$;
 
+-- Mesma coisa pelo id (para os gatilhos INVOKER de seções e fixados: quem está logado
+-- não lê todas as colunas da vitrine, como o CNPJ). Só diz o que o plano libera.
+create or replace function public.recursos_vitrine_id(p_vitrine uuid)
+returns table (foto_fachada boolean, secoes_max integer, fixados_max integer)
+language plpgsql stable security definer
+set search_path = public, extensions
+as $$
+declare v public.vitrines_lojas;
+begin
+  select * into v from public.vitrines_lojas where id = p_vitrine;
+  return query select * from public.recursos_vitrine(v);
+end $$;
+
 -- ---------------------------------------------------------------------
 -- 3. Vitrine: banner, informações da loja
 -- ---------------------------------------------------------------------
@@ -203,6 +232,13 @@ begin
       new.banner_moderado_em := old.banner_moderado_em;
       new.banner_moderado_motivo := old.banner_moderado_motivo;
     end if;
+  end if;
+
+  -- Pessoa física não tem página de vitrine e nunca mostra endereço exato
+  if new.tipo = 'pf' and not sistema then
+    new.endereco := null;
+    new.lat := null;
+    new.lng := null;
   end if;
 
   -- Textos: tira espaços sobrando; vazio vira "não informado"
@@ -345,7 +381,6 @@ set search_path = public, extensions
 as $$
 declare
   sistema boolean := public.acesso_sistema();
-  v       public.vitrines_lojas;
   rec     record;
   total   integer;
   nomes   text;
@@ -362,8 +397,8 @@ begin
     if new.status not in ('ativo', 'pausado') then
       raise exception using errcode = '23514', message = 'Só dá para fixar um anúncio que está no ar.';
     end if;
-    select * into v from public.vitrines_lojas where id = new.vitrine_id for update;
-    select * into rec from public.recursos_vitrine(v);
+    perform 1 from public.vitrines_lojas where id = new.vitrine_id for update;   -- duas abas ao mesmo tempo não passam do limite
+    select * into rec from public.recursos_vitrine_id(new.vitrine_id);
     select count(*) into total from public.anuncios a
      where a.vitrine_id = new.vitrine_id and a.fixado_na_loja is not null and a.id <> new.id;
     if rec.fixados_max is not null and total >= rec.fixados_max then
@@ -412,7 +447,7 @@ set search_path = public, extensions
 as $$
 declare
   sistema boolean := public.acesso_sistema();
-  v       public.vitrines_lojas;
+  v       record;
   rec     record;
   total   integer;
   nomes   text;
@@ -426,8 +461,8 @@ begin
   if char_length(new.nome) not between 2 and 40 then
     raise exception using errcode = '23514', message = 'Escreva o nome da seção (de 2 a 40 letras).', detail = 'campo:nome';
   end if;
-  select * into v from public.vitrines_lojas where id = new.vitrine_id;
-  if v.id is null then
+  select x.id, x.tipo, x.microrregiao_id, x.dono_id into v from public.vitrines_lojas x where x.id = new.vitrine_id;
+  if v.id is null or (not sistema and v.dono_id is distinct from public.usuario_id()) then
     raise exception using errcode = '42501', message = 'Loja não encontrada.';
   end if;
   if v.tipo <> 'loja' then
@@ -447,7 +482,7 @@ begin
   if tg_op = 'INSERT' then
     if not sistema then
       perform 1 from public.vitrines_lojas where id = v.id for update;   -- duas abas ao mesmo tempo não passam do limite
-      select * into rec from public.recursos_vitrine(v);
+      select * into rec from public.recursos_vitrine_id(v.id);
       select count(*) into total from public.loja_secoes s where s.vitrine_id = v.id;
       if rec.secoes_max is not null and total >= rec.secoes_max then
         nomes := public.planos_com_recurso('secoes');
@@ -858,12 +893,12 @@ grant execute on function public.vitrine_publica(text), public.anuncios_vitrine(
 
 -- Só para quem está logado (usadas pelos gatilhos INVOKER e pelas telas do dono)
 revoke all on function public.texto_bloqueado(text, uuid), public.planos_com_recurso(text),
-  public.recursos_vitrine(public.vitrines_lojas), public.minha_vitrine_recursos(),
+  public.recursos_vitrine(public.vitrines_lojas), public.recursos_vitrine_id(uuid), public.minha_vitrine_recursos(),
   public.ordenar_secoes(uuid[]), public.definir_anuncios_secao(uuid, uuid[]),
   public.fixar_anuncio(uuid, boolean), public.ordenar_fixados(uuid[]),
   public.moderar_banner_vitrine(uuid, text) from public, anon;
 grant execute on function public.texto_bloqueado(text, uuid), public.planos_com_recurso(text),
-  public.recursos_vitrine(public.vitrines_lojas), public.minha_vitrine_recursos(),
+  public.recursos_vitrine(public.vitrines_lojas), public.recursos_vitrine_id(uuid), public.minha_vitrine_recursos(),
   public.ordenar_secoes(uuid[]), public.definir_anuncios_secao(uuid, uuid[]),
   public.fixar_anuncio(uuid, boolean), public.ordenar_fixados(uuid[]),
   public.moderar_banner_vitrine(uuid, text) to authenticated, service_role;
