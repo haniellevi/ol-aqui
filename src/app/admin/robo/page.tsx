@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { exigirAdmin } from "@/lib/admin/auth";
 import { inteiro, paraReaisInput, quando, reais } from "@/lib/admin/formato";
-import { Cartao, Numero, Titulo, estiloBotaoSec } from "@/components/admin/ui";
+import { Cartao, Numero, Titulo } from "@/components/admin/ui";
 import { chavesConfiguradas } from "@/lib/aki/provedores";
 import type { ModeloIA, PainelAki, ProvedorIA } from "@/lib/aki/tipos";
-import { resolverBuscaVazia } from "./actions";
-import { FormLigarGeral, FormLimites, FormModelo, FormModeloEscolhido, FormRegiao, FormTextos } from "./forms";
+import { FormLigarGeral, FormLimites, FormModelo, FormModeloEscolhido, FormRegiao, FormResolverBusca, FormTextos } from "./forms";
 
 export const metadata = { title: "Robô Aki" };
 
@@ -160,6 +159,7 @@ export default async function RoboPage() {
             orcamentoReais={paraReaisInput(numero(geral.get("robo.orcamento_mensal_centavos"), 0))}
             alerta={numero(geral.get("robo.alerta_percentual"), 80)}
             cotacao={numero(geral.get("robo.cotacao_dolar"), 5.5)}
+            reservaTokens={numero(geral.get("robo.reserva_tokens_entrada"), 20000)}
           />
         </Cartao>
       </Secao>
@@ -288,10 +288,7 @@ export default async function RoboPage() {
                       {inteiro(b.vezes)} {b.vezes === 1 ? "vez" : "vezes"} · {b.regiao ?? "sem região"} · última {quando(b.ultima_em)}
                     </p>
                   </div>
-                  <form action={resolverBuscaVazia}>
-                    <input type="hidden" name="id" value={b.id} />
-                    <button className={estiloBotaoSec}>Resolvido</button>
-                  </form>
+                  <FormResolverBusca id={b.id} />
                 </li>
               ))}
             </ul>

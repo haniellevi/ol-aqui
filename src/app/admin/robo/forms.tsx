@@ -4,7 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { Aviso, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { reais } from "@/lib/admin/formato";
 import type { ModeloIA, ResultadoTeste } from "@/lib/aki/tipos";
-import { escolherModelo, ligarGeral, ligarRegiao, salvarLimites, salvarModelo, salvarTextos, testarModelo } from "./actions";
+import { escolherModelo, ligarGeral, ligarRegiao, resolverBuscaVazia, salvarLimites, salvarModelo, salvarTextos, testarModelo } from "./actions";
 
 function Retorno({ estado }: { estado: { ok?: string; erro?: string } | null }) {
   if (!estado) return null;
@@ -73,6 +73,8 @@ export function FormModeloEscolhido({
   const [teste, setTeste] = useState<ResultadoTeste | null>(null);
   const [testando, iniciarTeste] = useTransition();
   const atualNaLista = modelos.some((m) => `${m.provedor}|${m.modelo}` === atual);
+  // o "Testar" usa o modelo marcado na lista agora (mesmo antes de salvar)
+  const [escolhido, setEscolhido] = useState(atualNaLista ? atual : "");
   const NOMES: Record<string, string> = { anthropic: "Anthropic", openrouter: "OpenRouter", openai: "OpenAI" };
 
   return (
@@ -81,7 +83,15 @@ export function FormModeloEscolhido({
         <input type="hidden" name="tipo" value={tipo} />
         <label className="block text-sm font-semibold">
           {titulo}
-          <select name="modelo" defaultValue={atualNaLista ? atual : ""} className={estiloCampo}>
+          <select
+            name="modelo"
+            value={escolhido}
+            onChange={(e) => {
+              setEscolhido(e.target.value);
+              setTeste(null);
+            }}
+            className={estiloCampo}
+          >
             <option value="" disabled>
               Escolha um modelo
             </option>
@@ -102,12 +112,12 @@ export function FormModeloEscolhido({
           </button>
           <button
             type="button"
-            disabled={testando}
+            disabled={testando || !escolhido}
             className={estiloBotaoSec}
             onClick={() =>
               iniciarTeste(async () => {
                 setTeste(null);
-                setTeste(await testarModelo(tipo));
+                setTeste(await testarModelo(tipo, escolhido));
               })
             }
           >
@@ -135,7 +145,7 @@ export function FormModeloEscolhido({
 
 /* --------------------------- Limites e orçamento --------------------------- */
 
-export function FormLimites(p: { limite: number; orcamentoReais: string; alerta: number; cotacao: number }) {
+export function FormLimites(p: { limite: number; orcamentoReais: string; alerta: number; cotacao: number; reservaTokens: number }) {
   const [estado, acao, pendente] = useActionState(salvarLimites, null);
   return (
     <form action={acao} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -155,8 +165,13 @@ export function FormLimites(p: { limite: number; orcamentoReais: string; alerta:
         Cotação do dólar (R$)
         <input name="cotacao_dolar" inputMode="decimal" defaultValue={String(p.cotacao).replace(".", ",")} className={estiloCampo} />
       </label>
+      <label className="text-sm font-semibold sm:col-span-2">
+        Tokens de entrada reservados por volta (enquanto a resposta não termina)
+        <input name="reserva_tokens_entrada" type="number" min={0} max={1000000} defaultValue={p.reservaTokens} className={estiloCampo} />
+      </label>
       <p className="text-[13px] text-texto-suave sm:col-span-2">
-        Quando o gasto do mês chega no orçamento, o Aki descansa até o mês seguinte e o resto do site funciona normal.
+        Antes de cada resposta o Aki separa do orçamento o máximo que ela pode custar; no fim entra o valor certo. Assim muita gente ao
+        mesmo tempo não passa do orçamento. Quando o gasto do mês chega no orçamento, o Aki descansa até o mês seguinte e o resto do site funciona normal.
       </p>
       <div className="sm:col-span-2">
         <button disabled={pendente} className={estiloBotaoSec}>
@@ -280,6 +295,21 @@ export function FormModelo({ modelo }: { modelo?: ModeloIA }) {
       <div className="col-span-2 md:col-span-4">
         <Retorno estado={estado} />
       </div>
+    </form>
+  );
+}
+
+/* ---------------------------- Buscas sem resultado ---------------------------- */
+
+export function FormResolverBusca({ id }: { id: number }) {
+  const [estado, acao, pendente] = useActionState(resolverBuscaVazia, null);
+  return (
+    <form action={acao} className="flex flex-col items-end gap-1">
+      <input type="hidden" name="id" value={id} />
+      <button disabled={pendente} className={estiloBotaoSec}>
+        {pendente ? "Salvando…" : "Resolvido"}
+      </button>
+      {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
     </form>
   );
 }

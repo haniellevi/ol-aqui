@@ -7,7 +7,7 @@ import { exigirAdmin } from "@/lib/admin/auth";
 import { centavosDe } from "@/lib/admin/formato";
 import type { EstadoForm } from "@/lib/admin/estado";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { adaptador, ErroProvedor } from "@/lib/aki/provedores";
+import { adaptador, ErroProvedor, lerArgumentos, type ParteIA, type UsoIA } from "@/lib/aki/provedores";
 import { ERROS_PROVEDOR } from "@/lib/aki/textos";
 import { ehId } from "@/lib/aki/validar";
 import { PROVEDORES, type ProvedorIA, type ResultadoTeste } from "@/lib/aki/tipos";
@@ -137,61 +137,105 @@ export async function escolherModelo(_: EstadoForm, form: FormData): Promise<Est
   }
 }
 
-/** "Testar": manda uma frase curtinha ao modelo escolhido e mostra resposta, tempo e custo. */
-export async function testarModelo(tipo: "conversa" | "foto"): Promise<ResultadoTeste> {
+// Foto de teste (32×32, laranja) embutida: prova que o modelo lê imagem sem depender de arquivo de fora.
+const FOTO_TESTE =
+  "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR42mP41KNBU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULAAwRmFsnOcFSAAAAAElFTkSuQmCC";
+
+/**
+ * "Testar": testa o modelo ESCOLHIDO na lista (mesmo antes de salvar) com uma função do site
+ * disponível; no teste da foto vai junto uma foto pequena e o modelo precisa usar a função para
+ * dizer a cor. Mostra resposta, tempo e custo (gravado no livro-caixa como "teste").
+ */
+export async function testarModelo(tipo: "conversa" | "foto", escolhido: string): Promise<ResultadoTeste> {
+  let gravarCusto: ((uso: UsoIA, latenciaMs: number, erro: string | null) => Promise<number | null>) | null = null;
+  const inicio = Date.now();
   try {
     const { supabase, userId } = await exigirAdmin();
-    const ler = async (chave: string) => {
-      const { data } = await supabase.from("configuracoes").select("valor").eq("chave", chave).is("microrregiao_id", null).maybeSingle();
-      return typeof data?.valor === "string" ? data.valor : null;
-    };
     const t = tipo === "foto" ? "foto" : "conversa";
-    const provedor = await ler(`robo.provedor_${t}`);
-    const modelo = await ler(`robo.modelo_${t}`);
+    const [provedor, ...resto] = String(escolhido ?? "").split("|");
+    const modelo = resto.join("|");
     const prov = adaptador(provedor);
-    if (!prov || !modelo) return { ok: false, erro: "Escolha o provedor e o modelo primeiro." };
+    if (!prov || !modelo) return { ok: false, erro: "Escolha um modelo da lista primeiro." };
+    // o mesmo filtro da escolha: ativo no catálogo, lê imagem e usa ferramentas
+    const { data: linha } = await supabase
+      .from("robo_modelos")
+      .select("fallback_servidor")
+      .eq("provedor", prov.nome)
+      .eq("modelo", modelo)
+      .eq("ativo", true)
+      .eq("le_imagem", true)
+      .eq("usa_ferramentas", true)
+      .maybeSingle();
+    if (!linha) return { ok: false, erro: "Esse modelo não está ativo no catálogo (ou não lê imagem e usa ferramentas)." };
     if (!prov.temChave()) return { ok: false, erro: `Falta a chave ${NOME_CHAVE[prov.nome]} nas variáveis de ambiente da Vercel. ${ERROS_PROVEDOR.sem_chave}` };
-    const { data: linha } = await supabase.from("robo_modelos").select("fallback_servidor").eq("provedor", prov.nome).eq("modelo", modelo).maybeSingle();
 
-    const inicio = Date.now();
+    gravarCusto = async (uso, latenciaMs, erro) => {
+      // tipo "teste": não conta no limite de ninguém; sem a chave do servidor o teste funciona, só não grava
+      try {
+        const { data } = await supabaseAdmin().rpc("robo_registrar_resposta", {
+          p_usuario: userId,
+          p_conversa: null,
+          p_tipo: "teste",
+          p_provedor: prov.nome,
+          p_modelo: modelo,
+          p_tokens_entrada: uso.entrada,
+          p_tokens_saida: uso.saida,
+          p_tokens_cache_leitura: uso.cacheLeitura,
+          p_tokens_cache_escrita: uso.cacheEscrita,
+          p_latencia_ms: latenciaMs,
+          p_erro: erro,
+        });
+        const l = Array.isArray(data) ? data[0] : data;
+        return l?.custo_centavos == null ? null : Number(l.custo_centavos);
+      } catch {
+        return null;
+      }
+    };
+
+    const ferramenta =
+      t === "foto"
+        ? { nome: "dizer_cor", descricao: "Diz a cor principal da foto.", parametros: { type: "object", properties: { cor: { type: "string" } }, required: ["cor"], additionalProperties: false } }
+        : { nome: "dizer_oi", descricao: "Cumprimenta a pessoa.", parametros: { type: "object", properties: { frase: { type: "string" } }, required: ["frase"], additionalProperties: false } };
+    const partes: ParteIA[] =
+      t === "foto"
+        ? [
+            { tipo: "imagem", base64: FOTO_TESTE, mime: "image/png" },
+            { tipo: "texto", texto: "Use a função dizer_cor para dizer a cor principal desta foto." },
+          ]
+        : [{ tipo: "texto", texto: "Use a função dizer_oi para dizer oi e seu nome em uma frase." }];
+
     const resp = await prov.conversar(
       {
         modelo,
-        sistemaFixo: "Você é o Aki, ajudante do site OLAKI. Responda em português do Brasil, em uma frase curta.",
-        mensagens: [{ papel: "usuario", partes: [{ tipo: "texto", texto: "Diga oi e seu nome em uma frase." }] }],
+        sistemaFixo: "Você é o Aki, ajudante do site OLAKI. Responda em português do Brasil.",
+        mensagens: [{ papel: "usuario", partes }],
+        ferramentas: [ferramenta],
         maxTokens: 300,
         esforco: "low",
-        fallbackServidor: linha?.fallback_servidor === true,
+        fallbackServidor: linha.fallback_servidor === true,
         sinal: AbortSignal.timeout(30_000),
       },
       () => undefined,
     );
     const latenciaMs = Date.now() - inicio;
-
-    // grava o custo do teste no livro-caixa (tipo "teste": não conta no limite de ninguém)
-    let custoCentavos: number | null = null;
-    try {
-      const { data } = await supabaseAdmin().rpc("robo_registrar_resposta", {
-        p_usuario: userId,
-        p_conversa: null,
-        p_tipo: "teste",
-        p_provedor: prov.nome,
-        p_modelo: modelo,
-        p_tokens_entrada: resp.uso.entrada,
-        p_tokens_saida: resp.uso.saida,
-        p_tokens_cache_leitura: resp.uso.cacheLeitura,
-        p_tokens_cache_escrita: resp.uso.cacheEscrita,
-        p_latencia_ms: latenciaMs,
-      });
-      const l = Array.isArray(data) ? data[0] : data;
-      custoCentavos = l?.custo_centavos == null ? null : Number(l.custo_centavos);
-    } catch {
-      custoCentavos = null; // sem a chave do servidor o teste funciona, só não grava o custo
-    }
+    const custoCentavos = await gravarCusto(resp.uso, latenciaMs, null);
     revalidatePath(CAMINHO);
-    return { ok: true, resposta: resp.texto.trim().slice(0, 500) || "(resposta vazia)", latenciaMs, custoCentavos, modelo: resp.modeloUsado };
+
+    const chamada = resp.chamadas.find((c) => c.nome === ferramenta.nome);
+    const args = chamada ? lerArgumentos(chamada.argumentosBrutos) : null;
+    const valor = args ? String(args.cor ?? args.frase ?? "").slice(0, 200) : "";
+    if (!chamada) {
+      return {
+        ok: false,
+        erro: `O modelo respondeu mas não usou a função do site${t === "foto" ? " para ler a foto" : ""}. O Aki precisa disso: escolha outro modelo. Resposta: ${resp.texto.trim().slice(0, 200) || "(vazia)"}`,
+      };
+    }
+    const resposta = t === "foto" ? `Leu a foto e usou a função: cor = ${valor || "(vazio)"}` : `Usou a função: ${valor || "(vazio)"}`;
+    return { ok: true, resposta, latenciaMs, custoCentavos, modelo: resp.modeloUsado };
   } catch (e) {
     if (e instanceof ErroProvedor) {
+      // chamada que falhou no meio também custa: grava o que o provedor pode ter cobrado
+      if (e.uso && gravarCusto) await gravarCusto(e.uso, Date.now() - inicio, `${e.tipo}: ${e.message}`.slice(0, 300));
       const detalhe = e.status ? ` (código ${e.status})` : "";
       return { ok: false, erro: `${ERROS_PROVEDOR[e.tipo]}${detalhe} Detalhe: ${e.message.slice(0, 200)}` };
     }
@@ -210,10 +254,12 @@ export async function salvarLimites(_: EstadoForm, form: FormData): Promise<Esta
     const alerta = inteiro(form, "alerta_percentual", 1, 100, "Alerta");
     const cotacao = Number(String(form.get("cotacao_dolar") ?? "").replace(",", "."));
     if (!Number.isFinite(cotacao) || cotacao <= 0 || cotacao > 100) throw new Error("Cotação do dólar inválida. Ex.: 5,50");
+    const reserva = inteiro(form, "reserva_tokens_entrada", 0, 1_000_000, "Tokens de entrada reservados por volta");
     await gravarConfig(supabase, userId, "robo.limite_diario_pessoa", limite);
     await gravarConfig(supabase, userId, "robo.orcamento_mensal_centavos", orcamento);
     await gravarConfig(supabase, userId, "robo.alerta_percentual", alerta);
     await gravarConfig(supabase, userId, "robo.cotacao_dolar", Math.round(cotacao * 10000) / 10000);
+    await gravarConfig(supabase, userId, "robo.reserva_tokens_entrada", reserva);
     revalidatePath(CAMINHO);
     return { ok: "Limites salvos." };
   } catch (e) {
@@ -311,9 +357,17 @@ export async function salvarModelo(_: EstadoForm, form: FormData): Promise<Estad
 /* ---------------------------- Buscas sem resultado ---------------------------- */
 
 /** Marca uma busca sem resultado como resolvida (apaga da lista; fica no histórico). */
-export async function resolverBuscaVazia(form: FormData) {
-  const { supabase } = await exigirAdmin();
-  const id = Number(form.get("id"));
-  if (Number.isSafeInteger(id) && id > 0) await supabase.from("robo_buscas_vazias").delete().eq("id", id);
-  revalidatePath(CAMINHO);
+export async function resolverBuscaVazia(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  try {
+    const { supabase } = await exigirAdmin();
+    const id = Number(form.get("id"));
+    if (!Number.isSafeInteger(id) || id <= 0) return { erro: "Busca inválida." };
+    const { data, error } = await supabase.from("robo_buscas_vazias").delete().eq("id", id).select("id");
+    if (error) return { erro: error.message };
+    if (!data?.length) return { erro: "Essa busca já tinha sido resolvida. Atualize a página." };
+    revalidatePath(CAMINHO);
+    return { ok: "Resolvida." };
+  } catch (e) {
+    return erroDe(e);
+  }
 }
