@@ -185,6 +185,7 @@ alter table public.vitrines_lojas
   add column banner_cor             text not null default '#4B1248' check (banner_cor ~ '^#[0-9A-F]{6}$'),
   add column banner_moderado_em     timestamptz,                -- a equipe tirou a foto do banner
   add column banner_moderado_motivo text check (char_length(banner_moderado_motivo) <= 300),
+  add column banner_moderado_url    text check (char_length(banner_moderado_url) <= 500),   -- foto tirada: o dono não grava de novo
   add column endereco               text check (char_length(endereco) <= 160),
   add column lat                    numeric(9, 6) check (lat between -90 and 90),
   add column lng                    numeric(9, 6) check (lng between -180 and 180),
@@ -198,7 +199,7 @@ alter table public.vitrines_lojas
   add constraint vitrines_lat_lng_juntos      check ((lat is null) = (lng is null)),
   add constraint vitrines_horarios_validos    check (public.horarios_validos(horarios));
 
--- Campos públicos da loja (o motivo de moderação do banner não: o dono lê por minha_vitrine_recursos())
+-- Campos públicos da loja (a moderação do banner não: o dono lê o motivo por minha_vitrine_recursos())
 grant select (banner_tipo, banner_url, banner_modelo, banner_cor, endereco, lat, lng, horarios, instagram,
               sobre, formas_pagamento, faz_entrega, entrega_obs) on public.vitrines_lojas to anon, authenticated;
 
@@ -223,14 +224,20 @@ declare
   limpo   text[] := '{}';
   palavra text;
 begin
-  -- Moderação do banner: só a equipe grava
+  -- Moderação do banner: só a equipe grava.
+  -- A descrição antiga virou o "Sobre nós" (passa pelo filtro de palavras abaixo): o dono não grava
+  -- mais a coluna antiga, para nenhum texto sem filtro aparecer na página.
   if not sistema then
     if tg_op = 'INSERT' then
       new.banner_moderado_em := null;
       new.banner_moderado_motivo := null;
+      new.banner_moderado_url := null;
+      new.descricao := null;
     else
       new.banner_moderado_em := old.banner_moderado_em;
       new.banner_moderado_motivo := old.banner_moderado_motivo;
+      new.banner_moderado_url := old.banner_moderado_url;
+      new.descricao := old.descricao;
     end if;
   end if;
 
@@ -299,20 +306,29 @@ begin
       message = 'Confira os horários: a hora de abrir vem antes da hora de fechar, e os horários do mesmo dia não podem se cruzar.';
   end if;
 
-  -- Cor do banner: uma das cores do painel (só quando o dono troca)
+  -- Cor do banner: uma das cores do painel. Ao trocar, cor fora da lista é recusada.
+  -- Loja nova criada direto (sem passar pelo sistema) com cor fora da lista fica com a 1ª cor da lista.
   new.banner_cor := upper(btrim(coalesce(new.banner_cor, '')));
-  if new.banner_cor !~ '^#[0-9A-F]{6}$' then
+  if new.banner_cor !~ '^#[0-9A-F]{6}$' and not (tg_op = 'INSERT' and not sistema) then
     raise exception using errcode = '23514', message = 'Escolha uma das cores da lista.', detail = 'campo:banner_cor';
   end if;
-  if not sistema and tg_op = 'UPDATE' and new.banner_cor is distinct from old.banner_cor then
+  if not sistema and (tg_op = 'INSERT' or new.banner_cor is distinct from old.banner_cor) then
     lista := public.config('vitrine.banner_cores', new.microrregiao_id, '[]');
     if jsonb_typeof(lista) = 'array' and jsonb_array_length(lista) > 0
        and not exists (select 1 from jsonb_array_elements_text(lista) c where upper(btrim(c)) = new.banner_cor) then
-      raise exception using errcode = '23514', message = 'Escolha uma das cores da lista.', detail = 'campo:banner_cor';
+      if tg_op = 'INSERT' then
+        select upper(btrim(c)) into new.banner_cor from jsonb_array_elements_text(lista) c
+         where upper(btrim(c)) ~ '^#[0-9A-F]{6}$' limit 1;
+        new.banner_cor := coalesce(new.banner_cor, '#4B1248');
+      else
+        raise exception using errcode = '23514', message = 'Escolha uma das cores da lista.', detail = 'campo:banner_cor';
+      end if;
     end if;
   end if;
 
-  -- Formas de pagamento: só as da lista do painel (guarda com a grafia do painel, sem repetir)
+  -- Formas de pagamento: só as da lista do painel (guarda com a grafia do painel, sem repetir).
+  -- Uma forma que a loja já tinha e que o painel tirou da lista continua valendo (a loja não
+  -- fica presa sem poder mudar as outras); só não dá para marcar de novo depois de tirar.
   if tg_op = 'INSERT' or new.formas_pagamento is distinct from old.formas_pagamento then
     lista := public.config('vitrine.formas_pagamento', new.microrregiao_id, '[]');
     foreach f in array coalesce(new.formas_pagamento, '{}') loop
@@ -320,6 +336,10 @@ begin
       if nullif(btrim(f), '') is null then continue; end if;
       if jsonb_typeof(lista) = 'array' then
         select o into achou from jsonb_array_elements_text(lista) o
+         where public.sem_acento(lower(btrim(o))) = public.sem_acento(lower(btrim(f))) limit 1;
+      end if;
+      if achou is null and tg_op = 'UPDATE' then
+        select o into achou from unnest(old.formas_pagamento) o
          where public.sem_acento(lower(btrim(o))) = public.sem_acento(lower(btrim(f))) limit 1;
       end if;
       if achou is null then
@@ -356,7 +376,12 @@ begin
     if not coalesce(public.foto_do_olaki(new.banner_url, new.dono_id, 'vitrine'), false) then
       raise exception using errcode = '22023', message = 'Envie a foto da fachada pelo botão do OLAKI.', detail = 'campo:banner';
     end if;
-    -- foto nova: o aviso de moderação antigo sai
+    -- a foto que a equipe tirou não volta
+    if new.banner_url = new.banner_moderado_url then
+      raise exception using errcode = '42501', detail = 'campo:banner',
+        message = 'Essa foto foi tirada pela equipe do OLAKI. Envie outra foto ou escolha um banner modelo.';
+    end if;
+    -- foto nova (diferente da que foi tirada): o aviso de moderação antigo sai
     new.banner_moderado_em := null;
     new.banner_moderado_motivo := null;
   end if;
@@ -373,7 +398,8 @@ alter table public.anuncios
   add column fixado_na_loja integer check (fixado_na_loja between 1 and 1000);   -- ordem; null = não fixado
 create index anuncios_fixados_idx on public.anuncios (vitrine_id, fixado_na_loja) where fixado_na_loja is not null;
 
--- Limite de fixados do plano ao fixar; vendido/vencido sai do topo sozinho.
+-- Limite de fixados do plano ao fixar. Anúncio que sai do ar (vendido, vencido, rascunho,
+-- em análise, congelado) sai do topo sozinho e libera a vaga: só conta o que está no ar ou pausado.
 -- SECURITY INVOKER de propósito (ver validar_vitrine_completa).
 create or replace function public.validar_fixado_loja()
 returns trigger language plpgsql
@@ -389,7 +415,7 @@ begin
     if not sistema then new.fixado_na_loja := null; end if;
     return new;
   end if;
-  if new.fixado_na_loja is not null and new.status in ('vendido', 'expirado', 'rascunho', 'congelado') then
+  if new.fixado_na_loja is not null and new.status not in ('ativo', 'pausado') then
     new.fixado_na_loja := null;
     return new;
   end if;
@@ -677,22 +703,28 @@ begin
     v.banner_moderado_em, v.banner_moderado_motivo;
 end $$;
 
--- Equipe OLAKI tira a foto do banner (volta para o modelo) e grava o motivo
+-- Equipe OLAKI tira a foto do banner (volta para o modelo) e grava o motivo.
+-- Guarda o endereço da foto tirada (o dono não consegue gravar a mesma de novo) e devolve esse
+-- endereço para o painel apagar o arquivo do Storage (o banco não apaga arquivo).
 create or replace function public.moderar_banner_vitrine(p_vitrine uuid, p_motivo text default null)
-returns void language plpgsql security definer
+returns text language plpgsql security definer
 set search_path = public, extensions
 as $$
+declare url text;
 begin
   if not public.e_admin() then
     raise exception 'Apenas a equipe OLAKI pode moderar.' using errcode = '42501';
   end if;
-  update public.vitrines_lojas
-     set banner_tipo = 'modelo', banner_url = null, banner_moderado_em = now(),
-         banner_moderado_motivo = left(coalesce(nullif(btrim(p_motivo), ''), 'Foto fora das regras do OLAKI'), 300)
-   where id = p_vitrine;
+  select banner_url into url from public.vitrines_lojas where id = p_vitrine for update;
   if not found then
     raise exception 'Loja não encontrada.' using errcode = 'P0002';
   end if;
+  update public.vitrines_lojas
+     set banner_tipo = 'modelo', banner_url = null, banner_moderado_em = now(),
+         banner_moderado_url = coalesce(url, banner_moderado_url),
+         banner_moderado_motivo = left(coalesce(nullif(btrim(p_motivo), ''), 'Foto fora das regras do OLAKI'), 300)
+   where id = p_vitrine;
+  return url;
 end $$;
 
 -- ---------------------------------------------------------------------
@@ -750,7 +782,7 @@ begin
     'whatsapp', case when v.status = 'ativa'
                      then coalesce(v.whatsapp, case when pf.whatsapp_verificado_em is not null then pf.whatsapp end) end,
     'endereco', v.endereco, 'lat', v.lat, 'lng', v.lng, 'horarios', v.horarios, 'instagram', v.instagram,
-    'sobre', coalesce(v.sobre, v.descricao), 'formas_pagamento', to_jsonb(v.formas_pagamento),
+    'sobre', v.sobre, 'formas_pagamento', to_jsonb(v.formas_pagamento),
     'faz_entrega', v.faz_entrega, 'entrega_obs', v.entrega_obs,
     'status', v.status, 'criado_em', v.criado_em, 'microrregiao_id', v.microrregiao_id,
     'e_dono', coalesce(dono, false), 'secoes', secoes, 'total_anuncios', total);
@@ -771,25 +803,39 @@ create type public.vitrine_anuncio as (
   categoria_slug     text,
   categoria_nome     text,
   categoria_pai_nome text,
-  grupo_ordem        integer        -- ordem do grupo automático (categoria-mãe, depois subcategoria)
+  grupo_ordem        integer,       -- ordem do grupo automático (categoria-mãe, depois subcategoria)
+  na_pagina          boolean        -- entra nos grupos desta página; false = veio só por estar numa seção
 );
 
--- Anúncios no ar da loja. Ordem 'recentes' (padrão): fixados primeiro (só os N do plano),
--- depois os mais novos. 'menor_preco': do mais barato ao mais caro ("a combinar" no fim).
-create or replace function public.anuncios_vitrine(p_vitrine_id uuid, p_ordem text default 'recentes')
+-- Anúncios no ar da loja, uma página por vez (vitrine.anuncios_por_pagina por página).
+-- Ordem 'recentes' (padrão): fixados primeiro (só os N do plano), depois os mais novos.
+-- 'menor_preco': do mais barato ao mais caro ("a combinar" no fim).
+-- Os produtos das seções que o plano mostra vêm sempre, mesmo fora da página (na_pagina = false),
+-- para a seção não perder produto por causa da ordem ou do tamanho da loja.
+create or replace function public.anuncios_vitrine(p_vitrine_id uuid, p_ordem text default 'recentes', p_pagina integer default 1)
 returns setof public.vitrine_anuncio
 language sql stable security definer
 set search_path = public, extensions
 as $$
   with v as (
-    select x.id, x.microrregiao_id, r.fixados_max
+    select x.id, x.microrregiao_id, r.fixados_max, r.secoes_max,
+           greatest(coalesce(public.numero_ou_nulo(public.config('vitrine.anuncios_por_pagina', x.microrregiao_id, '120'))::int, 120), 1) as por_pagina
       from public.vitrines_lojas x
       cross join lateral public.recursos_vitrine(x) r
      where x.id = p_vitrine_id and x.tipo = 'loja'
        and (x.status = 'ativa' or x.dono_id = public.usuario_id() or public.e_admin())
   ),
+  secoes_visiveis as (                                  -- mesma regra de vitrine_publica
+    select s.id from public.loja_secoes s join v on v.id = s.vitrine_id
+     where s.ativa
+     order by s.ordem, s.criado_em
+     limit (select v.secoes_max from v)                 -- limit null = sem limite
+  ),
+  da_secao as (
+    select distinct sa.anuncio_id from public.loja_secao_anuncios sa join secoes_visiveis sv on sv.id = sa.secao_id
+  ),
   base as (
-    select a.*, v.fixados_max,
+    select a.*, v.fixados_max, v.por_pagina,
            case when a.fixado_na_loja is not null
                 then row_number() over (partition by a.fixado_na_loja is not null
                                         order by a.fixado_na_loja, coalesce(a.publicado_em, a.criado_em) desc, a.id) end as pos_fixado
@@ -799,20 +845,30 @@ as $$
   efetivo as (
     select b.*, case when b.pos_fixado <= coalesce(b.fixados_max, 2147483647) then b.pos_fixado end as fixado_ok
       from base b
+  ),
+  ordenado as (
+    select e.*, row_number() over (
+             order by case when p_ordem = 'menor_preco' then e.preco_centavos end asc nulls last,
+                      case when coalesce(p_ordem, 'recentes') <> 'menor_preco' then e.fixado_ok end asc nulls last,
+                      coalesce(e.publicado_em, e.criado_em) desc,
+                      e.id) as pos
+      from efetivo e
+  ),
+  pagina as (
+    select o.*, o.pos >  (greatest(coalesce(p_pagina, 1), 1) - 1)::bigint * o.por_pagina
+            and o.pos <= greatest(coalesce(p_pagina, 1), 1)::bigint * o.por_pagina as dentro
+      from ordenado o
   )
   select e.id, e.titulo, e.preco_centavos, e.aceita_troca, e.cidade, e.bairro, e.fotos[1],
          coalesce(e.publicado_em, e.criado_em), coalesce(e.destaque_ate > now(), false), e.fixado_ok::int,
          c.id, c.slug, c.nome, cp.nome,
-         (coalesce(cp.ordem, c.ordem, 999) * 1000 + case when cp.id is null then 0 else coalesce(c.ordem, 999) end)::int
-    from efetivo e
+         (coalesce(cp.ordem, c.ordem, 999) * 1000 + case when cp.id is null then 0 else coalesce(c.ordem, 999) end)::int,
+         e.dentro
+    from pagina e
     left join public.categorias c on c.id = e.categoria_id
     left join public.categorias cp on cp.id = c.pai_id
-   order by case when p_ordem = 'menor_preco' then e.preco_centavos end asc nulls last,
-            case when coalesce(p_ordem, 'recentes') <> 'menor_preco' then e.fixado_ok end asc nulls last,
-            coalesce(e.publicado_em, e.criado_em) desc,
-            e.id
-   limit greatest(coalesce(public.numero_ou_nulo(public.config('vitrine.anuncios_por_pagina',
-                    (select v.microrregiao_id from v), '120'))::int, 120), 1)
+   where e.dentro or e.id in (select d.anuncio_id from da_secao d)
+   order by e.pos
 $$;
 
 -- ---------------------------------------------------------------------
@@ -887,8 +943,8 @@ begin
 end $$;
 
 -- Públicas por natureza (página da loja e checagem de formato)
-revoke all on function public.vitrine_publica(text), public.anuncios_vitrine(uuid, text), public.horarios_validos(jsonb) from public;
-grant execute on function public.vitrine_publica(text), public.anuncios_vitrine(uuid, text), public.horarios_validos(jsonb)
+revoke all on function public.vitrine_publica(text), public.anuncios_vitrine(uuid, text, integer), public.horarios_validos(jsonb) from public;
+grant execute on function public.vitrine_publica(text), public.anuncios_vitrine(uuid, text, integer), public.horarios_validos(jsonb)
   to anon, authenticated, service_role;
 
 -- Só para quem está logado (usadas pelos gatilhos INVOKER e pelas telas do dono)

@@ -324,3 +324,66 @@ select * from recursos_vitrine_id(:'v70');
 \echo '[18b] dono tenta mudar a secao para a loja de outra pessoa: o banco mantem a loja original'
 set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_lj70',false) \g /dev/null
 update loja_secoes set vitrine_id = :'v71' where id = :'s2' returning vitrine_id = :'v70' as mesma_loja;
+
+\echo '[19] moderacao do banner nao se desfaz: a mesma foto nao volta; foto nova tira o aviso'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_ad70',false) \g /dev/null
+select moderar_banner_vitrine(:'v70', 'Foto proibida') like '%/user_lj70/vitrine/banner-2.webp' as devolve_url_para_apagar;
+select set_config('request.jwt.claim.sub','user_lj70',false) \g /dev/null
+\echo '[19a] ERRO ESPERADO: dono grava de novo a foto que a equipe tirou'
+update vitrines_lojas set banner_tipo = 'foto', banner_url = 'https://abc.supabase.co/storage/v1/object/public/anuncios/user_lj70/vitrine/banner-2.webp' where id = :'v70';
+select banner_moderado_motivo, banner_moderado_em is not null as aviso_continua from minha_vitrine_recursos();
+\echo '[19b] dono tenta apagar a marca da foto tirada (forjado): o banco mantem'
+update vitrines_lojas set banner_moderado_url = null where id = :'v70';
+reset role; select banner_moderado_url like '%banner-2.webp' as marca_mantida from vitrines_lojas where id = :'v70';
+set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select v->>'banner_tipo' as banner_publico, v->>'banner_url' is null as sem_foto, v ? 'banner_moderado_url' as vaza_marca from vitrine_publica('loja-setenta') v;
+\echo '[19c] foto nova (outro arquivo): aceita e o aviso sai'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_lj70',false) \g /dev/null
+update vitrines_lojas set banner_tipo = 'foto', banner_url = 'https://abc.supabase.co/storage/v1/object/public/anuncios/user_lj70/vitrine/banner-3.webp' where id = :'v70' returning banner_tipo;
+select banner_moderado_motivo is null as aviso_saiu from minha_vitrine_recursos();
+
+\echo '[20] descricao antiga nao passa sem filtro: dono nao grava a coluna antiga; a pagina so mostra o Sobre nos'
+update vitrines_lojas set sobre = null, descricao = 'Aceitamos pix antecipado, maconha' where id = :'v70';
+reset role; select descricao is null as descricao_nao_gravada from vitrines_lojas where id = :'v70';
+set role anon; select set_config('request.jwt.claim.role','anon',false) \g /dev/null
+select vitrine_publica('loja-setenta')->>'sobre' is null as sobre_vazio;
+reset role; update vitrines_lojas set descricao = 'Texto antigo do sistema' where id = :'v70';
+set role anon; select vitrine_publica('loja-setenta')->>'sobre' is null as descricao_antiga_nao_aparece;
+
+\echo '[21] loja criada direto com cor fora da lista: fica com a 1a cor da lista do painel'
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values ('user_lj79',:'reg','Lia Lojista','5589999997979','Corrente','pj');
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_lj79',false) \g /dev/null
+insert into vitrines_lojas (dono_id, microrregiao_id, slug, nome, cidade, plano, banner_cor)
+values ('user_lj79', :'reg', 'loja-setenta-nove', 'Loja 79', 'Corrente', 'teste', '#123456') returning banner_cor;
+\echo '[21a] ERRO ESPERADO: depois de criada, trocar para cor fora da lista'
+update vitrines_lojas set banner_cor = '#123456' where dono_id = 'user_lj79';
+
+\echo '[22] forma de pagamento que o painel tirou da lista: a loja que ja tinha continua mudando as outras'
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+update vitrines_lojas set formas_pagamento = '{Pix,Crediário}' where id = :'v70';
+update configuracoes set valor = '["Pix", "Dinheiro"]' where chave = 'vitrine.formas_pagamento' and microrregiao_id is null;
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_lj70',false) \g /dev/null
+update vitrines_lojas set formas_pagamento = '{Pix,crediario,Dinheiro}' where id = :'v70' returning formas_pagamento;
+update vitrines_lojas set formas_pagamento = '{Pix}' where id = :'v70' returning formas_pagamento;
+\echo '[22a] ERRO ESPERADO: depois de tirar, nao marca de novo a forma que saiu da lista'
+update vitrines_lojas set formas_pagamento = '{Pix,Crediário}' where id = :'v70';
+reset role; update configuracoes set valor = '["Pix", "Dinheiro", "Cartão de crédito", "Cartão de débito", "Boleto", "Crediário", "Transferência"]'
+ where chave = 'vitrine.formas_pagamento' and microrregiao_id is null;
+
+\echo '[23] paginas de produtos (configuracao = 2 por pagina): produtos das secoes vem sempre (na_pagina falso)'
+update configuracoes set valor = '2' where chave = 'vitrine.anuncios_por_pagina' and microrregiao_id is null;
+set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select titulo, na_pagina from anuncios_vitrine(:'v70', 'menor_preco', 1);
+select titulo, na_pagina from anuncios_vitrine(:'v70', 'menor_preco', 2);
+select count(*) filter (where na_pagina) as na_pagina_3 from anuncios_vitrine(:'v70', 'menor_preco', 3);
+reset role; update configuracoes set valor = '120' where chave = 'vitrine.anuncios_por_pagina' and microrregiao_id is null;
+
+\echo '[24] anuncio que vai para analise sai do topo e libera a vaga (tela e banco contam igual)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_lj70',false) \g /dev/null
+select fixados_total as antes from minha_vitrine_recursos();
+reset role; update anuncios set status = 'em_analise' where id = :'a1';
+select fixado_na_loja is null as saiu_do_topo from anuncios where id = :'a1';
+set role authenticated;
+select fixados_total as depois from minha_vitrine_recursos();
+select fixar_anuncio(:'a2') is not null as vaga_liberada;
