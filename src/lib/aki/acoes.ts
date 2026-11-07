@@ -37,12 +37,17 @@ export async function apagarMinhasConversas(): Promise<RespostaAcao> {
   return { ok: true, mensagem: "Pronto. Suas conversas com o Aki foram apagadas." };
 }
 
-/** "Confirmar pedido no Radar": cria o pedido que o Aki preparou (a pessoa tocou no botão). */
-export async function confirmarPedidoRadar(dados: unknown): Promise<RespostaAcao> {
+/**
+ * "Confirmar pedido no Radar": cria o pedido que o Aki preparou (a pessoa tocou no botão).
+ * Os dados vêm da resposta guardada no banco (não do navegador) e o botão vale uma vez só:
+ * robo_marcar_acao marca a ação como usada antes de criar o pedido e desfaz a marca se falhar.
+ */
+export async function confirmarPedidoRadar(mensagemId: number, indice: number): Promise<RespostaAcao> {
   const { userId } = await auth();
   if (!userId) return SEM_LOGIN;
-  const v = validarPedidoRadar(dados);
-  if (!v.ok) return { ok: false, erro: v.erro };
+  if (!Number.isSafeInteger(mensagemId) || mensagemId <= 0 || !Number.isInteger(indice) || indice < 0 || indice > 9) {
+    return { ok: false, erro: "Pedido não encontrado." };
+  }
 
   const db = await createClient();
   const [{ data: confirmado }, { data: perfil }] = await Promise.all([
@@ -53,6 +58,18 @@ export async function confirmarPedidoRadar(dados: unknown): Promise<RespostaAcao
     return { ok: false, erro: "Confirme seu celular antes de pedir no Radar.", link: { rotulo: "Confirmar meu celular", href: "/minha-conta/dados" } };
   }
   if (!perfil?.microrregiao_id) return { ok: false, erro: "Termine seu cadastro antes de pedir no Radar.", link: { rotulo: "Meus dados", href: "/minha-conta/dados" } };
+
+  const { data: dados, error: erroMarca } = await db.rpc("robo_marcar_acao", { p_mensagem_id: mensagemId, p_indice: indice, p_usada: true });
+  if (erroMarca) {
+    if (erroMarca.code === "23505") return { ok: true, mensagem: "Esse pedido já foi enviado ao Radar." };
+    return { ok: false, erro: traduzirErro(erroMarca).mensagem };
+  }
+  const desfazer = () => db.rpc("robo_marcar_acao", { p_mensagem_id: mensagemId, p_indice: indice, p_usada: false });
+  const v = validarPedidoRadar(dados);
+  if (!v.ok) {
+    await desfazer();
+    return { ok: false, erro: v.erro };
+  }
 
   const { data, error } = await db
     .from("radar_pedidos")
@@ -69,7 +86,10 @@ export async function confirmarPedidoRadar(dados: unknown): Promise<RespostaAcao
     })
     .select("status")
     .single();
-  if (error || !data) return { ok: false, erro: traduzirErro(error).mensagem };
+  if (error || !data) {
+    await desfazer();
+    return { ok: false, erro: traduzirErro(error).mensagem };
+  }
   return {
     ok: true,
     mensagem:

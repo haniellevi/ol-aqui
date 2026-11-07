@@ -25,6 +25,12 @@ export type ContextoFerramentas = {
   regiao: { id: string; slug: string | null; nome: string };
   cidades: string[];
   cidadePerfil: string | null;
+  /**
+   * Rascunhos que o Aki pode alterar nesta conversa: o que a pessoa abriu (passo Fotos), os que o
+   * próprio Aki criou antes nesta conversa e os que criar agora. Outro id (por exemplo, vindo de texto
+   * de anúncio) não é aceito: assim nada de fora reescreve um rascunho que a pessoa está fazendo.
+   */
+  rascunhosPermitidos: Set<string>;
   /** Cartões e botões que a tela mostra embaixo da resposta. */
   saida: { cartoes: CartaoAki[]; acoes: AcaoAki[]; usadas: string[] };
   /** Conta uma busca sem resultado (feita pelo servidor, sem dados pessoais). */
@@ -44,6 +50,7 @@ const ROTULOS: Record<string, string> = {
   meus_anuncios: "Vendo seus anúncios…",
   consultar_planos: "Vendo os planos e preços…",
   gerar_link_destaque: "Preparando o destaque…",
+  pedidos_radar_da_regiao: "Vendo os pedidos do Radar…",
 };
 export const rotuloFerramenta = (nome: string) => ROTULOS[nome] ?? "Pensando…";
 
@@ -144,6 +151,18 @@ export const FERRAMENTAS: FerramentaIA[] = [
     parametros: { type: "object", properties: {}, additionalProperties: false },
   },
   {
+    nome: "pedidos_radar_da_regiao",
+    descricao:
+      "Lista os pedidos abertos no Radar da região (o que os compradores estão procurando), para quem vende ver se combina com o estoque. Detalhes e nome do comprador só aparecem para quem tem plano com Radar; contato nunca.",
+    parametros: {
+      type: "object",
+      properties: {
+        texto: { type: "string", description: "Palavra para filtrar os pedidos (ex.: 'moto', 'geladeira'), opcional." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     nome: "gerar_link_destaque",
     descricao: "Mostra o botão para a pessoa destacar um anúncio dela que está no ar. Não cobra nada: a pessoa paga na tela de destaque.",
     parametros: {
@@ -161,9 +180,15 @@ const ok = (dados: Record<string, unknown>): Resultado => ({ conteudo: JSON.stri
 const falha = (mensagem: string): Resultado => ({ conteudo: JSON.stringify({ erro: mensagem }), erro: true });
 const reais = (c: number | null | undefined) => (c == null ? null : precoTexto(c));
 
+const chaveAcao = (a: AcaoAki) => (a.tipo === "link" ? a.href : a.tipo === "rascunho" ? `rascunho:${a.id}` : `radar:${a.dados.titulo}`);
+
 function addAcao(ctx: ContextoFerramentas, acao: AcaoAki) {
-  const chave = acao.tipo === "link" ? acao.href : `radar:${acao.dados.titulo}`;
-  if (ctx.saida.acoes.some((a) => (a.tipo === "link" ? a.href : `radar:${a.dados.titulo}`) === chave)) return;
+  const chave = chaveAcao(acao);
+  const i = ctx.saida.acoes.findIndex((a) => chaveAcao(a) === chave);
+  if (i >= 0) {
+    if (acao.tipo === "rascunho") ctx.saida.acoes[i] = acao; // prévia do rascunho sempre com os dados mais novos
+    return;
+  }
   if (ctx.saida.acoes.length < 4) ctx.saida.acoes.push(acao);
 }
 
@@ -207,6 +232,8 @@ export async function executarFerramenta(nome: string, args: Record<string, unkn
         return await planos(ctx);
       case "gerar_link_destaque":
         return await destaque(args, ctx);
+      case "pedidos_radar_da_regiao":
+        return await pedidosRadar(args, ctx);
       default:
         return falha("Essa função não existe.");
     }
@@ -333,6 +360,9 @@ async function salvarRascunho(args: Record<string, unknown>, ctx: ContextoFerram
   let categoriaAtual: string | null = null;
   if (id !== undefined && id !== null && id !== "") {
     if (!ehId(id)) return falha("rascunho_id inválido.");
+    if (!ctx.rascunhosPermitidos.has(id)) {
+      return falha("Esse rascunho não foi aberto nesta conversa. Não mude: crie um rascunho novo (sem rascunho_id) ou peça para a pessoa abrir o Aki pelo passo Fotos do anúncio.");
+    }
     const a = await meuAnuncio(id);
     if (!a) return falha("Rascunho não encontrado.");
     if (a.status !== "rascunho") {
@@ -416,6 +446,7 @@ async function salvarRascunho(args: Record<string, unknown>, ctx: ContextoFerram
       .single();
     if (error || !data) return falha(traduzirErro(error).mensagem);
     rascunhoId = String(data.id);
+    ctx.rascunhosPermitidos.add(rascunhoId);
   }
 
   const atual = await meuAnuncio(rascunhoId);
@@ -426,8 +457,17 @@ async function salvarRascunho(args: Record<string, unknown>, ctx: ContextoFerram
   if (atual && atual.preco_centavos == null && args.a_combinar !== true) falta.push("preço (ou a combinar)");
   if (!atual?.cidade) falta.push("cidade");
 
-  addAcao(ctx, { tipo: "link", rotulo: "Colocar as fotos", href: urlPasso("fotos", rascunhoId), icone: "vender" });
-  addAcao(ctx, { tipo: "link", rotulo: "Revisar e publicar rascunho", href: urlPasso("revisar", rascunhoId), icone: "revisar" });
+  // card pronto: a pessoa vê foto, título e preço e toca em "Revisar e publicar" (o Aki nunca publica)
+  addAcao(ctx, {
+    tipo: "rascunho",
+    id: rascunhoId,
+    titulo: atual?.titulo ?? null,
+    preco_centavos: atual?.preco_centavos ?? null,
+    capa: atual?.fotos?.[0] ?? null,
+    fotos: atual?.fotos?.length ?? 0,
+    href: urlPasso("revisar", rascunhoId),
+  });
+  if (!atual?.fotos?.length) addAcao(ctx, { tipo: "link", rotulo: "Colocar as fotos", href: urlPasso("fotos", rascunhoId), icone: "vender" });
   return ok({ rascunho_id: rascunhoId, salvo: true, publicado: false, falta, avisos });
 }
 
@@ -460,6 +500,63 @@ async function prepararRadar(args: Record<string, unknown>, ctx: ContextoFerrame
   }
   addAcao(ctx, { tipo: "pedido_radar", rotulo: "Confirmar pedido no Radar", dados: v.dados });
   return ok({ preparado: true, criado: false, aviso: 'O pedido só vai para o Radar quando a pessoa tocar em "Confirmar pedido no Radar".', pedido: v.dados });
+}
+
+/* -------------------------- Pedidos do Radar -------------------------- */
+
+type LinhaRadar = {
+  id: string;
+  categoria: string;
+  titulo: string;
+  detalhes: string | null;
+  preco_max_centavos: number | null;
+  cidade: string | null;
+  urgencia: string;
+  total_propostas: number;
+  max_propostas: number | null;
+  criado_em: string;
+  comprador_primeiro_nome: string | null;
+  ja_propus: boolean;
+};
+
+async function pedidosRadar(args: Record<string, unknown>, ctx: ContextoFerramentas): Promise<Resultado> {
+  if (!ctx.regiao.id) return falha("A pessoa precisa terminar o cadastro (região) para ver o Radar.");
+  // radar_feed() roda com a sessão da pessoa: detalhes e nome só para quem tem plano com Radar; contato nunca
+  const [{ data, error }, { data: acesso }] = await Promise.all([
+    ctx.db
+      .rpc("radar_feed")
+      .eq("microrregiao_id", ctx.regiao.id)
+      .select("id, categoria, titulo, detalhes, preco_max_centavos, cidade, urgencia, total_propostas, max_propostas, criado_em, comprador_primeiro_nome, ja_propus")
+      .order("criado_em", { ascending: false })
+      .limit(40),
+    ctx.db.rpc("tem_plano_pago"),
+  ]);
+  if (error) return falha("Não consegui ler o Radar agora.");
+  const termo = texto(args.texto, 60);
+  const t = termo ? termo.toLowerCase() : null;
+  const lista = ((data ?? []) as LinhaRadar[])
+    .filter((p) => !t || p.titulo.toLowerCase().includes(t) || (p.detalhes ?? "").toLowerCase().includes(t))
+    .slice(0, 10);
+  addAcao(ctx, { tipo: "link", rotulo: "Abrir o Radar", href: "/radar", icone: "radar" });
+  if (acesso !== true) addAcao(ctx, { tipo: "link", rotulo: "Ver planos", href: LINK_PLANOS, icone: "planos" });
+  return ok({
+    total: lista.length,
+    tem_plano_com_radar: acesso === true,
+    aviso:
+      acesso === true
+        ? "Para mandar proposta a pessoa toca em Abrir o Radar."
+        : "Sem plano com Radar a pessoa vê só o título; para ver detalhes e mandar proposta precisa de um plano (consultar_planos).",
+    [CHAVE_DADOS]: lista.map((p) => ({
+      titulo: p.titulo,
+      detalhes: p.detalhes,
+      preco_maximo: p.preco_max_centavos == null ? null : reais(p.preco_max_centavos),
+      cidade: p.cidade,
+      urgencia: p.urgencia,
+      propostas: `${p.total_propostas}${p.max_propostas ? ` de ${p.max_propostas}` : ""}`,
+      ja_mandei_proposta: p.ja_propus,
+      comprador: p.comprador_primeiro_nome,
+    })),
+  });
 }
 
 /* ---------------------------- Meus anúncios --------------------------- */

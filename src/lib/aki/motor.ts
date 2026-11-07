@@ -141,6 +141,19 @@ async function mensagensDaConversa(db: SupabaseClient, conversaId: string, limit
   );
 }
 
+/** Rascunhos que o Aki guardou numa resposta (prévia do rascunho ou link com ?rascunho=). */
+function rascunhosDaResposta(c: ConteudoAssistente): string[] {
+  const ids: string[] = [];
+  for (const a of c.acoes ?? []) {
+    if (a.tipo === "rascunho" && ehId(a.id)) ids.push(a.id);
+    else if (a.tipo === "link" && a.href.includes("rascunho=")) {
+      const id = new URL(a.href, "https://x").searchParams.get("rascunho");
+      if (id && ehId(id)) ids.push(id);
+    }
+  }
+  return ids;
+}
+
 /** Histórico para a IA: só texto (fotos antigas não voltam) e um resumo do que foi mostrado. */
 function historicoParaIA(mensagens: MensagemAki[]): MensagemIA[] {
   const saida: MensagemIA[] = [];
@@ -152,11 +165,8 @@ function historicoParaIA(mensagens: MensagemAki[]): MensagemIA[] {
       const c = m.conteudo;
       const notas: string[] = [];
       if (c.cartoes?.length) notas.push(`anúncios mostrados (ids): ${c.cartoes.map((x) => x.id).join(", ")}`);
-      const rascunho = c.acoes?.find((a) => a.tipo === "link" && a.href.includes("rascunho="));
-      if (rascunho && rascunho.tipo === "link") {
-        const id = new URL(rascunho.href, "https://x").searchParams.get("rascunho");
-        if (id) notas.push(`rascunho_id em andamento: ${id}`);
-      }
+      const [rascunho] = rascunhosDaResposta(c);
+      if (rascunho) notas.push(`rascunho_id em andamento: ${rascunho}`);
       const t = (c.texto ?? "").slice(0, 4000) + (notas.length ? `\n[${notas.join("; ")}]` : "");
       saida.push({ papel: "assistente", partes: [{ tipo: "texto", texto: t || "…" }] });
     }
@@ -248,6 +258,10 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
     regiao,
     cidades,
     cidadePerfil: perfil?.cidade ?? null,
+    rascunhosPermitidos: new Set([
+      ...(rascunhoAberto ? [rascunhoAberto] : []),
+      ...historico.flatMap((m) => (m.papel === "assistente" ? rascunhosDaResposta(m.conteudo) : [])),
+    ]),
     saida,
     registrarBuscaVazia: async (termo, categoria) => {
       await admin.rpc("robo_registrar_busca_vazia", { p_termo: termo, p_microrregiao: regiao.id || null, p_categoria: categoria });

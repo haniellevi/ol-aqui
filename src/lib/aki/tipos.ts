@@ -58,7 +58,10 @@ export type DadosPedidoRadar = {
 /** Botão que aparece embaixo da resposta. Nenhum deles publica, paga ou apaga sozinho. */
 export type AcaoAki =
   | { tipo: "link"; rotulo: string; href: string; icone?: "revisar" | "planos" | "destacar" | "radar" | "vender" | "celular" }
-  | { tipo: "pedido_radar"; rotulo: string; dados: DadosPedidoRadar };
+  /** usada = a pessoa já confirmou (marcado no banco por robo_marcar_acao; o botão não volta). */
+  | { tipo: "pedido_radar"; rotulo: string; dados: DadosPedidoRadar; usada?: boolean }
+  /** Prévia do rascunho que o Aki guardou (foto, título, preço) com o botão para revisar e publicar. */
+  | { tipo: "rascunho"; id: string; titulo: string | null; preco_centavos: number | null; capa: string | null; fotos: number; href: string };
 
 export type ConteudoUsuario = { texto: string; foto?: boolean };
 export type ConteudoAssistente = {

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { BadgeCheck, CircleCheck, ClipboardCheck, Loader2, Phone, Radar, Sparkles, Store, ThumbsDown, ThumbsUp } from "lucide-react";
+import { BadgeCheck, CircleCheck, ClipboardCheck, ImageOff, Loader2, Phone, Radar, Sparkles, Store, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { CardAnuncio } from "@/components/anuncio/card-anuncio";
 import { avaliarResposta, confirmarPedidoRadar } from "@/lib/aki/acoes";
+import { preco } from "@/lib/formato";
 import type { AcaoAki, MensagemAki } from "@/lib/aki/tipos";
 import { MascoteAki } from "./mascote";
 
@@ -19,9 +20,19 @@ const ICONES = {
   celular: <Phone />,
 } as const;
 
-function BotaoRadar({ acao }: { acao: Extract<AcaoAki, { tipo: "pedido_radar" }> }) {
+function BotaoRadar({
+  acao,
+  mensagemId,
+  indice,
+}: {
+  acao: Extract<AcaoAki, { tipo: "pedido_radar" }>;
+  mensagemId: number | null;
+  indice: number;
+}) {
   const [enviando, setEnviando] = useState(false);
-  const [resultado, setResultado] = useState<{ ok: boolean; texto: string; link?: { rotulo: string; href: string } } | null>(null);
+  const [resultado, setResultado] = useState<{ ok: boolean; texto: string; link?: { rotulo: string; href: string } } | null>(
+    acao.usada ? { ok: true, texto: "Pedido enviado ao Radar." } : null,
+  );
   if (resultado?.ok) {
     return (
       <p role="status" className="flex items-start gap-2 rounded-card bg-sucesso-fundo px-3 py-2 text-sm text-verde-escuro">
@@ -41,11 +52,12 @@ function BotaoRadar({ acao }: { acao: Extract<AcaoAki, { tipo: "pedido_radar" }>
         variante="secundario"
         larguraTotal
         icone={<Radar />}
-        carregando={enviando}
-        textoCarregando="Enviando o pedido…"
+        carregando={enviando || !mensagemId}
+        textoCarregando={mensagemId ? "Enviando o pedido…" : "Aguarde…"}
         onClick={async () => {
+          if (!mensagemId || enviando) return;
           setEnviando(true);
-          const r = await confirmarPedidoRadar(acao.dados).catch(() => null);
+          const r = await confirmarPedidoRadar(mensagemId, indice).catch(() => null);
           setEnviando(false);
           if (!r) setResultado({ ok: false, texto: "Sem conexão agora. Tente de novo." });
           else if (r.ok) setResultado({ ok: true, texto: r.mensagem });
@@ -64,6 +76,37 @@ function BotaoRadar({ acao }: { acao: Extract<AcaoAki, { tipo: "pedido_radar" }>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Card pronto do rascunho que o Aki guardou: a pessoa confere e toca em "Revisar e publicar". */
+function CardRascunho({ acao }: { acao: Extract<AcaoAki, { tipo: "rascunho" }> }) {
+  return (
+    <div className="overflow-hidden rounded-card border border-borda bg-cartao">
+      <div className="flex gap-3 p-2.5">
+        <div className="relative size-20 shrink-0 overflow-hidden rounded-campo bg-borda">
+          {acao.capa ? (
+            // eslint-disable-next-line @next/next/no-img-element -- foto do rascunho no Storage (img simples, leve no 3G)
+            <img src={acao.capa} alt={acao.titulo ? `Foto de ${acao.titulo}` : "Foto do anúncio"} className="absolute inset-0 size-full object-cover" />
+          ) : (
+            <span className="absolute inset-0 grid place-items-center text-texto-suave" aria-label="Sem foto">
+              <ImageOff className="size-6" aria-hidden />
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-semibold text-texto-suave">Rascunho guardado · ainda não publicado</p>
+          <p className="text-lg font-bold leading-6">{preco(acao.preco_centavos)}</p>
+          <p className="line-clamp-2 text-[15px] leading-5">{acao.titulo ?? "Sem título ainda"}</p>
+          <p className="text-[13px] text-texto-suave">{acao.fotos === 1 ? "1 foto" : `${acao.fotos} fotos`}</p>
+        </div>
+      </div>
+      <div className="border-t border-borda p-2.5">
+        <Botao href={acao.href} variante="secundario" larguraTotal icone={<ClipboardCheck />}>
+          Revisar e publicar
+        </Botao>
+      </div>
     </div>
   );
 }
@@ -176,8 +219,10 @@ export function RespostaAki({
                 <Botao key={`${a.href}${i}`} href={a.href} variante="secundario" larguraTotal icone={a.icone ? ICONES[a.icone] : undefined}>
                   {a.rotulo}
                 </Botao>
+              ) : a.tipo === "rascunho" ? (
+                <CardRascunho key={`rascunho${a.id}`} acao={a} />
               ) : (
-                <BotaoRadar key={`radar${i}`} acao={a} />
+                <BotaoRadar key={`radar${i}`} acao={a} mensagemId={mensagem.id} indice={i} />
               ),
             )}
           </div>
