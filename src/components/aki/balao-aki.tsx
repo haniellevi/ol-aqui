@@ -5,18 +5,44 @@ import { usePathname } from "next/navigation";
 import { Camera, Info, Loader2, SendHorizontal, Trash2, X } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Chip } from "@/components/ui/chip";
-import { reduzirFoto } from "@/lib/fotos";
-import { apagarMinhasConversas } from "@/lib/aki/acoes";
+import { enviarFoto, reduzirFoto } from "@/lib/fotos";
+import { apagarFoto, criarUrlEnvioFoto } from "@/lib/dados/fotos";
+import { adicionarFotoRascunho, apagarMinhasConversas } from "@/lib/aki/acoes";
 import { DESCANSANDO, mensagemBloqueio } from "@/lib/aki/textos";
 import type { EstadoAki, EventoAki, MensagemAki, PedidoAki } from "@/lib/aki/tipos";
 import { MascoteAki } from "./mascote";
-import { EVENTO_ABRIR_AKI, EVENTO_ESTADO_AKI, type PedidoAbrirAki } from "./abrir";
+import {
+  EVENTO_ABRIR_AKI,
+  EVENTO_DICA_AKI,
+  EVENTO_ESTADO_AKI,
+  EVENTO_FOTO_AKI,
+  lerDicaPendente,
+  mostrarDicaAki,
+  type DicaAki,
+  type FotoGuardadaAki,
+  type PedidoAbrirAki,
+} from "./abrir";
 import { RespostaAki } from "./resposta-aki";
 
 // Balão flutuante do Aki + folha de conversa (DESIGN-SYSTEM.md: folha rounded-t-folha, shadow-2,
 // 48px de toque, texto mínimo 13px, campo 16px, um botão laranja por tela = "Enviar").
 
-type FotoPronta = { base64: string; tipo: "image/webp" | "image/jpeg"; previa: string };
+type FotoPronta = { base64: string; tipo: "image/webp" | "image/jpeg"; previa: string; blob: Blob; formato: "webp" | "jpg" };
+
+/** Envia a foto ao Storage e põe no rascunho. Devolve null se deu certo, ou a frase do erro. */
+async function guardarFotoNoAnuncio(foto: FotoPronta, anuncioId: string): Promise<string | null> {
+  const envio = await criarUrlEnvioFoto(anuncioId, foto.formato).catch(() => null);
+  if (!envio) return "Sem conexão agora. A foto não foi guardada no anúncio.";
+  if (!envio.ok) return envio.erro.mensagem;
+  if (!(await enviarFoto(foto.blob, envio.dados.urlEnvio))) return "A foto não foi guardada no anúncio. Coloque pelo passo Fotos.";
+  const r = await adicionarFotoRascunho(anuncioId, envio.dados.urlPublica).catch(() => null);
+  if (!r?.ok) {
+    void apagarFoto(envio.dados.urlPublica).catch(() => undefined);
+    return r && !r.ok ? r.erro : "A foto não foi guardada no anúncio. Coloque pelo passo Fotos.";
+  }
+  window.dispatchEvent(new CustomEvent<FotoGuardadaAki>(EVENTO_FOTO_AKI, { detail: { anuncioId, url: envio.dados.urlPublica } }));
+  return null;
+}
 
 const API = "/api/aki";
 
@@ -45,6 +71,15 @@ export function BalaoAki() {
   const [rascunhoId, setRascunhoId] = useState<string | null>(null);
   const [confirmarApagar, setConfirmarApagar] = useState(false);
   const [apagando, setApagando] = useState(false);
+  const [usarNoAnuncio, setUsarNoAnuncio] = useState(false);
+  const [dica, setDica] = useState<DicaAki | null>(null);
+  // mudou de tela (card, "Ver planos", "Revisar e publicar"...): a folha fecha para a pessoa ver a tela nova
+  const [caminhoAtual, setCaminhoAtual] = useState(caminho);
+  if (caminhoAtual !== caminho) {
+    setCaminhoAtual(caminho);
+    setAberto(false);
+    setConfirmarApagar(false);
+  }
   const inputFoto = useRef<HTMLInputElement>(null);
   const lista = useRef<HTMLDivElement>(null);
   const caixa = useRef<HTMLTextAreaElement>(null);
@@ -89,15 +124,21 @@ export function BalaoAki() {
     }
   }, []);
 
+  const podeAgora = !!estado?.pode;
   const abrir = useCallback(
     (pedido?: PedidoAbrirAki) => {
       setAberto(true);
+      setDica(null);
+      mostrarDicaAki(null);
       if (pedido?.texto) setTexto(pedido.texto);
       if (pedido?.rascunhoId) setRascunhoId(pedido.rascunhoId);
-      if (pedido?.foto) inputFoto.current?.click(); // dentro do toque da pessoa
+      // cadastro pela foto: a foto vai para o anúncio também (a pessoa pode desmarcar antes de enviar)
+      if (pedido?.foto) setUsarNoAnuncio(!!pedido.rascunhoId);
+      // seletor de foto só se o Aki pode responder; senão a folha abre mostrando o motivo
+      if (pedido?.foto && podeAgora) inputFoto.current?.click(); // dentro do toque da pessoa
       void carregarCompleto();
     },
-    [carregarCompleto],
+    [carregarCompleto, podeAgora],
   );
 
   useEffect(() => {
@@ -105,6 +146,14 @@ export function BalaoAki() {
     window.addEventListener(EVENTO_ABRIR_AKI, ouvir);
     return () => window.removeEventListener(EVENTO_ABRIR_AKI, ouvir);
   }, [abrir]);
+
+  // convite ao lado do balão (busca sem resultado); a tela pode ter pedido antes de o balão ouvir
+  useEffect(() => {
+    setDica(lerDicaPendente());
+    const ouvir = (e: Event) => setDica((e as CustomEvent<DicaAki | null>).detail);
+    window.addEventListener(EVENTO_DICA_AKI, ouvir);
+    return () => window.removeEventListener(EVENTO_DICA_AKI, ouvir);
+  }, []);
 
   // folha aberta: Esc fecha e a página de trás não rola
   useEffect(() => {
@@ -130,7 +179,13 @@ export function BalaoAki() {
     try {
       const reduzida = await reduzirFoto(arquivo, { ladoMaximo: estado?.fotoLadoMaximo ?? 1024, qualidade: 0.75 });
       const base64 = await paraBase64(reduzida.blob);
-      setFoto({ base64, tipo: reduzida.formato === "webp" ? "image/webp" : "image/jpeg", previa: URL.createObjectURL(reduzida.blob) });
+      setFoto({
+        base64,
+        tipo: reduzida.formato === "webp" ? "image/webp" : "image/jpeg",
+        previa: URL.createObjectURL(reduzida.blob),
+        blob: reduzida.blob,
+        formato: reduzida.formato,
+      });
     } catch (e) {
       setAviso(e instanceof Error ? e.message : "Essa foto não abriu. Tente outra.");
     } finally {
@@ -142,6 +197,11 @@ export function BalaoAki() {
   function tirarFoto() {
     if (foto) URL.revokeObjectURL(foto.previa);
     setFoto(null);
+  }
+
+  function fecharDica() {
+    setDica(null);
+    mostrarDicaAki(null);
   }
 
   async function enviar(textoEnviar?: string) {
@@ -156,7 +216,17 @@ export function BalaoAki() {
     setMensagens((m) => [...m, minha, resposta]);
     setTexto("");
     const corpo: PedidoAki = { texto: t, conversaId, foto: foto ? { base64: foto.base64, tipo: foto.tipo } : null, rascunhoId };
+    const fotoAnuncio = foto && usarNoAnuncio && rascunhoId ? foto : null;
     tirarFoto();
+
+    // primeiro guarda a foto no rascunho (a pessoa marcou "Usar esta foto no anúncio"):
+    // assim o card do rascunho que o Aki mostra já vem com ela
+    if (fotoAnuncio && rascunhoId) {
+      setPensando("Guardando a foto no anúncio…");
+      const falhou = await guardarFotoNoAnuncio(fotoAnuncio, rascunhoId);
+      if (falhou) setAviso(falhou);
+      setPensando("Pensando…");
+    }
 
     const atualizar = (f: (r: Extract<MensagemAki, { papel: "assistente" }>) => Extract<MensagemAki, { papel: "assistente" }>) =>
       setMensagens((m) => {
@@ -262,6 +332,10 @@ export function BalaoAki() {
   const posicao = elevado
     ? "bottom-[calc(10rem+env(safe-area-inset-bottom))] md:bottom-28"
     : "bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6";
+  // o convite fica logo acima do balão (balão de 56px + 8px)
+  const posicaoDica = elevado
+    ? "bottom-[calc(14rem+env(safe-area-inset-bottom))] md:bottom-44"
+    : "bottom-[calc(9.5rem+env(safe-area-inset-bottom))] md:bottom-24";
 
   const podeEscrever = estado.logado && estado.pode;
   const motivoTexto = estado.logado && !estado.pode ? mensagemBloqueio(estado.motivo) : null;
@@ -278,6 +352,24 @@ export function BalaoAki() {
         aria-hidden
         tabIndex={-1}
       />
+
+      {!aberto && dica && (
+        <div
+          role="status"
+          className={`fixed right-4 z-30 flex max-w-[calc(100vw-2rem)] items-center rounded-card bg-cartao shadow-2 md:right-6 ${posicaoDica}`}
+        >
+          <button
+            type="button"
+            onClick={() => abrir(dica.pedido)}
+            className="min-h-12 flex-1 py-2 pl-4 pr-2 text-left text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+          >
+            {dica.texto}
+          </button>
+          <button type="button" onClick={fecharDica} aria-label="Fechar o convite do Aki" className="grid size-12 shrink-0 place-items-center text-texto-suave">
+            <X className="size-5" aria-hidden />
+          </button>
+        </div>
+      )}
 
       {!aberto && (
         <button
@@ -312,7 +404,9 @@ export function BalaoAki() {
                 <button
                   type="button"
                   onClick={() => setConfirmarApagar(true)}
-                  className="flex h-12 items-center gap-1 px-3 text-[13px] font-semibold text-perigo"
+                  disabled={enviando}
+                  title={enviando ? "Espere o Aki terminar de responder" : undefined}
+                  className="flex h-12 items-center gap-1 px-3 text-[13px] font-semibold text-perigo disabled:opacity-50"
                 >
                   <Trash2 className="size-4" aria-hidden />
                   Apagar conversa
@@ -334,7 +428,7 @@ export function BalaoAki() {
               <div role="alertdialog" aria-label="Apagar conversa" className="space-y-2 bg-perigo-fundo px-4 py-3">
                 <p className="text-sm text-perigo">Apagar toda a sua conversa com o Aki? Não dá para desfazer.</p>
                 <div className="flex gap-2">
-                  <Botao variante="perigo" carregando={apagando} textoCarregando="Apagando…" onClick={() => void apagarConversa()}>
+                  <Botao variante="perigo" carregando={apagando} textoCarregando="Apagando…" disabled={enviando} onClick={() => void apagarConversa()}>
                     Apagar
                   </Botao>
                   <Botao variante="secundario" onClick={() => setConfirmarApagar(false)} disabled={apagando}>
@@ -422,10 +516,21 @@ export function BalaoAki() {
                 <div className="mb-2 flex items-center gap-2">
                   {/* eslint-disable-next-line @next/next/no-img-element -- prévia local da foto (objectURL) */}
                   <img src={foto.previa} alt="Foto escolhida" className="size-16 rounded-campo object-cover" />
-                  <span className="flex-1 text-sm text-texto-suave">A foto vai junto com a mensagem e não fica guardada.</span>
+                  <span className="flex-1 text-sm text-texto-suave">
+                    {usarNoAnuncio && rascunhoId
+                      ? "A foto vai para o Aki e fica no seu anúncio."
+                      : "A foto vai junto com a mensagem e não fica guardada."}
+                  </span>
                   <button type="button" onClick={tirarFoto} aria-label="Tirar a foto" className="grid size-12 place-items-center text-perigo">
                     <X className="size-5" aria-hidden />
                   </button>
+                </div>
+              )}
+              {foto && rascunhoId && (
+                <div className="mb-2">
+                  <Chip ativo={usarNoAnuncio} onClick={() => setUsarNoAnuncio((v) => !v)}>
+                    Usar esta foto no anúncio
+                  </Chip>
                 </div>
               )}
               {estado.logado ? (

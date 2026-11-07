@@ -5,7 +5,9 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { traduzirErro } from "@/lib/erros";
-import { validarPedidoRadar } from "@/lib/aki/validar";
+import { validarPedidoRadar, ehId } from "@/lib/aki/validar";
+import { meuAnuncio } from "@/lib/dados/anuncios";
+import { salvarFotos } from "@/app/(conta)/anunciar/actions";
 
 export type RespostaAcao = { ok: true; mensagem: string } | { ok: false; erro: string; link?: { rotulo: string; href: string } };
 
@@ -24,6 +26,23 @@ export async function avaliarResposta(mensagemId: number, nota: -1 | 0 | 1, come
   });
   if (error) return { ok: false, erro: traduzirErro(error).mensagem };
   return { ok: true, mensagem: nota === 0 ? "Avaliação tirada." : "Obrigado! Isso ajuda o Aki a melhorar." };
+}
+
+/**
+ * "Usar esta foto no anúncio": põe no rascunho a foto que a pessoa mandou ao Aki (já enviada ao
+ * Storage pelo navegador com criarUrlEnvioFoto). Só rascunho dela; salvarFotos confere o endereço.
+ */
+export async function adicionarFotoRascunho(anuncioId: string, url: string): Promise<RespostaAcao> {
+  const { userId } = await auth();
+  if (!userId) return SEM_LOGIN;
+  if (!ehId(anuncioId) || typeof url !== "string") return { ok: false, erro: "Anúncio não encontrado." };
+  const a = await meuAnuncio(anuncioId);
+  if (!a || a.status !== "rascunho") return { ok: false, erro: "Anúncio não encontrado." };
+  const fotos = a.fotos ?? [];
+  if (fotos.includes(url)) return { ok: true, mensagem: "A foto já está no anúncio." };
+  const r = await salvarFotos(anuncioId, [...fotos, url]);
+  if (!r.ok) return { ok: false, erro: r.erro.mensagem };
+  return { ok: true, mensagem: "Foto guardada no anúncio." };
 }
 
 /** LGPD: apaga todas as conversas da pessoa com o Aki (o uso sem texto continua contando no limite). */
