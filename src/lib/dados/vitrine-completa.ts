@@ -42,11 +42,15 @@ export const vitrinePublica = cache(async (slug: string): Promise<VitrinePublica
   }, null);
 });
 
-/** Anúncios no ar da loja: fixados (do plano) primeiro e mais novos, ou do menor preço. */
-export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitrine = "recentes"): Promise<AnuncioVitrine[]> =>
+/**
+ * Anúncios no ar da loja, uma página por vez (tamanho da página no painel: vitrine.anuncios_por_pagina):
+ * fixados (do plano) primeiro e mais novos, ou do menor preço. Os produtos das seções vêm sempre
+ * (na_pagina = false quando estão fora desta página).
+ */
+export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitrine = "recentes", pagina = 1): Promise<AnuncioVitrine[]> =>
   seguro(async () => {
     const db = await createClient();
-    const { data, error } = await db.rpc("anuncios_vitrine", { p_vitrine_id: vitrineId, p_ordem: ordem });
+    const { data, error } = await db.rpc("anuncios_vitrine", { p_vitrine_id: vitrineId, p_ordem: ordem, p_pagina: pagina });
     return error ? [] : ((data ?? []) as AnuncioVitrine[]);
   }, []),
 );
@@ -177,9 +181,32 @@ export const planosPublicos = cache(async (): Promise<PlanoPublico[]> =>
   }, []),
 );
 
+/**
+ * Configuração marcada como pública no painel, lida pela tabela (o visitante sem login não usa a
+ * função config(), só lê as linhas públicas). Região primeiro, depois a global; senão o padrão.
+ */
+async function lerConfigPublica<T>(chave: string, microrregiaoId: string | null, padrao: T): Promise<T | unknown> {
+  return seguro(async () => {
+    const db = await createClient();
+    const { data, error } = await db.from("configuracoes").select("valor, microrregiao_id").eq("chave", chave);
+    if (error || !data) return padrao;
+    const linhas = data as { valor: unknown; microrregiao_id: string | null }[];
+    const daRegiao = microrregiaoId ? linhas.find((l) => l.microrregiao_id === microrregiaoId) : undefined;
+    const global = linhas.find((l) => l.microrregiao_id === null);
+    return (daRegiao ?? global)?.valor ?? padrao;
+  }, padrao);
+}
+
+/** Produtos por página na vitrine (painel → configurações: vitrine.anuncios_por_pagina). Mesmo padrão do banco. */
+export async function anunciosPorPaginaVitrine(microrregiaoId: string | null): Promise<number> {
+  const v = await lerConfigPublica<unknown>("vitrine.anuncios_por_pagina", microrregiaoId, 120);
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isFinite(n) ? Math.max(Math.trunc(n), 1) : 120;
+}
+
 /** Perguntas da página de planos: cada linha da configuração é "Pergunta | Resposta". */
 export async function perguntasDosPlanos(): Promise<PerguntaFrequente[]> {
-  const v = await lerConfig<unknown>("planos.perguntas_frequentes", null, []);
+  const v = await lerConfigPublica<unknown>("planos.perguntas_frequentes", null, []);
   if (!Array.isArray(v)) return [];
   return v
     .filter((x): x is string => typeof x === "string")

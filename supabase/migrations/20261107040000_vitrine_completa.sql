@@ -26,7 +26,7 @@ insert into public.configuracoes (chave, valor, grupo, publico, descricao) value
    '["Pix", "Dinheiro", "Cartão de crédito", "Cartão de débito", "Boleto", "Crediário", "Transferência"]',
    'geral', true, 'Formas de pagamento que a loja pode marcar na vitrine (uma por linha)'),
   ('vitrine.anuncios_por_secao_max', '48',  'geral', true,  'Máximo de produtos em cada seção própria da vitrine'),
-  ('vitrine.anuncios_por_pagina',    '120', 'geral', false, 'Máximo de produtos mostrados na página da loja'),
+  ('vitrine.anuncios_por_pagina',    '120', 'geral', true,  'Produtos por página na vitrine da loja (o resto aparece em "Ver mais produtos")'),
   ('planos.perguntas_frequentes',
    '["Posso começar sem pagar? | Sim. Loja nova ganha um período de teste grátis. Pessoa física anuncia algumas coisas sem pagar.", "Como eu pago? | Por Pix ou cartão, aqui no OLAKI. O plano começa assim que o pagamento é confirmado.", "E se eu passar do limite de anúncios? | Você escolhe: pausa um anúncio, troca de plano ou paga um anúncio avulso.", "O que é o Radar de Negócios? | É onde os compradores dizem o que procuram. Nos planos com Radar, sua loja vê os pedidos e manda proposta.", "E se eu mudar para um plano menor? | Nada é apagado. O que não cabe no plano fica escondido e volta quando você subir de plano."]',
    'planos', true, 'Perguntas da página de planos. Uma por linha, assim: Pergunta | Resposta')
@@ -225,19 +225,15 @@ declare
   palavra text;
 begin
   -- Moderação do banner: só a equipe grava.
-  -- A descrição antiga virou o "Sobre nós" (passa pelo filtro de palavras abaixo): o dono não grava
-  -- mais a coluna antiga, para nenhum texto sem filtro aparecer na página.
   if not sistema then
     if tg_op = 'INSERT' then
       new.banner_moderado_em := null;
       new.banner_moderado_motivo := null;
       new.banner_moderado_url := null;
-      new.descricao := null;
     else
       new.banner_moderado_em := old.banner_moderado_em;
       new.banner_moderado_motivo := old.banner_moderado_motivo;
       new.banner_moderado_url := old.banner_moderado_url;
-      new.descricao := old.descricao;
     end if;
   end if;
 
@@ -260,6 +256,15 @@ begin
   end if;
   if char_length(new.entrega_obs) > 200 then
     raise exception using errcode = '23514', message = 'O recado da entrega pode ter até 200 letras.', detail = 'campo:entrega_obs';
+  end if;
+  -- A descrição curta antiga (etapa 2, ainda lida por outras telas) vira cópia do "Sobre nós", que
+  -- passa pelo filtro abaixo: o dono não grava a coluna antiga direto (nenhum texto sem filtro aparece).
+  if not sistema then
+    if tg_op = 'INSERT' or new.sobre is distinct from old.sobre then
+      new.descricao := left(new.sobre, 600);
+    else
+      new.descricao := old.descricao;
+    end if;
   end if;
   if not sistema then
     if tg_op = 'INSERT' or new.sobre is distinct from old.sobre then

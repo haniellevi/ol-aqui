@@ -75,6 +75,8 @@ export type AnuncioVitrine = {
   categoria_nome: string | null;
   categoria_pai_nome: string | null;
   grupo_ordem: number;
+  /** true = entra nos grupos desta página; false = veio só porque está numa seção da loja. */
+  na_pagina: boolean;
 };
 
 /* ------------------------------ Dono -------------------------------- */

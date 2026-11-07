@@ -22,7 +22,7 @@ Tipos: `src/lib/tipos-vitrine.ts` · Dados: `src/lib/dados/vitrine-completa.ts`
 | `lat`, `lng` | Os dois juntos ou nenhum (botão "Usar minha localização" no celular, na loja) |
 | `horarios` | JSON por dia (`dom`..`sab`), cada dia com até 3 faixas `{"abre":"08:00","fecha":"12:00"}`, em ordem e sem cruzar. Dia vazio = fechado. `horarios_validos()` confere |
 | `instagram` | Só o @ (o banco limpa `@`, `instagram.com/...`, maiúsculas) e confere `^[a-z0-9._]{1,30}$` |
-| `sobre` | "Sobre nós", até 1500 letras. Copiado de `descricao` na migração; a tela passa a editar só `sobre` |
+| `sobre` | "Sobre nós", até 1500 letras. Copiado de `descricao` na migração; a tela passa a editar só `sobre`. Daqui em diante o banco copia o `sobre` (já filtrado) para `descricao` (600 letras); o dono não grava `descricao` direto e a página pública não lê `descricao` |
 | `formas_pagamento` | Lista de textos, cada um da configuração `vitrine.formas_pagamento` |
 | `faz_entrega`, `entrega_obs` | sim/não/não informado + observação até 200 letras |
 | `banner_moderado_em`, `banner_moderado_motivo` | Só o sistema/admin grava (quando a equipe tira uma foto do banner) |
@@ -54,10 +54,10 @@ A semente desses valores roda com o gatilho `log_planos` desligado (não é muda
 | Anúncio da seção é da mesma loja | gatilho `secao_anuncios_0_validar` |
 | Pessoa física sem vitrine | `recursos_vitrine()` devolve tudo falso/0 para `tipo = 'pf'`; o gatilho apaga endereço exato e localização de pessoa física |
 | Seção só na própria loja | gatilho `secoes_0_validar` recusa ("Loja não encontrada") antes da RLS |
-| Vendido/vencido sai do fixado | gatilho `anuncios_2_fixar` |
+| Anúncio fora do ar (vendido, vencido, rascunho, em análise, congelado) sai do fixado e libera a vaga | gatilho `anuncios_2_fixar` |
 | Palavras proibidas em `sobre`, `entrega_obs` e nome de seção | `texto_bloqueado()` com `moderacao.palavras_bloqueadas` (recusa com mensagem) |
 | Só o dono escreve | RLS (`vitrine propria editar`, políticas das seções) |
-| Admin modera | admin passa em tudo (`acesso_sistema()`); `moderar_banner_vitrine(vitrine, motivo)` tira a foto do banner e grava o motivo; seções têm política de admin |
+| Admin modera | admin passa em tudo (`acesso_sistema()`); `moderar_banner_vitrine(vitrine, motivo)` tira a foto do banner, grava o motivo e guarda o endereço tirado em `banner_moderado_url` (o dono não grava a mesma foto de novo; o aviso só sai com foto nova); devolve o endereço para o painel apagar o arquivo do Storage; seções têm política de admin |
 | **Plano menor (downgrade)** | nada é apagado. A leitura pública mostra só as primeiras N seções ativas (por ordem), só os primeiros N fixados (por ordem) e o banner modelo quando o plano não tem foto. Voltando ao plano maior, tudo reaparece |
 
 Os gatilhos de limite são SECURITY INVOKER de propósito: dentro de SECURITY DEFINER o usuário vira `postgres` e `acesso_sistema()` liberaria tudo.
@@ -67,10 +67,10 @@ As funções de ordenar (`ordenar_secoes`, `definir_anuncios_secao`, `fixar_anun
 | Função | Quem chama | O que faz |
 |---|---|---|
 | `vitrine_publica(slug)` → jsonb | todos | Só campos públicos da loja ativa (dono/admin veem a inativa): banner efetivo, logo, selo, WhatsApp (mesma regra de `anuncio_publico`), informações, seções visíveis com os ids dos anúncios no ar. Nunca CNPJ, gateway ou plano |
-| `anuncios_vitrine(vitrine_id, ordem)` | todos | Anúncios no ar da loja, fixados efetivos primeiro e mais novos (ou `menor_preco`), com a categoria para os grupos automáticos. Máximo `vitrine.anuncios_por_pagina` |
+| `anuncios_vitrine(vitrine_id, ordem, pagina)` | todos | Anúncios no ar da loja, fixados efetivos primeiro e mais novos (ou `menor_preco`), com a categoria para os grupos automáticos. Uma página de `vitrine.anuncios_por_pagina`; os produtos das seções visíveis vêm sempre (`na_pagina = false` quando estão fora da página) |
 | `recursos_vitrine(vitrine)` / `recursos_vitrine_id(id)` / `minha_vitrine_recursos()` | gatilhos / dono | foto, seções e fixados do plano que vale agora (`plano_efetivo`). A versão por id existe porque quem está logado não lê todas as colunas da vitrine (CNPJ, cobrança) dentro dos gatilhos INVOKER |
 | `horarios_validos(jsonb)` | check da tabela | formato dos horários |
-| `moderar_banner_vitrine(vitrine, motivo)` | admin | tira a foto do banner |
+| `moderar_banner_vitrine(vitrine, motivo)` | admin | tira a foto do banner (botão em /admin/moderacao, que também apaga o arquivo) |
 
 ### Configurações novas (tela 3 do painel; todas com histórico)
 | Chave | Grupo | Para quê |
@@ -78,7 +78,7 @@ As funções de ordenar (`ordenar_secoes`, `definir_anuncios_secao`, `fixar_anun
 | `vitrine.banner_cores` | geral | cores do banner modelo |
 | `vitrine.formas_pagamento` | geral | formas de pagamento que a loja pode marcar |
 | `vitrine.anuncios_por_secao_max` | geral | produtos por seção |
-| `vitrine.anuncios_por_pagina` | geral | produtos na página da loja |
+| `vitrine.anuncios_por_pagina` | geral (pública) | produtos por página na loja; o resto aparece em "Ver mais produtos" |
 | `planos.perguntas_frequentes` | planos | perguntas da página /planos, uma por linha: `Pergunta | Resposta` |
 
 ## 2. Telas e rotas
@@ -87,7 +87,7 @@ As funções de ordenar (`ordenar_secoes`, `definir_anuncios_secao`, `fixar_anun
 | `/loja/[slug]` | Banner (foto ou modelo: cor + nome + logo, nunca vazio), logo, nome, selo, "Chamar no WhatsApp", seções próprias, grupos por categoria, chip "Menor preço" (`?ordem=menor_preco`, funciona sem JS), informações (endereço + "Como chegar", horário com "Aberto agora" no fuso America/Fortaleza, Instagram, Sobre nós, pagamento, entrega). OpenGraph com a foto do banner ou uma imagem gerada (`/loja/[slug]/imagem`) |
 | `/minha-conta/loja` | Prévia do banner, menu da vitrine (Banner, Informações, Seções, Produtos no topo, com o uso do plano) e os dados da loja (nome, WhatsApp, cidade, bairro, logo) |
 | `/minha-conta/loja/banner` | Foto da fachada cortada no aparelho em 3:1 (1500 x 500, com régua para escolher a parte) ou modelo (cor da lista do painel + desenho). A foto fica guardada mesmo quando o plano não mostra |
-| `/minha-conta/loja/informacoes` | Endereço + "Usar minha localização", horários por dia com "Aberto/Fechado" e até 3 faixas, Instagram, "Sobre nós" (a `descricao` antiga acompanha os primeiros 600 caracteres), chips de pagamento, entrega |
+| `/minha-conta/loja/informacoes` | Endereço + "Usar minha localização", horários por dia com "Aberto/Fechado" e até 3 faixas, Instagram, "Sobre nós" (o banco copia os primeiros 600 caracteres para a `descricao` antiga), chips de pagamento, entrega |
 | `/minha-conta/loja/secoes` e `/minha-conta/loja/secoes/[id]` | Criar, renomear, subir/descer, esconder, apagar seção; escolher os produtos |
 | `/minha-conta/loja/fixados` | Fixar/desafixar e ordenar os fixados |
 | `/minha-conta/anuncios` | Botão "Fixar na loja" nos anúncios no ar (lojas) |
@@ -104,5 +104,5 @@ Quando o recurso não está no plano, a tela mostra "Disponível no …" com os 
 - Nenhuma variável de ambiente nova.
 
 ## 4. O que ficou para depois
-- Tela de moderação do banner no painel: a função `moderar_banner_vitrine` já existe e o admin pode editar as seções; falta só o botão na tela de Moderação (o pedido desta etapa era mexer só em Planos).
+- Moderação do banner: /admin/moderacao lista as fotos de banner mais novas com o botão "Tirar foto do banner" (motivo vai para o dono). Não há fila de "banner novo para revisar": a equipe confere pela lista.
 - Horário que passa da meia-noite (ex.: 18:00 às 02:00): hoje a loja divide em dois dias.

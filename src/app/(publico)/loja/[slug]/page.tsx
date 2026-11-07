@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Clock, MapPin, MessageCircle, Pencil } from "lucide-react";
-import { anunciosVitrine, vitrinePublica } from "@/lib/dados/vitrine-completa";
+import { anunciosPorPaginaVitrine, anunciosVitrine, vitrinePublica } from "@/lib/dados/vitrine-completa";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import type { CardAnuncioProps } from "@/components/anuncio/card-anuncio";
 import { Vazio } from "@/components/ui/vazio";
@@ -18,15 +18,30 @@ import { LINK_MINHA_LOJA } from "@/lib/rotas";
 import type { AnuncioVitrine, OrdemVitrine, VitrinePublica } from "@/lib/tipos-vitrine";
 
 // T10 · Vitrine da loja: olaki.com.br/loja/<slug>. "Site grátis" que a loja divulga no Instagram.
-// Ordem da página: topo (banner, logo, nome, selo, WhatsApp) → seções próprias (se o plano deixar)
-// → grupos automáticos pelas categorias do site (fixados primeiro, depois os mais novos; ou
-// "Menor preço" pelo endereço ?ordem=menor_preco, funciona sem JavaScript) → informações da loja.
+// Ordem da página: topo (banner, logo, nome, selo, WhatsApp) → destaques da loja (produtos fixados
+// no topo) → seções próprias (se o plano deixar) → grupos automáticos pelas categorias do site
+// (os mais novos; ou "Menor preço" pelo endereço ?ordem=menor_preco, funciona sem JavaScript)
+// → "Ver mais produtos" (?pagina=2...) → informações da loja.
 // O que o plano mostra (foto, seções, fixados) já vem decidido pelo banco.
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ ordem?: string | string[] }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ ordem?: string | string[]; pagina?: string | string[] }> };
 
 function lerOrdem(v: string | string[] | undefined): OrdemVitrine {
   return (Array.isArray(v) ? v[0] : v) === "menor_preco" ? "menor_preco" : "recentes";
+}
+
+function lerPagina(v: string | string[] | undefined): number {
+  const n = Number(Array.isArray(v) ? v[0] : v);
+  return Number.isInteger(n) && n > 1 && n <= 1000 ? n : 1;
+}
+
+/** Endereço da vitrine com ordem e página (página 1 e ordem padrão ficam de fora). */
+function linkPagina(base: string, ordem: OrdemVitrine, pagina: number) {
+  const q = new URLSearchParams();
+  if (ordem === "menor_preco") q.set("ordem", ordem);
+  if (pagina > 1) q.set("pagina", String(pagina));
+  const t = q.toString();
+  return t ? `${base}?${t}` : base;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -36,7 +51,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const descricao =
     (v.sobre ?? "").replace(/\s+/g, " ").trim().slice(0, 155) ||
     `Veja os produtos de ${v.nome} em ${v.cidade} e chame no WhatsApp pelo OLAKI.`;
-  const imagem = v.banner_tipo === "foto" && v.banner_url ? v.banner_url : `${linkLoja(v.slug)}/imagem`;
+  // Foto da fachada: 1500x500 (cortar-banner.ts). Banner modelo: imagem gerada 1200x630, com a cor
+  // no endereço para a mudança de cor chegar logo no WhatsApp/Facebook (a imagem fica em cache).
+  const foto = v.banner_tipo === "foto" && v.banner_url ? v.banner_url : null;
+  const imagem = foto ?? `${linkLoja(v.slug)}/imagem?v=${encodeURIComponent(`${v.banner_cor}-${v.banner_modelo}-${v.nome}`.slice(0, 120))}`;
+  const tamanho = foto ? { width: 1500, height: 500 } : { width: 1200, height: 630 };
   return {
     title: `${v.nome} · ${v.cidade}`,
     description: descricao,
@@ -49,7 +68,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: linkLoja(v.slug),
       siteName: "OLAKI",
       locale: "pt_BR",
-      images: [{ url: imagem, width: 1200, height: 630, alt: `Vitrine de ${v.nome} no OLAKI` }],
+      images: [{ url: imagem, ...tamanho, alt: `Vitrine de ${v.nome} no OLAKI` }],
     },
     twitter: { card: "summary_large_image", title: v.nome, description: descricao, images: [imagem] },
   };
@@ -89,7 +108,10 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const v = await vitrinePublica(slug);
   if (!v) notFound();
   const ordem = lerOrdem(sp.ordem);
-  const anuncios = await anunciosVitrine(v.id, ordem);
+  const pagina = lerPagina(sp.pagina);
+  const [todos, porPagina] = await Promise.all([anunciosVitrine(v.id, ordem, pagina), anunciosPorPaginaVitrine(v.microrregiao_id)]);
+  // na_pagina = false: o produto veio só porque está numa seção (fora desta página)
+  const anuncios = todos.filter((a) => a.na_pagina);
   const agora = new Date();
   const situacao = situacaoAgora(v.horarios, agora);
   const numero = (v.whatsapp ?? "").replace(/\D/g, "");
@@ -97,15 +119,20 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
     ? `https://wa.me/${numero}?text=${encodeURIComponent(`Olá! Vi sua loja no OLAKI: ${urlAbsoluta(linkLoja(v.slug))}`)}`
     : null;
 
-  const porId = new Map(anuncios.map((a) => [a.id, a]));
-  const secoes = v.secoes
+  const porId = new Map(todos.map((a) => [a.id, a]));
+  const primeira = pagina === 1;
+  // Produtos fixados: bloco próprio no topo da loja (só na 1ª página e na ordem "Mais novos")
+  const fixados = primeira && ordem === "recentes" ? anuncios.filter((a) => a.fixado != null) : [];
+  const secoes = (primeira ? v.secoes : [])
     .map((s) => {
       const itens = s.anuncios.map((id) => porId.get(id)).filter((a): a is AnuncioVitrine => !!a);
       if (ordem === "menor_preco") itens.sort((x, y) => (x.preco_centavos ?? Number.MAX_SAFE_INTEGER) - (y.preco_centavos ?? Number.MAX_SAFE_INTEGER));
       return { ...s, itens };
     })
     .filter((s) => s.itens.length > 0);
-  const grupos = agrupar(anuncios);
+  const grupos = agrupar(fixados.length > 0 ? anuncios.filter((a) => a.fixado == null) : anuncios);
+  const inicio = (pagina - 1) * porPagina;
+  const temMais = inicio + anuncios.length < v.total_anuncios;
   const desdeTexto = desde(v.criado_em);
   const base = linkLoja(v.slug);
 
@@ -167,7 +194,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
       <div className="flex flex-col gap-6 px-4 md:px-0 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start">
         <div className="flex min-w-0 flex-col gap-6">
           {/* Ordem */}
-          {anuncios.length > 1 && (
+          {v.total_anuncios > 1 && (
             <nav aria-label="Ordem dos produtos" className="flex flex-wrap items-center gap-2">
               <span className="text-base text-texto-suave">Mostrar:</span>
               <Chip href={base} ativo={ordem === "recentes"} scroll={false} replace>
@@ -179,7 +206,13 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
             </nav>
           )}
 
-          {anuncios.length === 0 ? (
+          {anuncios.length === 0 && pagina > 1 ? (
+            <Vazio titulo="Não tem mais produtos aqui." texto="Volte para o começo da loja.">
+              <Botao href={linkPagina(base, ordem, 1)} variante="primario" larguraTotal>
+                Ver o começo da loja
+              </Botao>
+            </Vazio>
+          ) : anuncios.length === 0 ? (
             <Vazio titulo="Esta loja ainda não tem anúncio no ar." texto="Volte daqui a pouco ou veja outros anúncios da região.">
               {whatsapp && (
                 <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={classesBotao("whatsapp", true)}>
@@ -193,6 +226,14 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
             </Vazio>
           ) : (
             <>
+              {fixados.length > 0 && (
+                <section aria-labelledby="destaques-loja" className="flex flex-col gap-3">
+                  <h2 id="destaques-loja" className="text-lg font-semibold">
+                    Destaques da loja
+                  </h2>
+                  <GradeAnuncios anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} />
+                </section>
+              )}
               {secoes.map((s) => (
                 <section key={s.id} aria-labelledby={`secao-${s.id}`} className="flex flex-col gap-3">
                   <h2 id={`secao-${s.id}`} className="text-lg font-semibold">
@@ -206,14 +247,27 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                   <h2 id={`grupo-${i}`} className="text-lg font-semibold">
                     {g.nome} <span className="text-base font-normal text-texto-suave">({inteiro(g.itens.length)})</span>
                   </h2>
-                  <GradeAnuncios anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 ? 2 : 0} />
+                  <GradeAnuncios anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} />
                 </section>
               ))}
-              {v.total_anuncios > anuncios.length && (
-                <p className="text-base text-texto-suave">
-                  Mostrando {inteiro(anuncios.length)} de {inteiro(v.total_anuncios)} produtos.{" "}
-                  {whatsapp ? "Não achou? Chame a loja no WhatsApp." : ""}
-                </p>
+              {(temMais || pagina > 1) && (
+                <nav aria-label="Páginas de produtos" className="flex flex-col gap-3">
+                  <p className="text-base text-texto-suave">
+                    Produtos {inteiro(inicio + 1)} a {inteiro(inicio + anuncios.length)} de {inteiro(v.total_anuncios)}.
+                  </p>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    {temMais && (
+                      <Botao href={linkPagina(base, ordem, pagina + 1)} variante="secundario" larguraTotal className="sm:w-auto">
+                        Ver mais produtos
+                      </Botao>
+                    )}
+                    {pagina > 1 && (
+                      <Botao href={linkPagina(base, ordem, pagina - 1)} variante="secundario" larguraTotal className="sm:w-auto">
+                        Voltar
+                      </Botao>
+                    )}
+                  </div>
+                </nav>
               )}
             </>
           )}

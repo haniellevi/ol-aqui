@@ -342,9 +342,13 @@ set role authenticated; select set_config('request.jwt.claim.role','authenticate
 update vitrines_lojas set banner_tipo = 'foto', banner_url = 'https://abc.supabase.co/storage/v1/object/public/anuncios/user_lj70/vitrine/banner-3.webp' where id = :'v70' returning banner_tipo;
 select banner_moderado_motivo is null as aviso_saiu from minha_vitrine_recursos();
 
-\echo '[20] descricao antiga nao passa sem filtro: dono nao grava a coluna antiga; a pagina so mostra o Sobre nos'
+\echo '[20] descricao antiga nao passa sem filtro: o banco copia o Sobre nos (filtrado); a pagina so mostra o Sobre nos'
+update vitrines_lojas set sobre = 'Motos e peças.', descricao = 'qualquer coisa' where id = :'v70';
+reset role; select descricao as copia_do_sobre from vitrines_lojas where id = :'v70';
+set role authenticated;
 update vitrines_lojas set sobre = null, descricao = 'Aceitamos pix antecipado, maconha' where id = :'v70';
-reset role; select descricao is null as descricao_nao_gravada from vitrines_lojas where id = :'v70';
+update vitrines_lojas set descricao = 'Aceitamos pix antecipado, maconha' where id = :'v70';
+reset role; select descricao is null as descricao_sem_texto_forjado from vitrines_lojas where id = :'v70';
 set role anon; select set_config('request.jwt.claim.role','anon',false) \g /dev/null
 select vitrine_publica('loja-setenta')->>'sobre' is null as sobre_vazio;
 reset role; update vitrines_lojas set descricao = 'Texto antigo do sistema' where id = :'v70';
