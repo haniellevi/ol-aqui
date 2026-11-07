@@ -1,9 +1,14 @@
 import { exigirAdmin } from "@/lib/admin/auth";
 import { quando, reais } from "@/lib/admin/formato";
 import { Cartao, Titulo, estiloBotaoAprovar, estiloBotaoPerigo, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
-import { decidirAnuncio, decidirPedido, resolverDenuncia } from "./actions";
+import { decidirAnuncio, decidirPedido, resolverDenuncia, tirarFotoBanner } from "./actions";
+import { BotaoTirarBanner } from "./botao-tirar-banner";
 
 export const metadata = { title: "Moderação" };
+
+// Banners com foto da fachada mais recentes (para a equipe conferir). Só a lista da tela: a regra
+// de quem pode tirar a foto e o histórico ficam no banco (moderar_banner_vitrine + logs_atividade).
+const BANNERS_NA_TELA = 30;
 
 const MOTIVOS: Record<string, string> = {
   golpe: "Golpe",
@@ -16,7 +21,7 @@ const MOTIVOS: Record<string, string> = {
 
 export default async function ModeracaoPage() {
   const { supabase } = await exigirAdmin();
-  const [anunciosR, pedidosR, denunciasR] = await Promise.all([
+  const [anunciosR, pedidosR, denunciasR, bannersR] = await Promise.all([
     supabase
       .from("anuncios")
       .select("id, titulo, descricao, preco_centavos, categoria, cidade, fotos, motivo_analise, criado_em, vitrines_lojas(nome, slug)")
@@ -24,7 +29,15 @@ export default async function ModeracaoPage() {
       .order("criado_em"),
     supabase.from("radar_pedidos").select("id, titulo, detalhes, cidade, motivo_analise, criado_em").eq("status", "em_analise").order("criado_em"),
     supabase.from("denuncias").select("id, alvo_tipo, alvo_id, motivo, detalhes, criado_em").eq("status", "aberta").order("criado_em"),
+    supabase
+      .from("vitrines_lojas")
+      .select("id, nome, slug, cidade, banner_url, atualizado_em")
+      .eq("banner_tipo", "foto")
+      .not("banner_url", "is", null)
+      .order("atualizado_em", { ascending: false })
+      .limit(BANNERS_NA_TELA),
   ]);
+  const banners = bannersR.data ?? [];
   const anuncios = anunciosR.data ?? [];
   const pedidos = pedidosR.data ?? [];
   const denuncias = denunciasR.data ?? [];
@@ -103,6 +116,31 @@ export default async function ModeracaoPage() {
                 <button name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</button>
                 <button name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</button>
               </div>
+            </form>
+          </Cartao>
+        ))}
+      </div>
+
+      {banners.length > 0 && (
+        <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Fotos de banner das lojas (mais novas)</h2>
+      )}
+      <div className="space-y-4">
+        {banners.map((b) => (
+          <Cartao key={b.id}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={b.banner_url ?? ""} alt={`Banner de ${b.nome}`} className="aspect-[3/1] w-full rounded-card object-cover" />
+            <p className="mt-2 font-semibold text-beringela">
+              <a href={`/loja/${b.slug}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                {b.nome}
+              </a>
+            </p>
+            <p className="text-sm text-texto-suave">
+              {b.cidade} · {quando(b.atualizado_em)}
+            </p>
+            <form action={tirarFotoBanner} className="mt-4 space-y-2">
+              <input type="hidden" name="id" value={b.id} />
+              <input name="motivo" maxLength={300} placeholder="Motivo (o dono da loja vê)" className={estiloCampo} />
+              <BotaoTirarBanner />
             </form>
           </Cartao>
         ))}

@@ -52,6 +52,8 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
   const [estado, acao, salvando] = useActionState<EstadoVitrine, FormData>(salvarInformacoes, null);
   const campos = estado?.campos ?? {};
 
+  // Todos os campos são controlados: o React limpa campo solto depois de cada envio, mesmo com erro.
+  const [endereco, setEndereco] = useState(dados.endereco ?? "");
   const [lat, setLat] = useState<number | null>(dados.lat);
   const [lng, setLng] = useState<number | null>(dados.lng);
   const [localizando, setLocalizando] = useState(false);
@@ -115,7 +117,8 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
           rotulo="Endereço da loja"
           name="endereco"
           opcional
-          defaultValue={dados.endereco ?? ""}
+          value={endereco}
+          onChange={(e) => setEndereco(e.target.value)}
           maxLength={160}
           placeholder="Rua, número e bairro"
           autoComplete="street-address"

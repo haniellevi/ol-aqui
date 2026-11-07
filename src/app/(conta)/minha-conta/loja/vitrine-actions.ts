@@ -76,8 +76,14 @@ export async function salvarBanner(_antes: EstadoVitrine, form: FormData): Promi
   if (!userId) return { erro: SEM_LOGIN.erro.mensagem };
   if (!v) return { erro: SO_LOJA.erro.mensagem };
 
-  const tipo = form.get("banner_tipo") === "foto" ? "foto" : "modelo";
-  const url = String(form.get("banner_url") ?? "").trim();
+  let tipo = form.get("banner_tipo") === "foto" ? "foto" : "modelo";
+  let url = String(form.get("banner_url") ?? "").trim();
+  // Plano sem foto da fachada (plano menor): a tela só mostra o modelo, mas a foto guardada fica
+  // como está para voltar quando o plano tiver foto de novo. Aqui só mudam a cor e o desenho.
+  if (v.banner_tipo === "foto" && v.banner_url && !(await meusRecursosVitrine()).foto_fachada) {
+    tipo = "foto";
+    url = v.banner_url;
+  }
   const cor = String(form.get("banner_cor") ?? "").trim().toUpperCase();
   const modeloBruto = String(form.get("banner_modelo") ?? "liso");
   const modelo = (BANNER_MODELOS as readonly string[]).includes(modeloBruto) ? modeloBruto : "liso";
@@ -207,8 +213,7 @@ export async function salvarInformacoes(_antes: EstadoVitrine, form: FormData): 
       horarios,
       instagram: instagram || null,
       sobre: sobre || null,
-      // a descrição curta (etapa 2) acompanha o "Sobre nós", para nenhuma tela mostrar texto velho
-      descricao: sobre ? sobre.slice(0, 600) : null,
+      // a descrição curta (etapa 2) acompanha o "Sobre nós": o banco copia (só o texto que passou no filtro)
       formas_pagamento: [...new Set(formas)],
       faz_entrega: entrega === "sim" ? true : entrega === "nao" ? false : null,
       entrega_obs: entregaObs || null,

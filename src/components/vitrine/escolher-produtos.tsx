@@ -10,6 +10,8 @@ import { preco } from "@/lib/formato";
 import type { MeuAnuncioVitrine } from "@/lib/tipos-vitrine";
 
 // Marcar os produtos que entram numa seção. A ordem fica: os que já estavam, depois os novos marcados.
+// Produto da seção que está fora do ar agora (em análise, vendido...) não aparece na lista, mas
+// continua guardado na seção ao salvar: volta sozinho quando estiver no ar de novo.
 export function EscolherProdutos({
   secaoId,
   anuncios,
@@ -25,10 +27,11 @@ export function EscolherProdutos({
   const router = useRouter();
   const existentes = new Set(anuncios.map((a) => a.id));
   const [escolhidos, setEscolhidos] = useState<string[]>(inicial.filter((id) => existentes.has(id)));
+  const guardados = inicial.filter((id) => !existentes.has(id));
   const [pendente, iniciar] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
-  const cheio = maximo !== null && escolhidos.length >= maximo;
+  const cheio = maximo !== null && escolhidos.length + guardados.length >= maximo;
 
   function alternar(id: string) {
     setOk(false);
@@ -40,7 +43,7 @@ export function EscolherProdutos({
     setErro(null);
     setOk(false);
     iniciar(async () => {
-      const r = await definirProdutosSecao(secaoId, escolhidos);
+      const r = await definirProdutosSecao(secaoId, [...escolhidos, ...guardados]);
       if (!r.ok) setErro(r.erro.mensagem);
       else {
         setOk(true);
@@ -55,6 +58,13 @@ export function EscolherProdutos({
         {escolhidos.length === 0 ? "Nenhum produto marcado" : escolhidos.length === 1 ? "1 produto marcado" : `${escolhidos.length} produtos marcados`}
         {maximo !== null && <span className="font-normal text-texto-suave"> (até {maximo})</span>}
       </p>
+      {guardados.length > 0 && (
+        <p className="text-base text-texto-suave">
+          {guardados.length === 1
+            ? "Mais 1 produto desta seção está fora do ar agora (por exemplo, em análise). Ele continua na seção e volta quando estiver no ar."
+            : `Mais ${guardados.length} produtos desta seção estão fora do ar agora (por exemplo, em análise). Eles continuam na seção e voltam quando estiverem no ar.`}
+        </p>
+      )}
       <ul className="flex flex-col gap-2">
         {anuncios.map((a) => {
           const marcado = escolhidos.includes(a.id);
@@ -62,7 +72,7 @@ export function EscolherProdutos({
           return (
             <li key={a.id}>
               <label
-                className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-card border-2 bg-cartao p-2 shadow-1 ${
+                className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-card border-2 bg-cartao p-2 shadow-1 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro ${
                   marcado ? "border-laranja-escuro bg-laranja-claro" : "border-transparent"
                 } ${bloqueado ? "cursor-not-allowed opacity-60" : ""}`}
               >

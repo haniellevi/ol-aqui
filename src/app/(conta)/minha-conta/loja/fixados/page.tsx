@@ -35,7 +35,9 @@ export default async function PaginaFixadosLoja() {
   const noPlano = maximo === null || maximo > 0;
   const fixados = anuncios.filter((a) => a.fixado_na_loja !== null).sort((a, b) => (a.fixado_na_loja ?? 0) - (b.fixado_na_loja ?? 0));
   const outros = anuncios.filter((a) => a.fixado_na_loja === null && a.status === "ativo");
-  const cheio = maximo !== null && fixados.length >= maximo;
+  // O banco conta todos os fixados da loja (só ficam fixados os anúncios no ar ou pausados)
+  const total = Math.max(fixados.length, recursos.fixados_total);
+  const cheio = maximo !== null && total >= maximo;
   // Posição entre os fixados que estão no ar (é o que a vitrine conta para o limite do plano)
   let noAr = 0;
   const avisos = new Map<string, string | null>();
@@ -52,7 +54,7 @@ export default async function PaginaFixadosLoja() {
     <PaginaConta>
       <TopoConta
         titulo="Produtos no topo"
-        texto="Os produtos fixados aparecem primeiro na sua vitrine, na ordem que você escolher."
+        texto="Os produtos fixados aparecem no alto da sua vitrine, em “Destaques da loja”, na ordem que você escolher."
         voltar={LINK_MINHA_LOJA}
         textoVoltar="Minha loja"
       />
@@ -62,7 +64,7 @@ export default async function PaginaFixadosLoja() {
       )}
       {noPlano && maximo !== null && (
         <p className="text-base font-semibold">
-          Seu plano deixa fixar até {maximo} {maximo === 1 ? "produto" : "produtos"}. Você tem {fixados.length}.
+          Seu plano deixa fixar até {maximo} {maximo === 1 ? "produto" : "produtos"}. Você tem {total}.
         </p>
       )}
 

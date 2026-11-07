@@ -70,9 +70,10 @@ export function situacaoAgora(h: Horarios | null | undefined, agora: Date = new 
       return { aberto: true, texto: f.fecha === "24:00" ? "Aberto agora · até meia-noite" : `Aberto agora · fecha às ${f.fecha}` };
     }
   }
-  // próxima abertura: ainda hoje, ou nos próximos dias
+  // próxima abertura: ainda hoje, ou nos próximos dias (i = 7: o mesmo dia da semana que vem,
+  // para a loja que só abre um dia por semana)
   const hoje = DIAS_SEMANA.indexOf(dia);
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i <= 7; i++) {
     const d = DIAS_SEMANA[(hoje + i) % 7];
     const proxima = faixasDoDia(h, d).find((f) => i > 0 || minutosDoDia(f.abre)! > minutos);
     if (proxima) {
