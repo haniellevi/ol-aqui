@@ -2,19 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShieldAlert, SlidersHorizontal, Tags } from "lucide-react";
+import { Bot, LayoutDashboard, ShieldAlert, SlidersHorizontal, Tags } from "lucide-react";
 
 const ITENS = [
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
   { href: "/admin/planos", rotulo: "Planos", icone: Tags },
   { href: "/admin/configuracoes", rotulo: "Configurações", icone: SlidersHorizontal },
   { href: "/admin/moderacao", rotulo: "Moderação", icone: ShieldAlert },
+  { href: "/admin/robo", rotulo: "Robô Aki", icone: Bot },
 ];
 
 export function NavAdmin({ pendencias }: { pendencias: number }) {
   const atual = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-borda bg-cartao shadow-2 md:static md:flex md:w-56 md:flex-col md:gap-1 md:border-0 md:bg-transparent md:p-4 md:shadow-none">
+    <nav className="fixed inset-x-0 bottom-0 z-20 grid auto-cols-fr grid-flow-col border-t border-borda bg-cartao shadow-2 md:static md:flex md:w-56 md:flex-col md:gap-1 md:border-0 md:bg-transparent md:p-4 md:shadow-none">
       {ITENS.map(({ href, rotulo, icone: Icone }) => {
         const ativo = href === "/admin" ? atual === href : atual.startsWith(href);
         return (

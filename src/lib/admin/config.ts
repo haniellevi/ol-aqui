@@ -67,6 +67,7 @@ export const NOMES_GRUPO: Record<string, string> = {
   radar: "Radar de Negócios",
   moderacao: "Moderação",
   cobranca: "Cobrança",
+  robo: "Robô Aki",
   geral: "Geral",
 };
 
