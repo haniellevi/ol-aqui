@@ -3,9 +3,13 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // Login pelo Clerk. Áreas que exigem conta: painel e Radar. O resto do site é público.
 const exigeLogin = createRouteMatcher(["/admin(.*)", "/radar(.*)"]);
 
-export default clerkMiddleware(async (auth, req) => {
-  if (exigeLogin(req)) await auth.protect();
-});
+export default clerkMiddleware(
+  async (auth, req) => {
+    if (exigeLogin(req)) await auth.protect();
+  },
+  // padrão no código: a integração do Clerk não cria NEXT_PUBLIC_CLERK_SIGN_IN_URL
+  { signInUrl: "/entrar", signUpUrl: "/entrar" },
+);
 
 export const config = {
   matcher: [
