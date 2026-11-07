@@ -11,11 +11,12 @@ import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { CirculoCategoria } from "@/components/ui/icone-categoria";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
+import { ComoFuncionaRadar } from "@/components/radar/como-funciona";
 import { LojasDaRegiao } from "@/components/vitrine/lojas-da-regiao";
 import { linkCategoria } from "@/lib/formato";
 
-// T2 · Início: busca grande, categorias, destaques pagos (quando houver), faixa do Radar,
-// lojas da região e os mais recentes. Tudo montado no servidor (pouco JavaScript no celular).
+// T2 · Início: busca grande, o Radar logo abaixo (segundo herói), categorias, destaques pagos
+// (quando houver), lojas da região e os mais recentes. Tudo montado no servidor (pouco JavaScript no celular).
 
 const POR_VEZ = 24;
 
@@ -43,6 +44,29 @@ export default async function Inicio() {
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4">
       <h1 className="sr-only">OLAKI: compre e venda em {lugar}</h1>
       <CampoBusca rotuloVisivel id="busca-inicio" />
+
+      {/* Radar: o segundo herói, logo abaixo da busca (decisão "Classificados + Radar", 07/11/2026) */}
+      <section aria-labelledby="titulo-radar" className="flex flex-col gap-4 rounded-card bg-laranja-claro p-4 sm:p-5">
+        <div className="flex gap-3">
+          <Radar className="mt-0.5 size-7 shrink-0 text-laranja-escuro" aria-hidden />
+          <div className="flex flex-col gap-1">
+            <h2 id="titulo-radar" className="text-lg font-bold text-beringela">
+              Não achou? Peça no Radar.
+            </h2>
+            <p className="text-base">Diga o que procura e as lojas de {lugar} te chamam no WhatsApp.</p>
+          </div>
+        </div>
+        <ComoFuncionaRadar compacto />
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+          <Botao href="/radar/pedir" larguraTotal icone={<Radar />} className="sm:w-auto">
+            Pedir no Radar
+          </Botao>
+          <Botao href="/radar" variante="texto" className="self-center">
+            Como funciona
+          </Botao>
+        </div>
+      </section>
+
 
       {categorias.length > 0 && (
         <nav aria-label="Categorias" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none]">
@@ -90,20 +114,6 @@ export default async function Inicio() {
         </section>
       )}
 
-      <section aria-labelledby="titulo-radar" className="flex flex-col gap-3 rounded-card bg-laranja-claro p-4 sm:flex-row sm:items-center">
-        <div className="flex flex-1 gap-3">
-          <Radar className="mt-0.5 size-7 shrink-0 text-laranja-escuro" aria-hidden />
-          <div className="flex flex-col gap-1">
-            <h2 id="titulo-radar" className="text-lg font-semibold">
-              Não achou o que queria?
-            </h2>
-            <p className="text-base">Diga o que procura no Radar e as lojas da região te chamam.</p>
-          </div>
-        </div>
-        <Botao href="/radar" className="sm:w-auto" larguraTotal>
-          Pedir no Radar
-        </Botao>
-      </section>
 
       {regiao && <LojasDaRegiao microrregiaoId={regiao.id} lugar={lugar} />}
 
@@ -122,7 +132,7 @@ export default async function Inicio() {
               <Botao href="/anunciar" larguraTotal>
                 Anunciar agora
               </Botao>
-              <Botao href="/radar" variante="secundario" larguraTotal>
+              <Botao href="/radar/pedir" variante="secundario" larguraTotal>
                 Pedir no Radar
               </Botao>
             </Vazio>

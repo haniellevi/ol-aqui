@@ -1,6 +1,7 @@
 import { Radar } from "lucide-react";
 import { Vazio } from "@/components/ui/vazio";
 import { Botao } from "@/components/ui/botao";
+import { linkPedir } from "@/lib/radar";
 
 // Busca sem resultado: nunca beco sem saída (USABILIDADE.md, regra 10).
 // Oferece o Radar já preenchido com o que a pessoa procurou.
@@ -15,7 +16,7 @@ export function VazioBusca({
   outrasHref?: string;
 }) {
   const t = (termo ?? "").trim();
-  const pedido = t ? `/radar?pedido=${encodeURIComponent(t)}` : "/radar";
+  const pedido = linkPedir(t);
   return (
     <Vazio
       titulo={t ? `Não achamos “${t}” por aqui ainda.` : "Ainda não tem anúncio aqui."}

@@ -10,6 +10,7 @@ import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { Aviso } from "@/components/conta/aviso";
+import DemoRadar from "@/components/demo/radar/radar-demo";
 import { dataPorExtenso, resumoPlano } from "@/components/conta/resumo-plano";
 
 export const metadata: Metadata = { title: "Meu plano" };
@@ -161,6 +162,25 @@ export default async function PaginaMeuPlano() {
           </p>
         )}
       </section>
+
+      {/* Demo animada do Radar: mostra o que a loja ganha antes de escolher o plano
+          (some para quem já paga um plano com Radar) */}
+      {(!conta.plano?.acesso_radar || conta.plano.e_teste) && (
+        <section aria-labelledby="demo-radar" className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <h2 id="demo-radar" className="flex items-center gap-2 text-lg font-bold">
+              <Radar className="size-5 text-laranja-escuro" aria-hidden />
+              Veja o Radar funcionando
+            </h2>
+            <p className="text-base text-texto-suave">
+              Quem procura algo na região faz um pedido. Sua loja vê na hora e manda a oferta com um toque.
+            </p>
+          </div>
+          <div className="mx-auto w-full max-w-[440px]">
+            <DemoRadar />
+          </div>
+        </section>
+      )}
 
       {/* Planos do painel */}
       {opcoes.length > 0 && (

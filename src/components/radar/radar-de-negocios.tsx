@@ -3,7 +3,7 @@
 // Mobile-first, sem bibliotecas pesadas: Tailwind + lucide-react (já vem com shadcn/ui).
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, MessageCircle, Radar, Send, Users } from "lucide-react";
 import { proporProduto } from "@/app/radar/actions";
@@ -57,11 +57,14 @@ export function RadarDeNegocios({
   temAcesso,
   propostasRestantes,
   planos,
+  abas,
 }: {
   pedidos: PedidoRadar[];
   temAcesso: boolean;
   propostasRestantes: number | null; // null = ilimitado
   planos: PlanoResumo[];
+  /** Abas "Pedidos da região" / "Meus pedidos" (página /radar), logo abaixo do título. */
+  abas?: ReactNode;
 }) {
   const [filtro, setFiltro] = useState<CategoriaRadar | "todas">("todas");
   const [restantes, setRestantes] = useState(propostasRestantes);
@@ -72,8 +75,8 @@ export function RadarDeNegocios({
   const podePropor = temAcesso && (restantes === null || restantes > 0);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-xl bg-fundo pb-28">
-      <header className="sticky top-0 z-10 border-b border-borda bg-cartao/95 px-4 pb-3 pt-4 backdrop-blur">
+    <main className="mx-auto max-w-xl bg-fundo pb-8">
+      <header className="border-b border-borda bg-cartao px-4 pb-3 pt-4">
         <div className="flex items-center gap-2">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
           <h1 className="text-xl font-bold tracking-tight text-beringela">Radar de Negócios</h1>
@@ -81,6 +84,7 @@ export function RadarDeNegocios({
         <p className="mt-0.5 text-sm text-texto-suave">
           {pedidos.length} {pedidos.length === 1 ? "comprador procurando" : "compradores procurando"} na sua região
         </p>
+        {abas}
 
         <nav className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]" aria-label="Filtrar por categoria">
           {CATEGORIAS.map((c) => (
