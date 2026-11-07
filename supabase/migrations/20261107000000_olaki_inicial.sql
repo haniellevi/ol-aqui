@@ -16,8 +16,11 @@
 --    public.usuario_id(), que lê o 'sub' do token. Não usamos auth.users.
 -- =====================================================================
 
-create extension if not exists pg_trgm;
-create extension if not exists unaccent;
+-- No Supabase as extensões ficam no schema "extensions" (fora do public, como pede o Security Advisor).
+create schema if not exists extensions;
+create extension if not exists pg_trgm  with schema extensions;
+create extension if not exists unaccent with schema extensions;
+grant usage on schema extensions to anon, authenticated, service_role; -- o Supabase já dá; repetido para o banco de teste
 
 -- ---------------------------------------------------------------------
 -- Tipos
@@ -38,7 +41,7 @@ create type public.status_verificacao as enum ('pendente', 'aprovada', 'recusada
 create or replace function public.sem_acento(texto text)
 returns text language sql immutable parallel safe
 set search_path = public, extensions
-as $$ select public.unaccent('public.unaccent'::regdictionary, coalesce(texto, '')) $$;
+as $$ select extensions.unaccent('extensions.unaccent'::regdictionary, coalesce(texto, '')) $$;
 
 -- IP real do cliente vindo do PostgREST/Supabase (cabeçalhos da requisição).
 create or replace function public.ip_requisicao()
@@ -239,7 +242,7 @@ create index anuncios_feed_idx      on public.anuncios (microrregiao_id, status,
 create index anuncios_categoria_idx on public.anuncios (microrregiao_id, categoria, status, preco_centavos);
 create index anuncios_vitrine_idx   on public.anuncios (vitrine_id, status);
 create index anuncios_busca_idx     on public.anuncios using gin (busca);
-create index anuncios_titulo_trgm   on public.anuncios using gin (public.sem_acento(titulo) gin_trgm_ops); -- tolera erro de digitação
+create index anuncios_titulo_trgm   on public.anuncios using gin (public.sem_acento(titulo) extensions.gin_trgm_ops); -- tolera erro de digitação
 create index anuncios_atributos_idx on public.anuncios using gin (atributos jsonb_path_ops);
 create index anuncios_veiculo_ano   on public.anuncios (((atributos->>'ano')::int)) where categoria = 'veiculo';
 
