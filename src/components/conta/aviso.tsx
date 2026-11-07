@@ -4,8 +4,8 @@ import { AlertCircle, CheckCircle2, Info } from "lucide-react";
 // Caixa de aviso das telas da conta. "erro" e "ok" são anunciados pelo leitor de tela.
 export function Aviso({ tipo = "info", children }: { tipo?: "erro" | "ok" | "info" | "atencao"; children: ReactNode }) {
   const estilos = {
-    erro: "border-perigo bg-red-50 text-perigo",
-    ok: "border-verde-escuro bg-green-50 text-verde-escuro",
+    erro: "border-perigo bg-perigo-fundo text-perigo",
+    ok: "border-verde-escuro bg-sucesso-fundo text-verde-escuro",
     info: "border-borda bg-cartao text-texto",
     atencao: "border-aviso bg-aviso-fundo text-aviso",
   }[tipo];

@@ -44,7 +44,7 @@ export default async function ResumoPage() {
       <Titulo sub={`Atualizado agora · ${agora.toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" })}`}>Resumo</Titulo>
 
       {fila > 0 && (
-        <Link href="/admin/moderacao" className="mb-6 flex items-center justify-between rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        <Link href="/admin/moderacao" className="mb-6 flex min-h-12 items-center justify-between gap-3 rounded-card bg-perigo-fundo px-4 py-3 text-sm font-semibold text-perigo active:brightness-90">
           <span>
             {fila} {fila === 1 ? "item espera" : "itens esperam"} revisão: {emAnalise} anúncios, {pedidosAnalise} pedidos, {denuncias} denúncias
           </span>
@@ -52,7 +52,7 @@ export default async function ResumoPage() {
         </Link>
       )}
 
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-400">Dinheiro</h2>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Dinheiro</h2>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Numero rotulo="Recebido no mês" valor={reais(receitaMes)} />
         <Numero rotulo="Receita mensal recorrente" valor={reais(mrr)} detalhe="assinaturas em dia × preço atual" />
@@ -60,7 +60,7 @@ export default async function ResumoPage() {
         <Numero rotulo="Cobranças pendentes" valor={inteiro((abertosR.data ?? []).length - inadimplentes)} />
       </div>
 
-      <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-neutral-400">Lojistas</h2>
+      <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Lojistas</h2>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Numero rotulo="Vitrines no total" valor={inteiro(vitrines.length)} />
         <Numero rotulo="Em teste grátis" valor={inteiro(emTeste)} />
@@ -69,7 +69,7 @@ export default async function ResumoPage() {
         ))}
       </div>
 
-      <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-neutral-400">Movimento</h2>
+      <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Movimento</h2>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Numero rotulo="Anúncios no ar" valor={inteiro(anunciosAtivos)} />
         <Numero rotulo="Pedidos abertos no Radar" valor={inteiro(pedidosAbertos)} />
@@ -82,7 +82,7 @@ export default async function ResumoPage() {
       </div>
 
       {vitrines.length === 0 && (
-        <Cartao className="mt-8 text-sm text-neutral-600">
+        <Cartao className="mt-8 text-sm text-texto-suave">
           Ainda não há lojistas cadastrados. Assim que o piloto em Corrente começar, os números aparecem aqui.
         </Cartao>
       )}

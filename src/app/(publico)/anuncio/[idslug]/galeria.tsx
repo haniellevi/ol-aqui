@@ -7,8 +7,8 @@ import { ChevronLeft, ChevronRight, ImageOff, Maximize2, X } from "lucide-react"
 // contador "1/8", setas no computador e tela cheia ao tocar na foto.
 
 const BOTAO_REDONDO =
-  "grid size-12 place-items-center rounded-full bg-cartao/90 text-beringela shadow-1 hover:bg-cartao " +
-  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
+  "grid size-12 place-items-center rounded-full bg-cartao/90 text-beringela shadow-1 hover:bg-cartao active:brightness-90 " +
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:opacity-60";
 
 export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) {
   const trilho = useRef<HTMLUListElement>(null);
@@ -132,7 +132,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
             <button
               type="button"
               onClick={fechar}
-              className="grid size-12 place-items-center rounded-full bg-white/15 hover:bg-white/25 focus-visible:outline-3 focus-visible:outline-laranja"
+              className="grid size-12 place-items-center rounded-full bg-white/15 hover:bg-white/25 active:bg-white/25 focus-visible:outline-3 focus-visible:outline-laranja"
               aria-label="Fechar fotos"
               autoFocus
             >

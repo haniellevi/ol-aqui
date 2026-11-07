@@ -26,11 +26,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       signInUrl="/entrar"
       signUpUrl="/entrar"
       appearance={{
+        // Mesmos valores dos tokens de globals.css (o Clerk não lê as classes do Tailwind).
         variables: {
           colorPrimary: "#ff6a13",
           colorPrimaryForeground: "#4b1248", // contraste acessível (texto beringela no laranja)
           colorText: "#4b1248",
+          colorMutedForeground: "#5e5266", // texto-suave
+          colorDanger: "#b91c1c", // perigo
+          colorSuccess: "#0e7a3d", // verde-escuro
+          colorWarning: "#b45309", // aviso
           fontFamily: "var(--font-poppins), system-ui, sans-serif",
+          // Campo com 16px (evita o zoom do iPhone) e nada menor que 13px
+          fontSize: { xs: "0.8125rem", sm: "0.875rem", md: "1rem", lg: "1.25rem", xl: "1.5rem" },
+          // A Poppins só é carregada em 400, 600 e 700
+          fontWeight: { normal: 400, medium: 600, semibold: 600, bold: 700 },
           borderRadius: "0.75rem",
         },
       }}

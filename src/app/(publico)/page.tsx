@@ -100,7 +100,8 @@ export default async function Inicio() {
             <p className="text-base">Diga o que procura no Radar e as lojas da região te chamam.</p>
           </div>
         </div>
-        <Botao href="/radar" className="sm:w-auto" larguraTotal>
+        {/* Um botão principal por tela: o laranja da home é o "Buscar" (ou o "Anunciar agora" da tela vazia) */}
+        <Botao href="/radar" variante="secundario" className="sm:w-auto" larguraTotal>
           Pedir no Radar
         </Botao>
       </section>

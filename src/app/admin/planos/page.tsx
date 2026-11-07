@@ -19,11 +19,11 @@ export default async function PlanosPage() {
         {planos.map((p) => (
           <Cartao key={p.codigo}>
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold">{p.nome}</h2>
-              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600">{p.codigo}</span>
-              {p.e_teste && <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs text-sky-700">teste grátis</span>}
-              {!p.ativo && <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs text-neutral-600">inativo</span>}
-              <span className="ml-auto text-sm font-semibold text-neutral-700">
+              <h2 className="text-lg font-semibold text-beringela">{p.nome}</h2>
+              <span className="rounded-full bg-fundo px-2 py-0.5 text-[13px] text-texto-suave">{p.codigo}</span>
+              {p.e_teste && <span className="rounded-full bg-aviso-fundo px-2 py-0.5 text-[13px] font-semibold text-aviso">teste grátis</span>}
+              {!p.ativo && <span className="rounded-full bg-borda px-2 py-0.5 text-[13px] font-semibold text-texto-suave">inativo</span>}
+              <span className="ml-auto text-sm font-semibold text-beringela">
                 {p.preco_centavos ? `${reais(p.preco_centavos)} / ${p.periodo_dias} dias` : "Grátis"}
               </span>
             </div>
@@ -31,7 +31,7 @@ export default async function PlanosPage() {
           </Cartao>
         ))}
         <Cartao className="border-dashed">
-          <h2 className="mb-3 text-lg font-semibold">Novo plano</h2>
+          <h2 className="mb-3 text-lg font-semibold text-beringela">Novo plano</h2>
           <FormPlano />
         </Cartao>
       </div>

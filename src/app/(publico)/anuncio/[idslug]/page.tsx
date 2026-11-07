@@ -179,7 +179,7 @@ export default async function PaginaAnuncio({ params }: Props) {
           <p className="text-base font-semibold">Prévia: só você vê esta página.</p>
           <p className="text-base">{STATUS_PREVIA[a.status] ?? "Fora do ar."}</p>
           {a.e_dono && (
-            <Link href="/minha-conta/anuncios" className="font-semibold underline underline-offset-4">
+            <Link href="/minha-conta/anuncios" className="inline-flex min-h-12 items-center self-start font-semibold underline underline-offset-4">
               Ir para Meus anúncios
             </Link>
           )}
@@ -293,7 +293,7 @@ export default async function PaginaAnuncio({ params }: Props) {
             </section>
           )}
 
-          <aside aria-label="Dica de segurança" className="flex gap-3 rounded-card bg-aviso-fundo p-4 text-[15px] leading-6 text-[#5B3A06]">
+          <aside aria-label="Dica de segurança" className="flex gap-3 rounded-card bg-aviso-fundo p-4 text-[15px] leading-6 text-beringela">
             <ShieldAlert className="mt-0.5 size-6 shrink-0 text-aviso" aria-hidden />
             <p>
               <strong className="font-semibold">Nunca pague nada antes de ver o produto.</strong> Desconfie de preço muito abaixo do normal e

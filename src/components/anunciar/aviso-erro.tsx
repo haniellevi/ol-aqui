@@ -6,7 +6,7 @@ export function AvisoErro({ mensagem, link }: { mensagem?: string | null; link?:
   return (
     <div aria-live="assertive" aria-atomic="true">
       {mensagem && (
-        <div role="alert" className="flex gap-3 rounded-card border-2 border-perigo bg-red-50 p-3 text-base text-perigo">
+        <div role="alert" className="flex gap-3 rounded-card border-2 border-perigo bg-perigo-fundo p-3 text-base text-perigo">
           <AlertCircle className="mt-0.5 size-5 shrink-0" aria-hidden />
           <div className="flex flex-col gap-1">
             <p className="font-semibold">{mensagem}</p>

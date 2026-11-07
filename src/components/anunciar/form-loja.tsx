@@ -97,7 +97,7 @@ export function FormLoja({
     const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Conheça minha loja no OLAKI: *${feito.nome}* ${url}`)}`;
     return (
       <section aria-labelledby="titulo-pronta" className="flex flex-col items-center gap-4 text-center" aria-live="polite">
-        <span className="grid size-20 place-items-center rounded-full bg-laranja-claro text-verde-escuro" aria-hidden>
+        <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
           <CheckCircle2 className="size-12" />
         </span>
         <h1 id="titulo-pronta" className="text-2xl font-semibold">

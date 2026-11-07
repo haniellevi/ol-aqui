@@ -15,7 +15,7 @@ import type { EstadoForm } from "./passos";
 
 const CAIXA =
   "flex min-h-12 cursor-pointer items-center gap-3 rounded-card border-2 border-borda bg-cartao px-3 py-2 text-base font-semibold " +
-  "hover:bg-fundo has-[:checked]:border-beringela has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
+  "text-beringela hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-laranja-claro has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
 /** Digitação → "8.500" ou "8.500,50" (agrupa milhar, no máximo 2 casas depois da vírgula). */
 function mascara(t: string): string {

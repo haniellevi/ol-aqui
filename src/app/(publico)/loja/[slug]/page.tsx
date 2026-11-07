@@ -64,7 +64,7 @@ export default async function PaginaLoja({ params }: Props) {
             href={whatsapp}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-card bg-verde-escuro px-5 text-base font-semibold text-white hover:bg-[#0c6a35] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro sm:w-auto sm:self-start"
+            className="inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-card bg-verde-escuro px-5 text-base font-semibold text-white transition-colors hover:brightness-95 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro sm:w-auto sm:self-start"
           >
             <MessageCircle className="size-5" aria-hidden />
             Chamar a loja no WhatsApp
