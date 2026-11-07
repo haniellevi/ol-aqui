@@ -175,6 +175,15 @@ select (p->>'custo_mes_centavos')::numeric > 0 as tem_custo, jsonb_array_length(
        p->'avaliacoes' as avaliacoes, (p->>'orcamento_centavos')::numeric as orcamento
   from robo_painel() p;
 select count(*) as uso_admin from robo_uso;
+\echo '[17b] usuario comum nao apaga busca vazia (0 linhas); admin apaga (resolvida) e fica no log'
+select set_config('request.jwt.claim.sub','user_a60',false) \g /dev/null
+delete from robo_buscas_vazias;
+select set_config('request.jwt.claim.sub','user_adm60',false) \g /dev/null
+select count(*) as buscas_antes from robo_buscas_vazias;
+reset role; insert into robo_buscas_vazias (microrregiao_id, termo, termo_normalizado) values (:'reg', 'apagar', 'apagar');
+set role authenticated; select set_config('request.jwt.claim.sub','user_adm60',false) \g /dev/null
+delete from robo_buscas_vazias where termo='apagar';
+reset role; select count(*) as log_busca_apagada from logs_atividade where tabela='robo_buscas_vazias' and acao='DELETE' and usuario_id='user_adm60';
 
 \echo '[18] "Testar" do painel: grava uso tipo teste sem conversa e nao conta no limite de ninguem'
 set role service_role; select set_config('request.jwt.claim.role','service_role',false) \g /dev/null

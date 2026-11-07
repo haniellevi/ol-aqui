@@ -183,6 +183,7 @@ create unique index robo_buscas_vazias_termo on public.robo_buscas_vazias
 alter table public.robo_buscas_vazias enable row level security;
 create policy "robo buscas vazias admin leitura" on public.robo_buscas_vazias for select using (public.e_admin());
 create policy "robo buscas vazias admin apagar"  on public.robo_buscas_vazias for delete using (public.e_admin());
+create trigger log_robo_buscas_vazias after delete on public.robo_buscas_vazias for each row execute function public.registrar_log();
 
 -- Permissões de tabela: visitante nada; logado só o que a RLS libera.
 revoke all on public.robo_modelos, public.robo_conversas, public.robo_mensagens, public.robo_uso,
