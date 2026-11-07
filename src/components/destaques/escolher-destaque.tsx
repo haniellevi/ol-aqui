@@ -61,6 +61,7 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
 
   const opcao = opcoes.find((o) => o.slug === escolhido) ?? null;
   const temCredito = !!opcao && opcao.disponivel && opcao.creditos_restantes > 0;
+  const gratis = !!opcao && opcao.disponivel && !temCredito && opcao.preco_centavos === 0;
   const podePagar = !!opcao && opcao.disponivel && pagamentoLigado && opcao.preco_centavos > 0;
 
   function receber(r: RespostaPagamento) {
@@ -84,7 +85,7 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
     setErro(null);
     setEmCurso("credito");
     iniciar(async () => {
-      const r = await usarCreditoDestaque(opcao.slug, anuncioId);
+      const r = await usarCreditoDestaque(opcao.slug, anuncioId, !gratis);
       if (r.ok) {
         setPedido(r.dados);
         setEtapa("sucesso");
@@ -105,8 +106,10 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
     setEmCurso(acao);
     iniciar(async () => {
       const doc = pedirDoc ? documento : null;
-      const r = pedidoId
-        ? await pagarPedidoDestaque(pedidoId, formaEscolhida, doc)
+      // pedido em andamento só vale para o mesmo tipo (se a pessoa trocou de cartão, é um pedido novo)
+      const usarPedido = pedidoId && (etapa === "aguardando" || !opcao || pedido?.tipo === opcao.slug) ? pedidoId : null;
+      const r = usarPedido
+        ? await pagarPedidoDestaque(usarPedido, formaEscolhida, doc)
         : await comprarDestaque(opcao!.slug, anuncioId, formaEscolhida, doc);
       if (r.ok) {
         setForma(formaEscolhida);
@@ -310,7 +313,7 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
       {opcao && opcao.disponivel && (
         <section aria-labelledby="titulo-confirmar" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
           <h2 id="titulo-confirmar" className="text-lg font-semibold">
-            {temCredito ? "Usar destaque grátis" : "Como você quer pagar?"}
+            {temCredito || gratis ? "Usar destaque grátis" : "Como você quer pagar?"}
           </h2>
 
           {temCredito ? (
@@ -320,6 +323,13 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
               </p>
               <Botao larguraTotal icone={<Gift />} carregando={emCurso === "credito"} textoCarregando="Ativando..." disabled={pendente} onClick={usarCredito}>
                 Usar meu destaque grátis
+              </Botao>
+            </>
+          ) : gratis ? (
+            <>
+              <p className="text-base">Este destaque está grátis agora. Nada é cobrado.</p>
+              <Botao larguraTotal icone={<Gift />} carregando={emCurso === "credito"} textoCarregando="Ativando..." disabled={pendente} onClick={usarCredito}>
+                Ativar grátis
               </Botao>
             </>
           ) : podePagar ? (

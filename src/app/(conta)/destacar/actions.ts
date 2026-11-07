@@ -37,14 +37,18 @@ async function contratar(tipo: SlugDestaque, anuncioId: string | null, usarCredi
   return { id: linha?.destaque_id ?? null };
 }
 
-/** Usa um crédito grátis do plano: ativa na hora. */
-export async function usarCreditoDestaque(tipo: string, anuncioId: string | null): Promise<Resultado<PedidoDestaque>> {
+/**
+ * Ativa na hora, sem cobrança: com um crédito grátis do plano (`usarCredito`) ou quando o painel
+ * deixou o preço do tipo em zero. O banco confere créditos e preço; se não for grátis, só cria o pedido.
+ */
+export async function usarCreditoDestaque(tipo: string, anuncioId: string | null, usarCredito = true): Promise<Resultado<PedidoDestaque>> {
   const invalido = conferir(tipo, anuncioId);
   if (invalido) return falha(invalido);
-  const r = await contratar(tipo as SlugDestaque, anuncioId, true);
+  const r = await contratar(tipo as SlugDestaque, anuncioId, usarCredito);
   if ("erro" in r) return { ok: false, erro: r.erro! };
   const pedido = r.id ? await meuPedidoDestaque(r.id) : null;
   if (!pedido) return falha("Algo deu errado. Tente de novo.");
+  if (pedido.status !== "ativo") return falha("Este destaque não é grátis agora. Atualize a página para ver o preço.");
   atualizar();
   return { ok: true, dados: pedido };
 }
