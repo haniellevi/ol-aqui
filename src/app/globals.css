@@ -1,16 +1,38 @@
 @import "tailwindcss";
 
-/* Cores da marca OLAKI (logo: "ol" azul-marinho + "aki" laranja).
+/* Tokens do OLAKI (docs/DESIGN-SYSTEM.md, seção 6).
    Botão primário = fundo laranja + texto marinho (4,96:1). Branco sobre laranja reprova (2,87:1). */
 @theme {
   --color-marinho: #1b2a4a;
   --color-laranja: #ff6a13;
-  --color-laranja-escuro: #c2410c; /* texto e links: contraste 5,2:1 no branco */
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --color-laranja-escuro: #c2410c;
+  --color-laranja-claro: #fff4ec;
+  --color-verde: #12a150;
+  --color-verde-escuro: #0e7a3d;
+  --color-fundo: #f5f6f8;
+  --color-cartao: #ffffff;
+  --color-texto: #1b2a4a;
+  --color-texto-suave: #475569;
+  --color-borda: #e2e8f0;
+  --color-perigo: #b91c1c;
+  --color-aviso: #b45309;
+  --color-aviso-fundo: #fffbeb;
+  --color-patrocinado-fundo: #ffe4d1;
+
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
+
+  --radius-campo: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-folha: 1.25rem;
+
+  --shadow-1: 0 1px 2px rgb(27 42 74 / 0.08);
+  --shadow-2: 0 -2px 12px rgb(27 42 74 / 0.12);
+
+  --spacing-toque: 3rem; /* 48px, área mínima de toque */
 }
 
 body {
-  background: #fafafa;
-  color: #171717;
+  background: var(--color-fundo);
+  color: var(--color-texto);
   -webkit-tap-highlight-color: transparent;
 }

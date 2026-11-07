@@ -15,7 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const pendencias = (anuncios.count ?? 0) + (pedidos.count ?? 0) + (denuncias.count ?? 0);
 
   return (
-    <div className="min-h-dvh bg-neutral-50 md:flex">
+    <div className="min-h-dvh bg-fundo md:flex">
       <aside className="md:sticky md:top-0 md:h-dvh md:border-r md:border-neutral-200 md:bg-white">
         <Link href="/admin" className="hidden items-center gap-2 px-6 pb-2 pt-6 md:flex">
           <Image src="/logo/olaki-opcao2-balao.svg" alt="OLAKI" width={110} height={40} />

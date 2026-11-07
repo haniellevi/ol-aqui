@@ -67,7 +67,7 @@ export function FormEntrar() {
                 key={m}
                 type="button"
                 onClick={() => setMeio(m)}
-                className={`h-10 rounded-lg ${meio === m ? "bg-white shadow-sm" : "text-neutral-500"}`}
+                className={`h-12 rounded-lg ${meio === m ? "bg-white shadow-sm" : "text-neutral-500"}`}
               >
                 {m === "celular" ? "Celular" : "E-mail"}
               </button>

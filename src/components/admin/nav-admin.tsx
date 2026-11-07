@@ -21,7 +21,7 @@ export function NavAdmin({ pendencias }: { pendencias: number }) {
           <Link
             key={href}
             href={href}
-            className={`relative flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium md:h-11 md:flex-row md:justify-start md:gap-3 md:rounded-xl md:px-3 md:text-sm ${
+            className={`relative flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium md:h-12 md:flex-row md:justify-start md:gap-3 md:rounded-xl md:px-3 md:text-sm ${
               ativo ? "text-laranja-escuro md:bg-orange-50" : "text-neutral-500 md:hover:bg-neutral-100"
             }`}
           >

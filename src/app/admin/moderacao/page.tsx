@@ -14,7 +14,7 @@ const MOTIVOS: Record<string, string> = {
   outro: "Outro",
 };
 
-const botao = "h-11 rounded-xl px-4 text-sm font-semibold";
+const botao = "h-12 rounded-xl px-4 text-sm font-semibold";
 
 export default async function ModeracaoPage() {
   const { supabase } = await exigirAdmin();

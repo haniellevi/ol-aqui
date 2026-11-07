@@ -71,7 +71,7 @@ export function RadarDeNegocios({
   const podePropor = temAcesso && (restantes === null || restantes > 0);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-xl bg-neutral-50 pb-28">
+    <main className="mx-auto min-h-dvh max-w-xl bg-fundo pb-28">
       <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/95 px-4 pb-3 pt-4 backdrop-blur">
         <div className="flex items-center gap-2">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
@@ -87,7 +87,7 @@ export function RadarDeNegocios({
               key={c.valor}
               onClick={() => setFiltro(c.valor)}
               aria-pressed={filtro === c.valor}
-              className={`h-10 shrink-0 rounded-full px-4 text-sm font-medium transition-colors ${
+              className={`h-12 shrink-0 rounded-full px-4 text-sm font-medium transition-colors ${
                 filtro === c.valor
                   ? "bg-neutral-900 text-white"
                   : "border border-neutral-200 bg-white text-neutral-700 active:bg-neutral-100"
@@ -338,7 +338,7 @@ function FaixaUpgrade({ planos, titulo }: { planos: PlanoResumo[]; titulo: strin
       </p>
       <Link
         href="/planos?origem=radar"
-        className="mt-3 inline-flex h-11 items-center rounded-full bg-laranja px-5 text-sm font-semibold text-marinho active:bg-orange-500"
+        className="mt-3 inline-flex h-12 items-center rounded-full bg-laranja px-5 text-sm font-semibold text-marinho active:bg-orange-500"
       >
         Ver planos
       </Link>

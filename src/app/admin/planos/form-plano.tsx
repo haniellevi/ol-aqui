@@ -78,11 +78,11 @@ export function FormPlano({ plano }: { plano?: Plano }) {
         <input name="descricao" defaultValue={plano?.descricao ?? ""} className={estiloCampo} />
       </label>
       <div className="col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2 md:col-span-4">
-        <label className="flex h-11 items-center gap-2 text-sm">
+        <label className="flex h-12 items-center gap-2 text-sm">
           <input type="checkbox" name="acesso_radar" defaultChecked={plano?.acesso_radar ?? true} className="size-5 accent-orange-500" />
           Acessa o Radar
         </label>
-        <label className="flex h-11 items-center gap-2 text-sm">
+        <label className="flex h-12 items-center gap-2 text-sm">
           <input type="checkbox" name="ativo" defaultChecked={plano?.ativo ?? true} className="size-5 accent-orange-500" />
           Ativo (aparece para venda)
         </label>

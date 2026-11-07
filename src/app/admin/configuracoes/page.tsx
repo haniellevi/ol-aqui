@@ -44,7 +44,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
           <Link
             key={g}
             href={`/admin/configuracoes?grupo=${g}`}
-            className={`h-10 shrink-0 rounded-full px-4 text-sm font-medium leading-10 ${
+            className={`h-12 shrink-0 rounded-full px-4 text-sm font-medium leading-12 ${
               g === grupoAtual ? "bg-marinho text-white" : "border border-neutral-200 bg-white text-neutral-700"
             }`}
           >
