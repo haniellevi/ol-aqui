@@ -22,10 +22,10 @@ Este documento junta o que já foi decidido em LEIA-ME.md, PAINEL-ADMIN.md e PRO
  └──────────────┬───────────────┘        ┌──────────────────────┐
                 │                ───────▶ │  WhatsApp/SMS        │ código de acesso e avisos
                 ▼                         └──────────────────────┘
- ┌──────────────────────────────┐
- │  Supabase                     │
- │  - Postgres (dados + regras)  │
- │  - Login por celular (OTP)    │
+ ┌──────────────────────────────┐        ┌──────────────────────┐
+ │  Supabase (São Paulo)         │◀────── │  Clerk (login)        │ Google + celular
+ │  - Postgres (dados + regras)  │        └──────────────────────┘
+ │  - reconhece o login do Clerk │
  │  - Storage (fotos)            │
  │  - Tarefas agendadas (cron)   │
  └──────────────────────────────┘
@@ -35,11 +35,12 @@ Este documento junta o que já foi decidido em LEIA-ME.md, PAINEL-ADMIN.md e PRO
 |---|---|---|
 | App | **Next.js 15 (App Router) + React 19** | Um código só para site, app instalável e painel. Páginas de anúncio saem prontas do servidor, o que é bom para o Google e para celular fraco |
 | Visual | **Tailwind 4 + lucide-react** (shadcn/ui opcional depois) | Ver DESIGN-SYSTEM.md |
-| Banco | **Supabase (Postgres 16)** com regras de acesso no próprio banco (RLS) | Segurança não depende da tela; já está nas migrações |
+| Banco | **Supabase (Postgres), região São Paulo** com regras de acesso no próprio banco (RLS) | Segurança não depende da tela; já está nas migrações. **Decidido em 07/11** contra Google (Cloud SQL/AlloyDB não têm plano grátis; Firestore exigiria reescrever) |
+| Login | **Clerk** (Google + celular), ligado ao Supabase pela integração oficial | **Decidido pelo Raniel em 07/11**. Grátis até 50 mil usuários ativos/mês |
 | Hospedagem | **Vercel** | Deploy automático a cada mudança aprovada |
 | Pagamentos | **Asaas** | Pix e cartão, assinaturas; já decidido |
 | Robô | **Claude API** | Ver seção 8 |
-| Mensagens | **WhatsApp (API oficial da Meta) + SMS de reserva** | Código de acesso e avisos |
+| Mensagens | **WhatsApp (API oficial da Meta)** | Avisos (o código de login vem pelo Clerk) |
 
 ---
 
@@ -66,10 +67,12 @@ src/
     api/
       aki/                Conversa com o robô (streaming)
       webhooks/asaas/     Confirmação de pagamento
+      webhooks/clerk/     Cria/atualiza o perfil quando alguém entra
       webhooks/whatsapp/  (fase 2) mensagens recebidas
   components/{ui,anuncio,busca,radar,aki,admin}
   lib/
-    supabase/{server,client}.ts
+    supabase/server.ts    banco com o token do Clerk (sem @supabase/ssr)
+    perfil.ts             sincroniza o perfil do Clerk com o banco
     config/               ← (proposta) leitura das tabelas planos/configuracoes com cache
     admin/
     aki/                  ferramentas do robô
@@ -110,11 +113,14 @@ A conversa de produto propõe as próximas: `categorias` (com campos em JSON), t
 
 ---
 
-## 5. Login
+## 5. Login (decidido em 07/11: Clerk)
 
-- Celular + código de 6 dígitos (Supabase Auth com telefone). Envio pelo WhatsApp e, se falhar, SMS. Limite de tentativas por número e por IP vem do painel.
-- Sessão longa (a pessoa não precisa entrar toda hora); "sair de todos os aparelhos" em Minha conta.
+- **Clerk** cuida de entrar, sair, aparelhos conectados e proteção contra robôs. Formas de entrar: **Google** e **celular com código**. O código por SMS só funciona no plano pago do Clerk (Pro US$ 25/mês + preço por SMS); nos testes pode ficar só Google.
+- O Supabase reconhece o login do Clerk pela integração "Third-Party Auth": as regras de segurança do banco leem o id da pessoa do token do Clerk (`auth.jwt()->>'sub'`, um texto tipo `user_2ab...`), então os ids de usuário no banco são texto.
+- O perfil (`perfis`) é criado no primeiro acesso ou pelo aviso `user.created` do Clerk.
+- Sessão longa; "sair de todos os aparelhos" já vem pronto no Clerk.
 - Visitante não precisa de conta para ver e chamar no WhatsApp. O login só aparece quando a pessoa tenta favoritar, anunciar ou pedir no Radar, e depois ela volta exatamente para onde estava.
+- Passo a passo de configuração: PUBLICAR-PRODUCAO.md.
 
 ---
 
@@ -169,7 +175,8 @@ Pelo agendador do Supabase (pg_cron) ou da Vercel:
 
 ## 11. Segurança e lei
 
-- **RLS no banco** em todas as tabelas; o painel admin confere `e_admin()` no banco, não só na tela.
+- **RLS no banco** em todas as tabelas, com o id da pessoa lido por `public.usuario_id()`; o painel admin confere `e_admin()` no banco, não só na tela.
+- O Radar é lido só pela view `radar_feed`, que já esconde nome e detalhes de contato no próprio banco.
 - **Marco Civil art. 15:** guardar IP, data e **porta de origem** por 6 meses. A Vercel não repassa a porta; **(proposta)** colocar a **Cloudflare** na frente do domínio (plano grátis serve) para registrar a porta, e de quebra ganhar proteção contra ataque e cache de imagens.
 - **LGPD:** baixar meus dados e excluir conta em Minha conta; endereço exato de pessoa física nunca aparece; verificação de documento por provedor de KYC (sem guardar foto de documento).
 - Limite de requisições em login, Aki e envio de anúncio (evita robô e golpe em massa).
@@ -202,7 +209,8 @@ Fluxo: mudança no GitHub → link de prévia → você testa → aprova → vai
 | Serviço | Começo |
 |---|---|
 | Vercel | grátis (Hobby) só nos testes, porque ele não permite uso comercial; Pro ~US$ 20 no lançamento |
-| Supabase | grátis no teste; Pro ~US$ 25 no lançamento (backup diário) |
+| Supabase | grátis no teste; Pro ~US$ 25 no lançamento (backup diário); US$ 25 a 110 com ~100 mil usuários |
+| Clerk (login) | grátis até 50 mil usuários ativos/mês; ~US$ 1.000 com 100 mil (US$ 0,02 por usuário acima de 50 mil); SMS cobrado à parte no Pro |
 | Cloudflare | grátis |
 | Asaas | só taxa por cobrança paga |
 | WhatsApp/SMS | por mensagem enviada (código e avisos) |
