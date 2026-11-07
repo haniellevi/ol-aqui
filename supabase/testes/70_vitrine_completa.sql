@@ -312,3 +312,15 @@ select horarios_validos('{"seg":[{"abre":"00:00","fecha":"24:00"}]}') as dia_tod
        horarios_validos('{"seg":[{"abre":"08:00","fecha":"12:00","x":1}]}') as campo_a_mais,
        horarios_validos('{"seg":[{"abre":"08:00","fecha":"09:00"},{"abre":"10:00","fecha":"11:00"},{"abre":"12:00","fecha":"13:00"},{"abre":"14:00","fecha":"15:00"}]}') as quatro_faixas,
        horarios_validos('[]') as lista;
+
+\echo '[18] outro usuario nao reordena secoes nem fixados da loja dos outros (0 linhas); fixado nao muda'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_lj71',false) \g /dev/null
+select ordenar_secoes(array[:'s2', :'s1']::uuid[]) as secoes_alheias, ordenar_fixados(array[:'a3']::uuid[]) as fixados_alheios;
+update anuncios set fixado_na_loja = null where id = :'a5' returning id;
+reset role; select fixado_na_loja is not null as continua_fixado from anuncios where id = :'a5';
+\echo '[18a] ERRO ESPERADO: visitante nao usa recursos_vitrine_id'
+set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select * from recursos_vitrine_id(:'v70');
+\echo '[18b] dono tenta mudar a secao para a loja de outra pessoa: o banco mantem a loja original'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_lj70',false) \g /dev/null
+update loja_secoes set vitrine_id = :'v71' where id = :'s2' returning vitrine_id = :'v70' as mesma_loja;
