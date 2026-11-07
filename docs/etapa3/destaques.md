@@ -38,7 +38,7 @@ saem, para não existir dois lugares com o mesmo preço).
 | `ativar_destaque(id)` | interna | Subir: `subido_em = now()`. Busca: estende `destaque_ate` (busca e listas continuam usando essa coluna, com rodízio justo). Home/Loja: início/fim (somando se já tiver um ativo) |
 | `confirmar_pagamento(cobranca, payload)` | webhook (service_role) | Mesma assinatura. Idempotente (só age quando o pagamento ainda não estava pago). Tipo `destaque` com destaque ligado → ativa; sem destaque ligado (cobrança antiga) → comportamento antigo com os dias do tipo `busca` |
 | `cancelar_pagamento(cobranca, status, payload)` | webhook (service_role) | Vencido/apagado → cancela o pedido pendente. Estorno → cancela o destaque ativo (e devolve o tempo de `destaque_ate`). Idempotente |
-| `registrar_cobranca_asaas(pagamento, cobranca, link, forma)` | servidor (service_role) | Grava os ids do Asaas no pagamento |
+| `registrar_cobranca_asaas(pagamento, cobranca, link, forma)` | servidor (service_role) | Grava os ids do Asaas no pagamento pendente. Nunca troca uma cobrança já gravada por outra (devolve `false`; o servidor apaga a cobrança a mais no Asaas), para nenhum Pix pago ficar sem dono |
 | `conceder_destaque_cortesia(...)` / `cancelar_destaque(...)` | admin | Cortesia ativa na hora, respeita vagas (a não ser que o admin marque "passar das vagas"); fica no log |
 | `resultados_destaques(anuncio_id, todos, limite)` | vendedor / admin | Visualizações e cliques no WhatsApp de `eventos_anuncio` dentro da janela do destaque. Vendedor vê só os seus; admin vê todos com `todos = true` |
 | `destaques_home(regiao, limite)` | público | Carrossel "Destaques perto de você": tipo `home` ativo na região, anúncio no ar, rodízio justo que muda a cada hora |
@@ -76,7 +76,7 @@ nesse caso pode passar uma vaga do limite por alguns dias.
 | Minha conta > Meus anúncios | Botão "Destacar" nos anúncios no ar + "Seu destaque teve X visualizações e Y cliques no WhatsApp" |
 | Minha conta > Minha loja | Cartão "Destacar minha loja" com o resultado |
 | `/anunciar/pronto` | Botão "Destacar" |
-| Início | Carrossel "Destaques perto de você" (tipo home) e bloco "Lojas em destaque" (tipo loja), sempre com "Patrocinado" |
+| Início | Carrossel "Destaques perto de você" (só tipo home da região) e bloco "Lojas em destaque" (tipo loja), sempre com "Patrocinado". O "Destaque na busca" continua no topo da grade "Mais recentes" com "Patrocinado", igual à busca |
 | `/admin/destaques` (tela 10) | Tipos (preço, dias, vagas, ativo, ordem), créditos por plano, configurações dos destaques, destaques ativos com resultado, cortesia, pagamentos esperando, situação do Asaas |
 
 Link para o robô Aki: `linkDestacar(anuncioId)` em `src/lib/rotas.ts` e `gerarLinkDestaque()` em `src/lib/dados/destaques.ts`
@@ -90,3 +90,21 @@ Link para o robô Aki: `linkDestacar(anuncioId)` em `src/lib/rotas.ts` e `gerarL
   `confirmar_pagamento`, `cancelar_pagamento`, `registrar_cobranca_asaas` e `expirar_destaques` só para `service_role`; `subido_em` e `destaque_ate` protegidos por gatilho.
 - **Patrocinado:** todo lugar pago (busca, carrossel da home, lojas em destaque) mostra a etiqueta.
 - **Resultado só do próprio vendedor:** `resultados_destaques` filtra por `dono_id = usuario_id()`; admin precisa pedir `todos`.
+
+## 5. Arquivos
+
+- Banco: `supabase/migrations/20261107030000_destaques.sql`; testes: `supabase/testes/50_destaques.sql`.
+- Tipos: `src/lib/tipos-destaques.ts`. CPF/CNPJ (dígitos e máscara): `src/lib/cpf-cnpj.ts`.
+- Asaas: `src/lib/asaas.ts` (cliente HTTP) e `src/lib/cobranca-destaque.ts` (cobrar um pedido, conferir a situação, saber se precisa do CPF).
+- Leituras: `src/lib/dados/destaques.ts` (opções, pedido, resultados, carrossel, lojas em destaque, `gerarLinkDestaque`).
+- Ações do vendedor: `src/app/(conta)/destacar/actions.ts`; telas: `src/app/(conta)/destacar/[anuncioId]/page.tsx`, `src/app/(conta)/destacar/loja/page.tsx`,
+  componentes em `src/components/destaques/`.
+- Webhook: `src/app/api/asaas/webhook/route.ts`. Painel: `src/app/admin/destaques/` (+ item "Destaques" no menu do painel).
+
+## 6. Como ligar em produção
+
+1. Na Vercel: `ASAAS_API_KEY` (chave do Asaas) e `ASAAS_WEBHOOK_TOKEN` (um texto longo inventado).
+2. No Asaas: Integrações > Webhooks > URL `https://SEU-SITE/api/asaas/webhook`, mesmo token, eventos de cobrança
+   (PAYMENT_CONFIRMED, PAYMENT_RECEIVED, PAYMENT_OVERDUE, PAYMENT_DELETED, PAYMENT_REFUNDED).
+3. No painel: Destaques > `asaas.ambiente` = `producao` quando for valer (começa em `sandbox`).
+4. Rotina diária (pg_cron) continua `select public.expirar_rotina()`: ela já chama `expirar_destaques()`.
