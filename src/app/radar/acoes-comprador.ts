@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { listarCidades } from "@/lib/dados/regiao";
 import { lerConfig } from "@/lib/dados/config";
@@ -19,6 +20,7 @@ import {
   TITULO_MIN,
   URGENCIAS,
   linkPedido,
+  whatsappDigitado,
   type ModoContato,
 } from "@/lib/radar";
 import type { ErroTela } from "@/lib/tipos";
@@ -32,6 +34,12 @@ async function prazosPermitidos(microrregiaoId: string): Promise<number[]> {
   const v = await lerConfig<unknown>("radar.prazos_horas", microrregiaoId, PRAZOS_PADRAO);
   const lista = Array.isArray(v) ? v.map(Number).filter((n) => Number.isInteger(n) && n > 0) : [];
   return lista.length ? lista : PRAZOS_PADRAO;
+}
+
+/** O painel exige celular confirmado por código para pedir? (radar.exigir_celular_confirmado; padrão: sim) */
+export async function exigeCelularConfirmado(microrregiaoId: string): Promise<boolean> {
+  const v = await lerConfig<unknown>("radar.exigir_celular_confirmado", microrregiaoId, true);
+  return v !== false && v !== "false";
 }
 
 export async function criarPedido(_antes: EstadoPedido, form: FormData): Promise<EstadoPedido> {
@@ -69,7 +77,28 @@ export async function criarPedido(_antes: EstadoPedido, form: FormData): Promise
   } else if (modo !== "whatsapp_direto") {
     campos.modo = "Escolha como quer ser chamado.";
   }
+  // Sem celular confirmado (o SMS do login ainda não funciona): a pessoa digita o WhatsApp,
+  // se o painel deixar. Nunca troca um número já confirmado pelo Clerk.
+  const confirmado = !!perfil.whatsapp && !!perfil.whatsapp_verificado_em;
+  let whatsappNovo: string | null = null;
+  if (!confirmado) {
+    if (await exigeCelularConfirmado(perfil.microrregiao_id)) {
+      return { erro: { mensagem: "Confirme seu celular antes de pedir no Radar." } };
+    }
+    whatsappNovo = whatsappDigitado(String(form.get("whatsapp") ?? ""));
+    if (!whatsappNovo) campos.whatsapp = "Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.";
+  }
   if (Object.keys(campos).length) return { campos, erro: { mensagem: "Confira o que está marcado em vermelho." } };
+
+  if (whatsappNovo && whatsappNovo !== perfil.whatsapp) {
+    // Grava com a chave secreta: perfis.whatsapp não é editável pelo navegador. Fica sem confirmação.
+    const { error } = await supabaseAdmin()
+      .from("perfis")
+      .update({ whatsapp: whatsappNovo, whatsapp_verificado_em: null })
+      .eq("id", userId)
+      .is("whatsapp_verificado_em", null);
+    if (error) return { erro: { mensagem: "Não conseguimos guardar seu WhatsApp. Tente de novo." } };
+  }
 
   const db = await createClient();
   const { data, error } = await db
@@ -91,8 +120,8 @@ export async function criarPedido(_antes: EstadoPedido, form: FormData): Promise
 
   if (error) {
     // A regra "radar criar" barra quem ainda não confirmou o celular.
-    if (error.code === "42501" && !conta.perfil.whatsapp_verificado_em) {
-      return { erro: { mensagem: "Confirme seu celular antes de pedir no Radar." } };
+    if (error.code === "42501" && !confirmado) {
+      return { erro: { mensagem: "Não conseguimos usar seu WhatsApp agora. Confira o número e tente de novo." } };
     }
     return { erro: traduzirErro(error) };
   }

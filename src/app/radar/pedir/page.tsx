@@ -6,6 +6,8 @@ import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { listarCidades } from "@/lib/dados/regiao";
 import { lerConfig } from "@/lib/dados/config";
 import { PRAZOS_PADRAO, TITULO_MAX } from "@/lib/radar";
+import { telefone } from "@/lib/formato";
+import { exigeCelularConfirmado } from "@/app/radar/acoes-comprador";
 import { FormPedido } from "@/components/radar/form-pedido";
 import { ComoFuncionaRadar } from "@/components/radar/como-funciona";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
@@ -16,7 +18,8 @@ export const metadata: Metadata = { title: "Pedir no Radar", robots: { index: fa
 
 // T27 · Fazer pedido no Radar (F4). O middleware já exige login e volta para cá depois.
 // O texto pode vir da busca sem resultado (?pedido=...). Para pedir, o banco exige o celular
-// confirmado (o Clerk confirma por código); sem ele, a tela leva para confirmar e voltar.
+// confirmado (o Clerk confirma por código) ou, se o painel liberar (radar.exigir_celular_confirmado
+// = false), o WhatsApp digitado aqui mesmo. Exigindo o código, a tela leva para confirmar e voltar.
 export default async function PedirNoRadar({ searchParams }: { searchParams: Promise<{ pedido?: string }> }) {
   const { pedido } = await searchParams;
   // Atualiza o perfil com o celular do Clerk antes de ler (quem acabou de confirmar já pode pedir).
@@ -36,7 +39,10 @@ export default async function PedirNoRadar({ searchParams }: { searchParams: Pro
   }
 
   const { perfil } = conta;
-  if (!perfil.whatsapp || !perfil.whatsapp_verificado_em) {
+  const confirmado = !!perfil.whatsapp && !!perfil.whatsapp_verificado_em;
+  // Enquanto o SMS do login não funciona, o painel pode liberar o WhatsApp digitado (sem código).
+  const exigeCodigo = !confirmado && (await exigeCelularConfirmado(perfil.microrregiao_id));
+  if (exigeCodigo) {
     return (
       <PaginaConta>
         <TopoConta titulo="Pedir no Radar" voltar="/radar" textoVoltar="Radar" />
@@ -80,6 +86,8 @@ export default async function PedirNoRadar({ searchParams }: { searchParams: Pro
         cidades={cidades}
         cidadeInicial={cidadeInicial}
         prazos={prazos.length ? prazos : PRAZOS_PADRAO}
+        pedirWhatsapp={!confirmado}
+        whatsappInicial={perfil.whatsapp ? telefone(perfil.whatsapp) : ""}
       />
     </PaginaConta>
   );

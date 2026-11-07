@@ -78,3 +78,10 @@ export const linkPedir = (texto?: string | null) => {
 };
 
 export const linkPedido = (id: string) => `/radar/pedido/${id}`;
+
+/** WhatsApp digitado ("(89) 99999-0000", "89999990000"...) → "5589999990000". Inválido → null. */
+export function whatsappDigitado(texto: string | null | undefined): string | null {
+  let d = String(texto ?? "").replace(/\D/g, "").replace(/^0+/, "");
+  if (d.length === 10 || d.length === 11) d = `55${d}`;
+  return /^55[1-9][0-9]9[0-9]{8}$/.test(d) ? d : null;
+}

@@ -28,11 +28,16 @@ export function FormPedido({
   cidades,
   cidadeInicial,
   prazos,
+  pedirWhatsapp = false,
+  whatsappInicial = "",
 }: {
   textoInicial: string;
   cidades: { nome: string; uf: string }[];
   cidadeInicial: string;
   prazos: number[];
+  /** Celular ainda não confirmado: pede o WhatsApp aqui (sem código). */
+  pedirWhatsapp?: boolean;
+  whatsappInicial?: string;
 }) {
   const [estado, acao, enviando] = useActionState<EstadoPedido, FormData>(criarPedido, null);
   const [titulo, setTitulo] = useState(textoInicial);
@@ -183,6 +188,21 @@ export function FormPedido({
           </div>
         )}
       </fieldset>
+
+      {pedirWhatsapp && (
+        <Campo
+          rotulo="Seu WhatsApp"
+          name="whatsapp"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel-national"
+          defaultValue={whatsappInicial}
+          placeholder="(89) 99999-0000"
+          maxLength={20}
+          erro={erro.whatsapp}
+          dica="Com DDD. É por ele que as lojas falam com você."
+        />
+      )}
 
       <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 -mx-4 border-t border-borda bg-cartao/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
         <Botao type="submit" larguraTotal icone={<Radar />} carregando={enviando} textoCarregando="Enviando o pedido...">
