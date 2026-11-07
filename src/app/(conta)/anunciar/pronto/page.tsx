@@ -29,7 +29,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
     const horas = await lerConfigNumero("moderacao.prazo_horas");
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-4 py-8 text-center">
-        <span className="grid size-20 place-items-center rounded-full bg-laranja-claro text-beringela" aria-hidden>
+        <span className="grid size-20 place-items-center rounded-full bg-aviso-fundo text-aviso" aria-hidden>
           <Clock className="size-10" />
         </span>
         <h1 className="text-2xl font-semibold">Seu anúncio está em análise</h1>
@@ -53,7 +53,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-4 py-8 text-center">
-      <span className="grid size-20 place-items-center rounded-full bg-laranja-claro text-verde-escuro" aria-hidden>
+      <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
         <CheckCircle2 className="size-12" />
       </span>
       <h1 className="text-2xl font-semibold">Seu anúncio está no ar!</h1>

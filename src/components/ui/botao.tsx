@@ -2,21 +2,22 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
-// Botão do OLAKI (docs/DESIGN-SYSTEM.md, "Botões"). Altura mínima 48px, texto 16px negrito.
+// Botão do OLAKI (docs/DESIGN-SYSTEM.md, "Botões"). Altura mínima 48px (52px no principal de
+// largura cheia e no WhatsApp), texto 16px peso 600. Apertado = brightness-90.
 // Principal = laranja com texto beringela (nunca branco no laranja).
 
 export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | "texto";
 
 const BASE =
-  "inline-flex min-h-12 select-none items-center justify-center gap-2 rounded-card px-5 text-base font-semibold leading-5 " +
-  "transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro " +
+  "inline-flex select-none items-center justify-center gap-2 rounded-card px-5 text-base font-semibold leading-5 " +
+  "transition-colors active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro " +
   "disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:pointer-events-none aria-disabled:opacity-60";
 
 const VARIANTES: Record<VarianteBotao, string> = {
-  primario: "bg-laranja text-beringela font-bold hover:bg-[#f25f0a] active:bg-[#e55a08]",
-  secundario: "border-2 border-beringela bg-cartao text-beringela hover:bg-fundo active:bg-borda",
-  perigo: "border-2 border-perigo bg-cartao text-perigo hover:bg-red-50 active:bg-red-100",
-  whatsapp: "bg-verde-escuro text-white hover:bg-[#0c6a35] active:bg-[#0a5a2d]",
+  primario: "bg-laranja text-beringela hover:brightness-95",
+  secundario: "border border-beringela bg-cartao text-beringela hover:bg-fundo",
+  perigo: "border border-perigo bg-cartao text-perigo hover:bg-perigo-fundo",
+  whatsapp: "bg-verde-escuro text-white hover:brightness-95",
   texto: "px-3 text-laranja-escuro underline-offset-4 hover:underline",
 };
 
@@ -40,7 +41,9 @@ type ComoLink = Comum & Omit<ComponentProps<typeof Link>, keyof Comum> & { href:
 export type BotaoProps = ComoBotao | ComoLink;
 
 export function classesBotao(variante: VarianteBotao = "primario", larguraTotal = false, extra = "") {
-  return `${BASE} ${VARIANTES[variante]} ${larguraTotal ? "w-full" : ""} ${extra}`.trim();
+  // 52px (h-13) no WhatsApp e no principal de largura cheia (a ação principal da tela); 48px nos outros.
+  const altura = variante === "whatsapp" || (variante === "primario" && larguraTotal) ? "min-h-13" : "min-h-12";
+  return `${BASE} ${altura} ${VARIANTES[variante]} ${larguraTotal ? "w-full" : ""} ${extra}`.trim();
 }
 
 /** Com `href` vira link (next/link); sem `href` é <button> (type="button" por padrão). */

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Heart, MessageCircle } from "lucide-react";
+import { classesBotao } from "@/components/ui/botao";
 import { alternarFavorito, registrarEvento } from "./actions";
 
 // Barra fixa embaixo (T7, item 10): "Chamar no WhatsApp" verde + coração.
@@ -11,7 +12,7 @@ import { alternarFavorito, registrarEvento } from "./actions";
 // O WhatsApp é um link comum: funciona sem JavaScript; com JavaScript também conta o clique.
 
 const CORACAO =
-  "grid size-[52px] shrink-0 place-items-center rounded-card border-2 border-borda bg-cartao text-beringela hover:bg-fundo " +
+  "grid size-13 shrink-0 place-items-center rounded-card border-2 border-borda bg-cartao text-beringela hover:bg-fundo active:brightness-90 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:opacity-60";
 
 export function BarraContato({
@@ -69,13 +70,13 @@ export function BarraContato({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => void registrarEvento(anuncioId, "clique_whatsapp")}
-            className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-card bg-verde-escuro px-5 text-base font-semibold text-white hover:bg-[#0c6a35] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+            className={classesBotao("whatsapp", false, "flex-1")}
           >
             <MessageCircle className="size-5" aria-hidden />
             Chamar no WhatsApp
           </a>
         ) : (
-          <p className="flex min-h-[52px] flex-1 items-center text-[15px] text-texto-suave">Este vendedor ainda não colocou o WhatsApp.</p>
+          <p className="flex min-h-13 flex-1 items-center text-[15px] text-texto-suave">Este vendedor ainda não colocou o WhatsApp.</p>
         )}
 
         {podeFavoritar &&

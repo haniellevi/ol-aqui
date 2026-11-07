@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
 import { ORDENS, paramCampo, type EstadoBusca } from "@/components/busca/parametros";
 import type { CampoCategoria, CategoriaComFilhas, Cidade } from "@/lib/tipos";
@@ -13,10 +13,11 @@ export const ID_RESULTADOS = "resultados";
 const SELECT =
   "h-12 w-full rounded-campo border-2 border-borda bg-cartao px-3 text-base text-texto " +
   "focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30";
-const ENTRADA = SELECT;
+const ENTRADA = `${SELECT} placeholder:text-texto-suave`;
+// Chip de escolha (igual ao <Chip>): selecionado = borda laranja-escuro, fundo laranja-claro, texto beringela e ✓.
 const OPCAO =
-  "inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-campo border-2 border-borda bg-cartao px-4 text-[15px] font-semibold " +
-  "has-checked:border-beringela has-checked:bg-beringela has-checked:text-white " +
+  "group inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-campo border border-borda bg-cartao px-4 text-[15px] font-semibold text-beringela " +
+  "has-checked:border-laranja-escuro has-checked:bg-laranja-claro " +
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 const LEGENDA = "mb-2 text-base font-semibold";
 
@@ -130,6 +131,7 @@ export function FolhaFiltros({
                       defaultChecked={estado.ordem === o.valor}
                       className="sr-only"
                     />
+                    <Check className="hidden size-4 shrink-0 group-has-checked:inline" aria-hidden />
                     {o.rotulo}
                   </label>
                 ))}
@@ -198,6 +200,7 @@ function FiltroCampo({ campo: c, estado }: { campo: CampoCategoria; estado: Esta
           {(c.opcoes ?? []).map((o) => (
             <label key={o} className={OPCAO}>
               <input type="checkbox" name={paramCampo(c.chave)} value={o} defaultChecked={marcados.has(o)} className="sr-only" />
+              <Check className="hidden size-4 shrink-0 group-has-checked:inline" aria-hidden />
               {o}
             </label>
           ))}
@@ -218,6 +221,7 @@ function FiltroCampo({ campo: c, estado }: { campo: CampoCategoria; estado: Esta
           ].map((o) => (
             <label key={o.v} className={OPCAO}>
               <input type="radio" name={paramCampo(c.chave)} value={o.v} defaultChecked={atual === o.v} className="sr-only" />
+              <Check className="hidden size-4 shrink-0 group-has-checked:inline" aria-hidden />
               {o.r}
             </label>
           ))}

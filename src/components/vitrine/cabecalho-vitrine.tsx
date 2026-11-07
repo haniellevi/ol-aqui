@@ -33,7 +33,7 @@ export function CabecalhoVitrine({
   const desdeTexto = desde(criadoEm);
   return (
     <header className="overflow-hidden bg-cartao shadow-1 md:rounded-card">
-      <div className="relative aspect-[3/1] max-h-56 w-full bg-gradient-to-br from-beringela to-[#7a2a74]">
+      <div className="relative aspect-[3/1] max-h-56 w-full bg-gradient-to-br from-beringela to-beringela/80">
         {capa && (
           // eslint-disable-next-line @next/next/no-img-element -- capa vem do Storage
           <img src={capa} alt="" width={1200} height={400} fetchPriority="high" className="absolute inset-0 size-full object-cover" />

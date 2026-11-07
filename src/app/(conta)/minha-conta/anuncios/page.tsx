@@ -26,9 +26,9 @@ const ABAS = [
 ] as const satisfies readonly { chave: string; nome: string; status: readonly StatusAnuncio[] }[];
 
 const ROTULO: Record<StatusAnuncio, { texto: string; cor: string }> = {
-  ativo: { texto: "No ar", cor: "bg-green-100 text-verde-escuro" },
+  ativo: { texto: "No ar", cor: "bg-sucesso-fundo text-verde-escuro" },
   em_analise: { texto: "Em análise", cor: "bg-aviso-fundo text-aviso" },
-  congelado: { texto: "Bloqueado", cor: "bg-red-100 text-perigo" },
+  congelado: { texto: "Bloqueado", cor: "bg-perigo-fundo text-perigo" },
   rascunho: { texto: "Rascunho", cor: "bg-fundo text-texto-suave" },
   pausado: { texto: "Pausado", cor: "bg-fundo text-texto-suave" },
   expirado: { texto: "Vencido", cor: "bg-fundo text-texto-suave" },
@@ -161,14 +161,14 @@ function LinhaAnuncio({ anuncio: a }: { anuncio: MeuAnuncio }) {
       </div>
 
       {a.status === "em_analise" && a.motivo_analise && (
-        <p className="rounded-campo bg-aviso-fundo p-2 text-sm font-semibold text-aviso">Motivo: {a.motivo_analise}</p>
+        <p className="rounded-card bg-aviso-fundo p-2 text-sm font-semibold text-aviso">Motivo: {a.motivo_analise}</p>
       )}
       {a.status === "congelado" && (
-        <p className="rounded-campo bg-red-50 p-2 text-sm font-semibold text-perigo">Este anúncio foi bloqueado pela equipe. Fale com o suporte.</p>
+        <p className="rounded-card bg-perigo-fundo p-2 text-sm font-semibold text-perigo">Este anúncio foi bloqueado pela equipe. Fale com o suporte.</p>
       )}
 
       {a.status !== "rascunho" && (
-        <dl className="grid grid-cols-3 gap-2 rounded-campo bg-fundo p-2 text-center">
+        <dl className="grid grid-cols-3 gap-2 rounded-card bg-fundo p-2 text-center">
           <Numero icone={<Eye />} rotulo="visualizações" valor={a.visualizacoes} />
           <Numero icone={<MessageCircle />} rotulo="cliques no WhatsApp" valor={a.cliques_whatsapp} />
           <Numero icone={<Heart />} rotulo="favoritos" valor={a.total_favoritos} />
@@ -183,7 +183,7 @@ function LinhaAnuncio({ anuncio: a }: { anuncio: MeuAnuncio }) {
 function Numero({ icone, rotulo, valor }: { icone: React.ReactNode; rotulo: string; valor: number }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <dt className="order-2 text-[12px] leading-4 text-texto-suave">{rotulo}</dt>
+      <dt className="order-2 text-[13px] leading-4 text-texto-suave">{rotulo}</dt>
       <dd className="order-1 flex items-center gap-1 text-base font-bold">
         <span className="inline-flex text-laranja-escuro [&>svg]:size-4" aria-hidden>
           {icone}

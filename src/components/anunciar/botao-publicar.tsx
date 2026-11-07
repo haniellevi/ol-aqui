@@ -42,6 +42,7 @@ export function BotaoPublicar({
         <Botao
           type="submit"
           larguraTotal
+         
           carregando={enviando}
           textoCarregando={modo === "salvar" ? "Salvando..." : "Publicando..."}
           icone={modo === "salvar" ? <Save /> : <Send />}

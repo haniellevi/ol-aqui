@@ -16,10 +16,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-dvh bg-fundo md:flex">
-      <aside className="md:sticky md:top-0 md:h-dvh md:border-r md:border-neutral-200 md:bg-white">
+      <aside className="md:sticky md:top-0 md:h-dvh md:border-r md:border-borda md:bg-cartao">
         <Link href="/admin" className="hidden items-center gap-2 px-6 pb-2 pt-6 md:flex">
           <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={88} height={36} />
-          <span className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Painel</span>
+          <span className="text-[13px] font-semibold uppercase tracking-wide text-texto-suave">Painel</span>
         </Link>
         <NavAdmin pendencias={pendencias} />
       </aside>

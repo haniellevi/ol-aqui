@@ -31,7 +31,7 @@ const BOTAO_FOTO =
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 const BOTAO_MINI =
-  "grid min-h-12 flex-1 place-items-center rounded-campo border border-borda bg-cartao text-beringela hover:bg-fundo " +
+  "grid min-h-12 flex-1 place-items-center rounded-campo border border-borda bg-cartao text-beringela hover:bg-fundo active:bg-borda " +
   "disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-laranja-escuro";
 
 let contador = 0;
@@ -252,7 +252,7 @@ export function EnvioFotos({
                     <span className="absolute left-1.5 top-1.5 rounded-full bg-beringela px-2 py-0.5 text-[13px] font-bold text-white">Capa</span>
                   )}
                   {(item.estado === "enviando" || item.estado === "fila") && (
-                    <span className="absolute inset-0 grid place-items-center bg-beringela/50 text-center text-sm font-semibold text-white">
+                    <span className="absolute inset-0 grid place-items-center bg-beringela/70 text-center text-sm font-semibold text-white">
                       <span className="flex flex-col items-center gap-1">
                         <Loader2 className="size-6 animate-spin motion-reduce:animate-none" aria-hidden />
                         {item.estado === "fila" ? "Na fila" : "Enviando..."}
@@ -264,7 +264,7 @@ export function EnvioFotos({
                       <button
                         type="button"
                         onClick={() => tentarDeNovo(item.chave)}
-                        className="inline-flex min-h-12 items-center gap-1.5 rounded-card bg-laranja px-3 text-sm font-bold text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                        className="inline-flex min-h-12 items-center gap-1.5 rounded-card border-2 border-beringela bg-cartao px-3 text-sm font-semibold text-beringela hover:bg-fundo active:bg-borda focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                       >
                         <RotateCw className="size-4" aria-hidden />
                         Tentar de novo

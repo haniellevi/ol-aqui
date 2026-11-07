@@ -24,13 +24,13 @@ export async function CabecalhoPublico() {
       </a>
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4">
         <Link href="/" className="flex h-12 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="OLAKI, página inicial">
-          <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={78} height={32} priority className="h-8 w-auto sm:h-9" />
+          <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={88} height={36} priority className="h-8 w-auto sm:h-9" />
         </Link>
 
         {cidade && (
           <Link
             href={HREF_ESCOLHER_CIDADE}
-            className="ml-1 inline-flex h-12 min-w-0 items-center gap-1 rounded-full border border-borda bg-cartao px-3 text-[15px] font-semibold text-texto hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+            className="ml-1 inline-flex h-12 min-w-0 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-[15px] font-semibold text-texto hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
             aria-label={`Cidade: ${cidade}. Trocar cidade`}
           >
             <MapPin className="size-4 shrink-0" aria-hidden />

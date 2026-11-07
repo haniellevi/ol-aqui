@@ -120,7 +120,7 @@ Duas colunas no celular, 4 a 5 no computador. Card inteiro é tocável.
 
 ### Outros componentes
 - **Campo de busca** grande no topo ("O que você procura?"), com microfone (busca por voz do próprio celular) e botão do Aki.
-- **Chips de filtro** roláveis (cidade, preço, categoria), com contador "Filtros (3)".
+- **Chips de filtro** roláveis (cidade, preço, categoria), com contador "Filtros (3)". Chip selecionado: fundo `laranja-claro`, borda `laranja-escuro` e um ✓ (a borda laranja comum tem só 2,9 : 1 sobre branco e o estado não pode depender só da cor). Foco de campo: borda `laranja-escuro`.
 - **Folha que sobe de baixo** (bottom sheet) para filtros, escolher cidade e confirmar ações. Mais fácil com uma mão que janela no meio da tela.
 - **Seletor de cidade** com as cidades da região e "Perto de mim".
 - **Campo de código** (6 caixinhas, preenche sozinho com o código que chega no celular).
