@@ -1,6 +1,6 @@
 # OLAKI · Sistema visual (design system) · 07/11/2026
 
-Tudo aqui sai do logo oficial, **opção 1 (pin no "i")**, decidido pelo Raniel em 07/11/2026; a opção 2 (balão) saiu. Arquivos: `logo/olaki-opcao1-pin-beringela.svg` (fundo claro), `logo/olaki-opcao1-pin-fundo-escuro-beringela.svg` (fundo escuro) e `logo/olaki-icone-app-beringela.svg` (ícone). Cores: **roxo beringela "ol" + laranja forte "aki"**, letra redonda e geométrica.
+Tudo aqui sai do logo oficial, **opção 1 (pin no "i")**, decidido pelo Raniel em 07/11/2026; a opção 2 (balão) saiu. Arquivos: `public/logo/olaki-opcao1-pin.svg` (fundo claro), `public/logo/olaki-opcao1-pin-fundo-escuro.svg` (fundo escuro), `public/logo/olaki-icone-app.svg` (ícone) e `src/app/icon.svg` (ícone do site, cópia idêntica do ícone). Cores: **roxo beringela "ol" + laranja forte "aki"**, letra redonda e geométrica.
 
 > **Atualizado em 07/11/2026:** o Raniel trocou o azul-marinho pelo **roxo beringela `#4B1248`**, para provocar o OLX sem copiar o roxo violeta dele (`#6E0AD6`). O beringela puxa para o vinho, é outra família de cor. Não usar nenhum roxo violeta vivo no app.
 Objetivo: o app parecer **simples, confiável e da região**, legível no sol, num celular barato, por quem lê pouco.

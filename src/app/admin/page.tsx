@@ -44,7 +44,7 @@ export default async function ResumoPage() {
       <Titulo sub={`Atualizado agora · ${agora.toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" })}`}>Resumo</Titulo>
 
       {fila > 0 && (
-        <Link href="/admin/moderacao" className="mb-6 flex items-center justify-between rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+        <Link href="/admin/moderacao" className="mb-6 flex items-center justify-between rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
           <span>
             {fila} {fila === 1 ? "item espera" : "itens esperam"} revisão: {emAnalise} anúncios, {pedidosAnalise} pedidos, {denuncias} denúncias
           </span>

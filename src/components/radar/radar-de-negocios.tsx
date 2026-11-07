@@ -72,12 +72,12 @@ export function RadarDeNegocios({
 
   return (
     <main className="mx-auto min-h-dvh max-w-xl bg-fundo pb-28">
-      <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/95 px-4 pb-3 pt-4 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b border-borda bg-cartao/95 px-4 pb-3 pt-4 backdrop-blur">
         <div className="flex items-center gap-2">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
-          <h1 className="text-xl font-bold tracking-tight text-neutral-900">Radar de Negócios</h1>
+          <h1 className="text-xl font-bold tracking-tight text-beringela">Radar de Negócios</h1>
         </div>
-        <p className="mt-0.5 text-sm text-neutral-500">
+        <p className="mt-0.5 text-sm text-texto-suave">
           {pedidos.length} {pedidos.length === 1 ? "comprador procurando" : "compradores procurando"} na sua região
         </p>
 
@@ -87,10 +87,10 @@ export function RadarDeNegocios({
               key={c.valor}
               onClick={() => setFiltro(c.valor)}
               aria-pressed={filtro === c.valor}
-              className={`h-12 shrink-0 rounded-full px-4 text-sm font-medium transition-colors ${
+              className={`h-12 shrink-0 rounded-lg border px-4 text-sm font-semibold transition-colors ${
                 filtro === c.valor
-                  ? "bg-neutral-900 text-white"
-                  : "border border-neutral-200 bg-white text-neutral-700 active:bg-neutral-100"
+                  ? "border-laranja bg-laranja-claro text-beringela"
+                  : "border-borda bg-cartao text-beringela active:bg-fundo"
               }`}
             >
               {c.rotulo}
@@ -102,7 +102,7 @@ export function RadarDeNegocios({
       {!temAcesso && <FaixaUpgrade planos={planos} titulo="Esses clientes já querem comprar." />}
       {temAcesso && restantes !== null && (
         restantes > 0 ? (
-          <p className="mx-4 mt-4 rounded-xl bg-orange-50 px-4 py-3 text-sm text-orange-800">
+          <p className="mx-4 mt-4 rounded-xl bg-laranja-claro px-4 py-3 text-sm text-beringela">
             Você tem <strong>{restantes}</strong> {restantes === 1 ? "proposta grátis" : "propostas grátis"} no seu teste.
           </p>
         ) : (
@@ -122,7 +122,7 @@ export function RadarDeNegocios({
           </li>
         ))}
         {visiveis.length === 0 && (
-          <li className="rounded-2xl border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
+          <li className="rounded-xl border border-dashed border-borda bg-cartao p-8 text-center text-sm text-texto-suave">
             Nenhum pedido aberto nesta categoria agora. Volte mais tarde, o Radar atualiza o tempo todo.
           </li>
         )}
@@ -190,41 +190,41 @@ function CartaoPedido({
   }
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+    <article className="overflow-hidden rounded-xl border border-borda bg-cartao shadow-1">
       <div className="p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {p.urgencia !== "normal" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 font-semibold text-orange-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-laranja-claro px-2 py-0.5 font-semibold text-laranja-escuro">
               <Flame className="size-3.5" aria-hidden />
               {p.urgencia === "hoje" ? "Precisa hoje" : "Esta semana"}
             </span>
           )}
           {modoPrazo && p.propostasAte && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 font-medium text-sky-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-aviso-fundo px-2 py-0.5 font-semibold text-aviso">
               <Hourglass className="size-3.5" aria-hidden />
               Propostas até {dataHora.format(new Date(p.propostasAte))}
             </span>
           )}
           {p.compradorCertificado && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-verde-escuro px-2 py-0.5 font-semibold text-white">
               <BadgeCheck className="size-3.5" aria-hidden />
               Negociador Certificado
             </span>
           )}
-          <span className="ml-auto inline-flex items-center gap-1 text-neutral-400">
+          <span className="ml-auto inline-flex items-center gap-1 text-texto-suave">
             <Clock className="size-3.5" aria-hidden />
             {tempoAtras(p.criadoEm)}
           </span>
         </div>
 
         {/* O que procura: sempre visível, é o "gancho" que vende o plano */}
-        <h2 className="mt-2 text-base font-semibold leading-snug text-neutral-900">{p.titulo}</h2>
+        <h2 className="mt-2 text-base font-semibold leading-snug text-beringela">{p.titulo}</h2>
 
         <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="text-lg font-bold text-neutral-900">
+          <span className="text-lg font-bold text-beringela">
             {p.precoMaxCentavos != null ? `até ${reais.format(p.precoMaxCentavos / 100)}` : "Valor a combinar"}
           </span>
-          <span className="inline-flex items-center gap-1 text-sm text-neutral-500">
+          <span className="inline-flex items-center gap-1 text-sm text-texto-suave">
             <MapPin className="size-4" aria-hidden />
             {p.cidade}
           </span>
@@ -232,9 +232,9 @@ function CartaoPedido({
 
         <div className="relative mt-3">
           {temAcesso ? (
-            <div className="rounded-xl bg-neutral-50 p-3 text-sm text-neutral-700">
-              {p.detalhes ? <p className="whitespace-pre-line">{p.detalhes}</p> : <p className="text-neutral-400">Sem detalhes extras.</p>}
-              <p className="mt-2 text-xs text-neutral-500">
+            <div className="rounded-xl bg-fundo p-3 text-sm text-beringela">
+              {p.detalhes ? <p className="whitespace-pre-line">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
+              <p className="mt-2 text-xs text-texto-suave">
                 Comprador: {p.compradorNome}
                 {modoPrazo && " · prefere receber as ofertas e escolher com quem falar"}
               </p>
@@ -242,12 +242,12 @@ function CartaoPedido({
           ) : (
             <>
               {/* Texto falso: o real nunca chega ao navegador de quem não tem acesso */}
-              <div aria-hidden className="select-none rounded-xl bg-neutral-50 p-3 text-sm text-neutral-700 blur-[5px]">
+              <div aria-hidden className="select-none rounded-xl bg-fundo p-3 text-sm text-beringela blur-[5px]">
                 <p>Detalhes do pedido com modelo, ano, condição de pagamento e prazo para fechar negócio.</p>
                 <p className="mt-2 text-xs">Comprador: ••••••• · (89) 9••••-••••</p>
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-900/90 px-3 py-1.5 text-xs font-semibold text-white">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-beringela/90 px-3 py-1.5 text-xs font-semibold text-white">
                   <Lock className="size-3.5" aria-hidden />
                   Exclusivo para lojistas assinantes
                 </span>
@@ -256,7 +256,7 @@ function CartaoPedido({
           )}
         </div>
 
-        <p className="mt-3 inline-flex items-center gap-1 text-xs text-neutral-500">
+        <p className="mt-3 inline-flex items-center gap-1 text-xs text-texto-suave">
           <Users className="size-3.5" aria-hidden />
           {p.totalPropostas === 0
             ? "Nenhuma proposta ainda. Seja o primeiro!"
@@ -266,17 +266,17 @@ function CartaoPedido({
         {/* Formulário do modo "propostas com prazo" */}
         {formAberto && (
           <form onSubmit={enviarProposta} className="mt-3 space-y-2">
-            <label className="block text-sm font-medium text-neutral-700">
+            <label className="block text-sm font-semibold text-beringela">
               Seu preço (R$)
               <input
                 inputMode="decimal"
                 value={preco}
                 onChange={(e) => setPreco(e.target.value)}
                 placeholder="Ex.: 14.500"
-                className="mt-1 h-12 w-full rounded-xl border border-neutral-300 px-3 text-base outline-none focus:border-orange-500"
+                className="mt-1 h-12 w-full rounded-lg border border-borda px-3 text-base outline-none focus:border-laranja"
               />
             </label>
-            <label className="block text-sm font-medium text-neutral-700">
+            <label className="block text-sm font-semibold text-beringela">
               Mensagem (opcional)
               <textarea
                 value={mensagem}
@@ -284,21 +284,21 @@ function CartaoPedido({
                 maxLength={500}
                 rows={2}
                 placeholder="Ex.: Titan 2019, revisada, aceito troca"
-                className="mt-1 w-full rounded-xl border border-neutral-300 p-3 text-base outline-none focus:border-orange-500"
+                className="mt-1 w-full rounded-lg border border-borda p-3 text-base outline-none focus:border-laranja"
               />
             </label>
           </form>
         )}
 
-        {aviso && <p className="mt-2 rounded-lg bg-emerald-50 p-2 text-sm text-emerald-700">{aviso}</p>}
-        {erro && <p className="mt-2 text-sm text-red-600" role="alert">{erro}</p>}
+        {aviso && <p className="mt-2 rounded-lg bg-verde-escuro p-2 text-sm text-white">{aviso}</p>}
+        {erro && <p className="mt-2 text-sm text-perigo" role="alert">{erro}</p>}
       </div>
 
       {/* Ação principal: largura total, 52px de altura */}
       {!temAcesso || !liberado ? (
         <Link
           href="/planos?origem=radar"
-          className="flex h-13 w-full items-center justify-center gap-2 bg-neutral-900 text-base font-semibold text-white active:bg-neutral-800"
+          className="flex h-13 w-full items-center justify-center gap-2 bg-laranja text-base font-semibold text-beringela active:brightness-90"
         >
           <Lock className="size-5" aria-hidden />
           Desbloquear e Propor Produto
@@ -308,7 +308,7 @@ function CartaoPedido({
           type={formAberto ? "submit" : "button"}
           onClick={formAberto ? (e) => enviarProposta(e as unknown as React.FormEvent) : () => setFormAberto(true)}
           disabled={pendente || esgotado}
-          className="flex h-13 w-full items-center justify-center gap-2 bg-laranja text-base font-semibold text-beringela transition-colors active:bg-orange-500 disabled:bg-neutral-300"
+          className="flex h-13 w-full items-center justify-center gap-2 bg-laranja text-base font-semibold text-beringela transition-colors active:brightness-90 disabled:bg-borda disabled:text-texto-suave"
         >
           <Send className="size-5" aria-hidden />
           {pendente ? "Enviando…" : esgotado ? "Propostas esgotadas" : formAberto ? "Enviar proposta" : propus ? "Atualizar minha proposta" : "Propor Produto"}
@@ -317,7 +317,7 @@ function CartaoPedido({
         <button
           onClick={enviarDireto}
           disabled={pendente || esgotado}
-          className="flex h-13 w-full items-center justify-center gap-2 bg-emerald-700 text-base font-semibold text-white transition-colors active:bg-emerald-800 disabled:bg-neutral-300"
+          className="flex h-13 w-full items-center justify-center gap-2 bg-verde-escuro text-base font-semibold text-white transition-colors active:brightness-90 disabled:bg-borda disabled:text-texto-suave"
         >
           <MessageCircle className="size-5" aria-hidden />
           {pendente ? "Abrindo WhatsApp…" : esgotado ? "Propostas esgotadas" : propus ? "Falar de novo no WhatsApp" : "Propor Produto"}
@@ -331,14 +331,14 @@ function FaixaUpgrade({ planos, titulo }: { planos: PlanoResumo[]; titulo: strin
   // Nomes e preços vêm do painel administrativo (tabela planos)
   const lista = planos.map((p) => `${p.nome} (${reaisCentavos.format(p.preco_centavos / 100)}/mês)`).join(" ou ");
   return (
-    <section className="mx-4 mt-4 rounded-2xl bg-beringela p-4 text-white">
+    <section className="mx-4 mt-4 rounded-xl bg-beringela p-4 text-white">
       <p className="text-base font-bold">{titulo}</p>
-      <p className="mt-1 text-sm text-neutral-200">
+      <p className="mt-1 text-sm text-white/80">
         Assine {lista || "um plano com Radar"} para ver os detalhes e falar com o comprador antes da concorrência.
       </p>
       <Link
         href="/planos?origem=radar"
-        className="mt-3 inline-flex h-12 items-center rounded-full bg-laranja px-5 text-sm font-semibold text-beringela active:bg-orange-500"
+        className="mt-3 inline-flex h-12 items-center rounded-xl bg-laranja px-5 text-sm font-semibold text-beringela active:brightness-90"
       >
         Ver planos
       </Link>
