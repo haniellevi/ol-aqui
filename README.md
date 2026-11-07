@@ -26,6 +26,17 @@ As migrações ficam em `supabase/migrations` e devem rodar **nesta ordem**:
 1. `20261107000000_olaki_inicial.sql` · tabelas, RLS, logs do Marco Civil, Radar
 2. `20261107010000_novos_status.sql` · status "em análise"
 3. `20261107010100_painel_admin.sql` · planos, configurações, pagamentos, moderação, região-piloto
+4. `20261107020000_categorias_e_anuncios.sql` · categorias em tabela (com os campos de cada uma), rascunhos, "Quero vender" (pessoa física ou loja), busca, página do anúncio, contagem de visitas e o bucket de fotos
+
+Testes do banco (Postgres local, sem Supabase): `bash supabase/testes/rodar.sh` como usuário `postgres`. Cada bloco `[n]` diz o que deve acontecer.
+
+### Fotos (Supabase Storage)
+
+A migração 4 cria o bucket público **`anuncios`** (tamanho máximo em `fotos.tamanho_max_bytes`; só WebP, JPEG e PNG). Cada pessoa só envia para a própria pasta: `<user_id>/<id do anúncio>/` ou `<user_id>/loja/` (logo e capa). Ninguém lista as pastas dos outros; a foto abre pelo endereço público.
+
+**Depois do deploy**, em `/admin/configuracoes`, preencha **`fotos.origem`** com o endereço do projeto (ex.: `https://abcd.supabase.co`). Sem isso o banco recusa fotos, logos e capas (só aceita arquivos do Storage do OLAKI).
+
+Ao excluir a conta, o webhook do Clerk apaga também os arquivos da pasta da pessoa.
 
 Com a [Supabase CLI](https://supabase.com/docs/guides/cli): `supabase link` e depois `supabase db push`.
 Sem a CLI: cole cada arquivo, na ordem, no SQL Editor do painel do Supabase.
@@ -54,12 +65,19 @@ update public.perfis set e_admin = true where id = 'user_SEU_ID';
 
 ```
 src/app/entrar          login do Clerk (Google ou celular)
-src/app/api/webhooks    webhook do Clerk (cria e atualiza perfis)
+src/app/api/webhooks    webhook do Clerk (cria, atualiza e apaga perfis e fotos)
+src/app/(publico)       início, /categorias, /c/[categoria]/[sub], /busca, /anuncio/[id-titulo],
+                        /loja/[slug] (vitrine da loja), /vendedor/[id] (pessoa física, só o primeiro nome)
+src/app/(conta)         /quero-vender (pessoa física ou loja), /anunciar (passo a passo: fotos,
+                        categoria, detalhes, preço, local, revisar, pronto) e /minha-conta
+                        (anúncios, favoritos, plano, loja, dados, notificações, privacidade)
 src/app/radar           Radar de Negócios (lojista)
 src/app/admin           painel: resumo, planos, configurações, moderação
 src/lib/supabase        cliente com o token do Clerk e cliente de servidor (chave secreta)
 src/lib/perfil.ts       sincroniza o perfil com os dados do Clerk
 src/lib/admin           helpers do painel (exigirAdmin, formatos, configurações)
+src/lib/dados           leituras do banco para as telas (busca, anúncio, conta, categorias)
+src/components          telas públicas (anuncio, busca, vitrine), anunciar, conta e ui
 supabase/migrations     banco de dados
 docs/                   decisões de produto e plano do painel
 public/logo             logos (opção 1: pin no "i"; opção 2: balão "ol")
@@ -67,4 +85,4 @@ public/logo             logos (opção 1: pin no "i"; opção 2: balão "ol")
 
 ## Regra de ouro
 
-Nenhum preço, limite ou regra fica no código. Tudo vem das tabelas `planos` e `configuracoes`, editáveis em `/admin`, e toda mudança fica registrada em `logs_atividade`.
+Nenhum preço, limite ou regra fica no código. Tudo vem das tabelas `planos`, `configuracoes` e `categorias`, editáveis em `/admin`, e toda mudança fica registrada em `logs_atividade`.

@@ -1,0 +1,106 @@
+import "server-only";
+import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
+import { buscarAnuncios } from "@/lib/dados/anuncios";
+import { listarCategorias, type CategoriaEncontrada } from "@/lib/dados/categorias";
+import { listarCidades, regiaoAtual } from "@/lib/dados/regiao";
+import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
+import { ResultadosBusca } from "@/components/busca/resultados-busca";
+import { VazioBusca } from "@/components/busca/vazio-busca";
+import { POR_PAGINA, comParametros, lerEstadoBusca, lugarDaRegiao, type ParametrosUrl } from "@/components/busca/parametros";
+import type { AnuncioCard } from "@/lib/tipos";
+
+// Monta a lista de anúncios da busca (T5) e das categorias (T4) a partir do endereço.
+// Tudo no servidor: a página chega pronta, sem JavaScript pesado no celular.
+
+export async function Listagem({
+  caminho,
+  sp,
+  categoria,
+  categoriaPeloEndereco,
+  topo,
+}: {
+  /** Endereço da própria página (para onde vão os filtros e a paginação). */
+  caminho: string;
+  sp: ParametrosUrl;
+  /** Categoria fixa da página (/c/...) ou a escolhida no ?categoria= da busca. */
+  categoria: CategoriaEncontrada | null;
+  /** true = a categoria veio do caminho /c/... (não aparece na folha de filtros). */
+  categoriaPeloEndereco: boolean;
+  /** Título, campo de busca etc. (fica acima dos chips). */
+  topo: ReactNode;
+}) {
+  const campos = categoria && !categoria.filhas.length ? categoria.categoria.campos.filter((c) => c.filtro) : [];
+  const estado = lerEstadoBusca(sp, campos, !categoriaPeloEndereco);
+  const [regiao, categorias] = await Promise.all([regiaoAtual(), categoriaPeloEndereco ? null : listarCategorias()]);
+  const cidades = regiao ? await listarCidades(regiao.id) : [];
+  const slugCategoria = categoria?.categoria.slug ?? null;
+
+  const { anuncios, total } = await buscarAnuncios({
+    q: estado.q,
+    categoria: slugCategoria,
+    cidade: estado.cidade,
+    precoMin: estado.precoMin,
+    precoMax: estado.precoMax,
+    filtros: estado.filtros,
+    ordem: estado.ordem,
+    limite: POR_PAGINA,
+    deslocamento: (estado.pagina - 1) * POR_PAGINA,
+  });
+
+  // Página além da última (link antigo, anúncios vendidos): volta para a 1ª página.
+  if (!anuncios.length && estado.pagina > 1) redirect(comParametros(caminho, sp));
+
+  // Nada achado: procura algo parecido (sem filtros; depois em outras regiões).
+  let parecidos: AnuncioCard[] = [];
+  let tituloParecidos = "";
+  const temFiltro = estado.quantos > 0 || (!!slugCategoria && categoriaPeloEndereco);
+  if (total === 0 && estado.pagina === 1) {
+    if (estado.q && temFiltro) {
+      parecidos = (await buscarAnuncios({ q: estado.q, limite: 10 })).anuncios;
+      tituloParecidos = `“${estado.q}” em outras categorias e cidades`;
+    }
+    if (!parecidos.length && estado.quantos > 0) {
+      // mesma região, mesma busca e categoria, sem cidade/preço/campos
+      parecidos = (await buscarAnuncios({ q: estado.q, categoria: slugCategoria, limite: 10 })).anuncios;
+      tituloParecidos = "Sem esses filtros";
+    }
+    // Aqui a região do visitante já não tem nada com essa busca/categoria (nem sem filtros):
+    // o que vier sem região é mesmo de outras regiões.
+    if (!parecidos.length && (estado.q || slugCategoria)) {
+      parecidos = (await buscarAnuncios({ q: estado.q, categoria: slugCategoria, limite: 10, regiao: null })).anuncios;
+      tituloParecidos = "Parecidos em outras regiões";
+    }
+  }
+
+  const limpar =
+    estado.quantos > 0 ? (estado.q ? `${caminho}?q=${encodeURIComponent(estado.q)}` : caminho) : null;
+  const termoRadar = estado.q || (categoria ? categoria.categoria.nome : "");
+
+  return (
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4">
+      {topo}
+      <ResultadosBusca
+        caminho={caminho}
+        sp={sp}
+        estado={estado}
+        campos={campos}
+        cidades={cidades}
+        categorias={categorias ?? undefined}
+        nomeCategoria={categoria?.categoria.nome ?? null}
+        lugar={lugarDaRegiao(regiao)}
+        anuncios={anuncios}
+        total={total}
+        vazio={<VazioBusca termo={termoRadar} limparHref={limpar} />}
+      />
+      {parecidos.length > 0 && (
+        <section aria-labelledby="titulo-parecidos" className="flex flex-col gap-3">
+          <h2 id="titulo-parecidos" className="text-lg font-semibold">
+            {tituloParecidos}
+          </h2>
+          <GradeAnuncios anuncios={parecidos} prioridade={0} />
+        </section>
+      )}
+    </main>
+  );
+}

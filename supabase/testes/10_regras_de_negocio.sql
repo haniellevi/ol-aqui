@@ -15,6 +15,8 @@ update perfis set whatsapp_verificado_em=now() where id='user_a';
 update vitrines_lojas set plano='full', plano_expira_em=now()+interval '30 days' where slug='loja-paga';
 update vitrines_lojas set teste_expira_em=now()-interval '1 day' where slug='ze-pf';
 select count(*) as cidades_piloto from cidades;
+-- Estes testes são de antes das fotos (anuncio.fotos_minimo): sem mínimo aqui. O 40_ volta para 1.
+update configuracoes set valor='0' where chave='anuncio.fotos_minimo' and microrregiao_id is null;
 
 set role authenticated;
 select set_config('request.jwt.claim.role','authenticated',false) \g /dev/null

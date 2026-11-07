@@ -55,6 +55,9 @@ async function apagarConta(id: string) {
     if (r.error) throw new Error(r.error.message);
   };
 
+  // Fotos dos anúncios, rascunhos, logo e capa saem do Storage (pasta <id>/ do bucket público).
+  await apagarArquivos(db, id);
+
   const apagou = await db.from("perfis").delete().eq("id", id);
   if (!apagou.error) return;
 
@@ -64,6 +67,7 @@ async function apagarConta(id: string) {
   const ids = (vitrines.data ?? []).map((v) => v.id);
   if (ids.length) {
     ok(await db.from("anuncios").update({ status: "pausado" }).in("vitrine_id", ids).neq("status", "congelado"));
+    ok(await db.from("anuncios").update({ fotos: [] }).in("vitrine_id", ids));
     ok(
       await db
         .from("vitrines_lojas")
@@ -80,4 +84,30 @@ async function apagarConta(id: string) {
       .update({ nome: "Conta excluída", whatsapp: null, whatsapp_verificado_em: null, avatar_url: null, cidade: null, bairro: null })
       .eq("id", id),
   );
+}
+
+/** Apaga todos os arquivos da pasta <id>/ do bucket "anuncios" (subpastas incluídas). */
+async function apagarArquivos(db: ReturnType<typeof supabaseAdmin>, id: string) {
+  if (!/^[A-Za-z0-9_]+$/.test(id)) return; // id do Clerk (user_...): nunca apaga fora da pasta da pessoa
+  const bucket = db.storage.from("anuncios");
+  const LOTE = 1000;
+  const pastas = [id];
+  const arquivos: string[] = [];
+  while (pastas.length) {
+    const pasta = pastas.pop()!;
+    for (let inicio = 0; ; inicio += LOTE) {
+      const { data, error } = await bucket.list(pasta, { limit: LOTE, offset: inicio });
+      if (error) throw new Error(error.message);
+      for (const item of data ?? []) {
+        const caminho = `${pasta}/${item.name}`;
+        if (item.id) arquivos.push(caminho);
+        else pastas.push(caminho); // sem id = subpasta
+      }
+      if ((data?.length ?? 0) < LOTE) break;
+    }
+  }
+  for (let i = 0; i < arquivos.length; i += LOTE) {
+    const { error } = await bucket.remove(arquivos.slice(i, i + LOTE));
+    if (error) throw new Error(error.message);
+  }
 }
