@@ -35,7 +35,9 @@ A `capa_url` antiga vira `banner_url` com `banner_tipo = 'foto'` na migração (
 | `vitrine_foto_fachada` | pode usar foto no banner | teste/pf_gratis: não · slim/full: sim |
 | `vitrine_secoes_max` | seções próprias (vazio = sem limite) | teste/pf_gratis: 0 · slim: 3 · full: 10 |
 | `vitrine_fixados_max` | produtos fixados no topo (vazio = sem limite) | teste/pf_gratis: 0 · slim: 3 · full: 6 |
-| `recomendado` | plano em destaque na página /planos (só um) | slim |
+| `recomendado` | plano em destaque na página /planos (só um: marcar um desmarca o outro, gatilho `planos_0_recomendado`) | slim |
+
+A semente desses valores roda com o gatilho `log_planos` desligado (não é mudança de ninguém); daí em diante toda mudança feita no painel fica no histórico.
 
 ### Tabelas novas (RLS ligado)
 - `loja_secoes (id, vitrine_id, nome, ordem, ativa)`: dono faz tudo nas da sua loja; admin faz tudo; ninguém mais lê direto (o público lê pela função).
@@ -50,7 +52,8 @@ A `capa_url` antiga vira `banner_url` com `banner_tipo = 'foto'` na migração (
 | Limite de seções | gatilho `secoes_0_validar` no INSERT (conta todas as seções da loja) |
 | Limite de fixados | gatilho `anuncios_2_fixar` ao fixar (conta os fixados da loja) |
 | Anúncio da seção é da mesma loja | gatilho `secao_anuncios_0_validar` |
-| Pessoa física sem vitrine | `recursos_vitrine()` devolve tudo falso/0 para `tipo = 'pf'` |
+| Pessoa física sem vitrine | `recursos_vitrine()` devolve tudo falso/0 para `tipo = 'pf'`; o gatilho apaga endereço exato e localização de pessoa física |
+| Seção só na própria loja | gatilho `secoes_0_validar` recusa ("Loja não encontrada") antes da RLS |
 | Vendido/vencido sai do fixado | gatilho `anuncios_2_fixar` |
 | Palavras proibidas em `sobre`, `entrega_obs` e nome de seção | `texto_bloqueado()` com `moderacao.palavras_bloqueadas` (recusa com mensagem) |
 | Só o dono escreve | RLS (`vitrine propria editar`, políticas das seções) |
@@ -65,7 +68,7 @@ As funções de ordenar (`ordenar_secoes`, `definir_anuncios_secao`, `fixar_anun
 |---|---|---|
 | `vitrine_publica(slug)` → jsonb | todos | Só campos públicos da loja ativa (dono/admin veem a inativa): banner efetivo, logo, selo, WhatsApp (mesma regra de `anuncio_publico`), informações, seções visíveis com os ids dos anúncios no ar. Nunca CNPJ, gateway ou plano |
 | `anuncios_vitrine(vitrine_id, ordem)` | todos | Anúncios no ar da loja, fixados efetivos primeiro e mais novos (ou `menor_preco`), com a categoria para os grupos automáticos. Máximo `vitrine.anuncios_por_pagina` |
-| `recursos_vitrine(vitrine)` / `minha_vitrine_recursos()` | gatilhos / dono | foto, seções e fixados do plano que vale agora (`plano_efetivo`) |
+| `recursos_vitrine(vitrine)` / `recursos_vitrine_id(id)` / `minha_vitrine_recursos()` | gatilhos / dono | foto, seções e fixados do plano que vale agora (`plano_efetivo`). A versão por id existe porque quem está logado não lê todas as colunas da vitrine (CNPJ, cobrança) dentro dos gatilhos INVOKER |
 | `horarios_validos(jsonb)` | check da tabela | formato dos horários |
 | `moderar_banner_vitrine(vitrine, motivo)` | admin | tira a foto do banner |
 
@@ -82,7 +85,9 @@ As funções de ordenar (`ordenar_secoes`, `definir_anuncios_secao`, `fixar_anun
 | Rota | O quê |
 |---|---|
 | `/loja/[slug]` | Banner (foto ou modelo: cor + nome + logo, nunca vazio), logo, nome, selo, "Chamar no WhatsApp", seções próprias, grupos por categoria, chip "Menor preço" (`?ordem=menor_preco`, funciona sem JS), informações (endereço + "Como chegar", horário com "Aberto agora" no fuso America/Fortaleza, Instagram, Sobre nós, pagamento, entrega). OpenGraph com a foto do banner ou uma imagem gerada (`/loja/[slug]/imagem`) |
-| `/minha-conta/loja` | Banner (foto cortada no aparelho em 3:1 ou modelo com cor), dados e informações, horários por dia com "Fechado", chips de pagamento |
+| `/minha-conta/loja` | Prévia do banner, menu da vitrine (Banner, Informações, Seções, Produtos no topo, com o uso do plano) e os dados da loja (nome, WhatsApp, cidade, bairro, logo) |
+| `/minha-conta/loja/banner` | Foto da fachada cortada no aparelho em 3:1 (1500 x 500, com régua para escolher a parte) ou modelo (cor da lista do painel + desenho). A foto fica guardada mesmo quando o plano não mostra |
+| `/minha-conta/loja/informacoes` | Endereço + "Usar minha localização", horários por dia com "Aberto/Fechado" e até 3 faixas, Instagram, "Sobre nós" (a `descricao` antiga acompanha os primeiros 600 caracteres), chips de pagamento, entrega |
 | `/minha-conta/loja/secoes` e `/minha-conta/loja/secoes/[id]` | Criar, renomear, subir/descer, esconder, apagar seção; escolher os produtos |
 | `/minha-conta/loja/fixados` | Fixar/desafixar e ordenar os fixados |
 | `/minha-conta/anuncios` | Botão "Fixar na loja" nos anúncios no ar (lojas) |
@@ -90,3 +95,14 @@ As funções de ordenar (`ordenar_secoes`, `definir_anuncios_secao`, `fixar_anun
 | `/admin/planos` | Campos novos: foto da fachada, seções, fixados, recomendado |
 
 Quando o recurso não está no plano, a tela mostra "Disponível no …" com os nomes dos planos que têm o recurso (lidos da tabela) e o link para `/planos?origem=vitrine`.
+
+## 3. Arquivos do app
+- Leituras: `src/lib/dados/vitrine-completa.ts` · Ações: `src/app/(conta)/minha-conta/loja/vitrine-actions.ts`
+- Regras de tela (horário em America/Fortaleza, "Como chegar", Instagram, "Disponível no ..."): `src/components/vitrine/regras.ts`
+- Componentes: `banner-loja`, `informacoes-loja`, `form-banner` (+ `cortar-banner.ts`), `form-informacoes`, `gerenciar-secoes`, `escolher-produtos`, `botao-fixar`, `upsell-plano` em `src/components/vitrine/`
+- Imagem de compartilhamento do banner modelo: `src/app/(publico)/loja/[slug]/imagem/route.tsx` (sem imagem de fora, nada para dar erro)
+- Nenhuma variável de ambiente nova.
+
+## 4. O que ficou para depois
+- Tela de moderação do banner no painel: a função `moderar_banner_vitrine` já existe e o admin pode editar as seções; falta só o botão na tela de Moderação (o pedido desta etapa era mexer só em Planos).
+- Horário que passa da meia-noite (ex.: 18:00 às 02:00): hoje a loja divide em dois dias.
