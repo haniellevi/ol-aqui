@@ -24,7 +24,7 @@ export async function CabecalhoPublico() {
       </a>
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4">
         <Link href="/" className="flex h-12 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="OLAKI, página inicial">
-          <Image src="/logo/olaki-opcao1-pin.svg" alt="OLAKI" width={87} height={44} priority className="h-10 w-auto" />
+          <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={78} height={32} priority className="h-8 w-auto sm:h-9" />
         </Link>
 
         {cidade && (

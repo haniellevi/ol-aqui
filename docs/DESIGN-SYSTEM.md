@@ -1,6 +1,6 @@
 # OLAKI · Sistema visual (design system) · 07/11/2026
 
-Tudo aqui sai do logo oficial, **OLAKI em caixa alta** (opção A, decidida pelo Raniel em 07/11/2026): Poppins Bold, **"OL" em roxo beringela + "AKI" em laranja forte**, com o pin laranja sobre o I. O logo anterior, em minúsculas ("ol" fino + "aki"), saiu porque "ol" se confundia com "oi". Arquivos: `public/logo/olaki-opcao1-pin.svg` (fundo claro, com a tagline "olha aqui o que você procura"), `public/logo/olaki-opcao1-pin-fundo-escuro.svg` (fundo escuro), `public/logo/olaki-icone-app.svg` (ícone: "AKI" branco com o pin beringela num quadrado laranja arredondado; nunca "O" + "I", que se lê "OI") e `src/app/icon.svg` (ícone do site, cópia idêntica). Alternativas e o gerador ficam em `docs/logo-opcoes/`.
+Tudo aqui sai do logo oficial, **OLAKI em caixa alta** (opção A, decidida pelo Raniel em 07/11/2026): Poppins Bold, **"OL" em roxo beringela + "AKI" em laranja forte**, com o pin laranja sobre o I. O logo anterior, em minúsculas ("ol" fino + "aki"), saiu porque "ol" se confundia com "oi". Arquivos: `public/logo/olaki-opcao1-pin.svg` (fundo claro, com a tagline "olha aqui o que você procura"), `public/logo/olaki-opcao1-pin-fundo-escuro.svg` (fundo escuro), `public/logo/olaki-icone-app.svg` (ícone: "AKI" branco com o pin beringela num quadrado laranja arredondado; nunca "O" + "I", que se lê "OI") e `src/app/icon.svg` (ícone do site, cópia idêntica). Em tamanho pequeno (cabeçalho do site e do painel, até uns 60 px de altura) usa `public/logo/olaki-marca.svg`, o mesmo logo sem a tagline, porque a tagline fica ilegível nesse tamanho. Alternativas e o gerador ficam em `docs/logo-opcoes/`.
 
 > **Atualizado em 07/11/2026:** o Raniel trocou o azul-marinho pelo **roxo beringela `#4B1248`**, para provocar o OLX sem copiar o roxo violeta dele (`#6E0AD6`). O beringela puxa para o vinho, é outra família de cor. Não usar nenhum roxo violeta vivo no app.
 Objetivo: o app parecer **simples, confiável e da região**, legível no sol, num celular barato, por quem lê pouco.
@@ -34,6 +34,8 @@ Objetivo: o app parecer **simples, confiável e da região**, legível no sol, n
 | `perigo` | `#B91C1C` | Erros, denunciar, apagar |
 | `aviso` | `#B45309` sobre `#FFFBEB` | "Em análise", plano vencendo |
 | `patrocinado` | `#4B1248` sobre `#FFE4D1` | Etiqueta "Patrocinado" |
+| `perigo-fundo` | `#FEF2F2` (texto `perigo` por cima, 5,9 : 1) | Caixa de erro, confirmação de apagar |
+| `sucesso-fundo` | `#ECF8F1` (texto `verde-escuro` por cima, 5,0 : 1) | Caixa de sucesso ("Salvo", "Publicado") |
 
 ### Contraste (conferido, regra WCAG AA = mínimo 4,5:1 para texto)
 
@@ -157,6 +159,8 @@ Fica em `src/app/globals.css` (a base do app tinha `--color-marinho`; trocar o n
   --color-aviso: #B45309;
   --color-aviso-fundo: #FFFBEB;
   --color-patrocinado-fundo: #FFE4D1;
+  --color-perigo-fundo: #FEF2F2;
+  --color-sucesso-fundo: #ECF8F1;
 
   --font-sans: var(--font-poppins), system-ui, sans-serif;
 
