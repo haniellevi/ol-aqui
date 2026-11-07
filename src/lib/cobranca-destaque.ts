@@ -49,6 +49,15 @@ async function lerPagamento(id: string): Promise<LinhaPagamento | null> {
   return data ?? null;
 }
 
+/**
+ * Limite de perguntas ao Asaas, decidido no banco (cobranca.consulta_intervalo_segundos):
+ * no máximo uma pergunta por pagamento a cada poucos segundos, seja o que for que a tela peça.
+ */
+async function podePerguntarAoAsaas(pagamentoId: string): Promise<boolean> {
+  const { data, error } = await supabaseAdmin().rpc("marcar_consulta_asaas", { p_pagamento_id: pagamentoId });
+  return !error && data === true;
+}
+
 async function montarCobranca(amb: AmbienteAsaas, pg: LinhaPagamento, forma: FormaPagamento): Promise<Cobranca> {
   const id = pg.asaas_cobranca_id!;
   if (forma === "cartao") {
@@ -115,8 +124,15 @@ export async function cobrarPedido(pedidoId: string, forma: FormaPagamento, docu
         p_link: nova.invoiceUrl,
         p_forma: forma,
       });
-      if (error || gravou !== true) await apagarCobranca(amb, nova.id); // outro clique já criou uma: fica a primeira
+      if (gravou === false) {
+        await apagarCobranca(amb, nova.id); // outro clique já criou uma: fica a primeira
+      } else if (error) {
+        // a resposta se perdeu, mas pode ter gravado: só apaga se a gravada não for esta
+        const conferido = await lerPagamento(pg.id);
+        if (conferido && conferido.asaas_cobranca_id !== nova.id) await apagarCobranca(amb, nova.id);
+      }
     } else if (pg.forma !== forma) {
+      if (!(await podePerguntarAoAsaas(pg.id))) throw new ErroCobranca("Espere alguns segundos e tente de novo.");
       const trocada = await trocarForma(amb, pg.asaas_cobranca_id, forma);
       await db.rpc("registrar_cobranca_asaas", {
         p_pagamento_id: pg.id,
@@ -144,15 +160,22 @@ export async function cobrarPedido(pedidoId: string, forma: FormaPagamento, docu
 /**
  * Situação do pedido para a tela de espera. Com `perguntarAoAsaas`, confere direto no Asaas
  * (se o aviso do webhook atrasar, ativa do mesmo jeito: confirmar_pagamento é idempotente).
+ * O pedido da tela é só um pedido: quem decide se pergunta agora é o banco (podePerguntarAoAsaas).
+ * Pedido cancelado com cobrança vencida/cancelada: apaga a cobrança no Asaas, para o Pix antigo
+ * não ser pago por engano (o banco também não liga um pedido cancelado pela equipe).
  */
 export async function situacaoPedido(pedidoId: string, perguntarAoAsaas: boolean): Promise<PedidoDestaque | null> {
   const pedido = await meuPedidoDestaque(pedidoId);
-  if (!pedido || pedido.status !== "aguardando_pagamento" || !perguntarAoAsaas || !pedido.tem_cobranca || !asaasConfigurado()) {
+  if (!pedido || !pedido.tem_cobranca || !asaasConfigurado()) return pedido;
+  if (pedido.status === "cancelado") {
+    if (pedido.pagamento_status === "vencido" || pedido.pagamento_status === "cancelado") await apagarCobrancaDoPedido(pedido);
     return pedido;
   }
+  if (pedido.status !== "aguardando_pagamento" || !perguntarAoAsaas) return pedido;
   try {
     const pg = pedido.pagamento_id ? await lerPagamento(pedido.pagamento_id) : null;
     if (!pg?.asaas_cobranca_id || pg.status !== "pendente") return pedido;
+    if (!(await podePerguntarAoAsaas(pg.id))) return pedido;
     const amb = await ambienteAsaas();
     const c = await consultarCobranca(amb, pg.asaas_cobranca_id);
     if (STATUS_PAGO.has(String(c.status))) {
@@ -166,6 +189,22 @@ export async function situacaoPedido(pedidoId: string, perguntarAoAsaas: boolean
     /* tenta de novo na próxima pergunta */
   }
   return pedido;
+}
+
+/**
+ * Apaga no Asaas a cobrança de um pedido que não vale mais (cancelado, vencido). Só o servidor chama,
+ * e só para pagamento que não foi pago. Devolve true quando a cobrança não pode mais ser paga.
+ */
+export async function apagarCobrancaDoPedido(pedido: Pick<PedidoDestaque, "pagamento_id">): Promise<boolean> {
+  if (!pedido.pagamento_id || !asaasConfigurado()) return false;
+  try {
+    const pg = await lerPagamento(pedido.pagamento_id);
+    if (!pg?.asaas_cobranca_id || pg.status === "pago" || pg.status === "estornado" || pg.status === "pendente") return false;
+    if (!(await podePerguntarAoAsaas(pg.id))) return false;
+    return await apagarCobranca(await ambienteAsaas(), pg.asaas_cobranca_id);
+  } catch {
+    return false;
+  }
 }
 
 /** true quando a pessoa ainda não tem cliente no Asaas neste ambiente (a tela pede o CPF/CNPJ). */

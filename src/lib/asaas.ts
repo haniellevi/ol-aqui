@@ -125,6 +125,7 @@ export async function criarCobranca(
 
 /** Troca a forma de uma cobrança que ainda não foi paga (Pix ⇄ cartão). */
 export async function trocarForma(ambiente: AmbienteAsaas, id: string, forma: "pix" | "cartao") {
+  qrGuardados.delete(`${ambiente}:${id}`);
   return chamar<CobrancaAsaas>(ambiente, `/payments/${encodeURIComponent(id)}`, {
     method: "POST",
     body: JSON.stringify({ billingType: forma === "pix" ? "PIX" : "CREDIT_CARD" }),
@@ -135,21 +136,41 @@ export async function consultarCobranca(ambiente: AmbienteAsaas, id: string) {
   return chamar<CobrancaAsaas & Record<string, unknown>>(ambiente, `/payments/${encodeURIComponent(id)}`);
 }
 
-/** Apaga uma cobrança criada a mais (dois cliques ao mesmo tempo). Erro aqui não atrapalha a pessoa. */
-export async function apagarCobranca(ambiente: AmbienteAsaas, id: string) {
+/**
+ * Apaga uma cobrança que não deve mais ser paga (criada a mais, pedido cancelado ou vencido).
+ * true = apagada (ou já não existia). false = o Asaas não apagou (ex.: já foi paga) ou não respondeu.
+ * Nunca lança erro: quem chama decide o que mostrar.
+ */
+export async function apagarCobranca(ambiente: AmbienteAsaas, id: string): Promise<boolean> {
+  qrGuardados.delete(`${ambiente}:${id}`);
   try {
     await chamar(ambiente, `/payments/${encodeURIComponent(id)}`, { method: "DELETE" });
-  } catch {
-    /* fica pendente no Asaas e vence sozinha */
+    return true;
+  } catch (e) {
+    return e instanceof ErroAsaas && e.status === 404;
   }
 }
 
+type QrPix = { encodedImage: string; payload: string; expirationDate?: string };
+
+// QR do Pix guardado na memória do servidor por alguns minutos: abrir a tela de novo não
+// pergunta ao Asaas toda vez (a chave do Asaas é uma só para todo o site e tem limite de uso).
+const QR_MINUTOS = 10;
+const QR_MAXIMO = 500;
+const qrGuardados = new Map<string, { qr: QrPix; ate: number }>();
+
 /** QR Code do Pix: imagem (base64 PNG) e o código "copia e cola". */
-export async function qrCodePix(ambiente: AmbienteAsaas, id: string) {
-  return chamar<{ encodedImage: string; payload: string; expirationDate?: string }>(
-    ambiente,
-    `/payments/${encodeURIComponent(id)}/pixQrCode`,
-  );
+export async function qrCodePix(ambiente: AmbienteAsaas, id: string): Promise<QrPix> {
+  const chave = `${ambiente}:${id}`;
+  const guardado = qrGuardados.get(chave);
+  if (guardado && guardado.ate > Date.now()) return guardado.qr;
+  const qr = await chamar<QrPix>(ambiente, `/payments/${encodeURIComponent(id)}/pixQrCode`);
+  if (qrGuardados.size >= QR_MAXIMO) {
+    const maisVelho = qrGuardados.keys().next().value;
+    if (maisVelho) qrGuardados.delete(maisVelho);
+  }
+  qrGuardados.set(chave, { qr, ate: Date.now() + QR_MINUTOS * 60_000 });
+  return qr;
 }
 
 /** Compara o cabeçalho "asaas-access-token" com ASAAS_WEBHOOK_TOKEN em tempo constante. */
