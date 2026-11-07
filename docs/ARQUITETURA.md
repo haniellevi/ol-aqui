@@ -176,7 +176,7 @@ Pelo agendador do Supabase (pg_cron) ou da Vercel:
 ## 11. Segurança e lei
 
 - **RLS no banco** em todas as tabelas, com o id da pessoa lido por `public.usuario_id()`; o painel admin confere `e_admin()` no banco, não só na tela.
-- O Radar é lido só pela view `radar_feed`, que já esconde nome e detalhes de contato no próprio banco.
+- O Radar é lido só pela função `radar_feed()`, que já esconde nome e detalhes de contato no próprio banco.
 - **Marco Civil art. 15:** guardar IP, data e **porta de origem** por 6 meses. A Vercel não repassa a porta; **(proposta)** colocar a **Cloudflare** na frente do domínio (plano grátis serve) para registrar a porta, e de quebra ganhar proteção contra ataque e cache de imagens.
 - **LGPD:** baixar meus dados e excluir conta em Minha conta; endereço exato de pessoa física nunca aparece; verificação de documento por provedor de KYC (sem guardar foto de documento).
 - Limite de requisições em login, Aki e envio de anúncio (evita robô e golpe em massa).

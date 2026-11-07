@@ -15,14 +15,14 @@ set role authenticated;
 insert into anuncios (vitrine_id,microrregiao_id,categoria,titulo,cidade,pago_ate,destaque_ate,total_favoritos) select v.id,v.microrregiao_id,'geral','Bicicleta aro 29','Corrente','2999-01-01','2999-01-01',999 from vitrines_lojas v where slug='loja-nova' returning pago_ate, destaque_ate, total_favoritos;
 \echo '[20] loja sem acesso ve o pedido no feed mas sem detalhes nem nome; tabela direta vazia'
 select set_config('request.jwt.claim.sub','user_d',false) \g /dev/null
-select titulo, detalhes, comprador_primeiro_nome from radar_feed limit 1;
+select titulo, detalhes, comprador_primeiro_nome from radar_feed() limit 1;
 select count(*) as direto from radar_pedidos;
 \echo '[21] loja paga ve detalhes'
 select set_config('request.jwt.claim.sub','user_c',false) \g /dev/null
 update radar_pedidos set detalhes='Trator 4x4 ate 2015' where false;
-select count(*) filter (where comprador_primeiro_nome is not null) as com_nome from radar_feed;
+select count(*) filter (where comprador_primeiro_nome is not null) as com_nome from radar_feed();
 \echo '[22] comprador com celular nao confirmado: nao entrega o numero'
 reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null
 update perfis set whatsapp_verificado_em=null where id='user_a';
 set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_c',false) \g /dev/null
-select * from revelar_contato_radar((select id from radar_feed where titulo='Procuro trator traçado 4' ));
+select * from revelar_contato_radar((select id from radar_feed() where titulo='Procuro trator traçado 4' ));

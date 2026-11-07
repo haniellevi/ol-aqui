@@ -30,11 +30,11 @@ export default async function RadarPage() {
   const temAcesso = acesso === true;
 
   const { data } = await supabase
-    .from("radar_feed")
+    .rpc("radar_feed")
+    .eq("microrregiao_id", perfil?.microrregiao_id)
     .select(
       "id, categoria, titulo, detalhes, preco_max_centavos, cidade, urgencia, total_propostas, max_propostas, modo_contato, propostas_ate, criado_em, comprador_certificado, comprador_primeiro_nome, ja_propus",
     )
-    .eq("microrregiao_id", perfil?.microrregiao_id)
     .order("criado_em", { ascending: false })
     .limit(40);
 

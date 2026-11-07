@@ -35,20 +35,23 @@ select tem_plano_pago() as pf_radar;
 \echo '[5] loja em teste: 3 propostas, a 4a falha'
 select set_config('request.jwt.claim.sub','user_b',false) \g /dev/null
 select propostas_restantes() as antes;
-select modo, whatsapp from revelar_contato_radar((select id from radar_feed where titulo='Procuro trator traçado 1'));
-select modo, whatsapp from revelar_contato_radar((select id from radar_feed where titulo='Procuro trator traçado 2'));
-select modo, whatsapp from revelar_contato_radar((select id from radar_feed where titulo='Procuro trator traçado 3'));
-select modo, whatsapp from revelar_contato_radar((select id from radar_feed where titulo='Procuro trator traçado 4'));
+select modo, whatsapp from revelar_contato_radar((select id from radar_feed() where titulo='Procuro trator traçado 1'));
+select modo, whatsapp from revelar_contato_radar((select id from radar_feed() where titulo='Procuro trator traçado 2'));
+select modo, whatsapp from revelar_contato_radar((select id from radar_feed() where titulo='Procuro trator traçado 3'));
+select modo, whatsapp from revelar_contato_radar((select id from radar_feed() where titulo='Procuro trator traçado 4'));
 \echo '[6] modo prazo: nao revela WhatsApp'
 select set_config('request.jwt.claim.sub','user_c',false) \g /dev/null
-select modo, whatsapp, mensagem from revelar_contato_radar((select id from radar_feed where modo_contato='propostas_prazo'), null, 'Tenho uma Titan 2019', 1450000);
+select modo, whatsapp, mensagem from revelar_contato_radar((select id from radar_feed() where modo_contato='propostas_prazo'), null, 'Tenho uma Titan 2019', 1450000);
+\echo '[6b] modo prazo: a mesma loja atualiza a propria oferta (sem erro de coluna ambigua)'
+select modo, mensagem is not null as ok from revelar_contato_radar((select id from radar_feed() where modo_contato='propostas_prazo'), null, 'Titan 2019 revisada', 1400000);
+select mensagem, preco_centavos from radar_propostas where mensagem like 'Titan 2019%';
 \echo '[7] preco absurdo vai para analise'
 insert into anuncios (vitrine_id,microrregiao_id,categoria,titulo,cidade,preco_centavos,atributos) select v.id,v.microrregiao_id,'veiculo','Hilux 2022 zerada','Corrente',50000,'{"tipo":"carro"}' from vitrines_lojas v where slug='loja-paga' returning status, motivo_analise;
 \echo '[8] dono nao tira da analise'
 update anuncios set status='ativo' where titulo='Hilux 2022 zerada';
 \echo '[9] comprador escolhe a proposta e recebe WhatsApp da loja'
 select set_config('request.jwt.claim.sub','user_a',false) \g /dev/null
-select * from escolher_proposta((select id from radar_propostas where preco_centavos=1450000));
+select * from escolher_proposta((select id from radar_propostas where mensagem like 'Titan 2019%'));
 \echo '[10] denuncias: 3 tiram o anuncio do ar'
 reset role;
 insert into anuncios (vitrine_id,microrregiao_id,categoria,titulo,cidade) select v.id,v.microrregiao_id,'geral','Celular novo lacrado','Corrente' from vitrines_lojas v where slug='loja-paga';
