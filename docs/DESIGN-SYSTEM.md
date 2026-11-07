@@ -1,6 +1,6 @@
 # OLAKI · Sistema visual (design system) · 07/11/2026
 
-Tudo aqui sai do logo escolhido (opção 1, pin no "i", e opção 2, balão "ol"): **roxo beringela "ol" + laranja forte "aki"**, letra redonda e geométrica.
+Tudo aqui sai do logo oficial, **opção 1 (pin no "i")**, decidido pelo Raniel em 07/11/2026; a opção 2 (balão) saiu. Arquivos: `logo/olaki-opcao1-pin-beringela.svg` (fundo claro), `logo/olaki-opcao1-pin-fundo-escuro-beringela.svg` (fundo escuro) e `logo/olaki-icone-app-beringela.svg` (ícone). Cores: **roxo beringela "ol" + laranja forte "aki"**, letra redonda e geométrica.
 
 > **Atualizado em 07/11/2026:** o Raniel trocou o azul-marinho pelo **roxo beringela `#4B1248`**, para provocar o OLX sem copiar o roxo violeta dele (`#6E0AD6`). O beringela puxa para o vinho, é outra família de cor. Não usar nenhum roxo violeta vivo no app.
 Objetivo: o app parecer **simples, confiável e da região**, legível no sol, num celular barato, por quem lê pouco.
@@ -19,7 +19,7 @@ Objetivo: o app parecer **simples, confiável e da região**, legível no sol, n
 | `laranja` | `#FF6A13` | Botão principal, preço em destaque sobre fundo escuro, pin, etiquetas |
 | `laranja-escuro` | `#C2410C` | Links e textos laranja sobre fundo branco |
 | `laranja-claro` | `#FFF4EC` | Fundo de faixas (Radar, dicas do Aki), chip selecionado |
-| `verde` | `#12A150` | Só ícones e selos (cor do logo opção 3) |
+| `verde` | `#12A150` | Só ícones e selos |
 | `verde-escuro` | `#0E7A3D` | Botão "Chamar no WhatsApp", mensagens de sucesso |
 
 ### Cores de apoio
@@ -90,7 +90,7 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 - Ícones: **lucide-react** (já está no projeto), traço 2px, sempre **com texto embaixo ou ao lado** nos menus. Ícone sozinho só em coisas universais (fechar, voltar, coração de favorito, lupa).
 - Ícones das categorias: desenho simples em círculo laranja-claro com ícone beringela (trator, moto, casa, boi...). Arte própria, nunca copiada de outro app.
 - Fotos dos anúncios: proporção 4:3 no card, cortadas no centro; carregadas em WebP pequeno primeiro (ver ARQUITETURA.md, "Imagens").
-- Mascote/Aki: um balão de conversa laranja com dois olhinhos, derivado do logo opção 2. Simples o bastante para ficar bom em 24px.
+- Mascote/Aki: um balão de conversa laranja com dois olhinhos (é só o robô, não substitui o logo). Simples o bastante para ficar bom em 24px.
 
 ---
 

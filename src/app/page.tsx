@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center gap-6 px-6 text-center">
-      <Image src="/logo/olaki-opcao1-pin.svg" alt="OLAKI" width={320} height={113} priority />
+      <Image src="/logo/olaki-opcao1-pin.svg" alt="OLAKI" width={320} height={162} priority />
       <p className="text-neutral-600">Em breve na sua região. Compre, venda e peça no Radar de Negócios.</p>
       <div className="flex gap-3">
         <Link href="/radar" className="inline-flex h-12 items-center rounded-full bg-laranja px-6 font-semibold text-beringela">
