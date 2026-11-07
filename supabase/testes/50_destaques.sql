@@ -269,3 +269,149 @@ select destaque_vagas_ocupadas('home', :'reg');
 set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
 select * from resultados_destaques();
 reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null
+
+-- =====================================================================
+-- Correções da revisão: vagas sem pagar, cancelamento desfeito pelo pagamento,
+-- anúncio fora do ar, preço por região e limite de perguntas ao Asaas.
+-- Atores novos na outra região (X e Y, um anúncio cada).
+-- =====================================================================
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values
+ ('user_x50',:'reg_outra','Xavier Cinquenta','5589999995454','Longe','pf'),
+ ('user_y50',:'reg_outra','Yara Cinquenta','5589999995555','Longe','pf');
+update perfis set whatsapp_verificado_em=now() where id in ('user_x50','user_y50');
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_x50',false) \g /dev/null
+select tipo from quero_vender('pf') \g /dev/null
+select id as vit_x from vitrines_lojas where dono_id='user_x50' \gset
+insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos)
+values (:'vit_x', :'cat_moveis', 'Bicicleta zeta50 aro 29', 'Longe', 80000, '{}',
+        '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_x50/x/1.webp}') returning id as ax \gset
+select set_config('request.jwt.claim.sub','user_y50',false) \g /dev/null
+select tipo from quero_vender('pf') \g /dev/null
+select id as vit_y from vitrines_lojas where dono_id='user_y50' \gset
+insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos)
+values (:'vit_y', :'cat_moveis', 'Geladeira zeta50 duplex', 'Longe', 90000, '{}',
+        '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_y50/x/1.webp}') returning id as ay \gset
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select status as ax_status from anuncios where id=:'ax';
+update destaque_tipos set vagas_por_regiao=1 where slug='home';
+
+\echo '[25] reserva: pedir de novo com a reserva valendo NAO estica a reserva (mesma data, 0 renovacoes)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_x50',false) \g /dev/null
+select destaque_id as d_hx, pagamento_id as pg_hx, reservado_ate as res1 from contratar_destaque('home', :'ax') \gset
+select reservado_ate = :'res1' as mesma_reserva, destaque_id = :'d_hx' as mesmo_pedido from contratar_destaque('home', :'ax');
+reset role; select renovacoes from destaques where id=:'d_hx';
+\echo '[25b] reserva venceu (pedido de 47h): guarda de novo UMA vez (renovacoes = 1)'
+update destaques set reservado_ate = now() - interval '1 minute', criado_em = now() - interval '47 hours' where id=:'d_hx';
+set role authenticated;
+select reservado_ate > now() as guardou_de_novo from contratar_destaque('home', :'ax');
+reset role; select renovacoes from destaques where id=:'d_hx';
+\echo '[25c] venceu de novo: nao guarda mais (reservado_ate no passado) e a outra vendedora pega a vaga'
+update destaques set reservado_ate = now() - interval '1 minute' where id=:'d_hx';
+set role authenticated;
+select reservado_ate > now() as guardou_mais_uma, destaque_id = :'d_hx' as mesmo_pedido from contratar_destaque('home', :'ax');
+select set_config('request.jwt.claim.sub','user_y50',false) \g /dev/null
+select destaque_id as d_hy, pagamento_id as pg_hy from contratar_destaque('home', :'ay') \gset
+select status, reservado_ate > now() as y_reservou from destaques where id=:'d_hy';
+\echo '[25d] X pede de novo com a vaga ocupada pela Y (ERRO esperado: vagas ocupadas)'
+select set_config('request.jwt.claim.sub','user_x50',false) \g /dev/null
+select * from contratar_destaque('home', :'ax');
+
+\echo '[26] pendentes_max conta pedido velho com reserva valendo: Y (pedido de 3 dias, reserva valendo) nao pede outro (ERRO esperado: muitos destaques esperando)'
+reset role; update configuracoes set valor='1' where chave='destaque.pendentes_max' and microrregiao_id is null;
+update destaques set criado_em = now() - interval '3 days' where id=:'d_hy';
+set role authenticated; select set_config('request.jwt.claim.sub','user_y50',false) \g /dev/null
+select * from contratar_destaque('busca', :'ay');
+reset role; update configuracoes set valor='10' where chave='destaque.pendentes_max' and microrregiao_id is null;
+update destaques set criado_em = now() where id=:'d_hy';
+
+\echo '[26b] reservas_max_por_vendedor = 1: a loja guarda a vaga da home para l1 e nao guarda para l3 (ERRO esperado: ja tem vagas guardadas)'
+update configuracoes set valor='1' where chave='destaque.reservas_max_por_vendedor' and microrregiao_id is null;
+update destaque_tipos set vagas_por_regiao=5 where slug='home';
+set role authenticated; select set_config('request.jwt.claim.sub','user_lj50',false) \g /dev/null
+select destaque_id as d_hl1 from contratar_destaque('home', :'l1') \gset
+select * from contratar_destaque('home', :'l3');
+reset role; update configuracoes set valor='2' where chave='destaque.reservas_max_por_vendedor' and microrregiao_id is null;
+update destaques set status='cancelado', motivo='teste' where id=:'d_hl1';
+
+\echo '[27] admin cancela pedido pendente e o Pix antigo e pago depois: continua cancelado, pagamento marcado para devolver, destaque_ate nao muda'
+set role authenticated; select set_config('request.jwt.claim.sub','user_lj50',false) \g /dev/null
+select destaque_id as d_adm, pagamento_id as pg_adm from contratar_destaque('busca', :'l1') \gset
+reset role; select coalesce(destaque_ate::text, 'nenhum') as ate_l1 from anuncios where id=:'l1' \gset
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select registrar_cobranca_asaas(:'pg_adm', 'pay_50_adm', null, 'pix') \g /dev/null
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_ad50',false) \g /dev/null
+select cancelar_destaque(:'d_adm', 'Anuncio suspeito') \g /dev/null
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select confirmar_pagamento('pay_50_adm', '{"event":"PAYMENT_RECEIVED"}') \g /dev/null
+reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null
+select d.status as destaque, d.cancelado_pela_equipe, p.status as pagamento, p.devolver_motivo is not null as devolver,
+       (select coalesce(destaque_ate::text, 'nenhum') = :'ate_l1' from anuncios where id=:'l1') as destaque_ate_igual
+  from destaques d join pagamentos p on p.id=d.pagamento_id where d.id=:'d_adm';
+\echo '[27b] chamada direta de ativar num pedido cancelado nao liga'
+select ativar_destaque(:'d_adm');
+select status as continua from destaques where id=:'d_adm';
+
+\echo '[28] anuncio congelado antes do dinheiro chegar: nao liga, pagamento marcado para devolver'
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select registrar_cobranca_asaas(:'pg_hy', 'pay_50_hy', null, 'pix') \g /dev/null
+select registrar_cobranca_asaas(:'pg_hx', 'pay_50_hx', null, 'pix') \g /dev/null
+reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null
+update anuncios set status='congelado' where id=:'ax';
+set role service_role; select set_config('request.jwt.claim.role','service_role',false) \g /dev/null
+select confirmar_pagamento('pay_50_hx') \g /dev/null
+reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null
+select d.status as destaque, a.status as anuncio, p.devolver_motivo
+  from destaques d join anuncios a on a.id=d.anuncio_id join pagamentos p on p.id=d.pagamento_id where d.id=:'d_hx';
+\echo '[28b] vaga: destaque ativo de anuncio congelado nao ocupa vaga (1 com a Y no ar, 0 com ela congelada)'
+set role service_role; select set_config('request.jwt.claim.role','service_role',false) \g /dev/null
+select confirmar_pagamento('pay_50_hy') \g /dev/null
+reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null
+select status as y_ativo from destaques where id=:'d_hy';
+select destaque_vagas_ocupadas('home', :'reg_outra') as com_y_no_ar;
+update anuncios set status='congelado' where id=:'ay';
+select destaque_vagas_ocupadas('home', :'reg_outra') as com_y_congelada;
+update anuncios set status='ativo' where id in (:'ay', :'ax');
+
+\echo '[29] pedido vencido pago depois com as vagas cheias: nao liga e marca para devolver'
+update destaque_tipos set vagas_por_regiao=2 where slug='home';
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_x50',false) \g /dev/null
+select destaque_id as d_hx2, pagamento_id as pg_hx2 from contratar_destaque('home', :'ax') \gset
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select registrar_cobranca_asaas(:'pg_hx2', 'pay_50_hx2', null, 'pix') \g /dev/null
+select cancelar_pagamento('pay_50_hx2', 'vencido') \g /dev/null
+reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null
+update destaque_tipos set vagas_por_regiao=1 where slug='home';
+set role service_role; select set_config('request.jwt.claim.role','service_role',false) \g /dev/null
+select confirmar_pagamento('pay_50_hx2') \g /dev/null
+reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null
+select d.status as destaque, p.status as pagamento, p.devolver_motivo from destaques d join pagamentos p on p.id=d.pagamento_id where d.id=:'d_hx2';
+update destaque_tipos set vagas_por_regiao=8 where slug='home';
+
+\echo '[30] preco por regiao: admin cria excecao do "busca" na outra regiao (fica no log); a opcao e o pedido usam o preco da regiao'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_ad50',false) \g /dev/null
+insert into destaque_precos_regiao (tipo, microrregiao_id, preco_centavos, dias, atualizado_por) values ('busca', :'reg_outra', 990, 3, 'user_ad50');
+reset role; select count(*) as log_preco_regiao from logs_atividade where tabela='destaque_precos_regiao' and usuario_id='user_ad50';
+set role authenticated; select set_config('request.jwt.claim.sub','user_x50',false) \g /dev/null
+select slug, preco_centavos, dias from opcoes_destaque(:'ax') where slug='busca';
+select preco_centavos from contratar_destaque('busca', :'ax');
+select set_config('request.jwt.claim.sub','user_lj50',false) \g /dev/null
+select slug, preco_centavos, dias from opcoes_destaque(:'l1') where slug='busca';
+\echo '[30b] usuario comum nao cria excecao de preco (ERRO esperado: row-level security); visitante le'
+insert into destaque_precos_regiao (tipo, microrregiao_id, preco_centavos) values ('home', :'reg', 1);
+set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select count(*) as visitante_le from destaque_precos_regiao;
+\echo '[30c] "subir" nao tem dias por regiao (ERRO esperado: check constraint)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_ad50',false) \g /dev/null
+insert into destaque_precos_regiao (tipo, microrregiao_id, dias) values ('subir', :'reg_outra', 3);
+
+\echo '[31] perguntas ao Asaas: servidor pode uma vez a cada 15 s por pagamento; usuario nao chama nem le (ERRO esperado: permission denied x2)'
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select marcar_consulta_asaas(:'pg_hy') as primeira, marcar_consulta_asaas(:'pg_hy') as logo_depois;
+reset role; update asaas_consultas set consultado_em = now() - interval '20 seconds' where pagamento_id=:'pg_hy';
+set role service_role;
+select marcar_consulta_asaas(:'pg_hy') as depois_de_20s, marcar_consulta_asaas(gen_random_uuid()) as pagamento_inexistente;
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_y50',false) \g /dev/null
+select marcar_consulta_asaas(:'pg_hy');
+select count(*) from asaas_consultas;
+reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null

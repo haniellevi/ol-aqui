@@ -65,8 +65,57 @@ insert into public.destaque_tipos (slug, nome, descricao, preco_centavos, dias, 
   ('home', 'Vitrine da página inicial', 'Aparece no carrossel "Destaques perto de você" da página inicial.', 3990, 7, 8, 'anuncio', 3),
   ('loja', 'Loja em destaque', 'Sua loja aparece em "Lojas em destaque" na página inicial.', 4990, 7, 6, 'loja', 4);
 
+-- Preço e dias diferentes por região (exceção da região; vazio = usa o do tipo). Editável na tela Destaques.
+create table public.destaque_precos_regiao (
+  id              uuid primary key default gen_random_uuid(),
+  tipo            text not null references public.destaque_tipos(slug),
+  microrregiao_id uuid not null references public.microrregioes(id) on delete cascade,
+  preco_centavos  integer check (preco_centavos between 0 and 10000000),
+  dias            integer check (dias between 1 and 365),
+  atualizado_em   timestamptz not null default now(),
+  atualizado_por  text references public.perfis(id) on delete set null,
+  unique (tipo, microrregiao_id),
+  check (preco_centavos is not null or dias is not null),
+  check (tipo <> 'subir' or dias is null)
+);
+create trigger tocar_destaque_precos_regiao before update on public.destaque_precos_regiao
+  for each row execute function public.tocar_atualizado_em();
+create trigger log_destaque_precos_regiao after insert or update or delete on public.destaque_precos_regiao
+  for each row execute function public.registrar_log();
+alter table public.destaque_precos_regiao enable row level security;
+create policy "precos regiao leitura" on public.destaque_precos_regiao for select using (true);
+create policy "precos regiao admin"   on public.destaque_precos_regiao for all using (public.e_admin()) with check (public.e_admin());
+revoke all on public.destaque_precos_regiao from anon, authenticated;
+grant select on public.destaque_precos_regiao to anon, authenticated;
+grant insert, update, delete on public.destaque_precos_regiao to authenticated;   -- a policy deixa só o admin
+
+-- As exceções por região que existiam em destaque.preco_centavos / destaque.dias viram exceções do "busca"
+insert into public.destaque_precos_regiao (tipo, microrregiao_id, preco_centavos, dias)
+select 'busca', r.mid,
+       case when public.numero_ou_nulo(p.valor) between 0 and 10000000 then public.numero_ou_nulo(p.valor)::int end,
+       case when public.numero_ou_nulo(d.valor) between 1 and 365 then public.numero_ou_nulo(d.valor)::int end
+  from (select distinct c.microrregiao_id as mid from public.configuracoes c
+         where c.chave in ('destaque.preco_centavos', 'destaque.dias') and c.microrregiao_id is not null) r
+  left join public.configuracoes p on p.chave = 'destaque.preco_centavos' and p.microrregiao_id = r.mid
+  left join public.configuracoes d on d.chave = 'destaque.dias' and d.microrregiao_id = r.mid
+ where (public.numero_ou_nulo(p.valor) between 0 and 10000000) or (public.numero_ou_nulo(d.valor) between 1 and 365);
+
 -- Um lugar só para o preço: as configurações antigas saem (o painel mostra tudo na tela Destaques)
 delete from public.configuracoes where chave in ('destaque.preco_centavos', 'destaque.dias');
+
+-- O tipo como vale numa região: preço e dias da exceção da região, se tiver
+create or replace function public.destaque_tipo_regiao(p_slug text, p_regiao uuid)
+returns public.destaque_tipos language sql stable security definer
+set search_path = public, extensions
+as $$
+  select t.slug, t.id, t.nome, t.descricao,
+         coalesce(r.preco_centavos, t.preco_centavos),
+         case when t.slug = 'subir' then null else coalesce(r.dias, t.dias) end,
+         t.vagas_por_regiao, t.alvo, t.ativo, t.ordem, t.atualizado_em, t.atualizado_por
+    from public.destaque_tipos t
+    left join public.destaque_precos_regiao r on r.tipo = t.slug and r.microrregiao_id = p_regiao
+   where t.slug = p_slug
+$$;
 
 -- ---------------------------------------------------------------------
 -- 2. Créditos que cada plano ganha por mês (ex.: Full ganha 4 "Subir")
@@ -117,6 +166,8 @@ create table public.destaques (
   inicio          timestamptz,
   fim             timestamptz,
   motivo          text check (char_length(motivo) <= 300),
+  renovacoes      integer not null default 0,          -- quantas vezes a reserva vencida foi guardada de novo
+  cancelado_pela_equipe boolean not null default false, -- cancelado pelo admin: pagamento que chegar depois não liga
   criado_em       timestamptz not null default now(),
   atualizado_em   timestamptz not null default now(),
   check ((tipo = 'loja') = (anuncio_id is null)),
@@ -136,6 +187,19 @@ create policy "destaques leitura" on public.destaques for select using (
     select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = public.usuario_id()));
 revoke all on public.destaques from anon, authenticated;
 grant select on public.destaques to authenticated;
+
+-- Pagamentos: dinheiro que chegou sem dar para ligar o destaque (a equipe devolve no Asaas)
+alter table public.pagamentos
+  add column devolver_motivo text check (char_length(devolver_motivo) <= 300);
+
+-- Última vez que o servidor perguntou ao Asaas sobre um pagamento (limite de perguntas).
+-- Tabela à parte, sem log: muda a cada poucos segundos. Só o servidor mexe (função abaixo).
+create table public.asaas_consultas (
+  pagamento_id  uuid primary key references public.pagamentos(id) on delete cascade,
+  consultado_em timestamptz not null default now()
+);
+alter table public.asaas_consultas enable row level security;
+revoke all on public.asaas_consultas from anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- 4. "Subir": data em que o anúncio subiu (só o sistema grava)
@@ -169,7 +233,10 @@ insert into public.configuracoes (chave, valor, grupo, publico, descricao) value
   ('destaque.subir_intervalo_horas',  '24', 'planos',   true,  'Tempo mínimo (horas) entre dois "Subir" do mesmo anúncio'),
   ('destaque.subir_resultado_dias',   '7',  'planos',   false, 'Dias em que o resultado do "Subir" é medido (visualizações e cliques)'),
   ('destaque.pendentes_max',          '10', 'planos',   false, 'Máximo de pedidos de destaque esperando pagamento por vendedor ao mesmo tempo'),
-  ('cobranca.vencimento_dias',        '1',  'cobranca', false, 'Dias até a cobrança do Asaas vencer (Pix e cartão)')
+  ('destaque.reserva_renovacoes_max', '1',  'planos',   false, 'Quantas vezes a vaga de um pedido não pago pode ser guardada de novo depois que a reserva acaba'),
+  ('destaque.reservas_max_por_vendedor','2','planos',   false, 'Máximo de vagas guardadas (home/loja) esperando pagamento por vendedor, por tipo, ao mesmo tempo'),
+  ('cobranca.vencimento_dias',        '1',  'cobranca', false, 'Dias até a cobrança do Asaas vencer (Pix e cartão)'),
+  ('cobranca.consulta_intervalo_segundos','15','cobranca',false,'Intervalo mínimo (segundos) entre duas perguntas do servidor ao Asaas sobre a mesma cobrança')
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------
@@ -178,14 +245,18 @@ on conflict do nothing;
 
 -- Vagas ocupadas de um tipo numa região. Ocupa vaga: destaque ativo que ainda não acabou
 -- ou pedido esperando pagamento com a reserva valendo. Conta por alvo (anúncio ou loja):
--- o mesmo alvo renovando não ocupa outra vaga.
+-- o mesmo alvo renovando não ocupa outra vaga. Só conta alvo que está no ar
+-- (anúncio congelado/pausado ou loja parada não aparece, então não segura vaga).
 create or replace function public.destaque_vagas_ocupadas(p_tipo text, p_regiao uuid, p_excluir_alvo uuid default null)
 returns integer language sql stable security definer
 set search_path = public, extensions
 as $$
   select count(distinct coalesce(d.anuncio_id, d.vitrine_id))::int
     from public.destaques d
+    join public.vitrines_lojas v on v.id = d.vitrine_id and v.status = 'ativa'
+    left join public.anuncios a on a.id = d.anuncio_id
    where d.tipo = p_tipo and d.microrregiao_id = p_regiao
+     and (d.anuncio_id is null or a.status = 'ativo')
      and ((d.status = 'ativo' and d.fim > now())
           or (d.status = 'aguardando_pagamento' and d.reservado_ate > now()))
      and coalesce(d.anuncio_id, d.vitrine_id) is distinct from p_excluir_alvo
@@ -214,7 +285,8 @@ begin
   return greatest(qtd - usados, 0);
 end $$;
 
--- Liga o destaque (crédito, cortesia ou pagamento confirmado). Chamada repetida não faz nada.
+-- Liga o destaque (crédito, cortesia ou pagamento confirmado). Só age em pedido esperando
+-- (chamada repetida, pedido encerrado ou cancelado: não faz nada).
 create or replace function public.ativar_destaque(p_destaque_id uuid)
 returns void language plpgsql security definer
 set search_path = public, extensions
@@ -230,7 +302,7 @@ declare
   antes   text := coalesce(current_setting('olaki.sistema', true), '');
 begin
   select * into d from public.destaques where id = p_destaque_id for update;
-  if d.id is null or d.status in ('ativo', 'encerrado') then
+  if d.id is null or d.status <> 'aguardando_pagamento' then
     return;
   end if;
   select * into t from public.destaque_tipos where slug = d.tipo;
@@ -275,6 +347,65 @@ begin
   perform set_config('olaki.sistema', antes, true);
 end $$;
 
+-- Pagamento confirmado de um pedido pago. Liga o destaque, menos quando:
+--  * a equipe cancelou o pedido (o cancelamento vale);
+--  * o anúncio (ou a loja) não está mais no ar;
+--  * o pedido já tinha sido cancelado (venceu/não pago a tempo) e as vagas da região estão cheias.
+-- Nesses casos o destaque fica cancelado e o pagamento fica marcado para a equipe devolver o
+-- dinheiro (pagamentos.devolver_motivo, lista na tela Destaques do painel).
+-- Pedido ainda esperando com a reserva vencida: liga assim mesmo (a cobrança era válida).
+create or replace function public.ativar_destaque_pago(p_destaque_id uuid)
+returns void language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare
+  d      public.destaques;
+  t      public.destaque_tipos;
+  a      public.anuncios;
+  v      public.vitrines_lojas;
+  porque text;
+begin
+  select * into d from public.destaques where id = p_destaque_id;
+  if d.id is null or d.status in ('ativo', 'encerrado') then
+    return;
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('olaki:destaque:' || d.tipo || ':' || d.microrregiao_id::text, 0));
+  select * into d from public.destaques where id = p_destaque_id for update;
+  if d.status in ('ativo', 'encerrado') then
+    return;
+  end if;
+  select * into t from public.destaque_tipos where slug = d.tipo;
+  select * into v from public.vitrines_lojas where id = d.vitrine_id;
+  if d.anuncio_id is not null then
+    select * into a from public.anuncios where id = d.anuncio_id;
+  end if;
+
+  if d.status = 'cancelado' and d.cancelado_pela_equipe then
+    porque := 'Pago depois que a equipe cancelou';
+  elsif v.id is null or v.status <> 'ativa' or (d.tipo = 'loja' and v.tipo <> 'loja') then
+    porque := 'A loja não estava ativa quando o pagamento chegou';
+  elsif d.anuncio_id is not null and (a.id is null or a.status <> 'ativo') then
+    porque := 'O anúncio não estava no ar quando o pagamento chegou';
+  elsif d.status = 'cancelado' and t.vagas_por_regiao is not null
+        and public.destaque_vagas_ocupadas(d.tipo, d.microrregiao_id, coalesce(d.anuncio_id, d.vitrine_id)) >= t.vagas_por_regiao then
+    porque := 'Pago depois do prazo e as vagas da região estavam ocupadas';
+  end if;
+
+  if porque is not null then
+    update public.destaques
+       set status = 'cancelado', reservado_ate = null,
+           motivo = left(porque || '. A equipe vai devolver o dinheiro.', 300)
+     where id = d.id;
+    update public.pagamentos set devolver_motivo = left(porque, 300) where id = d.pagamento_id;
+    return;
+  end if;
+
+  if d.status = 'cancelado' then
+    update public.destaques set status = 'aguardando_pagamento', motivo = 'Pago depois do prazo' where id = d.id;
+  end if;
+  perform public.ativar_destaque(d.id);
+end $$;
+
 -- ---------------------------------------------------------------------
 -- 7. Tela "Destacar": opções e contratação
 -- ---------------------------------------------------------------------
@@ -314,7 +445,8 @@ begin
     alvo_id := v.id;
   end if;
 
-  for t in select * from public.destaque_tipos x
+  for t in select r.* from public.destaque_tipos x
+            cross join lateral public.destaque_tipo_regiao(x.slug, regiao) r
             where x.ativo and x.alvo = case when p_anuncio_id is null then 'loja' else 'anuncio' end
             order by x.ordem, x.slug loop
     ok := true;
@@ -372,6 +504,9 @@ declare
   maximo    integer;
   venc      integer;
   pg_id     uuid;
+  renov_max integer;
+  reservas  integer;
+  horas     integer;
 begin
   if uid is null then
     raise exception 'Entre na sua conta para destacar.' using errcode = '28000';
@@ -411,6 +546,7 @@ begin
     regiao := v.microrregiao_id;
     alvo_id := v.id;
   end if;
+  t := public.destaque_tipo_regiao(t.slug, regiao);   -- preço e dias da região
 
   -- Fila por tipo + região (vagas) e por vitrine (créditos e pedidos): duas compras ao mesmo tempo não passam juntas
   perform pg_advisory_xact_lock(hashtextextended('olaki:destaque:' || t.slug || ':' || regiao::text, 0));
@@ -418,7 +554,9 @@ begin
 
   reserva := coalesce(public.numero_ou_nulo(public.config('destaque.reserva_minutos', regiao, '30')), 30)::int;
 
-  -- Mesmo pedido esperando pagamento (mesmo preço): devolve ele, renovando a reserva se tiver vaga
+  -- Mesmo pedido esperando pagamento (mesmo preço): devolve ele. A reserva que ainda vale não é
+  -- esticada; a que venceu só é guardada de novo poucas vezes (destaque.reserva_renovacoes_max),
+  -- para ninguém segurar vaga sem pagar.
   if not p_usar_credito and t.preco_centavos > 0 then
     select * into d from public.destaques x
      where x.tipo = t.slug and x.vitrine_id = v.id and coalesce(x.anuncio_id, x.vitrine_id) = alvo_id
@@ -426,13 +564,18 @@ begin
        and exists (select 1 from public.pagamentos p where p.id = x.pagamento_id and p.status = 'pendente')
      order by x.criado_em desc limit 1;
     if d.id is not null then
-      if d.reservado_ate <= now() and t.vagas_por_regiao is not null
-         and public.destaque_vagas_ocupadas(t.slug, regiao, alvo_id) >= t.vagas_por_regiao then
-        raise exception using errcode = 'P0001',
-          message = format('As vagas de "%s" estão ocupadas na sua região agora. Tente de novo em alguns dias.', t.nome);
+      if t.vagas_por_regiao is not null and (d.reservado_ate is null or d.reservado_ate <= now()) then
+        if public.destaque_vagas_ocupadas(t.slug, regiao, alvo_id) >= t.vagas_por_regiao then
+          raise exception using errcode = 'P0001',
+            message = format('As vagas de "%s" estão ocupadas na sua região agora. Tente de novo em alguns dias.', t.nome);
+        end if;
+        renov_max := greatest(coalesce(public.numero_ou_nulo(public.config('destaque.reserva_renovacoes_max', regiao, '1')), 1)::int, 0);
+        if d.renovacoes < renov_max then
+          update public.destaques x set reservado_ate = now() + make_interval(mins => reserva), renovacoes = x.renovacoes + 1
+           where x.id = d.id
+          returning * into d;
+        end if;
       end if;
-      update public.destaques x set reservado_ate = now() + make_interval(mins => reserva) where x.id = d.id
-      returning * into d;
       return query select d.id, d.status, d.origem, d.preco_centavos, d.pagamento_id, d.reservado_ate;
       return;
     end if;
@@ -466,10 +609,21 @@ begin
     perform public.ativar_destaque(d.id);
   else
     maximo := coalesce(public.numero_ou_nulo(public.config('destaque.pendentes_max', regiao, '10')), 10)::int;
+    horas := greatest(coalesce(public.numero_ou_nulo(public.config('destaque.cancelar_pendente_horas', regiao, '48')), 48)::int, 1);
     select count(*) into pendentes from public.destaques x
-     where x.vitrine_id = v.id and x.status = 'aguardando_pagamento' and x.criado_em > now() - interval '1 day';
+     where x.vitrine_id = v.id and x.status = 'aguardando_pagamento' and x.origem = 'pago'
+       and (x.criado_em > now() - make_interval(hours => horas) or x.reservado_ate > now());
     if pendentes >= maximo then
       raise exception 'Você tem muitos destaques esperando pagamento. Pague ou espere um pouco antes de pedir outro.' using errcode = 'P0001';
+    end if;
+    if t.vagas_por_regiao is not null then
+      select count(*) into reservas from public.destaques x
+       where x.vitrine_id = v.id and x.tipo = t.slug and x.microrregiao_id = regiao
+         and x.status = 'aguardando_pagamento' and x.reservado_ate > now();
+      if reservas >= greatest(coalesce(public.numero_ou_nulo(public.config('destaque.reservas_max_por_vendedor', regiao, '2')), 2)::int, 1) then
+        raise exception using errcode = 'P0001',
+          message = format('Você já tem vagas de "%s" guardadas esperando pagamento. Pague ou espere a reserva acabar.', t.nome);
+      end if;
     end if;
     venc := greatest(coalesce(public.numero_ou_nulo(public.config('cobranca.vencimento_dias', regiao, '1')), 1)::int, 0);
     insert into public.pagamentos (vitrine_id, microrregiao_id, tipo, anuncio_id, valor_centavos, status, vencimento, repasse_percentual)
@@ -528,9 +682,9 @@ begin
   elsif pg.tipo = 'destaque' then
     select x.id into d_id from public.destaques x where x.pagamento_id = pg.id;
     if d_id is not null then
-      perform public.ativar_destaque(d_id);
+      perform public.ativar_destaque_pago(d_id);
     else
-      dias := coalesce((select t.dias from public.destaque_tipos t where t.slug = 'busca'), 7);
+      dias := coalesce((public.destaque_tipo_regiao('busca', pg.microrregiao_id)).dias, 7);
       update public.anuncios set destaque_ate = greatest(coalesce(destaque_ate, now()), now()) + make_interval(days => dias)
        where id = pg.anuncio_id;
     end if;
@@ -617,6 +771,27 @@ begin
   return n > 0;
 end $$;
 
+-- O servidor só pergunta ao Asaas sobre uma cobrança de tempos em tempos
+-- (cobranca.consulta_intervalo_segundos), seja qual for o pedido da tela. true = pode perguntar agora.
+create or replace function public.marcar_consulta_asaas(p_pagamento_id uuid)
+returns boolean language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare
+  regiao    uuid;
+  intervalo double precision;
+  n         integer;
+begin
+  select p.microrregiao_id into regiao from public.pagamentos p where p.id = p_pagamento_id;
+  if regiao is null then return false; end if;
+  intervalo := greatest(coalesce(public.numero_ou_nulo(public.config('cobranca.consulta_intervalo_segundos', regiao, '15')), 15), 1);
+  insert into public.asaas_consultas as c (pagamento_id, consultado_em) values (p_pagamento_id, now())
+  on conflict (pagamento_id) do update set consultado_em = now()
+   where c.consultado_em <= now() - make_interval(secs => intervalo);
+  get diagnostics n = row_count;
+  return n > 0;
+end $$;
+
 -- ---------------------------------------------------------------------
 -- 9. Painel: cortesia e cancelamento (só admin; tudo fica no log)
 -- ---------------------------------------------------------------------
@@ -677,6 +852,7 @@ begin
     raise exception 'As vagas deste destaque estão ocupadas na região. Marque "passar das vagas" se quiser dar assim mesmo.' using errcode = 'P0001';
   end if;
 
+  t := public.destaque_tipo_regiao(t.slug, regiao);
   insert into public.destaques (tipo, anuncio_id, vitrine_id, microrregiao_id, criado_por, origem, status, preco_centavos, dias, motivo)
   values (t.slug, a.id, v.id, regiao, public.usuario_id(), 'cortesia', 'aguardando_pagamento', 0,
           case when t.slug = 'subir' then null else coalesce(p_dias, t.dias) end, left(btrim(p_motivo), 300))
@@ -703,7 +879,8 @@ begin
   end if;
   perform public.devolver_tempo_destaque(d);
   update public.destaques
-     set status = 'cancelado', fim = case when fim is not null then least(fim, now()) end,
+     set status = 'cancelado', fim = case when fim is not null then least(fim, now()) end, reservado_ate = null,
+         cancelado_pela_equipe = true,
          motivo = coalesce(nullif(left(btrim(coalesce(p_motivo, '')), 300), ''), 'Cancelado pela equipe')
    where id = d.id;
   update public.pagamentos set status = 'cancelado' where id = d.pagamento_id and status = 'pendente';
@@ -963,16 +1140,20 @@ end $$;
 revoke all on function public.destaque_vagas_ocupadas(text, uuid, uuid) from public, anon, authenticated;
 revoke all on function public.destaque_creditos_restantes(uuid, text) from public, anon, authenticated;
 revoke all on function public.ativar_destaque(uuid) from public, anon, authenticated;
+revoke all on function public.ativar_destaque_pago(uuid) from public, anon, authenticated;
+revoke all on function public.destaque_tipo_regiao(text, uuid) from public, anon, authenticated;
 revoke all on function public.devolver_tempo_destaque(public.destaques) from public, anon, authenticated;
 
 -- Só o servidor (webhook do Asaas, rotina diária)
 revoke all on function public.confirmar_pagamento(text, jsonb) from public, anon, authenticated;
 revoke all on function public.cancelar_pagamento(text, text, jsonb) from public, anon, authenticated;
 revoke all on function public.registrar_cobranca_asaas(uuid, text, text, text) from public, anon, authenticated;
+revoke all on function public.marcar_consulta_asaas(uuid) from public, anon, authenticated;
 revoke all on function public.expirar_destaques() from public, anon, authenticated;
 revoke all on function public.expirar_rotina() from public, anon, authenticated;
 grant execute on function public.confirmar_pagamento(text, jsonb), public.cancelar_pagamento(text, text, jsonb),
-  public.registrar_cobranca_asaas(uuid, text, text, text), public.expirar_destaques(), public.expirar_rotina() to service_role;
+  public.registrar_cobranca_asaas(uuid, text, text, text), public.marcar_consulta_asaas(uuid),
+  public.expirar_destaques(), public.expirar_rotina() to service_role;
 
 -- Pessoa logada (a função confere dono ou admin por dentro)
 revoke all on function public.opcoes_destaque(uuid) from public, anon;
