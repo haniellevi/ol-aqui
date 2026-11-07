@@ -1,0 +1,80 @@
+"use server";
+// Ações que a PESSOA dispara tocando num botão da folha do Aki (nunca a IA sozinha).
+// Todas usam o cliente com a sessão dela: a RLS e as funções do banco conferem tudo de novo.
+import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { traduzirErro } from "@/lib/erros";
+import { validarPedidoRadar } from "@/lib/aki/validar";
+
+export type RespostaAcao = { ok: true; mensagem: string } | { ok: false; erro: string; link?: { rotulo: string; href: string } };
+
+const SEM_LOGIN: RespostaAcao = { ok: false, erro: "Entre na sua conta para continuar.", link: { rotulo: "Entrar", href: "/entrar" } };
+
+/** Joinha (1), não joinha (-1) ou tirar (0) numa resposta do Aki. */
+export async function avaliarResposta(mensagemId: number, nota: -1 | 0 | 1, comentario?: string | null): Promise<RespostaAcao> {
+  const { userId } = await auth();
+  if (!userId) return SEM_LOGIN;
+  if (!Number.isSafeInteger(mensagemId) || mensagemId <= 0 || ![-1, 0, 1].includes(nota)) return { ok: false, erro: "Avaliação inválida." };
+  const db = await createClient();
+  const { error } = await db.rpc("robo_avaliar", {
+    p_mensagem_id: mensagemId,
+    p_nota: nota,
+    p_comentario: typeof comentario === "string" ? comentario.slice(0, 500) : null,
+  });
+  if (error) return { ok: false, erro: traduzirErro(error).mensagem };
+  return { ok: true, mensagem: nota === 0 ? "Avaliação tirada." : "Obrigado! Isso ajuda o Aki a melhorar." };
+}
+
+/** LGPD: apaga todas as conversas da pessoa com o Aki (o uso sem texto continua contando no limite). */
+export async function apagarMinhasConversas(): Promise<RespostaAcao> {
+  const { userId } = await auth();
+  if (!userId) return SEM_LOGIN;
+  const db = await createClient();
+  const { error } = await db.from("robo_conversas").delete().eq("usuario_id", userId);
+  if (error) return { ok: false, erro: traduzirErro(error).mensagem };
+  revalidatePath("/minha-conta/privacidade");
+  return { ok: true, mensagem: "Pronto. Suas conversas com o Aki foram apagadas." };
+}
+
+/** "Confirmar pedido no Radar": cria o pedido que o Aki preparou (a pessoa tocou no botão). */
+export async function confirmarPedidoRadar(dados: unknown): Promise<RespostaAcao> {
+  const { userId } = await auth();
+  if (!userId) return SEM_LOGIN;
+  const v = validarPedidoRadar(dados);
+  if (!v.ok) return { ok: false, erro: v.erro };
+
+  const db = await createClient();
+  const [{ data: confirmado }, { data: perfil }] = await Promise.all([
+    db.rpc("whatsapp_confirmado"),
+    db.from("perfis").select("microrregiao_id").eq("id", userId).maybeSingle(),
+  ]);
+  if (confirmado !== true) {
+    return { ok: false, erro: "Confirme seu celular antes de pedir no Radar.", link: { rotulo: "Confirmar meu celular", href: "/minha-conta/dados" } };
+  }
+  if (!perfil?.microrregiao_id) return { ok: false, erro: "Termine seu cadastro antes de pedir no Radar.", link: { rotulo: "Meus dados", href: "/minha-conta/dados" } };
+
+  const { data, error } = await db
+    .from("radar_pedidos")
+    .insert({
+      comprador_id: userId,
+      microrregiao_id: perfil.microrregiao_id,
+      categoria: v.dados.categoria,
+      titulo: v.dados.titulo,
+      detalhes: v.dados.detalhes,
+      preco_max_centavos: v.dados.preco_max_centavos,
+      cidade: v.dados.cidade,
+      urgencia: v.dados.urgencia,
+      modo_contato: "whatsapp_direto",
+    })
+    .select("status")
+    .single();
+  if (error || !data) return { ok: false, erro: traduzirErro(error).mensagem };
+  return {
+    ok: true,
+    mensagem:
+      data.status === "em_analise"
+        ? "Recebemos seu pedido. Ele passa por uma conferência rápida antes de ir para o Radar."
+        : "Pedido no Radar! As lojas da região vão te chamar no WhatsApp.",
+  };
+}
