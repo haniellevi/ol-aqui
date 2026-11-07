@@ -26,7 +26,7 @@ export const metadata: Metadata = { title: "Minha conta" };
 type Item = { href: string; nome: string; icone: React.ReactNode; detalhe?: string };
 
 const CLASSE_ITEM =
-  "flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left text-base font-semibold text-texto hover:bg-fundo " +
+  "flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left text-base font-semibold hover:bg-fundo " +
   "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
 
 // T31 · Minha conta: lista simples com ícone + nome. Itens de vendedor só para quem vende.
@@ -148,7 +148,7 @@ function Lista({ titulo, itens }: { titulo: string; itens: Item[] }) {
       <ul className="divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
         {itens.map((i) => (
           <li key={i.href}>
-            <Link href={i.href} className={CLASSE_ITEM}>
+            <Link href={i.href} className={`${CLASSE_ITEM} text-texto`}>
               <span className="inline-flex shrink-0 text-laranja-escuro [&>svg]:size-6" aria-hidden>
                 {i.icone}
               </span>

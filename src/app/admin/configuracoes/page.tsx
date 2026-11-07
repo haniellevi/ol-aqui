@@ -44,8 +44,9 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
           <Link
             key={g}
             href={`/admin/configuracoes?grupo=${g}`}
-            className={`h-12 shrink-0 rounded-full px-4 text-sm font-semibold leading-12 ${
-              g === grupoAtual ? "bg-beringela text-white" : "border border-neutral-200 bg-white text-neutral-700"
+            aria-current={g === grupoAtual ? "page" : undefined}
+            className={`inline-flex h-12 shrink-0 items-center rounded-campo border px-4 text-sm font-semibold text-beringela active:brightness-90 ${
+              g === grupoAtual ? "border-laranja-escuro bg-laranja-claro" : "border-borda bg-cartao"
             }`}
           >
             {NOMES_GRUPO[g] ?? g}
@@ -60,8 +61,8 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
           return (
             <Cartao key={c.id}>
               <div className="mb-3">
-                <h2 className="font-semibold text-neutral-900">{c.descricao ?? c.chave}</h2>
-                <p className="text-xs text-neutral-400">
+                <h2 className="font-semibold text-beringela">{c.descricao ?? c.chave}</h2>
+                <p className="text-[13px] text-texto-suave">
                   {c.chave} · {c.publico ? "visível no site" : "só no sistema"} · alterado em {quando(c.atualizado_em)}
                 </p>
               </div>
@@ -70,12 +71,12 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
               {excecoes.length > 0 && (
                 <ul className="mt-4 space-y-2">
                   {excecoes.map((e) => (
-                    <li key={e.id} className="flex items-center gap-3 rounded-xl bg-orange-50 px-3 py-2 text-sm">
+                    <li key={e.id} className="flex min-h-12 items-center gap-3 rounded-card bg-laranja-claro pl-3 pr-1 text-sm text-beringela">
                       <span className="font-semibold">{nomesRegiao.get(e.microrregiao_id!) ?? "Região"}:</span>
-                      <span className="truncate font-mono text-xs">{valorParaForm(tipoDe(e.valor), e.valor).replace(/\n/g, " · ")}</span>
+                      <span className="truncate font-mono text-[13px]">{valorParaForm(tipoDe(e.valor), e.valor).replace(/\n/g, " · ")}</span>
                       <form action={removerExcecao} className="ml-auto">
                         <input type="hidden" name="id" value={e.id} />
-                        <button className="text-xs font-semibold text-red-700 underline">remover</button>
+                        <button className="h-12 px-3 text-sm font-semibold text-perigo underline">remover</button>
                       </form>
                     </li>
                   ))}

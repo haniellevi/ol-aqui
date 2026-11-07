@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Aviso, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
+import { Aviso, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { emCentavos, valorParaForm, type TipoValor } from "@/lib/admin/config";
 import { criarExcecao, salvarConfig } from "./actions";
 
@@ -25,10 +25,10 @@ function CampoValor({ tipo, valor, chave }: { tipo: TipoValor; valor: unknown; c
           name="valor"
           defaultValue={texto}
           rows={Math.min(8, Math.max(3, texto.split("\n").length))}
-          className={`${estiloCampo} h-auto py-2 font-mono text-sm`}
+          className={`${estiloCampo} h-auto py-2 font-mono`}
         />
       )}
-      {ajuda && <p className="mt-1 text-xs text-neutral-500">{ajuda}</p>}
+      {ajuda && <p className="mt-1 text-[13px] text-texto-suave">{ajuda}</p>}
     </>
   );
 }
@@ -41,10 +41,10 @@ export function FormConfig({ id, chave, tipo, valor }: { id: string; chave: stri
       <input type="hidden" name="tipo" value={tipo} />
       <CampoValor tipo={tipo} valor={valor} chave={chave} />
       <div className="flex items-center gap-3">
-        <button disabled={pendente} className={estiloBotao}>
+        <button disabled={pendente} className={estiloBotaoSec}>
           {pendente ? "Salvando…" : "Salvar"}
         </button>
-        {estado?.ok && <span className="text-sm text-emerald-700">{estado.ok}</span>}
+        {estado?.ok && <span className="text-sm font-semibold text-verde-escuro">{estado.ok}</span>}
       </div>
       {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
     </form>
@@ -64,9 +64,9 @@ export function FormExcecao({
 }) {
   const [estado, acao, pendente] = useActionState(criarExcecao, null);
   return (
-    <details className="rounded-xl bg-neutral-50 p-3">
-      <summary className="cursor-pointer text-sm font-semibold text-neutral-700">Criar exceção para uma região</summary>
-      <form action={acao} className="mt-3 space-y-2">
+    <details className="rounded-card bg-fundo px-3">
+      <summary className="min-h-12 cursor-pointer py-3.5 text-sm font-semibold text-beringela">Criar exceção para uma região</summary>
+      <form action={acao} className="space-y-2 pb-3">
         <input type="hidden" name="chave" value={chave} />
         <input type="hidden" name="tipo" value={tipo} />
         <select name="microrregiao_id" defaultValue="" className={estiloCampo}>

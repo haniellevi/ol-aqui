@@ -60,15 +60,15 @@ export function situacaoPedido(
   agora: Date = new Date(),
 ): SituacaoPedido {
   if (p.status === "em_analise") return { texto: "Em análise", cor: "bg-aviso-fundo text-aviso", aberto: false };
-  if (p.status === "atendido") return { texto: "Resolvido", cor: "bg-green-100 text-verde-escuro", aberto: false };
-  if (p.status === "congelado") return { texto: "Suspenso", cor: "bg-red-100 text-perigo", aberto: false };
+  if (p.status === "atendido") return { texto: "Resolvido", cor: "bg-sucesso-fundo text-verde-escuro", aberto: false };
+  if (p.status === "congelado") return { texto: "Suspenso", cor: "bg-perigo-fundo text-perigo", aberto: false };
   if (p.status === "encerrado" || new Date(p.expira_em) <= agora) {
     return { texto: "Encerrado", cor: "bg-fundo text-texto-suave", aberto: false };
   }
   if (p.modo_contato === "propostas_prazo" && p.propostas_ate && new Date(p.propostas_ate) <= agora) {
     return { texto: "Prazo acabou", cor: "bg-laranja-claro text-beringela", aberto: false };
   }
-  return { texto: "No ar", cor: "bg-green-100 text-verde-escuro", aberto: true };
+  return { texto: "No ar", cor: "bg-sucesso-fundo text-verde-escuro", aberto: true };
 }
 
 /** Link para pedir no Radar já com o texto da busca. */

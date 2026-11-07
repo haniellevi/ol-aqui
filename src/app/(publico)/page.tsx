@@ -58,7 +58,8 @@ export default async function Inicio() {
         </div>
         <ComoFuncionaRadar compacto />
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-          <Botao href="/radar/pedir" larguraTotal icone={<Radar />} className="sm:w-auto">
+          {/* Um botão principal por tela: o laranja da home é o "Buscar" (regra do design system) */}
+          <Botao href="/radar/pedir" variante="secundario" larguraTotal icone={<Radar />} className="sm:w-auto">
             Pedir no Radar
           </Botao>
           <Botao href="/radar" variante="texto" className="self-center">

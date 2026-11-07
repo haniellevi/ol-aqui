@@ -39,7 +39,7 @@ export function CampoBusca({
         />
         <button
           type="submit"
-          className="inline-flex h-12 shrink-0 items-center rounded-campo bg-laranja px-4 text-base font-bold text-beringela hover:bg-[#f25f0a] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+          className="inline-flex h-12 shrink-0 items-center rounded-campo bg-laranja px-4 text-base font-semibold text-beringela hover:brightness-95 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
         >
           Buscar
         </button>

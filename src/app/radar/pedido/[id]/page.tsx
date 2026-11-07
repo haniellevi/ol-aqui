@@ -223,7 +223,7 @@ function CartaoProposta({ proposta: p, maisBarata }: { proposta: PropostaRecebid
             {p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}
           </p>
           {maisBarata && (
-            <span className="w-fit rounded-full bg-green-100 px-2 py-0.5 text-[13px] font-bold text-verde-escuro">Menor preço</span>
+            <span className="w-fit rounded-full bg-sucesso-fundo px-2 py-0.5 text-[13px] font-bold text-verde-escuro">Menor preço</span>
           )}
           {p.anuncio && (
             <Link href={linkAnuncio(p.anuncio.id, p.anuncio.titulo)} className="line-clamp-2 text-[15px] font-semibold underline underline-offset-4">
@@ -233,7 +233,7 @@ function CartaoProposta({ proposta: p, maisBarata }: { proposta: PropostaRecebid
         </div>
       </div>
 
-      {p.mensagem && <p className="whitespace-pre-line rounded-campo bg-fundo p-3 text-base">“{p.mensagem}”</p>}
+      {p.mensagem && <p className="whitespace-pre-line rounded-card bg-fundo p-3 text-base">“{p.mensagem}”</p>}
 
       <BotaoChamarLoja propostaId={p.id} escolhida={p.escolhida} />
     </article>

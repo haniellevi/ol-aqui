@@ -92,9 +92,9 @@ export function RadarDeNegocios({
               key={c.valor}
               onClick={() => setFiltro(c.valor)}
               aria-pressed={filtro === c.valor}
-              className={`h-12 shrink-0 rounded-lg border px-4 text-sm font-semibold transition-colors ${
+              className={`h-12 shrink-0 rounded-campo border px-4 text-sm font-semibold transition-colors ${
                 filtro === c.valor
-                  ? "border-laranja bg-laranja-claro text-beringela"
+                  ? "border-laranja-escuro bg-laranja-claro text-beringela"
                   : "border-borda bg-cartao text-beringela active:bg-fundo"
               }`}
             >
@@ -107,7 +107,7 @@ export function RadarDeNegocios({
       {!temAcesso && <FaixaUpgrade planos={planos} titulo="Esses clientes já querem comprar." />}
       {temAcesso && restantes !== null && (
         restantes > 0 ? (
-          <p className="mx-4 mt-4 rounded-xl bg-laranja-claro px-4 py-3 text-sm text-beringela">
+          <p className="mx-4 mt-4 rounded-card bg-laranja-claro px-4 py-3 text-sm text-beringela">
             Você tem <strong>{restantes}</strong> {restantes === 1 ? "proposta grátis" : "propostas grátis"} no seu teste.
           </p>
         ) : (
@@ -127,7 +127,7 @@ export function RadarDeNegocios({
           </li>
         ))}
         {visiveis.length === 0 && (
-          <li className="rounded-xl border border-dashed border-borda bg-cartao p-8 text-center text-sm text-texto-suave">
+          <li className="rounded-card border border-dashed border-borda bg-cartao p-8 text-center text-sm text-texto-suave">
             Nenhum pedido aberto nesta categoria agora. Volte mais tarde, o Radar atualiza o tempo todo.
           </li>
         )}
@@ -195,9 +195,9 @@ function CartaoPedido({
   }
 
   return (
-    <article className="overflow-hidden rounded-xl border border-borda bg-cartao shadow-1">
+    <article className="overflow-hidden rounded-card border border-borda bg-cartao shadow-1">
       <div className="p-4">
-        <div className="flex flex-wrap items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-[13px]">
           {p.urgencia !== "normal" && (
             <span className="inline-flex items-center gap-1 rounded-full bg-laranja-claro px-2 py-0.5 font-semibold text-laranja-escuro">
               <Flame className="size-3.5" aria-hidden />
@@ -237,9 +237,9 @@ function CartaoPedido({
 
         <div className="relative mt-3">
           {temAcesso ? (
-            <div className="rounded-xl bg-fundo p-3 text-sm text-beringela">
+            <div className="rounded-card bg-fundo p-3 text-sm text-beringela">
               {p.detalhes ? <p className="whitespace-pre-line">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
-              <p className="mt-2 text-xs text-texto-suave">
+              <p className="mt-2 text-[13px] text-texto-suave">
                 Comprador: {p.compradorNome}
                 {modoPrazo && " · prefere receber as ofertas e escolher com quem falar"}
               </p>
@@ -247,12 +247,12 @@ function CartaoPedido({
           ) : (
             <>
               {/* Texto falso: o real nunca chega ao navegador de quem não tem acesso */}
-              <div aria-hidden className="select-none rounded-xl bg-fundo p-3 text-sm text-beringela blur-[5px]">
+              <div aria-hidden className="select-none rounded-card bg-fundo p-3 text-sm text-beringela blur-[5px]">
                 <p>Detalhes do pedido com modelo, ano, condição de pagamento e prazo para fechar negócio.</p>
-                <p className="mt-2 text-xs">Comprador: ••••••• · (89) 9••••-••••</p>
+                <p className="mt-2 text-[13px]">Comprador: ••••••• · (89) 9••••-••••</p>
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-beringela/90 px-3 py-1.5 text-xs font-semibold text-white">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-beringela/90 px-3 py-1.5 text-[13px] font-semibold text-white">
                   <Lock className="size-3.5" aria-hidden />
                   Exclusivo para lojistas assinantes
                 </span>
@@ -261,7 +261,7 @@ function CartaoPedido({
           )}
         </div>
 
-        <p className="mt-3 inline-flex items-center gap-1 text-xs text-texto-suave">
+        <p className="mt-3 inline-flex items-center gap-1 text-[13px] text-texto-suave">
           <Users className="size-3.5" aria-hidden />
           {p.totalPropostas === 0
             ? "Nenhuma proposta ainda. Seja o primeiro!"
@@ -278,7 +278,7 @@ function CartaoPedido({
                 value={preco}
                 onChange={(e) => setPreco(e.target.value)}
                 placeholder="Ex.: 14.500"
-                className="mt-1 h-12 w-full rounded-lg border border-borda px-3 text-base outline-none focus:border-laranja"
+                className="mt-1 h-12 w-full rounded-campo border border-borda px-3 text-base outline-none focus:border-laranja-escuro"
               />
             </label>
             <label className="block text-sm font-semibold text-beringela">
@@ -289,13 +289,13 @@ function CartaoPedido({
                 maxLength={500}
                 rows={2}
                 placeholder="Ex.: Titan 2019, revisada, aceito troca"
-                className="mt-1 w-full rounded-lg border border-borda p-3 text-base outline-none focus:border-laranja"
+                className="mt-1 w-full rounded-campo border border-borda p-3 text-base outline-none focus:border-laranja-escuro"
               />
             </label>
           </form>
         )}
 
-        {aviso && <p className="mt-2 rounded-lg bg-verde-escuro p-2 text-sm text-white">{aviso}</p>}
+        {aviso && <p className="mt-2 rounded-card bg-verde-escuro p-2 text-sm text-white">{aviso}</p>}
         {erro && <p className="mt-2 text-sm text-perigo" role="alert">{erro}</p>}
       </div>
 
@@ -336,14 +336,14 @@ function FaixaUpgrade({ planos, titulo }: { planos: PlanoResumo[]; titulo: strin
   // Nomes e preços vêm do painel administrativo (tabela planos)
   const lista = planos.map((p) => `${p.nome} (${reaisCentavos.format(p.preco_centavos / 100)}/mês)`).join(" ou ");
   return (
-    <section className="mx-4 mt-4 rounded-xl bg-beringela p-4 text-white">
+    <section className="mx-4 mt-4 rounded-card bg-beringela p-4 text-white">
       <p className="text-base font-bold">{titulo}</p>
       <p className="mt-1 text-sm text-white/80">
         Assine {lista || "um plano com Radar"} para ver os detalhes e falar com o comprador antes da concorrência.
       </p>
       <Link
         href={`${LINK_PLANOS}?origem=radar`}
-        className="mt-3 inline-flex h-12 items-center rounded-xl bg-laranja px-5 text-sm font-semibold text-beringela active:brightness-90"
+        className="mt-3 inline-flex h-12 items-center rounded-card bg-laranja px-5 text-sm font-semibold text-beringela active:brightness-90"
       >
         Ver planos
       </Link>

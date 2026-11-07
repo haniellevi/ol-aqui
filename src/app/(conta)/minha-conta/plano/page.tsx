@@ -41,8 +41,8 @@ const TIPO_PAGAMENTO: Record<Pagamento["tipo"], string> = {
 };
 const STATUS_PAGAMENTO: Record<Pagamento["status"], { texto: string; cor: string }> = {
   pendente: { texto: "Aguardando", cor: "bg-aviso-fundo text-aviso" },
-  pago: { texto: "Pago", cor: "bg-green-100 text-verde-escuro" },
-  vencido: { texto: "Vencido", cor: "bg-red-100 text-perigo" },
+  pago: { texto: "Pago", cor: "bg-sucesso-fundo text-verde-escuro" },
+  vencido: { texto: "Vencido", cor: "bg-perigo-fundo text-perigo" },
   estornado: { texto: "Devolvido", cor: "bg-fundo text-texto-suave" },
   cancelado: { texto: "Cancelado", cor: "bg-fundo text-texto-suave" },
 };

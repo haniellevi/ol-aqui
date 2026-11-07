@@ -103,7 +103,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
             <ul className="list-disc pl-5">
               {faltando.map((l) => (
                 <li key={l.rotulo}>
-                  <Link href={urlPasso(l.passo, anuncio.id, editar)} className="font-semibold text-laranja-escuro underline underline-offset-4">
+                  <Link href={urlPasso(l.passo, anuncio.id, editar)} className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4">
                     {l.rotulo}
                   </Link>
                 </li>
@@ -126,7 +126,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
       )}
 
       {anuncio.status === "em_analise" && (
-        <p className="rounded-card bg-laranja-claro p-3 text-base">
+        <p className="rounded-card bg-aviso-fundo p-3 text-base text-aviso">
           Este anúncio está em análise. Avisamos quando ele for liberado.
         </p>
       )}

@@ -36,11 +36,11 @@ export function BarraInferior() {
                 href={href}
                 aria-current={atual ? "page" : undefined}
                 className={`flex w-full flex-col items-center justify-center gap-0.5 text-[13px] font-semibold leading-4 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${
-                  atual ? "text-beringela" : "text-texto-suave"
+                  atual || anunciar ? "text-beringela" : "text-texto-suave"
                 }`}
               >
                 {anunciar ? (
-                  <span className="-mt-5 grid size-12 place-items-center rounded-card bg-laranja text-beringela shadow-[0_4px_10px_rgb(255_106_19/0.35)]">
+                  <span className="-mt-5 grid size-12 place-items-center rounded-card bg-laranja text-beringela shadow-2">
                     <Icone className="size-6" strokeWidth={2.5} aria-hidden />
                   </span>
                 ) : (

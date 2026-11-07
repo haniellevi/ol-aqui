@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Aviso, estiloBotao, estiloCampo } from "@/components/admin/ui";
+import { Aviso, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { paraReaisInput } from "@/lib/admin/formato";
 import { criarPlano, salvarPlano } from "./actions";
 
@@ -79,14 +79,14 @@ export function FormPlano({ plano }: { plano?: Plano }) {
       </label>
       <div className="col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2 md:col-span-4">
         <label className="flex h-12 items-center gap-2 text-sm">
-          <input type="checkbox" name="acesso_radar" defaultChecked={plano?.acesso_radar ?? true} className="size-5 accent-orange-500" />
+          <input type="checkbox" name="acesso_radar" defaultChecked={plano?.acesso_radar ?? true} className="size-5 accent-laranja-escuro" />
           Acessa o Radar
         </label>
         <label className="flex h-12 items-center gap-2 text-sm">
-          <input type="checkbox" name="ativo" defaultChecked={plano?.ativo ?? true} className="size-5 accent-orange-500" />
+          <input type="checkbox" name="ativo" defaultChecked={plano?.ativo ?? true} className="size-5 accent-laranja-escuro" />
           Ativo (aparece para venda)
         </label>
-        <button disabled={pendente} className={`${estiloBotao} ml-auto`}>
+        <button disabled={pendente} className={`${novo ? estiloBotao : estiloBotaoSec} ml-auto`}>
           {pendente ? "Salvando…" : novo ? "Criar plano" : "Salvar"}
         </button>
       </div>
