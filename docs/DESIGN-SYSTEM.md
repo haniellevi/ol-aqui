@@ -1,6 +1,6 @@
 # OLAKI · Sistema visual (design system) · 07/11/2026
 
-Tudo aqui sai do logo oficial, **opção 1 (pin no "i")**, decidido pelo Raniel em 07/11/2026; a opção 2 (balão) saiu. Arquivos: `public/logo/olaki-opcao1-pin.svg` (fundo claro), `public/logo/olaki-opcao1-pin-fundo-escuro.svg` (fundo escuro), `public/logo/olaki-icone-app.svg` (ícone) e `src/app/icon.svg` (ícone do site, cópia idêntica do ícone). Cores: **roxo beringela "ol" + laranja forte "aki"**, letra redonda e geométrica.
+Tudo aqui sai do logo oficial, **OLAKI em caixa alta** (opção A, decidida pelo Raniel em 07/11/2026): Poppins Bold, **"OL" em roxo beringela + "AKI" em laranja forte**, com o pin laranja sobre o I. O logo anterior, em minúsculas ("ol" fino + "aki"), saiu porque "ol" se confundia com "oi". Arquivos: `public/logo/olaki-opcao1-pin.svg` (fundo claro, com a tagline "olha aqui o que você procura"), `public/logo/olaki-opcao1-pin-fundo-escuro.svg` (fundo escuro), `public/logo/olaki-icone-app.svg` (ícone: "AKI" branco com o pin beringela num quadrado laranja arredondado; nunca "O" + "I", que se lê "OI") e `src/app/icon.svg` (ícone do site, cópia idêntica). Alternativas e o gerador ficam em `docs/logo-opcoes/`.
 
 > **Atualizado em 07/11/2026:** o Raniel trocou o azul-marinho pelo **roxo beringela `#4B1248`**, para provocar o OLX sem copiar o roxo violeta dele (`#6E0AD6`). O beringela puxa para o vinho, é outra família de cor. Não usar nenhum roxo violeta vivo no app.
 Objetivo: o app parecer **simples, confiável e da região**, legível no sol, num celular barato, por quem lê pouco.
