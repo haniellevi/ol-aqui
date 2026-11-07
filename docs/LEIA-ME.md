@@ -14,7 +14,7 @@ O nome soa como **"olha aqui"**, e isso é ouro para marketing: "Olha aqui o que
 | `app/radar/page.tsx` | Página do Radar (Server Component, decide o bloqueio no servidor) |
 | `app/radar/actions.ts` | Server Action "Propor Produto" → abre WhatsApp |
 | `components/radar/radar-de-negocios.tsx` | Componente visual do Radar (mobile-first) |
-| `logo/*.svg` + `logo/olaki-logos-preview.png` | 3 propostas de logo + ícone do app |
+| `public/logo/*.svg`, `app/icon.svg`, `app/apple-icon.png`, `app/opengraph-image.png`, `public/icone-*.png` | Logo oficial: OLAKI em caixa alta com o pin sobre o I (claro e para fundo escuro) e ícone do app "AKI" com o pin. Alternativas e gerador em `docs/logo-opcoes/` |
 
 O código assume Next.js 15 (App Router), Tailwind v4, `lucide-react` e `@supabase/ssr` com um `createClient` em `lib/supabase/server.ts` (padrão da documentação do Supabase).
 
