@@ -28,8 +28,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       appearance={{
         variables: {
           colorPrimary: "#ff6a13",
-          colorPrimaryForeground: "#1b2a4a", // contraste acessível (texto marinho no laranja)
-          colorText: "#1b2a4a",
+          colorPrimaryForeground: "#4b1248", // contraste acessível (texto beringela no laranja)
+          colorText: "#4b1248",
           fontFamily: "var(--font-poppins), system-ui, sans-serif",
           borderRadius: "0.75rem",
         },

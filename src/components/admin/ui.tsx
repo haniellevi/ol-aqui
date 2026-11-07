@@ -25,7 +25,7 @@ export function Numero({ rotulo, valor, detalhe, alerta }: { rotulo: string; val
 export const estiloCampo =
   "mt-1 h-12 w-full rounded-xl border border-neutral-300 bg-white px-3 text-base outline-none focus:border-laranja";
 export const estiloBotao =
-  "inline-flex h-12 items-center justify-center rounded-xl bg-laranja px-5 text-sm font-semibold text-marinho active:bg-orange-600 disabled:opacity-60";
+  "inline-flex h-12 items-center justify-center rounded-xl bg-laranja px-5 text-sm font-semibold text-beringela active:bg-orange-600 disabled:opacity-60";
 export const estiloBotaoSec =
   "inline-flex h-12 items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 text-sm font-semibold text-neutral-700 active:bg-neutral-100";
 

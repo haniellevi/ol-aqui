@@ -8,7 +8,7 @@ export default function Home() {
       <Image src="/logo/olaki-opcao1-pin.svg" alt="OLAKI" width={320} height={113} priority />
       <p className="text-neutral-600">Em breve na sua região. Compre, venda e peça no Radar de Negócios.</p>
       <div className="flex gap-3">
-        <Link href="/radar" className="inline-flex h-12 items-center rounded-full bg-laranja px-6 font-semibold text-marinho">
+        <Link href="/radar" className="inline-flex h-12 items-center rounded-full bg-laranja px-6 font-semibold text-beringela">
           Radar de Negócios
         </Link>
         <Link href="/entrar" className="inline-flex h-12 items-center rounded-full border border-neutral-300 px-6 font-semibold">

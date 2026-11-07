@@ -308,7 +308,7 @@ function CartaoPedido({
           type={formAberto ? "submit" : "button"}
           onClick={formAberto ? (e) => enviarProposta(e as unknown as React.FormEvent) : () => setFormAberto(true)}
           disabled={pendente || esgotado}
-          className="flex h-13 w-full items-center justify-center gap-2 bg-laranja text-base font-semibold text-marinho transition-colors active:bg-orange-500 disabled:bg-neutral-300"
+          className="flex h-13 w-full items-center justify-center gap-2 bg-laranja text-base font-semibold text-beringela transition-colors active:bg-orange-500 disabled:bg-neutral-300"
         >
           <Send className="size-5" aria-hidden />
           {pendente ? "Enviando…" : esgotado ? "Propostas esgotadas" : formAberto ? "Enviar proposta" : propus ? "Atualizar minha proposta" : "Propor Produto"}
@@ -331,14 +331,14 @@ function FaixaUpgrade({ planos, titulo }: { planos: PlanoResumo[]; titulo: strin
   // Nomes e preços vêm do painel administrativo (tabela planos)
   const lista = planos.map((p) => `${p.nome} (${reaisCentavos.format(p.preco_centavos / 100)}/mês)`).join(" ou ");
   return (
-    <section className="mx-4 mt-4 rounded-2xl bg-marinho p-4 text-white">
+    <section className="mx-4 mt-4 rounded-2xl bg-beringela p-4 text-white">
       <p className="text-base font-bold">{titulo}</p>
       <p className="mt-1 text-sm text-neutral-200">
         Assine {lista || "um plano com Radar"} para ver os detalhes e falar com o comprador antes da concorrência.
       </p>
       <Link
         href="/planos?origem=radar"
-        className="mt-3 inline-flex h-12 items-center rounded-full bg-laranja px-5 text-sm font-semibold text-marinho active:bg-orange-500"
+        className="mt-3 inline-flex h-12 items-center rounded-full bg-laranja px-5 text-sm font-semibold text-beringela active:bg-orange-500"
       >
         Ver planos
       </Link>
