@@ -1,0 +1,21 @@
+"use client";
+
+import { useActionState } from "react";
+import { Plus } from "lucide-react";
+import { Botao } from "@/components/ui/botao";
+import { novoRascunho } from "@/app/(conta)/anunciar/actions";
+import { AvisoErro } from "./aviso-erro";
+import type { EstadoForm } from "./passos";
+
+// "Começar um anúncio novo": cria o rascunho no servidor e abre o passo 1.
+export function BotaoNovoRascunho({ variante = "primario", texto = "Começar um anúncio novo" }: { variante?: "primario" | "secundario"; texto?: string }) {
+  const [estado, acao, enviando] = useActionState<EstadoForm, FormData>(async () => novoRascunho(), null);
+  return (
+    <form action={acao} className="flex flex-col gap-2">
+      <AvisoErro mensagem={estado?.erro?.mensagem} />
+      <Botao type="submit" variante={variante} larguraTotal carregando={enviando} textoCarregando="Abrindo..." icone={<Plus />}>
+        {texto}
+      </Botao>
+    </form>
+  );
+}

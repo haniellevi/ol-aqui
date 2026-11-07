@@ -1,0 +1,47 @@
+import type { Metadata } from "next";
+import { categoriaPorSlug } from "@/lib/dados/categorias";
+import { CampoBusca } from "@/components/busca/campo-busca";
+import { Listagem } from "@/components/busca/listagem";
+import type { ParametrosUrl } from "@/components/busca/parametros";
+
+// T5 · Resultado da busca. Sempre montada na hora (resultado atual).
+export const dynamic = "force-dynamic";
+
+type Props = { searchParams: Promise<ParametrosUrl> };
+
+function termo(sp: ParametrosUrl) {
+  const q = Array.isArray(sp.q) ? sp.q[0] : sp.q;
+  return (q ?? "").trim().slice(0, 120);
+}
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const q = termo(await searchParams);
+  return {
+    title: q ? `${q}: anúncios` : "Buscar anúncios",
+    description: q ? `Anúncios de ${q} na sua região no OLAKI.` : "Busque o que você precisa na sua região.",
+    robots: { index: false, follow: true },
+  };
+}
+
+export default async function PaginaBusca({ searchParams }: Props) {
+  const sp = await searchParams;
+  const q = termo(sp);
+  const slug = (Array.isArray(sp.categoria) ? sp.categoria[0] : sp.categoria)?.trim().toLowerCase() ?? "";
+  const categoria = slug ? await categoriaPorSlug(slug) : null;
+  const cidade = (Array.isArray(sp.cidade) ? sp.cidade[0] : sp.cidade) ?? null;
+
+  return (
+    <Listagem
+      caminho="/busca"
+      sp={sp}
+      categoria={categoria}
+      categoriaPeloEndereco={false}
+      topo={
+        <>
+          <h1 className="text-[22px] font-semibold leading-7">{q ? `Resultados para “${q}”` : "Buscar anúncios"}</h1>
+          <CampoBusca valor={q} manter={{ categoria: categoria?.categoria.slug, cidade }} autoFocus={!q && !categoria} />
+        </>
+      }
+    />
+  );
+}

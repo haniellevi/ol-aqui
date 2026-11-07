@@ -7,6 +7,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, MessageCircle, Radar, Send, Users } from "lucide-react";
 import { proporProduto } from "@/app/radar/actions";
+import { LINK_PLANOS } from "@/lib/rotas";
 
 export type CategoriaRadar = "imovel" | "veiculo" | "movel" | "geral";
 
@@ -297,7 +298,7 @@ function CartaoPedido({
       {/* Ação principal: largura total, 52px de altura */}
       {!temAcesso || !liberado ? (
         <Link
-          href="/planos?origem=radar"
+          href={`${LINK_PLANOS}?origem=radar`}
           className="flex h-13 w-full items-center justify-center gap-2 bg-laranja text-base font-semibold text-beringela active:brightness-90"
         >
           <Lock className="size-5" aria-hidden />
@@ -337,7 +338,7 @@ function FaixaUpgrade({ planos, titulo }: { planos: PlanoResumo[]; titulo: strin
         Assine {lista || "um plano com Radar"} para ver os detalhes e falar com o comprador antes da concorrência.
       </p>
       <Link
-        href="/planos?origem=radar"
+        href={`${LINK_PLANOS}?origem=radar`}
         className="mt-3 inline-flex h-12 items-center rounded-xl bg-laranja px-5 text-sm font-semibold text-beringela active:brightness-90"
       >
         Ver planos

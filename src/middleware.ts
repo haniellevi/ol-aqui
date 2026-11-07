@@ -1,7 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Login pelo Clerk. Áreas que exigem conta: painel e Radar. O resto do site é público.
-const exigeLogin = createRouteMatcher(["/admin(.*)", "/radar(.*)"]);
+// Login pelo Clerk. Áreas que exigem conta: painel, Radar e a área da conta
+// (anunciar, quero vender, minha conta, destacar). O resto do site é público.
+const exigeLogin = createRouteMatcher([
+  "/admin(.*)",
+  "/radar(.*)",
+  "/anunciar(.*)",
+  "/quero-vender(.*)",
+  "/minha-conta(.*)",
+  "/destacar(.*)",
+]);
 
 export default clerkMiddleware(
   async (auth, req) => {

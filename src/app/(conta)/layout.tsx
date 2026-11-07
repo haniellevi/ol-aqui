@@ -1,0 +1,24 @@
+import { auth } from "@clerk/nextjs/server";
+import { garantirPerfil } from "@/lib/perfil";
+import { CabecalhoPublico } from "@/components/ui/cabecalho-publico";
+import { BarraInferior } from "@/components/ui/barra-inferior";
+
+// Área da conta (anunciar, quero vender, minha conta, destacar): exige login.
+// O middleware já manda para /entrar?redirect_url=...; aqui é a segunda barreira.
+// Nunca guardada em cache: dado de uma pessoa não aparece para outra.
+export const dynamic = "force-dynamic";
+export const metadata = { robots: { index: false } };
+
+export default async function LayoutConta({ children }: { children: React.ReactNode }) {
+  await auth.protect();
+  await garantirPerfil(); // 1º acesso: cria o perfil se o webhook do Clerk ainda não chegou
+  return (
+    <>
+      <CabecalhoPublico />
+      <div id="conteudo" className="pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
+        {children}
+      </div>
+      <BarraInferior />
+    </>
+  );
+}
