@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+/* Cores da marca OLAKI (logo: "ol" azul-marinho + "aki" laranja).
+   Botão primário = fundo laranja + texto marinho (4,96:1). Branco sobre laranja reprova (2,87:1). */
+@theme {
+  --color-marinho: #1b2a4a;
+  --color-laranja: #ff6a13;
+  --color-laranja-escuro: #c2410c; /* texto e links: contraste 5,2:1 no branco */
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: #fafafa;
+  color: #171717;
+  -webkit-tap-highlight-color: transparent;
+}

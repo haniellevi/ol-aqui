@@ -1,0 +1,74 @@
+// Converte valores das configurações entre o banco (jsonb) e os campos do painel.
+export type TipoValor = "numero" | "texto" | "lista" | "mapa" | "json";
+
+export function tipoDe(valor: unknown): TipoValor {
+  if (typeof valor === "number") return "numero";
+  if (typeof valor === "string" || valor === null) return "texto";
+  if (Array.isArray(valor) && valor.every((v) => typeof v === "string")) return "lista";
+  if (valor && typeof valor === "object" && Object.values(valor).every((v) => typeof v === "number")) return "mapa";
+  return "json";
+}
+
+/** Texto do formulário → jsonb. Lança Error com mensagem amigável. */
+export function valorDoForm(tipo: TipoValor, bruto: string): unknown {
+  const t = bruto.trim();
+  switch (tipo) {
+    case "numero": {
+      const n = Number(t.replace(",", "."));
+      if (!t || !Number.isFinite(n)) throw new Error("Digite um número.");
+      return n;
+    }
+    case "texto":
+      return t === "" ? null : t;
+    case "lista":
+      return t
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    case "mapa": {
+      // uma linha por item: "veiculo = 5000000"
+      const obj: Record<string, number> = {};
+      for (const linha of t.split("\n").map((s) => s.trim()).filter(Boolean)) {
+        const [k, v] = linha.split("=").map((s) => s.trim());
+        const n = Number((v ?? "").replace(/\./g, "").replace(",", "."));
+        if (!k || !Number.isFinite(n)) throw new Error(`Linha inválida: "${linha}". Use: chave = número`);
+        obj[k] = n;
+      }
+      return obj;
+    }
+    default:
+      try {
+        return JSON.parse(t);
+      } catch {
+        throw new Error("JSON inválido.");
+      }
+  }
+}
+
+export function valorParaForm(tipo: TipoValor, valor: unknown): string {
+  switch (tipo) {
+    case "numero":
+      return String(valor);
+    case "texto":
+      return (valor as string | null) ?? "";
+    case "lista":
+      return (valor as string[]).join("\n");
+    case "mapa":
+      return Object.entries(valor as Record<string, number>)
+        .map(([k, v]) => `${k} = ${v}`)
+        .join("\n");
+    default:
+      return JSON.stringify(valor, null, 2);
+  }
+}
+
+export const NOMES_GRUPO: Record<string, string> = {
+  planos: "Planos e avulsos",
+  radar: "Radar de Negócios",
+  moderacao: "Moderação",
+  cobranca: "Cobrança",
+  geral: "Geral",
+};
+
+/** Dica exibida embaixo de campos em centavos. */
+export const emCentavos = (chave: string) => chave.includes("centavos");
