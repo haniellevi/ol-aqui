@@ -593,7 +593,10 @@ begin
   end if;
 end $$;
 
--- O servidor grava os ids da cobrança criada no Asaas (só em pagamento ainda pendente)
+-- O servidor grava os ids da cobrança criada no Asaas (só em pagamento ainda pendente).
+-- Nunca troca uma cobrança já gravada por outra: se dois cliques criarem duas cobranças,
+-- só a primeira fica (devolve false e o servidor apaga a segunda no Asaas). Assim nenhum
+-- Pix pago fica sem dono.
 create or replace function public.registrar_cobranca_asaas(p_pagamento_id uuid, p_cobranca_id text, p_link text default null, p_forma text default null)
 returns boolean language plpgsql security definer
 set search_path = public, extensions
@@ -608,7 +611,8 @@ begin
   end if;
   update public.pagamentos
      set asaas_cobranca_id = btrim(p_cobranca_id), link_pagamento = left(p_link, 500), forma = coalesce(p_forma, forma)
-   where id = p_pagamento_id and status = 'pendente';
+   where id = p_pagamento_id and status = 'pendente'
+     and (asaas_cobranca_id is null or asaas_cobranca_id = btrim(p_cobranca_id));
   get diagnostics n = row_count;
   return n > 0;
 end $$;

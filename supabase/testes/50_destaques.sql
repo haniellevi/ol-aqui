@@ -87,6 +87,10 @@ select registrar_cobranca_asaas(:'pg_busca', 'pay_forjado', null, 'pix');
 \echo '[8] servidor grava a cobranca e o Asaas confirma: destaque ativo, destaque_ate +7 dias; aviso repetido nao soma'
 set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
 select registrar_cobranca_asaas(:'pg_busca', 'pay_50_busca', 'https://sandbox.asaas.com/i/x', 'pix') as gravou;
+\echo '[8a] segunda cobranca para o mesmo pagamento nao substitui a primeira (false); a mesma de novo pode (troca a forma)'
+select registrar_cobranca_asaas(:'pg_busca', 'pay_50_duplicada', null, 'pix') as gravou_outra,
+       registrar_cobranca_asaas(:'pg_busca', 'pay_50_busca', 'https://sandbox.asaas.com/i/x', 'cartao') as mesma_de_novo;
+select asaas_cobranca_id, forma from pagamentos where id=:'pg_busca';
 select confirmar_pagamento('pay_50_busca', '{"event":"PAYMENT_RECEIVED","payment":{"id":"pay_50_busca","billingType":"PIX"}}');
 select status, origem, fim > now() + interval '6 days' as sete_dias from destaques where id=:'d_busca';
 select destaque_ate as ate1 from anuncios where id=:'a_pf' \gset
