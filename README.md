@@ -62,7 +62,7 @@ src/lib/perfil.ts       sincroniza o perfil com os dados do Clerk
 src/lib/admin           helpers do painel (exigirAdmin, formatos, configurações)
 supabase/migrations     banco de dados
 docs/                   decisões de produto e plano do painel
-public/logo             logos (opção 1: pin no "i"; opção 2: balão "ol")
+public/logo             logos (OLAKI em caixa alta, pin sobre o I; claro, fundo escuro e ícone do app "AKI")
 ```
 
 ## Regra de ouro

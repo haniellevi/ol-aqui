@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# lixeira local (arquivos substituídos, não versionar)
+/_lixeira

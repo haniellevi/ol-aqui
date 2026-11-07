@@ -1,0 +1,452 @@
+/* OLAKI · Radar de Negócios. Tudo aqui pertence a este exemplo.
+   Tokens de docs/DESIGN-SYSTEM.md e src/app/globals.css do projeto. */
+
+/* O look do OLAKI sobre o tema claro do kit */
+.look-olaki .ss-stage {
+  --ol-beringela: #4b1248;
+  --ol-laranja: #ff6a13;
+  --ol-laranja-escuro: #c2410c;
+  --ol-laranja-claro: #fff4ec;
+  --ol-verde: #12a150;
+  --ol-verde-escuro: #0e7a3d;
+  --ol-fundo: #f6f4f7;
+  --ol-cartao: #ffffff;
+  --ol-texto-suave: #5e5266;
+  --ol-borda: #e6e0e9;
+
+  --ss-accent: var(--ol-laranja);
+  --ss-accent-2: #ff8a47;
+  --ss-accent-soft: var(--ol-laranja-claro);
+  --ss-accent-text: var(--ol-laranja-escuro);
+  --ss-canvas: var(--ol-fundo);
+  --ss-surface: var(--ol-cartao);
+  --ss-line: var(--ol-borda);
+  --ss-line-faint: #efeaf1;
+  --ss-text-strong: var(--ol-beringela);
+  --ss-text: var(--ol-beringela);
+  --ss-text-faint: var(--ol-texto-suave);
+  --ss-icon: var(--ol-beringela);
+  --ss-icon-faint: var(--ol-texto-suave);
+  --ss-success: var(--ol-verde);
+  --ss-success-text: var(--ol-verde-escuro);
+  --ss-danger: #b91c1c;
+  --ss-warning: #b45309;
+  --ss-warning-soft: #fffbeb;
+  --ss-font: var(--font-poppins), 'Poppins', system-ui, sans-serif;
+  --ss-radius-sm: 8px;
+  --ss-radius-md: 12px;
+  --ss-radius-lg: 12px;
+  --ss-radius-window: 20px;
+}
+
+.ol {
+  & .ss-stage {
+    overflow: hidden;
+    border-radius: 14px;
+    /* A faixa do Radar da home: laranja-claro, com uma luz quente no alto */
+    background: var(--ol-laranja-claro);
+  }
+
+  .ol-wash {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(70% 55% at 80% 0%, rgba(255, 106, 19, 0.18), transparent 70%),
+      radial-gradient(60% 50% at 10% 100%, rgba(75, 18, 72, 0.08), transparent 70%);
+  }
+
+  /* Fixo em cima, centrado, corre para fora do pé do palco */
+  .ol-phone {
+    position: absolute;
+    top: 40px;
+    left: 50px;
+  }
+  & .ss-stage[data-layout='compact'] .ol-phone {
+    top: 16px;
+    left: 16px;
+  }
+
+  /* ---- A tela ---- */
+
+  .ol-app {
+    position: relative;
+    height: 100%;
+    background: var(--ol-fundo);
+    color: var(--ol-beringela);
+    font-family: var(--ss-font);
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .ol-head {
+    padding: 14px 16px 14px;
+    border-bottom: 1px solid var(--ol-borda);
+    background: var(--ol-cartao);
+  }
+
+  .ol-head__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 28px;
+  }
+
+  .ol-head__title svg {
+    flex: none;
+    color: var(--ol-laranja-escuro);
+  }
+
+  .ol-head__sub {
+    margin-top: 2px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--ol-texto-suave);
+  }
+
+  /* Chips de categoria: área de toque de 48, o escolhido em laranja-claro */
+  .ol-chips {
+    display: flex;
+    gap: 8px;
+    margin: 12px -16px 0;
+    padding: 0 16px;
+    overflow: hidden;
+  }
+
+  .ol-chip {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    height: 44px;
+    padding: 0 17px;
+    border: 1px solid var(--ol-borda);
+    border-radius: 999px;
+    background: var(--ol-cartao);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 20px;
+    color: var(--ol-beringela);
+  }
+
+  .ol-chip[data-on] {
+    border-color: var(--ol-laranja);
+    background: var(--ol-laranja-claro);
+    font-weight: 600;
+  }
+
+  /* ---- Pedidos ---- */
+
+  .ol-list {
+    padding: 12px 16px 0;
+  }
+
+  .ol-slot {
+    padding-bottom: 12px;
+  }
+
+  .ol-card {
+    overflow: hidden;
+    /* Uma camada própria: quando um cartão novo empurra os de baixo, o texto
+       desce como uma figura só, sem pular de pixel em pixel */
+    will-change: transform;
+    border: 1px solid var(--ol-borda);
+    border-radius: 12px;
+    background: var(--ol-cartao);
+    box-shadow: 0 1px 2px rgb(75 18 72 / 0.08);
+  }
+
+  .ol-card__body {
+    padding: 14px 16px 16px;
+  }
+
+  .ol-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+  }
+
+  .ol-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 8px 0 7px;
+    border-radius: 999px;
+    background: var(--ol-laranja-claro);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+    color: var(--ol-laranja-escuro);
+  }
+
+  .ol-when {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--ol-texto-suave);
+  }
+
+  .ol-card__title {
+    margin-top: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 22px;
+  }
+
+  .ol-card__title--bars {
+    display: grid;
+    gap: 11px;
+    padding: 5.5px 0;
+  }
+
+  .ol-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 6px;
+    min-height: 24px;
+  }
+
+  .ol-price {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 24px;
+  }
+
+  .ol-city {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--ol-texto-suave);
+  }
+
+  .ol-details {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--ol-fundo);
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .ol-details p {
+    margin: 0;
+  }
+
+  .ol-details__buyer {
+    margin-top: 4px !important;
+    color: var(--ol-texto-suave);
+  }
+
+  /* Barras no lugar das linhas, no mesmo passo das linhas de 20 */
+  .ol-details--bars {
+    display: grid;
+    gap: 14px;
+    padding: 19px 12px 20px;
+  }
+
+  .ol-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--ol-texto-suave);
+  }
+
+  .ol-count svg {
+    flex: none;
+  }
+
+  /* O botão principal do OLAKI: 52 de altura, laranja com texto beringela
+     (branco sobre o laranja não passa no contraste). No cartão vai de
+     ponta a ponta, rente ao pé; na folha tem os cantos do cartão. */
+  .ol-cta {
+    --ss-button-height: 52px;
+    --ss-button-icon: 20px;
+    --ss-button-gap: 8px;
+    display: flex;
+    width: 100%;
+    border-radius: 0;
+    background: var(--ol-laranja);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ol-beringela);
+  }
+
+  .ol-cta[data-hover] {
+    background: #f5610c;
+  }
+
+  .ol-cta[data-sent] {
+    background: var(--ol-verde-escuro);
+    color: #fff;
+  }
+
+  .ol-cta[data-sent][data-hover] {
+    background: #0c6b35;
+  }
+
+  .ol-cta--sheet {
+    margin-top: 16px;
+    border-radius: 12px;
+  }
+
+  .ol-swap {
+    display: grid;
+    width: 20px;
+    height: 20px;
+  }
+
+  .ol-swap__i {
+    grid-area: 1 / 1;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    scale: 0.6;
+    transition: opacity 0.18s ease, scale 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .ol-swap__i[data-on] {
+    opacity: 1;
+    scale: 1;
+  }
+
+  /* ---- A folha da vitrine ---- */
+
+  .ol-scrim {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    top: -48px;
+    z-index: 4;
+    background: rgba(30, 16, 32, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .ol-scrim[data-show] {
+    opacity: 1;
+  }
+
+  .ol-sheet {
+    position: absolute;
+    top: 224px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+    padding: 8px 16px 16px;
+    border-radius: 20px 20px 0 0;
+    background: var(--ol-cartao);
+    box-shadow: 0 -2px 12px rgb(75 18 72 / 0.12);
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 1, 1), visibility 0s linear 0.4s;
+    will-change: transform;
+  }
+
+  .ol-sheet[data-open] {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.5s cubic-bezier(0.3, 0.75, 0.1, 1), visibility 0s;
+  }
+
+  .ol-sheet__grab {
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 0 auto 14px;
+    border-radius: 2.5px;
+    background: var(--ol-borda);
+  }
+
+  .ol-sheet__title {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 24px;
+  }
+
+  .ol-sheet__sub {
+    margin-top: 2px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--ol-texto-suave);
+  }
+
+  .ol-items {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  /* Cada anúncio da vitrine: foto, nome, preço; o escolhido em laranja-claro */
+  .ol-item {
+    --ss-row-title: 16px;
+    --ss-row-subtitle: 14px;
+    --ss-row-meta: 14px;
+    --ss-row-line: 22px;
+    --ss-row-line-2: 20px;
+    --ss-row-gap: 0px;
+    column-gap: 12px;
+    border: 1px solid var(--ol-borda);
+    border-radius: 12px;
+    background: var(--ol-cartao);
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .ol-item[data-hover]:not([data-selected]) {
+    background: var(--ol-fundo);
+  }
+
+  .ol-item[data-selected] {
+    border-color: var(--ol-laranja);
+    background: var(--ol-laranja-claro);
+  }
+
+  .ol-item .ss-row__title {
+    font-weight: 600;
+  }
+
+  .ol-item .ss-row__subtitle {
+    color: var(--ol-texto-suave);
+  }
+
+  .ol-item .ss-check {
+    margin-right: 2px;
+  }
+
+  /* A foto do anúncio: um quadrado 4:3 em cores quentes, no lugar de uma
+     fotografia que a demo não tem */
+  .ol-thumb {
+    display: block;
+    width: 56px;
+    height: 48px;
+    border-radius: 8px;
+  }
+
+  .ol-thumb--a {
+    background:
+      radial-gradient(70% 90% at 80% 15%, #ffb071 0%, transparent 60%),
+      linear-gradient(160deg, #ff7a3d 0%, #d9431c 60%, #8f2a16 100%);
+  }
+
+  .ol-thumb--b {
+    background:
+      radial-gradient(70% 90% at 80% 10%, #c9c0d1 0%, transparent 60%),
+      linear-gradient(160deg, #8d7f96 0%, #5e5266 60%, #3b2f44 100%);
+  }
+}
