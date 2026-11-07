@@ -91,11 +91,12 @@ export async function estadoAki(userId: string | null, completo: boolean): Promi
   };
   const db = await createClient();
   if (!userId) {
-    // visitante: só os textos públicos (o pitch e o botão "Entrar para conversar")
+    // visitante: só os textos públicos (o pitch e o botão "Entrar para conversar").
+    // config() é fechada para anon; robo_publico() devolve só estas três chaves públicas.
     const regiao = await regiaoAtual();
-    const ler = (chave: string) => db.rpc("config", { p_chave: chave, p_microrregiao: regiao?.id ?? null, p_padrao: null });
-    const [ativo, bv, av] = await Promise.all([ler("robo.ativo"), ler("robo.boas_vindas"), ler("robo.aviso_ia")]);
-    return { ...base, ligado: ativo.data === true, boasVindas: textoOuNull(bv.data), avisoIa: textoOuNull(av.data) };
+    const { data } = await db.rpc("robo_publico", { p_microrregiao: regiao?.id ?? null });
+    const pub = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+    return { ...base, ligado: pub["robo.ativo"] === true, boasVindas: textoOuNull(pub["robo.boas_vindas"]), avisoIa: textoOuNull(pub["robo.aviso_ia"]) };
   }
 
   const [ajustes, pode] = await Promise.all([lerAjustes(db), lerPodeEnviar(db, "conversa")]);
@@ -205,12 +206,11 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
   const regiao = { id: String(reg?.id ?? perfil?.microrregiao_id ?? ""), slug: (reg?.slug as string | undefined) ?? null, nome: String(reg?.nome ?? "sua região") };
   const cidades = regiao.id ? (await listarCidades(regiao.id)).map((c) => c.nome) : [];
 
-  const { data: modeloLinha } = await admin
-    .from("robo_modelos")
-    .select("fallback_servidor")
-    .eq("provedor", reserva.provedor)
-    .eq("modelo", reserva.modelo)
-    .maybeSingle();
+  const [{ data: modeloLinha }, { data: palavras }] = await Promise.all([
+    admin.from("robo_modelos").select("fallback_servidor").eq("provedor", reserva.provedor).eq("modelo", reserva.modelo).maybeSingle(),
+    // lista da moderação não é pública: só o servidor lê (nunca vai para o navegador nem para a IA)
+    admin.rpc("config", { p_chave: "moderacao.palavras_bloqueadas", p_microrregiao: regiao.id || null, p_padrao: null }),
+  ]);
 
   // 3) conversa e histórico
   const maxConversa = num(ajustes["robo.max_conversa_mensagens"], 80, 4, 1000);
@@ -235,7 +235,7 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
   if (pedido.foto) partesUsuario.unshift({ tipo: "imagem", base64: pedido.foto.base64, mime: pedido.foto.tipo });
   const mensagens: MensagemIA[] = [...historicoParaIA(historico), { papel: "usuario", partes: partesUsuario }];
 
-  const moderador = criarModerador(ajustes["moderacao.palavras_bloqueadas"]);
+  const moderador = criarModerador(palavras);
   const maxResposta = num(ajustes["robo.max_caracteres_resposta"], 4000, 200, 20000);
   const maxTokens = num(ajustes["robo.max_tokens_resposta"], 1500, 100, 16000);
   const maxFerramentas = num(ajustes["robo.max_ferramentas"], 5, 0, 10);
@@ -286,12 +286,12 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
       cidade: perfil?.cidade ?? null,
       nome: perfil?.nome ? perfil.nome.split(" ")[0] : null,
       vende: !!conta?.vitrine,
-      palavrasEvitar: moderador.palavras,
       foto: !!pedido.foto,
       rascunhoId: rascunhoAberto,
     });
 
     for (let volta = 0; ; volta++) {
+      if (controle.signal.aborted) break; // a pessoa fechou ou o tempo acabou entre uma volta e outra
       if (filtro.texto && !/\s$/.test(filtro.texto)) adicionarTexto("\n\n");
       const resp = await prov.conversar(
         {
@@ -332,7 +332,12 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
     }
   } catch (e) {
     if (e instanceof ErroProvedor) {
-      erro = `${e.tipo}: ${e.message}`.slice(0, 300);
+      // chamada cortada no meio também custa: soma o que o provedor já cobrou (ou a estimativa)
+      if (e.uso) uso = somarUso(uso, e.uso);
+      // antes do ":" vai só o tipo (é o que a pessoa pode ler); o detalhe fica no livro-caixa do admin
+      erro = cortado
+        ? "cortado: a resposta passou do tamanho máximo"
+        : `${e.tipo}${e.status ? ` ${e.status}` : ""}: ${e.message}`.slice(0, 300);
       erroTela = cortado ? null : ERROS_PROVEDOR[e.tipo];
     } else {
       erro = (e instanceof Error ? e.message : "erro").slice(0, 300);

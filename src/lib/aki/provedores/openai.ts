@@ -1,9 +1,12 @@
 import "server-only";
 import {
   ErroProvedor,
+  comUso,
   erroDeStatus,
   lerSSE,
   numeroOuZero,
+  usoAposFalha,
+  usoVazio,
   type ChamadaIA,
   type MensagemIA,
   type PedidoIA,
@@ -68,6 +71,8 @@ function criarAdaptador(nome: ProvedorIA, url: string, variavel: string, extras?
         corpo.tool_choice = "auto";
       }
 
+      // cancelado antes de sair: nada foi mandado, nada é cobrado
+      if (pedido.sinal?.aborted) throw new ErroProvedor("tempo", "cancelado antes de enviar");
       let resposta: Response;
       try {
         resposta = await fetch(url, {
@@ -77,14 +82,17 @@ function criarAdaptador(nome: ProvedorIA, url: string, variavel: string, extras?
           signal: pedido.sinal,
         });
       } catch (e) {
-        throw new ErroProvedor(pedido.sinal?.aborted ? "tempo" : "rede", e instanceof Error ? e.message : "falha de rede");
+        // o pedido pode ter chegado ao provedor antes de cair: cobra a entrada estimada
+        throw comUso(e, usoAposFalha(pedido, usoVazio(), false, false), !!pedido.sinal?.aborted, "falha de rede");
       }
+      // erro HTTP (chave, limite, sobrecarga): o provedor não cobra
       if (!resposta.ok) throw erroDeStatus(resposta.status, await resposta.text().catch(() => ""));
 
       let texto = "";
       let parada: RespostaIA["parada"] = "fim";
       let modeloUsado = pedido.modelo;
-      const uso: UsoIA = { entrada: 0, saida: 0, cacheLeitura: 0, cacheEscrita: 0 };
+      const uso: UsoIA = usoVazio();
+      let viuUso = false; // neste formato o uso só chega no fim
       const chamadasPorIndice = new Map<number, { id: string; nome: string; args: string }>();
       let erroStream: string | null = null;
 
@@ -105,6 +113,7 @@ function criarAdaptador(nome: ProvedorIA, url: string, variavel: string, extras?
           if (typeof ev.model === "string") modeloUsado = ev.model;
           const u = ev.usage as Record<string, unknown> | undefined | null;
           if (u) {
+            viuUso = true;
             const detalhes = (u.prompt_tokens_details ?? {}) as Record<string, unknown>;
             const cache = numeroOuZero(detalhes.cached_tokens);
             uso.entrada = Math.max(0, numeroOuZero(u.prompt_tokens) - cache);
@@ -136,10 +145,10 @@ function criarAdaptador(nome: ProvedorIA, url: string, variavel: string, extras?
           else if (typeof fim === "string") parada = "fim";
         });
       } catch (e) {
-        if (e instanceof ErroProvedor) throw e;
-        throw new ErroProvedor(pedido.sinal?.aborted ? "tempo" : "rede", e instanceof Error ? e.message : "falha no streaming");
+        // cortado no meio (tela fechada, tempo, resposta grande demais): cobra o que já foi lido
+        throw comUso(e, usoAposFalha(pedido, uso, viuUso, true), !!pedido.sinal?.aborted, "falha no streaming");
       }
-      if (erroStream) throw new ErroProvedor("requisicao", erroStream);
+      if (erroStream) throw new ErroProvedor("requisicao", erroStream, undefined, usoAposFalha(pedido, uso, viuUso, true));
 
       const chamadas: ChamadaIA[] = [...chamadasPorIndice.entries()]
         .sort((a, b) => a[0] - b[0])

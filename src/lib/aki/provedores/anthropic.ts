@@ -1,9 +1,12 @@
 import "server-only";
 import {
   ErroProvedor,
+  comUso,
   erroDeStatus,
   lerSSE,
   numeroOuZero,
+  usoAposFalha,
+  usoVazio,
   type ChamadaIA,
   type MensagemIA,
   type PedidoIA,
@@ -79,16 +82,21 @@ export const anthropic: ProvedorIAAdaptador = {
       cabecalhos["anthropic-beta"] = BETA_FALLBACK;
     }
 
+    // cancelado antes de sair: nada foi mandado, nada é cobrado
+    if (pedido.sinal?.aborted) throw new ErroProvedor("tempo", "cancelado antes de enviar");
     let resposta: Response;
     try {
       resposta = await fetch(URL_API, { method: "POST", headers: cabecalhos, body: JSON.stringify(corpo), signal: pedido.sinal });
     } catch (e) {
-      throw new ErroProvedor(pedido.sinal?.aborted ? "tempo" : "rede", e instanceof Error ? e.message : "falha de rede");
+      // o pedido pode ter chegado ao provedor antes de cair: cobra a entrada estimada
+      throw comUso(e, usoAposFalha(pedido, usoVazio(), false, false), !!pedido.sinal?.aborted, "falha de rede");
     }
+    // erro HTTP (chave, limite, sobrecarga): o provedor não cobra
     if (!resposta.ok) throw erroDeStatus(resposta.status, await resposta.text().catch(() => ""));
 
     const blocos: (Bloco & { _json?: string })[] = [];
-    const uso: UsoIA = { entrada: 0, saida: 0, cacheLeitura: 0, cacheEscrita: 0 };
+    const uso: UsoIA = usoVazio();
+    let viuUso = false;
     let texto = "";
     let parada: RespostaIA["parada"] = "fim";
     let modeloUsado = pedido.modelo;
@@ -96,6 +104,7 @@ export const anthropic: ProvedorIAAdaptador = {
 
     const lerUso = (u: Record<string, unknown> | undefined) => {
       if (!u) return;
+      viuUso = true;
       // os números chegam acumulados (message_start e depois message_delta): fica o maior
       uso.entrada = Math.max(uso.entrada, numeroOuZero(u.input_tokens));
       uso.saida = Math.max(uso.saida, numeroOuZero(u.output_tokens));
@@ -162,12 +171,12 @@ export const anthropic: ProvedorIAAdaptador = {
         }
       });
     } catch (e) {
-      if (e instanceof ErroProvedor) throw e;
-      throw new ErroProvedor(pedido.sinal?.aborted ? "tempo" : "rede", e instanceof Error ? e.message : "falha no streaming");
+      // cortado no meio (tela fechada, tempo, resposta grande demais): cobra o que já foi lido
+      throw comUso(e, usoAposFalha(pedido, uso, viuUso, true), !!pedido.sinal?.aborted, "falha no streaming");
     }
     if (erroStream) {
       const sobrecarga = /overloaded|api_error/i.test(erroStream);
-      throw new ErroProvedor(sobrecarga ? "sobrecarga" : "requisicao", erroStream);
+      throw new ErroProvedor(sobrecarga ? "sobrecarga" : "requisicao", erroStream, undefined, usoAposFalha(pedido, uso, viuUso, true));
     }
 
     const chamadas: ChamadaIA[] = [];

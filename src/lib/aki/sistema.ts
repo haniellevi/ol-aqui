@@ -34,7 +34,6 @@ export function sistemaVariavel(p: {
   cidade: string | null;
   nome: string | null;
   vende: boolean;
-  palavrasEvitar: string[];
   foto: boolean;
   rascunhoId: string | null;
 }): string {
@@ -44,9 +43,6 @@ export function sistemaVariavel(p: {
     p.vende ? "A pessoa já pode anunciar." : 'A pessoa ainda não ativou a venda: para anunciar ela precisa tocar em "Quero vender" (a função de rascunho avisa).',
     p.rascunhoId ? `A pessoa está no cadastro do anúncio: use rascunho_id ${p.rascunhoId} em salvar_rascunho_anuncio (não crie outro).` : "",
     p.foto ? "A pessoa mandou uma foto nesta mensagem: olhe a foto com atenção." : "",
-    p.palavrasEvitar.length
-      ? `Não escreva estas palavras (a resposta seria bloqueada): ${p.palavrasEvitar.join(", ")}.`
-      : "",
   ];
   return linhas.filter(Boolean).join("\n");
 }

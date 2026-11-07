@@ -74,6 +74,11 @@ export class ErroProvedor extends Error {
     public readonly tipo: "sem_chave" | "limite" | "sobrecarga" | "requisicao" | "rede" | "tempo",
     detalhe: string,
     public readonly status?: number,
+    /**
+     * Tokens que o provedor provavelmente já cobrou antes da falha (chamada cortada no meio,
+     * pessoa fechou a tela, tempo esgotado). O motor soma no custo: chamada cortada nunca sai de graça.
+     */
+    public readonly uso?: UsoIA,
   ) {
     super(detalhe);
     this.name = "ErroProvedor";
@@ -81,6 +86,49 @@ export class ErroProvedor extends Error {
 }
 
 export const usoVazio = (): UsoIA => ({ entrada: 0, saida: 0, cacheLeitura: 0, cacheEscrita: 0 });
+
+// Estimativa por baixo do número de tokens (≈ 3 letras por token em português; uma foto de até
+// 1024 px fica perto de 1.600 tokens). Só é usada quando o provedor não chegou a dizer a conta certa.
+const LETRAS_POR_TOKEN = 3;
+const TOKENS_POR_FOTO = 1600;
+
+/** Tokens de entrada de um pedido, contados pelo tamanho do texto (sem os dados da foto). */
+export function estimarEntrada(pedido: PedidoIA): number {
+  let letras = pedido.sistemaFixo.length + (pedido.sistemaVariavel?.length ?? 0);
+  if (pedido.ferramentas?.length) letras += JSON.stringify(pedido.ferramentas).length;
+  let fotos = 0;
+  for (const m of pedido.mensagens) {
+    for (const p of m.partes) {
+      if (p.tipo === "texto") letras += p.texto.length;
+      else if (p.tipo === "resultado") letras += p.conteudo.length;
+      else if (p.tipo === "chamada") letras += JSON.stringify(p.argumentos ?? {}).length + p.nome.length;
+      else if (p.tipo === "imagem") fotos++;
+    }
+    if (m.nativo) letras += JSON.stringify(m.nativo.dados ?? "").length;
+  }
+  return Math.ceil(letras / LETRAS_POR_TOKEN) + fotos * TOKENS_POR_FOTO;
+}
+
+/**
+ * Uso a cobrar quando a chamada falhou depois de enviada.
+ * - `viuUso`: o provedor já disse quantos tokens de entrada leu (Anthropic manda no começo).
+ * - `recebeu`: a resposta já tinha começado a chegar. Sem a conta exata da saída, cobra o
+ *   máximo da resposta (max_tokens): é o teto do que o provedor pode cobrar.
+ */
+export function usoAposFalha(pedido: PedidoIA, uso: UsoIA, viuUso: boolean, recebeu: boolean): UsoIA {
+  return {
+    entrada: viuUso ? uso.entrada : Math.max(uso.entrada, estimarEntrada(pedido)),
+    cacheLeitura: uso.cacheLeitura,
+    cacheEscrita: uso.cacheEscrita,
+    saida: recebeu ? Math.max(uso.saida, pedido.maxTokens) : uso.saida,
+  };
+}
+
+/** Junta o uso parcial a um erro (classificado ou não) antes de repassar ao motor. */
+export function comUso(e: unknown, uso: UsoIA, abortado: boolean, padrao: string): ErroProvedor {
+  if (e instanceof ErroProvedor) return new ErroProvedor(e.tipo, e.message, e.status, uso);
+  return new ErroProvedor(abortado ? "tempo" : "rede", e instanceof Error ? e.message : padrao, undefined, uso);
+}
 
 export function somarUso(a: UsoIA, b: UsoIA): UsoIA {
   return {
