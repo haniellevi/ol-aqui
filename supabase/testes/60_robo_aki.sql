@@ -65,8 +65,13 @@ select titulo, total_mensagens, custo_centavos from robo_conversas where id=:'co
 select papel, conteudo->>'texto' as texto, tokens_entrada, tokens_saida, custo_centavos from robo_mensagens where conversa_id=:'conv_a' order by id;
 select tipo, provedor, modelo, custo_centavos, cotacao_dolar from robo_uso where usuario_id='user_a60';
 
-\echo '[7b] servidor nao usa a conversa da Ana para o Bruno (ERRO esperado: Conversa nao encontrada); tokens negativos (ERRO esperado)'
-select * from robo_registrar_resposta('user_b60', :'conv_a', 'conversa', 'anthropic', 'claude-opus-5-5', 1, 1, 0, 0);
+\echo '[7b] servidor nao grava na conversa da Ana para o Bruno (sem conversa, sem mensagem; o custo fica so no livro-caixa do Bruno); tokens negativos (ERRO esperado)'
+select conversa_id is null as sem_conversa, mensagem_id is null as sem_mensagem, custo_centavos > 0 as custo_gravado
+  from robo_registrar_resposta('user_b60', :'conv_a', 'conversa', 'anthropic', 'claude-opus-5-5', 1, 1, 0, 0, '{"texto":"invasão"}', '{"texto":"x"}');
+select (select count(*) from robo_mensagens where conversa_id=:'conv_a') as mensagens_da_ana,
+       (select erro from robo_uso where usuario_id='user_b60') as nota_no_livro;
+reset role; delete from robo_uso where usuario_id='user_b60';  -- volta ao estado dos blocos seguintes
+set role service_role;
 select * from robo_registrar_resposta('user_a60', :'conv_a', 'conversa', 'anthropic', 'claude-opus-5-5', -5, 1, 0, 0);
 \echo '[7c] tipo inventado (ERRO esperado) e pessoa inexistente (ERRO esperado)'
 select * from robo_registrar_resposta('user_a60', null, 'gratis', 'anthropic', 'claude-opus-5-5', 1, 1, 0, 0);
@@ -151,10 +156,10 @@ update configuracoes set valor='"claude-haiku-5-5"' where chave='robo.modelo_fot
 set role authenticated; select set_config('request.jwt.claim.sub','user_b60',false) \g /dev/null
 select pode, provedor, modelo from robo_pode_enviar('foto');
 
-\echo '[15] ajustes da conversa: textos e limites, sem orcamento nem cotacao'
+\echo '[15] ajustes da conversa: textos e limites, sem orcamento, cotacao nem palavras bloqueadas da moderacao'
 select ajustes ? 'robo.boas_vindas' as boas_vindas, jsonb_array_length(ajustes->'robo.sugestoes') as sugestoes,
        ajustes ? 'robo.orcamento_mensal_centavos' as vaza_orcamento, ajustes ? 'robo.cotacao_dolar' as vaza_cotacao,
-       jsonb_typeof(ajustes->'moderacao.palavras_bloqueadas') as palavras, ajustes->>'microrregiao_id' = :'reg2' as regiao
+       ajustes ? 'moderacao.palavras_bloqueadas' as vaza_palavras, ajustes->>'microrregiao_id' = :'reg2' as regiao
   from robo_ajustes() as ajustes;
 
 \echo '[16] buscas sem resultado: servidor conta (normaliza acento e espaco); usuario nao ve; admin ve'
@@ -220,7 +225,7 @@ select min(id) as uso1, max(id) as uso2 from robo_uso where usuario_id='user_c60
 \echo '[22b] terceira reserva no mesmo dia: bloqueada (limite 2), sem linha nova'
 select pode, motivo, uso_id from robo_reservar('user_c60', 'conversa');
 select count(*) as linhas_uso_c from robo_uso where usuario_id='user_c60';
-\echo '[22c] fechar a reserva grava o custo na mesma linha (continua 2 linhas); fechar de novo ou de outra pessoa (2 ERROS esperados: Reserva nao encontrada)'
+\echo '[22c] fechar a reserva troca a estimativa pelo custo certo na mesma linha (continua 2 linhas; a aberta guarda a estimativa da foto no Haiku = 9,075); fechar de novo ou de outra pessoa (2 ERROS esperados: Reserva nao encontrada)'
 select custo_centavos from robo_registrar_resposta('user_c60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 1000, 1000, 0, 0,
        '{"texto":"oi"}', '{"texto":"Oi!"}', 500, null, :uso1);
 select count(*) as linhas_uso_c, count(*) filter (where erro='em andamento') as abertas, sum(custo_centavos) as custo from robo_uso where usuario_id='user_c60';
@@ -233,3 +238,120 @@ set role service_role;
 select pode, motivo, uso_id from robo_reservar('user_c60', 'conversa');
 reset role; select has_function_privilege('authenticated', 'public.robo_checar(text, text)', 'execute') as checar_autenticado,
                    has_function_privilege('authenticated', 'public.robo_reservar(text, text)', 'execute') as reservar_autenticado;
+
+\echo '[23] reserva separa o custo maximo estimado (Opus: 6 voltas x (1500 saida x US$20 + 20000 entrada x US$4) x R$5,50 = 363 centavos) e ele conta no orcamento'
+reset role; delete from configuracoes where chave='robo.ativo' and microrregiao_id=:'reg2';
+insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values
+ ('user_d60',:'reg','Dora Aki','5589999996464','Corrente','pf'),
+ ('user_e60',:'reg','Edu Aki','5589999996565','Corrente','pf');
+set role service_role; select set_config('request.jwt.claim.role','service_role',false) \g /dev/null
+select uso_id as uso_d from robo_reservar('user_d60', 'conversa') \gset
+reset role; select custo_centavos as estimativa, erro from robo_uso where id=:uso_d;
+\echo '[23b] orcamento com folga menor que a estimativa: outra pessoa nao reserva (motivo orcamento), sem linha nova'
+select coalesce(sum(custo_centavos),0) as gasto_mes from robo_uso where criado_em >= robo_inicio('mes') \gset
+update configuracoes set valor=to_jsonb(ceil(:gasto_mes + 100)) where chave='robo.orcamento_mensal_centavos' and microrregiao_id is null;
+set role service_role;
+select pode, motivo, uso_id from robo_reservar('user_e60', 'conversa');
+select pode, motivo, uso_id from robo_reservar('user_e60', 'conversa');
+reset role; select count(*) as linhas_e from robo_uso where usuario_id='user_e60';
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_e60',false) \g /dev/null
+select pode, motivo as pode_enviar_tambem_ve from robo_pode_enviar();
+\echo '[23c] a resposta da Dora fecha com o custo certo (bem menor): a folga volta e o Edu ja pode'
+set role service_role; select set_config('request.jwt.claim.role','service_role',false) \g /dev/null
+select custo_centavos as custo_real from robo_registrar_resposta('user_d60', null, 'conversa', 'anthropic', 'claude-opus-5-5', 1000, 100, 0, 0,
+       '{"texto":"oi"}', '{"texto":"Oi!"}', 300, null, :uso_d);
+select pode as edu_pode from robo_reservar('user_e60', 'conversa');
+reset role; update configuracoes set valor='10000' where chave='robo.orcamento_mensal_centavos' and microrregiao_id is null;
+delete from robo_uso where usuario_id='user_e60';
+
+\echo '[24] apagar a conversa enquanto a resposta chega: sem ERRO, mensagens nao gravadas, o custo fecha a reserva (200 mil entrada + 1500 saida no Opus = 456,50 centavos)'
+set role service_role;
+select conversa_id as conv_d from robo_registrar_resposta('user_d60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 10, 10, 0, 0,
+       '{"texto":"primeira"}', '{"texto":"ok"}') \gset
+select uso_id as uso_d2 from robo_reservar('user_d60', 'conversa') \gset
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_d60',false) \g /dev/null
+delete from robo_conversas where id=:'conv_d';
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select conversa_id is null as sem_conversa, mensagem_id is null as sem_mensagem, custo_centavos
+  from robo_registrar_resposta('user_d60', :'conv_d', 'conversa', 'anthropic', 'claude-opus-5-5', 200000, 1500, 0, 0,
+       '{"texto":"segunda"}', '{"texto":"resposta longa"}', 900, null, :uso_d2);
+reset role; select custo_centavos, erro, conversa_ref = :'conv_d' as guarda_ref from robo_uso where id=:uso_d2;
+select count(*) as conversas_d from robo_conversas where usuario_id='user_d60';
+
+\echo '[25] conteudo grande demais: mensagens ficam de fora, mas o custo fecha a reserva (sem ERRO)'
+set role service_role;
+select uso_id as uso_d3 from robo_reservar('user_d60', 'conversa') \gset
+select conversa_id is null as sem_conversa, custo_centavos
+  from robo_registrar_resposta('user_d60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 1000, 1000, 0, 0,
+       '{"texto":"oi"}', jsonb_build_object('texto', repeat('x', 70000)), 100, null, :uso_d3);
+reset role; select custo_centavos, erro like '%mensagens não gravadas%' as anotado, erro <> 'em andamento' as fechada from robo_uso where id=:uso_d3;
+
+\echo '[26] erro do provedor: a pessoa ve so o tipo; o detalhe fica no livro-caixa (admin)'
+set role service_role;
+select mensagem_id as msg_err from robo_registrar_resposta('user_d60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 0, 0, 0, 0,
+       '{"texto":"oi"}', '{"texto":"O Aki descansa."}', 100, 'sem_chave 401: HTTP 401: {"error":"Incorrect API key provided: sk-abc...xyz"}') \gset
+reset role; select erro as erro_na_mensagem from robo_mensagens where id=:msg_err;
+select erro like '%Incorrect API key%' as detalhe_so_no_livro from robo_uso where mensagem_id=:msg_err;
+\echo '[26b] a dona le o texto mas nao as colunas internas (ERRO esperado: permission denied na coluna erro)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_d60',false) \g /dev/null
+select papel, conteudo->>'texto' as texto from robo_mensagens where id=:msg_err;
+select erro from robo_mensagens where id=:msg_err;
+
+\echo '[27] visitante le so os textos publicos do convite (robo_publico); config continua fechada (ERRO esperado: permission denied for function config)'
+set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select p->'robo.ativo' as ativo, p->>'robo.boas_vindas' is not null as boas_vindas, p->>'robo.aviso_ia' is not null as aviso,
+       p ? 'robo.orcamento_mensal_centavos' as vaza_orcamento, (select count(*) from jsonb_object_keys(p)) as chaves
+  from robo_publico(:'reg') p;
+select config('robo.ativo', null, null);
+reset role; insert into configuracoes (chave, microrregiao_id, valor, grupo) values ('robo.ativo', :'reg2', 'false', 'robo');
+set role anon;
+select robo_publico(:'reg2')->'robo.ativo' as ativo_na_regiao_desligada, robo_publico(null)->'robo.ativo' as ativo_geral;
+reset role; delete from configuracoes where chave='robo.ativo' and microrregiao_id=:'reg2';
+
+\echo '[28] botao Confirmar pedido no Radar: marca uma vez so; pedido de outra pessoa, link que nao e pedido, segunda vez e visitante (4 ERROS esperados)'
+set role service_role; select set_config('request.jwt.claim.role','service_role',false) \g /dev/null
+select mensagem_id as msg_radar from robo_registrar_resposta('user_d60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 1, 1, 0, 0,
+       '{"texto":"quero moto"}',
+       '{"texto":"Preparei.","acoes":[{"tipo":"link","rotulo":"Ver","href":"/radar"},{"tipo":"pedido_radar","rotulo":"Confirmar","dados":{"titulo":"Procuro moto até 10 mil","detalhes":null,"preco_max_centavos":1000000,"cidade":"Corrente","urgencia":"normal","categoria":"veiculo"}}]}') \gset
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_a60',false) \g /dev/null
+select robo_marcar_acao(:msg_radar, 1);
+select set_config('request.jwt.claim.sub','user_d60',false) \g /dev/null
+select robo_marcar_acao(:msg_radar, 0) as link_nao_e_pedido;
+select robo_marcar_acao(:msg_radar, 1)->>'titulo' as dados_do_banco;
+select robo_marcar_acao(:msg_radar, 1);
+select conteudo->'acoes'->1->>'usada' as usada from robo_mensagens where id=:msg_radar;
+\echo '[28b] pedido falhou: desmarca e pode tentar de novo'
+select robo_marcar_acao(:msg_radar, 1, false) is not null as desmarcou;
+select robo_marcar_acao(:msg_radar, 1)->>'cidade' as de_novo;
+set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select robo_marcar_acao(:msg_radar, 1);
+
+\echo '[29] conversas por dia: apagar o historico nao infla a conta (2 respostas na mesma conversa = 1 conversa, mesmo depois de apagar)'
+reset role; insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values ('user_f60',:'reg','Fabi Aki','5589999996666','Corrente','pf');
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_adm60',false) \g /dev/null
+select (robo_painel()->'por_dia'->-1->>'conversas')::int as conversas_antes \gset
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select conversa_id as conv_f from robo_registrar_resposta('user_f60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 1, 1, 0, 0, '{"texto":"a"}', '{"texto":"b"}') \gset
+select 1 as segunda from robo_registrar_resposta('user_f60', :'conv_f', 'conversa', 'anthropic', 'claude-haiku-5-5', 1, 1, 0, 0, '{"texto":"c"}', '{"texto":"d"}');
+reset role; delete from robo_conversas where usuario_id='user_f60';
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_adm60',false) \g /dev/null
+select (robo_painel()->'por_dia'->-1->>'conversas')::int - :conversas_antes as conversas_a_mais;
+
+\echo '[30] conta excluida no meio da resposta: a reserva fecha mesmo assim (custo nao se perde)'
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select uso_id as uso_f from robo_reservar('user_f60', 'conversa') \gset
+reset role; delete from perfis where id='user_f60';
+set role service_role;
+select conversa_id is null as sem_conversa, custo_centavos from robo_registrar_resposta('user_f60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 1000, 1000, 0, 0, '{"texto":"x"}', '{"texto":"y"}', 10, null, :uso_f);
+reset role; select usuario_id is null as sem_dono, custo_centavos, erro from robo_uso where id=:uso_f;
+\echo '[30b] sem reserva, pessoa inexistente continua dando ERRO esperado (Pessoa nao encontrada)'
+set role service_role;
+select * from robo_registrar_resposta('user_f60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 1, 1, 0, 0);
+
+\echo '[31] permissoes das funcoes novas'
+reset role; select has_function_privilege('anon', 'public.robo_publico(uuid)', 'execute') as publico_anon,
+                   has_function_privilege('anon', 'public.robo_marcar_acao(bigint, integer, boolean)', 'execute') as marcar_anon,
+                   has_function_privilege('authenticated', 'public.robo_marcar_acao(bigint, integer, boolean)', 'execute') as marcar_logado,
+                   has_function_privilege('anon', 'public.robo_checar(text, text)', 'execute') as checar_anon,
+                   has_column_privilege('authenticated', 'public.robo_mensagens', 'custo_centavos', 'select') as custo_visivel,
+                   has_column_privilege('authenticated', 'public.robo_mensagens', 'conteudo', 'select') as conteudo_visivel;
