@@ -6,7 +6,14 @@ import { asaasConfigurado, webhookConfigurado } from "@/lib/asaas";
 import { linkAnuncio } from "@/lib/formato";
 import { Cartao, Numero, Titulo } from "@/components/admin/ui";
 import { FormConfig } from "../configuracoes/form-config";
-import { BotaoCancelarDestaque, FormCortesia, FormCreditos, FormTipoDestaque } from "./formularios";
+import {
+  BotaoCancelarDestaque,
+  BotaoRemoverPrecoRegiao,
+  FormCortesia,
+  FormCreditos,
+  FormPrecoRegiao,
+  FormTipoDestaque,
+} from "./formularios";
 import type { ResultadoDestaque, TipoDestaque } from "@/lib/tipos-destaques";
 
 export const metadata = { title: "Destaques" };
@@ -21,13 +28,25 @@ const CHAVES_CONFIG = [
   "destaque.subir_intervalo_horas",
   "destaque.subir_resultado_dias",
   "destaque.pendentes_max",
+  "destaque.reserva_renovacoes_max",
+  "destaque.reservas_max_por_vendedor",
   "cobranca.vencimento_dias",
+  "cobranca.consulta_intervalo_segundos",
   "asaas.ambiente",
 ];
 
 const ORIGEM: Record<string, string> = { pago: "Pago", credito: "Crédito do plano", cortesia: "Cortesia" };
 
 type Config = { id: string; chave: string; valor: unknown; descricao: string | null };
+type PrecoRegiao = { id: string; tipo: TipoDestaque["slug"]; microrregiao_id: string; preco_centavos: number | null; dias: number | null };
+type Devolver = {
+  id: string;
+  valor_centavos: number;
+  pago_em: string | null;
+  devolver_motivo: string;
+  link_pagamento: string | null;
+  vitrines_lojas: { nome: string } | null;
+};
 type Pendente = {
   id: string;
   valor_centavos: number;
@@ -37,12 +56,13 @@ type Pendente = {
   asaas_cobranca_id: string | null;
   link_pagamento: string | null;
   vitrines_lojas: { nome: string } | null;
-  destaques: { tipo: string; status: string; reservado_ate: string | null } | { tipo: string; status: string; reservado_ate: string | null }[] | null;
+  destaques: LinhaPendente | LinhaPendente[] | null;
 };
+type LinhaPendente = { id: string; tipo: string; status: string; reservado_ate: string | null };
 
 export default async function DestaquesAdminPage() {
   const { supabase } = await exigirAdmin();
-  const [tiposRes, creditosRes, planosRes, configsRes, ativosRes, pendentesRes] = await Promise.all([
+  const [tiposRes, creditosRes, planosRes, configsRes, ativosRes, pendentesRes, precosRes, regioesRes, devolverRes] = await Promise.all([
     supabase.from("destaque_tipos").select("*").order("ordem"),
     supabase.from("destaque_creditos_plano").select("plano_codigo, tipo, quantidade_mes"),
     supabase.from("planos").select("codigo, nome, ordem").order("ordem"),
@@ -50,10 +70,20 @@ export default async function DestaquesAdminPage() {
     supabase.rpc("resultados_destaques", { p_anuncio_id: null, p_todos: true, p_limite: 200 }),
     supabase
       .from("pagamentos")
-      .select("id, valor_centavos, forma, criado_em, vencimento, asaas_cobranca_id, link_pagamento, vitrines_lojas(nome), destaques(tipo, status, reservado_ate)")
+      .select("id, valor_centavos, forma, criado_em, vencimento, asaas_cobranca_id, link_pagamento, vitrines_lojas(nome), destaques(id, tipo, status, reservado_ate)")
       .eq("tipo", "destaque")
       .eq("status", "pendente")
       .order("criado_em", { ascending: false })
+      .limit(50),
+    supabase.from("destaque_precos_regiao").select("id, tipo, microrregiao_id, preco_centavos, dias"),
+    supabase.from("microrregioes").select("id, nome").order("nome"),
+    supabase
+      .from("pagamentos")
+      .select("id, valor_centavos, pago_em, devolver_motivo, link_pagamento, vitrines_lojas(nome)")
+      .eq("tipo", "destaque")
+      .eq("status", "pago")
+      .not("devolver_motivo", "is", null)
+      .order("pago_em", { ascending: false })
       .limit(50),
   ]);
 
@@ -68,6 +98,10 @@ export default async function DestaquesAdminPage() {
   }));
   const ativos = todos.filter((r) => r.status === "ativo");
   const pendentes = (pendentesRes.data ?? []) as unknown as Pendente[];
+  const precosRegiao = (precosRes.data ?? []) as PrecoRegiao[];
+  const regioes = (regioesRes.data ?? []) as { id: string; nome: string }[];
+  const nomeRegiao = new Map(regioes.map((r) => [r.id, r.nome]));
+  const devolver = (devolverRes.data ?? []) as unknown as Devolver[];
   const somaVis = ativos.reduce((s, r) => s + r.visualizacoes, 0);
   const somaCli = ativos.reduce((s, r) => s + r.cliques_whatsapp, 0);
   const temAsaas = asaasConfigurado();
@@ -126,6 +160,31 @@ export default async function DestaquesAdminPage() {
             </Cartao>
           ))}
         </section>
+
+        <Cartao>
+          <h2 className="mb-1 text-lg font-semibold text-beringela">Preço e dias por região</h2>
+          <p className="mb-3 text-sm text-texto-suave">
+            Exceção para uma região (ex.: preço de lançamento). Campo vazio = usa o preço ou os dias do tipo. As vagas valem para todas as regiões.
+          </p>
+          {precosRegiao.length > 0 && (
+            <ul className="mb-4 divide-y divide-borda rounded-card border border-borda">
+              {precosRegiao.map((p) => (
+                <li key={p.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm">
+                  <span className="font-semibold text-beringela">{nomeRegiao.get(p.microrregiao_id) ?? "Região"}</span>
+                  <span>{nomeTipo.get(p.tipo) ?? p.tipo}</span>
+                  <span className="text-texto-suave">
+                    {p.preco_centavos != null ? (p.preco_centavos ? reais(p.preco_centavos) : "Grátis") : "preço do tipo"}
+                    {p.tipo !== "subir" ? ` · ${p.dias != null ? `${p.dias} dias` : "dias do tipo"}` : ""}
+                  </span>
+                  <span className="ml-auto">
+                    <BotaoRemoverPrecoRegiao id={p.id} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <FormPrecoRegiao tipos={tipos.map((t) => ({ slug: t.slug, nome: t.nome }))} regioes={regioes} />
+        </Cartao>
 
         <Cartao>
           <h2 className="mb-1 text-lg font-semibold text-beringela">Créditos grátis por mês em cada plano</h2>
@@ -207,6 +266,11 @@ export default async function DestaquesAdminPage() {
                           Ver no Asaas
                         </a>
                       )}
+                      {d?.status === "aguardando_pagamento" && (
+                        <div className="w-full">
+                          <BotaoCancelarDestaque id={d.id} texto="Cancelar pedido" />
+                        </div>
+                      )}
                     </li>
                   );
                 })}
@@ -214,6 +278,34 @@ export default async function DestaquesAdminPage() {
             </Cartao>
           )}
         </section>
+
+        {devolver.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-bold text-beringela">Pagos sem destaque: devolver o dinheiro</h2>
+            <p className="text-sm text-texto-suave">
+              O dinheiro chegou, mas o destaque não pôde ser ligado. Faça a devolução no Asaas: quando o Asaas avisar, o pagamento sai desta lista.
+            </p>
+            <Cartao className="p-0">
+              <ul className="divide-y divide-borda">
+                {devolver.map((p) => (
+                  <li key={p.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4 text-sm">
+                    <span className="font-semibold text-beringela">{p.vitrines_lojas?.nome ?? "Vendedor"}</span>
+                    <span className="font-semibold">{reais(p.valor_centavos)}</span>
+                    <span className="text-texto-suave">
+                      {p.devolver_motivo}
+                      {p.pago_em ? ` · pago em ${quando(p.pago_em)}` : ""}
+                    </span>
+                    {p.link_pagamento && (
+                      <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline">
+                        Ver no Asaas
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Cartao>
+          </section>
+        )}
 
         <section className="space-y-3">
           <h2 className="text-xl font-bold text-beringela">Prazos dos destaques e da cobrança</h2>
@@ -227,11 +319,11 @@ export default async function DestaquesAdminPage() {
             </Cartao>
           ))}
           <p className="text-sm text-texto-suave">
-            Exceções por região ficam em{" "}
+            Exceções destes prazos por região ficam em{" "}
             <Link href="/admin/configuracoes?grupo=planos" className="font-semibold text-laranja-escuro underline">
               Configurações
             </Link>
-            .
+            . Preço e dias por região ficam no cartão &quot;Preço e dias por região&quot; acima.
           </p>
         </section>
 

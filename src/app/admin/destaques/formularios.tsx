@@ -5,7 +5,14 @@ import { Aviso, estiloCampo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
 import { paraReaisInput } from "@/lib/admin/formato";
 import type { SlugDestaque, TipoDestaque } from "@/lib/tipos-destaques";
-import { cancelarDestaqueAdmin, concederCortesia, salvarCreditosDestaque, salvarTipoDestaque } from "./actions";
+import {
+  cancelarDestaqueAdmin,
+  concederCortesia,
+  removerPrecoRegiao,
+  salvarCreditosDestaque,
+  salvarPrecoRegiao,
+  salvarTipoDestaque,
+} from "./actions";
 
 // Formulários da tela 10 (Destaques). Cada botão mostra "carregando" e não deixa enviar duas vezes.
 
@@ -174,13 +181,84 @@ export function FormCortesia({ tipos }: { tipos: { slug: SlugDestaque; nome: str
   );
 }
 
-export function BotaoCancelarDestaque({ id }: { id: string }) {
+export function FormPrecoRegiao({
+  tipos,
+  regioes,
+}: {
+  tipos: { slug: SlugDestaque; nome: string }[];
+  regioes: { id: string; nome: string }[];
+}) {
+  const [estado, acao, pendente] = useActionState(salvarPrecoRegiao, null);
+  const [tipo, setTipo] = useState<SlugDestaque>(tipos[0]?.slug ?? "busca");
+  return (
+    <form action={acao} className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <label className="text-sm font-semibold">
+        Tipo
+        <select name="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as SlugDestaque)} className={estiloCampo}>
+          {tipos.map((t) => (
+            <option key={t.slug} value={t.slug}>
+              {t.nome}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-sm font-semibold">
+        Região
+        <select name="microrregiao_id" required defaultValue="" className={estiloCampo}>
+          <option value="" disabled>
+            Escolha
+          </option>
+          {regioes.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.nome}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-sm font-semibold">
+        Preço (R$)
+        <input name="preco" inputMode="decimal" placeholder="igual ao do tipo" className={estiloCampo} />
+      </label>
+      <label className="text-sm font-semibold">
+        Dias
+        {tipo === "subir" ? (
+          <input disabled value="Sobe uma vez" className={estiloCampo} readOnly />
+        ) : (
+          <input name="dias" type="number" min={1} max={365} placeholder="igual ao do tipo" className={estiloCampo} />
+        )}
+      </label>
+      <div className="col-span-2 md:col-span-4">
+        <Botao type="submit" variante="secundario" carregando={pendente} textoCarregando="Salvando...">
+          Salvar exceção
+        </Botao>
+      </div>
+      <div className="col-span-2 md:col-span-4">
+        <Retorno estado={estado} />
+      </div>
+    </form>
+  );
+}
+
+export function BotaoRemoverPrecoRegiao({ id }: { id: string }) {
+  const [estado, acao, pendente] = useActionState(removerPrecoRegiao, null);
+  return (
+    <form action={acao} className="flex flex-col items-end gap-1">
+      <input type="hidden" name="id" value={id} />
+      <Botao type="submit" variante="texto" className="text-perigo" carregando={pendente} textoCarregando="Removendo...">
+        Remover
+      </Botao>
+      {estado?.erro && <Retorno estado={estado} />}
+    </form>
+  );
+}
+
+export function BotaoCancelarDestaque({ id, texto = "Cancelar destaque" }: { id: string; texto?: string }) {
   const [estado, acao, pendente] = useActionState(cancelarDestaqueAdmin, null);
   const [aberto, setAberto] = useState(false);
   if (!aberto) {
     return (
       <Botao variante="texto" className="text-perigo" onClick={() => setAberto(true)}>
-        Cancelar destaque
+        {texto}
       </Botao>
     );
   }
@@ -191,7 +269,9 @@ export function BotaoCancelarDestaque({ id }: { id: string }) {
         Motivo do cancelamento
         <input name="motivo" maxLength={300} placeholder="ex.: pedido do vendedor" className={estiloCampo} />
       </label>
-      <p className="text-[13px] text-perigo">Se foi pago, a devolução do dinheiro é feita no Asaas.</p>
+      <p className="text-[13px] text-perigo">
+        Se foi pago, a devolução do dinheiro é feita no Asaas. Se ainda não foi pago, a cobrança é apagada no Asaas.
+      </p>
       <div className="flex flex-wrap gap-2">
         <Botao type="submit" variante="perigo" carregando={pendente} textoCarregando="Cancelando...">
           Sim, cancelar

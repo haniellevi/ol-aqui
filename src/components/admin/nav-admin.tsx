@@ -7,7 +7,7 @@ import { LayoutDashboard, ShieldAlert, SlidersHorizontal, Sparkles, Tags } from 
 const ITENS = [
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
   { href: "/admin/planos", rotulo: "Planos", icone: Tags },
-  { href: "/admin/configuracoes", rotulo: "Configurações", icone: SlidersHorizontal },
+  { href: "/admin/configuracoes", rotulo: "Configurações", curto: "Config.", icone: SlidersHorizontal },
   { href: "/admin/moderacao", rotulo: "Moderação", icone: ShieldAlert },
   { href: "/admin/destaques", rotulo: "Destaques", icone: Sparkles },
 ];
@@ -16,7 +16,7 @@ export function NavAdmin({ pendencias }: { pendencias: number }) {
   const atual = usePathname();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 grid auto-cols-fr grid-flow-col border-t border-borda bg-cartao shadow-2 md:static md:flex md:w-56 md:flex-col md:gap-1 md:border-0 md:bg-transparent md:p-4 md:shadow-none">
-      {ITENS.map(({ href, rotulo, icone: Icone }) => {
+      {ITENS.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
         const ativo = href === "/admin" ? atual === href : atual.startsWith(href);
         return (
           <Link
@@ -27,7 +27,17 @@ export function NavAdmin({ pendencias }: { pendencias: number }) {
             }`}
           >
             <Icone className="size-5" aria-hidden />
-            <span className="max-w-full truncate px-0.5">{rotulo}</span>
+            {/* no celular (5 itens lado a lado) o nome longo vira curto para caber inteiro */}
+            {curto ? (
+              <>
+                <span className="max-w-full truncate px-0.5 md:hidden" aria-hidden>
+                  {curto}
+                </span>
+                <span className="sr-only md:not-sr-only">{rotulo}</span>
+              </>
+            ) : (
+              <span className="max-w-full truncate px-0.5">{rotulo}</span>
+            )}
             {href === "/admin/moderacao" && pendencias > 0 && (
               <span className="absolute right-[22%] top-1 rounded-full bg-perigo px-1.5 text-[13px] font-bold leading-5 text-white md:static md:ml-auto">
                 {pendencias}

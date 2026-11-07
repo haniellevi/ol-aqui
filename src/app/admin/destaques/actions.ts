@@ -6,6 +6,7 @@ import { centavosDe, inteiroOuNulo } from "@/lib/admin/formato";
 import type { EstadoForm } from "@/lib/admin/estado";
 import { ehUuid, idDoLinkAnuncio } from "@/lib/formato";
 import { traduzirErro } from "@/lib/erros";
+import { apagarCobrancaDoPedido } from "@/lib/cobranca-destaque";
 import type { SlugDestaque } from "@/lib/tipos-destaques";
 
 // Tela 10 · Destaques. Tudo pelo token do admin: a RLS (e_admin) barra quem não é,
@@ -121,11 +122,66 @@ export async function cancelarDestaqueAdmin(_: EstadoForm, form: FormData): Prom
     const { supabase } = await exigirAdmin();
     const id = String(form.get("id"));
     if (!ehUuid(id)) return { erro: "Destaque inválido." };
+    const { data: antes } = await supabase
+      .from("destaques")
+      .select("pagamento_id, status, pagamentos(status, asaas_cobranca_id)")
+      .eq("id", id)
+      .maybeSingle<{ pagamento_id: string | null; status: string; pagamentos: { status: string; asaas_cobranca_id: string | null } | null }>();
     const { error } = await supabase.rpc("cancelar_destaque", { p_destaque_id: id, p_motivo: String(form.get("motivo") ?? "").trim() || null });
     if (error) return { erro: traduzirErro(error).mensagem };
     atualizarTelas();
+    // Pedido que esperava pagamento: apaga a cobrança no Asaas para o Pix antigo não ser pago.
+    // (Se for pago assim mesmo, o banco não liga o destaque e marca para devolver o dinheiro.)
+    if (antes?.status === "aguardando_pagamento" && antes.pagamentos?.status === "pendente" && antes.pagamentos.asaas_cobranca_id) {
+      const apagou = await apagarCobrancaDoPedido({ pagamento_id: antes.pagamento_id });
+      return apagou
+        ? { ok: "Pedido cancelado e cobrança apagada no Asaas." }
+        : { ok: "Pedido cancelado. Não deu para apagar a cobrança no Asaas: apague lá para ninguém pagar por engano." };
+    }
     return { ok: "Destaque cancelado." };
   } catch (e) {
     return { erro: e instanceof Error ? e.message : "Erro ao cancelar." };
+  }
+}
+
+/** Exceção por região: preço e/ou dias de um tipo numa microrregião (vazio = usa o do tipo). */
+export async function salvarPrecoRegiao(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  try {
+    const { supabase, userId } = await exigirAdmin();
+    const tipo = String(form.get("tipo")) as SlugDestaque;
+    if (!TIPOS.includes(tipo)) return { erro: "Escolha o tipo." };
+    const regiao = String(form.get("microrregiao_id") ?? "");
+    if (!ehUuid(regiao)) return { erro: "Escolha a região." };
+    const textoPreco = String(form.get("preco") ?? "").trim();
+    const preco = textoPreco ? centavosDe(textoPreco) : null;
+    if (textoPreco && preco == null) return { erro: "Preço inválido (0 = grátis)." };
+    const dias = tipo === "subir" ? null : inteiroOuNulo(form.get("dias"));
+    if (dias !== null && (dias < 1 || dias > 365)) return { erro: "Os dias devem ficar entre 1 e 365." };
+    if (preco == null && dias == null) return { erro: "Digite o preço ou os dias desta região." };
+    const { error } = await supabase
+      .from("destaque_precos_regiao")
+      .upsert(
+        { tipo, microrregiao_id: regiao, preco_centavos: preco, dias, atualizado_por: userId },
+        { onConflict: "tipo,microrregiao_id" },
+      );
+    if (error) return { erro: traduzirErro(error).mensagem };
+    atualizarTelas();
+    return { ok: "Exceção salva. Vale para os próximos pedidos dessa região." };
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : "Erro ao salvar." };
+  }
+}
+
+export async function removerPrecoRegiao(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  try {
+    const { supabase } = await exigirAdmin();
+    const id = String(form.get("id"));
+    if (!ehUuid(id)) return { erro: "Exceção inválida." };
+    const { error } = await supabase.from("destaque_precos_regiao").delete().eq("id", id);
+    if (error) return { erro: traduzirErro(error).mensagem };
+    atualizarTelas();
+    return { ok: "Exceção removida." };
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : "Erro ao remover." };
   }
 }
