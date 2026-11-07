@@ -2,7 +2,8 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Pause, Pencil, Play, Trash2, ArrowRight } from "lucide-react";
+import { CheckCircle2, Pause, Pencil, Play, Sparkles, Trash2, ArrowRight } from "lucide-react";
+import { linkDestacar } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { excluirRascunho, marcarVendido, pausarAnuncio, reativarAnuncio } from "@/app/(conta)/minha-conta/anuncios/actions";
 import type { Resultado, StatusAnuncio } from "@/lib/tipos";
@@ -71,6 +72,11 @@ export function AcoesAnuncio({ id, status, titulo }: { id: string; status: Statu
                 onClick={() => rodar("pausar", () => pausarAnuncio(id))}
               >
                 Pausar
+              </Botao>
+            )}
+            {status === "ativo" && (
+              <Botao href={linkDestacar(id)} variante="secundario" icone={<Sparkles />} className="col-span-2 px-3">
+                Destacar
               </Botao>
             )}
             {podeReativar && (

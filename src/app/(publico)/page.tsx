@@ -12,10 +12,13 @@ import { CirculoCategoria } from "@/components/ui/icone-categoria";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { LojasDaRegiao } from "@/components/vitrine/lojas-da-regiao";
+import { LojasEmDestaque } from "@/components/destaques/lojas-em-destaque";
+import { destaquesHome } from "@/lib/dados/destaques";
 import { linkCategoria } from "@/lib/formato";
 
-// T2 · Início: busca grande, categorias, destaques pagos (quando houver), faixa do Radar,
-// lojas da região e os mais recentes. Tudo montado no servidor (pouco JavaScript no celular).
+// T2 · Início: busca grande, categorias, "Destaques perto de você" (tipo home, pago),
+// "Lojas em destaque" (tipo loja, pago), faixa do Radar, lojas da região e os mais recentes.
+// Todo lugar pago mostra "Patrocinado". Tudo montado no servidor (pouco JavaScript no celular).
 
 const POR_VEZ = 24;
 
@@ -35,9 +38,10 @@ export default async function Inicio() {
     buscarAnuncios({ ordem: "recentes", limite: POR_VEZ }),
   ]);
   const lugar = lugarDaRegiao(regiao);
-  // destaques pagos vêm primeiro na busca; vão para o carrossel e saem da grade
-  const destaques = recentes.anuncios.filter((a) => a.destaque);
-  const normais = recentes.anuncios.filter((a) => !a.destaque);
+  // Carrossel: só o tipo "Vitrine da página inicial" da região (vagas limitadas, rodízio justo no banco).
+  // "Destaque na busca" continua no topo da grade, com "Patrocinado", como na busca.
+  const destaques = regiao ? await destaquesHome(regiao.id) : [];
+  const normais = recentes.anuncios;
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4">
@@ -90,6 +94,8 @@ export default async function Inicio() {
         </section>
       )}
 
+      {regiao && <LojasEmDestaque microrregiaoId={regiao.id} />}
+
       <section aria-labelledby="titulo-radar" className="flex flex-col gap-3 rounded-card bg-laranja-claro p-4 sm:flex-row sm:items-center">
         <div className="flex flex-1 gap-3">
           <Radar className="mt-0.5 size-7 shrink-0 text-laranja-escuro" aria-hidden />
@@ -117,7 +123,7 @@ export default async function Inicio() {
           prioridade={destaques.length ? 0 : 2}
           vazio={
             <Vazio
-              titulo={destaques.length ? "Por enquanto, só os destaques acima." : "Ainda não tem anúncio por aqui."}
+              titulo="Ainda não tem anúncio por aqui."
               texto="Seja o primeiro: anunciar é rápido e você recebe as conversas no WhatsApp."
             >
               <Botao href="/anunciar" larguraTotal>

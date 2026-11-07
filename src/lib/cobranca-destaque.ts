@@ -167,3 +167,17 @@ export async function situacaoPedido(pedidoId: string, perguntarAoAsaas: boolean
   }
   return pedido;
 }
+
+/** true quando a pessoa ainda não tem cliente no Asaas neste ambiente (a tela pede o CPF/CNPJ). */
+export async function precisaDocumento(vitrineId: string): Promise<boolean> {
+  if (!asaasConfigurado()) return false;
+  try {
+    const [amb, { data }] = await Promise.all([
+      ambienteAsaas(),
+      supabaseAdmin().from("vitrines_lojas").select("gateway_cliente_id").eq("id", vitrineId).maybeSingle<{ gateway_cliente_id: string | null }>(),
+    ]);
+    return !clienteDoAmbiente(data?.gateway_cliente_id, amb);
+  } catch {
+    return true;
+  }
+}

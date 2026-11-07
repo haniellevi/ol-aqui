@@ -1,0 +1,41 @@
+import "server-only";
+import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
+import { lojasEmDestaque } from "@/lib/dados/destaques";
+import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
+import { linkLoja } from "@/lib/formato";
+
+// "Lojas em destaque" no Início: lojas que contrataram o tipo "loja" na região.
+// Lugar pago: sempre com a etiqueta "Patrocinado" (Código de Defesa do Consumidor).
+export async function LojasEmDestaque({ microrregiaoId }: { microrregiaoId: string }) {
+  const lojas = await lojasEmDestaque(microrregiaoId);
+  if (!lojas.length) return null;
+  return (
+    <section aria-labelledby="titulo-lojas-destaque" className="flex flex-col gap-3">
+      <h2 id="titulo-lojas-destaque" className="text-lg font-semibold">
+        Lojas em destaque
+      </h2>
+      <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+        {lojas.map((l) => (
+          <li key={l.id} className="w-36 shrink-0 snap-start">
+            <Link
+              href={linkLoja(l.slug)}
+              className="flex h-full flex-col items-center gap-1.5 rounded-card bg-cartao p-3 text-center shadow-1 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+            >
+              <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-[13px] font-bold text-beringela">Patrocinado</span>
+              <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="lg" />
+              <span className="line-clamp-2 text-[15px] font-semibold leading-5">{l.nome}</span>
+              <span className="text-[13px] leading-[18px] text-texto-suave">{l.cidade}</span>
+              {l.selo_loja_verificada && (
+                <span className="flex items-center gap-1 text-[13px] font-semibold leading-[18px] text-verde-escuro">
+                  <ShieldCheck className="size-4" aria-hidden />
+                  Verificada
+                </span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
