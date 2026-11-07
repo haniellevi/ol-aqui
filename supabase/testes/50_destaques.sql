@@ -227,7 +227,7 @@ select subido_em is null as subido_intacto, destaque_ate < '2999-01-01' as desta
 insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos, subido_em)
 values (:'vit_lj', :'cat_moveis', 'Banco zeta50 forjado', 'Corrente', 5000, '{}', :'foto_lj', '2999-01-01') returning subido_em is null as zerado;
 
-\echo '[21] admin nao troca o tipo (slug/alvo ficam); dias do "subir" continuam vazios (ERRO esperado ao pôr dias)'
+\echo '[21] admin nao troca o tipo: alvo nao tem permissao de coluna (ERRO esperado: permission denied); dias do "subir" continuam vazios (ERRO esperado: check constraint)'
 select set_config('request.jwt.claim.sub','user_ad50',false) \g /dev/null
 update destaque_tipos set alvo='loja' where slug='home';
 select slug, alvo from destaque_tipos where slug='home';
@@ -246,7 +246,7 @@ select status from contratar_destaque('busca', :'o1');
 select status from contratar_destaque('home', :'o1');
 reset role; update configuracoes set valor='10' where chave='destaque.pendentes_max' and microrregiao_id is null;
 
-\echo '[23] rotina diaria: encerra o que venceu e cancela pedido velho nao pago (o pagamento pendente tambem)'
+\echo '[23] rotina diaria: usuario nao roda (ERRO esperado: permission denied); servidor roda, encerra o que venceu e cancela pedido velho nao pago (o pagamento pendente tambem)'
 update destaques set fim = now() - interval '1 minute' where id=:'d_home_pf';
 update destaques set criado_em = now() - interval '3 days' where anuncio_id=:'o1' and status='aguardando_pagamento';
 set role authenticated; select set_config('request.jwt.claim.sub','user_ou50',false) \g /dev/null
