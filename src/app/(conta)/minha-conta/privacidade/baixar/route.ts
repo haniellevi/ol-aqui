@@ -13,11 +13,16 @@ export async function GET() {
   if (!userId) return new Response("Entre na sua conta para continuar.", { status: 401 });
 
   const db = await createClient();
-  const [perfil, vitrine, favoritos, pedidos] = await Promise.all([
+  const [perfil, vitrine, favoritos, pedidos, conversasAki] = await Promise.all([
     db.rpc("meu_perfil"),
     db.from("vitrines_lojas").select(COLUNAS_VITRINE).eq("dono_id", userId).maybeSingle<{ id: string }>(),
     db.from("favoritos").select("anuncio_id, criado_em").eq("usuario_id", userId).order("criado_em", { ascending: false }),
     db.from("radar_pedidos").select("*").eq("comprador_id", userId).order("criado_em", { ascending: false }),
+    db
+      .from("robo_conversas")
+      .select("id, titulo, criado_em, atualizado_em, robo_mensagens(papel, conteudo, criado_em)")
+      .eq("usuario_id", userId)
+      .order("criado_em", { ascending: false }),
   ]);
   if (perfil.error) return new Response("Não deu para juntar seus dados agora. Tente de novo.", { status: 500 });
 
@@ -46,6 +51,7 @@ export async function GET() {
     pagamentos: pagamentos?.data ?? [],
     favoritos: favoritos.data ?? [],
     pedidos_radar: pedidos.data ?? [],
+    conversas_com_o_aki: conversasAki.data ?? [],
   };
 
   const dia = new Date().toISOString().slice(0, 10);

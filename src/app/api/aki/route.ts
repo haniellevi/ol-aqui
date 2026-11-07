@@ -21,13 +21,14 @@ const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 const json = (dados: unknown, status = 200) =>
   new Response(JSON.stringify(dados), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 
-export async function GET() {
+export async function GET(req: Request) {
   const { userId } = await auth();
+  const completo = new URL(req.url).searchParams.get("completo") === "1";
   try {
     if (userId) await garantirPerfil().catch(() => null);
-    return json(await estadoAki(userId));
+    return json(await estadoAki(userId, completo));
   } catch {
-    return json({ logado: !!userId, pode: false, motivo: "erro", restantes: null, boasVindas: null, sugestoes: [], avisoIa: null, fotoLadoMaximo: 1024, maxCaracteres: 600, conversaId: null, mensagens: [] });
+    return json({ logado: !!userId, ligado: false, pode: false, motivo: "erro", restantes: null, boasVindas: null, sugestoes: [], avisoIa: null, fotoLadoMaximo: 1024, maxCaracteres: 600, conversaId: null, mensagens: [] });
   }
 }
 
@@ -83,6 +84,7 @@ export async function POST(req: Request) {
     if (motivo) return umEvento({ tipo: "bloqueado", motivo, mensagem: mensagemBloqueio(motivo) });
 
     const conversaId = typeof corpo.conversaId === "string" && ehId(corpo.conversaId) ? corpo.conversaId : null;
+    const rascunhoId = typeof corpo.rascunhoId === "string" && ehId(corpo.rascunhoId) ? corpo.rascunhoId : null;
     const codificador = new TextEncoder();
     const fluxo = new ReadableStream<Uint8Array>({
       async start(controle) {
@@ -96,7 +98,7 @@ export async function POST(req: Request) {
           }
         };
         try {
-          await responder({ userId, pedido: { texto, conversaId, foto }, ajustes, emitir, sinal: req.signal });
+          await responder({ userId, pedido: { texto, conversaId, foto, rascunhoId }, ajustes, emitir, sinal: req.signal });
         } catch {
           emitir({ tipo: "erro", mensagem: "O Aki não conseguiu responder agora. Tente de novo." });
         } finally {

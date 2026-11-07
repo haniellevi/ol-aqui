@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { garantirPerfil } from "@/lib/perfil";
 import { CabecalhoPublico } from "@/components/ui/cabecalho-publico";
 import { BarraInferior } from "@/components/ui/barra-inferior";
+import { BalaoAki } from "@/components/aki/balao-aki";
 
 // Área da conta (anunciar, quero vender, minha conta, destacar): exige login.
 // O middleware já manda para /entrar?redirect_url=...; aqui é a segunda barreira.
@@ -19,6 +20,7 @@ export default async function LayoutConta({ children }: { children: React.ReactN
         {children}
       </div>
       <BarraInferior />
+      <BalaoAki />
     </>
   );
 }

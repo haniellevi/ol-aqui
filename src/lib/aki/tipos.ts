@@ -76,6 +76,8 @@ export type MensagemAki =
 /** Resposta do GET /api/aki: o que o balão precisa saber ao abrir. */
 export type EstadoAki = {
   logado: boolean;
+  /** O Aki existe nesta região (robo.ativo)? Desligado no painel = o balão nem aparece. */
+  ligado: boolean;
   pode: boolean;
   motivo: MotivoBloqueio | null;
   restantes: number | null; // mensagens que ainda pode mandar hoje
@@ -104,6 +106,8 @@ export type PedidoAki = {
   conversaId?: string | null;
   texto: string;
   foto?: { base64: string; tipo: "image/webp" | "image/jpeg" | "image/png" } | null;
+  /** Rascunho aberto no cadastro (passo Fotos): o Aki guarda nele em vez de criar outro. */
+  rascunhoId?: string | null;
 };
 
 /* ------------------------------- Painel ------------------------------- */

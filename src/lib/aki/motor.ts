@@ -3,7 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
-import { listarCidades } from "@/lib/dados/regiao";
+import { listarCidades, regiaoAtual } from "@/lib/dados/regiao";
+import { meuAnuncio } from "@/lib/dados/anuncios";
 import { adaptador, ErroProvedor, lerArgumentos, somarUso, usoVazio, type MensagemIA, type ParteIA, type UsoIA } from "@/lib/aki/provedores";
 import { executarFerramenta, FERRAMENTAS, rotuloFerramenta, type ContextoFerramentas } from "@/lib/aki/ferramentas";
 import { criarFiltroStream, criarModerador } from "@/lib/aki/moderacao";
@@ -73,9 +74,10 @@ export function motivoFinal(pode: PodeEnviar | null): MotivoBloqueio | null {
 
 /* ------------------------------ Estado (GET) ------------------------------ */
 
-export async function estadoAki(userId: string | null): Promise<EstadoAki> {
+export async function estadoAki(userId: string | null, completo: boolean): Promise<EstadoAki> {
   const base: EstadoAki = {
     logado: !!userId,
+    ligado: false,
     pode: false,
     motivo: userId ? "erro" : "sem_login",
     restantes: null,
@@ -90,24 +92,21 @@ export async function estadoAki(userId: string | null): Promise<EstadoAki> {
   const db = await createClient();
   if (!userId) {
     // visitante: só os textos públicos (o pitch e o botão "Entrar para conversar")
-    const [bv, av] = await Promise.all([
-      db.rpc("config", { p_chave: "robo.boas_vindas", p_microrregiao: null, p_padrao: null }),
-      db.rpc("config", { p_chave: "robo.aviso_ia", p_microrregiao: null, p_padrao: null }),
-    ]);
-    return { ...base, boasVindas: textoOuNull(bv.data), avisoIa: textoOuNull(av.data) };
+    const regiao = await regiaoAtual();
+    const ler = (chave: string) => db.rpc("config", { p_chave: chave, p_microrregiao: regiao?.id ?? null, p_padrao: null });
+    const [ativo, bv, av] = await Promise.all([ler("robo.ativo"), ler("robo.boas_vindas"), ler("robo.aviso_ia")]);
+    return { ...base, ligado: ativo.data === true, boasVindas: textoOuNull(bv.data), avisoIa: textoOuNull(av.data) };
   }
 
   const [ajustes, pode] = await Promise.all([lerAjustes(db), lerPodeEnviar(db, "conversa")]);
   const motivo = motivoFinal(pode);
-  const { data: conversa } = await db
-    .from("robo_conversas")
-    .select("id")
-    .order("atualizado_em", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data: conversa } = completo
+    ? await db.from("robo_conversas").select("id").order("atualizado_em", { ascending: false }).limit(1).maybeSingle()
+    : { data: null };
   const mensagens = conversa ? await mensagensDaConversa(db, String(conversa.id), 40) : [];
   return {
     ...base,
+    ligado: motivo !== "desligado",
     pode: motivo === null,
     motivo,
     restantes: pode ? Math.max(0, pode.limite_diario - pode.usadas_hoje) : null,
@@ -169,7 +168,7 @@ function historicoParaIA(mensagens: MensagemAki[]): MensagemIA[] {
 
 export type EntradaResposta = {
   userId: string;
-  pedido: { texto: string; conversaId: string | null; foto: PedidoAki["foto"] };
+  pedido: { texto: string; conversaId: string | null; foto: PedidoAki["foto"]; rascunhoId: string | null };
   ajustes: Ajustes;
   emitir: (e: EventoAki) => void;
   sinal: AbortSignal;
@@ -223,6 +222,13 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
       conversaId = String(conv.id);
       historico = await mensagensDaConversa(db, conversaId, num(ajustes["robo.historico_mensagens"], 12, 0, 40));
     }
+  }
+
+  // rascunho aberto no cadastro: só vale se for rascunho da própria pessoa
+  let rascunhoAberto: string | null = null;
+  if (pedido.rascunhoId && ehId(pedido.rascunhoId)) {
+    const a = await meuAnuncio(pedido.rascunhoId);
+    if (a?.status === "rascunho") rascunhoAberto = a.id;
   }
 
   const partesUsuario: ParteIA[] = [{ tipo: "texto", texto: pedido.texto || "O que é isto na foto? Quero anunciar." }];
@@ -282,6 +288,7 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
       vende: !!conta?.vitrine,
       palavrasEvitar: moderador.palavras,
       foto: !!pedido.foto,
+      rascunhoId: rascunhoAberto,
     });
 
     for (let volta = 0; ; volta++) {

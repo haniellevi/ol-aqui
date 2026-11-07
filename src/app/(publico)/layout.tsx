@@ -1,5 +1,6 @@
 import { CabecalhoPublico } from "@/components/ui/cabecalho-publico";
 import { BarraInferior } from "@/components/ui/barra-inferior";
+import { BalaoAki } from "@/components/aki/balao-aki";
 
 // Páginas abertas a todos (Início, busca, anúncio, loja...): cabeçalho + conteúdo + barra de baixo.
 export default function LayoutPublico({ children }: { children: React.ReactNode }) {
@@ -10,6 +11,7 @@ export default function LayoutPublico({ children }: { children: React.ReactNode 
         {children}
       </div>
       <BarraInferior />
+      <BalaoAki />
     </>
   );
 }
