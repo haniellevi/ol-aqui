@@ -9,6 +9,7 @@ import { Campo } from "@/components/ui/campo";
 import { Aviso } from "@/components/conta/aviso";
 import { preco } from "@/lib/formato";
 import { documentoValido, mascaraDocumento } from "@/lib/cpf-cnpj";
+import { linkDestacar, linkDestacarLoja } from "@/lib/rotas";
 import {
   comprarDestaque,
   pagarPedidoDestaque,
@@ -60,6 +61,11 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
   const pedidoId = pedido?.status === "aguardando_pagamento" ? pedido.id : null;
 
   const opcao = opcoes.find((o) => o.slug === escolhido) ?? null;
+  // endereço desta tela, com ou sem o pedido (?d=...) para a pessoa poder voltar ao pagamento
+  const enderecoTela = useCallback(
+    (id: string | null) => (anuncioId ? linkDestacar(anuncioId, id) : linkDestacarLoja(id)),
+    [anuncioId],
+  );
   const temCredito = !!opcao && opcao.disponivel && opcao.creditos_restantes > 0;
   const gratis = !!opcao && opcao.disponivel && !temCredito && opcao.preco_centavos === 0;
   const podePagar = !!opcao && opcao.disponivel && pagamentoLigado && opcao.preco_centavos > 0;
@@ -77,6 +83,7 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
     } else {
       setCobranca(r.cobranca);
       setEtapa("aguardando");
+      router.replace(enderecoTela(r.pedido.id), { scroll: false });
     }
   }
 
@@ -184,26 +191,35 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
     setCobranca(null);
     setErro(null);
     setEtapa("escolher");
+    router.replace(enderecoTela(null), { scroll: false });
     router.refresh();
   }
 
   /* ------------------------------ Pronto ------------------------------ */
   if (etapa === "sucesso") {
     const subir = pedido?.tipo === "subir";
+    // home/loja comprado com outro ainda valendo: o novo começa quando o atual acaba
+    const comecaDepois = !!pedido?.inicio && new Date(pedido.inicio).getTime() > Date.now() + 60_000;
     return (
       <section className="flex flex-col items-center gap-4 rounded-card bg-cartao p-6 text-center shadow-1" aria-live="polite">
         <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
           <CheckCircle2 className="size-12" />
         </span>
-        <h2 className="text-2xl font-semibold">Pronto! Seu destaque está ativo.</h2>
+        <h2 className="text-2xl font-semibold">{comecaDepois ? "Pronto! Seu destaque está garantido." : "Pronto! Seu destaque está ativo."}</h2>
         <p className="max-w-sm text-base text-texto-suave">
           {subir
             ? "Seu anúncio voltou para o topo dos mais recentes."
-            : pedido?.fim
-              ? `${pedido.tipo_nome} até ${ate(pedido.fim)}. Ele aparece com a etiqueta "Patrocinado".`
-              : 'Ele aparece com a etiqueta "Patrocinado".'}
+            : comecaDepois && pedido?.fim
+              ? `${pedido.tipo_nome}: começa em ${ate(pedido.inicio)}, quando o destaque de agora acabar, e vai até ${ate(pedido.fim)}. Ele aparece com a etiqueta "Patrocinado".`
+              : pedido?.fim
+                ? `${pedido.tipo_nome} até ${ate(pedido.fim)}. Ele aparece com a etiqueta "Patrocinado".`
+                : 'Ele aparece com a etiqueta "Patrocinado".'}
         </p>
-        <p className="max-w-sm text-sm text-texto-suave">Em Meus anúncios você vê quantas pessoas viram e chamaram no WhatsApp.</p>
+        <p className="max-w-sm text-sm text-texto-suave">
+          {anuncioId
+            ? "Em Meus anúncios você vê quantas pessoas viram e chamaram no WhatsApp."
+            : "Em Minha loja você vê quantas pessoas viram e chamaram no WhatsApp."}
+        </p>
         <Botao href={voltar.href} larguraTotal className="max-w-sm">
           {voltar.texto}
         </Botao>
@@ -213,16 +229,34 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
 
   /* ---------------------------- Cancelado ----------------------------- */
   if (etapa === "cancelado") {
+    // dinheiro chegou mas o destaque não pôde ser ligado: a equipe devolve (não oferece comprar de novo)
+    const pagoSemDestaque = pedido?.pagamento_status === "pago";
     return (
       <section className="flex flex-col items-center gap-4 rounded-card bg-cartao p-6 text-center shadow-1" aria-live="polite">
         <span className="grid size-20 place-items-center rounded-full bg-perigo-fundo text-perigo" aria-hidden>
           <XCircle className="size-12" />
         </span>
-        <h2 className="text-xl font-semibold">Este pagamento não vale mais</h2>
-        <p className="max-w-sm text-base text-texto-suave">O prazo para pagar acabou ou a cobrança foi cancelada. Nada foi cobrado.</p>
-        <Botao larguraTotal className="max-w-sm" onClick={recomecar}>
-          Escolher de novo
-        </Botao>
+        {pagoSemDestaque ? (
+          <>
+            <h2 className="text-xl font-semibold">Recebemos seu pagamento, mas o destaque não pôde ser ligado</h2>
+            <p className="max-w-sm text-base text-texto-suave">
+              A equipe OLAKI vai devolver o seu dinheiro. Se tiver dúvida, fale com a gente.
+            </p>
+            <Botao href={voltar.href} larguraTotal className="max-w-sm">
+              {voltar.texto}
+            </Botao>
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl font-semibold">Este pedido foi cancelado</h2>
+            <p className="max-w-sm text-base text-texto-suave">
+              O prazo para pagar acabou ou o pedido foi cancelado. Se você ainda tem o Pix antigo, não pague: ele não vale mais.
+            </p>
+            <Botao larguraTotal className="max-w-sm" onClick={recomecar}>
+              Escolher de novo
+            </Botao>
+          </>
+        )}
       </section>
     );
   }

@@ -9,3 +9,6 @@ export const linkDestacar = (anuncioId: string, pedidoId?: string | null) =>
 
 /** Tela "Destacar minha loja" (tipo "Loja em destaque"). */
 export const LINK_DESTACAR_LOJA = "/destacar/loja";
+
+/** "Destacar minha loja" retomando um pagamento (?d=<pedido>). */
+export const linkDestacarLoja = (pedidoId?: string | null) => `${LINK_DESTACAR_LOJA}${pedidoId ? `?d=${pedidoId}` : ""}`;

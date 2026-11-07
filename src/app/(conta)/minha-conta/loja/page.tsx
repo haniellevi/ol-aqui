@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { Clock, ExternalLink, Sparkles } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { listarCidades } from "@/lib/dados/regiao";
-import { linkLoja, urlAbsoluta } from "@/lib/formato";
+import { linkLoja, preco, urlAbsoluta } from "@/lib/formato";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
@@ -10,7 +10,7 @@ import { Aviso } from "@/components/conta/aviso";
 import { FormMinhaLoja } from "@/components/conta/form-minha-loja";
 import { DestaquesAtivos } from "@/components/destaques/destaques-ativos";
 import { resultadosDestaques } from "@/lib/dados/destaques";
-import { LINK_DESTACAR_LOJA } from "@/lib/rotas";
+import { LINK_DESTACAR_LOJA, linkDestacarLoja } from "@/lib/rotas";
 
 export const metadata: Metadata = { title: "Minha loja" };
 
@@ -35,6 +35,7 @@ export default async function PaginaMinhaLoja() {
   }
   const [cidades, destaques] = await Promise.all([listarCidades(v.microrregiao_id), resultadosDestaques()]);
   const destaquesLoja = destaques.filter((d) => d.tipo === "loja");
+  const lojaPendente = destaquesLoja.find((d) => d.status === "aguardando_pagamento" && d.pagamento_status === "pendente");
   const endereco = urlAbsoluta(linkLoja(v.slug)).replace(/^https?:\/\//, "");
 
   return (
@@ -65,9 +66,21 @@ export default async function PaginaMinhaLoja() {
             Destacar minha loja
           </h2>
           <p className="text-base text-texto-suave">Sua loja aparece em &quot;Lojas em destaque&quot; na página inicial da sua região.</p>
-          <Botao href={LINK_DESTACAR_LOJA} variante="secundario" larguraTotal icone={<Sparkles />} className="sm:w-fit">
-            Ver opções de destaque
-          </Botao>
+          {lojaPendente ? (
+            <>
+              <p className="flex items-start gap-2 rounded-card bg-aviso-fundo p-3 text-sm font-semibold text-aviso">
+                <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
+                Pagamento pendente: {lojaPendente.tipo_nome} ({preco(lojaPendente.preco_centavos)})
+              </p>
+              <Botao href={linkDestacarLoja(lojaPendente.id)} variante="secundario" larguraTotal className="sm:w-fit">
+                Continuar o pagamento
+              </Botao>
+            </>
+          ) : (
+            <Botao href={LINK_DESTACAR_LOJA} variante="secundario" larguraTotal icone={<Sparkles />} className="sm:w-fit">
+              Ver opções de destaque
+            </Botao>
+          )}
         </section>
       )}
       <DestaquesAtivos lista={destaquesLoja} titulo="Destaques da loja" />
