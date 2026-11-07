@@ -12,6 +12,8 @@ import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { AcoesAnuncio } from "@/components/conta/acoes-anuncio";
 import { Aviso } from "@/components/conta/aviso";
 import { resumoPlano } from "@/components/conta/resumo-plano";
+import { BotaoFixar } from "@/components/vitrine/botao-fixar";
+import { meusFixados, meusRecursosVitrine } from "@/lib/dados/vitrine-completa";
 
 export const metadata: Metadata = { title: "Meus anúncios" };
 
@@ -58,6 +60,10 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
     (contagem.ativos === 0 && contagem.rascunhos > 0 ? ABAS[2] : ABAS[0]);
   const lista = anuncios.filter((x) => (aba.status as readonly StatusAnuncio[]).includes(x.status));
   const plano = resumoPlano(conta);
+  // Loja com "fixar no topo" no plano: botão em cada anúncio no ar (o banco confere o limite)
+  const loja = conta.vitrine.tipo === "loja";
+  const [fixados, recursos] = loja ? await Promise.all([meusFixados(conta.vitrine.id), meusRecursosVitrine()]) : [new Set<string>(), null];
+  const podeFixar = !!recursos && recursos.fixados_max !== 0;
 
   return (
     <PaginaConta>
@@ -99,7 +105,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         <ul className="flex flex-col gap-3">
           {lista.map((a) => (
             <li key={a.id}>
-              <LinhaAnuncio anuncio={a} />
+              <LinhaAnuncio anuncio={a} fixado={fixados.has(a.id)} mostrarFixar={loja && (podeFixar || fixados.has(a.id))} />
             </li>
           ))}
         </ul>
@@ -108,7 +114,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
   );
 }
 
-function LinhaAnuncio({ anuncio: a }: { anuncio: MeuAnuncio }) {
+function LinhaAnuncio({ anuncio: a, fixado = false, mostrarFixar = false }: { anuncio: MeuAnuncio; fixado?: boolean; mostrarFixar?: boolean }) {
   const titulo = a.titulo?.trim() || "Anúncio sem título";
   const rotulo = ROTULO[a.status];
   const capa = a.fotos[0];
@@ -145,6 +151,7 @@ function LinhaAnuncio({ anuncio: a }: { anuncio: MeuAnuncio }) {
             <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${rotulo.cor}`}>{rotulo.texto}</span>
             {destaque && <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-[13px] font-bold text-beringela">Destaque</span>}
             {pago && <span className="rounded-full bg-laranja-claro px-2 py-0.5 text-[13px] font-bold text-laranja-escuro">Avulso pago</span>}
+            {fixado && <span className="rounded-full bg-laranja-claro px-2 py-0.5 text-[13px] font-bold text-beringela">No topo da loja</span>}
           </div>
           <h2 className="line-clamp-2 text-base font-semibold leading-5">
             {publico ? (
@@ -176,6 +183,7 @@ function LinhaAnuncio({ anuncio: a }: { anuncio: MeuAnuncio }) {
       )}
 
       <AcoesAnuncio id={a.id} status={a.status} titulo={titulo} />
+      {mostrarFixar && (a.status === "ativo" || fixado) && <BotaoFixar anuncioId={a.id} fixado={fixado} />}
     </article>
   );
 }
