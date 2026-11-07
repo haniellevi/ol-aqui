@@ -27,30 +27,30 @@ export function FormPlano({ plano }: { plano?: Plano }) {
   return (
     <form action={acao} className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {novo ? (
-        <label className="col-span-2 text-sm font-medium md:col-span-1">
+        <label className="col-span-2 text-sm font-semibold md:col-span-1">
           Código
           <input name="codigo" required placeholder="ex.: ouro" className={estiloCampo} />
         </label>
       ) : (
         <input type="hidden" name="codigo" value={plano.codigo} />
       )}
-      <label className="col-span-2 text-sm font-medium">
+      <label className="col-span-2 text-sm font-semibold">
         Nome
         <input name="nome" required defaultValue={plano?.nome} className={estiloCampo} />
       </label>
-      <label className="text-sm font-medium">
+      <label className="text-sm font-semibold">
         Preço (R$/período)
         <input name="preco" inputMode="decimal" defaultValue={paraReaisInput(plano?.preco_centavos ?? 0)} className={estiloCampo} />
       </label>
-      <label className="text-sm font-medium">
+      <label className="text-sm font-semibold">
         Dias do período
         <input name="periodo_dias" type="number" min={1} defaultValue={plano?.periodo_dias ?? 30} className={estiloCampo} />
       </label>
-      <label className="text-sm font-medium">
+      <label className="text-sm font-semibold">
         Limite de anúncios
         <input name="limite_anuncios" type="number" min={0} placeholder="ilimitado" defaultValue={plano?.limite_anuncios ?? ""} className={estiloCampo} />
       </label>
-      <label className="text-sm font-medium">
+      <label className="text-sm font-semibold">
         Propostas no Radar/mês
         <input
           name="propostas_radar_mes"
@@ -61,7 +61,7 @@ export function FormPlano({ plano }: { plano?: Plano }) {
           className={estiloCampo}
         />
       </label>
-      <label className="text-sm font-medium">
+      <label className="text-sm font-semibold">
         Para quem
         <select name="publico" defaultValue={plano?.publico ?? "todos"} className={estiloCampo}>
           <option value="todos">Todos</option>
@@ -69,11 +69,11 @@ export function FormPlano({ plano }: { plano?: Plano }) {
           <option value="pj">Loja / empresa</option>
         </select>
       </label>
-      <label className="text-sm font-medium">
+      <label className="text-sm font-semibold">
         Ordem na tela
         <input name="ordem" type="number" defaultValue={plano?.ordem ?? 10} className={estiloCampo} />
       </label>
-      <label className="col-span-2 text-sm font-medium md:col-span-4">
+      <label className="col-span-2 text-sm font-semibold md:col-span-4">
         Descrição (aparece para o cliente)
         <input name="descricao" defaultValue={plano?.descricao ?? ""} className={estiloCampo} />
       </label>

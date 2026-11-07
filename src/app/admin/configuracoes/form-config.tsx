@@ -65,7 +65,7 @@ export function FormExcecao({
   const [estado, acao, pendente] = useActionState(criarExcecao, null);
   return (
     <details className="rounded-xl bg-neutral-50 p-3">
-      <summary className="cursor-pointer text-sm font-medium text-neutral-700">Criar exceção para uma região</summary>
+      <summary className="cursor-pointer text-sm font-semibold text-neutral-700">Criar exceção para uma região</summary>
       <form action={acao} className="mt-3 space-y-2">
         <input type="hidden" name="chave" value={chave} />
         <input type="hidden" name="tipo" value={tipo} />

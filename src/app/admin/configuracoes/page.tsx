@@ -44,7 +44,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
           <Link
             key={g}
             href={`/admin/configuracoes?grupo=${g}`}
-            className={`h-12 shrink-0 rounded-full px-4 text-sm font-medium leading-12 ${
+            className={`h-12 shrink-0 rounded-full px-4 text-sm font-semibold leading-12 ${
               g === grupoAtual ? "bg-beringela text-white" : "border border-neutral-200 bg-white text-neutral-700"
             }`}
           >
@@ -71,7 +71,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
                 <ul className="mt-4 space-y-2">
                   {excecoes.map((e) => (
                     <li key={e.id} className="flex items-center gap-3 rounded-xl bg-orange-50 px-3 py-2 text-sm">
-                      <span className="font-medium">{nomesRegiao.get(e.microrregiao_id!) ?? "Região"}:</span>
+                      <span className="font-semibold">{nomesRegiao.get(e.microrregiao_id!) ?? "Região"}:</span>
                       <span className="truncate font-mono text-xs">{valorParaForm(tipoDe(e.valor), e.valor).replace(/\n/g, " · ")}</span>
                       <form action={removerExcecao} className="ml-auto">
                         <input type="hidden" name="id" value={e.id} />
