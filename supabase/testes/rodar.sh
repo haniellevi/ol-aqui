@@ -6,4 +6,5 @@ set -euo pipefail
 cd "$(dirname "$0")"
 psql -q -f 00_simula_supabase.sql
 for m in ../migrations/*.sql; do psql -q -v ON_ERROR_STOP=1 -d olaki -1 -f "$m"; done
-for t in 10_*.sql 20_*.sql 21_*.sql 30_*.sql 40_*.sql 60_*.sql; do echo "===== $t"; psql -d olaki -f "$t"; done
+# todos os arquivos NN_*.sql em ordem (menos o 00, que monta o banco)
+for t in [1-9][0-9]_*.sql; do echo "===== $t"; psql -d olaki -f "$t"; done

@@ -37,7 +37,9 @@ insert into public.configuracoes (chave, valor, grupo, publico, descricao) value
   ('robo.max_ferramentas',          '5',     'robo', false, 'Quantas vezes seguidas o Aki pode usar as funções do site (buscar, rascunho...) numa resposta'),
   ('robo.historico_mensagens',      '12',    'robo', false, 'Quantas mensagens anteriores da conversa o Aki relê a cada pergunta'),
   ('robo.anthropic_esforco',        '"low"', 'robo', false, 'Esforço de raciocínio nos modelos da Anthropic (low, medium, high). Vazio = padrão do modelo'),
-  ('robo.foto_lado_maximo',         '1024',  'robo', true,  'Tamanho máximo (pixels do lado maior) da foto mandada ao Aki')
+  ('robo.foto_lado_maximo',         '1024',  'robo', true,  'Tamanho máximo (pixels do lado maior) da foto mandada ao Aki'),
+  ('robo.foto_max_kb',              '800',   'robo', false, 'Tamanho máximo da foto mandada ao Aki, depois de reduzida no celular (KB)'),
+  ('robo.max_conversa_mensagens',   '80',    'robo', false, 'Quantas mensagens uma conversa pode ter. Passou disso, o Aki começa uma conversa nova')
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------
@@ -206,9 +208,9 @@ as $$
          at time zone 'America/Fortaleza'
 $$;
 
--- Pode mandar mais uma mensagem? Só olha os dados de quem chamou (nunca de outra pessoa).
+-- Checagem interna (não exposta): a pessoa uid pode mandar mais uma mensagem?
 -- Configuração vazia ou inválida = bloqueado (falha fechada).
-create or replace function public.robo_pode_enviar(p_tipo text default 'conversa')
+create or replace function public.robo_checar(p_uid text, p_tipo text)
 returns table (pode boolean, motivo text, usadas_hoje integer, limite_diario integer,
                provedor text, modelo text, microrregiao_id uuid)
 language plpgsql stable security definer
@@ -216,7 +218,6 @@ set search_path = public, extensions
 as $$
 #variable_conflict use_column
 declare
-  uid      text := public.usuario_id();
   v_tipo   text := case when p_tipo = 'foto' then 'foto' else 'conversa' end;
   v_reg    uuid;
   v_prov   text;
@@ -228,18 +229,18 @@ declare
   v_usadas integer;
   v_motivo text;
 begin
-  if uid is null then
+  if p_uid is null then
     return query select false, 'sem_login'::text, 0, 0, null::text, null::text, null::uuid;
     return;
   end if;
-  select p.microrregiao_id into v_reg from public.perfis p where p.id = uid;
+  select p.microrregiao_id into v_reg from public.perfis p where p.id = p_uid;
   if v_reg is null then
     return query select false, 'sem_perfil'::text, 0, 0, null::text, null::text, null::uuid;
     return;
   end if;
 
   select count(*)::int into v_usadas from public.robo_uso u
-   where u.usuario_id = uid and u.tipo in ('conversa', 'foto') and u.criado_em >= public.robo_inicio('dia');
+   where u.usuario_id = p_uid and u.tipo in ('conversa', 'foto') and u.criado_em >= public.robo_inicio('dia');
   v_lim  := public.numero_ou_nulo(public.config('robo.limite_diario_pessoa', v_reg, 'null'));
   v_prov := public.config('robo.provedor_' || v_tipo, v_reg, 'null') #>> '{}';
   v_mod  := public.config('robo.modelo_' || v_tipo, v_reg, 'null') #>> '{}';
@@ -269,6 +270,44 @@ begin
                       greatest(coalesce(floor(v_lim), 0), 0)::int, v_prov, v_mod, v_reg;
 end $$;
 
+-- Pode mandar mais uma mensagem? Só olha os dados de quem chamou (nunca de outra pessoa).
+create or replace function public.robo_pode_enviar(p_tipo text default 'conversa')
+returns table (pode boolean, motivo text, usadas_hoje integer, limite_diario integer,
+               provedor text, modelo text, microrregiao_id uuid)
+language sql stable security definer
+set search_path = public, extensions
+as $$ select * from public.robo_checar(public.usuario_id(), p_tipo) $$;
+
+-- Reserva a vez antes de chamar a IA (só o servidor). Confere de novo e já grava uma linha no
+-- livro-caixa, com trava por pessoa: várias abas ao mesmo tempo não passam do limite do dia.
+-- O custo entra depois, em robo_registrar_resposta(p_uso_id => ...).
+create or replace function public.robo_reservar(p_usuario text, p_tipo text default 'conversa')
+returns table (pode boolean, motivo text, uso_id bigint, usadas_hoje integer, limite_diario integer,
+               provedor text, modelo text)
+language plpgsql security definer
+set search_path = public, extensions
+as $$
+#variable_conflict use_column
+declare
+  c     record;
+  v_id  bigint;
+  v_tipo text := case when p_tipo = 'foto' then 'foto' else 'conversa' end;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
+    raise exception 'Só o servidor do OLAKI reserva o uso do robô.' using errcode = '42501';
+  end if;
+  perform pg_advisory_xact_lock(hashtext('robo_uso:' || coalesce(p_usuario, '')));
+  select * into c from public.robo_checar(p_usuario, v_tipo);
+  if not c.pode then
+    return query select false, c.motivo, null::bigint, c.usadas_hoje, c.limite_diario, c.provedor, c.modelo;
+    return;
+  end if;
+  insert into public.robo_uso (usuario_id, microrregiao_id, tipo, provedor, modelo, erro)
+  values (p_usuario, c.microrregiao_id, v_tipo, left(c.provedor, 40), left(c.modelo, 120), 'em andamento')
+  returning id into v_id;
+  return query select true, null::text, v_id, c.usadas_hoje + 1, c.limite_diario, c.provedor, c.modelo;
+end $$;
+
 -- Textos e limites que a conversa usa, já com a exceção da região de quem chamou.
 -- Não devolve orçamento, gasto nem cotação.
 create or replace function public.robo_ajustes()
@@ -284,7 +323,8 @@ begin
   foreach k in array array['robo.ativo', 'robo.boas_vindas', 'robo.sugestoes', 'robo.temas_proibidos', 'robo.aviso_ia',
                            'robo.max_caracteres_mensagem', 'robo.max_tokens_resposta', 'robo.max_caracteres_resposta',
                            'robo.max_ferramentas', 'robo.historico_mensagens', 'robo.anthropic_esforco',
-                           'robo.foto_lado_maximo', 'moderacao.palavras_bloqueadas'] loop
+                           'robo.foto_lado_maximo', 'robo.foto_max_kb', 'robo.max_conversa_mensagens',
+                           'moderacao.palavras_bloqueadas'] loop
     res := res || jsonb_build_object(k, public.config(k, v_reg, 'null'));
   end loop;
   return res || jsonb_build_object('microrregiao_id', v_reg);
@@ -305,7 +345,8 @@ create or replace function public.robo_registrar_resposta(
   p_pergunta              jsonb default null,
   p_resposta              jsonb default null,
   p_latencia_ms           integer default null,
-  p_erro                  text default null)
+  p_erro                  text default null,
+  p_uso_id                bigint default null)
 returns table (conversa_id uuid, mensagem_id bigint, custo_centavos numeric)
 language plpgsql security definer
 set search_path = public, extensions
@@ -376,12 +417,25 @@ begin
      where c.id = v_conv;
   end if;
 
-  insert into public.robo_uso (usuario_id, microrregiao_id, conversa_id, mensagem_id, tipo, provedor, modelo,
-                               tokens_entrada, tokens_saida, tokens_cache_leitura, tokens_cache_escrita,
-                               custo_centavos, cotacao_dolar, erro)
-  values (p_usuario, v_reg, case when p_tipo <> 'teste' then v_conv end, v_msg, p_tipo,
-          left(coalesce(p_provedor, '?'), 40), left(coalesce(p_modelo, '?'), 120),
-          e, s, cl, ce, v_custo, v_cot, v_erro);
+  if p_uso_id is not null then
+    -- fecha a reserva feita por robo_reservar (não conta duas vezes no limite do dia)
+    update public.robo_uso u
+       set conversa_id = case when p_tipo <> 'teste' then v_conv end, mensagem_id = v_msg,
+           provedor = left(coalesce(p_provedor, '?'), 40), modelo = left(coalesce(p_modelo, '?'), 120),
+           tokens_entrada = e, tokens_saida = s, tokens_cache_leitura = cl, tokens_cache_escrita = ce,
+           custo_centavos = v_custo, cotacao_dolar = v_cot, erro = v_erro
+     where u.id = p_uso_id and u.usuario_id = p_usuario and u.erro = 'em andamento';
+    if not found then
+      raise exception 'Reserva de uso não encontrada.' using errcode = '42501';
+    end if;
+  else
+    insert into public.robo_uso (usuario_id, microrregiao_id, conversa_id, mensagem_id, tipo, provedor, modelo,
+                                 tokens_entrada, tokens_saida, tokens_cache_leitura, tokens_cache_escrita,
+                                 custo_centavos, cotacao_dolar, erro)
+    values (p_usuario, v_reg, case when p_tipo <> 'teste' then v_conv end, v_msg, p_tipo,
+            left(coalesce(p_provedor, '?'), 40), left(coalesce(p_modelo, '?'), 120),
+            e, s, cl, ce, v_custo, v_cot, v_erro);
+  end if;
 
   return query select case when p_tipo <> 'teste' then v_conv end, v_msg, v_custo;
 end $$;
@@ -518,8 +572,8 @@ begin
   end loop;
 end $$;
 
--- Auxiliar interna
-revoke all on function public.robo_inicio(text) from public, anon, authenticated;
+-- Auxiliares internas
+revoke all on function public.robo_inicio(text), public.robo_checar(text, text) from public, anon, authenticated;
 -- Pessoa logada: só sobre ela mesma
 revoke all on function public.robo_pode_enviar(text), public.robo_ajustes(),
                        public.robo_avaliar(bigint, integer, text) from public, anon;
@@ -529,8 +583,10 @@ grant execute on function public.robo_pode_enviar(text), public.robo_ajustes(),
 revoke all on function public.robo_painel(integer) from public, anon;
 grant execute on function public.robo_painel(integer) to authenticated, service_role;
 -- Gravação de uso e de buscas: só o servidor
-revoke all on function public.robo_registrar_resposta(text, uuid, text, text, text, integer, integer, integer, integer, jsonb, jsonb, integer, text)
+revoke all on function public.robo_registrar_resposta(text, uuid, text, text, text, integer, integer, integer, integer, jsonb, jsonb, integer, text, bigint)
   from public, anon, authenticated;
 revoke all on function public.robo_registrar_busca_vazia(text, uuid, text) from public, anon, authenticated;
-grant execute on function public.robo_registrar_resposta(text, uuid, text, text, text, integer, integer, integer, integer, jsonb, jsonb, integer, text),
+revoke all on function public.robo_reservar(text, text) from public, anon, authenticated;
+grant execute on function public.robo_reservar(text, text) to service_role;
+grant execute on function public.robo_registrar_resposta(text, uuid, text, text, text, integer, integer, integer, integer, jsonb, jsonb, integer, text, bigint),
                           public.robo_registrar_busca_vazia(text, uuid, text) to service_role;

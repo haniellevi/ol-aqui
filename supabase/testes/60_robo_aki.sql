@@ -196,5 +196,31 @@ select count(*) as uso_sem_dono from robo_uso where usuario_id is null and model
 \echo '[21] funcoes de gatilho e internas fora da API'
 select has_function_privilege('authenticated', 'public.robo_inicio(text)', 'execute') as inicio_autenticado,
        has_function_privilege('anon', 'public.robo_ajustes()', 'execute') as ajustes_anon,
-       has_function_privilege('authenticated', 'public.robo_registrar_resposta(text, uuid, text, text, text, integer, integer, integer, integer, jsonb, jsonb, integer, text)', 'execute') as registrar_autenticado,
-       has_function_privilege('service_role', 'public.robo_registrar_resposta(text, uuid, text, text, text, integer, integer, integer, integer, jsonb, jsonb, integer, text)', 'execute') as registrar_servidor;
+       has_function_privilege('authenticated', 'public.robo_registrar_resposta(text, uuid, text, text, text, integer, integer, integer, integer, jsonb, jsonb, integer, text, bigint)', 'execute') as registrar_autenticado,
+       has_function_privilege('service_role', 'public.robo_registrar_resposta(text, uuid, text, text, text, integer, integer, integer, integer, jsonb, jsonb, integer, text, bigint)', 'execute') as registrar_servidor;
+
+\echo '[22] reserva antes de chamar a IA: usuario nao reserva (ERRO esperado: permission denied); servidor reserva e fecha'
+reset role; insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values ('user_c60',:'reg2','Caio Aki','5589999996363','Outra','pf');
+update configuracoes set valor='2' where chave='robo.limite_diario_pessoa' and microrregiao_id is null;
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_c60',false) \g /dev/null
+select * from robo_reservar('user_c60', 'conversa');
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select pode, motivo, uso_id is not null as reservou, usadas_hoje, limite_diario from robo_reservar('user_c60', 'conversa');
+select pode, uso_id is not null as reservou, usadas_hoje from robo_reservar('user_c60', 'foto');
+select min(id) as uso1, max(id) as uso2 from robo_uso where usuario_id='user_c60' and erro='em andamento' \gset
+\echo '[22b] terceira reserva no mesmo dia: bloqueada (limite 2), sem linha nova'
+select pode, motivo, uso_id from robo_reservar('user_c60', 'conversa');
+select count(*) as linhas_uso_c from robo_uso where usuario_id='user_c60';
+\echo '[22c] fechar a reserva grava o custo na mesma linha (continua 2 linhas); fechar de novo ou de outra pessoa (2 ERROS esperados: Reserva nao encontrada)'
+select custo_centavos from robo_registrar_resposta('user_c60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 1000, 1000, 0, 0,
+       '{"texto":"oi"}', '{"texto":"Oi!"}', 500, null, :uso1);
+select count(*) as linhas_uso_c, count(*) filter (where erro='em andamento') as abertas, sum(custo_centavos) as custo from robo_uso where usuario_id='user_c60';
+select * from robo_registrar_resposta('user_c60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 1, 1, 0, 0, null, null, null, null, :uso1);
+select * from robo_registrar_resposta('user_adm60', null, 'conversa', 'anthropic', 'claude-haiku-5-5', 1, 1, 0, 0, null, null, null, null, :uso2);
+\echo '[22d] reserva respeita robo desligado na regiao'
+reset role; insert into configuracoes (chave, microrregiao_id, valor, grupo) values ('robo.ativo', :'reg2', 'false', 'robo');
+update configuracoes set valor='20' where chave='robo.limite_diario_pessoa' and microrregiao_id is null;
+set role service_role;
+select pode, motivo, uso_id from robo_reservar('user_c60', 'conversa');
+reset role; select has_function_privilege('authenticated', 'public.robo_checar(text, text)', 'execute') as checar_autenticado,
+                   has_function_privilege('authenticated', 'public.robo_reservar(text, text)', 'execute') as reservar_autenticado;
