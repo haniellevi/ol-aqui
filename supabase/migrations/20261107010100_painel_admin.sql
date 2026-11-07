@@ -54,7 +54,7 @@ create table public.planos (
   ativo                  boolean not null default true,
   asaas_descricao        text,
   atualizado_em          timestamptz not null default now(),
-  atualizado_por         text references public.perfis(id)
+  atualizado_por         text references public.perfis(id) on delete set null
 );
 alter table public.planos enable row level security;
 create policy "planos leitura" on public.planos for select using (ativo or public.e_admin());
@@ -89,7 +89,7 @@ create table public.configuracoes (
   grupo           text not null default 'geral',      -- organiza as abas do painel
   publico         boolean not null default false,     -- true = o site pode ler sem login
   atualizado_em   timestamptz not null default now(),
-  atualizado_por  text references public.perfis(id)
+  atualizado_por  text references public.perfis(id) on delete set null
 );
 create unique index configuracoes_chave_regiao on public.configuracoes (chave, coalesce(microrregiao_id, '00000000-0000-0000-0000-000000000000'));
 alter table public.configuracoes enable row level security;
@@ -407,7 +407,12 @@ begin
     return;
   end if;
 
-  select pf.whatsapp into v_fone from public.perfis pf where pf.id = v_pedido.comprador_id;
+  -- só entrega número confirmado no Clerk (quem troca o número perde a confirmação)
+  select pf.whatsapp into v_fone from public.perfis pf
+   where pf.id = v_pedido.comprador_id and pf.whatsapp_verificado_em is not null;
+  if v_fone is null then
+    raise exception 'O comprador ainda não confirmou o celular. Tente mais tarde.' using errcode = 'P0001';
+  end if;
   return query select 'whatsapp_direto'::text, v_fone,
     format('Olá! Vi seu pedido no Radar do OLAKI: "%s". Tenho uma proposta da loja %s.', v_pedido.titulo, v_vitrine.nome);
 end $$;
@@ -437,23 +442,37 @@ end $$;
 revoke all on function public.escolher_proposta(uuid) from public, anon;
 grant execute on function public.escolher_proposta(uuid) to authenticated;
 
--- A view do Radar ganha o modo e o prazo
+-- A view do Radar ganha o modo e o prazo, e passa a aplicar o bloqueio NO BANCO:
+-- detalhes, atributos e nome do comprador só saem para quem tem acesso ao Radar
+-- (ou para o próprio comprador). A view roda como dona (sem security_invoker)
+-- porque a tabela radar_pedidos e os perfis deixam de ser legíveis por terceiros.
 drop view public.radar_feed;
-create view public.radar_feed
-with (security_invoker = true) as
-select p.id, p.microrregiao_id, p.categoria, p.titulo, p.detalhes, p.preco_max_centavos,
-       p.cidade, p.urgencia, p.atributos, p.total_propostas, p.max_propostas,
+create view public.radar_feed as
+select p.id, p.microrregiao_id, p.categoria, p.titulo,
+       case when acesso.ok then p.detalhes end           as detalhes,
+       p.preco_max_centavos, p.cidade, p.urgencia,
+       case when acesso.ok then p.atributos else '{}'::jsonb end as atributos,
+       p.total_propostas, p.max_propostas,
        p.modo_contato, p.propostas_ate, p.expira_em, p.criado_em,
        pf.selo_negociador_certificado as comprador_certificado,
-       split_part(pf.nome, ' ', 1)     as comprador_primeiro_nome,
+       case when acesso.ok then split_part(pf.nome, ' ', 1) end as comprador_primeiro_nome,
        exists (select 1 from public.radar_propostas rp
                  join public.vitrines_lojas v on v.id = rp.vitrine_id
                 where rp.pedido_id = p.id and v.dono_id = public.usuario_id()) as ja_propus
 from public.radar_pedidos p
 join public.perfis pf on pf.id = p.comprador_id
-where p.status = 'aberto' and p.expira_em > now()
+cross join lateral (select public.tem_plano_pago(public.usuario_id()) or p.comprador_id = public.usuario_id() as ok) acesso
+where public.usuario_id() is not null
+  and p.status = 'aberto' and p.expira_em > now()
   and (p.modo_contato = 'whatsapp_direto' or p.propostas_ate > now());
+revoke all on public.radar_feed from public, anon;
 grant select on public.radar_feed to authenticated;
+
+-- Terceiros não leem mais radar_pedidos nem perfis diretamente (só pela view acima)
+drop policy "radar leitura" on public.radar_pedidos;
+create policy "radar leitura" on public.radar_pedidos
+  for select using (comprador_id = public.usuario_id() or public.e_admin());
+drop policy "perfil comprador no radar" on public.perfis;
 
 -- ---------------------------------------------------------------------
 -- 7. Moderação: filtro automático + denúncias
@@ -509,7 +528,10 @@ create or replace function public.proteger_campos_v2()
 returns trigger language plpgsql
 as $$
 begin
-  if coalesce(auth.role(), 'service_role') = 'service_role' or public.e_admin()
+  -- Só passa direto: chave secreta (role service_role), SQL Editor/funções do sistema
+  -- (usuário postgres) e admins. Token sem 'role' NÃO passa (falha fechada).
+  if coalesce(auth.role(), '') = 'service_role' or current_user in ('postgres', 'supabase_admin', 'service_role')
+     or public.e_admin()
      or current_setting('olaki.sistema', true) = '1' then
     return new;
   end if;
@@ -535,7 +557,7 @@ create table public.denuncias (
   motivo         text not null check (motivo in ('golpe', 'proibido', 'falso', 'ofensivo', 'duplicado', 'outro')),
   detalhes       text check (char_length(detalhes) <= 1000),
   status         text not null default 'aberta' check (status in ('aberta', 'procedente', 'improcedente')),
-  resolvido_por  text references public.perfis(id),
+  resolvido_por  text references public.perfis(id) on delete set null,
   resolvido_em   timestamptz,
   criado_em      timestamptz not null default now(),
   criado_ip      inet default public.ip_requisicao(),
@@ -631,3 +653,64 @@ select r.id, c.nome, c.uf from r, (values
   ('São Gonçalo do Gurguéia', 'PI'), ('Redenção do Gurguéia', 'PI'), ('Bom Jesus', 'PI'), ('Santa Filomena', 'PI'),
   ('Formosa do Rio Preto', 'BA')
 ) as c(nome, uf);
+
+
+-- ---------------------------------------------------------------------
+-- 10. Endurecimento (revisão de segurança de 07/11/2026)
+-- ---------------------------------------------------------------------
+
+-- Visitante (anon) só lê. Escrita exige token do Clerk com role=authenticated.
+revoke insert, update, delete, truncate on all tables in schema public from anon;
+alter default privileges in schema public revoke insert, update, delete, truncate on tables from anon;
+
+-- No cadastro (INSERT), campos de sistema sempre recebem o valor padrão,
+-- não importa o que o navegador mande. O BEFORE UPDATE já protegia a edição.
+create or replace function public.proteger_insercao()
+returns trigger language plpgsql
+as $$
+begin
+  if coalesce(auth.role(), '') = 'service_role' or current_user in ('postgres', 'supabase_admin', 'service_role')
+     or public.e_admin() then
+    return new;
+  end if;
+
+  if tg_table_name = 'perfis' then
+    new.e_admin := false;
+    new.selo_negociador_certificado := false;
+    new.whatsapp_verificado_em := null;
+    new.criado_em := now();
+  elsif tg_table_name = 'vitrines_lojas' then
+    new.plano := 'teste';
+    new.status := 'ativa';
+    new.teste_expira_em := now() + make_interval(days => coalesce((public.config('teste.dias', new.microrregiao_id, '30'))::int, 30));
+    new.plano_expira_em := null;
+    new.gateway_cliente_id := null;
+    new.gateway_assinatura_id := null;
+    new.selo_loja_verificada := false;
+    new.criado_em := now();
+  elsif tg_table_name = 'anuncios' then
+    if new.status not in ('rascunho', 'ativo') then new.status := 'ativo'; end if;
+    new.pago_ate := null;
+    new.destaque_ate := null;
+    new.visualizacoes := 0;
+    new.cliques_whatsapp := 0;
+    new.total_favoritos := 0;
+    new.congelado_motivo := null;
+    new.motivo_analise := null;
+    new.criado_em := now();
+  elsif tg_table_name = 'radar_pedidos' then
+    new.status := 'aberto';
+    new.total_propostas := 0;
+    new.resumo_enviado_em := null;
+    new.motivo_analise := null;
+    new.criado_em := now();
+  end if;
+  return new;
+end $$;
+
+-- Nomes com "0" para rodar ANTES dos outros gatilhos (limite, moderação, padrões),
+-- que o Postgres executa em ordem alfabética.
+create trigger perfis_0_proteger    before insert on public.perfis         for each row execute function public.proteger_insercao();
+create trigger vitrines_0_proteger  before insert on public.vitrines_lojas for each row execute function public.proteger_insercao();
+create trigger anuncios_0_proteger  before insert on public.anuncios       for each row execute function public.proteger_insercao();
+create trigger radar_0_proteger     before insert on public.radar_pedidos  for each row execute function public.proteger_insercao();

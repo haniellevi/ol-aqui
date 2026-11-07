@@ -116,7 +116,7 @@ create table public.perfis_verificacoes (
   arquivo_path    text,                    -- caminho no bucket privado 'verificacoes'
   valor_hash      text,                    -- hash do CPF/CNPJ/telefone, nunca o valor puro
   status          public.status_verificacao not null default 'pendente',
-  analisado_por   text references public.perfis(id),
+  analisado_por   text references public.perfis(id) on delete set null,
   analisado_em    timestamptz,
   motivo_recusa   text,
   criado_em       timestamptz not null default now(),
@@ -475,7 +475,10 @@ returns trigger language plpgsql
 as $$
 begin
   -- service_role (webhooks de pagamento, painel admin) e admins passam direto
-  if coalesce(auth.role(), 'service_role') = 'service_role' or public.e_admin()
+  -- Só passa direto: chave secreta (role service_role), SQL Editor/funções do sistema
+  -- (usuário postgres) e admins. Token sem 'role' NÃO passa (falha fechada).
+  if coalesce(auth.role(), '') = 'service_role' or current_user in ('postgres', 'supabase_admin', 'service_role')
+     or public.e_admin()
      or current_setting('olaki.sistema', true) = '1' then
     return new;
   end if;
