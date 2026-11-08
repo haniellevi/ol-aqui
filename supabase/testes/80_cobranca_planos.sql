@@ -355,3 +355,9 @@ select confirmar_pagamento('pay_80_av3') \g /dev/null
 select status, pago_ate > now() as pago from anuncios where id=:'a_dois';
 select cancelar_pagamento('pay_80_av3', 'estornado') \g /dev/null
 select status as continua, pago_ate <= now() as sem_tempo from anuncios where id=:'a_dois';
+
+\echo '[31] sem segunda ligacao vitrines_lojas->planos/pagamentos (a API embute vitrines_lojas(nome) em pagamentos): esperado 0 e 1'
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select count(*) filter (where confrelid = 'public.pagamentos'::regclass) as vitrine_para_pagamentos,
+       count(*) filter (where confrelid = 'public.planos'::regclass) as vitrine_para_planos
+  from pg_constraint where conrelid = 'public.vitrines_lojas'::regclass and contype = 'f';

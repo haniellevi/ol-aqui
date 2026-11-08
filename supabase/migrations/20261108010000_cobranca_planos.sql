@@ -41,11 +41,15 @@ alter table public.pagamentos
   add column criado_por       text references public.perfis(id) on delete set null;
 create index pagamentos_tipo_status_idx on public.pagamentos (tipo, status, criado_em desc);
 
--- Plano menor já pago que começa quando o período atual acaba (troca para baixo)
+-- Plano menor já pago que começa quando o período atual acaba (troca para baixo).
+-- Sem chave estrangeira de propósito: uma segunda ligação vitrines_lojas↔planos e
+-- vitrines_lojas↔pagamentos deixaria ambíguos os "select" com tabela embutida da API
+-- (ex.: pagamentos?select=vitrines_lojas(nome)). Só o sistema grava estas colunas
+-- (gatilho vitrines_3_proteger_assinatura), sempre com plano e pagamento que existem.
 alter table public.vitrines_lojas
-  add column plano_proximo              text references public.planos(codigo),
+  add column plano_proximo              text,
   add column plano_proximo_ate          timestamptz,
-  add column plano_proximo_pagamento_id uuid references public.pagamentos(id) on delete set null,
+  add column plano_proximo_pagamento_id uuid,
   add constraint vitrines_proximo_junto check ((plano_proximo is null) = (plano_proximo_ate is null));
 
 -- O dono não grava o plano marcado para depois (só o sistema e o admin)
@@ -105,7 +109,8 @@ returns public.vitrines_lojas language plpgsql stable
 set search_path = public, extensions
 as $$
 begin
-  if v.plano_proximo is not null and coalesce(v.plano_expira_em, '-infinity'::timestamptz) <= now() then
+  if v.plano_proximo is not null and coalesce(v.plano_expira_em, '-infinity'::timestamptz) <= now()
+     and exists (select 1 from public.planos x where x.codigo = v.plano_proximo) then
     v.plano := v.plano_proximo;
     v.plano_expira_em := v.plano_proximo_ate;
     v.plano_proximo := null;
@@ -129,10 +134,17 @@ begin
     return;
   end if;
   perform set_config('olaki.sistema', '1', true);
-  update public.vitrines_lojas
-     set plano = v.plano_proximo, plano_expira_em = v.plano_proximo_ate,
-         plano_proximo = null, plano_proximo_ate = null, plano_proximo_pagamento_id = null
-   where id = v.id;
+  if exists (select 1 from public.planos x where x.codigo = v.plano_proximo) then
+    update public.vitrines_lojas
+       set plano = v.plano_proximo, plano_expira_em = v.plano_proximo_ate,
+           plano_proximo = null, plano_proximo_ate = null, plano_proximo_pagamento_id = null
+     where id = v.id;
+  else
+    -- o plano marcado saiu da tabela: desmarca (sem quebrar a rotina diária)
+    update public.vitrines_lojas
+       set plano_proximo = null, plano_proximo_ate = null, plano_proximo_pagamento_id = null
+     where id = v.id;
+  end if;
   perform set_config('olaki.sistema', antes, true);
 end $$;
 
