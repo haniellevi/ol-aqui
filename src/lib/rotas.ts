@@ -57,3 +57,9 @@ export const linkDocumentoLegal = (tipo: "termos" | "privacidade", versao?: numb
 export const LINK_AKI = "/aki";
 export const LINK_ENTRAR_PERFIL = "/entrar/perfil";
 export const LINK_ADMIN_TEXTOS = "/admin/textos";
+
+/** Painel: telas 7 (regiões e cidades) e 9 (categorias e campos). */
+export const LINK_ADMIN_REGIOES = "/admin/regioes";
+export const linkAdminRegiao = (id: string) => `${LINK_ADMIN_REGIOES}/${id}`;
+export const LINK_ADMIN_CATEGORIAS = "/admin/categorias";
+export const linkAdminCategoria = (id: string) => `${LINK_ADMIN_CATEGORIAS}/${id}`;
