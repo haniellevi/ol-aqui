@@ -1,4 +1,4 @@
-// Tipos dos destaques pagos (migração 20261107030000_destaques.sql).
+// Tipos dos destaques pagos (migração 20261107030500_destaques.sql).
 // Arquivo separado de tipos.ts para não misturar com as outras partes do sistema.
 
 /** Os 4 tipos. O comportamento de cada um está no banco; nome, preço, dias e vagas vêm do painel. */

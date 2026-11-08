@@ -1,7 +1,7 @@
 \set ON_ERROR_STOP 0
 \set QUIET on
 \pset footer off
--- Destaques pagos (migração 20261107030000_destaques.sql).
+-- Destaques pagos (migração 20261107030500_destaques.sql).
 -- Cada bloco [n] diz o que deve acontecer. "ERRO esperado" = a linha ERROR logo abaixo é o certo.
 
 -- Preparação (como o sistema)
