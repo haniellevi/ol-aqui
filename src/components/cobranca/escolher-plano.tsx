@@ -101,7 +101,6 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
         </Aviso>
       ) : opcao && opcao.disponivel ? (
         <FluxoCobranca
-          key={pagamentoInicial?.id ?? "novo"}
           valorCentavos={opcao.valor_centavos}
           precisaDocumento={precisaDocumento}
           pagamentoInicial={pagamentoInicial?.tipo === "assinatura" ? pagamentoInicial : null}

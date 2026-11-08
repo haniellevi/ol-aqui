@@ -26,7 +26,9 @@ Sem `ASAAS_API_KEY` tudo mostra "Pagamento em breve" e o painel continua dando c
 | `vitrines_lojas` | `plano_proximo`, `plano_proximo_ate`, `plano_proximo_pagamento_id` | Plano menor já pago que começa quando o período atual acaba |
 
 As colunas novas da vitrine são protegidas pelo gatilho `vitrines_3_proteger_assinatura` (só o sistema/admin
-grava; o dono não forja). `pagamentos` continua sem INSERT/UPDATE para o usuário (só leitura do dono e do admin).
+grava; o dono não forja). Elas **não têm chave estrangeira** de propósito: uma segunda ligação
+vitrines_lojas↔pagamentos/planos deixaria ambíguo o `select` com tabela embutida da API (ex.:
+`pagamentos?select=vitrines_lojas(nome)`, usado no painel de destaques). Plano marcado que sumiu da tabela é desmarcado. `pagamentos` continua sem INSERT/UPDATE para o usuário (só leitura do dono e do admin).
 
 ### Tabela nova
 
@@ -116,6 +118,11 @@ Todas SECURITY DEFINER com `search_path = public, extensions`, conferem `usuario
 | `/admin/pagamentos/csv` | Rota do servidor, só admin (confere `e_admin` com o token do admin; RLS também barra), `;` e BOM para abrir no Excel, protegido contra fórmula em célula |
 | `/admin/lojas` | Tela 5: lista de lojas e vendedores com plano, vencimento, anúncios no ar, propostas usadas, situação; ações com motivo; verificações pendentes |
 
-Código: `src/lib/cobranca-pagamento.ts` (núcleo comum de cobrança no Asaas, usado também pelos destaques),
-`src/lib/dados/cobranca.ts`, `src/app/(conta)/pagar/actions.ts`, `src/components/cobranca/*`, tipos em
+Código: `src/lib/cobranca-pagamento.ts` (núcleo comum de cobrança no Asaas, usado também pelos destaques:
+`cobranca-destaque.ts` só chama o núcleo), `src/lib/dados/cobranca.ts`, `src/app/(conta)/pagar/actions.ts`,
+`src/components/cobranca/*` (fluxo de pagamento, escolher plano, avulso), `src/lib/admin/pagamentos.ts` (filtros
+da tela 6, usados pela lista e pelo CSV), `src/app/admin/lojas/*`, `src/app/admin/pagamentos/*`, tipos em
 `src/lib/tipos-cobranca.ts`. Testes do banco: `supabase/testes/80_cobranca_planos.sql`.
+
+Fica para depois: reenviar o link pelo WhatsApp (fase 2; hoje é "Copiar link"), envio de documentos e bucket
+privado `verificacoes`, lembrete de renovação por mensagem (tela 13).
