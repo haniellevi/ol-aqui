@@ -1,8 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Eye, Heart, ImageOff, MessageCircle, Plus } from "lucide-react";
+import { BarChart3, Clock, Eye, Heart, ImageOff, MessageCircle, Plus } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { meusAnuncios } from "@/lib/dados/anuncios";
+import { fraseResultado, resultadosDestaques } from "@/lib/dados/destaques";
+import type { ResultadoDestaque } from "@/lib/tipos-destaques";
+import { linkDestacar } from "@/lib/rotas";
 import { inteiro, linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
 import type { MeuAnuncio, StatusAnuncio } from "@/lib/tipos";
 import { Botao } from "@/components/ui/botao";
@@ -36,7 +39,7 @@ const ROTULO: Record<StatusAnuncio, { texto: string; cor: string }> = {
 };
 
 export default async function PaginaMeusAnuncios({ searchParams }: { searchParams: Promise<{ aba?: string | string[] }> }) {
-  const [sp, conta, anuncios] = await Promise.all([searchParams, meuPerfilEVitrine(), meusAnuncios()]);
+  const [sp, conta, anuncios, destaques] = await Promise.all([searchParams, meuPerfilEVitrine(), meusAnuncios(), resultadosDestaques()]);
 
   if (!conta?.vitrine) {
     return (
@@ -58,6 +61,18 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
     (contagem.ativos === 0 && contagem.rascunhos > 0 ? ABAS[2] : ABAS[0]);
   const lista = anuncios.filter((x) => (aba.status as readonly StatusAnuncio[]).includes(x.status));
   const plano = resumoPlano(conta);
+  // resultado do destaque mais recente de cada anúncio (ativo ou que já acabou)
+  const ultimoDestaque = new Map<string, ResultadoDestaque>();
+  for (const d of destaques) {
+    if (d.anuncio_id && (d.status === "ativo" || d.status === "encerrado") && !ultimoDestaque.has(d.anuncio_id)) ultimoDestaque.set(d.anuncio_id, d);
+  }
+  // pedido de destaque esperando pagamento (o mais recente de cada anúncio): botão para continuar
+  const pagamentoPendente = new Map<string, ResultadoDestaque>();
+  for (const d of destaques) {
+    if (d.anuncio_id && d.status === "aguardando_pagamento" && d.pagamento_status === "pendente" && !pagamentoPendente.has(d.anuncio_id)) {
+      pagamentoPendente.set(d.anuncio_id, d);
+    }
+  }
 
   return (
     <PaginaConta>
@@ -99,7 +114,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         <ul className="flex flex-col gap-3">
           {lista.map((a) => (
             <li key={a.id}>
-              <LinhaAnuncio anuncio={a} />
+              <LinhaAnuncio anuncio={a} destaque={ultimoDestaque.get(a.id)} pendente={pagamentoPendente.get(a.id)} />
             </li>
           ))}
         </ul>
@@ -108,7 +123,15 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
   );
 }
 
-function LinhaAnuncio({ anuncio: a }: { anuncio: MeuAnuncio }) {
+function LinhaAnuncio({
+  anuncio: a,
+  destaque: d,
+  pendente: p,
+}: {
+  anuncio: MeuAnuncio;
+  destaque?: ResultadoDestaque;
+  pendente?: ResultadoDestaque;
+}) {
   const titulo = a.titulo?.trim() || "Anúncio sem título";
   const rotulo = ROTULO[a.status];
   const capa = a.fotos[0];
@@ -173,6 +196,27 @@ function LinhaAnuncio({ anuncio: a }: { anuncio: MeuAnuncio }) {
           <Numero icone={<MessageCircle />} rotulo="cliques no WhatsApp" valor={a.cliques_whatsapp} />
           <Numero icone={<Heart />} rotulo="favoritos" valor={a.total_favoritos} />
         </dl>
+      )}
+
+      {d && (
+        <p className="flex items-start gap-2 rounded-card bg-laranja-claro p-2 text-sm">
+          <BarChart3 className="mt-0.5 size-4 shrink-0 text-laranja-escuro" aria-hidden />
+          <span>
+            {d.status === "ativo" ? `${d.tipo_nome}: seu destaque` : `Seu último destaque (${d.tipo_nome})`} teve {fraseResultado(d)}.
+          </span>
+        </p>
+      )}
+
+      {p && a.status === "ativo" && (
+        <div className="flex flex-col gap-2 rounded-card bg-aviso-fundo p-3">
+          <p className="flex items-start gap-2 text-sm font-semibold text-aviso">
+            <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
+            Pagamento pendente: {p.tipo_nome} ({preco(p.preco_centavos)})
+          </p>
+          <Botao href={linkDestacar(a.id, p.id)} variante="secundario" larguraTotal className="sm:w-fit">
+            Continuar o pagamento
+          </Botao>
+        </div>
       )}
 
       <AcoesAnuncio id={a.id} status={a.status} titulo={titulo} />

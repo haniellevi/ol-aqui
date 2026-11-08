@@ -7,6 +7,7 @@ import { ehUuid, linkAnuncio, urlAbsoluta } from "@/lib/formato";
 import { Botao } from "@/components/ui/botao";
 import { BotaoNovoRascunho } from "@/components/anunciar/botao-novo-rascunho";
 import { urlPasso } from "@/components/anunciar/passos";
+import { linkDestacar } from "@/lib/rotas";
 
 export const metadata: Metadata = { title: "Anúncio publicado" };
 
@@ -69,11 +70,11 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
         </Botao>
         <BotaoNovoRascunho variante="secundario" texto="Anunciar outro" />
         <div className="flex flex-col gap-1 rounded-card bg-cartao p-3 shadow-1">
-          <Botao variante="secundario" larguraTotal disabled icone={<Sparkles />} aria-describedby="destacar-em-breve">
+          <Botao href={linkDestacar(anuncio.id)} variante="secundario" larguraTotal icone={<Sparkles />} aria-describedby="destacar-dica">
             Destacar
           </Botao>
-          <p id="destacar-em-breve" className="text-sm text-texto-suave">
-            Em breve: destacar põe seu anúncio no topo da busca.
+          <p id="destacar-dica" className="text-sm text-texto-suave">
+            Quer que mais gente veja? Destacar põe seu anúncio na frente.
           </p>
         </div>
       </div>
