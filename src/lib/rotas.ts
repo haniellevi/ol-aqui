@@ -57,3 +57,7 @@ export const linkDocumentoLegal = (tipo: "termos" | "privacidade", versao?: numb
 export const LINK_AKI = "/aki";
 export const LINK_ENTRAR_PERFIL = "/entrar/perfil";
 export const LINK_ADMIN_TEXTOS = "/admin/textos";
+
+/** Painel: telas 13 (mensagens automáticas) e 15 (relatórios). */
+export const LINK_ADMIN_MENSAGENS = "/admin/mensagens";
+export const LINK_ADMIN_RELATORIOS = "/admin/relatorios";

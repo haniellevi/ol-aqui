@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, FileText, LayoutDashboard, Receipt, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags } from "lucide-react";
+import { BarChart3, Bot, FileText, LayoutDashboard, MessageSquareText, Receipt, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags } from "lucide-react";
 
 const ITENS = [
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
@@ -14,6 +14,8 @@ const ITENS = [
   { href: "/admin/destaques", rotulo: "Destaques", icone: Sparkles },
   { href: "/admin/robo", rotulo: "Robô Aki", curto: "Aki", icone: Bot },
   { href: "/admin/textos", rotulo: "Página inicial e textos", curto: "Textos", icone: FileText },
+  { href: "/admin/mensagens", rotulo: "Mensagens automáticas", curto: "Msgs.", icone: MessageSquareText },
+  { href: "/admin/relatorios", rotulo: "Relatórios", curto: "Relat.", icone: BarChart3 },
 ];
 
 export function NavAdmin({ pendencias }: { pendencias: number }) {
