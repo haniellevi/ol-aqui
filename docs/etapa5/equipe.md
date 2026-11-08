@@ -75,3 +75,8 @@ Fluxo: abrir a tela grava um acesso. Para ver qualquer dado, a pessoa escreve o 
 
 ## 4. Sem variável nova
 Usa `CLERK_SECRET_KEY` (já existe) para buscar por e-mail. Nenhuma chave no banco.
+
+## 5. Pontos em aberto (para o Raniel decidir)
+- IP no histórico: o banco grava o IP que chega no Supabase. Como o site fala com o banco pelo servidor da Vercel, em muitas ações esse IP pode ser o do servidor, não o da pessoa. Para o Marco Civil ficar redondo, o próximo passo é o servidor repassar o IP real (cabeçalho) em cada gravação e, se possível, a porta (Cloudflare na frente, ver ARQUITETURA.md).
+- Franqueado: por enquanto só vê a lista de lojas da região dele. Resumo da região e moderação da região podem entrar depois, quando o modelo de franquia for decidido.
+- Menu do painel no celular: com 11 telas, os botões de baixo ficam estreitos. Vale trocar por um menu que rola para o lado ou um botão "Mais".

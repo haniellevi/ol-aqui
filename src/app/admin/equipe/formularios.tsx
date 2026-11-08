@@ -7,7 +7,7 @@ import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { classesChip } from "@/components/ui/chip";
 import { telefone } from "@/lib/formato";
-import { NOME_PAPEL, O_QUE_FAZ, PAPEIS, type ContaEncontrada, type Papel, type Regiao } from "@/lib/tipos-equipe";
+import { NOME_PAPEL, O_QUE_FAZ, PAPEIS, type Papel, type Regiao } from "@/lib/tipos-equipe";
 import { buscarConta, desativarMembro, salvarMembro, type EstadoEquipe } from "./actions";
 
 // Formulários da tela 14. Cada botão gira e troca o texto enquanto salva (sem toque duplo).
