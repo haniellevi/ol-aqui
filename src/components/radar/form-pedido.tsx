@@ -9,6 +9,7 @@ import { Chip } from "@/components/ui/chip";
 import { Botao } from "@/components/ui/botao";
 import { criarPedido } from "@/app/radar/actions";
 import { linkMeuPedidoRadar } from "@/lib/rotas";
+import { whatsappDigitado } from "@/lib/formato";
 import type { ModoContato, RegrasRadar } from "@/lib/tipos-radar";
 import { dataHoraCurta, rotuloPrazo } from "./util";
 
@@ -18,11 +19,14 @@ type Props = {
   cidades: string[];
   cidadeInicial: string | null;
   regras: RegrasRadar;
+  /** Celular ainda não confirmado e o painel não exige o código: pede o WhatsApp aqui. */
+  pedirWhatsapp?: boolean;
+  whatsappInicial?: string;
 };
 
 const ROTULO_GRUPO = "text-base font-semibold text-texto";
 
-export function FormPedido({ textoInicial, categorias, cidades, cidadeInicial, regras }: Props) {
+export function FormPedido({ textoInicial, categorias, cidades, cidadeInicial, regras, pedirWhatsapp = false, whatsappInicial = "" }: Props) {
   const router = useRouter();
   const [titulo, setTitulo] = useState(textoInicial);
   const [detalhes, setDetalhes] = useState("");
@@ -30,6 +34,7 @@ export function FormPedido({ textoInicial, categorias, cidades, cidadeInicial, r
   const [precoMin, setPrecoMin] = useState("");
   const [precoMax, setPrecoMax] = useState("");
   const [cidade, setCidade] = useState<string | null>(cidadeInicial);
+  const [whatsapp, setWhatsapp] = useState(whatsappInicial);
   const [modo, setModo] = useState<ModoContato>("whatsapp_direto");
   const [prazo, setPrazo] = useState<number | null>(regras.prazosHoras[1] ?? regras.prazosHoras[0] ?? null);
   const [erro, setErro] = useState<{ texto: string; campo?: string; celular?: boolean } | null>(null);
@@ -47,8 +52,21 @@ export function FormPedido({ textoInicial, categorias, cidades, cidadeInicial, r
     if (titulo.trim().length < 3) return setErro({ texto: "Escreva o que você procura.", campo: "titulo" });
     if (!cidade) return setErro({ texto: "Escolha a cidade.", campo: "cidade" });
     if (modo === "propostas_prazo" && !prazo) return setErro({ texto: "Escolha até quando quer receber propostas.", campo: "prazo" });
+    if (pedirWhatsapp && !whatsappDigitado(whatsapp)) {
+      return setErro({ texto: "Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.", campo: "whatsapp" });
+    }
     iniciar(async () => {
-      const r = await criarPedido({ titulo, detalhes, categoriaId, precoMin, precoMax, cidade, modo, prazoHoras: prazo });
+      const r = await criarPedido({
+        titulo,
+        detalhes,
+        categoriaId,
+        precoMin,
+        precoMax,
+        cidade,
+        modo,
+        prazoHoras: prazo,
+        whatsapp: pedirWhatsapp ? whatsapp : undefined,
+      });
       if (!r.ok) {
         setErro({ texto: r.erro, campo: r.campo, celular: r.precisaCelular });
         return;
@@ -58,7 +76,7 @@ export function FormPedido({ textoInicial, categorias, cidades, cidadeInicial, r
   }
 
   const erroDe = (campo: string) => (erro?.campo === campo ? erro.texto : null);
-  const erroGeral = erro && !["titulo", "detalhes", "cidade", "prazo", "preco_min_centavos", "preco_max_centavos"].includes(erro.campo ?? "") ? erro : null;
+  const erroGeral = erro && !["titulo", "detalhes", "cidade", "prazo", "preco_min_centavos", "preco_max_centavos", "whatsapp"].includes(erro.campo ?? "") ? erro : null;
 
   return (
     <form onSubmit={enviar} className="flex flex-col gap-6" noValidate>
@@ -184,6 +202,22 @@ export function FormPedido({ textoInicial, categorias, cidades, cidadeInicial, r
           </div>
         )}
       </fieldset>
+
+      {pedirWhatsapp && (
+        <Campo
+          rotulo="Seu WhatsApp"
+          name="whatsapp"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel-national"
+          value={whatsapp}
+          onChange={(e) => setWhatsapp(e.target.value)}
+          placeholder="(89) 99999-0000"
+          maxLength={20}
+          erro={erroDe("whatsapp")}
+          dica="Com DDD. É por ele que as lojas falam com você."
+        />
+      )}
 
       {erroGeral && (
         <div role="alert" className="flex flex-col gap-2 rounded-card bg-perigo-fundo p-4 text-base font-semibold text-perigo">
