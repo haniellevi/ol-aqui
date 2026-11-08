@@ -62,3 +62,9 @@ export const LINK_ADMIN_TEXTOS = "/admin/textos";
 export const LINK_ADMIN_EQUIPE = "/admin/equipe";
 export const LINK_ADMIN_COMPLIANCE = "/admin/compliance";
 export const linkRelatorioCompliance = (relatorioId: string) => `/admin/compliance/relatorio/${relatorioId}`;
+
+/** Painel: telas 7 (regiões e cidades) e 9 (categorias e campos). */
+export const LINK_ADMIN_REGIOES = "/admin/regioes";
+export const linkAdminRegiao = (id: string) => `${LINK_ADMIN_REGIOES}/${id}`;
+export const LINK_ADMIN_CATEGORIAS = "/admin/categorias";
+export const linkAdminCategoria = (id: string) => `${LINK_ADMIN_CATEGORIAS}/${id}`;
