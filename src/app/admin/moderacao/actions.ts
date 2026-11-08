@@ -21,7 +21,7 @@ function voltar(falha: string | null, aviso?: string): never {
 }
 
 export async function decidirAnuncio(form: FormData): Promise<void> {
-  const { supabase } = await exigirTela("moderacao");
+  const { supabase, userId } = await exigirTela("moderacao");
   const id = String(form.get("id") ?? "");
   const decisao = String(form.get("decisao")) as Decisao;
   const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
@@ -34,7 +34,6 @@ export async function decidirAnuncio(form: FormData): Promise<void> {
   if (error) voltar(traduzirErro(error).mensagem);
   if (decisao === "congelar") {
     // congelar (só administrador) não fecha as denúncias sozinho: ficam como procedentes
-    const { userId } = await exigirTela("moderacao");
     await supabase
       .from("denuncias")
       .update({ status: "procedente", resolvido_por: userId, resolvido_em: new Date().toISOString() })
