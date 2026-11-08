@@ -1,7 +1,8 @@
 // Converte valores das configurações entre o banco (jsonb) e os campos do painel.
-export type TipoValor = "numero" | "texto" | "lista" | "mapa" | "json";
+export type TipoValor = "numero" | "texto" | "lista" | "mapa" | "json" | "simnao";
 
 export function tipoDe(valor: unknown): TipoValor {
+  if (typeof valor === "boolean") return "simnao";
   if (typeof valor === "number") return "numero";
   if (typeof valor === "string" || valor === null) return "texto";
   if (Array.isArray(valor) && valor.every((v) => typeof v === "string")) return "lista";
@@ -20,6 +21,9 @@ export function valorDoForm(tipo: TipoValor, bruto: string): unknown {
     }
     case "texto":
       return t === "" ? null : t;
+    case "simnao":
+      if (t !== "true" && t !== "false") throw new Error("Escolha Sim ou Não.");
+      return t === "true";
     case "lista":
       return t
         .split("\n")
@@ -48,6 +52,7 @@ export function valorDoForm(tipo: TipoValor, bruto: string): unknown {
 export function valorParaForm(tipo: TipoValor, valor: unknown): string {
   switch (tipo) {
     case "numero":
+    case "simnao":
       return String(valor);
     case "texto":
       return (valor as string | null) ?? "";
@@ -73,3 +78,33 @@ export const NOMES_GRUPO: Record<string, string> = {
 
 /** Dica exibida embaixo de campos em centavos. */
 export const emCentavos = (chave: string) => chave.includes("centavos");
+
+export type Opcao = { valor: string; nome: string };
+
+/** Configurações de texto que só aceitam valores fixos: aparecem como lista de escolha. */
+export const OPCOES_FIXAS: Record<string, Opcao[]> = {
+  "asaas.ambiente": [
+    { valor: "sandbox", nome: "Teste (sandbox): não cobra de verdade" },
+    { valor: "producao", nome: "Produção: cobra de verdade" },
+  ],
+  "robo.provedor_conversa": PROVEDORES(),
+  "robo.provedor_foto": PROVEDORES(),
+  "robo.anthropic_esforco": [
+    { valor: "low", nome: "Baixo (mais barato e rápido)" },
+    { valor: "medium", nome: "Médio" },
+    { valor: "high", nome: "Alto (mais caro)" },
+  ],
+};
+
+function PROVEDORES(): Opcao[] {
+  return [
+    { valor: "anthropic", nome: "Anthropic" },
+    { valor: "openrouter", nome: "OpenRouter" },
+    { valor: "openai", nome: "OpenAI" },
+  ];
+}
+
+/** Configurações que guardam o código de um plano: as opções vêm da tabela planos. */
+export const CHAVES_DE_PLANO = new Set(["pf.plano_apos_teste", "pf.plano_inicial", "loja.plano_teste"]);
+/** Configurações que guardam um modelo do catálogo do robô. */
+export const CHAVES_DE_MODELO = new Set(["robo.modelo_conversa", "robo.modelo_foto"]);

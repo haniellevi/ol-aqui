@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { exigirAdmin } from "@/lib/admin/auth";
-import { NOMES_GRUPO, tipoDe, valorParaForm } from "@/lib/admin/config";
+import { CHAVES_DE_MODELO, CHAVES_DE_PLANO, NOMES_GRUPO, OPCOES_FIXAS, tipoDe, valorParaForm, type Opcao } from "@/lib/admin/config";
 import { quando } from "@/lib/admin/formato";
 import { Cartao, Titulo } from "@/components/admin/ui";
 import { removerExcecao } from "./actions";
@@ -21,10 +21,16 @@ type Config = {
 
 export default async function ConfiguracoesPage({ searchParams }: { searchParams: Promise<{ grupo?: string }> }) {
   const { supabase } = await exigirAdmin();
-  const [{ data: configs }, { data: regioes }] = await Promise.all([
+  const [{ data: configs }, { data: regioes }, { data: planos }, { data: modelos }] = await Promise.all([
     supabase.from("configuracoes").select("*").order("chave"),
     supabase.from("microrregioes").select("id, nome").order("nome"),
+    supabase.from("planos").select("codigo, nome").order("nome"),
+    supabase.from("robo_modelos").select("provedor, modelo, nome").eq("ativo", true).order("nome"),
   ]);
+  const opcoesPlano: Opcao[] = (planos ?? []).map((p) => ({ valor: p.codigo, nome: `${p.nome} (${p.codigo})` }));
+  const opcoesModelo: Opcao[] = (modelos ?? []).map((m) => ({ valor: m.modelo, nome: `${m.nome} · ${m.provedor}` }));
+  const opcoesDe = (chave: string): Opcao[] | undefined =>
+    OPCOES_FIXAS[chave] ?? (CHAVES_DE_PLANO.has(chave) ? opcoesPlano : CHAVES_DE_MODELO.has(chave) ? opcoesModelo : undefined);
   const lista = (configs ?? []) as Config[];
   const nomesRegiao = new Map((regioes ?? []).map((r) => [r.id, r.nome]));
   const grupos = [...new Set(lista.map((c) => c.grupo))].sort(
@@ -66,14 +72,14 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
                   {c.chave} · {c.publico ? "visível no site" : "só no sistema"} · alterado em {quando(c.atualizado_em)}
                 </p>
               </div>
-              <FormConfig id={c.id} chave={c.chave} tipo={tipo} valor={c.valor} />
+              <FormConfig id={c.id} chave={c.chave} tipo={tipo} valor={c.valor} opcoes={opcoesDe(c.chave)} />
 
               {excecoes.length > 0 && (
                 <ul className="mt-4 space-y-2">
                   {excecoes.map((e) => (
                     <li key={e.id} className="flex min-h-12 items-center gap-3 rounded-card bg-laranja-claro pl-3 pr-1 text-sm text-beringela">
                       <span className="font-semibold">{nomesRegiao.get(e.microrregiao_id!) ?? "Região"}:</span>
-                      <span className="truncate font-mono text-[13px]">{valorParaForm(tipoDe(e.valor), e.valor).replace(/\n/g, " · ")}</span>
+                      <span className="truncate font-mono text-[13px]">{nomeValor(tipoDe(e.valor), e.valor, opcoesDe(c.chave))}</span>
                       <form action={removerExcecao} className="ml-auto">
                         <input type="hidden" name="id" value={e.id} />
                         <button className="h-12 px-3 text-sm font-semibold text-perigo underline">remover</button>
@@ -84,7 +90,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
               )}
               {(regioes ?? []).length > 0 && (
                 <div className="mt-3">
-                  <FormExcecao chave={c.chave} tipo={tipo} valor={c.valor} regioes={regioes ?? []} />
+                  <FormExcecao chave={c.chave} tipo={tipo} valor={c.valor} regioes={regioes ?? []} opcoes={opcoesDe(c.chave)} />
                 </div>
               )}
             </Cartao>
@@ -93,4 +99,10 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
       </div>
     </>
   );
+}
+
+function nomeValor(tipo: ReturnType<typeof tipoDe>, valor: unknown, opcoes?: Opcao[]) {
+  const texto = valorParaForm(tipo, valor);
+  if (tipo === "simnao") return valor ? "Sim" : "Não";
+  return opcoes?.find((o) => o.valor === texto)?.nome ?? texto.replace(/\n/g, " · ");
 }

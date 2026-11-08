@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { Aviso, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
-import { emCentavos, valorParaForm, type TipoValor } from "@/lib/admin/config";
+import { emCentavos, valorParaForm, type Opcao, type TipoValor } from "@/lib/admin/config";
 import { criarExcecao, salvarConfig } from "./actions";
 
 const AJUDA: Record<TipoValor, string> = {
@@ -11,11 +11,33 @@ const AJUDA: Record<TipoValor, string> = {
   lista: "Um item por linha.",
   mapa: "Um item por linha, no formato: categoria = valor",
   json: "Formato JSON.",
+  simnao: "",
 };
 
-function CampoValor({ tipo, valor, chave }: { tipo: TipoValor; valor: unknown; chave: string }) {
+function CampoValor({ tipo, valor, chave, opcoes }: { tipo: TipoValor; valor: unknown; chave: string; opcoes?: Opcao[] }) {
   const texto = valorParaForm(tipo, valor);
   const ajuda = [AJUDA[tipo], emCentavos(chave) ? "Valores em centavos (R$ 9,90 = 990)." : ""].filter(Boolean).join(" ");
+  if (tipo === "simnao") {
+    return (
+      <select name="valor" defaultValue={texto} className={estiloCampo}>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+      </select>
+    );
+  }
+  if (opcoes && opcoes.length > 0) {
+    const conhecido = opcoes.some((o) => o.valor === texto);
+    return (
+      <select name="valor" defaultValue={texto} className={estiloCampo}>
+        {!conhecido && <option value={texto}>{texto || "(vazio)"} (valor atual, fora da lista)</option>}
+        {opcoes.map((o) => (
+          <option key={o.valor} value={o.valor}>
+            {o.nome}
+          </option>
+        ))}
+      </select>
+    );
+  }
   return (
     <>
       {tipo === "numero" || tipo === "texto" ? (
@@ -33,13 +55,13 @@ function CampoValor({ tipo, valor, chave }: { tipo: TipoValor; valor: unknown; c
   );
 }
 
-export function FormConfig({ id, chave, tipo, valor }: { id: string; chave: string; tipo: TipoValor; valor: unknown }) {
+export function FormConfig({ id, chave, tipo, valor, opcoes }: { id: string; chave: string; tipo: TipoValor; valor: unknown; opcoes?: Opcao[] }) {
   const [estado, acao, pendente] = useActionState(salvarConfig, null);
   return (
     <form action={acao} className="space-y-2">
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="tipo" value={tipo} />
-      <CampoValor tipo={tipo} valor={valor} chave={chave} />
+      <CampoValor tipo={tipo} valor={valor} chave={chave} opcoes={opcoes} />
       <div className="flex items-center gap-3">
         <button disabled={pendente} className={estiloBotaoSec}>
           {pendente ? "Salvando…" : "Salvar"}
@@ -56,11 +78,13 @@ export function FormExcecao({
   tipo,
   valor,
   regioes,
+  opcoes,
 }: {
   chave: string;
   tipo: TipoValor;
   valor: unknown;
   regioes: { id: string; nome: string }[];
+  opcoes?: Opcao[];
 }) {
   const [estado, acao, pendente] = useActionState(criarExcecao, null);
   return (
@@ -79,7 +103,7 @@ export function FormExcecao({
             </option>
           ))}
         </select>
-        <CampoValor tipo={tipo} valor={valor} chave={chave} />
+        <CampoValor tipo={tipo} valor={valor} chave={chave} opcoes={opcoes} />
         <button disabled={pendente} className={estiloBotaoSec}>
           {pendente ? "Criando…" : "Criar exceção"}
         </button>
