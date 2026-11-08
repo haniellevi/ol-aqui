@@ -3,6 +3,7 @@ import { lerConfigNumero } from "@/lib/dados/config";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
 import { EnvioFotos } from "@/components/anunciar/envio-fotos";
+import { BotaoAbrirAki } from "@/components/aki/botao-abrir-aki";
 import { carregarPasso, type ParamsPasso } from "../_carregar";
 
 export const metadata: Metadata = { title: "Anunciar · Fotos" };
@@ -28,6 +29,11 @@ export default async function PassoFotos({ searchParams }: { searchParams: Param
         titulo={editar ? "Fotos do anúncio" : "Tire fotos do que você quer vender"}
         subtitulo="As fotos ficam salvas assim que terminam de enviar."
       />
+      {!editar && (
+        <div className="mb-4">
+          <BotaoAbrirAki pedido={{ foto: true, rascunhoId: anuncio.id }}>Cadastrar com o Aki pela foto</BotaoAbrirAki>
+        </div>
+      )}
       <EnvioFotos id={anuncio.id} editar={editar} fotosIniciais={anuncio.fotos} maximo={maximo} minimo={minimo ?? 0} />
     </CorpoPasso>
   );

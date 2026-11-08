@@ -9,7 +9,8 @@ import { prepararEnvioImagemLoja, salvarLoja, type EstadoLojaConta } from "@/app
 import { Seletor } from "./seletor";
 import { Aviso } from "./aviso";
 
-// T38 · Minha loja: dados da vitrine + logo e capa (reduzidas no aparelho antes de enviar).
+// T38 · Minha loja: dados da vitrine + logo (reduzida no aparelho antes de enviar).
+// Banner, "Sobre nós", horários e as outras informações têm telas próprias (vitrine completa).
 
 /** "5589999990000" ou "89999990000" → "(89) 99999-0000" enquanto digita. */
 function mascaraFone(t: string): string {
@@ -26,21 +27,17 @@ function mascaraFone(t: string): string {
 
 export type DadosLoja = {
   nome: string;
-  descricao: string | null;
   whatsapp: string | null;
   cidade: string;
   bairro: string | null;
   logo_url: string | null;
-  capa_url: string | null;
 };
 
 export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { nome: string; uf: string }[] }) {
   const [estado, acao, enviando] = useActionState<EstadoLojaConta, FormData>(salvarLoja, null);
   const [fone, setFone] = useState(mascaraFone(loja.whatsapp ?? ""));
-  const [descricao, setDescricao] = useState(loja.descricao ?? "");
   const [logo, setLogo] = useState(loja.logo_url ?? "");
-  const [capa, setCapa] = useState(loja.capa_url ?? "");
-  const [subindo, setSubindo] = useState<"logo" | "capa" | null>(null);
+  const [subindo, setSubindo] = useState<"logo" | null>(null);
   const campos = estado?.campos ?? {};
   const cidadeFora = loja.cidade && !cidades.some((c) => c.nome === loja.cidade);
 
@@ -51,17 +48,7 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
         {estado?.ok && <Aviso tipo="ok">Loja salva. Sua vitrine já mostra as mudanças.</Aviso>}
       </div>
 
-      <section aria-label="Capa e logo" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
-        <EnvioImagem
-          qual="capa"
-          rotulo="Capa da loja"
-          dica="Foto larga da fachada ou dos produtos."
-          url={capa}
-          aoMudar={setCapa}
-          ocupado={subindo !== null}
-          aoSubir={setSubindo}
-          erro={campos.capa_url}
-        />
+      <section aria-label="Logo" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
         <EnvioImagem
           qual="logo"
           rotulo="Logo"
@@ -73,22 +60,10 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
           erro={campos.logo_url}
         />
         <input type="hidden" name="logo_url" value={logo} />
-        <input type="hidden" name="capa_url" value={capa} />
       </section>
 
       <section aria-label="Dados da loja" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
         <Campo rotulo="Nome da loja" name="nome" defaultValue={loja.nome} required minLength={2} maxLength={80} erro={campos.nome} />
-        <Campo
-          rotulo="Sobre a loja"
-          name="descricao"
-          multilinha
-          opcional
-          maxLength={600}
-          value={descricao}
-          onChange={(e) => setDescricao(e.target.value)}
-          dica={`${descricao.length} de 600 letras. Conte o que vende, horário e entrega.`}
-          erro={campos.descricao}
-        />
         <Campo
           rotulo="WhatsApp da loja"
           name="whatsapp"
@@ -133,13 +108,13 @@ function EnvioImagem({
   aoSubir,
   erro: erroServidor,
 }: {
-  qual: "logo" | "capa";
+  qual: "logo";
   rotulo: string;
   dica: string;
   url: string;
   aoMudar: (u: string) => void;
   ocupado: boolean;
-  aoSubir: (q: "logo" | "capa" | null) => void;
+  aoSubir: (q: "logo" | null) => void;
   erro?: string;
 }) {
   const id = useId();
@@ -154,7 +129,7 @@ function EnvioImagem({
     setSubindo(true);
     aoSubir(qual);
     try {
-      const foto = await reduzirFoto(arquivo, { ladoMaximo: qual === "logo" ? 600 : 1600 });
+      const foto = await reduzirFoto(arquivo, { ladoMaximo: 600 });
       const envio = await prepararEnvioImagemLoja(qual, foto.formato);
       if (!envio.ok) throw new Error(envio.erro.mensagem);
       const foi = await enviarFoto(foto.blob, envio.dados.urlEnvio);
@@ -175,7 +150,7 @@ function EnvioImagem({
         {rotulo} <span className="font-normal text-texto-suave">(opcional)</span>
       </span>
       <div
-        className={`relative overflow-hidden bg-fundo ${qual === "capa" ? "aspect-[3/1] w-full rounded-card" : "size-24 rounded-full"} border-2 border-dashed border-borda`}
+        className="relative size-24 overflow-hidden rounded-full border-2 border-dashed border-borda bg-fundo"
       >
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element -- prévia da imagem enviada ao Storage

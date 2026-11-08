@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { exigirAdmin } from "@/lib/admin/auth";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 type Decisao = "aprovar" | "recusar" | "congelar";
 
@@ -66,4 +67,37 @@ export async function resolverDenuncia(form: FormData): Promise<void> {
     .eq("id", String(form.get("id")));
   if (error) throw new Error(error.message);
   revalidatePath("/admin", "layout");
+}
+
+/**
+ * Tira a foto do banner de uma loja (volta para o banner modelo) e grava o motivo, que o dono vê
+ * em "Minha loja". O banco guarda o endereço tirado (o dono não grava a mesma foto de novo) e a
+ * mudança fica no histórico (logs_atividade). Depois o arquivo sai do Storage: sem a chave secreta
+ * no servidor, o arquivo fica, mas a foto já saiu da vitrine.
+ */
+export async function tirarFotoBanner(form: FormData): Promise<void> {
+  const { supabase } = await exigirAdmin();
+  const id = String(form.get("id") ?? "");
+  const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
+  const { data, error } = await supabase.rpc("moderar_banner_vitrine", { p_vitrine: id, p_motivo: motivo || null });
+  if (error) throw new Error(error.message);
+  const caminho = caminhoNoBucket(typeof data === "string" ? data : null);
+  if (caminho) {
+    try {
+      await supabaseAdmin().storage.from("anuncios").remove([caminho]);
+    } catch {
+      // sem a chave secreta ou Storage fora do ar: a foto já não aparece na vitrine
+    }
+  }
+  revalidatePath("/admin", "layout");
+  revalidatePath("/loja", "layout");
+}
+
+/** "<usuario>/vitrine/<arquivo>" de um endereço público do bucket "anuncios" do OLAKI (ou null). */
+function caminhoNoBucket(url: string | null): string | null {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, "");
+  const prefixo = `${base}/storage/v1/object/public/anuncios/`;
+  if (!url || !base || !url.startsWith(prefixo)) return null;
+  const caminho = decodeURIComponent(url.slice(prefixo.length).split("?")[0]);
+  return /^[A-Za-z0-9_]+\/vitrine\/[A-Za-z0-9_-][A-Za-z0-9._-]*$/.test(caminho) ? caminho : null;
 }

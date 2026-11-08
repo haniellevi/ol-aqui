@@ -18,6 +18,10 @@ export type Plano = {
   e_teste: boolean;
   ordem: number;
   ativo: boolean;
+  vitrine_foto_fachada: boolean;
+  vitrine_secoes_max: number | null;
+  vitrine_fixados_max: number | null;
+  recomendado: boolean;
 };
 
 export function FormPlano({ plano }: { plano?: Plano }) {
@@ -73,6 +77,38 @@ export function FormPlano({ plano }: { plano?: Plano }) {
         Ordem na tela
         <input name="ordem" type="number" defaultValue={plano?.ordem ?? 10} className={estiloCampo} />
       </label>
+      <fieldset className="col-span-2 grid grid-cols-2 gap-3 rounded-card border border-borda p-3 md:col-span-4 md:grid-cols-4">
+        <legend className="px-1 text-sm font-semibold">Vitrine da loja</legend>
+        <label className="text-sm font-semibold">
+          Seções próprias
+          <input
+            name="vitrine_secoes_max"
+            type="number"
+            min={0}
+            placeholder="ilimitado"
+            defaultValue={plano ? (plano.vitrine_secoes_max ?? "") : 0}
+            className={estiloCampo}
+          />
+        </label>
+        <label className="text-sm font-semibold">
+          Produtos fixados no topo
+          <input
+            name="vitrine_fixados_max"
+            type="number"
+            min={0}
+            placeholder="ilimitado"
+            defaultValue={plano ? (plano.vitrine_fixados_max ?? "") : 0}
+            className={estiloCampo}
+          />
+        </label>
+        <label className="col-span-2 flex h-12 items-center gap-2 self-end text-sm">
+          <input type="checkbox" name="vitrine_foto_fachada" defaultChecked={plano?.vitrine_foto_fachada ?? false} className="size-5 accent-laranja-escuro" />
+          Foto da fachada no banner
+        </label>
+        <p className="col-span-2 text-[13px] text-texto-suave md:col-span-4">
+          0 = não tem o recurso; vazio = sem limite. Plano menor não apaga nada: o que passa do limite fica escondido na vitrine.
+        </p>
+      </fieldset>
       <label className="col-span-2 text-sm font-semibold md:col-span-4">
         Descrição (aparece para o cliente)
         <input name="descricao" defaultValue={plano?.descricao ?? ""} className={estiloCampo} />
@@ -85,6 +121,10 @@ export function FormPlano({ plano }: { plano?: Plano }) {
         <label className="flex h-12 items-center gap-2 text-sm">
           <input type="checkbox" name="ativo" defaultChecked={plano?.ativo ?? true} className="size-5 accent-laranja-escuro" />
           Ativo (aparece para venda)
+        </label>
+        <label className="flex h-12 items-center gap-2 text-sm">
+          <input type="checkbox" name="recomendado" defaultChecked={plano?.recomendado ?? false} className="size-5 accent-laranja-escuro" />
+          Recomendado na página de planos (só um)
         </label>
         <button disabled={pendente} className={`${novo ? estiloBotao : estiloBotaoSec} ml-auto`}>
           {pendente ? "Salvando…" : novo ? "Criar plano" : "Salvar"}

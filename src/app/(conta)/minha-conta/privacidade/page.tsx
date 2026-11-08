@@ -6,6 +6,7 @@ import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { classesBotao } from "@/components/ui/botao";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { ExcluirConta } from "@/components/conta/excluir-conta";
+import { ApagarConversasAki } from "@/components/aki/apagar-conversas";
 
 export const metadata: Metadata = { title: "Privacidade" };
 
@@ -13,6 +14,11 @@ export const metadata: Metadata = { title: "Privacidade" };
 export default async function PaginaPrivacidade() {
   const conta = await meuPerfilEVitrine();
   const vitrineId = conta?.vitrine?.id;
+  const conversasAki = await seguro(async () => {
+    const db = await createClient();
+    const { count } = await db.from("robo_conversas").select("id", { count: "exact", head: true });
+    return count ?? 0;
+  }, 0);
   const temPagamentos = vitrineId
     ? await seguro(async () => {
         const db = await createClient();
@@ -30,13 +36,27 @@ export default async function PaginaPrivacidade() {
           Baixar meus dados
         </h2>
         <p className="text-base text-texto-suave">
-          Um arquivo com seu perfil, sua loja, seus anúncios, favoritos e pedidos no Radar.
+          Um arquivo com seu perfil, sua loja, seus anúncios, favoritos, pedidos no Radar e conversas com o Aki.
         </p>
         {/* Link comum (não next/link): é um download de arquivo, não uma página */}
         <a href="/minha-conta/privacidade/baixar" download className={classesBotao("secundario", true)}>
           <Download className="size-5" aria-hidden />
           Baixar meus dados
         </a>
+      </section>
+
+      <section aria-labelledby="aki" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
+        <h2 id="aki" className="text-lg font-bold">
+          Conversas com o Aki
+        </h2>
+        <p className="text-base text-texto-suave">
+          {conversasAki === 0
+            ? "Você não tem conversas guardadas com o Aki."
+            : conversasAki === 1
+              ? "Você tem 1 conversa guardada com o Aki (o robô do OLAKI)."
+              : `Você tem ${conversasAki} conversas guardadas com o Aki (o robô do OLAKI).`}
+        </p>
+        {conversasAki > 0 && <ApagarConversasAki />}
       </section>
 
       <section aria-labelledby="excluir" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
