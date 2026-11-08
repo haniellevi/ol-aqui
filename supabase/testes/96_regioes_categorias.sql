@@ -145,12 +145,30 @@ update categorias set campos='[{"chave":"cor","rotulo":"Cor","tipo":"texto"}]' w
 update categorias set campos='[{"chave":"ano","rotulo":"Ano","tipo":"numero"},{"chave":"ano_min","rotulo":"Ano mínimo","tipo":"texto"}]' where id=:'cat_fur';
 update categorias set campos='[{"chave":"cor","rotulo":"Cor","tipo":"texto"},{"chave":"cor2","rotulo":"cor","tipo":"texto"}]' where id=:'cat_fur';
 
-\echo '[11c] limite de campos vem da configuracao (campos_max = 2): 3 campos dao ERRO esperado; volta para 20'
+\echo '[11c] limite de campos vem da configuracao (campos_max = 2, Furadeiras ja tem 3): ordem, esconder, renomear campo e Subir/Descer de uma irma funcionam; subir para 4 campos e criar outra com 3 dao 2 ERROS esperados'
 reset role; update configuracoes set valor='2' where chave='categorias.campos_max' and microrregiao_id is null;
 set role authenticated; select set_config('request.jwt.claim.sub','user_adm96',false) \g /dev/null
-update categorias set ordem=ordem where id=:'cat_fur';
+update categorias set ordem=ordem where id=:'cat_fur' returning slug as ordem_ok;
+update categorias set ativa=false where id=:'cat_fur' returning ativa as escondeu;
+update categorias set ativa=true where id=:'cat_fur' returning ativa as mostrou;
+update categorias set campos=jsonb_set(campos, '{2,rotulo}', '"Vem com maleta?"') where id=:'cat_fur' returning campos->2->>'rotulo' as renomeou_campo;
+update categorias set campos=campos || '[{"chave":"marca","rotulo":"Marca","tipo":"texto"}]' where id=:'cat_fur';
+insert into categorias (slug, nome, pai_id, campos) values ('serras-96', 'Serras', :'cat_ferr',
+  '[{"chave":"a","rotulo":"A","tipo":"texto"},{"chave":"b","rotulo":"B","tipo":"texto"},{"chave":"c","rotulo":"C","tipo":"texto"}]');
+insert into categorias (slug, nome, pai_id, ordem) values ('lixadeiras-96', 'Lixadeiras', :'cat_ferr', 20) returning slug as irma_criada;
+select admin_mover_categoria(:'cat_fur', 'descer') \g /dev/null
+select string_agg(slug, ', ' order by ordem, nome) as ordem_com_irma_acima_do_limite from categorias where pai_id=:'cat_ferr';
 reset role; update configuracoes set valor='20' where chave='categorias.campos_max' and microrregiao_id is null;
+\echo '[11c2] limite de opcoes (opcoes_max = 2, Voltagem ja tem 3): renomear a categoria funciona; mais uma opcao na Voltagem e campo novo com 3 opcoes dao 2 ERROS esperados; tirar uma opcao funciona'
+update configuracoes set valor='2' where chave='categorias.opcoes_max' and microrregiao_id is null;
 set role authenticated; select set_config('request.jwt.claim.sub','user_adm96',false) \g /dev/null
+update categorias set nome='Furadeiras e parafusadeiras' where id=:'cat_fur' returning nome;
+update categorias set campos=jsonb_set(campos, '{0,opcoes}', campos->0->'opcoes' || '["380 V"]') where id=:'cat_fur';
+update categorias set campos=campos || '[{"chave":"cor","rotulo":"Cor","tipo":"lista","opcoes":["Azul","Verde","Preta"]}]' where id=:'cat_fur';
+update categorias set campos=jsonb_set(campos, '{0,opcoes}', '["110 V","220 V"]') where id=:'cat_fur' returning campos->0->'opcoes' as tirou_opcao;
+reset role; update configuracoes set valor='60' where chave='categorias.opcoes_max' and microrregiao_id is null;
+set role authenticated; select set_config('request.jwt.claim.sub','user_adm96',false) \g /dev/null
+delete from categorias where slug='lixadeiras-96' returning slug as apagou_irma;
 
 \echo '[11d] slug nao muda depois de criado: ERRO esperado; preco minimo maior que o maximo: ERRO esperado (mensagem clara)'
 update categorias set slug='furadeiras-novo-96' where id=:'cat_fur';
@@ -209,6 +227,28 @@ update categorias set ativa=false where id=:'cat_moveis';
 set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_pf96',false) \g /dev/null
 select publicar_anuncio(:'rasc_moveis');
 select publicar_anuncio(:'anu_moveis') as pausado_volta;
+\echo '[14h] atalho: pausar o rascunho antes de publicar. Pausar passa, mas publicar e mudar direto para ativo dao 2 ERROS esperados (nunca esteve no ar)'
+update anuncios set status='pausado' where id=:'rasc_moveis' returning status;
+select publicar_anuncio(:'rasc_moveis');
+update anuncios set status='ativo' where id=:'rasc_moveis';
+select status, publicado_em is null as nunca_no_ar from anuncios where id=:'rasc_moveis';
+\echo '[14i] anuncio avulso (pago) do rascunho na categoria escondida: a cobranca nao nasce (ERRO esperado: Escolha outra antes de pagar)'
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+insert into pagamentos (vitrine_id, microrregiao_id, tipo, anuncio_id, valor_centavos, status, asaas_cobranca_id)
+values (:'vit_pf', :'reg', 'anuncio_avulso', :'rasc_moveis', 990, 'pendente', 'pay_96_av');
+\echo '[14j] cobranca feita com a categoria visivel e paga depois que ela foi escondida: so soma o tempo, nao vai ao ar sozinho (nota explica); mostrando a categoria, o dono publica'
+update categorias set ativa=true where id=:'cat_moveis';
+insert into pagamentos (vitrine_id, microrregiao_id, tipo, anuncio_id, valor_centavos, status, asaas_cobranca_id)
+values (:'vit_pf', :'reg', 'anuncio_avulso', :'rasc_moveis', 990, 'pendente', 'pay_96_av') returning id as pg96 \gset
+update categorias set ativa=false where id=:'cat_moveis';
+set role service_role; select set_config('request.jwt.claim.role','service_role',false) \g /dev/null
+select confirmar_pagamento('pay_96_av') \g /dev/null
+select status, pago_ate > now() as pago, publicado_em is null as nunca_no_ar from anuncios where id=:'rasc_moveis';
+select status, observacao from pagamentos where id=:'pg96';
+reset role; select set_config('request.jwt.claim.role','',false) \g /dev/null
+update categorias set ativa=true where id=:'cat_moveis';
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_pf96',false) \g /dev/null
+select publicar_anuncio(:'rasc_moveis') as publica_com_categoria_visivel;
 reset role; update categorias set ativa=true where id=:'cat_moveis';
 set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_pf96',false) \g /dev/null
 
@@ -236,10 +276,10 @@ insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, 
  (:'vit_pf', :'cat_moveis', 'Sofá de couro caríssimo', 'Corrente', 500000, '{}', :'foto')
 returning status, motivo_analise;
 
-\echo '[18] painel: admin_categorias traz escondidas e contagens; historico registra as mudancas de categoria'
+\echo '[18] painel: admin_categorias traz escondidas e contagens (a principal Casa e moveis soma os anuncios das subcategorias: tem_anuncios = t); historico registra as mudancas de categoria'
 select set_config('request.jwt.claim.sub','user_adm96',false) \g /dev/null
 select slug, anuncios_total >= 2 as tem_anuncios, filhas from admin_categorias() where slug in ('moveis', 'casa-e-moveis') order by slug;
 reset role;
 select count(*) filter (where acao='INSERT') > 0 as criou, count(*) filter (where acao='UPDATE') > 0 as editou,
-       count(*) filter (where acao='DELETE') = 2 as apagou
+       count(*) filter (where acao='DELETE') = 3 as apagou   -- Lixadeiras [11c2], Furadeiras e Ferramentas [15]
   from logs_atividade where tabela='categorias' and usuario_id='user_adm96';

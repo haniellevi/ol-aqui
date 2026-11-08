@@ -320,6 +320,8 @@ declare
   opcoes     jsonb;
   op         text;
   vistas     text[];
+  campos_antes integer := 0;
+  opcoes_antes integer := 0;
 begin
   new.nome := regexp_replace(btrim(coalesce(new.nome, '')), '\s+', ' ', 'g');
   if char_length(new.nome) not between 2 and 60 then
@@ -357,8 +359,13 @@ begin
     end if;
   end if;
 
-  -- limites dos campos (painel: categorias.campos_max e categorias.opcoes_max)
-  if jsonb_array_length(new.campos) > max_campos then
+  -- limites dos campos (painel: categorias.campos_max e categorias.opcoes_max).
+  -- Só barram quando a quantidade SOBE: se o limite baixar depois, a categoria que já passa dele
+  -- continua podendo ser escondida, renomeada, mudada de ordem e até perder campos.
+  if tg_op = 'UPDATE' then
+    campos_antes := jsonb_array_length(old.campos);
+  end if;
+  if jsonb_array_length(new.campos) > max_campos and jsonb_array_length(new.campos) > campos_antes then
     raise exception using errcode = '22023', message = format('Uma subcategoria pode ter no máximo %s campos.', max_campos);
   end if;
   select coalesce(array_agg(x->>'chave'), '{}') into chaves from jsonb_array_elements(new.campos) x;
@@ -385,7 +392,13 @@ begin
     end if;
 
     if c->>'tipo' = 'lista' then
-      if jsonb_array_length(c->'opcoes') > max_opcoes then
+      opcoes_antes := 0;
+      if tg_op = 'UPDATE' then
+        select coalesce(max(jsonb_array_length(o->'opcoes')), 0) into opcoes_antes
+          from jsonb_array_elements(old.campos) o
+         where o->>'chave' = c->>'chave' and o->>'tipo' = 'lista' and jsonb_typeof(o->'opcoes') = 'array';
+      end if;
+      if jsonb_array_length(c->'opcoes') > max_opcoes and jsonb_array_length(c->'opcoes') > opcoes_antes then
         raise exception using errcode = '22023', message = format('O campo "%s" pode ter no máximo %s opções.', rot, max_opcoes);
       end if;
       opcoes := '[]'::jsonb;
@@ -450,9 +463,9 @@ as $$
      where c.id = p_id and c.ativa and (c.pai_id is null or coalesce(p.ativa, false)))
 $$;
 
--- Ao ESCOLHER a categoria (inserção ou troca), a mãe também precisa estar visível. Rascunho que
+-- Ao ESCOLHER a categoria (inserção ou troca), a mãe também precisa estar visível. Anúncio que
 -- vai ao ar pela 1ª vez também precisa de categoria visível (é um anúncio novo entrando).
--- Quem já estava no ar continua como está (esconder não mexe nos anúncios; pausado pode voltar).
+-- Quem já esteve no ar continua como está (esconder não mexe nos anúncios; pausado pode voltar).
 create or replace function public.exigir_categoria_disponivel()
 returns trigger language plpgsql
 set search_path = public, extensions
@@ -466,10 +479,18 @@ begin
      or coalesce(current_setting('olaki.sistema', true), '') = '1' then
     return new;
   end if;
-  if tg_op = 'UPDATE' and new.categoria_id is not distinct from old.categoria_id
-     and not (tg_table_name = 'anuncios' and old.status::text = 'rascunho'
-              and new.status::text in ('ativo', 'em_analise', 'vendido')) then
-    return new;
+  -- "Vai ao ar pela 1ª vez" = nunca ficou no ar (publicado_em vazio; o dono não consegue mudar
+  -- esse campo) e agora entra num status público. Vale venha de rascunho, pausado ou expirado:
+  -- assim não adianta pausar o rascunho antes de publicar.
+  -- (radar_pedidos usa o mesmo gatilho e não tem publicado_em: por isso os IFs separados)
+  if tg_op = 'UPDATE' and new.categoria_id is not distinct from old.categoria_id then
+    if tg_table_name <> 'anuncios' then
+      return new;
+    end if;
+    if old.publicado_em is not null or new.status::text not in ('ativo', 'em_analise', 'vendido')
+       or new.status is not distinct from old.status then
+      return new;
+    end if;
   end if;
   if not public.categoria_disponivel(new.categoria_id) then
     raise exception using errcode = '23514', detail = 'campo:categoria',
@@ -481,6 +502,97 @@ create trigger anuncios_1_validar_mae before insert or update of categoria_id, s
   for each row execute function public.exigir_categoria_disponivel();
 create trigger radar_1_validar_mae before insert or update of categoria_id on public.radar_pedidos
   for each row execute function public.exigir_categoria_disponivel();
+
+-- Anúncio avulso (pago) também respeita a regra acima. Duas travas:
+--  1) não nasce cobrança de avulso para anúncio que nunca foi ao ar numa categoria escondida
+--     (pedir_anuncio_avulso grava em pagamentos; este gatilho barra antes de cobrar);
+--  2) se a cobrança já existia e a categoria foi escondida depois, o pagamento só soma o tempo:
+--     aplicar_anuncio_avulso não publica sozinho (o webhook roda como servidor e passaria direto).
+create or replace function public.avulso_exige_categoria_disponivel()
+returns trigger language plpgsql security definer
+set search_path = public, extensions
+as $$
+begin
+  if new.tipo = 'anuncio_avulso' and new.status = 'pendente' and new.anuncio_id is not null
+     and exists (select 1 from public.anuncios a
+                  where a.id = new.anuncio_id and a.publicado_em is null and a.categoria_id is not null
+                    and not public.categoria_disponivel(a.categoria_id)) then
+    raise exception using errcode = '23514', detail = 'campo:categoria',
+      message = 'Esta categoria não está disponível. Escolha outra antes de pagar.';
+  end if;
+  return new;
+end $$;
+create trigger pagamentos_avulso_categoria before insert on public.pagamentos
+  for each row execute function public.avulso_exige_categoria_disponivel();
+
+-- Avulso confirmado: estende pago_ate e publica sozinho quando o anúncio está pronto.
+-- Se algo impedir (campo que mudou, moderação), fica com pago_ate e o dono toca em Publicar.
+create or replace function public.aplicar_anuncio_avulso(p_pagamento_id uuid)
+returns void language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare
+  pg     public.pagamentos;
+  a      public.anuncios;
+  v      public.vitrines_lojas;
+  ndias  integer;
+  minimo integer;
+  pronto boolean;
+  ini    timestamptz;
+  fimp   timestamptz;
+  novo   public.status_anuncio;
+  antes  text := coalesce(current_setting('olaki.sistema', true), '');
+begin
+  select * into pg from public.pagamentos where id = p_pagamento_id;
+  select * into a from public.anuncios where id = pg.anuncio_id for update;
+  select * into v from public.vitrines_lojas where id = a.vitrine_id;
+  if a.id is null then
+    update public.pagamentos set devolver_motivo = 'O anúncio foi apagado antes do pagamento chegar' where id = pg.id;
+    return;
+  end if;
+  if a.status in ('vendido', 'congelado') then
+    update public.pagamentos
+       set devolver_motivo = case a.status when 'vendido' then 'O anúncio já estava vendido quando o pagamento chegou'
+                                           else 'O anúncio estava congelado quando o pagamento chegou' end
+     where id = pg.id;
+    return;
+  end if;
+  ndias := greatest(coalesce(public.numero_ou_nulo(public.config('avulso.dias', pg.microrregiao_id, '30')), 30)::int, 1);
+  ini := greatest(coalesce(a.pago_ate, now()), now());
+  fimp := ini + make_interval(days => ndias);
+
+  -- Com a flag do sistema os gatilhos de fotos não conferem nada: confere aqui o mínimo para publicar.
+  -- Loja suspensa: só soma o tempo (o anúncio fica fora do ar, como em aplicar_assinatura).
+  minimo := coalesce(public.numero_ou_nulo(public.config('anuncio.fotos_minimo', a.microrregiao_id, '1')), 0)::int;
+  -- Anúncio que nunca foi ao ar só entra se a categoria (e a mãe) ainda está visível.
+  pronto := v.id is not null and v.status <> 'suspensa' and a.categoria_id is not null
+            and coalesce(cardinality(a.fotos), 0) >= minimo
+            and (a.publicado_em is not null or public.categoria_disponivel(a.categoria_id));
+
+  perform set_config('olaki.sistema', '1', true);
+  begin
+    update public.anuncios
+       set pago_ate = fimp,
+           status = case when pronto and status in ('rascunho', 'pausado', 'expirado') then 'ativo'::public.status_anuncio else status end
+     where id = a.id
+    returning status into novo;
+  exception when others then
+    update public.anuncios set pago_ate = fimp where id = a.id returning status into novo;
+  end;
+  update public.pagamentos
+     set concedido_de = ini, concedido_ate = fimp,
+         observacao = case
+           when v.status = 'suspensa' then 'Pago com a conta suspensa: o tempo foi somado, mas o anúncio fica fora do ar.'
+           when novo in ('rascunho', 'pausado', 'expirado') and a.publicado_em is null and a.categoria_id is not null
+                and not public.categoria_disponivel(a.categoria_id)
+             then 'Pago. A categoria do anúncio não está mais disponível: o dono escolhe outra e toca em Publicar.'
+           when novo in ('rascunho', 'pausado', 'expirado') then 'Pago. O anúncio não entrou no ar sozinho: falta o dono tocar em Publicar.'
+           when novo = 'em_analise' then 'Pago. O anúncio está em análise pela moderação.'
+           else observacao end
+   where id = pg.id;
+  perform set_config('olaki.sistema', antes, true);
+end $$;
+revoke all on function public.aplicar_anuncio_avulso(uuid) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- 5. Funções do painel (tela 9). Conferem e_admin() por dentro.
@@ -499,8 +611,11 @@ begin
   return query
   select c.id, c.slug, c.nome, c.icone, c.pai_id, c.ordem, c.ativa, c.campos,
          c.preco_min_centavos, c.preco_max_centavos, c.tipo_legado::text,
-         (select count(*)::int from public.anuncios a where a.categoria_id = c.id and a.status = 'ativo'),
-         (select count(*)::int from public.anuncios a where a.categoria_id = c.id),
+         -- principal: soma os anúncios das subcategorias (é nelas que os anúncios ficam)
+         (select count(*)::int from public.anuncios a join public.categorias ac on ac.id = a.categoria_id
+           where (ac.id = c.id or ac.pai_id = c.id) and a.status = 'ativo'),
+         (select count(*)::int from public.anuncios a join public.categorias ac on ac.id = a.categoria_id
+           where ac.id = c.id or ac.pai_id = c.id),
          (select count(*)::int from public.radar_pedidos r where r.categoria_id = c.id),
          (select count(*)::int from public.categorias f where f.pai_id = c.id)
     from public.categorias c
