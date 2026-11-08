@@ -38,7 +38,8 @@ vitrines_lojas↔pagamentos/planos deixaria ambíguo o `select` com tabela embut
 
 `perfis_verificacoes` já existia (documento/selfie/CNPJ): ganha gatilho de log e a função `admin_analisar_verificacao`.
 O envio de documentos pelo usuário e o bucket privado `verificacoes` **ainda não existem** (fica para depois): a tela 5
-lista as verificações pendentes que houver e o admin aprova ou recusa com motivo.
+lista as verificações pendentes que houver, mostra o arquivo por link temporário (2 minutos) quando ele existe e o admin
+aprova ou recusa com motivo. Documento e selfie **sem arquivo** só podem ser recusados (o banco também barra).
 
 ### Configurações novas (Configurações > Planos e avulsos / Cobrança; todas com exceção por região)
 
@@ -85,12 +86,20 @@ Todas SECURITY DEFINER com `search_path = public, extensions`, conferem `usuario
   - pagar de novo o plano já marcado para depois: `renovacao_proximo` (soma no fim dele).
   - Com troca marcada, outro plano diferente é recusado antes de pagar ("fale com o suporte"). Se mesmo assim chegar
     dinheiro, nada muda e o pagamento vai para "Devoluções a fazer".
-- **Status existentes respeitados:** `ativa`, `inadimplente`, `suspensa`. A loja suspensa não consegue pedir cobrança;
+- **Status existentes respeitados:** `ativa`, `inadimplente`, `suspensa`. A loja suspensa não consegue pedir cobrança
+  (nem retomar uma antiga: `cobranca_pode_seguir` confere de novo antes de criar a cobrança no Asaas);
   se um Pix antigo for pago, o período é somado mas a loja **continua suspensa** e o pagamento ganha uma observação.
+  Avulso pago com a conta suspensa só soma o tempo (`pago_ate`). Suspender pausa na hora os anúncios no ar, e conta
+  suspensa não põe anúncio no ar de jeito nenhum (gatilho `anuncios_1_conta_suspensa`, nem com avulso pago).
+- **Limite do plano na rotina diária:** pausa o que passar do limite (limite 0 = tudo; plano menor que começou = os
+  mais antigos), mantendo os mais recentes. Avulso pago não conta e não é pausado.
+- **Avulso confirmado** só entra no ar sozinho se ainda tiver categoria e o mínimo de fotos; senão fica pago e o dono
+  toca em Publicar.
   "Vencida/atrasada" é calculada (plano pago com vencimento no passado), sem mudar o status: assim a vitrine não some
   do site; a rotina diária que já existia pausa os anúncios quando o limite vira 0.
 - **Devolução / contestação no cartão** (`estornado`): o plano volta para como estava antes daquele pagamento
   (termina na data paga anterior). Se outro pagamento veio depois, só tira o tempo que faltava daquele.
+  Se havia um plano menor marcado para depois, ele anda para trás o mesmo tanto (não vira tempo grátis).
 - **Lembrete de renovação:** não existe tabela de notificações na base. "Meu plano" mostra o aviso na tela.
   O lembrete por WhatsApp/notificação fica para a etapa das mensagens automáticas (tela 13): usar
   `assinatura.aviso_vencimento_dias` e `minha_assinatura()`.
@@ -114,7 +123,7 @@ Todas SECURITY DEFINER com `search_path = public, extensions`, conferem `usuario
 |---|---|
 | `/minha-conta/plano` | Plano atual, aviso de renovar, troca marcada, planos com período (chips), preço e regra antes de pagar, Pix/cartão, espera e sucesso. `?plano=` pré-escolhe; `?p=<pagamento>` retoma |
 | `/anunciar/avulso?id=` | Pagamento do anúncio avulso |
-| `/admin/pagamentos` | Tela 6: filtros (status, tipo, região, período), totais, link da fatura do Asaas, copiar link ("reenviar" pelo WhatsApp fica para a fase 2), devoluções a fazer, exportar CSV |
+| `/admin/pagamentos` | Tela 6: filtros (status, tipo, região, período), totais, link da fatura do Asaas, reenviar o link no WhatsApp do vendedor (wa.me) ou copiar, devoluções a fazer, exportar CSV (lido de 1000 em 1000; passou do máximo, a última linha avisa) |
 | `/admin/pagamentos/csv` | Rota do servidor, só admin (confere `e_admin` com o token do admin; RLS também barra), `;` e BOM para abrir no Excel, protegido contra fórmula em célula |
 | `/admin/lojas` | Tela 5: lista de lojas e vendedores com plano, vencimento, anúncios no ar, propostas usadas, situação; ações com motivo; verificações pendentes |
 
@@ -124,5 +133,5 @@ Código: `src/lib/cobranca-pagamento.ts` (núcleo comum de cobrança no Asaas, u
 da tela 6, usados pela lista e pelo CSV), `src/app/admin/lojas/*`, `src/app/admin/pagamentos/*`, tipos em
 `src/lib/tipos-cobranca.ts`. Testes do banco: `supabase/testes/80_cobranca_planos.sql`.
 
-Fica para depois: reenviar o link pelo WhatsApp (fase 2; hoje é "Copiar link"), envio de documentos e bucket
-privado `verificacoes`, lembrete de renovação por mensagem (tela 13).
+Fica para depois: envio automático de mensagens (tela 13), envio de documentos pelo usuário e bucket privado
+`verificacoes`, lembrete de renovação por mensagem.
