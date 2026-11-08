@@ -4,6 +4,7 @@ import { exigirAdmin } from "@/lib/admin/auth";
 import { ipDoNavegador } from "@/lib/admin/equipe";
 import { quando } from "@/lib/admin/formato";
 import { buscarCompliance, dadosDaConta, lerConsulta, registrarEntrada } from "@/lib/dados/compliance";
+import { emailsDaConta } from "@/lib/dados/equipe";
 import { ehUuid } from "@/lib/formato";
 import { LINK_ADMIN_COMPLIANCE } from "@/lib/rotas";
 import type { ResultadoCompliance } from "@/lib/tipos-equipe";
@@ -27,6 +28,7 @@ const USUARIO = /^user_[A-Za-z0-9]+$/;
 
 const NOME_TIPO: Record<ResultadoCompliance["tipo"], string> = {
   conta: "Conta",
+  conta_apagada: "Conta apagada",
   anuncio: "Anúncio",
   anuncio_apagado: "Anúncio apagado",
 };
@@ -75,6 +77,8 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
     termo.length >= 3 ? buscarCompliance(supabase, consulta.id, termo, ip) : Promise.resolve(null),
     conta ? dadosDaConta(supabase, consulta.id, conta, ip) : Promise.resolve(null),
   ]);
+  // e-mail do login (fica no Clerk): só depois que o banco gravou que a conta foi aberta
+  const emails = conta && dados?.ok ? await emailsDaConta(conta) : undefined;
   const linkConta = (usuario: string) =>
     `${LINK_ADMIN_COMPLIANCE}?c=${consulta.id}${termo ? `&q=${encodeURIComponent(termo)}` : ""}&conta=${encodeURIComponent(usuario)}`;
 
@@ -105,7 +109,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
           className="mb-6"
           icone={<Scale />}
           titulo="Nada encontrado"
-          texto="Tente o celular com DDD, o nome completo, o CNPJ ou o código do anúncio (aparece no endereço da página do anúncio)."
+          texto="Tente o celular com DDD, o e-mail, o nome completo, o CNPJ ou o código do anúncio (aparece no endereço da página do anúncio)."
         />
       )}
       {resultados?.ok && resultados.dados.length > 0 && (
@@ -126,10 +130,10 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
                     prefetch={false}
                     className="mt-2 inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4"
                   >
-                    {r.tipo === "conta" ? "Ver dados da conta" : "Ver dados de quem anunciou"}
+                    {r.tipo === "conta" || r.tipo === "conta_apagada" ? "Ver dados da conta" : "Ver dados de quem anunciou"}
                   </Link>
                 ) : (
-                  <p className="mt-2 text-sm text-texto-suave">A loja deste anúncio já foi apagada. Busque pelo código de quem apagou.</p>
+                  <p className="mt-2 text-sm text-texto-suave">Não foi possível achar o dono deste anúncio no histórico.</p>
                 )}
               </li>
             ))}
@@ -146,7 +150,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
         <Cartao className="mb-6">
           <h2 className="text-xl font-semibold text-beringela">Dados da conta</h2>
           <p className="font-mono text-[13px] text-texto-suave">{conta}</p>
-          <DadosConta d={dados.dados} />
+          <DadosConta d={dados.dados} emails={emails} />
           <div className="mt-8 border-t border-borda pt-4">
             <h3 className="mb-3 text-lg font-semibold text-beringela">Relatório para imprimir</h3>
             <FormRelatorio consulta={consulta.id} usuario={conta} motivoConsulta={consulta.motivo} />
@@ -158,7 +162,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
         <Vazio
           icone={<Scale />}
           titulo="Busque a pessoa ou o anúncio"
-          texto="Use o celular com DDD, o nome, o CNPJ da loja, o título ou o código do anúncio."
+          texto="Use o celular com DDD, o e-mail, o nome, o CNPJ da loja, o título ou o código do anúncio."
         >
           <Botao href={LINK_ADMIN_COMPLIANCE} variante="texto" prefetch={false}>
             Trocar o motivo

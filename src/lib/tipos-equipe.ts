@@ -82,6 +82,8 @@ export type MembroEquipe = {
   observacao: string | null;
   adicionado_por_nome: string | null;
   desativado_em: string | null;
+  /** quem tirou da equipe (nome, ou o código se a conta não existe mais) */
+  desativado_por_nome: string | null;
   criado_em: string;
   atualizado_em: string;
 };
@@ -101,7 +103,7 @@ export type Regiao = { id: string; nome: string };
 // Compliance
 // ---------------------------------------------------------------------------
 
-export type TipoResultadoCompliance = "conta" | "anuncio" | "anuncio_apagado";
+export type TipoResultadoCompliance = "conta" | "conta_apagada" | "anuncio" | "anuncio_apagado";
 
 export type ResultadoCompliance = {
   tipo: TipoResultadoCompliance;
@@ -130,6 +132,8 @@ export type DadosCompliance = {
   desde: string;
   historico_limite: number;
   perfil: Record<string, unknown> | null;
+  /** conta apagada: o último cadastro guardado no histórico */
+  perfil_apagado: { dados: Record<string, unknown>; apagado_em: string; apagado_por: string | null } | null;
   equipe: { papel: Papel; ativo: boolean } | null;
   aceites: { tipo: string; versao: number; aceito_em: string }[];
   lojas: {
@@ -155,6 +159,20 @@ export type DadosCompliance = {
     criado_ip: string | null;
     atualizado_em: string;
     congelado_motivo: string | null;
+  }[];
+  lojas_apagadas: {
+    id: string;
+    nome: string | null;
+    slug: string | null;
+    tipo: string | null;
+    cnpj: string | null;
+    whatsapp: string | null;
+    cidade: string | null;
+    criado_em: string | null;
+    criado_ip: string | null;
+    apagado_em: string;
+    apagado_por: string | null;
+    ip: string | null;
   }[];
   anuncios_apagados: { id: string; titulo: string | null; apagado_em: string; apagado_por: string | null; ip: string | null }[];
   historico: LinhaHistorico[];

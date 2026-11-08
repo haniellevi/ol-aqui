@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { exigirAdmin } from "@/lib/admin/auth";
 import { ipDoNavegador } from "@/lib/admin/equipe";
 import { traduzirErro } from "@/lib/erros";
@@ -24,6 +24,7 @@ export async function abrirConsulta(_: EstadoCompliance, form: FormData): Promis
     if (error || typeof data !== "string") return { erro: traduzirErro(error).mensagem };
     id = data;
   } catch (e) {
+    unstable_rethrow(e); // sessão vencida (redirect) ou quem saiu da equipe (404) não viram texto de erro
     return { erro: e instanceof Error ? e.message : "Não deu para abrir a consulta." };
   }
   redirect(`${LINK_ADMIN_COMPLIANCE}?c=${id}`);
@@ -48,6 +49,7 @@ export async function pedirRelatorio(_: EstadoCompliance, form: FormData): Promi
     if (error || typeof data !== "string") return { erro: traduzirErro(error).mensagem };
     id = data;
   } catch (e) {
+    unstable_rethrow(e); // sessão vencida (redirect) ou quem saiu da equipe (404) não viram texto de erro
     return { erro: e instanceof Error ? e.message : "Não deu para gerar o relatório." };
   }
   redirect(linkRelatorioCompliance(id));

@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_rethrow } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { exigirAdmin } from "@/lib/admin/auth";
 import { buscarContas } from "@/lib/dados/equipe";
@@ -30,6 +31,7 @@ export async function buscarConta(_: EstadoBusca, form: FormData): Promise<Estad
     }
     return { contas: r.contas, termo };
   } catch (e) {
+    unstable_rethrow(e); // sessão vencida (redirect) ou quem saiu da equipe (404) não viram texto de erro
     return { erro: e instanceof Error ? e.message : "Não deu para buscar agora." };
   }
 }
@@ -54,6 +56,7 @@ export async function salvarMembro(_: EstadoEquipe, form: FormData): Promise<Est
     revalidatePath(LINK_ADMIN_EQUIPE);
     return { ok: "Pronto. O papel já vale na próxima tela que a pessoa abrir." };
   } catch (e) {
+    unstable_rethrow(e); // sessão vencida (redirect) ou quem saiu da equipe (404) não viram texto de erro
     return { erro: e instanceof Error ? e.message : "Não deu para salvar." };
   }
 }
@@ -70,6 +73,7 @@ export async function desativarMembro(_: EstadoEquipe, form: FormData): Promise<
     revalidatePath(LINK_ADMIN_EQUIPE);
     return { ok: "Pessoa tirada da equipe. Ela perde o acesso ao painel na hora." };
   } catch (e) {
+    unstable_rethrow(e); // sessão vencida (redirect) ou quem saiu da equipe (404) não viram texto de erro
     return { erro: e instanceof Error ? e.message : "Não deu para salvar." };
   }
 }

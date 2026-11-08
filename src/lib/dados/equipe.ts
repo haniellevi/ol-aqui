@@ -22,18 +22,34 @@ export async function listarRegioes(supabase: SupabaseClient): Promise<Regiao[]>
   }, []);
 }
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Ids do Clerk das contas com este e-mail (o e-mail fica no Clerk, não no banco).
  * Sem CLERK_SECRET_KEY ou com o Clerk fora do ar: `null` (a tela avisa que a busca por e-mail não deu).
  */
-async function idsPeloEmail(email: string): Promise<string[] | null> {
+export async function idsPeloEmail(email: string): Promise<string[] | null> {
   if (!process.env.CLERK_SECRET_KEY) return null;
   try {
     const { data } = await (await clerkClient()).users.getUserList({ emailAddress: [email], limit: 5 });
     return data.map((u) => u.id);
   } catch {
+    return null;
+  }
+}
+
+/**
+ * E-mails da conta no Clerk (o banco não guarda e-mail). `null` = não deu para saber agora
+ * (sem CLERK_SECRET_KEY ou Clerk fora do ar); lista vazia = conta sem e-mail ou já apagada no Clerk.
+ */
+export async function emailsDaConta(usuarioId: string): Promise<string[] | null> {
+  if (!process.env.CLERK_SECRET_KEY) return null;
+  try {
+    const u = await (await clerkClient()).users.getUser(usuarioId);
+    return u.emailAddresses.map((e) => e.emailAddress);
+  } catch (e) {
+    // conta apagada no Clerk: 404
+    if (typeof e === "object" && e && "status" in e && (e as { status?: number }).status === 404) return [];
     return null;
   }
 }

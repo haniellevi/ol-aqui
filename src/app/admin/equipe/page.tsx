@@ -39,7 +39,11 @@ function Membro({ m, eu, regioes }: { m: MembroEquipe; eu: boolean; regioes: Reg
       </div>
       <p className="mt-2 text-[13px] text-texto-suave">
         {m.ativo ? "Na equipe desde" : "Saiu em"} {quando(m.ativo ? m.criado_em : m.desativado_em)}
-        {m.adicionado_por_nome ? ` · por ${m.adicionado_por_nome}` : ""}
+        {m.ativo
+          ? m.adicionado_por_nome
+            ? ` · posto por ${m.adicionado_por_nome}`
+            : ""
+          : ` · tirado por ${m.desativado_por_nome ?? "sistema"}`}
         {m.observacao ? ` · ${m.observacao}` : ""}
       </p>
       {!eu && (

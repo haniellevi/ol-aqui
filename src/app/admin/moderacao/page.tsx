@@ -2,6 +2,7 @@ import { exigirTela } from "@/lib/admin/equipe";
 import { quando, reais } from "@/lib/admin/formato";
 import { Aviso, Cartao, Titulo, estiloBotaoAprovar, estiloBotaoPerigo, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { decidirAnuncio, decidirPedido, resolverDenuncia, tirarFotoBanner } from "./actions";
+import { BotaoDecisao } from "./botao-decisao";
 import { BotaoTirarBanner } from "./botao-tirar-banner";
 import { RadarModeracao } from "./radar-moderacao";
 
@@ -105,10 +106,10 @@ export default async function ModeracaoPage({
                 <input type="hidden" name="id" value={a.id} />
                 <input name="motivo" placeholder={podeCongelar ? "Motivo (para recusar ou congelar)" : "Motivo (para recusar)"} className={estiloCampo} />
                 <div className="flex flex-wrap gap-2">
-                  <button name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</button>
-                  <button name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</button>
+                  <BotaoDecisao name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
+                  <BotaoDecisao name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</BotaoDecisao>
                   {podeCongelar && (
-                    <button name="decisao" value="congelar" className={estiloBotaoPerigo}>Congelar (Compliance)</button>
+                    <BotaoDecisao name="decisao" value="congelar" className={estiloBotaoPerigo}>Congelar (Compliance)</BotaoDecisao>
                   )}
                 </div>
               </form>
@@ -129,8 +130,8 @@ export default async function ModeracaoPage({
               <input type="hidden" name="id" value={p.id} />
               <input name="motivo" placeholder="Motivo (para recusar)" className={estiloCampo} />
               <div className="flex gap-2">
-                <button name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</button>
-                <button name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</button>
+                <BotaoDecisao name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
+                <BotaoDecisao name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</BotaoDecisao>
               </div>
             </form>
           </Cartao>
@@ -179,8 +180,8 @@ export default async function ModeracaoPage({
             </div>
             <form action={resolverDenuncia} className="flex gap-2">
               <input type="hidden" name="id" value={d.id} />
-              <button name="procedente" value="sim" className={estiloBotaoPerigo}>Procede</button>
-              <button name="procedente" value="nao" className={estiloBotaoSec}>Não procede</button>
+              <BotaoDecisao name="procedente" value="sim" className={estiloBotaoPerigo}>Procede</BotaoDecisao>
+              <BotaoDecisao name="procedente" value="nao" className={estiloBotaoSec}>Não procede</BotaoDecisao>
             </form>
           </Cartao>
         ))}

@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_rethrow } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { exigirTela } from "@/lib/admin/equipe";
 import { inteiroOuNulo } from "@/lib/admin/formato";
@@ -52,6 +53,7 @@ export async function acaoLoja(_: EstadoForm, form: FormData): Promise<EstadoFor
     atualizar();
     return { ok: OK[acao] };
   } catch (e) {
+    unstable_rethrow(e); // sessão vencida (redirect) ou quem saiu da equipe (404) não viram texto de erro
     return { erro: e instanceof Error ? e.message : "Não deu para salvar." };
   }
 }
@@ -69,6 +71,7 @@ export async function analisarVerificacao(_: EstadoForm, form: FormData): Promis
     revalidatePath("/admin/lojas");
     return { ok: aprovar ? "Aprovada." : "Recusada." };
   } catch (e) {
+    unstable_rethrow(e); // sessão vencida (redirect) ou quem saiu da equipe (404) não viram texto de erro
     return { erro: e instanceof Error ? e.message : "Não deu para salvar." };
   }
 }

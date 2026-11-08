@@ -57,7 +57,7 @@ export function FormBusca({ consulta, termo }: { consulta: string; termo: string
         minLength={3}
         maxLength={120}
         defaultValue={termo}
-        placeholder="Nome, celular, CNPJ, título ou código do anúncio"
+        placeholder="Celular, e-mail, nome, CNPJ, título ou código do anúncio"
         autoComplete="off"
       />
       <Botao type="submit" variante="secundario" carregando={pendente} textoCarregando="Buscando..." icone={<Search />} className="md:mb-0.5">

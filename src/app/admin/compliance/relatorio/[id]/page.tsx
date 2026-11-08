@@ -3,6 +3,7 @@ import { exigirAdmin } from "@/lib/admin/auth";
 import { ipDoNavegador } from "@/lib/admin/equipe";
 import { quando } from "@/lib/admin/formato";
 import { lerRelatorio } from "@/lib/dados/compliance";
+import { emailsDaConta } from "@/lib/dados/equipe";
 import { ehUuid } from "@/lib/formato";
 import { LINK_ADMIN_COMPLIANCE } from "@/lib/rotas";
 import { Aviso, Titulo } from "@/components/admin/ui";
@@ -41,6 +42,10 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
     );
   }
   const { cabecalho: c, dados } = r.dados;
+  // Histórico cortado no máximo de linhas: o período real começa na linha mais antiga que entrou.
+  const cortado = dados.historico.length >= dados.historico_limite && dados.historico.length > 0;
+  const inicio = cortado ? dados.historico[dados.historico.length - 1].criado_em : dados.desde;
+  const emails = await emailsDaConta(dados.usuario_id);
 
   return (
     <article className="text-beringela">
@@ -79,17 +84,27 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
           <dd className="break-all font-mono text-sm">{dados.usuario_id}</dd>
           <dt className="text-sm text-texto-suave">Período do histórico</dt>
           <dd>
-            {quando(dados.desde)} a {quando(c.impresso_em)}
+            {quando(inicio)} a {quando(c.impresso_em)}
+            {cortado && (
+              <span className="block text-sm font-semibold text-perigo">
+                Lista cortada nas {dados.historico_limite} linhas mais novas. O período pedido começava em {quando(dados.desde)}.
+              </span>
+            )}
+          </dd>
+          <dt className="text-sm text-texto-suave">IP de quem gerou</dt>
+          <dd className="text-sm">
+            {c.ip_navegador ?? "—"} (informado pelo painel do OLAKI) · {c.ip_banco ?? "—"} (gravado pelo banco)
           </dd>
         </dl>
       </header>
 
-      <DadosConta d={dados} relatorio />
+      <DadosConta d={dados} relatorio emails={emails} />
 
       <footer className="mt-8 border-t border-borda pt-3 text-sm text-texto-suave">
         <p>
-          Os IPs, datas e horários são os gravados pelo sistema do OLAKI no momento de cada ação. A porta lógica de origem só aparece se
-          estiver gravada. Este relatório foi gerado a pedido e o próprio pedido ficou registrado (quem, quando, motivo e IP).
+          Datas e horários são os gravados pelo sistema do OLAKI no momento de cada ação. Os IPs marcados com * são os que chegaram ao
+          banco: costumam ser do servidor do site do OLAKI, e não da pessoa (veja o aviso no começo). A porta lógica de origem não é
+          gravada. Este relatório foi gerado a pedido e o próprio pedido ficou registrado (quem, quando e motivo).
         </p>
         <p className="mt-2">Relatório nº {c.relatorio_id}</p>
       </footer>

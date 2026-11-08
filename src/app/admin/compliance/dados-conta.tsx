@@ -14,7 +14,7 @@ const CAMPOS_PERFIL: [string, string][] = [
   ["cidade", "Cidade"],
   ["bairro", "Bairro"],
   ["criado_em", "Conta criada em"],
-  ["criado_ip", "IP no cadastro"],
+  ["criado_ip", "IP gravado no cadastro*"],
   ["aceitou_termos_em", "Aceitou os termos em"],
   ["versao_termos", "Versão dos termos"],
   ["atualizado_em", "Última mudança no cadastro"],
@@ -64,19 +64,58 @@ function Campos({ campos }: { campos: Record<string, [string | null, string | nu
 
 const Nada = ({ children }: { children: React.ReactNode }) => <p className="text-base text-texto-suave">{children}</p>;
 
-/** `relatorio`: versão para imprimir (campos alterados sempre abertos). */
-export function DadosConta({ d, relatorio = false }: { d: DadosCompliance; relatorio?: boolean }) {
-  const outros = d.perfil ? Object.entries(d.perfil).filter(([k]) => !CONHECIDOS.has(k)) : [];
+/**
+ * Os IPs vêm de logs_atividade e de criado_ip, gravados pelo banco com o IP de quem chamou o banco.
+ * Quase toda ação passa antes pelo servidor do site (Vercel), então esse IP costuma ser o do servidor.
+ * Enquanto o IP da pessoa não for gravado em cada ação, o relatório diz isso com todas as letras.
+ */
+function AvisoIp() {
+  return (
+    <p className="mt-3 rounded-card border border-aviso bg-aviso-fundo p-3 text-sm text-beringela">
+      <span className="font-semibold">* Sobre os IPs e o navegador:</span> quase todo cadastro e mudança passa pelo servidor do site do
+      OLAKI antes de chegar ao banco. Por isso o IP e o navegador gravados costumam ser os do servidor do OLAKI, e não os da pessoa.
+      Não use estes dados para dizer de onde a pessoa acessou.
+    </p>
+  );
+}
+
+function Emails({ emails }: { emails: string[] | null }) {
+  if (emails === null) return <>Não deu para ver agora (o login está fora do ar)</>;
+  if (emails.length === 0) return <>Nenhum (a conta não existe mais no login)</>;
+  return <>{emails.join(", ")}</>;
+}
+
+/**
+ * `relatorio`: versão para imprimir (campos alterados sempre abertos).
+ * `emails`: e-mails do login (Clerk), lidos no servidor. `null` = não deu para ver; ausente = não buscado.
+ */
+export function DadosConta({ d, relatorio = false, emails }: { d: DadosCompliance; relatorio?: boolean; emails?: string[] | null }) {
+  // conta apagada: mostra o último cadastro guardado no histórico
+  const perfil = d.perfil ?? d.perfil_apagado?.dados ?? null;
+  const outros = perfil ? Object.entries(perfil).filter(([k]) => !CONHECIDOS.has(k)) : [];
   return (
     <div>
+      <AvisoIp />
       <Secao titulo="Cadastro">
-        {d.perfil ? (
+        {!d.perfil && d.perfil_apagado && (
+          <p className="mb-2 text-base font-semibold text-perigo">
+            Conta apagada em {quando(d.perfil_apagado.apagado_em)}
+            {d.perfil_apagado.apagado_por ? ` (por ${d.perfil_apagado.apagado_por === d.usuario_id ? "a própria pessoa" : d.perfil_apagado.apagado_por})` : ""}.
+            Abaixo, o último cadastro guardado.
+          </p>
+        )}
+        {perfil ? (
           <dl>
             {CAMPOS_PERFIL.map(([k, rotulo]) => (
               <Linha key={k} rotulo={rotulo}>
-                {valor(k, d.perfil?.[k])}
+                {valor(k, perfil[k])}
               </Linha>
             ))}
+            {emails !== undefined && (
+              <Linha rotulo="E-mail do login">
+                <Emails emails={emails} />
+              </Linha>
+            )}
             {d.equipe && (
               <Linha rotulo="Equipe OLAKI">
                 {NOME_PAPEL[d.equipe.papel]}
@@ -124,11 +163,32 @@ export function DadosConta({ d, relatorio = false }: { d: DadosCompliance; relat
               <Linha rotulo="Cidade">{l.cidade ?? "—"}</Linha>
               <Linha rotulo="Situação">{l.status}</Linha>
               <Linha rotulo="Criada em">{quando(l.criado_em)}</Linha>
-              <Linha rotulo="IP na criação">{l.criado_ip ?? "—"}</Linha>
+              <Linha rotulo="IP gravado na criação*">{l.criado_ip ?? "—"}</Linha>
             </dl>
           ))
         )}
       </Secao>
+
+      {d.lojas_apagadas.length > 0 && (
+        <Secao titulo={`Lojas apagadas (${d.lojas_apagadas.length})`}>
+          {d.lojas_apagadas.map((l) => (
+            <dl key={l.id} className="mb-3 rounded-card border border-borda p-3">
+              <Linha rotulo="Nome">{l.nome ?? "—"}</Linha>
+              <Linha rotulo="Endereço no site">{l.slug ? `/loja/${l.slug}` : "—"}</Linha>
+              <Linha rotulo="Tipo">{l.tipo === "loja" ? "Loja" : "Pessoa física"}</Linha>
+              <Linha rotulo="CNPJ">{l.cnpj ?? "—"}</Linha>
+              <Linha rotulo="WhatsApp da loja">{l.whatsapp ? `${telefone(l.whatsapp)} (${l.whatsapp})` : "—"}</Linha>
+              <Linha rotulo="Cidade">{l.cidade ?? "—"}</Linha>
+              <Linha rotulo="Criada em">{l.criado_em ? quando(l.criado_em) : "—"}</Linha>
+              <Linha rotulo="IP gravado na criação*">{l.criado_ip ?? "—"}</Linha>
+              <Linha rotulo="Apagada em">
+                {quando(l.apagado_em)} · por {l.apagado_por ?? "sistema (conta apagada)"}
+              </Linha>
+              <p className="font-mono text-[13px] text-texto-suave">{l.id}</p>
+            </dl>
+          ))}
+        </Secao>
+      )}
 
       <Secao titulo={`Anúncios (${d.anuncios.length})`}>
         {d.anuncios.length === 0 ? (
@@ -142,7 +202,7 @@ export function DadosConta({ d, relatorio = false }: { d: DadosCompliance; relat
                   {a.status} · {a.preco_centavos != null ? reais(a.preco_centavos) : "a combinar"} · {a.cidade ?? "—"}
                 </p>
                 <p className="text-sm text-texto-suave">
-                  Criado {quando(a.criado_em)} · IP {a.criado_ip ?? "—"} · mudou {quando(a.atualizado_em)}
+                  Criado {quando(a.criado_em)} · IP gravado* {a.criado_ip ?? "—"} · mudou {quando(a.atualizado_em)}
                 </p>
                 {a.congelado_motivo && <p className="text-sm font-semibold text-perigo">Congelado: {a.congelado_motivo}</p>}
                 <p className="font-mono text-[13px] text-texto-suave">{a.id}</p>
@@ -159,7 +219,7 @@ export function DadosConta({ d, relatorio = false }: { d: DadosCompliance; relat
               <li key={a.id} className="rounded-card border border-borda p-3">
                 <p className="text-base font-semibold text-beringela">{a.titulo ?? "Sem título"}</p>
                 <p className="text-sm text-texto-suave">
-                  Apagado {quando(a.apagado_em)} · por {a.apagado_por ?? "sistema"} · IP {a.ip ?? "—"}
+                  Apagado {quando(a.apagado_em)} · por {a.apagado_por ?? "sistema"} · IP gravado* {a.ip ?? "—"}
                 </p>
                 <p className="font-mono text-[13px] text-texto-suave">{a.id}</p>
               </li>
@@ -171,7 +231,9 @@ export function DadosConta({ d, relatorio = false }: { d: DadosCompliance; relat
       <Secao titulo={`Histórico: IPs, datas e alterações (${d.historico.length})`}>
         <p className="mb-3 text-sm text-texto-suave">
           Desde {quando(d.desde)} (últimos {d.meses_historico} meses), mais novo primeiro.
-          {d.historico.length >= d.historico_limite ? ` Mostrando as ${d.historico_limite} linhas mais novas.` : ""}
+          {d.historico.length >= d.historico_limite
+            ? ` Lista cortada: mostrando só as ${d.historico_limite} linhas mais novas (a mais antiga é de ${quando(d.historico[d.historico.length - 1].criado_em)}).`
+            : ""}
         </p>
         {d.historico.length === 0 ? (
           <Nada>Nenhum registro no período.</Nada>
@@ -183,9 +245,9 @@ export function DadosConta({ d, relatorio = false }: { d: DadosCompliance; relat
                   {quando(h.criado_em)} · {NOME_ACAO[h.acao] ?? h.acao} · {NOME_TABELA[h.tabela] ?? h.tabela}
                 </p>
                 <p className="text-sm text-texto-suave">
-                  IP {h.ip ?? "—"} · quem fez: {h.quem ? (h.quem === d.usuario_id ? "a própria pessoa" : h.quem) : "sistema"}
+                  IP gravado* {h.ip ?? "—"} · quem fez: {h.quem ? (h.quem === d.usuario_id ? "a própria pessoa" : h.quem) : "sistema"}
                 </p>
-                {h.user_agent && <p className="break-words text-[13px] text-texto-suave">Navegador: {h.user_agent}</p>}
+                {h.user_agent && <p className="break-words text-[13px] text-texto-suave">Navegador gravado*: {h.user_agent}</p>}
                 <p className="font-mono text-[13px] text-texto-suave">Registro {h.registro_id}</p>
                 {h.campos && Object.keys(h.campos).length > 0 && (
                   relatorio ? (
