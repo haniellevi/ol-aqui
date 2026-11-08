@@ -1,13 +1,13 @@
 // components/radar/radar-de-negocios.tsx
 // Radar de Negócios: a "lista quente" invertida do OLAKI.
 // Mobile-first, sem bibliotecas pesadas: Tailwind + lucide-react (já vem com shadcn/ui).
+// "Propor" abre a tela do pedido (/radar/[id]) com a folha de proposta: anúncio ou foto, preço e mensagem.
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, MessageCircle, Radar, Send, Users } from "lucide-react";
-import { proporProduto } from "@/app/radar/actions";
-import { LINK_PLANOS } from "@/lib/rotas";
+import { LINK_PLANOS, linkMeuPedidoRadar, linkPedidoRadarLoja } from "@/lib/rotas";
 
 export type CategoriaRadar = "imovel" | "veiculo" | "movel" | "geral";
 
@@ -27,6 +27,9 @@ export type PedidoRadar = {
   compradorCertificado: boolean;
   compradorNome: string | null; // null quando bloqueado
   jaPropus: boolean;
+  souComprador: boolean; // o pedido é meu (não proponho no meu próprio pedido)
+  precoMinCentavos: number | null;
+  categoriaNome: string | null;
 };
 
 export type PlanoResumo = { codigo: string; nome: string; preco_centavos: number };
@@ -57,14 +60,17 @@ export function RadarDeNegocios({
   temAcesso,
   propostasRestantes,
   planos,
+  abas,
 }: {
   pedidos: PedidoRadar[];
   temAcesso: boolean;
   propostasRestantes: number | null; // null = ilimitado
   planos: PlanoResumo[];
+  /** Abas da tela /radar (Meus pedidos, Pedidos na região, Minhas propostas). */
+  abas?: ReactNode;
 }) {
   const [filtro, setFiltro] = useState<CategoriaRadar | "todas">("todas");
-  const [restantes, setRestantes] = useState(propostasRestantes);
+  const restantes = propostasRestantes;
   const visiveis = useMemo(
     () => (filtro === "todas" ? pedidos : pedidos.filter((p) => p.categoria === filtro)),
     [pedidos, filtro],
@@ -73,7 +79,7 @@ export function RadarDeNegocios({
 
   return (
     <main className="mx-auto min-h-dvh max-w-xl bg-fundo pb-28">
-      <header className="sticky top-0 z-10 border-b border-borda bg-cartao/95 px-4 pb-3 pt-4 backdrop-blur">
+      <header className="sticky top-16 z-10 border-b border-borda bg-cartao/95 px-4 pb-3 pt-4 backdrop-blur">
         <div className="flex items-center gap-2">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
           <h1 className="text-xl font-bold tracking-tight text-beringela">Radar de Negócios</h1>
@@ -81,6 +87,7 @@ export function RadarDeNegocios({
         <p className="mt-0.5 text-sm text-texto-suave">
           {pedidos.length} {pedidos.length === 1 ? "comprador procurando" : "compradores procurando"} na sua região
         </p>
+        {abas}
 
         <nav className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]" aria-label="Filtrar por categoria">
           {CATEGORIAS.map((c) => (
@@ -114,12 +121,7 @@ export function RadarDeNegocios({
       <ul className="space-y-3 px-4 pt-4">
         {visiveis.map((p) => (
           <li key={p.id}>
-            <CartaoPedido
-              pedido={p}
-              temAcesso={temAcesso}
-              podePropor={podePropor}
-              aoUsarProposta={() => setRestantes((r) => (r === null ? null : Math.max(r - 1, 0)))}
-            />
+            <CartaoPedido pedido={p} temAcesso={temAcesso} podePropor={podePropor} />
           </li>
         ))}
         {visiveis.length === 0 && (
@@ -136,59 +138,16 @@ function CartaoPedido({
   pedido: p,
   temAcesso,
   podePropor,
-  aoUsarProposta,
 }: {
   pedido: PedidoRadar;
   temAcesso: boolean;
   podePropor: boolean;
-  aoUsarProposta: () => void;
 }) {
-  const [pendente, iniciar] = useTransition();
-  const [erro, setErro] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
-  const [propus, setPropus] = useState(p.jaPropus);
-  const [formAberto, setFormAberto] = useState(false);
-  const [preco, setPreco] = useState("");
-  const [mensagem, setMensagem] = useState("");
   const modoPrazo = p.modoContato === "propostas_prazo";
+  const propus = p.jaPropus;
   const esgotado = p.totalPropostas >= p.maxPropostas && !propus;
-  const liberado = podePropor || propus; // quem já propôs pode voltar a falar sem gastar proposta
-
-  function enviarDireto() {
-    setErro(null);
-    // Abre a aba já no clique (iOS bloqueia window.open depois de um await).
-    const aba = window.open("about:blank", "_blank");
-    iniciar(async () => {
-      const r = await proporProduto({ pedidoId: p.id });
-      if (r.ok && r.modo === "whatsapp_direto") {
-        if (!propus) aoUsarProposta();
-        setPropus(true);
-        if (aba) aba.location.href = r.linkWhatsapp;
-        else window.location.href = r.linkWhatsapp;
-      } else {
-        aba?.close();
-        setErro(r.ok ? "Este pedido não aceita WhatsApp direto." : r.erro);
-      }
-    });
-  }
-
-  function enviarProposta(e: React.FormEvent) {
-    e.preventDefault();
-    setErro(null);
-    const valor = Number(preco.replace(/\./g, "").replace(",", "."));
-    if (!valor || valor <= 0) return setErro("Informe o valor da sua proposta.");
-    iniciar(async () => {
-      const r = await proporProduto({ pedidoId: p.id, precoReais: valor, mensagem });
-      if (r.ok && r.modo === "propostas_prazo") {
-        if (!propus) aoUsarProposta();
-        setPropus(true);
-        setFormAberto(false);
-        setAviso(r.mensagem);
-      } else if (!r.ok) {
-        setErro(r.erro);
-      }
-    });
-  }
+  const liberado = podePropor || propus; // quem já propôs pode voltar a ver e editar sem gastar proposta
+  const linkPedido = linkPedidoRadarLoja(p.id);
 
   return (
     <article className="overflow-hidden rounded-card border border-borda bg-cartao shadow-1">
@@ -219,11 +178,19 @@ function CartaoPedido({
         </div>
 
         {/* O que procura: sempre visível, é o "gancho" que vende o plano */}
-        <h2 className="mt-2 text-base font-semibold leading-snug text-beringela">{p.titulo}</h2>
+        <h2 className="mt-2 text-base font-semibold leading-snug text-beringela">
+          <Link href={p.souComprador ? linkMeuPedidoRadar(p.id) : linkPedido} className="hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
+            {p.titulo}
+          </Link>
+        </h2>
 
         <div className="mt-2 flex items-center justify-between gap-3">
           <span className="text-lg font-bold text-beringela">
-            {p.precoMaxCentavos != null ? `até ${reais.format(p.precoMaxCentavos / 100)}` : "Valor a combinar"}
+            {p.precoMaxCentavos != null
+              ? `${p.precoMinCentavos != null ? `${reais.format(p.precoMinCentavos / 100)} a ` : "até "}${reais.format(p.precoMaxCentavos / 100)}`
+              : p.precoMinCentavos != null
+                ? `a partir de ${reais.format(p.precoMinCentavos / 100)}`
+                : "Valor a combinar"}
           </span>
           <span className="inline-flex items-center gap-1 text-sm text-texto-suave">
             <MapPin className="size-4" aria-hidden />
@@ -264,39 +231,18 @@ function CartaoPedido({
             : `${p.totalPropostas} de ${p.maxPropostas} propostas enviadas`}
         </p>
 
-        {/* Formulário do modo "propostas com prazo" */}
-        {formAberto && (
-          <form onSubmit={enviarProposta} className="mt-3 space-y-2">
-            <label className="block text-sm font-semibold text-beringela">
-              Seu preço (R$)
-              <input
-                inputMode="decimal"
-                value={preco}
-                onChange={(e) => setPreco(e.target.value)}
-                placeholder="Ex.: 14.500"
-                className="mt-1 h-12 w-full rounded-campo border border-borda px-3 text-base outline-none focus:border-laranja-escuro"
-              />
-            </label>
-            <label className="block text-sm font-semibold text-beringela">
-              Mensagem (opcional)
-              <textarea
-                value={mensagem}
-                onChange={(e) => setMensagem(e.target.value)}
-                maxLength={500}
-                rows={2}
-                placeholder="Ex.: Titan 2019, revisada, aceito troca"
-                className="mt-1 w-full rounded-campo border border-borda p-3 text-base outline-none focus:border-laranja-escuro"
-              />
-            </label>
-          </form>
-        )}
-
-        {aviso && <p className="mt-2 rounded-card bg-verde-escuro p-2 text-sm text-white">{aviso}</p>}
-        {erro && <p className="mt-2 text-sm text-perigo" role="alert">{erro}</p>}
       </div>
 
       {/* Ação principal: largura total, 52px de altura */}
-      {!temAcesso || !liberado ? (
+      {p.souComprador ? (
+        <Link
+          href={linkMeuPedidoRadar(p.id)}
+          className="flex h-13 w-full items-center justify-center gap-2 border-t border-borda bg-cartao text-base font-semibold text-beringela active:brightness-90"
+        >
+          <Users className="size-5" aria-hidden />
+          Seu pedido · ver propostas
+        </Link>
+      ) : !temAcesso || !liberado ? (
         <Link
           href={`${LINK_PLANOS}?origem=radar`}
           className="flex h-13 w-full items-center justify-center gap-2 bg-laranja text-base font-semibold text-beringela active:brightness-90"
@@ -304,25 +250,24 @@ function CartaoPedido({
           <Lock className="size-5" aria-hidden />
           Desbloquear e Propor Produto
         </Link>
-      ) : modoPrazo ? (
-        <button
-          type={formAberto ? "submit" : "button"}
-          onClick={formAberto ? (e) => enviarProposta(e as unknown as React.FormEvent) : () => setFormAberto(true)}
-          disabled={pendente || esgotado}
-          className="flex h-13 w-full items-center justify-center gap-2 bg-laranja text-base font-semibold text-beringela transition-colors active:brightness-90 disabled:bg-borda disabled:text-texto-suave"
+      ) : esgotado ? (
+        <span
+          aria-disabled
+          className="flex h-13 w-full items-center justify-center gap-2 bg-borda text-base font-semibold text-texto-suave"
         >
           <Send className="size-5" aria-hidden />
-          {pendente ? "Enviando…" : esgotado ? "Propostas esgotadas" : formAberto ? "Enviar proposta" : propus ? "Atualizar minha proposta" : "Propor Produto"}
-        </button>
+          Propostas esgotadas
+        </span>
       ) : (
-        <button
-          onClick={enviarDireto}
-          disabled={pendente || esgotado}
-          className="flex h-13 w-full items-center justify-center gap-2 bg-verde-escuro text-base font-semibold text-white transition-colors active:brightness-90 disabled:bg-borda disabled:text-texto-suave"
+        <Link
+          href={`${linkPedido}?propor=1`}
+          className={`flex h-13 w-full items-center justify-center gap-2 text-base font-semibold transition-colors active:brightness-90 ${
+            modoPrazo ? "bg-laranja text-beringela" : "bg-verde-escuro text-white"
+          }`}
         >
-          <MessageCircle className="size-5" aria-hidden />
-          {pendente ? "Abrindo WhatsApp…" : esgotado ? "Propostas esgotadas" : propus ? "Falar de novo no WhatsApp" : "Propor Produto"}
-        </button>
+          {modoPrazo ? <Send className="size-5" aria-hidden /> : <MessageCircle className="size-5" aria-hidden />}
+          {propus ? "Ver minha proposta" : "Propor Produto"}
+        </Link>
       )}
     </article>
   );

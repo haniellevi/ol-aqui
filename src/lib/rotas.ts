@@ -19,3 +19,13 @@ export const LINK_DESTACAR_LOJA = "/destacar/loja";
 
 /** "Destacar minha loja" retomando um pagamento (?d=<pedido>). */
 export const linkDestacarLoja = (pedidoId?: string | null) => `${LINK_DESTACAR_LOJA}${pedidoId ? `?d=${pedidoId}` : ""}`;
+
+/** Radar: pedir (com o texto já preenchido), pedido do comprador e pedido visto pela loja. */
+export const LINK_RADAR = "/radar";
+export const linkPedirRadar = (texto?: string | null) => {
+  const t = (texto ?? "").trim().slice(0, 120);
+  return t ? `/radar/pedir?q=${encodeURIComponent(t)}` : "/radar/pedir";
+};
+export const linkMeuPedidoRadar = (pedidoId: string) => `/radar/pedido/${pedidoId}`;
+export const linkPedidoRadarLoja = (pedidoId: string) => `/radar/${pedidoId}`;
+export const LINK_AVISOS = "/minha-conta/notificacoes";
