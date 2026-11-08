@@ -21,19 +21,19 @@ const ITENS = [
 export function NavAdmin({ pendencias }: { pendencias: number }) {
   const atual = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 grid auto-cols-fr grid-flow-col border-t border-borda bg-cartao shadow-2 md:static md:flex md:w-56 md:flex-col md:gap-1 md:border-0 md:bg-transparent md:p-4 md:shadow-none">
+    <nav className="fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto overscroll-x-contain border-t border-borda bg-cartao shadow-2 md:static md:w-56 md:flex-col md:gap-1 md:overflow-visible md:border-0 md:bg-transparent md:p-4 md:shadow-none">
       {ITENS.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
         const ativo = href === "/admin" ? atual === href : atual.startsWith(href);
         return (
           <Link
             key={href}
             href={href}
-            className={`relative flex h-16 min-w-0 flex-col items-center justify-center gap-1 text-[13px] font-semibold leading-4 md:h-12 md:flex-row md:justify-start md:gap-3 md:rounded-card md:px-3 md:text-sm md:leading-5 ${
+            className={`relative flex h-16 min-w-18 flex-1 shrink-0 flex-col items-center justify-center gap-1 text-[13px] font-semibold leading-4 md:h-12 md:min-w-0 md:flex-none md:flex-row md:justify-start md:gap-3 md:rounded-card md:px-3 md:text-sm md:leading-5 ${
               ativo ? "text-laranja-escuro md:bg-laranja-claro" : "text-texto-suave md:hover:bg-fundo"
             }`}
           >
             <Icone className="size-5" aria-hidden />
-            {/* no celular (5 itens lado a lado) o nome longo vira curto para caber inteiro */}
+            {/* no celular a barra rola para o lado (cada item com 72px: alvo de toque folgado e nome inteiro) e o nome longo vira curto */}
             {curto ? (
               <>
                 <span className="max-w-full truncate px-0.5 md:hidden" aria-hidden>

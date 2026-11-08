@@ -159,8 +159,8 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
     if (c.sair && !publicado(anuncio)) redirect(DESTINO_SAIR);
     return { erro: { mensagem: "Escolha a categoria do anúncio.", campo: "categoria" } };
   }
-  // anúncio já publicado (no ar, pausado...) que continua na mesma categoria (mesmo escondida no painel): segue sem mudar nada
-  if (categoriaId === anuncio.categoria_id && anuncio.status !== "rascunho") redirect(destino("categoria", c));
+  // anúncio que já esteve no ar (no ar, pausado...) e continua na mesma categoria (mesmo escondida no painel): segue sem mudar nada
+  if (categoriaId === anuncio.categoria_id && anuncio.publicado_em) redirect(destino("categoria", c));
   const achada = ehUuid(categoriaId) ? await categoriaPorId(categoriaId) : null;
   if (!achada) return { erro: { mensagem: "Essa categoria não está mais disponível. Escolha outra.", campo: "categoria" } };
   if (!achada.pai) {
@@ -199,9 +199,9 @@ export async function salvarDetalhes(_antes: EstadoForm, form: FormData): Promis
   const descricao = String(form.get("descricao") ?? "").replace(/\r\n/g, "\n").trim();
   if (descricao.length > MAX_DESCRICAO) campos.descricao = `A descrição pode ter no máximo ${MAX_DESCRICAO} letras.`;
 
-  // fora do rascunho: usa a categoria dele mesmo se o painel esconder (os campos continuam editáveis)
+  // já esteve no ar: usa a categoria dele mesmo se o painel esconder (os campos continuam editáveis)
   const cat = anuncio.categoria_id
-    ? await (anuncio.status !== "rascunho" ? categoriaDoAnuncio(anuncio.categoria_id) : categoriaPorId(anuncio.categoria_id))
+    ? await (anuncio.publicado_em ? categoriaDoAnuncio(anuncio.categoria_id) : categoriaPorId(anuncio.categoria_id))
     : null;
   const lidos = lerAtributos(cat?.categoria.campos ?? [], form, exigir);
   Object.assign(campos, lidos.erros);

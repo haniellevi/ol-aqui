@@ -8,7 +8,7 @@ tabelas, o painel edita e **toda mudança cai em `logs_atividade`** (gatilhos `r
 
 Migração: `supabase/migrations/20261108040000_regioes_categorias.sql` · Testes: `supabase/testes/96_regioes_categorias.sql`
 Tipos: `src/lib/tipos-cadastros.ts` · Leituras do painel: `src/lib/admin/cadastros.ts` ·
-Conferência dos campos (TypeScript, a mesma regra do banco): `src/lib/admin/campos-categoria.ts`
+Conferência dos campos (TypeScript, a mesma regra do banco): `src/lib/admin/regras-cadastros.ts`
 Telas: `src/app/admin/regioes/*` e `src/app/admin/categorias/*` (menu: "Regiões" e "Categ." em `nav-admin.tsx`) · Rotas: `LINK_ADMIN_REGIOES`, `LINK_ADMIN_CATEGORIAS` em `src/lib/rotas.ts`.
 
 ## 1. O que já existia (e continua igual)
@@ -49,15 +49,16 @@ vazio e travado com a explicação "a definir" (decisão de franquia ainda não 
 | Peça | Tipo | Regra |
 |---|---|---|
 | `conferir_categoria()` → gatilho `categorias_validar_2` | BEFORE INSERT/UPDATE (roda depois do `categorias_validar` que já existe) | Nome 2 a 60 letras (limpo); `slug` único com mensagem clara e **fixo depois de criado** (links `/c/...` não quebram); categoria principal (sem mãe) não tem campos nem preço (quem recebe anúncio é a subcategoria); subcategoria com anúncios não vira categoria principal; limites extras dos campos (abaixo) |
-| Limites dos campos | dentro de `conferir_categoria()` | No máximo `categorias.campos_max` campos e `categorias.opcoes_max` opções por lista (configurações, grupo "anuncios"); opção de até 60 letras e sem repetir (sem acento/maiúscula); unidade até 12 letras; chave não pode ser `<outra>_min`/`<outra>_max` de um campo número (o filtro da busca usa `c_<chave>_min`) |
+| Limites dos campos | dentro de `conferir_categoria()` | No máximo `categorias.campos_max` campos e `categorias.opcoes_max` opções por lista (configurações, grupo "anuncios"). Só barram quando a quantidade **sobe** (inserção, campo novo, opção nova): se o limite baixar depois, a categoria que já passa dele continua podendo ser escondida, renomeada, mudada de ordem e perder campos; opção de até 60 letras e sem repetir (sem acento/maiúscula); unidade até 12 letras; chave não pode ser `<outra>_min`/`<outra>_max` de um campo número (o filtro da busca usa `c_<chave>_min`) |
 | `impedir_apagar_categoria()` → gatilho `categorias_impedir_apagar` | BEFORE DELETE | Recusa apagar categoria com anúncios (qualquer status), pedidos no Radar ou subcategorias ("esconda em vez de apagar") |
 | `categoria_disponivel(id)` | função | Categoria ativa **e** com a mãe ativa |
-| `exigir_categoria_disponivel()` → gatilhos `anuncios_1_validar_mae` (OF categoria_id, status) e `radar_1_validar_mae` (OF categoria_id) | BEFORE INSERT/UPDATE | Ao **escolher** a categoria (inserção ou troca) a categoria e a mãe precisam estar visíveis; rascunho que vai ao ar pela 1ª vez também (é anúncio novo entrando). Anúncio que já esteve no ar continua como está (pausado volta normalmente). Passa direto só servidor (service_role), admin e `olaki.sistema` (pagamento confirmado). Não usa `acesso_sistema()` de propósito: dentro de `publicar_anuncio` (SECURITY DEFINER) o usuário do banco é o dono da função |
-| `admin_categorias()` | SECURITY DEFINER, só admin | Todas as categorias (inclusive escondidas) com anúncios no ar, total de anúncios, pedidos no Radar e subcategorias |
+| `exigir_categoria_disponivel()` → gatilhos `anuncios_1_validar_mae` (OF categoria_id, status) e `radar_1_validar_mae` (OF categoria_id) | BEFORE INSERT/UPDATE | Ao **escolher** a categoria (inserção ou troca) a categoria e a mãe precisam estar visíveis; anúncio que vai ao ar pela 1ª vez também (é anúncio novo entrando). "1ª vez" = `publicado_em` vazio (o dono não muda esse campo), venha de rascunho, pausado ou expirado: pausar o rascunho antes de publicar não fura a regra. Anúncio que já esteve no ar continua como está (pausado volta normalmente). Passa direto só servidor (service_role), admin e `olaki.sistema`. Não usa `acesso_sistema()` de propósito: dentro de `publicar_anuncio` (SECURITY DEFINER) o usuário do banco é o dono da função |
+| Anúncio avulso (pago) | gatilho `pagamentos_avulso_categoria` (BEFORE INSERT em `pagamentos`) + `aplicar_anuncio_avulso` (refeita) | Não nasce cobrança de avulso para anúncio que nunca foi ao ar numa categoria escondida. Se a cobrança já existia e a categoria foi escondida depois, o pagamento só soma o tempo: não publica sozinho e a nota do pagamento explica (o dono escolhe outra categoria e toca em Publicar) |
+| `admin_categorias()` | SECURITY DEFINER, só admin | Todas as categorias (inclusive escondidas) com anúncios no ar, total de anúncios, pedidos no Radar e subcategorias. A categoria principal soma os anúncios das subcategorias |
 | `admin_mover_categoria(id, direcao)` | SECURITY DEFINER, só admin | Sobe/desce entre as irmãs (renumera 10, 20, 30... e troca com a vizinha), com trava |
 | Política `categorias leitura` | troca | Passa a ler **todas** (inclusive escondidas): o vendedor que já tem anúncio numa categoria escondida continua vendo os campos dela ao editar. O cadastro e a busca continuam filtrando `ativa = true` no código |
 
-Configurações novas (grupo `anuncios`, editáveis em Configurações, com exceção por região se quiser):
+Configurações novas (grupo `anuncios`, editáveis em Configurações; valem para o site todo, porque as categorias são as mesmas em todas as regiões):
 `categorias.campos_max` = 20 e `categorias.opcoes_max` = 60.
 
 Hardening no fim da migração (mesmo bloco das anteriores): `search_path` fixo, gatilhos fora da API, funções do
@@ -67,9 +68,12 @@ painel sem `public`/`anon` (só `authenticated`, e por dentro conferem `e_admin(
 
 - `src/lib/dados/categorias.ts` ganhou `categoriaDoAnuncio(id)`: a categoria de um anúncio que já está nela,
   mesmo escondida (lê direto da tabela, que agora é legível). `categoriaPorId` continua só com as visíveis.
-- Passo "Detalhes" e `salvarDetalhes`: rascunho usa só categoria visível (escondida → volta para escolher
-  categoria); anúncio fora do rascunho usa `categoriaDoAnuncio` (os campos continuam aparecendo e salvando).
-- `salvarCategoria`: anúncio fora do rascunho que continua na mesma categoria (mesmo escondida) segue sem erro.
+- "Já esteve no ar" = `publicado_em` preenchido (a mesma regra do banco).
+- Passo "Detalhes" e `salvarDetalhes`: anúncio que nunca esteve no ar usa só categoria visível (escondida → volta
+  para escolher categoria); o que já esteve usa `categoriaDoAnuncio` (os campos continuam aparecendo e salvando).
+- Passo "Revisar": anúncio que nunca esteve no ar com categoria escondida mostra "Não está mais disponível. Escolha
+  outra" na linha Categoria (entra no "Falta pouco"), antes de tocar em Publicar.
+- `salvarCategoria`: anúncio que já esteve no ar e continua na mesma categoria (mesmo escondida) segue sem erro.
 - Busca, filtros e moderação não mudaram: já leem a tabela na hora.
 
 ## 3. Telas

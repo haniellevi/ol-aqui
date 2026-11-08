@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { AlertTriangle, Info } from "lucide-react";
 import { anuncioPublico } from "@/lib/dados/anuncios";
-import { categoriaPorId } from "@/lib/dados/categorias";
+import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
 import { lerConfigNumero } from "@/lib/dados/config";
 import { avulsoParaMim } from "@/lib/dados/cobranca";
 import { preco, valorDoCampo } from "@/lib/formato";
@@ -25,16 +25,19 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
   const { anuncio, conta, editar } = await carregarPasso(searchParams);
   const jaPublicado = (STATUS_PUBLICADO as readonly string[]).includes(anuncio.status);
   const pagoAte = anuncio.pago_ate && new Date(anuncio.pago_ate).getTime() > Date.now() ? anuncio.pago_ate : null;
+  // nunca esteve no ar: só vale categoria visível (o banco recusa publicar em categoria escondida)
+  const nuncaNoAr = !anuncio.publicado_em;
   const [publico, achada, minimoFotos, avulso] = await Promise.all([
     anuncioPublico(anuncio.id),
-    anuncio.categoria_id ? categoriaPorId(anuncio.categoria_id) : Promise.resolve(null),
+    anuncio.categoria_id ? (nuncaNoAr ? categoriaPorId : categoriaDoAnuncio)(anuncio.categoria_id) : Promise.resolve(null),
     lerConfigNumero("anuncio.fotos_minimo", conta.vitrine.microrregiao_id),
     !jaPublicado && !conta.podePublicar && !pagoAte ? avulsoParaMim(conta.vitrine) : Promise.resolve(null),
   ]);
   const hrefAvulso = avulso ? linkAvulso(anuncio.id) : null;
 
   const modo = jaPublicado ? "salvar" : anuncio.status === "rascunho" ? "publicar" : "republicar";
-  const campos = achada?.pai ? achada.categoria.campos : publico?.campos ?? [];
+  const categoriaSumiu = Boolean(anuncio.categoria_id) && !achada && nuncaNoAr;
+  const campos = achada?.pai ? achada.categoria.campos : categoriaSumiu ? [] : publico?.campos ?? [];
   const titulo = anuncio.titulo?.trim() ?? "";
 
   const linhas: Linha[] = [
@@ -46,9 +49,13 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
     },
     {
       rotulo: "Categoria",
-      valor: achada?.pai ? `${achada.pai.nome} › ${achada.categoria.nome}` : publico?.categoria_nome ?? "Falta escolher",
+      valor: categoriaSumiu
+        ? "Não está mais disponível. Escolha outra"
+        : achada?.pai
+          ? `${achada.pai.nome} › ${achada.categoria.nome}`
+          : publico?.categoria_nome ?? "Falta escolher",
       passo: "categoria",
-      falta: !anuncio.categoria_id,
+      falta: !anuncio.categoria_id || categoriaSumiu,
     },
     { rotulo: "Título", valor: titulo || "Falta escrever", passo: "detalhes", falta: titulo.length < 5 },
     ...campos.map<Linha>((c) => {

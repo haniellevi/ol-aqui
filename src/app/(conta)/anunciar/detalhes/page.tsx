@@ -14,12 +14,13 @@ const FORM = "form-detalhes";
 // T19 · Passo 3: título, descrição e os campos da subcategoria (vindos do banco).
 export default async function PassoDetalhes({ searchParams }: { searchParams: ParamsPasso }) {
   const { anuncio, editar } = await carregarPasso(searchParams);
-  // rascunho: só categoria visível (escondida no painel = escolhe outra); publicado: a dele, mesmo escondida
+  // nunca esteve no ar: só categoria visível (escondida no painel = escolhe outra); já esteve: a dele, mesmo escondida
+  const nuncaNoAr = !anuncio.publicado_em;
   const achada = anuncio.categoria_id
-    ? await (anuncio.status === "rascunho" ? categoriaPorId(anuncio.categoria_id) : categoriaDoAnuncio(anuncio.categoria_id))
+    ? await (nuncaNoAr ? categoriaPorId(anuncio.categoria_id) : categoriaDoAnuncio(anuncio.categoria_id))
     : null;
-  // rascunho sem categoria: os campos dependem dela, então escolhe primeiro
-  if (!achada && anuncio.status === "rascunho") redirect(urlPasso("categoria", anuncio.id, editar));
+  // sem categoria (ou com uma que sumiu): os campos dependem dela, então escolhe primeiro
+  if (!achada && nuncaNoAr) redirect(urlPasso("categoria", anuncio.id, editar));
 
   const campos = achada?.pai ? achada.categoria.campos : [];
   const nome = achada?.pai ? `${achada.pai.nome} › ${achada.categoria.nome}` : null;
