@@ -450,22 +450,34 @@ as $$
      where c.id = p_id and c.ativa and (c.pai_id is null or coalesce(p.ativa, false)))
 $$;
 
--- Ao ESCOLHER a categoria (inserção ou troca), a mãe também precisa estar visível.
--- Quem já estava na categoria continua como está (esconder não mexe nos anúncios).
+-- Ao ESCOLHER a categoria (inserção ou troca), a mãe também precisa estar visível. Rascunho que
+-- vai ao ar pela 1ª vez também precisa de categoria visível (é um anúncio novo entrando).
+-- Quem já estava no ar continua como está (esconder não mexe nos anúncios; pausado pode voltar).
 create or replace function public.exigir_categoria_disponivel()
 returns trigger language plpgsql
 set search_path = public, extensions
 as $$
 begin
-  if new.categoria_id is null or public.acesso_sistema() then return new; end if;
-  if tg_op = 'UPDATE' and new.categoria_id is not distinct from old.categoria_id then return new; end if;
+  -- Passa direto: servidor (service_role), admin e rotinas que ligam olaki.sistema (ex.: pagamento
+  -- confirmado). NÃO usa acesso_sistema(): dentro de publicar_anuncio (SECURITY DEFINER) o usuário
+  -- do banco é o dono da função, e o vendedor passaria direto.
+  if new.categoria_id is null
+     or coalesce(auth.role(), '') = 'service_role' or public.e_admin()
+     or coalesce(current_setting('olaki.sistema', true), '') = '1' then
+    return new;
+  end if;
+  if tg_op = 'UPDATE' and new.categoria_id is not distinct from old.categoria_id
+     and not (tg_table_name = 'anuncios' and old.status::text = 'rascunho'
+              and new.status::text in ('ativo', 'em_analise', 'vendido')) then
+    return new;
+  end if;
   if not public.categoria_disponivel(new.categoria_id) then
     raise exception using errcode = '23514', detail = 'campo:categoria',
       message = 'Esta categoria não está disponível. Escolha outra.';
   end if;
   return new;
 end $$;
-create trigger anuncios_1_validar_mae before insert or update of categoria_id on public.anuncios
+create trigger anuncios_1_validar_mae before insert or update of categoria_id, status on public.anuncios
   for each row execute function public.exigir_categoria_disponivel();
 create trigger radar_1_validar_mae before insert or update of categoria_id on public.radar_pedidos
   for each row execute function public.exigir_categoria_disponivel();

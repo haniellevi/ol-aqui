@@ -200,6 +200,18 @@ select set_config('request.jwt.claim.sub','user_pf96',false) \g /dev/null
 insert into anuncios (vitrine_id, status, categoria_id, titulo, cidade)
   select :'vit_pf', 'rascunho', id, 'Quadro decorativo', 'Corrente' from categorias where slug='decoracao' returning status;
 
+\echo '[14g] rascunho pronto numa categoria que foi escondida depois: publicar da ERRO esperado; o anuncio que ja estava no ar e pausado volta ao ar normalmente'
+reset role;
+insert into anuncios (vitrine_id, status, categoria_id, titulo, cidade, preco_centavos, atributos, fotos) values
+ (:'vit_pf', 'rascunho', :'cat_moveis', 'Cômoda rascunho noventa e seis', 'Corrente', 30000, '{}', :'foto') returning id as rasc_moveis \gset
+update anuncios set status='pausado' where id=:'anu_moveis';
+update categorias set ativa=false where id=:'cat_moveis';
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_pf96',false) \g /dev/null
+select publicar_anuncio(:'rasc_moveis');
+select publicar_anuncio(:'anu_moveis') as pausado_volta;
+reset role; update categorias set ativa=true where id=:'cat_moveis';
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_pf96',false) \g /dev/null
+
 \echo '[15] apagar categoria em uso (Moveis): ERRO esperado; com subcategorias (Ferramentas): ERRO esperado; sem uso (Furadeiras): ok'
 select set_config('request.jwt.claim.sub','user_adm96',false) \g /dev/null
 delete from categorias where id=:'cat_moveis';

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { categoriaPorId } from "@/lib/dados/categorias";
+import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
 import { FormDetalhes } from "@/components/anunciar/form-detalhes";
@@ -14,7 +14,10 @@ const FORM = "form-detalhes";
 // T19 · Passo 3: título, descrição e os campos da subcategoria (vindos do banco).
 export default async function PassoDetalhes({ searchParams }: { searchParams: ParamsPasso }) {
   const { anuncio, editar } = await carregarPasso(searchParams);
-  const achada = anuncio.categoria_id ? await categoriaPorId(anuncio.categoria_id) : null;
+  // rascunho: só categoria visível (escondida no painel = escolhe outra); publicado: a dele, mesmo escondida
+  const achada = anuncio.categoria_id
+    ? await (anuncio.status === "rascunho" ? categoriaPorId(anuncio.categoria_id) : categoriaDoAnuncio(anuncio.categoria_id))
+    : null;
   // rascunho sem categoria: os campos dependem dela, então escolhe primeiro
   if (!achada && anuncio.status === "rascunho") redirect(urlPasso("categoria", anuncio.id, editar));
 
