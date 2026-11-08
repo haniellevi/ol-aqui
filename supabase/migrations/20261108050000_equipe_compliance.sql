@@ -73,6 +73,90 @@ create trigger perfis_9_equipe after insert or update of e_admin on public.perfi
   for each row execute function public.sincronizar_equipe_admin();
 
 -- ---------------------------------------------------------------------
+-- 1b. Franqueado: uma fonte só
+--    A equipe (papel franqueado + região) manda. microrregioes.franqueado_id (PAINEL-ADMIN,
+--    "Quem entra") é o espelho dela: as duas andam juntas nos dois sentidos.
+--    Uma região tem no máximo um franqueado ativo.
+-- ---------------------------------------------------------------------
+-- Quem já estava em microrregioes.franqueado_id vira franqueado na equipe (nenhum passo manual)
+insert into public.equipe (usuario_id, papel, microrregiao_id, ativo, observacao)
+select distinct on (m.franqueado_id) m.franqueado_id, 'franqueado', m.id, true, 'Já era franqueado (microrregioes.franqueado_id)'
+  from public.microrregioes m
+ where m.franqueado_id is not null
+ order by m.franqueado_id, m.criado_em, m.id
+on conflict (usuario_id) do nothing;
+-- O que não bate com a equipe sai do espelho (o valor antigo fica em logs_atividade)
+update public.microrregioes m set franqueado_id = null
+ where m.franqueado_id is not null
+   and not exists (select 1 from public.equipe e
+                    where e.usuario_id = m.franqueado_id and e.ativo and e.papel = 'franqueado' and e.microrregiao_id = m.id);
+
+create unique index equipe_um_franqueado_por_regiao on public.equipe (microrregiao_id) where ativo and papel = 'franqueado';
+
+-- equipe → microrregioes.franqueado_id
+create or replace function public.equipe_espelhar_franquia()
+returns trigger language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare antes text := coalesce(current_setting('olaki.franquia_sync', true), '');
+begin
+  if antes = '1' then
+    return null;
+  end if;
+  perform set_config('olaki.franquia_sync', '1', true);
+  if tg_op <> 'INSERT' then
+    update public.microrregioes m set franqueado_id = null
+     where m.franqueado_id = old.usuario_id
+       and (tg_op = 'DELETE' or not (new.ativo and new.papel = 'franqueado' and m.id = new.microrregiao_id));
+  end if;
+  if tg_op <> 'DELETE' and new.ativo and new.papel = 'franqueado' then
+    update public.microrregioes m set franqueado_id = new.usuario_id
+     where m.id = new.microrregiao_id and m.franqueado_id is distinct from new.usuario_id;
+  end if;
+  perform set_config('olaki.franquia_sync', antes, true);
+  return null;
+end $$;
+create trigger equipe_franquia after insert or update or delete on public.equipe
+  for each row execute function public.equipe_espelhar_franquia();
+
+-- microrregioes.franqueado_id mudado direto (ex.: pelo Supabase) → equipe
+create or replace function public.franquia_espelhar_equipe()
+returns trigger language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare antes text := coalesce(current_setting('olaki.franquia_sync', true), '');
+begin
+  if antes = '1' or (tg_op = 'UPDATE' and new.franqueado_id is not distinct from old.franqueado_id) then
+    return null;
+  end if;
+  perform set_config('olaki.franquia_sync', '1', true);
+  if tg_op = 'UPDATE' and old.franqueado_id is not null then
+    update public.equipe e
+       set ativo = false, desativado_em = now(), desativado_por = public.usuario_id(),
+           observacao = 'Tirado em microrregioes.franqueado_id'
+     where e.usuario_id = old.franqueado_id and e.papel = 'franqueado' and e.microrregiao_id = new.id and e.ativo;
+  end if;
+  if new.franqueado_id is not null then
+    if exists (select 1 from public.equipe e where e.usuario_id = new.franqueado_id and e.ativo and e.papel <> 'franqueado')
+       or exists (select 1 from public.perfis pf where pf.id = new.franqueado_id and pf.e_admin) then
+      raise exception 'Esta pessoa já está na equipe com outro papel. Mude pela tela Equipe do painel.' using errcode = 'P0001';
+    end if;
+    -- franqueado de uma região só: sai do espelho de outra região
+    update public.microrregioes m set franqueado_id = null where m.franqueado_id = new.franqueado_id and m.id <> new.id;
+    insert into public.equipe (usuario_id, papel, microrregiao_id, ativo, adicionado_por, observacao)
+    values (new.franqueado_id, 'franqueado', new.id, true, public.usuario_id(), 'Ligado em microrregioes.franqueado_id')
+    on conflict (usuario_id) do update
+       set papel = 'franqueado', microrregiao_id = excluded.microrregiao_id, ativo = true,
+           adicionado_por = excluded.adicionado_por, desativado_em = null, desativado_por = null,
+           observacao = excluded.observacao;
+  end if;
+  perform set_config('olaki.franquia_sync', antes, true);
+  return null;
+end $$;
+create trigger microrregioes_9_franquia after insert or update of franqueado_id on public.microrregioes
+  for each row execute function public.franquia_espelhar_equipe();
+
+-- ---------------------------------------------------------------------
 -- 2. Funções de apoio (usadas nas regras de RLS e no painel)
 -- ---------------------------------------------------------------------
 
@@ -559,7 +643,7 @@ end $$;
 create or replace function public.equipe_lista()
 returns table (usuario_id text, nome text, whatsapp text, cidade text, papel text, microrregiao_id uuid, regiao_nome text,
                ativo boolean, observacao text, adicionado_por_nome text, desativado_em timestamptz,
-               criado_em timestamptz, atualizado_em timestamptz)
+               desativado_por_nome text, criado_em timestamptz, atualizado_em timestamptz)
 language plpgsql stable security definer
 set search_path = public, extensions
 as $$
@@ -569,11 +653,12 @@ begin
   end if;
   return query
   select e.usuario_id, pf.nome, pf.whatsapp, pf.cidade, e.papel, e.microrregiao_id, m.nome, e.ativo, e.observacao,
-         quem.nome, e.desativado_em, e.criado_em, e.atualizado_em
+         quem.nome, e.desativado_em, coalesce(tirou.nome, e.desativado_por), e.criado_em, e.atualizado_em
     from public.equipe e
     join public.perfis pf on pf.id = e.usuario_id
     left join public.microrregioes m on m.id = e.microrregiao_id
     left join public.perfis quem on quem.id = e.adicionado_por
+    left join public.perfis tirou on tirou.id = e.desativado_por
    order by e.ativo desc, case e.papel when 'administrador' then 0 when 'moderador' then 1 when 'financeiro' then 2
                                        when 'suporte' then 3 else 4 end, pf.nome;
 end $$;
@@ -635,6 +720,11 @@ begin
   end if;
   if p_papel = 'franqueado' and (regiao is null or not exists (select 1 from public.microrregioes m where m.id = regiao)) then
     raise exception 'Escolha a região do franqueado.' using errcode = '23514';
+  end if;
+  if p_papel = 'franqueado' and exists (
+       select 1 from public.equipe e
+        where e.ativo and e.papel = 'franqueado' and e.microrregiao_id = regiao and e.usuario_id <> p_usuario) then
+    raise exception 'Esta região já tem um franqueado. Tire a outra pessoa da equipe antes.' using errcode = 'P0001';
   end if;
   select * into atual from public.equipe e where e.usuario_id = p_usuario for update;
   if atual.id is not null and atual.papel = 'administrador' and atual.ativo and p_papel <> 'administrador'
@@ -746,6 +836,28 @@ exception when others then
   return null;
 end $$;
 
+-- Número inteiro de uma configuração, sempre entre o mínimo e o máximo. Valor estranho salvo no
+-- painel (1.5, "6,5", texto) não quebra a tela: decimal arredonda para baixo, o resto usa o padrão.
+create or replace function public.config_inteiro(p_chave text, p_padrao integer, p_minimo integer, p_maximo integer)
+returns integer language plpgsql stable
+set search_path = public, extensions
+as $$
+declare n numeric;
+begin
+  begin
+    n := floor((public.config(p_chave, null, to_jsonb(p_padrao)) #>> '{}')::numeric);
+  exception when others then
+    n := null;
+  end;
+  return least(greatest(coalesce(n, p_padrao), p_minimo), p_maximo)::integer;
+end $$;
+
+-- Minutos que a consulta vale (1 a 1440).
+create or replace function public.compliance_minutos()
+returns integer language sql stable
+set search_path = public, extensions
+as $$ select public.config_inteiro('compliance.consulta_minutos', 60, 1, 1440) $$;
+
 -- Confere a consulta: é do administrador logado, foi aberta com motivo e não venceu.
 create or replace function public.compliance_consulta_valida(p_consulta uuid)
 returns public.compliance_acessos language plpgsql stable security definer
@@ -753,7 +865,7 @@ set search_path = public, extensions
 as $$
 declare
   c   public.compliance_acessos;
-  min integer := greatest(coalesce((public.config('compliance.consulta_minutos', null, '60') #>> '{}')::int, 60), 1);
+  min integer := public.compliance_minutos();
 begin
   select * into c from public.compliance_acessos x
    where x.id = p_consulta and x.tipo = 'abrir' and x.admin_id = public.usuario_id();
@@ -763,26 +875,42 @@ begin
   return c;
 end $$;
 
+-- Achar lojas e anúncios no histórico, mesmo depois de apagados (conta apagada apaga tudo em cascata).
+create index if not exists logs_vitrines_dono_idx on public.logs_atividade ((coalesce(dados_depois->>'dono_id', dados_antes->>'dono_id')))
+  where tabela = 'vitrines_lojas';
+create index if not exists logs_anuncios_vitrine_idx on public.logs_atividade ((coalesce(dados_depois->>'vitrine_id', dados_antes->>'vitrine_id')))
+  where tabela = 'anuncios';
+
 -- Tudo o que o OLAKI guarda de uma conta: cadastro, aceites, lojas, anúncios e histórico.
+-- Vale também para conta apagada: o que sumiu das tabelas vem do histórico (logs_atividade).
 create or replace function public.compliance_dados(p_usuario text)
 returns jsonb language plpgsql stable security definer
 set search_path = public, extensions
 as $$
 declare
-  meses  integer := greatest(coalesce((public.config('compliance.meses_historico', null, '6') #>> '{}')::int, 6), 1);
-  maximo integer := least(greatest(coalesce((public.config('compliance.max_linhas_historico', null, '2000') #>> '{}')::int, 2000), 1), 20000);
+  -- Marco Civil, art. 15: no mínimo 6 meses, mesmo que a configuração diga menos
+  meses  integer := public.config_inteiro('compliance.meses_historico', 6, 6, 120);
+  maximo integer := public.config_inteiro('compliance.max_linhas_historico', 2000, 1, 20000);
   desde  timestamptz := now() - make_interval(months => meses);
-  lojas  uuid[];
+  lojas  text[];
+  ids_lj uuid[];
   ads    text[];
   r      jsonb;
 begin
-  select coalesce(array_agg(v.id), '{}') into lojas from public.vitrines_lojas v where v.dono_id = p_usuario;
-  -- anúncios de hoje e os já apagados (achados no histórico)
-  select coalesce(array_agg(distinct x), '{}') into ads from (
-    select a.id::text as x from public.anuncios a where a.vitrine_id = any (lojas)
+  -- lojas de hoje e as já apagadas (achadas no histórico pelo dono)
+  select coalesce(array_agg(distinct x), '{}') into lojas from (
+    select v.id::text as x from public.vitrines_lojas v where v.dono_id = p_usuario
     union
     select l.registro_id from public.logs_atividade l
-     where l.tabela = 'anuncios' and l.acao = 'DELETE' and (l.dados_antes->>'vitrine_id')::uuid = any (lojas)
+     where l.tabela = 'vitrines_lojas' and coalesce(l.dados_depois->>'dono_id', l.dados_antes->>'dono_id') = p_usuario
+  ) t;
+  ids_lj := lojas::uuid[];
+  -- anúncios de hoje e os já apagados (achados no histórico pela loja)
+  select coalesce(array_agg(distinct x), '{}') into ads from (
+    select a.id::text as x from public.anuncios a where a.vitrine_id = any (ids_lj)
+    union
+    select l.registro_id from public.logs_atividade l
+     where l.tabela = 'anuncios' and coalesce(l.dados_depois->>'vitrine_id', l.dados_antes->>'vitrine_id') = any (lojas)
   ) t;
 
   select jsonb_build_object(
@@ -790,20 +918,39 @@ begin
     'meses_historico', meses,
     'desde', desde,
     'perfil', (select to_jsonb(pf) - 'busca' from public.perfis pf where pf.id = p_usuario),
+    -- conta apagada: o último cadastro guardado no histórico
+    'perfil_apagado', (select jsonb_build_object('dados', l.dados_antes - 'busca', 'apagado_em', l.criado_em, 'apagado_por', l.usuario_id)
+                         from public.logs_atividade l
+                        where l.tabela = 'perfis' and l.acao = 'DELETE' and l.registro_id = p_usuario
+                          and not exists (select 1 from public.perfis pf where pf.id = p_usuario)
+                        order by l.criado_em desc, l.id desc limit 1),
     'equipe', (select jsonb_build_object('papel', e.papel, 'ativo', e.ativo) from public.equipe e where e.usuario_id = p_usuario),
-    'aceites', coalesce((select jsonb_agg(jsonb_build_object('tipo', ac.tipo, 'versao', ac.versao, 'aceito_em', ac.aceito_em) order by ac.aceito_em)
-                           from public.aceites ac where ac.usuario_id = p_usuario), '[]'::jsonb),
+    'aceites', coalesce((select jsonb_agg(jsonb_build_object('tipo', t.tipo, 'versao', t.versao, 'aceito_em', t.aceito_em) order by t.aceito_em)
+                           from (select ac.id::text as id, ac.tipo, ac.versao, ac.aceito_em
+                                   from public.aceites ac where ac.usuario_id = p_usuario
+                                 union
+                                 select l.registro_id, l.dados_depois->>'tipo', (l.dados_depois->>'versao')::int, (l.dados_depois->>'aceito_em')::timestamptz
+                                   from public.logs_atividade l
+                                  where l.tabela = 'aceites' and l.acao = 'INSERT' and l.dados_depois->>'usuario_id' = p_usuario) t), '[]'::jsonb),
     'lojas', coalesce((select jsonb_agg(jsonb_build_object(
                          'id', v.id, 'nome', v.nome, 'slug', v.slug, 'tipo', v.tipo, 'cnpj', v.cnpj, 'whatsapp', v.whatsapp,
                          'cidade', v.cidade, 'status', v.status, 'plano', v.plano, 'criado_em', v.criado_em, 'criado_ip', v.criado_ip)
                          order by v.criado_em)
                          from public.vitrines_lojas v where v.dono_id = p_usuario), '[]'::jsonb),
+    'lojas_apagadas', coalesce((select jsonb_agg(jsonb_build_object(
+                         'id', l.registro_id, 'nome', l.dados_antes->>'nome', 'slug', l.dados_antes->>'slug', 'tipo', l.dados_antes->>'tipo',
+                         'cnpj', l.dados_antes->>'cnpj', 'whatsapp', l.dados_antes->>'whatsapp', 'cidade', l.dados_antes->>'cidade',
+                         'criado_em', l.dados_antes->>'criado_em', 'criado_ip', l.dados_antes->>'criado_ip',
+                         'apagado_em', l.criado_em, 'apagado_por', l.usuario_id, 'ip', l.ip) order by l.criado_em desc)
+                         from public.logs_atividade l
+                        where l.tabela = 'vitrines_lojas' and l.acao = 'DELETE' and l.registro_id = any (lojas)
+                          and not exists (select 1 from public.vitrines_lojas v where v.id::text = l.registro_id)), '[]'::jsonb),
     'anuncios', coalesce((select jsonb_agg(jsonb_build_object(
                             'id', a.id, 'titulo', a.titulo, 'status', a.status, 'preco_centavos', a.preco_centavos,
                             'cidade', a.cidade, 'criado_em', a.criado_em, 'criado_ip', a.criado_ip,
                             'atualizado_em', a.atualizado_em, 'congelado_motivo', a.congelado_motivo)
                             order by a.criado_em desc)
-                            from public.anuncios a where a.vitrine_id = any (lojas)), '[]'::jsonb),
+                            from public.anuncios a where a.vitrine_id = any (ids_lj)), '[]'::jsonb),
     'anuncios_apagados', coalesce((select jsonb_agg(jsonb_build_object(
                             'id', l.registro_id, 'titulo', l.dados_antes->>'titulo', 'apagado_em', l.criado_em,
                             'apagado_por', l.usuario_id, 'ip', l.ip) order by l.criado_em desc)
@@ -827,7 +974,7 @@ begin
          where l.criado_em >= desde
            and (l.usuario_id = p_usuario
                 or (l.tabela = 'perfis' and l.registro_id = p_usuario)
-                or (l.tabela = 'vitrines_lojas' and l.registro_id = any (lojas::text[]))
+                or (l.tabela = 'vitrines_lojas' and l.registro_id = any (lojas))
                 or (l.tabela = 'anuncios' and l.registro_id = any (ads)))
          order by l.criado_em desc, l.id desc
          limit maximo
@@ -870,8 +1017,10 @@ begin
 end $$;
 
 -- Busca por conta (id, nome, celular, CNPJ ou nome da loja) e por anúncio (id ou título).
--- Anúncio apagado aparece pelo id (achado no histórico).
-create or replace function public.compliance_buscar(p_consulta uuid, p_busca text, p_ip text default null)
+-- Acha também conta, loja e anúncio já apagados (pelo que ficou no histórico).
+-- p_ids: busca por e-mail. O e-mail fica no Clerk; o servidor acha os ids lá e manda aqui
+-- (p_busca guarda o e-mail no registro). Com p_ids, só esses ids contam.
+create or replace function public.compliance_buscar(p_consulta uuid, p_busca text, p_ip text default null, p_ids text[] default null)
 returns table (tipo text, id text, titulo text, detalhe text, usuario_id text, criado_em timestamptz)
 language plpgsql security definer
 set search_path = public, extensions
@@ -879,10 +1028,13 @@ as $$
 declare
   c      public.compliance_acessos;
   termo  text := left(btrim(coalesce(p_busca, '')), 120);
+  so_ids boolean := p_ids is not null;
+  ids    text[] := coalesce(p_ids[1:20], '{}');
   digito text := nullif(regexp_replace(coalesce(p_busca, ''), '[^0-9]', '', 'g'), '');
   e_uuid boolean := btrim(coalesce(p_busca, '')) ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
   v_uuid uuid := case when btrim(coalesce(p_busca, '')) ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
                       then btrim(p_busca)::uuid end;
+  fone   boolean;
   texto  text;
 begin
   if not public.e_admin() then
@@ -895,34 +1047,80 @@ begin
   insert into public.compliance_acessos (consulta_id, admin_id, tipo, busca, ip_navegador)
   values (c.id, public.usuario_id(), 'buscar', termo, public.ip_ou_nulo(p_ip));
   texto := '%' || public.sem_acento(lower(termo)) || '%';
+  fone := not so_ids and digito is not null and char_length(digito) >= 8;
 
   return query
-  (select 'conta'::text, pf.id, pf.nome, concat_ws(' · ', pf.whatsapp, pf.cidade), pf.id, pf.criado_em
-     from public.perfis pf
-    where pf.id = termo
-       or (digito is not null and char_length(digito) >= 8 and coalesce(pf.whatsapp, '') like '%' || digito || '%')
-       or (not e_uuid and char_length(termo) >= 3 and public.sem_acento(lower(pf.nome)) like texto)
-       or exists (select 1 from public.vitrines_lojas v
-                   where v.dono_id = pf.id
-                     and ((digito is not null and char_length(digito) >= 8
-                           and (coalesce(v.whatsapp, '') like '%' || digito || '%' or coalesce(v.cnpj, '') like '%' || digito || '%'))
-                          or (not e_uuid and public.sem_acento(lower(v.nome)) like texto)))
-    order by pf.nome
+  with achados as (
+    select pf.id as uid
+      from public.perfis pf
+     where (so_ids and pf.id = any (ids))
+        or (not so_ids and (pf.id = termo
+                            or (fone and coalesce(pf.whatsapp, '') like '%' || digito || '%')
+                            or (not e_uuid and public.sem_acento(lower(pf.nome)) like texto)))
+    union
+    select v.dono_id
+      from public.vitrines_lojas v
+     where not so_ids
+       and ((fone and (coalesce(v.whatsapp, '') like '%' || digito || '%' or coalesce(v.cnpj, '') like '%' || digito || '%'))
+            or (not e_uuid and public.sem_acento(lower(v.nome)) like texto))
+    union
+    -- contas apagadas: o último cadastro ficou no histórico
+    select l.registro_id
+      from public.logs_atividade l
+     where not so_ids and l.tabela = 'perfis' and l.acao = 'DELETE'
+       and (l.registro_id = termo
+            or (fone and coalesce(l.dados_antes->>'whatsapp', '') like '%' || digito || '%')
+            or (not e_uuid and public.sem_acento(lower(l.dados_antes->>'nome')) like texto))
+    union
+    -- lojas apagadas (celular, CNPJ ou nome da loja) levam ao dono
+    select l.dados_antes->>'dono_id'
+      from public.logs_atividade l
+     where not so_ids and l.tabela = 'vitrines_lojas' and l.acao = 'DELETE'
+       and ((fone and (coalesce(l.dados_antes->>'whatsapp', '') like '%' || digito || '%'
+                       or coalesce(l.dados_antes->>'cnpj', '') like '%' || digito || '%'))
+            or (not e_uuid and public.sem_acento(lower(l.dados_antes->>'nome')) like texto))
+  )
+  (select case when pf.id is null then 'conta_apagada' else 'conta' end::text, a.uid,
+          coalesce(pf.nome, ult.dados->>'nome'),
+          case when pf.id is not null then concat_ws(' · ', pf.whatsapp, pf.cidade)
+               else concat_ws(' · ', 'Conta apagada' || coalesce(' em ' || to_char(ult.apagado_em at time zone 'America/Fortaleza', 'DD/MM/YYYY'), ''),
+                              ult.dados->>'whatsapp', ult.dados->>'cidade') end,
+          a.uid,
+          coalesce(pf.criado_em, (ult.dados->>'criado_em')::timestamptz)
+     from achados a
+     left join public.perfis pf on pf.id = a.uid
+     left join lateral (select l.dados_antes as dados, l.criado_em as apagado_em
+                          from public.logs_atividade l
+                         where l.tabela = 'perfis' and l.acao = 'DELETE' and l.registro_id = a.uid
+                         order by l.criado_em desc, l.id desc limit 1) ult on true
+    where a.uid is not null
+    order by 3
     limit 30)
   union all
   (select 'anuncio'::text, a.id::text, a.titulo, concat_ws(' · ', a.status::text, a.cidade, v.nome), v.dono_id, a.criado_em
      from public.anuncios a
      join public.vitrines_lojas v on v.id = a.vitrine_id
-    where (e_uuid and a.id = v_uuid)
-       or (not e_uuid and public.sem_acento(lower(a.titulo)) like texto)
+    where not so_ids
+      and ((e_uuid and a.id = v_uuid) or (not e_uuid and public.sem_acento(lower(a.titulo)) like texto))
     order by a.criado_em desc
     limit 30)
   union all
-  (select 'anuncio_apagado'::text, l.registro_id, l.dados_antes->>'titulo', 'Apagado', v.dono_id, l.criado_em
+  -- anúncio apagado: o dono vem da loja (de hoje ou do histórico dela, se a loja também sumiu)
+  (select 'anuncio_apagado'::text, l.registro_id, l.dados_antes->>'titulo',
+          'Apagado em ' || to_char(l.criado_em at time zone 'America/Fortaleza', 'DD/MM/YYYY'),
+          coalesce(v.dono_id,
+                   (select coalesce(lv.dados_depois->>'dono_id', lv.dados_antes->>'dono_id')
+                      from public.logs_atividade lv
+                     where lv.tabela = 'vitrines_lojas' and lv.registro_id = l.dados_antes->>'vitrine_id'
+                     order by lv.criado_em desc, lv.id desc limit 1)),
+          l.criado_em
      from public.logs_atividade l
-     left join public.vitrines_lojas v on v.id = (l.dados_antes->>'vitrine_id')::uuid
-    where e_uuid and l.tabela = 'anuncios' and l.acao = 'DELETE' and l.registro_id = v_uuid::text
-    limit 5);
+     left join public.vitrines_lojas v on v.id::text = l.dados_antes->>'vitrine_id'
+    where not so_ids and l.tabela = 'anuncios' and l.acao = 'DELETE'
+      and ((e_uuid and l.registro_id = v_uuid::text)
+           or (not e_uuid and public.sem_acento(lower(l.dados_antes->>'titulo')) like texto))
+    order by l.criado_em desc
+    limit 30);
 end $$;
 
 -- Abre os dados de uma conta (grava o acesso).
@@ -978,7 +1176,7 @@ as $$
 declare
   rel public.compliance_acessos;
   con public.compliance_acessos;
-  min integer := greatest(coalesce((public.config('compliance.consulta_minutos', null, '60') #>> '{}')::int, 60), 1);
+  min integer := public.compliance_minutos();
 begin
   if not public.e_admin() then
     raise exception 'Só um administrador usa o Compliance.' using errcode = '42501';
@@ -1047,7 +1245,7 @@ revoke all on function public.equipe_salvar(text, text, uuid, text) from public,
 revoke all on function public.equipe_desativar(text, text) from public, anon;
 revoke all on function public.compliance_entrar(text) from public, anon;
 revoke all on function public.compliance_abrir(text, text) from public, anon;
-revoke all on function public.compliance_buscar(uuid, text, text) from public, anon;
+revoke all on function public.compliance_buscar(uuid, text, text, text[]) from public, anon;
 revoke all on function public.compliance_conta(uuid, text, text) from public, anon;
 revoke all on function public.compliance_pedir_relatorio(uuid, text, text, text) from public, anon;
 revoke all on function public.compliance_relatorio(uuid, text) from public, anon;
@@ -1058,7 +1256,7 @@ grant execute on function public.meu_papel(), public.minha_regiao_equipe(),
   public.admin_acao_loja(uuid, text, text, integer, text), public.admin_analisar_verificacao(uuid, boolean, text),
   public.equipe_lista(), public.equipe_buscar_conta(text, text[]), public.equipe_salvar(text, text, uuid, text),
   public.equipe_desativar(text, text),
-  public.compliance_entrar(text), public.compliance_abrir(text, text), public.compliance_buscar(uuid, text, text),
+  public.compliance_entrar(text), public.compliance_abrir(text, text), public.compliance_buscar(uuid, text, text, text[]),
   public.compliance_conta(uuid, text, text), public.compliance_pedir_relatorio(uuid, text, text, text),
   public.compliance_relatorio(uuid, text)
   to authenticated, service_role;
@@ -1067,3 +1265,5 @@ grant execute on function public.meu_papel(), public.minha_regiao_equipe(),
 revoke all on function public.compliance_dados(text) from public, anon, authenticated;
 revoke all on function public.compliance_consulta_valida(uuid) from public, anon, authenticated;
 revoke all on function public.ip_ou_nulo(text) from public, anon, authenticated;
+revoke all on function public.config_inteiro(text, integer, integer, integer) from public, anon, authenticated;
+revoke all on function public.compliance_minutos() from public, anon, authenticated;

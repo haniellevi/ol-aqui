@@ -289,3 +289,91 @@ delete from compliance_acessos where id=:'consulta';
 select tipo, count(*) from compliance_acessos where admin_id='user_ad97' and criado_em > now() - interval '1 hour' group by tipo order by tipo;
 select ip_navegador, ip from compliance_acessos where id=:'consulta';
 select (select count(*) from logs_atividade where tabela='compliance_acessos') = (select count(*) from compliance_acessos) as tudo_no_log;
+
+\echo '[15] configuracao estranha nao quebra o Compliance: minutos 90.7 viram 90, texto usa o padrao; meses abaixo de 6 (ou decimal) ficam em 6 (Marco Civil)'
+update configuracoes set valor='90.7' where chave='compliance.consulta_minutos' and microrregiao_id is null;
+update configuracoes set valor='1.5' where chave='compliance.meses_historico' and microrregiao_id is null;
+update configuracoes set valor='"muitas"' where chave='compliance.max_linhas_historico' and microrregiao_id is null;
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_ad97',false) \g /dev/null
+select count(*) >= 1 as busca_funciona from compliance_buscar(:'consulta', 'mesa de jantar noventa');
+select (d->>'meses_historico')::int as meses, (d->>'historico_limite')::int as limite from compliance_conta(:'consulta', 'user_lj97') d;
+reset role; update configuracoes set valor='"seis"' where chave='compliance.meses_historico' and microrregiao_id is null;
+update configuracoes set valor='3' where chave='compliance.consulta_minutos' and microrregiao_id is null;
+set role authenticated;
+select (d->>'meses_historico')::int as meses from compliance_conta(:'consulta', 'user_lj97') d;
+select r->'dados'->>'meses_historico' as meses_relatorio from compliance_relatorio(:'rel') r;
+reset role;
+update configuracoes set valor='60' where chave='compliance.consulta_minutos' and microrregiao_id is null;
+update configuracoes set valor='6' where chave='compliance.meses_historico' and microrregiao_id is null;
+update configuracoes set valor='2000' where chave='compliance.max_linhas_historico' and microrregiao_id is null;
+\echo '[15b] a funcao de apoio e interna (ERRO esperado: permission denied)'
+set role authenticated;
+select config_inteiro('compliance.meses_historico', 6, 6, 120);
+
+\echo '[16] conta apagada (o golpista apaga a conta: o Clerk apaga o perfil e tudo cai em cascata)'
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values ('user_go97',:'reg','Golpista Noventa e Sete','5589988887797','Corrente','pj');
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_go97',false) \g /dev/null
+select tipo from quero_vender('loja', 'Loja Golpe Noventa e Sete', 'loja-golpe-noventa-sete', '89988887798') \g /dev/null
+select id as vit_go from vitrines_lojas where dono_id='user_go97' \gset
+insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos)
+values (:'vit_go', :'cat_moveis', 'Sofa golpe noventa e sete', 'Corrente', 50000, '{}', '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_go97/x/1.webp}') returning id as ad_go \gset
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+delete from perfis where id='user_go97';
+reset role; select count(*) as sobrou_loja from vitrines_lojas where id=:'vit_go';
+select tabela, count(*) as apagados from logs_atividade where acao='DELETE' and registro_id in ('user_go97', :'vit_go', :'ad_go') group by tabela order by tabela;
+\echo '[16b] admin acha a conta apagada pelo celular dela, pelo nome, pelo nome e celular da loja e pelo titulo; o anuncio apagado leva ao dono'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_ad97',false) \g /dev/null
+select tipo, id, usuario_id, detalhe like 'Conta apagada em %' as diz_apagada from compliance_buscar(:'consulta', '(89) 98888-7797');
+select tipo, id from compliance_buscar(:'consulta', 'golpista noventa');
+select tipo, id from compliance_buscar(:'consulta', 'Loja Golpe');
+select tipo, id from compliance_buscar(:'consulta', '89988887798');
+select tipo, usuario_id from compliance_buscar(:'consulta', 'sofa golpe');
+select tipo, titulo, usuario_id from compliance_buscar(:'consulta', :'ad_go');
+\echo '[16c] dados da conta apagada: ultimo cadastro guardado, loja apagada (com celular), anuncio apagado e o historico com os DELETE da loja e do anuncio'
+select jsonb_typeof(d->'perfil') = 'null' as sem_perfil, d->'perfil_apagado'->'dados'->>'whatsapp' as celular_guardado,
+       jsonb_array_length(d->'lojas') as lojas, jsonb_array_length(d->'lojas_apagadas') as lojas_apagadas,
+       d->'lojas_apagadas'->0->>'whatsapp' as fone_loja, jsonb_array_length(d->'anuncios_apagados') as anuncios_apagados
+  from compliance_conta(:'consulta', 'user_go97') d;
+select h->>'tabela' as tabela, h->>'acao' as acao
+  from compliance_conta(:'consulta', 'user_go97') d, jsonb_array_elements(d->'historico') h
+ where h->>'acao' = 'DELETE' order by 1;
+\echo '[16d] conta viva nao ganha "perfil_apagado" nem loja apagada'
+select jsonb_typeof(d->'perfil_apagado') = 'null' as sem_apagado, jsonb_array_length(d->'lojas_apagadas') as lojas_apagadas from compliance_conta(:'consulta', 'user_lj97') d;
+
+\echo '[17] busca por e-mail: o servidor manda os ids achados no Clerk; so esses contam (nem nome nem anuncio); lista vazia = nada; a busca fica gravada com o e-mail'
+select tipo, id from compliance_buscar(:'consulta', 'lojista97@exemplo.com', null, array['user_lj97']);
+select count(*) as nada from compliance_buscar(:'consulta', 'mesa@exemplo.com', null, array[]::text[]);
+reset role; select count(*) as gravou from compliance_acessos where tipo='buscar' and busca='lojista97@exemplo.com';
+
+\echo '[18] franqueado tem uma fonte so: equipe e microrregioes.franqueado_id andam juntas'
+select franqueado_id from microrregioes where id=:'reg';
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_ad97',false) \g /dev/null
+\echo '[18b] segundo franqueado na mesma regiao (ERRO esperado: ja tem um franqueado)'
+select equipe_salvar('user_co97', 'franqueado', :'reg');
+\echo '[18c] franqueado troca de regiao (o espelho anda junto) e depois sai da equipe (o espelho limpa)'
+select equipe_salvar('user_fr97', 'franqueado', :'reg_outra');
+reset role; select (select franqueado_id from microrregioes where id=:'reg') as corrente, (select franqueado_id from microrregioes where id=:'reg_outra') as outra;
+set role authenticated;
+select equipe_desativar('user_fr97', 'Fim da franquia');
+reset role; select count(*) as regioes_com_ele from microrregioes where franqueado_id='user_fr97';
+\echo '[18d] ligado direto em microrregioes.franqueado_id (pelo Supabase): vira franqueado na equipe; trocar desliga o anterior'
+update microrregioes set franqueado_id='user_fr97' where id=:'reg';
+select papel, ativo, microrregiao_id = :'reg' as regiao_certa from equipe where usuario_id='user_fr97';
+update microrregioes set franqueado_id='user_co97' where id=:'reg';
+select usuario_id, papel, ativo from equipe where usuario_id in ('user_fr97','user_co97') order by usuario_id;
+update microrregioes set franqueado_id=null where id=:'reg';
+select ativo from equipe where usuario_id='user_co97';
+\echo '[18e] pessoa com outro papel nao vira franqueado pelo Supabase (ERRO esperado: outro papel)'
+update microrregioes set franqueado_id='user_mo97' where id=:'reg';
+select franqueado_id is null as segue_vazio from microrregioes where id=:'reg';
+
+\echo '[19] lista da equipe diz quem tirou cada pessoa (nao quem pôs)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_a297',false) \g /dev/null
+reset role; update perfis set e_admin=true where id='user_a297';
+set role authenticated;
+select equipe_salvar('user_su97', 'suporte');
+select set_config('request.jwt.claim.sub','user_ad97',false) \g /dev/null
+select equipe_desativar('user_su97', 'Saiu');
+select usuario_id, adicionado_por_nome, desativado_por_nome from equipe_lista() where usuario_id='user_su97';
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
