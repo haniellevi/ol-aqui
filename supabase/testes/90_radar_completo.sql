@@ -34,6 +34,8 @@ insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, 
 insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos, status) values
  (:'vit_t', :'cat_moveis', 'Sofá de 3 lugares novo', 'Corrente', 150000, '{"estado":"novo"}',
   '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_t90/x/1.webp}', 'ativo') returning id as anu_t \gset
+-- modo com código (radar.exigir_celular_confirmado = true); o bloco [45] testa o modo sem código e volta
+update configuracoes set valor='true' where chave='radar.exigir_celular_confirmado' and microrregiao_id is null;
 -- limites folgados durante os testes (os blocos de limite mudam e voltam)
 update configuracoes set valor='100' where chave in ('radar.pedidos_por_dia','radar.pedidos_abertos_max') and microrregiao_id is null;
 
@@ -473,6 +475,46 @@ select has_function_privilege('authenticated', 'salvar_preferencia_aviso(text,bo
        has_function_privilege('anon', 'salvar_preferencia_aviso(text,boolean)', 'execute') as anon_escolhe,
        relrowsecurity as rls_preferencias
   from pg_class where relname='preferencias_avisos';
+
+\echo '[45] painel nao exige o codigo (radar.exigir_celular_confirmado = false): WhatsApp digitado sem confirmar pede, e a loja recebe esse numero'
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+update configuracoes set valor='false' where chave='radar.exigir_celular_confirmado' and microrregiao_id is null;
+insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values
+ ('user_w90',:'reg','Wanda Digitou','5589999999045','Corrente','pf');
+insert into perfis (id,microrregiao_id,nome,cidade,tipo_pessoa) values
+ ('user_n90',:'reg','Nilo Sem Número','Corrente','pf');
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_w90',false) \g /dev/null
+select (criar_pedido_radar('Procuro bicicleta aro 26 usada', 'Corrente')) ->> 'id' as ped_w \gset
+select (criar_pedido_radar('Procuro patinete elétrico usado', 'Corrente', 'propostas_prazo', 72)) ->> 'id' as ped_w2 \gset
+select whatsapp_confirmado() as pode_pedir_sem_codigo;
+select set_config('request.jwt.claim.sub','user_p90',false) \g /dev/null
+select modo, whatsapp as numero_digitado_entregue from propor_radar(:'ped_w', null, null, 30000, 'Tenho uma Caloi aro 26');
+select modo, whatsapp as pela_funcao_antiga from revelar_contato_radar(:'ped_w', null, 'Oi');
+
+\echo '[45b] sem numero nenhum continua sem pedir (ERRO esperado: Confirme seu celular)'
+select set_config('request.jwt.claim.sub','user_n90',false) \g /dev/null
+select criar_pedido_radar('Procuro bicicleta aro 26 usada', 'Corrente');
+
+\echo '[45c] PF sem celular confirmado propoe no modo prazo e o comprador escolhe: recebe o numero digitado da PF'
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values
+ ('user_f90',:'reg','Fabio PF','5589999999046','Corrente','pf');
+insert into vitrines_lojas (dono_id,microrregiao_id,slug,nome,cidade,tipo,plano,plano_expira_em) values
+ ('user_f90',:'reg','fabio-pf-90','Fabio PF','Corrente','pf','full',now()+interval '30 days') returning id as vit_f \gset
+insert into radar_propostas (pedido_id, vitrine_id, preco_centavos, mensagem) values (:'ped_w2', :'vit_f', 80000, 'Tenho um') returning id as prop_f \gset
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_w90',false) \g /dev/null
+select whatsapp as numero_digitado_da_pf from escolher_proposta(:'prop_f');
+
+\echo '[46] painel volta a exigir o codigo (true): o mesmo numero digitado nao pede, nao e entregue a loja nem ao comprador (4 ERROS esperados)'
+reset role; update configuracoes set valor='true' where chave='radar.exigir_celular_confirmado' and microrregiao_id is null;
+set role authenticated; select set_config('request.jwt.claim.sub','user_w90',false) \g /dev/null
+select whatsapp_confirmado() as pode_pedir_com_codigo;
+select criar_pedido_radar('Procuro bicicleta aro 29 usada', 'Corrente');
+select whatsapp from escolher_proposta(:'prop_f');
+select set_config('request.jwt.claim.sub','user_p90',false) \g /dev/null
+select modo, whatsapp from propor_radar(:'ped_w', null, null, 29000);
+select modo, whatsapp from revelar_contato_radar(:'ped_w', null, 'Oi');
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
 
 -- volta os limites ao padrão
 update configuracoes set valor='10' where chave in ('radar.pedidos_por_dia','radar.pedidos_abertos_max') and microrregiao_id is null;

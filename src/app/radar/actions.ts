@@ -4,9 +4,12 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sincronizarPerfil } from "@/lib/perfil";
+import { meuPerfilEVitrine } from "@/lib/dados/conta";
+import { exigeCelularConfirmado } from "@/lib/dados/radar";
 import { traduzirErro } from "@/lib/erros";
-import { centavosDoTexto, ehUuid } from "@/lib/formato";
+import { centavosDoTexto, ehUuid, whatsappDigitado } from "@/lib/formato";
 import type {
   EnvioFotoProposta,
   ModoContato,
@@ -43,6 +46,30 @@ async function atualizarCelularDoClerk() {
   }
 }
 
+/**
+ * Sem celular confirmado (o SMS do login ainda não chega): guarda o WhatsApp digitado no pedido,
+ * se o painel deixar (radar.exigir_celular_confirmado = false). Nunca troca um número já confirmado
+ * pelo Clerk. Grava com a chave secreta porque perfis.whatsapp não é editável pelo navegador.
+ */
+async function guardarWhatsappDigitado(userId: string, texto: string | undefined): Promise<{ erro: string; campo?: string; precisaCelular?: boolean } | null> {
+  const conta = await meuPerfilEVitrine();
+  if (!conta) return { erro: "Termine seu cadastro antes de pedir no Radar." };
+  const perfil = conta.perfil;
+  if (perfil.whatsapp && perfil.whatsapp_verificado_em) return null;
+  if (await exigeCelularConfirmado(perfil.microrregiao_id)) {
+    return { erro: "Confirme seu celular para pedir no Radar.", campo: "celular", precisaCelular: true };
+  }
+  const numero = whatsappDigitado(texto);
+  if (!numero) return { erro: "Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.", campo: "whatsapp" };
+  if (numero === perfil.whatsapp) return null;
+  const { error } = await supabaseAdmin()
+    .from("perfis")
+    .update({ whatsapp: numero, whatsapp_verificado_em: null })
+    .eq("id", userId)
+    .is("whatsapp_verificado_em", null);
+  return error ? { erro: "Não conseguimos guardar seu WhatsApp. Tente de novo." } : null;
+}
+
 export async function criarPedido(entrada: {
   titulo: string;
   detalhes?: string;
@@ -52,10 +79,14 @@ export async function criarPedido(entrada: {
   cidade: string;
   modo: ModoContato;
   prazoHoras?: number | null;
+  /** Só quando o celular não está confirmado e o painel não exige o código. */
+  whatsapp?: string;
 }): Promise<RespostaCriarPedido> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: SEM_LOGIN };
   await atualizarCelularDoClerk();
+  const semCelular = await guardarWhatsappDigitado(userId, entrada.whatsapp);
+  if (semCelular) return { ok: false, ...semCelular };
 
   const db = await createClient();
   const { data, error } = await db.rpc("criar_pedido_radar", {

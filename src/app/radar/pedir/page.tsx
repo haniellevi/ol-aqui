@@ -1,5 +1,7 @@
 // /radar/pedir: o comprador diz o que procura. Prazos e limites vêm do painel (configuracoes).
 // O celular confirmado vem do Clerk: sincronizamos antes de mostrar o formulário.
+// Enquanto o painel não exige o código (radar.exigir_celular_confirmado = false), quem não
+// confirmou digita o WhatsApp no próprio formulário.
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { ChevronLeft, Smartphone } from "lucide-react";
@@ -7,7 +9,8 @@ import { garantirPerfil, sincronizarPerfil } from "@/lib/perfil";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { listarCategorias } from "@/lib/dados/categorias";
 import { listarCidades } from "@/lib/dados/regiao";
-import { regrasRadar } from "@/lib/dados/radar";
+import { exigeCelularConfirmado, regrasRadar } from "@/lib/dados/radar";
+import { telefone } from "@/lib/formato";
 import { LINK_RADAR } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
@@ -25,6 +28,8 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
     // sem a chave do Clerk: vale o que já está no banco
   }
   const conta = await meuPerfilEVitrine();
+  const confirmado = !!conta?.perfil.whatsapp && !!conta.perfil.whatsapp_verificado_em;
+  const exigeCodigo = conta && !confirmado ? await exigeCelularConfirmado(conta.perfil.microrregiao_id) : false;
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
@@ -42,7 +47,7 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
             Tentar de novo
           </Botao>
         </Vazio>
-      ) : !conta.perfil.whatsapp || !conta.perfil.whatsapp_verificado_em ? (
+      ) : exigeCodigo ? (
         <Vazio
           icone={<Smartphone />}
           titulo="Confirme seu celular primeiro"
@@ -56,13 +61,31 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
           </Botao>
         </Vazio>
       ) : (
-        <Formulario microrregiaoId={conta.perfil.microrregiao_id} cidadePerfil={conta.perfil.cidade} texto={q ?? ""} />
+        <Formulario
+          microrregiaoId={conta.perfil.microrregiao_id}
+          cidadePerfil={conta.perfil.cidade}
+          texto={q ?? ""}
+          pedirWhatsapp={!confirmado}
+          whatsappInicial={conta.perfil.whatsapp ? telefone(conta.perfil.whatsapp) : ""}
+        />
       )}
     </main>
   );
 }
 
-async function Formulario({ microrregiaoId, cidadePerfil, texto }: { microrregiaoId: string; cidadePerfil: string | null; texto: string }) {
+async function Formulario({
+  microrregiaoId,
+  cidadePerfil,
+  texto,
+  pedirWhatsapp,
+  whatsappInicial,
+}: {
+  microrregiaoId: string;
+  cidadePerfil: string | null;
+  texto: string;
+  pedirWhatsapp: boolean;
+  whatsappInicial: string;
+}) {
   const [categorias, cidades, regras] = await Promise.all([listarCategorias(), listarCidades(microrregiaoId), regrasRadar(microrregiaoId)]);
   return (
     <FormPedido
@@ -71,6 +94,8 @@ async function Formulario({ microrregiaoId, cidadePerfil, texto }: { microrregia
       cidades={cidades.map((c) => c.nome)}
       cidadeInicial={cidades.some((c) => c.nome === cidadePerfil) ? cidadePerfil : (cidades[0]?.nome ?? null)}
       regras={regras}
+      pedirWhatsapp={pedirWhatsapp}
+      whatsappInicial={whatsappInicial}
     />
   );
 }

@@ -625,9 +625,12 @@ begin
     return;
   end if;
 
-  -- só entrega número confirmado no Clerk (quem troca o número perde a confirmação)
+  -- entrega número confirmado no Clerk (quem troca o número perde a confirmação);
+  -- sem confirmação, só o número digitado quando o painel não exige o código (20261107030000)
   select pf.whatsapp into v_fone from public.perfis pf
-   where pf.id = v_pedido.comprador_id and pf.whatsapp_verificado_em is not null;
+   where pf.id = v_pedido.comprador_id and pf.whatsapp is not null
+     and (pf.whatsapp_verificado_em is not null
+          or public.config('radar.exigir_celular_confirmado', v_pedido.microrregiao_id, 'true'::jsonb) = 'false'::jsonb);
   if v_fone is null then
     raise exception 'O comprador ainda não confirmou o celular. Tente mais tarde.' using errcode = 'P0001';
   end if;
@@ -690,9 +693,13 @@ begin
   if v.status <> 'ativa' then
     raise exception 'Esta loja não está atendendo pelo OLAKI agora.' using errcode = 'P0002';
   end if;
-  -- loja: WhatsApp da loja; pessoa física: só o celular confirmado do perfil
+  -- loja: WhatsApp da loja; pessoa física: o celular confirmado do perfil
+  -- (ou só cadastrado, quando o painel não exige o código)
   fone := coalesce(case when v.tipo = 'loja' then v.whatsapp end,
-                   (select pf.whatsapp from public.perfis pf where pf.id = v.dono_id and pf.whatsapp_verificado_em is not null));
+                   (select pf.whatsapp from public.perfis pf
+                     where pf.id = v.dono_id and pf.whatsapp is not null
+                       and (pf.whatsapp_verificado_em is not null
+                            or public.config('radar.exigir_celular_confirmado', p.microrregiao_id, 'true'::jsonb) = 'false'::jsonb)));
   if fone is null then
     raise exception 'Esta loja ainda não tem WhatsApp confirmado. Tente outra proposta.' using errcode = 'P0001';
   end if;

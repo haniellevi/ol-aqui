@@ -2,7 +2,7 @@
 
 Comprador pede → lojas propõem → comprador escolhe. Base: TELAS-E-FLUXOS.md (T26–T30, F4, F5),
 PRODUTO-CONTAS-ANUNCIOS-ROBO.md (Radar) e as decisões do Raniel: teste grátis tem 3 propostas,
-comprador escolhe "WhatsApp na hora" ou "propostas com prazo", e só pede com o celular confirmado por código.
+comprador escolhe "WhatsApp na hora" ou "propostas com prazo", e só pede com o celular confirmado por código (enquanto o SMS do login não funciona, `radar.exigir_celular_confirmado = false` deixa pedir com o WhatsApp digitado, e a loja recebe esse número).
 
 Migração: `supabase/migrations/20261108020000_radar_completo.sql` · Testes: `supabase/testes/90_radar_completo.sql`
 Tipos: `src/lib/tipos-radar.ts` · Leituras: `src/lib/dados/radar.ts` · Ações: `src/app/radar/actions.ts`
@@ -79,7 +79,7 @@ A migração agenda `olaki-radar-prazos` sozinha quando o pg_cron está ligado. 
 | Rota | Quem | O que tem |
 |---|---|---|
 | `/radar` | todos | visitante: explicação em 3 passos + "Pedir no Radar". Logado: abas **Meus pedidos** (comprador), **Pedidos na região** e **Minhas propostas** (loja). A aba de região é a tela que o Raniel redesenhou (mesmo visual) |
-| `/radar/pedir` | logado | o que procura (vem de `?q=` da busca vazia), categoria (opcional), faixa de preço, cidade da região, "Podem me chamar no WhatsApp" ou "Quero receber propostas aqui até <data>" com os prazos do painel. Sem celular confirmado: cartão "Confirme seu celular" (o Clerk é a fonte; o servidor sincroniza antes de conferir) |
+| `/radar/pedir` | logado | o que procura (vem de `?q=` da busca vazia), categoria (opcional), faixa de preço, cidade da região, "Podem me chamar no WhatsApp" ou "Quero receber propostas aqui até <data>" com os prazos do painel. Sem celular confirmado: cartão "Confirme seu celular" (o Clerk é a fonte; o servidor sincroniza antes de conferir); se o painel não exige o código, o formulário pede "Seu WhatsApp" (DDD + número), que o servidor grava no perfil com a chave secreta sem nunca trocar um número confirmado |
 | `/radar/pedido/[id]` | dono do pedido | "Pedido no ar!" logo depois de criar, propostas para comparar (menor preço / mais novas), "Chamar no WhatsApp" por proposta, "Já resolvi", "Cancelar pedido", resumo quando o prazo acaba |
 | `/radar/[id]` | loja | o pedido + folha **Propor** (anúncio no ar ou foto, preço, mensagem). No modo "Podem me chamar", quem já propôs tem "Chamar no WhatsApp de novo". Proposta escolhida pelo comprador não muda mais. Sem plano/propostas: planos da tabela e link `LINK_PLANOS?origem=radar` |
 | `/minha-conta/notificacoes` | logado | avisos do app; número de não lidas em Minha conta; "O que você quer receber" (liga/desliga cada aviso; WhatsApp e e-mail em breve) |

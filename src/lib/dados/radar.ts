@@ -43,6 +43,15 @@ export async function regrasRadar(microrregiaoId: string | null): Promise<Regras
   };
 }
 
+/**
+ * O painel exige celular confirmado por código para pedir? (radar.exigir_celular_confirmado; padrão: sim)
+ * Enquanto o SMS do login não funciona fica false e o comprador digita o WhatsApp no pedido.
+ */
+export async function exigeCelularConfirmado(microrregiaoId: string | null): Promise<boolean> {
+  const v = await lerConfig<unknown>("radar.exigir_celular_confirmado", microrregiaoId, true);
+  return v !== false && v !== "false";
+}
+
 /** Planos com Radar (para quem ainda não tem), na ordem do painel. */
 export const planosComRadar = cache(
   (): Promise<PlanoRadar[]> =>
