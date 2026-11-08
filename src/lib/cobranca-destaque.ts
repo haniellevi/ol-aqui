@@ -1,77 +1,23 @@
 import "server-only";
 import { auth } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 import { meuPedidoDestaque } from "@/lib/dados/destaques";
-import { documentoValido } from "@/lib/cpf-cnpj";
+import { apagarCobranca, ambienteAsaas, asaasConfigurado } from "@/lib/asaas";
 import {
-  ErroAsaas,
-  STATUS_PAGO,
-  ambienteAsaas,
-  apagarCobranca,
-  asaasConfigurado,
-  clienteDoAmbiente,
-  consultarCobranca,
-  criarCliente,
-  criarCobranca,
-  qrCodePix,
-  trocarForma,
-  type AmbienteAsaas,
-} from "@/lib/asaas";
-import type { Cobranca, FormaPagamento, PedidoDestaque, RespostaPagamento } from "@/lib/tipos-destaques";
+  ErroCobranca,
+  conferirNoAsaas,
+  garantirCobranca,
+  lerPagamento,
+  montarCobranca,
+  podePerguntarAoAsaas,
+  precisaDocumentoNoAsaas,
+} from "@/lib/cobranca-pagamento";
+import type { FormaPagamento, PedidoDestaque, RespostaPagamento } from "@/lib/tipos-destaques";
 
 // Cobrança de um pedido de destaque no Asaas. O pedido e o pagamento nascem no banco
-// (contratar_destaque, com o token da pessoa). Aqui o servidor cria o cliente e a cobrança
-// no Asaas e grava os ids com a chave secreta (registrar_cobranca_asaas). O CPF/CNPJ vai
-// só para o Asaas: o OLAKI guarda apenas o id do cliente.
+// (contratar_destaque, com o token da pessoa). A parte do Asaas (cliente, cobrança, Pix/cartão)
+// é o núcleo comum em cobranca-pagamento.ts, o mesmo dos planos e do anúncio avulso.
 
-export class ErroCobranca extends Error {}
-
-type LinhaPagamento = {
-  id: string;
-  vitrine_id: string;
-  valor_centavos: number;
-  vencimento: string | null;
-  status: string;
-  forma: string | null;
-  asaas_cobranca_id: string | null;
-  link_pagamento: string | null;
-};
-
-const hojeFortaleza = () =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-
-async function lerPagamento(id: string): Promise<LinhaPagamento | null> {
-  const { data } = await supabaseAdmin()
-    .from("pagamentos")
-    .select("id, vitrine_id, valor_centavos, vencimento, status, forma, asaas_cobranca_id, link_pagamento")
-    .eq("id", id)
-    .maybeSingle<LinhaPagamento>();
-  return data ?? null;
-}
-
-/**
- * Limite de perguntas ao Asaas, decidido no banco (cobranca.consulta_intervalo_segundos):
- * no máximo uma pergunta por pagamento a cada poucos segundos, seja o que for que a tela peça.
- */
-async function podePerguntarAoAsaas(pagamentoId: string): Promise<boolean> {
-  const { data, error } = await supabaseAdmin().rpc("marcar_consulta_asaas", { p_pagamento_id: pagamentoId });
-  return !error && data === true;
-}
-
-async function montarCobranca(amb: AmbienteAsaas, pg: LinhaPagamento, forma: FormaPagamento): Promise<Cobranca> {
-  const id = pg.asaas_cobranca_id!;
-  if (forma === "cartao") {
-    if (!pg.link_pagamento) throw new ErroCobranca("Não achamos a página de pagamento. Tente de novo.");
-    return { forma: "cartao", link: pg.link_pagamento };
-  }
-  try {
-    const qr = await qrCodePix(amb, id);
-    return { forma: "pix", qrCodeBase64: qr.encodedImage ?? null, copiaECola: qr.payload ?? null, link: pg.link_pagamento };
-  } catch {
-    // sem QR (instabilidade): a página do Asaas também mostra o Pix
-    return { forma: "pix", qrCodeBase64: null, copiaECola: null, link: pg.link_pagamento };
-  }
-}
+export { ErroCobranca };
 
 /**
  * Cria (ou reaproveita) a cobrança do pedido e devolve o Pix ou o link do cartão.
@@ -88,67 +34,20 @@ export async function cobrarPedido(pedidoId: string, forma: FormaPagamento, docu
   }
   if (!asaasConfigurado()) throw new ErroCobranca("Pagamento em breve. Por enquanto, use os destaques grátis do seu plano.");
 
-  const db = supabaseAdmin();
   const amb = await ambienteAsaas();
   let pg = await lerPagamento(pedido.pagamento_id);
   if (!pg || pg.status !== "pendente") throw new ErroCobranca("Este pedido não está mais esperando pagamento.");
 
-  const { data: vitrine } = await db
-    .from("vitrines_lojas")
-    .select("id, nome, tipo, dono_id, gateway_cliente_id, perfis(nome)")
-    .eq("id", pg.vitrine_id)
-    .maybeSingle<{ id: string; nome: string; tipo: string; dono_id: string; gateway_cliente_id: string | null; perfis: { nome: string } | null }>();
-  if (!vitrine || vitrine.dono_id !== userId) throw new ErroCobranca("Pedido não encontrado.");
-
-  try {
-    if (!pg.asaas_cobranca_id) {
-      let cliente = clienteDoAmbiente(vitrine.gateway_cliente_id, amb);
-      if (!cliente) {
-        if (!documento || !documentoValido(documento)) return { etapa: "precisa_documento", pedidoId: pedido.id };
-        const nome = vitrine.tipo === "loja" ? vitrine.nome : vitrine.perfis?.nome || vitrine.nome;
-        cliente = await criarCliente(amb, { nome, documento, referencia: vitrine.id });
-        await db.from("vitrines_lojas").update({ gateway_cliente_id: `${amb}:${cliente}` }).eq("id", vitrine.id);
-      }
-      const venc = pg.vencimento && pg.vencimento >= hojeFortaleza() ? pg.vencimento : hojeFortaleza();
-      const nova = await criarCobranca(amb, {
-        cliente,
-        forma,
-        centavos: pg.valor_centavos,
-        vencimento: venc,
-        descricao: `OLAKI · ${pedido.tipo_nome}`,
-        referencia: pg.id,
-      });
-      const { data: gravou, error } = await db.rpc("registrar_cobranca_asaas", {
-        p_pagamento_id: pg.id,
-        p_cobranca_id: nova.id,
-        p_link: nova.invoiceUrl,
-        p_forma: forma,
-      });
-      if (gravou === false) {
-        await apagarCobranca(amb, nova.id); // outro clique já criou uma: fica a primeira
-      } else if (error) {
-        // a resposta se perdeu, mas pode ter gravado: só apaga se a gravada não for esta
-        const conferido = await lerPagamento(pg.id);
-        if (conferido && conferido.asaas_cobranca_id !== nova.id) await apagarCobranca(amb, nova.id);
-      }
-    } else if (pg.forma !== forma) {
-      if (!(await podePerguntarAoAsaas(pg.id))) throw new ErroCobranca("Espere alguns segundos e tente de novo.");
-      const trocada = await trocarForma(amb, pg.asaas_cobranca_id, forma);
-      await db.rpc("registrar_cobranca_asaas", {
-        p_pagamento_id: pg.id,
-        p_cobranca_id: pg.asaas_cobranca_id,
-        p_link: trocada.invoiceUrl ?? pg.link_pagamento,
-        p_forma: forma,
-      });
-    }
-  } catch (e) {
-    if (e instanceof ErroAsaas) {
-      throw new ErroCobranca(
-        e.status === 400 ? `O pagamento não foi aceito: ${e.message}` : "O sistema de pagamento não respondeu. Tente de novo em instantes.",
-      );
-    }
-    throw e;
-  }
+  const r = await garantirCobranca({
+    amb,
+    pg,
+    userId,
+    forma,
+    documento,
+    descricao: `OLAKI · ${pedido.tipo_nome}`,
+    naoEncontrado: "Pedido não encontrado.",
+  });
+  if (r === "precisa_documento") return { etapa: "precisa_documento", pedidoId: pedido.id };
 
   pg = await lerPagamento(pg.id);
   if (!pg?.asaas_cobranca_id) throw new ErroCobranca("Não deu para criar a cobrança. Tente de novo.");
@@ -172,22 +71,7 @@ export async function situacaoPedido(pedidoId: string, perguntarAoAsaas: boolean
     return pedido;
   }
   if (pedido.status !== "aguardando_pagamento" || !perguntarAoAsaas) return pedido;
-  try {
-    const pg = pedido.pagamento_id ? await lerPagamento(pedido.pagamento_id) : null;
-    if (!pg?.asaas_cobranca_id || pg.status !== "pendente") return pedido;
-    if (!(await podePerguntarAoAsaas(pg.id))) return pedido;
-    const amb = await ambienteAsaas();
-    const c = await consultarCobranca(amb, pg.asaas_cobranca_id);
-    if (STATUS_PAGO.has(String(c.status))) {
-      await supabaseAdmin().rpc("confirmar_pagamento", {
-        p_asaas_cobranca_id: pg.asaas_cobranca_id,
-        p_payload: { event: "CONSULTA_OLAKI", payment: c },
-      });
-      return (await meuPedidoDestaque(pedidoId)) ?? pedido;
-    }
-  } catch {
-    /* tenta de novo na próxima pergunta */
-  }
+  if (pedido.pagamento_id && (await conferirNoAsaas(pedido.pagamento_id))) return (await meuPedidoDestaque(pedidoId)) ?? pedido;
   return pedido;
 }
 
@@ -210,13 +94,5 @@ export async function apagarCobrancaDoPedido(pedido: Pick<PedidoDestaque, "pagam
 /** true quando a pessoa ainda não tem cliente no Asaas neste ambiente (a tela pede o CPF/CNPJ). */
 export async function precisaDocumento(vitrineId: string): Promise<boolean> {
   if (!asaasConfigurado()) return false;
-  try {
-    const [amb, { data }] = await Promise.all([
-      ambienteAsaas(),
-      supabaseAdmin().from("vitrines_lojas").select("gateway_cliente_id").eq("id", vitrineId).maybeSingle<{ gateway_cliente_id: string | null }>(),
-    ]);
-    return !clienteDoAmbiente(data?.gateway_cliente_id, amb);
-  } catch {
-    return true;
-  }
+  return precisaDocumentoNoAsaas(vitrineId);
 }

@@ -19,3 +19,21 @@ export const LINK_DESTACAR_LOJA = "/destacar/loja";
 
 /** "Destacar minha loja" retomando um pagamento (?d=<pedido>). */
 export const linkDestacarLoja = (pedidoId?: string | null) => `${LINK_DESTACAR_LOJA}${pedidoId ? `?d=${pedidoId}` : ""}`;
+
+/** "Meu plano" (pagar plano). `plano` já escolhe um; `pagamentoId` retoma um pagamento (?p=). */
+export const LINK_MEU_PLANO = "/minha-conta/plano";
+export const linkMeuPlano = (opcoes: { plano?: string | null; pagamentoId?: string | null } = {}) => {
+  const q = new URLSearchParams();
+  if (opcoes.plano) q.set("plano", opcoes.plano);
+  if (opcoes.pagamentoId) q.set("p", opcoes.pagamentoId);
+  const s = q.toString();
+  return s ? `${LINK_MEU_PLANO}?${s}` : LINK_MEU_PLANO;
+};
+
+/** Pagamento do anúncio avulso de um anúncio (pessoa física), retomando um pagamento com ?p=. */
+export const linkAvulso = (anuncioId: string, pagamentoId?: string | null) =>
+  `/anunciar/avulso?id=${anuncioId}${pagamentoId ? `&p=${pagamentoId}` : ""}`;
+
+/** Painel: telas 5 (lojas e vendedores) e 6 (pagamentos). */
+export const LINK_ADMIN_LOJAS = "/admin/lojas";
+export const LINK_ADMIN_PAGAMENTOS = "/admin/pagamentos";
