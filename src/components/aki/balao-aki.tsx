@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Camera, Info, Loader2, SendHorizontal, Trash2, X } from "lucide-react";
+import { ArrowLeft, Camera, Info, Loader2, SendHorizontal, Trash2, X } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Chip } from "@/components/ui/chip";
 import { enviarFoto, reduzirFoto } from "@/lib/fotos";
@@ -26,6 +27,8 @@ import { RespostaAki } from "./resposta-aki";
 
 // Balão flutuante do Aki + folha de conversa (DESIGN-SYSTEM.md: folha rounded-t-folha, shadow-2,
 // 48px de toque, texto mínimo 13px, campo 16px, um botão laranja por tela = "Enviar").
+// modo="pagina": a mesma conversa ocupando a tela toda (T39, /aki), sem o balão flutuante.
+// Mesma API (/api/aki) e mesmas regras: nada muda no que o Aki pode fazer.
 
 type FotoPronta = { base64: string; tipo: "image/webp" | "image/jpeg"; previa: string; blob: Blob; formato: "webp" | "jpg" };
 
@@ -55,10 +58,12 @@ function paraBase64(blob: Blob): Promise<string> {
   });
 }
 
-export function BalaoAki() {
+export function BalaoAki({ modo = "balao" }: { modo?: "balao" | "pagina" } = {}) {
+  const pagina = modo === "pagina";
   const caminho = usePathname() ?? "/";
   const [estado, setEstado] = useState<EstadoAki | null>(null);
-  const [aberto, setAberto] = useState(false);
+  const [falhouEstado, setFalhouEstado] = useState(false);
+  const [aberto, setAberto] = useState(pagina);
   const [carregando, setCarregando] = useState(false);
   const [mensagens, setMensagens] = useState<MensagemAki[]>([]);
   const [conversaId, setConversaId] = useState<string | null>(null);
@@ -77,7 +82,7 @@ export function BalaoAki() {
   const [caminhoAtual, setCaminhoAtual] = useState(caminho);
   if (caminhoAtual !== caminho) {
     setCaminhoAtual(caminho);
-    setAberto(false);
+    if (!pagina) setAberto(false);
     setConfirmarApagar(false);
   }
   const inputFoto = useRef<HTMLInputElement>(null);
@@ -86,7 +91,9 @@ export function BalaoAki() {
   const completoCarregado = useRef(false);
 
   // estado leve ao montar: o Aki existe nesta região? (desligado no painel = sem balão)
+  // Na tela cheia a conversa abre direto (estado completo, logo abaixo).
   useEffect(() => {
+    if (pagina) return;
     let vivo = true;
     fetch(API, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
@@ -98,7 +105,7 @@ export function BalaoAki() {
     return () => {
       vivo = false;
     };
-  }, []);
+  }, [pagina]);
 
   useEffect(() => {
     const ligado = !!estado?.ligado;
@@ -113,16 +120,25 @@ export function BalaoAki() {
     try {
       const r = await fetch(`${API}?completo=1`, { cache: "no-store" });
       const e = (await r.json()) as EstadoAki;
+      // falha no servidor (a rota responde motivo "erro") não é "Aki desligado": mostra "Tentar de novo"
+      if (!r.ok || e.motivo === "erro") throw new Error("estado do Aki falhou");
       setEstado(e);
       setMensagens(e.mensagens ?? []);
       setConversaId(e.conversaId);
+      setFalhouEstado(false);
       completoCarregado.current = true;
     } catch {
       setAviso("Sem conexão agora. Tente de novo.");
+      setFalhouEstado(true);
     } finally {
       setCarregando(false);
     }
   }, []);
+
+  // tela cheia: carrega a conversa ao abrir a página
+  useEffect(() => {
+    if (pagina) void carregarCompleto();
+  }, [pagina, carregarCompleto]);
 
   const podeAgora = !!estado?.pode;
   const abrir = useCallback(
@@ -155,9 +171,9 @@ export function BalaoAki() {
     return () => window.removeEventListener(EVENTO_DICA_AKI, ouvir);
   }, []);
 
-  // folha aberta: Esc fecha e a página de trás não rola
+  // folha aberta: Esc fecha e a página de trás não rola (na tela cheia não há o que fechar)
   useEffect(() => {
-    if (!aberto) return;
+    if (!aberto || pagina) return;
     const tecla = (e: KeyboardEvent) => e.key === "Escape" && setAberto(false);
     window.addEventListener("keydown", tecla);
     const antes = document.body.style.overflow;
@@ -166,7 +182,7 @@ export function BalaoAki() {
       window.removeEventListener("keydown", tecla);
       document.body.style.overflow = antes;
     };
-  }, [aberto]);
+  }, [aberto, pagina]);
 
   useEffect(() => {
     lista.current?.scrollTo({ top: lista.current.scrollHeight, behavior: "smooth" });
@@ -325,7 +341,48 @@ export function BalaoAki() {
     }
   }
 
-  if (!estado?.ligado) return null;
+  if (!estado?.ligado) {
+    if (!pagina) return null;
+    // tela cheia: carregando, sem conexão ou Aki desligado nesta região (sempre com saída)
+    const carregandoPagina = !estado && !falhouEstado;
+    return (
+      <section aria-labelledby="aki-titulo" className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-4 px-4 text-center">
+        <MascoteAki tamanho={64} />
+        <h1 id="aki-titulo" className="text-[22px] font-semibold leading-7">
+          {carregandoPagina ? "Abrindo o Aki…" : falhouEstado ? "Não deu para abrir o Aki" : "O Aki está descansando"}
+        </h1>
+        {carregandoPagina ? (
+          <Loader2 className="size-6 animate-spin text-texto-suave motion-reduce:animate-none" aria-hidden />
+        ) : (
+          <>
+            <p className="max-w-sm text-base text-texto-suave">{falhouEstado ? "Algo deu errado. Confira sua internet e tente de novo." : DESCANSANDO}</p>
+            <div className="flex w-full max-w-sm flex-col gap-2">
+              {falhouEstado ? (
+                <Botao
+                  larguraTotal
+                  carregando={carregando}
+                  textoCarregando="Tentando…"
+                  onClick={() => {
+                    completoCarregado.current = false;
+                    void carregarCompleto();
+                  }}
+                >
+                  Tentar de novo
+                </Botao>
+              ) : (
+                <Botao href="/busca" larguraTotal>
+                  Buscar no OLAKI
+                </Botao>
+              )}
+              <Botao href="/" variante="secundario" larguraTotal>
+                Voltar ao início
+              </Botao>
+            </div>
+          </>
+        )}
+      </section>
+    );
+  }
 
   // telas com barra fixa embaixo (passos do anúncio, página do anúncio): o balão sobe para não cobrir
   const elevado = caminho.startsWith("/anunciar/") || caminho.startsWith("/anuncio/");
@@ -384,20 +441,37 @@ export function BalaoAki() {
       )}
 
       {aberto && (
-        <div className="fixed inset-0 z-50" role="presentation">
-          <button type="button" aria-label="Fechar o Aki" className="absolute inset-0 bg-beringela/40" onClick={() => setAberto(false)} />
+        <div className={pagina ? "contents" : "fixed inset-0 z-50"} role="presentation">
+          {!pagina && (
+            <button type="button" aria-label="Fechar o Aki" className="absolute inset-0 bg-beringela/40" onClick={() => setAberto(false)} />
+          )}
           <section
-            role="dialog"
-            aria-modal="true"
+            role={pagina ? undefined : "dialog"}
+            aria-modal={pagina ? undefined : true}
             aria-labelledby="aki-titulo"
-            className="absolute inset-x-0 bottom-0 mx-auto flex h-[88dvh] max-w-lg flex-col rounded-t-folha bg-cartao shadow-2 md:bottom-6 md:right-6 md:left-auto md:h-[min(720px,85dvh)] md:w-[420px] md:rounded-folha"
+            className={
+              pagina
+                ? "mx-auto flex h-dvh w-full max-w-2xl flex-col bg-cartao md:border-x md:border-borda"
+                : "absolute inset-x-0 bottom-0 mx-auto flex h-[88dvh] max-w-lg flex-col rounded-t-folha bg-cartao shadow-2 md:bottom-6 md:right-6 md:left-auto md:h-[min(720px,85dvh)] md:w-[420px] md:rounded-folha"
+            }
           >
-            <header className="flex items-center gap-2 border-b border-borda py-1 pl-4 pr-1">
+            <header className={`flex items-center gap-2 border-b border-borda py-1 pr-1 ${pagina ? "pl-1" : "pl-4"}`}>
+              {pagina && (
+                <Link href="/" aria-label="Voltar ao início" className="grid size-12 shrink-0 place-items-center text-beringela">
+                  <ArrowLeft className="size-6" aria-hidden />
+                </Link>
+              )}
               <MascoteAki tamanho={32} />
               <div className="min-w-0 flex-1">
-                <h2 id="aki-titulo" className="text-lg font-semibold leading-6">
-                  Aki
-                </h2>
+                {pagina ? (
+                  <h1 id="aki-titulo" className="text-lg font-semibold leading-6">
+                    Aki
+                  </h1>
+                ) : (
+                  <h2 id="aki-titulo" className="text-lg font-semibold leading-6">
+                    Aki
+                  </h2>
+                )}
                 <p className="text-[13px] leading-[18px] text-texto-suave">Ajudante do OLAKI</p>
               </div>
               {estado.logado && mensagens.length > 0 && (
@@ -412,9 +486,11 @@ export function BalaoAki() {
                   Apagar conversa
                 </button>
               )}
-              <button type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-12 place-items-center text-beringela">
-                <X className="size-6" aria-hidden />
-              </button>
+              {!pagina && (
+                <button type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-12 place-items-center text-beringela">
+                  <X className="size-6" aria-hidden />
+                </button>
+              )}
             </header>
 
             {estado.avisoIa && (

@@ -7,13 +7,14 @@ import { linkLoja } from "@/lib/formato";
 
 // "Lojas em destaque" no Início: lojas que contrataram o tipo "loja" na região.
 // Lugar pago: sempre com a etiqueta "Patrocinado" (Código de Defesa do Consumidor).
-export async function LojasEmDestaque({ microrregiaoId }: { microrregiaoId: string }) {
+// titulo: vem do painel (tela 12, home_blocos); sem ele, o de sempre.
+export async function LojasEmDestaque({ microrregiaoId, titulo = "Lojas em destaque" }: { microrregiaoId: string; titulo?: string }) {
   const lojas = await lojasEmDestaque(microrregiaoId);
   if (!lojas.length) return null;
   return (
     <section aria-labelledby="titulo-lojas-destaque" className="flex flex-col gap-3">
       <h2 id="titulo-lojas-destaque" className="text-lg font-semibold">
-        Lojas em destaque
+        {titulo}
       </h2>
       <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
         {lojas.map((l) => (

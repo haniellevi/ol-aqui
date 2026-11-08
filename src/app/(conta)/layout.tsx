@@ -3,6 +3,7 @@ import { garantirPerfil } from "@/lib/perfil";
 import { CabecalhoPublico } from "@/components/ui/cabecalho-publico";
 import { BarraInferior } from "@/components/ui/barra-inferior";
 import { BalaoAki } from "@/components/aki/balao-aki";
+import { AvisoTermos } from "@/components/paginas/aviso-termos";
 
 // Área da conta (anunciar, quero vender, minha conta, destacar): exige login.
 // O middleware já manda para /entrar?redirect_url=...; aqui é a segunda barreira.
@@ -17,6 +18,7 @@ export default async function LayoutConta({ children }: { children: React.ReactN
     <>
       <CabecalhoPublico />
       <div id="conteudo" className="pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
+        <AvisoTermos />
         {children}
       </div>
       <BarraInferior />
