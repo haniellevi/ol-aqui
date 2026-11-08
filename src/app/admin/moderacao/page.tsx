@@ -3,6 +3,7 @@ import { quando, reais } from "@/lib/admin/formato";
 import { Cartao, Titulo, estiloBotaoAprovar, estiloBotaoPerigo, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { decidirAnuncio, decidirPedido, resolverDenuncia, tirarFotoBanner } from "./actions";
 import { BotaoTirarBanner } from "./botao-tirar-banner";
+import { RadarModeracao } from "./radar-moderacao";
 
 export const metadata = { title: "Moderação" };
 
@@ -19,7 +20,8 @@ const MOTIVOS: Record<string, string> = {
   outro: "Outro",
 };
 
-export default async function ModeracaoPage() {
+export default async function ModeracaoPage({ searchParams }: { searchParams: Promise<{ erro?: string; ok?: string }> }) {
+  const { erro, ok } = await searchParams;
   const { supabase } = await exigirAdmin();
   const [anunciosR, pedidosR, denunciasR, bannersR] = await Promise.all([
     supabase
@@ -120,6 +122,8 @@ export default async function ModeracaoPage() {
           </Cartao>
         ))}
       </div>
+
+      <RadarModeracao erro={erro} ok={ok} />
 
       {banners.length > 0 && (
         <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Fotos de banner das lojas (mais novas)</h2>

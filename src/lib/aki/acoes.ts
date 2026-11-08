@@ -90,29 +90,27 @@ export async function confirmarPedidoRadar(mensagemId: number, indice: number): 
     return { ok: false, erro: v.erro };
   }
 
-  const { data, error } = await db
-    .from("radar_pedidos")
-    .insert({
-      comprador_id: userId,
-      microrregiao_id: perfil.microrregiao_id,
-      categoria: v.dados.categoria,
-      titulo: v.dados.titulo,
-      detalhes: v.dados.detalhes,
-      preco_max_centavos: v.dados.preco_max_centavos,
-      cidade: v.dados.cidade,
-      urgencia: v.dados.urgencia,
-      modo_contato: "whatsapp_direto",
-    })
-    .select("status")
-    .single();
-  if (error || !data) {
+  // Mesma função do formulário /radar/pedir: celular, cidade da região, limites e moderação no banco
+  const { data, error } = await db.rpc("criar_pedido_radar", {
+    p_titulo: v.dados.titulo,
+    p_cidade: v.dados.cidade,
+    p_modo: "whatsapp_direto",
+    p_detalhes: v.dados.detalhes,
+    p_preco_max_centavos: v.dados.preco_max_centavos,
+    p_urgencia: v.dados.urgencia,
+    p_categoria: v.dados.categoria,
+    p_origem: "aki",
+  });
+  const criado = data as { id: string; status: string } | null;
+  if (error || !criado) {
     await desfazer();
-    return { ok: false, erro: traduzirErro(error).mensagem };
+    return { ok: false, erro: error?.code === "P0002" && error.message ? error.message : traduzirErro(error).mensagem };
   }
+  revalidatePath("/radar");
   return {
     ok: true,
     mensagem:
-      data.status === "em_analise"
+      criado.status === "em_analise"
         ? "Recebemos seu pedido. Ele passa por uma conferência rápida antes de ir para o Radar."
         : "Pedido no Radar! As lojas da região vão te chamar no WhatsApp.",
   };

@@ -61,7 +61,7 @@ Tabela `configuracoes`, uma aba por grupo. Cada valor pode ter **exceção por r
 
 - Ler e salvar: Server Actions do Next.js usando a sessão do admin (RLS valida `e_admin()`).
 - Webhook do Asaas: rota `app/api/asaas/webhook/route.ts`, confere o token do Asaas, usa a chave `service_role` e chama `confirmar_pagamento()`. A função ignora o mesmo aviso repetido.
-- Rotina diária (pg_cron): `expirar_rotina()` encerra pedidos vencidos e pausa anúncios de quem não renovou. Uma segunda rotina vai mandar o resumo das propostas ao comprador quando o prazo acabar (precisa da API de WhatsApp, fica para a próxima etapa).
+- Rotina diária (pg_cron): `expirar_rotina()` encerra pedidos vencidos e pausa anúncios de quem não renovou. Uma segunda rotina, `radar_avisar_prazos()` (pg_cron a cada 10 min, nome `olaki-radar-prazos`), manda o resumo das propostas ao comprador dentro do app quando o prazo acaba (pelo WhatsApp fica para a fase 2).
 
 ## Já pronto no banco (migração `20261107010100_painel_admin.sql`, testada)
 

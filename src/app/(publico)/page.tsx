@@ -107,7 +107,7 @@ export default async function Inicio() {
           </div>
         </div>
         {/* Um botão principal por tela: o laranja da home é o "Buscar" (ou o "Anunciar agora" da tela vazia) */}
-        <Botao href="/radar" variante="secundario" className="sm:w-auto" larguraTotal>
+        <Botao href="/radar/pedir" variante="secundario" className="sm:w-auto" larguraTotal>
           Pedir no Radar
         </Botao>
       </section>
@@ -129,7 +129,7 @@ export default async function Inicio() {
               <Botao href="/anunciar" larguraTotal>
                 Anunciar agora
               </Botao>
-              <Botao href="/radar" variante="secundario" larguraTotal>
+              <Botao href="/radar/pedir" variante="secundario" larguraTotal>
                 Pedir no Radar
               </Botao>
             </Vazio>

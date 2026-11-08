@@ -27,6 +27,13 @@ export default async function ResumoPage() {
       contar(supabase.from("denuncias").select("id", { count: "exact", head: true }).eq("status", "aberta")),
     ]);
 
+  // Radar no mês (pedidos feitos, quantos receberam proposta e quantas propostas foram escolhidas)
+  const [pedidosMes, pedidosComProposta, escolhidasMes] = await Promise.all([
+    contar(supabase.from("radar_pedidos").select("id", { count: "exact", head: true }).gte("criado_em", inicioMes)),
+    contar(supabase.from("radar_pedidos").select("id", { count: "exact", head: true }).gte("criado_em", inicioMes).gt("total_propostas", 0)),
+    contar(supabase.from("radar_propostas").select("id", { count: "exact", head: true }).gte("escolhida_em", inicioMes)),
+  ]);
+
   const vitrines = (vitrinesR.data ?? []) as Vitrine[];
   const planos = planosR.data ?? [];
   const pagante = (v: Vitrine) => v.status === "ativa" && v.plano_expira_em && new Date(v.plano_expira_em) > agora;
@@ -79,6 +86,17 @@ export default async function ResumoPage() {
           valor={pedidosAbertos ? (propostasMes / pedidosAbertos).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : "—"}
           detalhe="mede se o Radar está vivo"
         />
+      </div>
+
+      <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Radar no mês</h2>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Numero rotulo="Pedidos feitos" valor={inteiro(pedidosMes)} />
+        <Numero
+          rotulo="Pedidos com proposta"
+          valor={inteiro(pedidosComProposta)}
+          detalhe={pedidosMes ? `${Math.round((pedidosComProposta / pedidosMes) * 100)}% dos pedidos` : undefined}
+        />
+        <Numero rotulo="Propostas escolhidas" valor={inteiro(escolhidasMes)} detalhe="comprador chamou no WhatsApp" />
       </div>
 
       {vitrines.length === 0 && (

@@ -16,6 +16,7 @@ import {
   Lock,
 } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
+import { avisosNaoLidos } from "@/lib/dados/radar";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta } from "@/components/conta/topo-conta";
@@ -31,7 +32,7 @@ const CLASSE_ITEM =
 
 // T31 · Minha conta: lista simples com ícone + nome. Itens de vendedor só para quem vende.
 export default async function PaginaMinhaConta() {
-  const conta = await meuPerfilEVitrine();
+  const [conta, naoLidos] = await Promise.all([meuPerfilEVitrine(), avisosNaoLidos()]);
   if (!conta) {
     return (
       <PaginaConta>
@@ -64,7 +65,12 @@ export default async function PaginaMinhaConta() {
   const paraTodos: Item[] = [
     { href: "/radar", nome: "Radar", icone: <Radar /> },
     { href: "/minha-conta/favoritos", nome: "Favoritos", icone: <Heart /> },
-    { href: "/minha-conta/notificacoes", nome: "Notificações", icone: <Bell /> },
+    {
+      href: "/minha-conta/notificacoes",
+      nome: "Notificações",
+      icone: <Bell />,
+      detalhe: naoLidos > 0 ? `${naoLidos} ${naoLidos === 1 ? "aviso novo" : "avisos novos"}` : undefined,
+    },
     { href: "/minha-conta/dados", nome: "Meus dados", icone: <UserRound /> },
     { href: "/minha-conta/privacidade", nome: "Privacidade", icone: <Lock /> },
   ];

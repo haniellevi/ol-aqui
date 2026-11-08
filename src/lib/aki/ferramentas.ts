@@ -5,7 +5,7 @@ import { categoriaPorSlug, listarCategorias } from "@/lib/dados/categorias";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { traduzirErro } from "@/lib/erros";
 import { linkAnuncio, preco as precoTexto } from "@/lib/formato";
-import { LINK_PLANOS } from "@/lib/rotas";
+import { LINK_PLANOS, linkPedirRadar } from "@/lib/rotas";
 import { filtrarAtributos } from "@/components/anunciar/atributos";
 import { urlPasso } from "@/components/anunciar/passos";
 import { CHAVE_DADOS } from "@/lib/aki/sistema";
@@ -499,6 +499,8 @@ async function prepararRadar(args: Record<string, unknown>, ctx: ContextoFerrame
     return falha("Para pedir no Radar a pessoa precisa confirmar o celular primeiro (botão na tela). Depois é só pedir de novo.");
   }
   addAcao(ctx, { tipo: "pedido_radar", rotulo: "Confirmar pedido no Radar", dados: v.dados });
+  // quem prefere escolher prazo e faixa de preço abre o formulário com o texto já preenchido
+  addAcao(ctx, { tipo: "link", rotulo: "Mudar detalhes ou prazo", href: linkPedirRadar(v.dados.titulo), icone: "radar" });
   return ok({ preparado: true, criado: false, aviso: 'O pedido só vai para o Radar quando a pessoa tocar em "Confirmar pedido no Radar".', pedido: v.dados });
 }
 

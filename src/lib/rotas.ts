@@ -37,3 +37,13 @@ export const linkAvulso = (anuncioId: string, pagamentoId?: string | null) =>
 /** Painel: telas 5 (lojas e vendedores) e 6 (pagamentos). */
 export const LINK_ADMIN_LOJAS = "/admin/lojas";
 export const LINK_ADMIN_PAGAMENTOS = "/admin/pagamentos";
+
+/** Radar: pedir (com o texto já preenchido), pedido do comprador e pedido visto pela loja. */
+export const LINK_RADAR = "/radar";
+export const linkPedirRadar = (texto?: string | null) => {
+  const t = (texto ?? "").trim().slice(0, 120);
+  return t ? `/radar/pedir?q=${encodeURIComponent(t)}` : "/radar/pedir";
+};
+export const linkMeuPedidoRadar = (pedidoId: string) => `/radar/pedido/${pedidoId}`;
+export const linkPedidoRadarLoja = (pedidoId: string) => `/radar/${pedidoId}`;
+export const LINK_AVISOS = "/minha-conta/notificacoes";
