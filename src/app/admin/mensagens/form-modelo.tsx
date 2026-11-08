@@ -189,13 +189,14 @@ export function FormModelo({ modelo }: { modelo: ModeloMensagem }) {
             {voltando && <Girando />}
             {voltando ? "Voltando…" : "Voltar ao texto original"}
           </button>
-          {voltou?.ok && (
-            <span role="status" className="text-sm font-semibold text-verde-escuro">
-              {voltou.ok}
-            </span>
-          )}
           {voltou?.erro && <Aviso tipo="erro">{voltou.erro}</Aviso>}
         </form>
+      )}
+      {/* Fora do formulário: depois de voltar, o texto fica igual ao original e o botão some */}
+      {igualOriginal && voltou?.ok && (
+        <p role="status" className="text-sm font-semibold text-verde-escuro">
+          {voltou.ok}
+        </p>
       )}
     </div>
   );

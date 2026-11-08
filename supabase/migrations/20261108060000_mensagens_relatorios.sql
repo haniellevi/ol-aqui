@@ -269,10 +269,11 @@ begin
   end loop;
 end $$;
 
--- As chaves antigas continuam (para não quebrar quem as lê), avisando onde se edita agora
+-- As chaves antigas continuam. O texto geral agora se edita na tela 13; aqui só a exceção
+-- por região (Configurações > Criar exceção) continua valendo, como antes.
 update public.configuracoes
-   set descricao = 'Não é mais usado: edite em Painel > Mensagens automáticas. ' || coalesce(descricao, '')
- where chave like 'radar.aviso.%' and coalesce(descricao, '') not like 'Não é mais usado%';
+   set descricao = 'Texto geral: edite em Painel > Mensagens automáticas. Aqui só vale a exceção por região. ' || coalesce(descricao, '')
+ where chave like 'radar.aviso.%' and coalesce(descricao, '') not like 'Texto geral: edite em Painel%';
 
 -- ---------------------------------------------------------------------
 -- 2. Mandar um aviso usando o modelo (uso interno)
@@ -297,8 +298,9 @@ begin
     p_link, p_chave_unica, coalesce(p_vars, '{}'::jsonb));
 end $$;
 
--- Radar: mesma regra de antes (radar.avisos_ligados), textos agora da tela 13.
--- Sem modelo (não deve acontecer), usa o texto antigo de configuracoes.
+-- Radar: mesma regra de antes (radar.avisos_ligados), texto geral agora da tela 13.
+-- Exceção por região em configuracoes (radar.aviso.*, com microrregiao_id) continua
+-- valendo por cima do texto geral, como antes. Sem modelo (não deve acontecer), usa o texto antigo.
 create or replace function public.radar_aviso(
   p_usuario text, p_tipo text, p_regiao uuid, p_vars jsonb, p_link text, p_chave text, p_chave_texto text default null)
 returns boolean language plpgsql security definer
@@ -308,16 +310,26 @@ declare
   ligados jsonb := public.config('radar.avisos_ligados', p_regiao, null);
   modelo  text := case when p_chave_texto = 'radar.aviso.prazo_sem_propostas.texto' then 'prazo_sem_propostas' else p_tipo end;
   m       public.modelos_mensagem;
+  reg_titulo text;
+  reg_texto  text;
 begin
   if p_usuario is null then return false; end if;
   if jsonb_typeof(ligados) = 'array' and not (ligados ? p_tipo) then return false; end if;
   select * into m from public.modelos_mensagem x where x.chave = modelo and x.canal = 'notificacao';
   if m.id is not null then
     if not m.ativo then return false; end if;
+    if p_regiao is not null then
+      select nullif(btrim(c.valor #>> '{}'), '') into reg_titulo from public.configuracoes c
+       where c.chave = 'radar.aviso.' || p_tipo || '.titulo' and c.microrregiao_id = p_regiao
+         and jsonb_typeof(c.valor) = 'string';
+      select nullif(btrim(c.valor #>> '{}'), '') into reg_texto from public.configuracoes c
+       where c.chave = coalesce(p_chave_texto, 'radar.aviso.' || p_tipo || '.texto') and c.microrregiao_id = p_regiao
+         and jsonb_typeof(c.valor) = 'string';
+    end if;
     return public.notificar(
       p_usuario, p_tipo,
-      public.mensagem_montar(m.titulo, p_vars, 120),
-      public.mensagem_montar(m.texto, p_vars, 500),
+      public.mensagem_montar(coalesce(reg_titulo, m.titulo), p_vars, 120),
+      public.mensagem_montar(coalesce(reg_texto, m.texto), p_vars, 500),
       p_link, p_chave, coalesce(p_vars, '{}'::jsonb));
   end if;
   return public.notificar(

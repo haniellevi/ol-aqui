@@ -33,6 +33,9 @@ Regras garantidas no banco:
   WhatsApp texto ≤ 1.000, e-mail título ≤ 150 e texto ≤ 4.000.
 - Permissão de coluna: `authenticated` só pode dar UPDATE em `titulo`, `texto`, `ativo`; a policy deixa só o admin.
 - Toda mudança vai para `logs_atividade` (gatilho `registrar_log`), com quem, IP e valor antigo.
+- Radar: o texto geral vem daqui, mas uma **exceção por região** já criada em Configurações para as chaves
+  antigas `radar.aviso.*` (linha com `microrregiao_id`) continua valendo por cima dele, como antes
+  (`radar_aviso`). A linha geral `radar.aviso.*` em Configurações não é mais lida.
 
 ### Funções
 
@@ -95,6 +98,9 @@ nome, telefone ou id de pessoa). Todas recebem `(p_de date, p_ate date, p_regiao
 
 "Visitas" do funil = visualizações de anúncio (`eventos_anuncio`), que é o que o site mede hoje. Buscas não
 são medidas (só as buscas vazias do Aki), então o funil começa nas visualizações.
+**Pendente de decisão do Raniel:** o funil da tela 15 em PAINEL-ADMIN.md começa em visitas e buscas. Contar
+buscas e visitas do site pede uma tabela nova de eventos (cada busca gravada), com custo de banco; fica para
+quando ele aprovar ou pedir.
 
 ### Tela
 

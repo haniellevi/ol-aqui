@@ -49,7 +49,7 @@ select count(*) as radar_iguais_ao_painel_antigo
      or (c.chave = 'radar.aviso.' || m.chave || '.titulo' and c.valor #>> '{}' = m.titulo))
  where m.canal = 'notificacao';
 select chave, valor, grupo from configuracoes where chave = 'mensagens.vencido_dias_max';
-select count(*) as chaves_antigas_avisando from configuracoes where chave like 'radar.aviso.%' and descricao like 'Não é mais usado%';
+select count(*) as chaves_antigas_avisando from configuracoes where chave like 'radar.aviso.%' and descricao like 'Texto geral: edite em Painel%';
 
 \echo '[2] visitante nao le modelos (ERRO esperado: permission denied); usuario comum le 0 e nao muda nada (0 linhas); nao cria nem apaga (2 ERROS esperados: permission denied)'
 set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
@@ -94,6 +94,15 @@ select tipo, titulo, texto, link from notificacoes where chave like 'teste98:%' 
 insert into configuracoes (chave, microrregiao_id, valor, grupo) values ('radar.avisos_ligados', :'reg', '["pedido_novo"]', 'radar');
 select radar_aviso('user_co98', 'proposta_nova', :'reg', '{"loja": "Loja", "pedido": "Outra coisa", "preco": ""}', '/radar/pedido/y98', 'teste98:proposta2') as desligado_no_radar;
 delete from configuracoes where chave='radar.avisos_ligados' and microrregiao_id = :'reg';
+
+\echo '[6b] excecao por regiao em configuracoes (radar.aviso.*) continua valendo por cima do texto geral; outra regiao usa o texto geral'
+insert into configuracoes (chave, microrregiao_id, valor, grupo) values
+  ('radar.aviso.proposta_escolhida.texto', :'reg', '"TEXTO REGIONAL {pedido}"', 'radar'),
+  ('radar.aviso.proposta_escolhida.titulo', :'reg', '"   "', 'radar');
+select radar_aviso('user_lj98', 'proposta_escolhida', :'reg', '{"pedido": "Bicicleta", "loja": "Loja"}', '/x', 'teste98r:regiao') as avisou_regiao;
+select radar_aviso('user_lj98', 'proposta_escolhida', gen_random_uuid(), '{"pedido": "Bicicleta", "loja": "Loja"}', '/x', 'teste98r:geral') as avisou_geral;
+select chave, titulo, texto from notificacoes where chave like 'teste98r:%' order by chave;
+delete from configuracoes where chave like 'radar.aviso.proposta_escolhida.%' and microrregiao_id = :'reg';
 
 \echo '[7] pagamento confirmado: aviso com valor e o plano; repetir nao duplica'
 insert into pagamentos (vitrine_id, microrregiao_id, tipo, plano_codigo, valor_centavos, status)

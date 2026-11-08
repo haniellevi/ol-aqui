@@ -60,12 +60,13 @@ function Bloco({ titulo, sub, id, filtros, children }: { titulo: string; sub?: s
   );
 }
 
-function SemDados({ doze }: { doze: string }) {
+/** Saída do "nada neste período": 12 meses; se já está nos 12 meses, todas as regiões; senão, o resumo. */
+function SemDados({ saida }: { saida: { href: string; texto: string } }) {
   return (
     <Cartao>
       <p className="text-base text-texto-suave">Nada neste período.</p>
-      <Link href={doze} className={`${classesBotao("texto")} -ml-3`}>
-        Ver os últimos 12 meses
+      <Link href={saida.href} className={`${classesBotao("texto")} -ml-3`}>
+        {saida.texto}
       </Link>
     </Cartao>
   );
@@ -86,7 +87,12 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
   const atalhos = atalhosPeriodo();
   const linkAtalho = (de: string, ate: string) => `${LINK_ADMIN_RELATORIOS}?${filtrosNoEndereco({ ...filtros, de, ate })}`;
   const doze = atalhos.find((a) => a.id === "12m")!;
-  const linkDoze = linkAtalho(doze.de, doze.ate);
+  const jaDoze = filtros.de <= doze.de && filtros.ate >= doze.ate;
+  const saida = !jaDoze
+    ? { href: linkAtalho(doze.de, doze.ate), texto: "Ver os últimos 12 meses" }
+    : filtros.regiao
+      ? { href: `${LINK_ADMIN_RELATORIOS}?${filtrosNoEndereco({ ...filtros, regiao: null })}`, texto: "Ver todas as regiões" }
+      : { href: "/admin", texto: "Voltar ao resumo do painel" };
   const nomeRegiao = filtros.regiao ? regioes.find((r) => r.id === filtros.regiao)?.nome ?? "Região escolhida" : "Todas as regiões";
 
   const f = rel.funil;
@@ -137,7 +143,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           {!f ? (
             <Falhou />
           ) : f.visualizacoes + f.cliques_whatsapp + f.vendidos === 0 ? (
-            <SemDados doze={linkDoze} />
+            <SemDados saida={saida} />
           ) : (
             <Cartao>
               <Barras
@@ -174,7 +180,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           {!rel.anuncios ? (
             <Falhou />
           ) : rel.anuncios.length === 0 ? (
-            <SemDados doze={linkDoze} />
+            <SemDados saida={saida} />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               <Cartao>
@@ -216,7 +222,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           {!rel.conversao ? (
             <Falhou />
           ) : conv.length === 0 ? (
-            <SemDados doze={linkDoze} />
+            <SemDados saida={saida} />
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -261,7 +267,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           {!rel.receita ? (
             <Falhou />
           ) : receita.length === 0 ? (
-            <SemDados doze={linkDoze} />
+            <SemDados saida={saida} />
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -292,7 +298,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           {!rel.aki ? (
             <Falhou />
           ) : aki.length === 0 ? (
-            <SemDados doze={linkDoze} />
+            <SemDados saida={saida} />
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

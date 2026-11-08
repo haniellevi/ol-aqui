@@ -34,7 +34,12 @@ export const MAX_DIAS = 366;
 
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 const um = (v: string | string[] | undefined | null) => (Array.isArray(v) ? v[0] : v) ?? "";
-const dataValida = (t: string) => (DATA.test(t) && !Number.isNaN(Date.parse(`${t}T00:00:00Z`)) ? t : null);
+/** Só datas que existem no calendário: 2026-02-31 não passa (o Date do JavaScript viraria 03/03). */
+const dataValida = (t: string) => {
+  if (!DATA.test(t)) return null;
+  const x = new Date(`${t}T00:00:00Z`);
+  return !Number.isNaN(x.getTime()) && x.toISOString().slice(0, 10) === t ? t : null;
+};
 
 /** Hoje em Fortaleza (AAAA-MM-DD). */
 export const hojeFortaleza = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
@@ -68,9 +73,14 @@ export function lerFiltrosRelatorio(sp: Record<string, string | string[] | undef
 } {
   const pegar = (k: string) => (sp instanceof URLSearchParams ? sp.get(k) ?? "" : um(sp[k]));
   const hoje = hojeFortaleza();
-  let ate = dataValida(pegar("ate")) ?? hoje;
-  let de = dataValida(pegar("de")) ?? somarDias(ate, -29);
-  let aviso: string | null = null;
+  const ateTexto = pegar("ate");
+  const deTexto = pegar("de");
+  let ate = dataValida(ateTexto) ?? hoje;
+  let de = dataValida(deTexto) ?? somarDias(ate, -29);
+  let aviso: string | null =
+    (ateTexto && !dataValida(ateTexto)) || (deTexto && !dataValida(deTexto))
+      ? "Uma das datas não existe no calendário. Mostramos o período padrão no lugar dela."
+      : null;
   if (de > ate) {
     [de, ate] = [ate, de];
     aviso = 'A data "de" era depois da data "até": trocamos as duas.';
