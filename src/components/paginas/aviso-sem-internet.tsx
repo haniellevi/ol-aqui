@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { WifiOff } from "lucide-react";
 
 // T43 · Sem internet. Aviso claro em todas as telas quando o celular perde a conexão
 // (navigator.onLine + eventos online/offline). Some sozinho quando a internet volta.
+// "Está guardado" só nos passos do anúncio, onde cada passo salvo vira rascunho no banco;
+// nas outras telas nada é guardado, então o aviso não promete isso.
 export function AvisoSemInternet() {
+  const caminho = usePathname() ?? "";
+  const noAnuncio = caminho === "/anunciar" || caminho.startsWith("/anunciar/");
   const [semInternet, setSemInternet] = useState(false);
   const [voltou, setVoltou] = useState(false);
   const estavaSem = useRef(false);
@@ -44,8 +49,8 @@ export function AvisoSemInternet() {
           <>
             <WifiOff className="mt-0.5 size-5 shrink-0" aria-hidden />
             <span>
-              <strong className="font-semibold">Você está sem internet.</strong> O que você preencheu está guardado. Quando a internet voltar, é só
-              continuar.
+              <strong className="font-semibold">Você está sem internet.</strong>{" "}
+              {noAnuncio ? "Os passos do anúncio que você já salvou estão guardados. " : ""}Quando a internet voltar, é só continuar.
             </span>
           </>
         ) : (

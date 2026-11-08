@@ -120,6 +120,8 @@ export function BalaoAki({ modo = "balao" }: { modo?: "balao" | "pagina" } = {})
     try {
       const r = await fetch(`${API}?completo=1`, { cache: "no-store" });
       const e = (await r.json()) as EstadoAki;
+      // falha no servidor (a rota responde motivo "erro") não é "Aki desligado": mostra "Tentar de novo"
+      if (!r.ok || e.motivo === "erro") throw new Error("estado do Aki falhou");
       setEstado(e);
       setMensagens(e.mensagens ?? []);
       setConversaId(e.conversaId);
@@ -347,13 +349,13 @@ export function BalaoAki({ modo = "balao" }: { modo?: "balao" | "pagina" } = {})
       <section aria-labelledby="aki-titulo" className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-4 px-4 text-center">
         <MascoteAki tamanho={64} />
         <h1 id="aki-titulo" className="text-[22px] font-semibold leading-7">
-          {carregandoPagina ? "Abrindo o Aki…" : falhouEstado ? "Sem conexão agora" : "O Aki está descansando"}
+          {carregandoPagina ? "Abrindo o Aki…" : falhouEstado ? "Não deu para abrir o Aki" : "O Aki está descansando"}
         </h1>
         {carregandoPagina ? (
           <Loader2 className="size-6 animate-spin text-texto-suave motion-reduce:animate-none" aria-hidden />
         ) : (
           <>
-            <p className="max-w-sm text-base text-texto-suave">{falhouEstado ? "Confira sua internet e tente de novo." : DESCANSANDO}</p>
+            <p className="max-w-sm text-base text-texto-suave">{falhouEstado ? "Algo deu errado. Confira sua internet e tente de novo." : DESCANSANDO}</p>
             <div className="flex w-full max-w-sm flex-col gap-2">
               {falhouEstado ? (
                 <Botao

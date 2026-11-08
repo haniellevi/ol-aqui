@@ -8,19 +8,21 @@ import { garantirPerfil } from "@/lib/perfil";
 import { termosPendentes } from "@/lib/dados/paginas";
 import { linkDocumentoLegal, LINK_ENTRAR_PERFIL } from "@/lib/rotas";
 import { NOME_DOCUMENTO } from "@/lib/tipos-paginas";
+import { caminhoInterno } from "@/lib/caminho-seguro";
 import { BotaoAceitarTermos } from "./botao-aceitar";
 
-// T13 (parte dos termos) · Conta nova cai aqui depois de entrar (Clerk: signUpFallbackRedirectUrl).
+// T13 (parte dos termos) · Conta nova cai aqui depois de criar a conta (Clerk: signUpForceRedirectUrl,
+// levando junto o redirect_url de onde a pessoa vinha).
 // Mostra as versões no ar dos termos e da privacidade e pede o aceite. Quem já aceitou segue direto.
 // Nome e cidade a pessoa ajusta em Minha conta > Meus dados.
 
 export const metadata: Metadata = { title: "Falta só um passo", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-/** Só caminho interno ("/..."), nunca outro site. */
+/** Só caminho interno ("/..."), nunca outro site (nem "/\\site.com"). */
 function destinoSeguro(v: string | string[] | undefined) {
-  const t = Array.isArray(v) ? v[0] : v;
-  return t && /^\/(?!\/)/.test(t) && !t.startsWith(LINK_ENTRAR_PERFIL) ? t.slice(0, 300) : "/";
+  const t = caminhoInterno((Array.isArray(v) ? v[0] : v)?.slice(0, 300));
+  return t && !t.startsWith(LINK_ENTRAR_PERFIL) && !t.startsWith("/entrar") ? t : "/";
 }
 
 export default async function CompletarPerfil({ searchParams }: { searchParams: Promise<{ redirect_url?: string | string[] }> }) {

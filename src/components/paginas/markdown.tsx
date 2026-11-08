@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { caminhoInterno } from "@/lib/caminho-seguro";
 import type { ReactNode } from "react";
 
 // Markdown simples e SEGURO para termos, privacidade e ajuda. Nada de HTML: cada trecho vira
@@ -72,7 +73,7 @@ function separar(md: string): Bloco[] {
 /** Link aceito: caminho interno, https/http ou mailto. Qualquer outro (javascript:, data:...) vira texto. */
 export function linkSeguro(url: string): string | null {
   const u = url.trim();
-  if (/^\/(?!\/)[^\s]*$/.test(u)) return u;
+  if (u.startsWith("/")) return caminhoInterno(u); // recusa "//site" e "/\\site"
   if (/^https?:\/\/[^\s/]+[^\s]*$/i.test(u)) return u;
   if (/^mailto:[^\s@]+@[^\s@]+$/i.test(u)) return u;
   return null;

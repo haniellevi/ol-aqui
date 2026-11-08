@@ -18,16 +18,22 @@ export const metadata: Metadata = { title: "Privacidade" };
 // T37 · Privacidade (LGPD): baixar meus dados e excluir minha conta.
 export default async function PaginaPrivacidade() {
   const conta = await meuPerfilEVitrine();
+  const userId = conta?.perfil.id ?? "";
   const vitrineId = conta?.vitrine?.id;
   const conversasAki = await seguro(async () => {
     const db = await createClient();
-    const { count } = await db.from("robo_conversas").select("id", { count: "exact", head: true });
+    const { count } = await db.from("robo_conversas").select("id", { count: "exact", head: true }).eq("usuario_id", userId);
     return count ?? 0;
   }, 0);
   // termos e privacidade que a pessoa aceitou (a última versão de cada)
   const aceites = await seguro(async () => {
     const db = await createClient();
-    const { data } = await db.from("aceites").select("tipo, versao, aceito_em").order("versao", { ascending: false });
+    const { data } = await db
+      .from("aceites")
+      .select("tipo, versao, aceito_em")
+      .eq("usuario_id", userId) // admin lê todos pela RLS: aqui só os da própria pessoa
+      .order("versao", { ascending: false })
+      .limit(50);
     const lista = (data ?? []) as { tipo: TipoDocumento; versao: number; aceito_em: string }[];
     return (["termos", "privacidade"] as const).map((t) => ({ tipo: t, ultimo: lista.find((x) => x.tipo === t) ?? null }));
   }, []);
