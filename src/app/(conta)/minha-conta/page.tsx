@@ -14,6 +14,7 @@ import {
   Tag,
   UserRound,
   Lock,
+  LifeBuoy,
 } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { avisosNaoLidos } from "@/lib/dados/radar";
@@ -73,6 +74,7 @@ export default async function PaginaMinhaConta() {
     },
     { href: "/minha-conta/dados", nome: "Meus dados", icone: <UserRound /> },
     { href: "/minha-conta/privacidade", nome: "Privacidade", icone: <Lock /> },
+    { href: "/ajuda", nome: "Ajuda", icone: <LifeBuoy /> },
   ];
 
   return (

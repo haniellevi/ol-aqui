@@ -26,6 +26,8 @@ import { Galeria } from "./galeria";
 import { BarraContato } from "./barra-contato";
 import { RegistrarVisita } from "./registrar-visita";
 import { Denunciar } from "./denunciar";
+import { anuncioForaDoAr } from "@/lib/dados/paginas";
+import { AnuncioForaDoAr } from "@/components/paginas/anuncio-fora-do-ar";
 
 // T7 · Página do anúncio. Montada no servidor a cada visita (lê a sessão para o coração
 // e a prévia do dono). Vendido mostra a faixa "Vendido" e parecidos (F8), nunca erro.
@@ -56,8 +58,13 @@ function decodificar(t: string) {
 const publico = (a: AnuncioPublico) => a.status === "ativo" || a.status === "vendido";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const a = await carregar((await params).idslug);
-  if (!a) return { title: "Anúncio não encontrado", robots: { index: false } };
+  const { idslug } = await params;
+  const a = await carregar(idslug);
+  if (!a) {
+    const id = idDoLinkAnuncio(idslug);
+    const fora = id ? await anuncioForaDoAr(id) : null;
+    return { title: fora ? "Anúncio fora do ar" : "Anúncio não encontrado", robots: { index: false } };
+  }
   const titulo = a.titulo || "Anúncio";
   const caminho = linkAnuncio(a.id, a.titulo);
   const resumo = `${preco(a.preco_centavos)}${a.cidade ? ` em ${a.cidade}` : ""}. ${(a.descricao ?? "").replace(/\s+/g, " ").slice(0, 140)}`.trim();
@@ -90,7 +97,13 @@ async function ehFavorito(anuncioId: string, userId: string | null): Promise<boo
 export default async function PaginaAnuncio({ params }: Props) {
   const { idslug } = await params;
   const a = await carregar(idslug);
-  if (!a) notFound();
+  if (!a) {
+    // pausado/expirado: "saiu do ar" com parecidos em vez de erro (T44); senão, não encontrado
+    const id = idDoLinkAnuncio(idslug);
+    const fora = id ? await anuncioForaDoAr(id) : null;
+    if (!fora) notFound();
+    return <AnuncioForaDoAr categoriaSlug={fora.categoria_slug} categoriaNome={fora.categoria_nome} />;
+  }
 
   const caminho = linkAnuncio(a.id, a.titulo);
   if (decodificar(idslug) !== `${a.id}-${slugDoTitulo(a.titulo)}`) redirect(caminho); // endereço antigo/errado → o certo

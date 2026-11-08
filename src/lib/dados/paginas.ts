@@ -166,3 +166,14 @@ export async function blocosHome(): Promise<BlocoHome[]> {
   const faltando = BLOCOS_PADRAO.filter((p) => !p.pode_desligar && !lidos.some((l) => l.chave === p.chave));
   return [...lidos, ...faltando];
 }
+
+/** Anúncio pausado/expirado (ou de loja fora do ar): só a categoria, para mostrar parecidos (T44). */
+export const anuncioForaDoAr = cache(async (id: string): Promise<{ categoria_slug: string | null; categoria_nome: string | null } | null> =>
+  seguro(async () => {
+    const db = await createClient();
+    const { data, error } = await db.rpc("anuncio_fora_do_ar", { p_anuncio_id: id });
+    if (error) return null;
+    const linha = (Array.isArray(data) ? data[0] : data) as { categoria_slug: string | null; categoria_nome: string | null } | undefined;
+    return linha ?? null;
+  }, null),
+);
