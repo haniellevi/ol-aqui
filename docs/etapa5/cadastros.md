@@ -9,7 +9,7 @@ tabelas, o painel edita e **toda mudança cai em `logs_atividade`** (gatilhos `r
 Migração: `supabase/migrations/20261108040000_regioes_categorias.sql` · Testes: `supabase/testes/96_regioes_categorias.sql`
 Tipos: `src/lib/tipos-cadastros.ts` · Leituras do painel: `src/lib/admin/cadastros.ts` ·
 Conferência dos campos (TypeScript, a mesma regra do banco): `src/lib/admin/campos-categoria.ts`
-Telas: `src/app/admin/regioes/*` e `src/app/admin/categorias/*` · Rotas: `LINK_ADMIN_REGIOES`, `LINK_ADMIN_CATEGORIAS` em `src/lib/rotas.ts`.
+Telas: `src/app/admin/regioes/*` e `src/app/admin/categorias/*` (menu: "Regiões" e "Categ." em `nav-admin.tsx`) · Rotas: `LINK_ADMIN_REGIOES`, `LINK_ADMIN_CATEGORIAS` em `src/lib/rotas.ts`.
 
 ## 1. O que já existia (e continua igual)
 
@@ -52,7 +52,7 @@ vazio e travado com a explicação "a definir" (decisão de franquia ainda não 
 | Limites dos campos | dentro de `conferir_categoria()` | No máximo `categorias.campos_max` campos e `categorias.opcoes_max` opções por lista (configurações, grupo "anuncios"); opção de até 60 letras e sem repetir (sem acento/maiúscula); unidade até 12 letras; chave não pode ser `<outra>_min`/`<outra>_max` de um campo número (o filtro da busca usa `c_<chave>_min`) |
 | `impedir_apagar_categoria()` → gatilho `categorias_impedir_apagar` | BEFORE DELETE | Recusa apagar categoria com anúncios (qualquer status), pedidos no Radar ou subcategorias ("esconda em vez de apagar") |
 | `categoria_disponivel(id)` | função | Categoria ativa **e** com a mãe ativa |
-| `exigir_categoria_disponivel()` → gatilhos `anuncios_1_validar_mae` e `radar_1_validar_mae` | BEFORE INSERT/UPDATE OF categoria_id | Ao **escolher** a categoria (inserção ou troca), a mãe também precisa estar visível. Esconder a mãe esconde as filhas do cadastro; anúncio que já estava nela continua como está |
+| `exigir_categoria_disponivel()` → gatilhos `anuncios_1_validar_mae` (OF categoria_id, status) e `radar_1_validar_mae` (OF categoria_id) | BEFORE INSERT/UPDATE | Ao **escolher** a categoria (inserção ou troca) a categoria e a mãe precisam estar visíveis; rascunho que vai ao ar pela 1ª vez também (é anúncio novo entrando). Anúncio que já esteve no ar continua como está (pausado volta normalmente). Passa direto só servidor (service_role), admin e `olaki.sistema` (pagamento confirmado). Não usa `acesso_sistema()` de propósito: dentro de `publicar_anuncio` (SECURITY DEFINER) o usuário do banco é o dono da função |
 | `admin_categorias()` | SECURITY DEFINER, só admin | Todas as categorias (inclusive escondidas) com anúncios no ar, total de anúncios, pedidos no Radar e subcategorias |
 | `admin_mover_categoria(id, direcao)` | SECURITY DEFINER, só admin | Sobe/desce entre as irmãs (renumera 10, 20, 30... e troca com a vizinha), com trava |
 | Política `categorias leitura` | troca | Passa a ler **todas** (inclusive escondidas): o vendedor que já tem anúncio numa categoria escondida continua vendo os campos dela ao editar. O cadastro e a busca continuam filtrando `ativa = true` no código |
@@ -62,6 +62,15 @@ Configurações novas (grupo `anuncios`, editáveis em Configurações, com exce
 
 Hardening no fim da migração (mesmo bloco das anteriores): `search_path` fixo, gatilhos fora da API, funções do
 painel sem `public`/`anon` (só `authenticated`, e por dentro conferem `e_admin()`).
+
+### Cadastro de anúncio (o que mudou no código público)
+
+- `src/lib/dados/categorias.ts` ganhou `categoriaDoAnuncio(id)`: a categoria de um anúncio que já está nela,
+  mesmo escondida (lê direto da tabela, que agora é legível). `categoriaPorId` continua só com as visíveis.
+- Passo "Detalhes" e `salvarDetalhes`: rascunho usa só categoria visível (escondida → volta para escolher
+  categoria); anúncio fora do rascunho usa `categoriaDoAnuncio` (os campos continuam aparecendo e salvando).
+- `salvarCategoria`: anúncio fora do rascunho que continua na mesma categoria (mesmo escondida) segue sem erro.
+- Busca, filtros e moderação não mudaram: já leem a tabela na hora.
 
 ## 3. Telas
 
