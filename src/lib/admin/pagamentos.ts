@@ -58,10 +58,10 @@ const diaSeguinte = (d: string) => {
 };
 
 const COLUNAS =
-  "id, tipo, status, valor_centavos, forma, plano_codigo, meses, regra, vencimento, pago_em, criado_em, link_pagamento, asaas_cobranca_id, devolver_motivo, observacao, microrregiao_id, vitrine_id, vitrines_lojas(nome, slug), anuncios(titulo)";
+  "id, tipo, status, valor_centavos, forma, plano_codigo, meses, regra, vencimento, pago_em, criado_em, link_pagamento, asaas_cobranca_id, devolver_motivo, observacao, microrregiao_id, vitrine_id, vitrines_lojas(nome, slug, whatsapp, perfis(whatsapp)), anuncios(titulo)";
 
-type Linha = Omit<PagamentoAdmin, "vitrine_nome" | "vitrine_slug" | "anuncio_titulo"> & {
-  vitrines_lojas: { nome: string; slug: string } | null;
+type Linha = Omit<PagamentoAdmin, "vitrine_nome" | "vitrine_slug" | "vitrine_whatsapp" | "anuncio_titulo"> & {
+  vitrines_lojas: { nome: string; slug: string; whatsapp: string | null; perfis: { whatsapp: string | null } | null } | null;
   anuncios: { titulo: string | null } | null;
 };
 
@@ -69,15 +69,48 @@ const paraAdmin = ({ vitrines_lojas, anuncios, ...l }: Linha): PagamentoAdmin =>
   ...l,
   vitrine_nome: vitrines_lojas?.nome ?? null,
   vitrine_slug: vitrines_lojas?.slug ?? null,
+  vitrine_whatsapp: vitrines_lojas?.whatsapp ?? vitrines_lojas?.perfis?.whatsapp ?? null,
   anuncio_titulo: anuncios?.titulo ?? null,
 });
+
+/** Tamanho de cada leitura: a API do Supabase devolve no máximo 1000 linhas por pedido. */
+const POR_LEITURA = 1000;
 
 /**
  * Lista de pagamentos com os filtros. O período usa a data do pagamento (pago_em) ou, se não foi pago,
  * a da criação, no fuso de Fortaleza (-03:00), igual a admin_resumo_pagamentos.
  */
 export async function listarPagamentos(supabase: SupabaseClient, f: FiltrosPagamentos, limite: number): Promise<PagamentoAdmin[]> {
-  let q = supabase.from("pagamentos").select(COLUNAS).order("criado_em", { ascending: false }).limit(limite);
+  return lerFaixa(supabase, f, 0, Math.min(limite, POR_LEITURA) - 1);
+}
+
+/**
+ * Todos os pagamentos com os filtros (para o CSV), lidos de 1000 em 1000 até acabar ou chegar ao `maximo`.
+ * `cortado` = havia mais linhas que o máximo (o CSV avisa).
+ */
+export async function listarTodosPagamentos(
+  supabase: SupabaseClient,
+  f: FiltrosPagamentos,
+  maximo: number,
+): Promise<{ linhas: PagamentoAdmin[]; cortado: boolean }> {
+  const linhas: PagamentoAdmin[] = [];
+  for (let de = 0; de < maximo + 1; de += POR_LEITURA) {
+    const ate = Math.min(de + POR_LEITURA, maximo + 1) - 1; // lê uma linha a mais para saber se cortou
+    const pagina = await lerFaixa(supabase, f, de, ate);
+    linhas.push(...pagina);
+    if (pagina.length < ate - de + 1) break;
+  }
+  const cortado = linhas.length > maximo;
+  return { linhas: cortado ? linhas.slice(0, maximo) : linhas, cortado };
+}
+
+async function lerFaixa(supabase: SupabaseClient, f: FiltrosPagamentos, de: number, ate: number): Promise<PagamentoAdmin[]> {
+  let q = supabase
+    .from("pagamentos")
+    .select(COLUNAS)
+    .order("criado_em", { ascending: false })
+    .order("id", { ascending: true })
+    .range(de, ate);
   if (f.status) q = q.eq("status", f.status);
   if (f.tipo) q = q.eq("tipo", f.tipo);
   if (f.regiao) q = q.eq("microrregiao_id", f.regiao);

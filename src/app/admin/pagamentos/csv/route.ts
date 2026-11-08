@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
-import { NOME_STATUS, NOME_TIPO, lerFiltros, listarPagamentos } from "@/lib/admin/pagamentos";
+import { NOME_STATUS, NOME_TIPO, lerFiltros, listarTodosPagamentos } from "@/lib/admin/pagamentos";
 
 // Tela 6 · Exportar CSV dos pagamentos com os mesmos filtros da tela. Só admin: confere e_admin
 // com o token da pessoa (e a RLS de pagamentos também barra). Quem não é admin recebe 404.
@@ -32,8 +32,9 @@ export async function GET(req: Request) {
 
   const filtros = lerFiltros(new URL(req.url).searchParams);
   let linhas;
+  let cortado = false;
   try {
-    linhas = await listarPagamentos(supabase, filtros, LIMITE);
+    ({ linhas, cortado } = await listarTodosPagamentos(supabase, filtros, LIMITE));
   } catch {
     return new Response("Não deu para ler os pagamentos agora. Tente de novo.", { status: 503 });
   }
@@ -84,7 +85,11 @@ export async function GET(req: Request) {
       .map(celula)
       .join(";"),
   );
-  const csv = `﻿${[cabecalho.map(celula).join(";"), ...corpo].join("\r\n")}\r\n`;
+  // Passou do máximo: a última linha avisa, para ninguém achar que o arquivo está completo.
+  const aviso = cortado
+    ? [celula(`Atenção: este arquivo tem só os ${LIMITE.toLocaleString("pt-BR")} pagamentos mais novos. Use as datas para baixar o resto.`)]
+    : [];
+  const csv = `﻿${[cabecalho.map(celula).join(";"), ...corpo, ...aviso].join("\r\n")}\r\n`;
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza" }).format(new Date());
   return new Response(csv, {
     headers: {

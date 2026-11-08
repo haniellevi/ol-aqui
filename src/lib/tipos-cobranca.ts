@@ -143,6 +143,8 @@ export type PagamentoAdmin = {
   vitrine_id: string;
   vitrine_nome: string | null;
   vitrine_slug: string | null;
+  /** WhatsApp da loja (ou do dono) para reenviar o link da fatura. */
+  vitrine_whatsapp: string | null;
   anuncio_titulo: string | null;
 };
 

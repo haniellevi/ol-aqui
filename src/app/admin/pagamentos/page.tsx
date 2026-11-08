@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, ExternalLink } from "lucide-react";
+import { Download, ExternalLink, MessageCircle } from "lucide-react";
 import { exigirAdmin } from "@/lib/admin/auth";
 import { LINK_ADMIN_PAGAMENTOS } from "@/lib/rotas";
 import { inteiro, quando, reais } from "@/lib/admin/formato";
@@ -21,7 +21,7 @@ import type { PagamentoAdmin, ResumoPagamentos, StatusPagamento } from "@/lib/ti
 export const metadata = { title: "Pagamentos" };
 
 // Tela 6 · Pagamentos: filtros (status, tipo, região, período), totais, link da fatura do Asaas,
-// "reenviar" (copiar o link), devoluções a fazer e exportar CSV. Tudo com o token do admin (RLS).
+// reenviar o link (pelo WhatsApp da loja ou copiar), devoluções a fazer e exportar CSV. Tudo com o token do admin (RLS).
 
 const LIMITE = 200;
 
@@ -219,6 +219,14 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
   );
 }
 
+/** wa.me com a mensagem e o link da fatura, para a equipe reenviar no WhatsApp do vendedor. */
+function reenviarNoWhatsApp(numero: string | null, link: string, oQue: string): string | null {
+  const digitos = (numero ?? "").replace(/\D/g, "");
+  if (digitos.length < 12) return null;
+  const texto = `Olá! Aqui é a equipe OLAKI. Segue o link para pagar (${oQue.trim()}): ${link}`;
+  return `https://wa.me/${digitos}?text=${encodeURIComponent(texto)}`;
+}
+
 function LinhaPagamento({ p, nomePlano, nomeRegiao }: { p: PagamentoAdmin; nomePlano: Map<string, string>; nomeRegiao: Map<string, string> }) {
   const link = linkSeguro(p.link_pagamento);
   const oQue =
@@ -263,6 +271,15 @@ function LinhaPagamento({ p, nomePlano, nomeRegiao }: { p: PagamentoAdmin; nomeP
             <ExternalLink className="size-4" aria-hidden />
             Abrir fatura
           </a>
+          {p.status === "pendente" && (() => {
+            const wa = reenviarNoWhatsApp(p.vitrine_whatsapp, link, oQue);
+            return wa ? (
+              <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center gap-1 px-3 font-semibold text-laranja-escuro underline-offset-4 hover:underline">
+                <MessageCircle className="size-4" aria-hidden />
+                Reenviar no WhatsApp
+              </a>
+            ) : null;
+          })()}
           {p.status === "pendente" && <CopiarLink link={link} />}
         </div>
       )}

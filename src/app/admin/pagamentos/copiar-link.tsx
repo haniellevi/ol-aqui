@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 
-// "Reenviar link": copia o link da fatura para a equipe colar no WhatsApp da pessoa.
-// O envio automático pelo WhatsApp fica para a fase 2.
+// "Copiar link": copia o link da fatura (para quando o vendedor não tem WhatsApp na conta
+// ou a equipe quer mandar por outro meio). O botão "Reenviar no WhatsApp" fica ao lado.
 export function CopiarLink({ link }: { link: string }) {
   const [copiado, setCopiado] = useState(false);
   async function copiar() {
