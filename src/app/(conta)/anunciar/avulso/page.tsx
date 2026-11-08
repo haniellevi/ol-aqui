@@ -65,7 +65,9 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
   }
 
   const pagoAte = anuncio.pago_ate && new Date(anuncio.pago_ate).getTime() > Date.now() ? anuncio.pago_ate : null;
-  if (!pagamento && (anuncio.status === "ativo" || anuncio.status === "em_analise" || anuncio.status === "vendido" || pagoAte)) {
+  // Sem pagamento pago para mostrar: anúncio no ar, vendido ou já pago não precisa (e não paga) de novo,
+  // mesmo voltando com ?p= de uma cobrança que ficou esperando.
+  if (pagamento?.status !== "pago" && (anuncio.status === "ativo" || anuncio.status === "em_analise" || anuncio.status === "vendido" || pagoAte)) {
     return (
       <PaginaConta>
         <TopoConta titulo="Anúncio avulso" voltar={revisar} textoVoltar="Voltar" />

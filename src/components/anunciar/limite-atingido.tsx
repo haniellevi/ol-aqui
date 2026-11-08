@@ -54,7 +54,7 @@ export function LimiteAtingido({
             </div>
             {pagamentoLigado ? (
               <>
-                <BotaoNovoRascunho variante="secundario" texto="Fazer um anúncio avulso" />
+                <BotaoNovoRascunho variante="secundario" texto="Fazer um anúncio avulso" avulso />
                 <p className="text-sm text-texto-suave">Monte o anúncio e, no fim, pague por Pix ou cartão para pôr no ar.</p>
               </>
             ) : (

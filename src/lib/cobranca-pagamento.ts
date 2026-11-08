@@ -1,6 +1,7 @@
 import "server-only";
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { meuPagamento } from "@/lib/dados/cobranca";
 import { documentoValido } from "@/lib/cpf-cnpj";
 import {
@@ -219,6 +220,14 @@ function descricaoDe(p: MeuPagamento): string {
   return `OLAKI · Plano ${nome}${p.meses > 1 ? ` (${p.meses} períodos)` : ""}`;
 }
 
+/** null quando o pagamento ainda pode ser cobrado; senão o motivo (cobranca_pode_seguir, com o token da pessoa). */
+async function motivoParaNaoCobrar(pagamentoId: string): Promise<string | null> {
+  const db = await createClient();
+  const { data, error } = await db.rpc("cobranca_pode_seguir", { p_pagamento_id: pagamentoId });
+  if (error) return "Não deu para conferir a cobrança agora. Tente de novo.";
+  return typeof data === "string" && data ? data : null;
+}
+
 /**
  * Cria (ou reaproveita) a cobrança no Asaas de um pagamento de plano ou de anúncio avulso do
  * vendedor logado e devolve o Pix ou o link do cartão. Já pago → { etapa: "pago" }.
@@ -231,6 +240,11 @@ export async function cobrarMeuPagamento(pagamentoId: string, forma: FormaPagame
   if (meu.status === "pago") return { etapa: "pago", pagamento: meu };
   if (meu.status !== "pendente") throw new ErroCobranca("Esta cobrança não está mais esperando pagamento. Comece de novo.");
   if (!asaasConfigurado()) throw new ErroCobranca("Pagamento em breve. Fale com a equipe OLAKI se precisar agora.");
+
+  // A cobrança pode ter nascido antes de a conta ser suspensa ou de o anúncio entrar no ar:
+  // o banco confere de novo o que pedir_* conferiu antes de criar ou trocar a cobrança no Asaas.
+  const motivo = await motivoParaNaoCobrar(meu.id);
+  if (motivo) throw new ErroCobranca(motivo);
 
   const amb = await ambienteAsaas();
   let pg = await lerPagamento(meu.id);

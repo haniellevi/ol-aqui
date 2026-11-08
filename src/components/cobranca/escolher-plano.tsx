@@ -25,7 +25,9 @@ export type EscolherPlanoProps = {
   pagamentoInicial?: MeuPagamento | null;
 };
 
-const nomePeriodo = (meses: number) => (meses === 1 ? "Mensal" : meses === 12 ? "Anual" : `${meses} meses`);
+// "meses" no banco = quantos períodos do plano (periodo_dias × meses). O nome sai dos dias de verdade.
+const nomePeriodo = (meses: number, dias: number | null) =>
+  dias ? `${dias} dias` : meses === 1 ? "Um período" : `${meses} períodos`;
 
 /** Como o pagamento vai entrar no plano, em palavras simples. */
 export function textoRegra(o: Pick<OpcaoAssinatura, "regra" | "nome" | "inicio" | "fim">, planoAtual: string | null): string {
@@ -49,15 +51,20 @@ export function textoRegra(o: Pick<OpcaoAssinatura, "regra" | "nome" | "inicio" 
 export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocumento, planoInicial, pagamentoInicial }: EscolherPlanoProps) {
   const router = useRouter();
   const periodos = useMemo(() => [...new Set(opcoes.map((o) => o.meses))].sort((a, b) => a - b), [opcoes]);
-  const [meses, setMeses] = useState<number>(() =>
-    pagamentoInicial?.meses && periodos.includes(pagamentoInicial.meses) ? pagamentoInicial.meses : periodos[0] ?? 1,
-  );
+  // Pagamento retomado (?p=): só vale se o plano e o período dele ainda estão na lista.
+  const retomado = pagamentoInicial?.tipo === "assinatura" ? pagamentoInicial : null;
+  const inicial =
+    retomado && opcoes.some((o) => o.codigo === retomado.plano_codigo && o.meses === retomado.meses && o.disponivel) ? retomado : null;
+  const retomadoSaiu = !!retomado && !inicial && retomado.status === "pendente";
+  const [meses, setMeses] = useState<number>(() => (inicial ? inicial.meses : periodos[0] ?? 1));
   const planos = opcoes.filter((o) => o.meses === meses);
   const [codigo, setCodigo] = useState<string | null>(() => {
-    const pedido = pagamentoInicial?.plano_codigo ?? planoInicial;
-    const daLista = planos.find((o) => o.codigo === pedido && o.disponivel);
+    if (inicial) return inicial.plano_codigo;
+    const daLista = planos.find((o) => o.codigo === planoInicial && o.disponivel);
     return daLista?.codigo ?? planos.find((o) => o.disponivel && !o.atual)?.codigo ?? planos.find((o) => o.disponivel)?.codigo ?? null;
   });
+  // Com uma cobrança esperando pagamento, plano e período ficam presos (o Pix é daquele valor).
+  const [travado, setTravado] = useState(inicial?.status === "pendente");
   const opcao = planos.find((o) => o.codigo === codigo) ?? null;
   const planoAtual = assinatura.plano_nome && !assinatura.e_teste && assinatura.preco_centavos > 0 ? assinatura.plano_nome : null;
 
@@ -76,11 +83,12 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
           <p className="text-base font-semibold">Pagar por quanto tempo?</p>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Período">
             {periodos.map((m) => {
-              const desconto = opcoes.find((o) => o.meses === m)?.desconto_percentual ?? 0;
+              const exemplo = opcoes.find((o) => o.meses === m);
+              const desconto = exemplo?.desconto_percentual ?? 0;
               return (
-                <Chip key={m} ativo={m === meses} onClick={() => setMeses(m)}>
-                  {nomePeriodo(m)}
-                  {desconto > 0 ? ` · ${desconto.toLocaleString("pt-BR")}% off` : ""}
+                <Chip key={m} ativo={m === meses} disabled={travado && m !== meses} onClick={() => setMeses(m)}>
+                  {nomePeriodo(m, exemplo?.dias ?? null)}
+                  {desconto > 0 ? ` · ${desconto.toLocaleString("pt-BR")}% de desconto` : ""}
                 </Chip>
               );
             })}
@@ -88,11 +96,26 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
         </div>
       )}
 
+      {retomadoSaiu && (
+        <Aviso tipo="atencao">
+          <span>A cobrança que você começou não vale mais. Escolha o plano de novo abaixo.</span>
+        </Aviso>
+      )}
+
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-3 text-lg font-semibold">Escolha o plano</legend>
         {planos.map((o) => (
-          <CartaoPlano key={o.codigo} opcao={o} ativo={o.codigo === codigo} onEscolher={() => setCodigo(o.codigo)} />
+          <CartaoPlano
+            key={o.codigo}
+            opcao={o}
+            ativo={o.codigo === codigo}
+            travado={travado && o.codigo !== codigo}
+            onEscolher={() => setCodigo(o.codigo)}
+          />
         ))}
+        {travado && (
+          <p className="text-sm text-texto-suave">Para escolher outro plano, toque em &quot;Escolher outra opção&quot;, lá embaixo.</p>
+        )}
       </fieldset>
 
       {!pagamentoLigado ? (
@@ -101,11 +124,15 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
         </Aviso>
       ) : opcao && opcao.disponivel ? (
         <FluxoCobranca
+          key={`${opcao.codigo}:${opcao.meses}`}
           valorCentavos={opcao.valor_centavos}
           precisaDocumento={precisaDocumento}
-          pagamentoInicial={pagamentoInicial?.tipo === "assinatura" ? pagamentoInicial : null}
+          pagamentoInicial={inicial && inicial.plano_codigo === opcao.codigo && inicial.meses === opcao.meses ? inicial : null}
           pedir={(forma, doc) => pedirPlano(opcao.codigo, opcao.meses, forma, doc)}
-          aoMudarPagamento={(id) => router.replace(linkMeuPlano({ pagamentoId: id }), { scroll: false })}
+          aoMudarPagamento={(id) => {
+            setTravado(id !== null);
+            router.replace(linkMeuPlano({ pagamentoId: id }), { scroll: false });
+          }}
           aoPagar={() => router.refresh()}
           nota={<p>{textoRegra(opcao, planoAtual)}</p>}
           sucesso={(p) => (
@@ -132,8 +159,19 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
   );
 }
 
-function CartaoPlano({ opcao: o, ativo, onEscolher }: { opcao: OpcaoAssinatura; ativo: boolean; onEscolher: () => void }) {
-  const bloqueado = !o.disponivel;
+function CartaoPlano({
+  opcao: o,
+  ativo,
+  travado = false,
+  onEscolher,
+}: {
+  opcao: OpcaoAssinatura;
+  ativo: boolean;
+  /** Há uma cobrança esperando pagamento de outro plano: não dá para trocar agora. */
+  travado?: boolean;
+  onEscolher: () => void;
+}) {
+  const bloqueado = !o.disponivel || travado;
   const porPeriodo = o.meses === 1 ? `a cada ${o.periodo_dias} dias` : `por ${o.dias} dias`;
   return (
     <label
