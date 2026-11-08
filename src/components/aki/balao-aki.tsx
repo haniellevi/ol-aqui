@@ -1,0 +1,593 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { Camera, Info, Loader2, SendHorizontal, Trash2, X } from "lucide-react";
+import { Botao } from "@/components/ui/botao";
+import { Chip } from "@/components/ui/chip";
+import { enviarFoto, reduzirFoto } from "@/lib/fotos";
+import { apagarFoto, criarUrlEnvioFoto } from "@/lib/dados/fotos";
+import { adicionarFotoRascunho, apagarMinhasConversas } from "@/lib/aki/acoes";
+import { DESCANSANDO, mensagemBloqueio } from "@/lib/aki/textos";
+import type { EstadoAki, EventoAki, MensagemAki, PedidoAki } from "@/lib/aki/tipos";
+import { MascoteAki } from "./mascote";
+import {
+  EVENTO_ABRIR_AKI,
+  EVENTO_DICA_AKI,
+  EVENTO_ESTADO_AKI,
+  EVENTO_FOTO_AKI,
+  lerDicaPendente,
+  mostrarDicaAki,
+  type DicaAki,
+  type FotoGuardadaAki,
+  type PedidoAbrirAki,
+} from "./abrir";
+import { RespostaAki } from "./resposta-aki";
+
+// Balão flutuante do Aki + folha de conversa (DESIGN-SYSTEM.md: folha rounded-t-folha, shadow-2,
+// 48px de toque, texto mínimo 13px, campo 16px, um botão laranja por tela = "Enviar").
+
+type FotoPronta = { base64: string; tipo: "image/webp" | "image/jpeg"; previa: string; blob: Blob; formato: "webp" | "jpg" };
+
+/** Envia a foto ao Storage e põe no rascunho. Devolve null se deu certo, ou a frase do erro. */
+async function guardarFotoNoAnuncio(foto: FotoPronta, anuncioId: string): Promise<string | null> {
+  const envio = await criarUrlEnvioFoto(anuncioId, foto.formato).catch(() => null);
+  if (!envio) return "Sem conexão agora. A foto não foi guardada no anúncio.";
+  if (!envio.ok) return envio.erro.mensagem;
+  if (!(await enviarFoto(foto.blob, envio.dados.urlEnvio))) return "A foto não foi guardada no anúncio. Coloque pelo passo Fotos.";
+  const r = await adicionarFotoRascunho(anuncioId, envio.dados.urlPublica).catch(() => null);
+  if (!r?.ok) {
+    void apagarFoto(envio.dados.urlPublica).catch(() => undefined);
+    return r && !r.ok ? r.erro : "A foto não foi guardada no anúncio. Coloque pelo passo Fotos.";
+  }
+  window.dispatchEvent(new CustomEvent<FotoGuardadaAki>(EVENTO_FOTO_AKI, { detail: { anuncioId, url: envio.dados.urlPublica } }));
+  return null;
+}
+
+const API = "/api/aki";
+
+function paraBase64(blob: Blob): Promise<string> {
+  return new Promise((ok, erro) => {
+    const leitor = new FileReader();
+    leitor.onload = () => ok(String(leitor.result).split(",")[1] ?? "");
+    leitor.onerror = () => erro(new Error("Não deu para ler a foto."));
+    leitor.readAsDataURL(blob);
+  });
+}
+
+export function BalaoAki() {
+  const caminho = usePathname() ?? "/";
+  const [estado, setEstado] = useState<EstadoAki | null>(null);
+  const [aberto, setAberto] = useState(false);
+  const [carregando, setCarregando] = useState(false);
+  const [mensagens, setMensagens] = useState<MensagemAki[]>([]);
+  const [conversaId, setConversaId] = useState<string | null>(null);
+  const [texto, setTexto] = useState("");
+  const [foto, setFoto] = useState<FotoPronta | null>(null);
+  const [preparandoFoto, setPreparandoFoto] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [pensando, setPensando] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [rascunhoId, setRascunhoId] = useState<string | null>(null);
+  const [confirmarApagar, setConfirmarApagar] = useState(false);
+  const [apagando, setApagando] = useState(false);
+  const [usarNoAnuncio, setUsarNoAnuncio] = useState(false);
+  const [dica, setDica] = useState<DicaAki | null>(null);
+  // mudou de tela (card, "Ver planos", "Revisar e publicar"...): a folha fecha para a pessoa ver a tela nova
+  const [caminhoAtual, setCaminhoAtual] = useState(caminho);
+  if (caminhoAtual !== caminho) {
+    setCaminhoAtual(caminho);
+    setAberto(false);
+    setConfirmarApagar(false);
+  }
+  const inputFoto = useRef<HTMLInputElement>(null);
+  const lista = useRef<HTMLDivElement>(null);
+  const caixa = useRef<HTMLTextAreaElement>(null);
+  const completoCarregado = useRef(false);
+
+  // estado leve ao montar: o Aki existe nesta região? (desligado no painel = sem balão)
+  useEffect(() => {
+    let vivo = true;
+    fetch(API, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((e: EstadoAki | null) => {
+        if (!vivo || !e) return;
+        setEstado(e);
+      })
+      .catch(() => undefined);
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const ligado = !!estado?.ligado;
+    if (ligado) document.documentElement.dataset.aki = "ligado";
+    else delete document.documentElement.dataset.aki;
+    window.dispatchEvent(new Event(EVENTO_ESTADO_AKI));
+  }, [estado?.ligado]);
+
+  const carregarCompleto = useCallback(async () => {
+    if (completoCarregado.current) return;
+    setCarregando(true);
+    try {
+      const r = await fetch(`${API}?completo=1`, { cache: "no-store" });
+      const e = (await r.json()) as EstadoAki;
+      setEstado(e);
+      setMensagens(e.mensagens ?? []);
+      setConversaId(e.conversaId);
+      completoCarregado.current = true;
+    } catch {
+      setAviso("Sem conexão agora. Tente de novo.");
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  const podeAgora = !!estado?.pode;
+  const abrir = useCallback(
+    (pedido?: PedidoAbrirAki) => {
+      setAberto(true);
+      setDica(null);
+      mostrarDicaAki(null);
+      if (pedido?.texto) setTexto(pedido.texto);
+      if (pedido?.rascunhoId) setRascunhoId(pedido.rascunhoId);
+      // cadastro pela foto: a foto vai para o anúncio também (a pessoa pode desmarcar antes de enviar)
+      if (pedido?.foto) setUsarNoAnuncio(!!pedido.rascunhoId);
+      // seletor de foto só se o Aki pode responder; senão a folha abre mostrando o motivo
+      if (pedido?.foto && podeAgora) inputFoto.current?.click(); // dentro do toque da pessoa
+      void carregarCompleto();
+    },
+    [carregarCompleto, podeAgora],
+  );
+
+  useEffect(() => {
+    const ouvir = (e: Event) => abrir((e as CustomEvent<PedidoAbrirAki>).detail);
+    window.addEventListener(EVENTO_ABRIR_AKI, ouvir);
+    return () => window.removeEventListener(EVENTO_ABRIR_AKI, ouvir);
+  }, [abrir]);
+
+  // convite ao lado do balão (busca sem resultado); a tela pode ter pedido antes de o balão ouvir
+  useEffect(() => {
+    setDica(lerDicaPendente());
+    const ouvir = (e: Event) => setDica((e as CustomEvent<DicaAki | null>).detail);
+    window.addEventListener(EVENTO_DICA_AKI, ouvir);
+    return () => window.removeEventListener(EVENTO_DICA_AKI, ouvir);
+  }, []);
+
+  // folha aberta: Esc fecha e a página de trás não rola
+  useEffect(() => {
+    if (!aberto) return;
+    const tecla = (e: KeyboardEvent) => e.key === "Escape" && setAberto(false);
+    window.addEventListener("keydown", tecla);
+    const antes = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", tecla);
+      document.body.style.overflow = antes;
+    };
+  }, [aberto]);
+
+  useEffect(() => {
+    lista.current?.scrollTo({ top: lista.current.scrollHeight, behavior: "smooth" });
+  }, [mensagens, pensando, aberto]);
+
+  async function escolherFoto(arquivo: File | undefined) {
+    if (!arquivo) return;
+    setPreparandoFoto(true);
+    setAviso(null);
+    try {
+      const reduzida = await reduzirFoto(arquivo, { ladoMaximo: estado?.fotoLadoMaximo ?? 1024, qualidade: 0.75 });
+      const base64 = await paraBase64(reduzida.blob);
+      setFoto({
+        base64,
+        tipo: reduzida.formato === "webp" ? "image/webp" : "image/jpeg",
+        previa: URL.createObjectURL(reduzida.blob),
+        blob: reduzida.blob,
+        formato: reduzida.formato,
+      });
+    } catch (e) {
+      setAviso(e instanceof Error ? e.message : "Essa foto não abriu. Tente outra.");
+    } finally {
+      setPreparandoFoto(false);
+      if (inputFoto.current) inputFoto.current.value = "";
+    }
+  }
+
+  function tirarFoto() {
+    if (foto) URL.revokeObjectURL(foto.previa);
+    setFoto(null);
+  }
+
+  function fecharDica() {
+    setDica(null);
+    mostrarDicaAki(null);
+  }
+
+  async function enviar(textoEnviar?: string) {
+    const t = (textoEnviar ?? texto).trim();
+    if (enviando || (!t && !foto) || !estado?.pode) return;
+    setEnviando(true);
+    setAviso(null);
+    setPensando("Pensando…");
+    const agora = new Date().toISOString();
+    const minha: MensagemAki = { id: null, papel: "usuario", conteudo: { texto: t, foto: !!foto }, criado_em: agora };
+    const resposta: MensagemAki = { id: null, papel: "assistente", conteudo: { texto: "" }, criado_em: agora, nota: null };
+    setMensagens((m) => [...m, minha, resposta]);
+    setTexto("");
+    const corpo: PedidoAki = { texto: t, conversaId, foto: foto ? { base64: foto.base64, tipo: foto.tipo } : null, rascunhoId };
+    const fotoAnuncio = foto && usarNoAnuncio && rascunhoId ? foto : null;
+    tirarFoto();
+
+    // primeiro guarda a foto no rascunho (a pessoa marcou "Usar esta foto no anúncio"):
+    // assim o card do rascunho que o Aki mostra já vem com ela
+    if (fotoAnuncio && rascunhoId) {
+      setPensando("Guardando a foto no anúncio…");
+      const falhou = await guardarFotoNoAnuncio(fotoAnuncio, rascunhoId);
+      if (falhou) setAviso(falhou);
+      setPensando("Pensando…");
+    }
+
+    const atualizar = (f: (r: Extract<MensagemAki, { papel: "assistente" }>) => Extract<MensagemAki, { papel: "assistente" }>) =>
+      setMensagens((m) => {
+        const copia = [...m];
+        const i = copia.length - 1;
+        const ultima = copia[i];
+        if (ultima?.papel === "assistente") copia[i] = f(ultima);
+        return copia;
+      });
+
+    try {
+      const r = await fetch(API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(corpo) });
+      if (!r.body) throw new Error("sem resposta");
+      const leitor = r.body.getReader();
+      const dec = new TextDecoder();
+      let resto = "";
+      const tratar = (linha: string) => {
+        if (!linha.trim()) return;
+        let ev: EventoAki;
+        try {
+          ev = JSON.parse(linha);
+        } catch {
+          return;
+        }
+        switch (ev.tipo) {
+          case "texto":
+            setPensando(null);
+            atualizar((x) => ({ ...x, conteudo: { ...x.conteudo, texto: x.conteudo.texto + ev.texto } }));
+            break;
+          case "substituir":
+            atualizar((x) => ({ ...x, conteudo: { ...x.conteudo, texto: ev.texto } }));
+            break;
+          case "pensando":
+            setPensando(ev.rotulo);
+            break;
+          case "cartoes":
+            atualizar((x) => ({ ...x, conteudo: { ...x.conteudo, cartoes: ev.cartoes } }));
+            break;
+          case "acoes":
+            atualizar((x) => ({ ...x, conteudo: { ...x.conteudo, acoes: ev.acoes } }));
+            break;
+          case "bloqueado":
+            setEstado((e) => (e ? { ...e, pode: false, motivo: ev.motivo } : e));
+            atualizar((x) => ({ ...x, conteudo: { ...x.conteudo, texto: x.conteudo.texto || ev.mensagem } }));
+            break;
+          case "erro":
+            atualizar((x) => ({ ...x, conteudo: { ...x.conteudo, texto: x.conteudo.texto ? `${x.conteudo.texto}\n\n${ev.mensagem}` : ev.mensagem } }));
+            break;
+          case "fim":
+            if (ev.conversaId) setConversaId(ev.conversaId);
+            atualizar((x) => ({ ...x, id: ev.mensagemId }));
+            setEstado((e) =>
+              e
+                ? {
+                    ...e,
+                    restantes: ev.restantes,
+                    ...(ev.restantes === 0 ? { pode: false, motivo: "limite_diario" as const } : {}),
+                  }
+                : e,
+            );
+            break;
+        }
+      };
+      for (;;) {
+        const { done, value } = await leitor.read();
+        if (done) break;
+        resto += dec.decode(value, { stream: true });
+        let i: number;
+        while ((i = resto.indexOf("\n")) >= 0) {
+          tratar(resto.slice(0, i));
+          resto = resto.slice(i + 1);
+        }
+      }
+      tratar(resto + dec.decode());
+    } catch {
+      atualizar((x) => ({ ...x, conteudo: { ...x.conteudo, texto: x.conteudo.texto || "A conexão caiu. Tente de novo." } }));
+    } finally {
+      setPensando(null);
+      setEnviando(false);
+      caixa.current?.focus();
+    }
+  }
+
+  async function apagarConversa() {
+    setApagando(true);
+    const r = await apagarMinhasConversas().catch(() => null);
+    setApagando(false);
+    setConfirmarApagar(false);
+    if (r?.ok) {
+      setMensagens([]);
+      setConversaId(null);
+      setRascunhoId(null);
+      setAviso(r.mensagem);
+    } else {
+      setAviso(r && !r.ok ? r.erro : "Não deu para apagar agora. Tente de novo.");
+    }
+  }
+
+  if (!estado?.ligado) return null;
+
+  // telas com barra fixa embaixo (passos do anúncio, página do anúncio): o balão sobe para não cobrir
+  const elevado = caminho.startsWith("/anunciar/") || caminho.startsWith("/anuncio/");
+  const posicao = elevado
+    ? "bottom-[calc(10rem+env(safe-area-inset-bottom))] md:bottom-28"
+    : "bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6";
+  // o convite fica logo acima do balão (balão de 56px + 8px)
+  const posicaoDica = elevado
+    ? "bottom-[calc(14rem+env(safe-area-inset-bottom))] md:bottom-44"
+    : "bottom-[calc(9.5rem+env(safe-area-inset-bottom))] md:bottom-24";
+
+  const podeEscrever = estado.logado && estado.pode;
+  const motivoTexto = estado.logado && !estado.pode ? mensagemBloqueio(estado.motivo) : null;
+  const vazio = mensagens.length === 0;
+
+  return (
+    <>
+      <input
+        ref={inputFoto}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => void escolherFoto(e.target.files?.[0])}
+        aria-hidden
+        tabIndex={-1}
+      />
+
+      {!aberto && dica && (
+        <div
+          role="status"
+          className={`fixed right-4 z-30 flex max-w-[calc(100vw-2rem)] items-center rounded-card bg-cartao shadow-2 md:right-6 ${posicaoDica}`}
+        >
+          <button
+            type="button"
+            onClick={() => abrir(dica.pedido)}
+            className="min-h-12 flex-1 py-2 pl-4 pr-2 text-left text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+          >
+            {dica.texto}
+          </button>
+          <button type="button" onClick={fecharDica} aria-label="Fechar o convite do Aki" className="grid size-12 shrink-0 place-items-center text-texto-suave">
+            <X className="size-5" aria-hidden />
+          </button>
+        </div>
+      )}
+
+      {!aberto && (
+        <button
+          type="button"
+          onClick={() => abrir()}
+          className={`fixed right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-cartao pl-2 pr-4 text-base font-semibold text-beringela shadow-2 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:right-6 ${posicao}`}
+          aria-haspopup="dialog"
+        >
+          <MascoteAki tamanho={40} />
+          Aki
+        </button>
+      )}
+
+      {aberto && (
+        <div className="fixed inset-0 z-50" role="presentation">
+          <button type="button" aria-label="Fechar o Aki" className="absolute inset-0 bg-beringela/40" onClick={() => setAberto(false)} />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="aki-titulo"
+            className="absolute inset-x-0 bottom-0 mx-auto flex h-[88dvh] max-w-lg flex-col rounded-t-folha bg-cartao shadow-2 md:bottom-6 md:right-6 md:left-auto md:h-[min(720px,85dvh)] md:w-[420px] md:rounded-folha"
+          >
+            <header className="flex items-center gap-2 border-b border-borda py-1 pl-4 pr-1">
+              <MascoteAki tamanho={32} />
+              <div className="min-w-0 flex-1">
+                <h2 id="aki-titulo" className="text-lg font-semibold leading-6">
+                  Aki
+                </h2>
+                <p className="text-[13px] leading-[18px] text-texto-suave">Ajudante do OLAKI</p>
+              </div>
+              {estado.logado && mensagens.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmarApagar(true)}
+                  disabled={enviando}
+                  title={enviando ? "Espere o Aki terminar de responder" : undefined}
+                  className="flex h-12 items-center gap-1 px-3 text-[13px] font-semibold text-perigo disabled:opacity-50"
+                >
+                  <Trash2 className="size-4" aria-hidden />
+                  Apagar conversa
+                </button>
+              )}
+              <button type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-12 place-items-center text-beringela">
+                <X className="size-6" aria-hidden />
+              </button>
+            </header>
+
+            {estado.avisoIa && (
+              <p className="flex items-start gap-2 bg-laranja-claro px-4 py-2 text-[13px] leading-[18px] text-beringela">
+                <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
+                {estado.avisoIa}
+              </p>
+            )}
+
+            {confirmarApagar && (
+              <div role="alertdialog" aria-label="Apagar conversa" className="space-y-2 bg-perigo-fundo px-4 py-3">
+                <p className="text-sm text-perigo">Apagar toda a sua conversa com o Aki? Não dá para desfazer.</p>
+                <div className="flex gap-2">
+                  <Botao variante="perigo" carregando={apagando} textoCarregando="Apagando…" disabled={enviando} onClick={() => void apagarConversa()}>
+                    Apagar
+                  </Botao>
+                  <Botao variante="secundario" onClick={() => setConfirmarApagar(false)} disabled={apagando}>
+                    Cancelar
+                  </Botao>
+                </div>
+              </div>
+            )}
+
+            <div ref={lista} className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">
+              {carregando && (
+                <p className="flex items-center gap-2 text-sm text-texto-suave">
+                  <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden /> Abrindo a conversa…
+                </p>
+              )}
+
+              {vazio && !carregando && (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <MascoteAki tamanho={28} className="mt-1 shrink-0" />
+                    <p className="rounded-card rounded-tl-none bg-fundo px-3 py-2 text-base leading-6">
+                      {estado.boasVindas ?? "Oi! Eu sou o Aki. Posso ajudar a achar coisas à venda e a anunciar."}
+                    </p>
+                  </div>
+                  {!estado.logado && (
+                    <Botao href={`/entrar?redirect_url=${encodeURIComponent(caminho)}`} larguraTotal>
+                      Entrar para conversar
+                    </Botao>
+                  )}
+                  {podeEscrever && estado.sugestoes.length > 0 && (
+                    <div className="flex flex-wrap gap-2" aria-label="Sugestões">
+                      {estado.sugestoes.map((s) => (
+                        <Chip key={s} onClick={() => void enviar(s)} disabled={enviando} className="whitespace-normal text-left">
+                          {s}
+                        </Chip>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {mensagens.map((m, i) =>
+                m.papel === "usuario" ? (
+                  <div key={`u${m.id ?? i}`} className="flex justify-end">
+                    <p className="max-w-[85%] whitespace-pre-wrap rounded-card rounded-br-none bg-laranja-claro px-3 py-2 text-base leading-6">
+                      {m.conteudo.foto && (
+                        <span className="mb-1 flex items-center gap-1 text-[13px] text-texto-suave">
+                          <Camera className="size-4" aria-hidden /> Foto enviada
+                        </span>
+                      )}
+                      {m.conteudo.texto}
+                    </p>
+                  </div>
+                ) : (
+                  <RespostaAki
+                    key={`a${m.id ?? i}`}
+                    mensagem={m}
+                    escrevendo={enviando && i === mensagens.length - 1}
+                    pensando={i === mensagens.length - 1 ? pensando : null}
+                    aoAvaliar={(nota) =>
+                      setMensagens((lista) => lista.map((x) => (x === m && x.papel === "assistente" ? { ...x, nota } : x)))
+                    }
+                  />
+                ),
+              )}
+            </div>
+
+            <footer className="border-t border-borda px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2">
+              {aviso && (
+                <p role="status" className="mb-2 rounded-card bg-fundo px-3 py-2 text-sm text-beringela">
+                  {aviso}
+                </p>
+              )}
+              {estado.logado && motivoTexto && (
+                <p role="status" className="mb-2 rounded-card bg-aviso-fundo px-3 py-2 text-sm text-aviso">
+                  {motivoTexto}
+                </p>
+              )}
+              {podeEscrever && estado.restantes !== null && estado.restantes <= 5 && (
+                <p className="mb-1 text-[13px] text-texto-suave">
+                  {estado.restantes === 1 ? "Falta 1 mensagem hoje." : `Faltam ${estado.restantes} mensagens hoje.`}
+                </p>
+              )}
+              {foto && (
+                <div className="mb-2 flex items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- prévia local da foto (objectURL) */}
+                  <img src={foto.previa} alt="Foto escolhida" className="size-16 rounded-campo object-cover" />
+                  <span className="flex-1 text-sm text-texto-suave">
+                    {usarNoAnuncio && rascunhoId
+                      ? "A foto vai para o Aki e fica no seu anúncio."
+                      : "A foto vai junto com a mensagem e não fica guardada."}
+                  </span>
+                  <button type="button" onClick={tirarFoto} aria-label="Tirar a foto" className="grid size-12 place-items-center text-perigo">
+                    <X className="size-5" aria-hidden />
+                  </button>
+                </div>
+              )}
+              {foto && rascunhoId && (
+                <div className="mb-2">
+                  <Chip ativo={usarNoAnuncio} onClick={() => setUsarNoAnuncio((v) => !v)}>
+                    Usar esta foto no anúncio
+                  </Chip>
+                </div>
+              )}
+              {estado.logado ? (
+                <form
+                  className="flex items-end gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void enviar();
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => inputFoto.current?.click()}
+                    disabled={!podeEscrever || enviando || preparandoFoto}
+                    className="flex h-12 shrink-0 flex-col items-center justify-center rounded-campo border border-borda px-2 text-[13px] font-semibold leading-4 text-beringela disabled:opacity-50"
+                  >
+                    {preparandoFoto ? <Loader2 className="size-5 animate-spin motion-reduce:animate-none" aria-hidden /> : <Camera className="size-5" aria-hidden />}
+                    Foto
+                  </button>
+                  <label htmlFor="aki-texto" className="sr-only">
+                    Mensagem para o Aki
+                  </label>
+                  <textarea
+                    id="aki-texto"
+                    ref={caixa}
+                    value={texto}
+                    onChange={(e) => setTexto(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        void enviar();
+                      }
+                    }}
+                    maxLength={estado.maxCaracteres}
+                    rows={1}
+                    disabled={!podeEscrever}
+                    placeholder={podeEscrever ? "Escreva para o Aki" : DESCANSANDO}
+                    className="max-h-32 min-h-12 flex-1 resize-none rounded-campo border-2 border-borda bg-cartao px-3 py-2.5 text-base leading-6 text-texto placeholder:text-texto-suave/80 focus:outline-none focus-visible:border-laranja-escuro disabled:bg-fundo"
+                  />
+                  <Botao
+                    type="submit"
+                    carregando={enviando}
+                    textoCarregando="…"
+                    disabled={!podeEscrever || (!texto.trim() && !foto)}
+                    icone={<SendHorizontal />}
+                    className="shrink-0 px-4"
+                  >
+                    Enviar
+                  </Botao>
+                </form>
+              ) : (
+                <p className="text-center text-[13px] text-texto-suave">Entre na sua conta para conversar com o Aki.</p>
+              )}
+            </footer>
+          </section>
+        </div>
+      )}
+    </>
+  );
+}

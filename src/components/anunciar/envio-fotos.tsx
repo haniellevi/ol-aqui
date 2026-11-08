@@ -10,6 +10,7 @@ import { salvarFotos } from "@/app/(conta)/anunciar/actions";
 import { AvisoErro } from "./aviso-erro";
 import { BarraContinuar } from "./barra-continuar";
 import { urlPasso } from "./passos";
+import { EVENTO_FOTO_AKI, type FotoGuardadaAki } from "@/components/aki/abrir";
 
 // Passo 1 · Fotos. Reduz cada foto no celular, envia uma por vez (com progresso e "Tentar de novo")
 // e salva a lista no rascunho a cada mudança. A primeira foto é a capa.
@@ -123,6 +124,17 @@ export function EnvioFotos({
       }
     })();
   }, [itens, id, mudar]);
+
+  // O Aki guardou no rascunho a foto que a pessoa mandou para ele: mostra aqui sem salvar de novo.
+  useEffect(() => {
+    const ouvir = (e: Event) => {
+      const { anuncioId, url } = (e as CustomEvent<FotoGuardadaAki>).detail ?? {};
+      if (anuncioId !== id || !url) return;
+      mudar((l) => (l.some((i) => i.url === url) ? l : [...l, { chave: novaChave(), estado: "pronta", url }]));
+    };
+    window.addEventListener(EVENTO_FOTO_AKI, ouvir);
+    return () => window.removeEventListener(EVENTO_FOTO_AKI, ouvir);
+  }, [id, mudar]);
 
   // Libera a memória das prévias ao sair da tela.
   useEffect(() => () => itensRef.current.forEach((i) => i.previa && URL.revokeObjectURL(i.previa)), []);
