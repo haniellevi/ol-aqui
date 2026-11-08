@@ -57,3 +57,8 @@ export const linkDocumentoLegal = (tipo: "termos" | "privacidade", versao?: numb
 export const LINK_AKI = "/aki";
 export const LINK_ENTRAR_PERFIL = "/entrar/perfil";
 export const LINK_ADMIN_TEXTOS = "/admin/textos";
+
+/** Painel: tela 14 (equipe e permissões) e tela 8 (Compliance jurídico, com o relatório para imprimir). */
+export const LINK_ADMIN_EQUIPE = "/admin/equipe";
+export const LINK_ADMIN_COMPLIANCE = "/admin/compliance";
+export const linkRelatorioCompliance = (relatorioId: string) => `/admin/compliance/relatorio/${relatorioId}`;

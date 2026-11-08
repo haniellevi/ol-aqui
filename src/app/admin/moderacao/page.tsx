@@ -1,6 +1,6 @@
-import { exigirAdmin } from "@/lib/admin/auth";
+import { exigirTela } from "@/lib/admin/equipe";
 import { quando, reais } from "@/lib/admin/formato";
-import { Cartao, Titulo, estiloBotaoAprovar, estiloBotaoPerigo, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
+import { Aviso, Cartao, Titulo, estiloBotaoAprovar, estiloBotaoPerigo, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { decidirAnuncio, decidirPedido, resolverDenuncia, tirarFotoBanner } from "./actions";
 import { BotaoTirarBanner } from "./botao-tirar-banner";
 import { RadarModeracao } from "./radar-moderacao";
@@ -20,9 +20,15 @@ const MOTIVOS: Record<string, string> = {
   outro: "Outro",
 };
 
-export default async function ModeracaoPage({ searchParams }: { searchParams: Promise<{ erro?: string; ok?: string }> }) {
-  const { erro, ok } = await searchParams;
-  const { supabase } = await exigirAdmin();
+export default async function ModeracaoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string; ok?: string; falha?: string; aviso?: string }>;
+}) {
+  const { erro, ok, falha, aviso } = await searchParams;
+  // Administrador e moderador. Congelar é só do administrador (o banco também recusa).
+  const { supabase, papel } = await exigirTela("moderacao");
+  const podeCongelar = papel === "administrador";
   const [anunciosR, pedidosR, denunciasR, bannersR] = await Promise.all([
     supabase
       .from("anuncios")
@@ -54,6 +60,12 @@ export default async function ModeracaoPage({ searchParams }: { searchParams: Pr
       <Titulo sub="Itens segurados pelo filtro automático ou por denúncias. Aprovar devolve ao ar; recusar tira do ar e avisa o motivo ao dono; congelar é para casos de Compliance Jurídico.">
         Moderação
       </Titulo>
+
+      {(falha || aviso) && (
+        <div className="mb-4">
+          <Aviso tipo={falha ? "erro" : "ok"}>{falha ?? aviso}</Aviso>
+        </div>
+      )}
 
       {vazio && <Cartao className="text-sm text-texto-suave">Nada esperando revisão. Tudo em dia.</Cartao>}
 
@@ -91,11 +103,13 @@ export default async function ModeracaoPage({ searchParams }: { searchParams: Pr
               )}
               <form action={decidirAnuncio} className="mt-4 space-y-2">
                 <input type="hidden" name="id" value={a.id} />
-                <input name="motivo" placeholder="Motivo (para recusar ou congelar)" className={estiloCampo} />
+                <input name="motivo" placeholder={podeCongelar ? "Motivo (para recusar ou congelar)" : "Motivo (para recusar)"} className={estiloCampo} />
                 <div className="flex flex-wrap gap-2">
                   <button name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</button>
                   <button name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</button>
-                  <button name="decisao" value="congelar" className={estiloBotaoPerigo}>Congelar (Compliance)</button>
+                  {podeCongelar && (
+                    <button name="decisao" value="congelar" className={estiloBotaoPerigo}>Congelar (Compliance)</button>
+                  )}
                 </div>
               </form>
             </Cartao>

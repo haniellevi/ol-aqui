@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, FileText, LayoutDashboard, Receipt, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags } from "lucide-react";
+import { Bot, FileText, LayoutDashboard, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
+import { podeVerLink, type Papel } from "@/lib/tipos-equipe";
 
 const ITENS = [
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
@@ -14,13 +15,17 @@ const ITENS = [
   { href: "/admin/destaques", rotulo: "Destaques", icone: Sparkles },
   { href: "/admin/robo", rotulo: "Robô Aki", curto: "Aki", icone: Bot },
   { href: "/admin/textos", rotulo: "Página inicial e textos", curto: "Textos", icone: FileText },
+  { href: "/admin/equipe", rotulo: "Equipe e permissões", curto: "Equipe", icone: UsersRound },
+  { href: "/admin/compliance", rotulo: "Compliance jurídico", curto: "Jurídico", icone: Scale },
 ];
 
-export function NavAdmin({ pendencias }: { pendencias: number }) {
+/** `papel`: o menu mostra só as telas que o papel usa (tela 14). Link sem regra = só administrador. */
+export function NavAdmin({ pendencias, papel }: { pendencias: number; papel: Papel }) {
   const atual = usePathname();
+  const itens = ITENS.filter((i) => podeVerLink(papel, i.href));
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 grid auto-cols-fr grid-flow-col border-t border-borda bg-cartao shadow-2 md:static md:flex md:w-56 md:flex-col md:gap-1 md:border-0 md:bg-transparent md:p-4 md:shadow-none">
-      {ITENS.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
+      {itens.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
         const ativo = href === "/admin" ? atual === href : atual.startsWith(href);
         return (
           <Link

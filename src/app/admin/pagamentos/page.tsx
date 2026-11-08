@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Download, ExternalLink, MessageCircle } from "lucide-react";
-import { exigirAdmin } from "@/lib/admin/auth";
+import { exigirTela } from "@/lib/admin/equipe";
 import { LINK_ADMIN_PAGAMENTOS } from "@/lib/rotas";
 import { inteiro, quando, reais } from "@/lib/admin/formato";
 import {
@@ -36,7 +36,7 @@ const COR_STATUS: Record<StatusPagamento, string> = {
 type Params = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function PagamentosPage({ searchParams }: { searchParams: Params }) {
-  const { supabase } = await exigirAdmin();
+  const { supabase } = await exigirTela("pagamentos"); // administrador e financeiro
   const filtros = lerFiltros(await searchParams);
 
   const [lista, resumoR, devolver, regioesR, planosR] = await Promise.all([

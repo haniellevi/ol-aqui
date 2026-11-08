@@ -1,9 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
+import { ehPapel, podeVerTela } from "@/lib/tipos-equipe";
 import { NOME_STATUS, NOME_TIPO, lerFiltros, listarTodosPagamentos } from "@/lib/admin/pagamentos";
 
-// Tela 6 · Exportar CSV dos pagamentos com os mesmos filtros da tela. Só admin: confere e_admin
-// com o token da pessoa (e a RLS de pagamentos também barra). Quem não é admin recebe 404.
+// Tela 6 · Exportar CSV dos pagamentos com os mesmos filtros da tela. Só administrador e financeiro:
+// confere o papel com o token da pessoa (e a RLS de pagamentos também barra). Os outros recebem 404.
 // ";" e BOM para abrir certo no Excel em português; célula que começa com = + - @ vira texto.
 
 export const dynamic = "force-dynamic";
@@ -27,8 +28,8 @@ export async function GET(req: Request) {
   const { userId } = await auth();
   if (!userId) return naoAchou();
   const supabase = await createClient();
-  const { data: admin } = await supabase.rpc("e_admin");
-  if (admin !== true) return naoAchou();
+  const { data: papel } = await supabase.rpc("meu_papel");
+  if (!ehPapel(papel) || !podeVerTela(papel, "pagamentos")) return naoAchou();
 
   const filtros = lerFiltros(new URL(req.url).searchParams);
   let linhas;

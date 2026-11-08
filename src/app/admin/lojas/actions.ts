@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { exigirAdmin } from "@/lib/admin/auth";
+import { exigirTela } from "@/lib/admin/equipe";
 import { inteiroOuNulo } from "@/lib/admin/formato";
 import type { EstadoForm } from "@/lib/admin/estado";
 import { ehUuid } from "@/lib/formato";
@@ -10,7 +10,7 @@ import type { AcaoLoja } from "@/lib/tipos-cobranca";
 
 // Tela 5 · Lojistas e vitrines. Tudo pelo token do admin; quem confere admin, motivo, dias e plano
 // é o banco (admin_acao_loja, admin_analisar_verificacao), que grava o motivo em vitrines_acoes_admin
-// e cada mudança em logs_atividade.
+// e cada mudança em logs_atividade. Suporte: só suspender/reativar e verificações; franqueado: nada (o banco recusa).
 
 const ACOES: readonly AcaoLoja[] = ["cortesia", "trocar_plano", "suspender", "reativar", "dar_selo", "tirar_selo"];
 
@@ -30,7 +30,7 @@ function atualizar() {
 
 export async function acaoLoja(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   try {
-    const { supabase } = await exigirAdmin();
+    const { supabase } = await exigirTela("lojas");
     const vitrine = String(form.get("vitrine") ?? "");
     const acao = String(form.get("acao") ?? "") as AcaoLoja;
     if (!ehUuid(vitrine)) return { erro: "Loja não encontrada." };
@@ -58,7 +58,7 @@ export async function acaoLoja(_: EstadoForm, form: FormData): Promise<EstadoFor
 
 export async function analisarVerificacao(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   try {
-    const { supabase } = await exigirAdmin();
+    const { supabase } = await exigirTela("lojas");
     const id = String(form.get("id") ?? "");
     if (!ehUuid(id)) return { erro: "Verificação não encontrada." };
     const aprovar = form.get("decisao") === "aprovar";
