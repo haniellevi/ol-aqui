@@ -80,7 +80,8 @@ export default async function PedidoLojaPage({
       <FolhaPropor
         pedidoId={pedido.id}
         modoPrazo={modoPrazo}
-        podeEditar={aberto && minha?.status !== "oculta"}
+        podeEditar={aberto && minha?.status !== "oculta" && !minha?.escolhida}
+        podeChamar={aberto && !modoPrazo && minha?.status === "ativa"}
         abrirLogo={propor === "1" && aberto}
         anuncios={anuncios}
         mensagemMax={regras.mensagemMax}

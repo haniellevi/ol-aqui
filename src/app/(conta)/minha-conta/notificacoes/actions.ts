@@ -21,6 +21,17 @@ export async function marcarTodasLidas() {
   revalidatePath("/minha-conta");
 }
 
+/** Liga ou desliga um aviso para a própria pessoa (o banco confere se o tipo pode ser escolhido). */
+export async function salvarPreferenciaAviso(formData: FormData) {
+  const { userId } = await auth();
+  const tipo = String(formData.get("tipo") ?? "");
+  const ligar = formData.get("ligar") === "sim";
+  if (!userId || !/^[a-z0-9_]{3,40}$/.test(tipo)) return;
+  const db = await createClient();
+  await db.rpc("salvar_preferencia_aviso", { p_tipo: tipo, p_ligado: ligar });
+  revalidatePath(LINK_AVISOS);
+}
+
 /** Abre um aviso: marca como lido e leva para a tela dele. */
 export async function abrirAviso(formData: FormData) {
   const { userId } = await auth();

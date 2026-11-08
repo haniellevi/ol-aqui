@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Check, ImagePlus, Pencil, Send, X } from "lucide-react";
+import { Camera, Check, ImagePlus, MessageCircle, Pencil, Send, X } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { criarUrlFotoProposta, enviarProposta } from "@/app/radar/actions";
@@ -14,6 +14,8 @@ type Props = {
   pedidoId: string;
   modoPrazo: boolean;
   podeEditar: boolean;
+  /** Modo "Podem me chamar" com proposta minha ativa: botão para abrir o WhatsApp do comprador de novo. */
+  podeChamar: boolean;
   abrirLogo: boolean;
   anuncios: AnuncioParaProposta[];
   mensagemMax: number;
@@ -25,7 +27,7 @@ type Props = {
 const textoPreco = (centavos: number | null) => (centavos == null ? "" : String(Math.round(centavos / 100)));
 
 // Folha "Propor": escolher um anúncio no ar ou mandar uma foto, preço e mensagem curta.
-export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, abrirLogo, anuncios, mensagemMax, minha, restantes }: Props) {
+export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrirLogo, anuncios, mensagemMax, minha, restantes }: Props) {
   const router = useRouter();
   const [aberta, setAberta] = useState(abrirLogo && podeEditar);
   const [anuncioId, setAnuncioId] = useState<string | null>(minha?.anuncio_id ?? null);
@@ -36,6 +38,8 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, abrirLogo, anunci
   const [erro, setErro] = useState<{ texto: string; campo?: string } | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [enviando, iniciar] = useTransition();
+  const [chamando, iniciarChamar] = useTransition();
+  const [erroChamar, setErroChamar] = useState<string | null>(null);
   const arquivo = useRef<HTMLInputElement>(null);
   const fechar = useRef<HTMLButtonElement>(null);
 
@@ -102,6 +106,22 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, abrirLogo, anunci
     });
   }
 
+  // Abre de novo a conversa com o comprador (o banco confere tudo de novo e não muda a proposta).
+  function chamarDeNovo() {
+    setErroChamar(null);
+    const aba = window.open("", "_blank");
+    iniciarChamar(async () => {
+      const r = await enviarProposta({ pedidoId });
+      if (!r.ok || r.modo !== "whatsapp_direto") {
+        aba?.close();
+        setErroChamar(r.ok ? "Não deu para abrir o WhatsApp. Tente de novo." : r.erro);
+        return;
+      }
+      if (aba) aba.location.href = r.linkWhatsapp;
+      else window.location.href = r.linkWhatsapp;
+    });
+  }
+
   const erroCampo = (c: string) => (erro?.campo === c ? erro.texto : null);
   const erroGeral = erro && !["foto", "preco", "preco_centavos", "mensagem"].includes(erro.campo ?? "") ? erro.texto : null;
 
@@ -113,9 +133,28 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, abrirLogo, anunci
           {sucesso}
         </p>
       )}
+      {podeChamar && (
+        <div className="flex flex-col gap-2">
+          <Botao
+            larguraTotal
+            variante="whatsapp"
+            icone={<MessageCircle />}
+            onClick={chamarDeNovo}
+            carregando={chamando}
+            textoCarregando="Abrindo o WhatsApp..."
+          >
+            Chamar no WhatsApp de novo
+          </Botao>
+          {erroChamar && (
+            <p role="alert" className="text-center text-sm font-semibold text-perigo">
+              {erroChamar}
+            </p>
+          )}
+        </div>
+      )}
       {podeEditar && (
         <div className="flex flex-col gap-2">
-          <Botao larguraTotal onClick={() => setAberta(true)} icone={minha ? <Pencil /> : <Send />}>
+          <Botao larguraTotal variante={minha ? "secundario" : "primario"} onClick={() => setAberta(true)} icone={minha ? <Pencil /> : <Send />}>
             {minha ? "Mudar minha proposta" : "Propor Produto"}
           </Botao>
           {!minha && restantes != null && (

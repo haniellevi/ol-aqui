@@ -113,6 +113,10 @@ export async function moderarRadar(form: FormData): Promise<void> {
   const acao = String(form.get("acao") ?? "");
   const id = String(form.get("id") ?? "");
   const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
+  // Remover apaga de vez (o pedido leva junto as propostas): só com a caixa de confirmação marcada
+  if (acao === "remover" && form.get("confirmar_remover") !== "sim") {
+    redirect(`/admin/moderacao?erro=${encodeURIComponent('Para remover de vez, marque "Sim, remover de vez" e toque em Remover de novo.')}#radar`);
+  }
   const { error } = await supabase.rpc("moderar_radar", { p_tipo: tipo, p_id: id, p_acao: acao, p_motivo: motivo || null });
   revalidatePath("/admin", "layout");
   revalidatePath("/radar", "layout");

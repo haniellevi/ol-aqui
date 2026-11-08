@@ -19,8 +19,9 @@ export function AcoesPedido({ pedidoId }: { pedidoId: string }) {
     setAcao(motivo);
     iniciar(async () => {
       const r = await fecharPedido(pedidoId, motivo);
-      setAviso(r.ok ? { ok: true, texto: r.mensagem } : { ok: false, texto: r.erro });
+      // deu certo: a página recarrega e mostra o pedido fechado (este bloco some)
       if (r.ok) router.refresh();
+      else setAviso({ ok: false, texto: r.erro });
     });
   }
 

@@ -53,6 +53,8 @@ export type PedidoRadarDetalhe = {
   mesma_regiao: boolean;
   tem_acesso: boolean;
   moderado_motivo: string | null;
+  /** Só para o dono (e a equipe): por que o pedido fechou. */
+  fechado_motivo: MotivoFechamento;
 };
 
 /** Linha de propostas_do_pedido(id): o que o comprador compara (sem contato). */
@@ -133,6 +135,9 @@ export type Notificacao = {
   lida_em: string | null;
   criado_em: string;
 };
+
+/** Um aviso que a pessoa pode ligar ou desligar (Minha conta > Notificações). */
+export type PreferenciaAviso = { tipo: string; nome: string; explicacao: string; ligado: boolean };
 
 /* ----------------------------- Respostas ----------------------------- */
 

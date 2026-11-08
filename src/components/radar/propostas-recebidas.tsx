@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BadgeCheck, Inbox, MessageCircle, Star, Store } from "lucide-react";
 import { Chip } from "@/components/ui/chip";
 import { Botao } from "@/components/ui/botao";
@@ -73,6 +74,7 @@ export function PropostasRecebidas({
 }
 
 function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher: boolean }) {
+  const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [abrindo, iniciar] = useTransition();
   const foto = p.foto_url ?? p.anuncio_capa;
@@ -88,8 +90,10 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
         setErro(r.erro);
         return;
       }
-      if (aba) aba.location.href = r.linkWhatsapp;
-      else window.location.href = r.linkWhatsapp;
+      if (aba) {
+        aba.location.href = r.linkWhatsapp;
+        router.refresh(); // mostra "Você chamou" nesta proposta
+      } else window.location.href = r.linkWhatsapp;
     });
   }
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, ChevronLeft, Hourglass, MessageCircle, ShieldAlert } from "lucide-react";
 import { pedidoRadar, propostasDoPedido } from "@/lib/dados/radar";
-import { LINK_RADAR, linkPedidoRadarLoja } from "@/lib/rotas";
+import { LINK_RADAR, linkPedidoRadarLoja, linkPedirRadar } from "@/lib/rotas";
 import { tempoRelativo } from "@/lib/formato";
 import { CLASSE_TOM, dataHoraCurta, faixaPreco, resumoPropostas, rotuloSituacao } from "@/components/radar/util";
 import { PropostasRecebidas } from "@/components/radar/propostas-recebidas";
@@ -25,7 +25,7 @@ export default async function MeuPedidoPage({
   if (!pedido.sou_comprador) redirect(linkPedidoRadarLoja(id));
 
   const propostas = await propostasDoPedido(id);
-  const s = rotuloSituacao(pedido.situacao, null);
+  const s = rotuloSituacao(pedido.situacao, pedido.fechado_motivo);
   const fechado = pedido.situacao === "fechado";
   const menor = propostas.reduce<number | null>((m, p) => (p.preco_centavos != null && (m == null || p.preco_centavos < m) ? p.preco_centavos : m), null);
   const modoPrazo = pedido.modo_contato === "propostas_prazo";
@@ -84,6 +84,21 @@ export default async function MeuPedidoPage({
         )}
         {pedido.moderado_motivo && <p className="text-sm font-semibold text-aviso">Motivo da equipe: {pedido.moderado_motivo}</p>}
       </section>
+
+      {fechado && (pedido.fechado_motivo === "resolvido" || pedido.fechado_motivo === "cancelado") && (
+        <section role="status" className="flex items-start gap-3 rounded-card bg-fundo p-4">
+          <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-verde-escuro" aria-hidden />
+          <div className="flex flex-col gap-1">
+            <p className="text-lg font-bold">{pedido.fechado_motivo === "resolvido" ? "Que bom que deu certo!" : "Pedido cancelado"}</p>
+            <p className="text-base text-texto-suave">
+              As lojas não veem mais este pedido. Precisa de outra coisa?{" "}
+              <Link href={linkPedirRadar()} className="font-semibold text-laranja-escuro underline">
+                Fazer um pedido novo
+              </Link>
+            </p>
+          </div>
+        </section>
+      )}
 
       {pedido.situacao === "prazo_acabou" && (
         <section className="flex flex-col gap-1 rounded-card bg-laranja-claro p-4 text-beringela">

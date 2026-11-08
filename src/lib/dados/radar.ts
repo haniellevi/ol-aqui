@@ -13,6 +13,7 @@ import type {
   Notificacao,
   PedidoRadarDetalhe,
   PlanoRadar,
+  PreferenciaAviso,
   PropostaRecebida,
   RegrasRadar,
 } from "@/lib/tipos-radar";
@@ -178,3 +179,34 @@ export const avisosNaoLidos = cache(
       return count ?? 0;
     }, 0),
 );
+
+// Nome e explicação de cada aviso na tela. A lista de quais a pessoa pode escolher vem do painel
+// (radar.avisos_escolha); aviso novo sem nome aqui aparece com um nome simples.
+const NOMES_AVISO: Record<string, { nome: string; explicacao: string }> = {
+  pedido_novo: { nome: "Pedido novo na região", explicacao: "Para lojas: alguém procura o que você vende." },
+  proposta_nova: { nome: "Chegou proposta", explicacao: "Uma loja mandou oferta para o seu pedido." },
+  prazo_acabou: { nome: "Prazo do pedido acabou", explicacao: "Resumo das ofertas para você escolher." },
+  proposta_escolhida: { nome: "Escolheram minha proposta", explicacao: "Para lojas: o comprador quer falar com você." },
+};
+
+/** Avisos que a pessoa pode ligar ou desligar, com o que ela já escolheu (sem linha = ligado). */
+export async function minhasPreferenciasAvisos(): Promise<PreferenciaAviso[]> {
+  return seguro(async () => {
+    const { userId } = await auth();
+    if (!userId) return [];
+    const db = await createClient();
+    const [tipos, { data }] = await Promise.all([
+      lerConfig<unknown>("radar.avisos_escolha", null, []),
+      db.from("preferencias_avisos").select("tipo, ligado").eq("usuario_id", userId).eq("canal", "app"),
+    ]);
+    const desligados = new Set((data ?? []).filter((p) => p.ligado === false).map((p) => p.tipo as string));
+    return (Array.isArray(tipos) ? tipos : [])
+      .filter((t): t is string => typeof t === "string" && /^[a-z0-9_]{3,40}$/.test(t))
+      .map((tipo) => ({
+        tipo,
+        nome: NOMES_AVISO[tipo]?.nome ?? tipo.replace(/_/g, " "),
+        explicacao: NOMES_AVISO[tipo]?.explicacao ?? "",
+        ligado: !desligados.has(tipo),
+      }));
+  }, []);
+}

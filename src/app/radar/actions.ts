@@ -134,6 +134,7 @@ export async function escolherProposta(propostaId: string): Promise<RespostaEsco
   const db = await createClient();
   const { data, error } = await db.rpc("escolher_proposta", { p_proposta_id: propostaId }).single<{ whatsapp: string; mensagem: string }>();
   if (error || !data?.whatsapp) return { ok: false, erro: mensagemDe(error).erro };
+  revalidatePath("/radar/pedido/[id]", "page");
   return { ok: true, linkWhatsapp: linkWa(data.whatsapp, data.mensagem) };
 }
 
