@@ -19,7 +19,8 @@ insert into public.configuracoes (chave, valor, grupo, publico, descricao) value
   ('radar.fotos_max_pasta',              '5',   'radar', false, 'Fotos que uma loja pode guardar para cada pedido do Radar'),
   ('radar.avisos_ligados',               '["proposta_nova", "prazo_acabou", "pedido_novo", "proposta_escolhida"]', 'radar', false,
      'Avisos do Radar que estão ligados (proposta_nova, prazo_acabou, pedido_novo, proposta_escolhida). Para desligar um, tire o nome da lista'),
-  ('radar.avisos_lojas_por_dia',         '10',  'radar', false, 'Máximo de avisos "pedido novo" que cada loja recebe por dia'),
+  ('radar.avisos_lojas_por_dia',         '10',  'radar', false, 'Máximo de avisos "pedido novo" que cada loja recebe por dia (só contam pedidos que ainda estão abertos)'),
+  ('radar.avisos_lojas_por_comprador_dia', '2', 'radar', false, 'Máximo de avisos "pedido novo" que cada loja recebe por dia vindos do mesmo comprador'),
   ('radar.avisos_lojas_max_por_pedido',  '200', 'radar', false, 'Máximo de lojas avisadas quando entra um pedido novo'),
   ('radar.aviso.proposta_nova.titulo',   '"Chegou proposta no Radar"', 'radar', false, 'Aviso ao comprador: título quando chega uma proposta'),
   ('radar.aviso.proposta_nova.texto',    '"{loja} mandou uma proposta para “{pedido}”. Toque para ver e comparar."', 'radar', false,
@@ -34,7 +35,9 @@ insert into public.configuracoes (chave, valor, grupo, publico, descricao) value
      'Aviso às lojas: texto do pedido novo. Pode usar {cidade}, {pedido} e {preco}'),
   ('radar.aviso.proposta_escolhida.titulo', '"Escolheram sua proposta!"', 'radar', false, 'Aviso à loja: título quando o comprador escolhe a proposta dela'),
   ('radar.aviso.proposta_escolhida.texto',  '"O comprador de “{pedido}” escolheu a sua proposta e vai te chamar no WhatsApp."', 'radar', false,
-     'Aviso à loja: texto quando o comprador escolhe a proposta. Pode usar {pedido} e {loja}')
+     'Aviso à loja: texto quando o comprador escolhe a proposta. Pode usar {pedido} e {loja}'),
+  ('radar.avisos_escolha', '["pedido_novo", "proposta_nova", "prazo_acabou", "proposta_escolhida"]', 'radar', true,
+     'Avisos que cada pessoa pode ligar ou desligar em Minha conta > Notificações')
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------
@@ -66,6 +69,12 @@ create policy "propostas leitura" on public.radar_propostas
     exists (select 1 from public.vitrines_lojas v where v.id = vitrine_id and v.dono_id = public.usuario_id())
     or (status = 'ativa' and exists (select 1 from public.radar_pedidos p where p.id = pedido_id and p.comprador_id = public.usuario_id()))
     or public.e_admin());
+-- O IP de quem propôs (Marco Civil) não sai pela API para ninguém: só o servidor (service_role) lê.
+-- Leitura por coluna: todas menos criado_ip. Coluna nova nesta tabela precisa entrar nesta lista.
+revoke select on public.radar_propostas from anon, authenticated;
+grant select (id, pedido_id, vitrine_id, anuncio_id, mensagem, criado_em, preco_centavos, foto_url, escolhida,
+              status, moderado_motivo, atualizado_em, escolhida_em)
+  on public.radar_propostas to authenticated;
 
 -- Toda mudança em proposta (edição da loja, moderação, remoção) fica no log
 create trigger log_propostas_alteracao after update or delete on public.radar_propostas
@@ -132,6 +141,23 @@ create policy "notificacoes proprias apagar" on public.notificacoes
 revoke all on public.notificacoes from anon, authenticated;
 grant select, delete on public.notificacoes to authenticated;
 
+-- O que cada pessoa quer receber (Minha conta > Notificações). Sem linha = ligado.
+-- Fase 2: a coluna canal separa WhatsApp, e-mail e celular; hoje só existe o aviso no app.
+create table public.preferencias_avisos (
+  usuario_id    text not null references public.perfis(id) on delete cascade,
+  tipo          text not null check (tipo ~ '^[a-z0-9_]{3,40}$'),
+  canal         text not null default 'app' check (canal in ('app', 'whatsapp', 'push', 'email')),
+  ligado        boolean not null default true,
+  atualizado_em timestamptz not null default now(),
+  primary key (usuario_id, tipo, canal)
+);
+alter table public.preferencias_avisos enable row level security;
+create policy "preferencias proprias leitura" on public.preferencias_avisos
+  for select using (usuario_id = public.usuario_id());
+-- Ninguém grava direto pela API: só pela função salvar_preferencia_aviso (abaixo)
+revoke all on public.preferencias_avisos from anon, authenticated;
+grant select on public.preferencias_avisos to authenticated;
+
 -- Grava um aviso (uso interno). Aviso nunca derruba a ação principal: erro de formato = não avisa.
 create or replace function public.notificar(
   p_usuario text, p_tipo text, p_titulo text, p_texto text,
@@ -142,6 +168,11 @@ as $$
 declare n integer;
 begin
   if p_usuario is null or nullif(btrim(coalesce(p_titulo, '')), '') is null or nullif(btrim(coalesce(p_texto, '')), '') is null then
+    return false;
+  end if;
+  -- a pessoa desligou este aviso em Minha conta > Notificações
+  if exists (select 1 from public.preferencias_avisos pa
+              where pa.usuario_id = p_usuario and pa.tipo = p_tipo and pa.canal = coalesce(p_canal, 'app') and not pa.ligado) then
     return false;
   end if;
   insert into public.notificacoes (usuario_id, tipo, titulo, texto, link, chave, dados, canal)
@@ -188,6 +219,31 @@ begin
    where usuario_id = uid and lida_em is null and (p_ids is null or id = any(p_ids));
   get diagnostics n = row_count;
   return n;
+end $$;
+
+-- A pessoa liga ou desliga um aviso do Radar para ela mesma (só os tipos que a equipe deixa escolher)
+create or replace function public.salvar_preferencia_aviso(p_tipo text, p_ligado boolean)
+returns boolean language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare
+  uid text := public.usuario_id();
+begin
+  if uid is null then
+    raise exception 'Entre na sua conta para continuar.' using errcode = '28000';
+  end if;
+  if p_ligado is null or p_tipo is null
+     or jsonb_typeof(public.config('radar.avisos_escolha', null, '[]')) is distinct from 'array'
+     or not (public.config('radar.avisos_escolha', null, '[]') ? p_tipo) then
+    raise exception 'Este aviso não pode ser escolhido.' using errcode = '22023';
+  end if;
+  if not exists (select 1 from public.perfis pf where pf.id = uid) then
+    raise exception 'Termine seu cadastro antes de escolher seus avisos.' using errcode = 'P0001';
+  end if;
+  insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
+  values (uid, p_tipo, 'app', p_ligado, now())
+  on conflict (usuario_id, tipo, canal) do update set ligado = excluded.ligado, atualizado_em = now();
+  return p_ligado;
 end $$;
 
 -- ---------------------------------------------------------------------
@@ -257,6 +313,8 @@ begin
   end if;
 
   if tg_op = 'INSERT' then
+    -- um pedido novo por vez para cada comprador: pedidos mandados juntos não passam do limite
+    perform pg_advisory_xact_lock(hashtext('radar_pedido:' || new.comprador_id));
     lim := public.numero_ou_nulo(public.config('radar.pedidos_por_dia', new.microrregiao_id, 'null'))::int;
     if lim is not null then
       select count(*) into total from public.radar_pedidos p where p.comprador_id = new.comprador_id and p.criado_em >= hoje;
@@ -268,7 +326,8 @@ begin
     lim := public.numero_ou_nulo(public.config('radar.pedidos_abertos_max', new.microrregiao_id, 'null'))::int;
     if lim is not null then
       select count(*) into total from public.radar_pedidos p
-       where p.comprador_id = new.comprador_id and p.status in ('aberto', 'em_analise') and p.expira_em > now();
+       where p.comprador_id = new.comprador_id and p.status in ('aberto', 'em_analise') and p.expira_em > now()
+         and not (p.modo_contato = 'propostas_prazo' and p.propostas_ate <= now());   -- prazo acabou: não segura vaga
       if total >= lim then
         raise exception using errcode = 'P0001',
           message = format('Você já tem %s pedidos abertos. Toque em "Já resolvi" ou cancele um para pedir outro.', total);
@@ -466,7 +525,8 @@ begin
     raise exception 'O Radar de Negócios é exclusivo dos planos com Radar.' using errcode = '42501';
   end if;
 
-  select * into v_vitrine from public.vitrines_lojas x where x.dono_id = uid;
+  -- trava a loja antes de contar as propostas: duas propostas ao mesmo tempo não passam do plano
+  select * into v_vitrine from public.vitrines_lojas x where x.dono_id = uid for update;
   select * into v_pedido  from public.radar_pedidos x where x.id = p_pedido_id for update;
 
   if v_pedido.id is null or v_pedido.status <> 'aberto' or v_pedido.expira_em <= now() then
@@ -535,8 +595,13 @@ begin
     if v_prop.status <> 'ativa' then
       raise exception 'Sua proposta foi tirada pela equipe do OLAKI. Fale com o suporte.' using errcode = '42501';
     end if;
-    -- editar é permitido até o prazo (modo prazo) ou enquanto o pedido está aberto (modo WhatsApp)
+    -- editar é permitido até o prazo (modo prazo) ou enquanto o pedido está aberto (modo WhatsApp),
+    -- mas nunca depois que o comprador escolheu: ele escolheu aquele preço
     if v_msg is not null or p_preco_centavos is not null or p_foto_url is not null or p_anuncio_id is not null then
+      if v_prop.escolhida then
+        raise exception using errcode = 'P0001', detail = 'campo:escolhida',
+          message = 'O comprador já escolheu sua proposta. Agora combine pelo WhatsApp.';
+      end if;
       update public.radar_propostas rp
          set mensagem = coalesce(v_msg, rp.mensagem),
              preco_centavos = coalesce(p_preco_centavos, rp.preco_centavos),
@@ -649,7 +714,8 @@ returns table (
   preco_min_centavos bigint, preco_max_centavos bigint, cidade text, urgencia text, modo_contato text,
   propostas_ate timestamptz, expira_em timestamptz, criado_em timestamptz, status text, situacao text,
   total_propostas integer, max_propostas integer, comprador_primeiro_nome text, comprador_certificado boolean,
-  sou_comprador boolean, ja_propus boolean, mesma_regiao boolean, tem_acesso boolean, moderado_motivo text)
+  sou_comprador boolean, ja_propus boolean, mesma_regiao boolean, tem_acesso boolean, moderado_motivo text,
+  fechado_motivo text)
 language sql stable security definer
 set search_path = public, extensions
 as $$
@@ -669,7 +735,8 @@ as $$
          x.dono, x.propus,
          coalesce((select v.microrregiao_id = p.microrregiao_id from public.vitrines_lojas v where v.dono_id = eu.uid), false),
          a.acesso,
-         case when x.dono or eu.admin then p.moderado_motivo end
+         case when x.dono or eu.admin then p.moderado_motivo end,
+         case when x.dono or eu.admin then p.fechado_motivo end
     from public.radar_pedidos p
     join public.perfis pf on pf.id = p.comprador_id
     left join public.categorias c on c.id = p.categoria_id
@@ -834,7 +901,9 @@ create trigger radar_avisar_proposta after insert on public.radar_propostas
   for each row execute function public.radar_avisar_proposta();
 
 -- Pedido novo (ou liberado pela moderação) → lojas da região que vendem na mesma categoria-mãe.
--- Sem categoria: todas as lojas da região. Teto por loja por dia e por pedido (painel).
+-- Sem categoria: todas as lojas da região. Tetos do painel: por loja por dia (só contam pedidos
+-- ainda abertos, então pedido cancelado não gasta o teto), por loja por comprador por dia (uma
+-- conta sozinha não lota o aviso de todas as lojas) e de lojas por pedido.
 create or replace function public.radar_avisar_pedido_novo()
 returns trigger language plpgsql security definer
 set search_path = public, extensions
@@ -842,6 +911,7 @@ as $$
 declare
   mae      uuid;
   por_dia  integer;
+  por_comp integer;
   max_lojas integer;
   hoje     timestamptz := date_trunc('day', now() at time zone 'America/Fortaleza') at time zone 'America/Fortaleza';
   ligados  jsonb := public.config('radar.avisos_ligados', new.microrregiao_id, null);
@@ -856,6 +926,7 @@ begin
     select coalesce(c.pai_id, c.id) into mae from public.categorias c where c.id = new.categoria_id;
   end if;
   por_dia   := public.numero_ou_nulo(public.config('radar.avisos_lojas_por_dia', new.microrregiao_id, 'null'))::int;
+  por_comp  := public.numero_ou_nulo(public.config('radar.avisos_lojas_por_comprador_dia', new.microrregiao_id, 'null'))::int;
   max_lojas := coalesce(public.numero_ou_nulo(public.config('radar.avisos_lojas_max_por_pedido', new.microrregiao_id, '200'))::int, 200);
   vars := jsonb_build_object('pedido', new.titulo, 'cidade', new.cidade,
                              'preco', public.radar_faixa_texto(new.preco_min_centavos, new.preco_max_centavos));
@@ -869,7 +940,13 @@ begin
              select 1 from public.anuncios a join public.categorias c on c.id = a.categoria_id
               where a.vitrine_id = v.id and a.status = 'ativo' and coalesce(c.pai_id, c.id) = mae))
        and (por_dia is null or (select count(*) from public.notificacoes n
-                                 where n.usuario_id = v.dono_id and n.tipo = 'pedido_novo' and n.criado_em >= hoje) < por_dia)
+                                  join public.radar_pedidos rp on rp.id::text = substr(n.chave, 13)
+                                 where n.usuario_id = v.dono_id and n.tipo = 'pedido_novo' and n.criado_em >= hoje
+                                   and n.chave like 'pedido_novo:%' and rp.status = 'aberto') < por_dia)
+       and (por_comp is null or (select count(*) from public.notificacoes n
+                                   join public.radar_pedidos rp on rp.id::text = substr(n.chave, 13)
+                                  where n.usuario_id = v.dono_id and n.tipo = 'pedido_novo' and n.criado_em >= hoje
+                                    and n.chave like 'pedido_novo:%' and rp.comprador_id = new.comprador_id) < por_comp)
      order by public.tem_plano_pago(v.dono_id) desc, v.criado_em
      limit greatest(max_lojas, 0)
   loop
@@ -929,7 +1006,17 @@ begin
   return feitos;
 end $$;
 
--- A rotina diária ganha o Radar sem apagar o que as outras etapas puseram nela:
+-- O aviso "prazo acabou" não pode esperar a rotina diária (prazo de 24 h viraria quase 48 h):
+-- radar_avisar_prazos() roda sozinha a cada 10 minutos. Onde o pg_cron está ligado (Supabase),
+-- a migração já agenda; sem ele, agendar na mão (docs/etapa4/radar.md).
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    execute $c$select cron.schedule('olaki-radar-prazos', '*/10 * * * *', 'select public.radar_avisar_prazos()')$c$;
+  end if;
+end $$;
+
+-- A rotina diária também ganha o Radar sem apagar o que as outras etapas puseram nela:
 -- a versão atual vira expirar_rotina_base() e a nova chama as duas.
 alter function public.expirar_rotina() rename to expirar_rotina_base;
 create function public.expirar_rotina()
@@ -1113,6 +1200,7 @@ revoke all on function public.meus_pedidos_radar() from public, anon;
 revoke all on function public.minhas_propostas_radar() from public, anon;
 revoke all on function public.radar_feed() from public, anon;
 revoke all on function public.marcar_notificacoes_lidas(uuid[]) from public, anon;
+revoke all on function public.salvar_preferencia_aviso(text, boolean) from public, anon;
 revoke all on function public.moderar_radar(text, uuid, text, text) from public, anon;
 grant execute on function
   public.criar_pedido_radar(text, text, text, integer, text, uuid, bigint, bigint, text, text, text),
@@ -1120,7 +1208,7 @@ grant execute on function
   public.revelar_contato_radar(uuid, uuid, text, bigint, text), public.escolher_proposta(uuid),
   public.radar_pedido(uuid), public.propostas_do_pedido(uuid), public.meus_pedidos_radar(),
   public.minhas_propostas_radar(), public.radar_feed(), public.marcar_notificacoes_lidas(uuid[]),
-  public.moderar_radar(text, uuid, text, text)
+  public.moderar_radar(text, uuid, text, text), public.salvar_preferencia_aviso(text, boolean)
   to authenticated;
 
 -- pode_enviar_foto foi recriada: mantém as permissões da versão anterior

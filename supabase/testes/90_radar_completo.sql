@@ -325,5 +325,154 @@ select has_function_privilege('authenticated', 'radar_avisar_proposta()', 'execu
        has_function_privilege('authenticated', 'criar_pedido_radar(text,text,text,integer,text,uuid,bigint,bigint,text,text,text)', 'execute') as logado_cria;
 select relrowsecurity as rls_notificacoes from pg_class where relname='notificacoes';
 
+-- ===================== Correções da revisão =====================
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values
+ ('user_spam90',:'reg','Conta Spam','5589999999011','Corrente','pf'),
+ ('user_leg90',:'reg','Lia Legítima','5589999999012','Corrente','pf'),
+ ('user_l90',:'reg','Luiz Lojista','5589999999013','Corrente','pj'),
+ ('user_q90',:'reg','Quitéria Lojista','5589999999014','Corrente','pj'),
+ ('user_b90',:'reg','Beto Comprador','5589999999015','Corrente','pf');
+update perfis set whatsapp_verificado_em=now() where id in ('user_spam90','user_leg90','user_l90','user_q90','user_b90');
+insert into vitrines_lojas (dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo,plano,plano_expira_em) values
+ ('user_l90',:'reg','loja-luiz-90','Loja do Luiz','Corrente','5589999999013','loja','full',now()+interval '30 days');
+insert into vitrines_lojas (dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo,plano,teste_expira_em) values
+ ('user_q90',:'reg','loja-quiteria-90','Loja da Quitéria','Corrente','5589999999014','loja','teste',now()+interval '10 days');
+
+\echo '[36] IP de quem propos nao sai pela API: nem comprador nem loja leem criado_ip (2 ERROS esperados: permission denied)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_c90',false) \g /dev/null
+select criado_ip from radar_propostas where pedido_id=:'ped_b';
+select * from radar_propostas where pedido_id=:'ped_b';
+select count(*) > 0 as comprador_ve_sem_ip from (select id, preco_centavos, mensagem from radar_propostas where pedido_id=:'ped_b') x;
+select set_config('request.jwt.claim.sub','user_t90',false) \g /dev/null
+select count(*) > 0 as loja_ve_as_suas from (select id, status, moderado_motivo from radar_propostas) x;
+reset role;
+select has_column_privilege('authenticated','public.radar_propostas','criado_ip','select') as logado_le_ip,
+       has_column_privilege('authenticated','public.radar_propostas','preco_centavos','select') as logado_le_preco,
+       has_table_privilege('anon','public.radar_propostas','select') as anon_le;
+
+\echo '[37] conta sozinha nao lota o aviso das lojas: teto por comprador (2) e pedido cancelado nao gasta o teto da loja'
+reset role; update configuracoes set valor='3' where chave='radar.avisos_lojas_por_dia' and microrregiao_id is null;
+set role authenticated; select set_config('request.jwt.claim.sub','user_spam90',false) \g /dev/null
+select (criar_pedido_radar('Procuro qualquer coisa barata 1', 'Corrente')) ->> 'id' as sp1 \gset
+select (criar_pedido_radar('Procuro qualquer coisa barata 2', 'Corrente')) ->> 'id' as sp2 \gset
+select (criar_pedido_radar('Procuro qualquer coisa barata 3', 'Corrente')) ->> 'id' as sp3 \gset
+select fechar_pedido_radar(:'sp1','cancelado'), fechar_pedido_radar(:'sp2','cancelado'), fechar_pedido_radar(:'sp3','cancelado');
+select set_config('request.jwt.claim.sub','user_leg90',false) \g /dev/null
+select (criar_pedido_radar('Procuro fogão de 4 bocas', 'Corrente')) ->> 'id' as leg1 \gset
+reset role;
+select count(*) filter (where chave in ('pedido_novo:'||:'sp1','pedido_novo:'||:'sp2','pedido_novo:'||:'sp3')) as spam_avisos,
+       count(*) filter (where chave = 'pedido_novo:'||:'leg1') as aviso_legitimo
+  from notificacoes where usuario_id='user_l90' and tipo='pedido_novo';
+update configuracoes set valor='10' where chave='radar.avisos_lojas_por_dia' and microrregiao_id is null;
+
+\echo '[38] pedido com prazo acabado nao segura vaga de pedido aberto (1 ERRO esperado: ja tem 1 pedidos abertos)'
+update configuracoes set valor='1' where chave='radar.pedidos_abertos_max' and microrregiao_id is null;
+set role authenticated; select set_config('request.jwt.claim.sub','user_leg90',false) \g /dev/null
+select fechar_pedido_radar(:'leg1','cancelado');
+select (criar_pedido_radar('Procuro geladeira usada boa', 'Corrente', 'propostas_prazo', 24)) ->> 'id' as leg2 \gset
+select criar_pedido_radar('Procuro máquina de lavar', 'Corrente');
+reset role; update radar_pedidos set propostas_ate = now() - interval '1 minute' where id=:'leg2';
+set role authenticated; select set_config('request.jwt.claim.sub','user_leg90',false) \g /dev/null
+select situacao from meus_pedidos_radar() where id=:'leg2';
+select (criar_pedido_radar('Procuro máquina de lavar', 'Corrente')) ->> 'status' as depois_do_prazo_pode;
+reset role; update configuracoes set valor='100' where chave='radar.pedidos_abertos_max' and microrregiao_id is null;
+
+\echo '[39] depois que o comprador escolhe, a loja nao muda preco nem mensagem (ERRO esperado); chamar de novo no WhatsApp continua'
+set role authenticated; select set_config('request.jwt.claim.sub','user_leg90',false) \g /dev/null
+select (criar_pedido_radar('Procuro bicicleta infantil aro 16', 'Corrente')) ->> 'id' as leg3 \gset
+select set_config('request.jwt.claim.sub','user_p90',false) \g /dev/null
+select proposta_id as prop_k from propor_radar(:'leg3', null, null, 90000, 'Tenho uma Caloi') \gset
+select set_config('request.jwt.claim.sub','user_leg90',false) \g /dev/null
+select whatsapp from escolher_proposta(:'prop_k');
+select set_config('request.jwt.claim.sub','user_p90',false) \g /dev/null
+select * from propor_radar(:'leg3', null, null, 500000, 'Agora custa mais');
+select modo, whatsapp, editada from propor_radar(:'leg3');
+select set_config('request.jwt.claim.sub','user_leg90',false) \g /dev/null
+select preco_centavos, mensagem, escolhida from propostas_do_pedido(:'leg3');
+
+\echo '[40] tela do pedido mostra o motivo do fechamento so para o dono'
+select situacao, fechado_motivo from radar_pedido(:'leg1');
+select set_config('request.jwt.claim.sub','user_p90',false) \g /dev/null
+select fechado_motivo as loja_ve_motivo from radar_pedido(:'leg3');
+
+\echo '[41] cada pessoa liga e desliga seus avisos; desligado nao e gravado (3 ERROS esperados: tipo fora da lista, gravar direto, visitante)'
+select set_config('request.jwt.claim.sub','user_l90',false) \g /dev/null
+select salvar_preferencia_aviso('pedido_novo', false) as ligado;
+select salvar_preferencia_aviso('golpe', false);
+insert into preferencias_avisos (usuario_id, tipo, ligado) values ('user_c90', 'proposta_nova', false);
+select set_config('request.jwt.claim.sub','user_c90',false) \g /dev/null
+select count(*) as ve_preferencia_de_outro from preferencias_avisos;
+select set_config('request.jwt.claim.sub','user_b90',false) \g /dev/null
+select (criar_pedido_radar('Procuro ventilador de teto', 'Corrente')) ->> 'id' as b1 \gset
+reset role;
+select count(*) filter (where usuario_id='user_l90') as desligado_nao_recebe,
+       count(*) filter (where usuario_id='user_t90') as outra_loja_recebe
+  from notificacoes where chave='pedido_novo:'||:'b1';
+set role authenticated; select set_config('request.jwt.claim.sub','user_l90',false) \g /dev/null
+select salvar_preferencia_aviso('pedido_novo', true) as religou;
+select tipo, ligado from preferencias_avisos;
+set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select salvar_preferencia_aviso('pedido_novo', false);
+
+\echo '[42] propostas mandadas ao mesmo tempo nao passam do teste gratis (ERRO esperado: usou todas as propostas)'
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+create extension if not exists dblink;
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_b90',false) \g /dev/null
+select (criar_pedido_radar('Procuro tanquinho de lavar 1', 'Corrente')) ->> 'id' as q1 \gset
+select (criar_pedido_radar('Procuro tanquinho de lavar 2', 'Corrente')) ->> 'id' as q2 \gset
+select (criar_pedido_radar('Procuro tanquinho de lavar 3', 'Corrente')) ->> 'id' as q3 \gset
+select (criar_pedido_radar('Procuro tanquinho de lavar 4', 'Corrente')) ->> 'id' as q4 \gset
+select set_config('request.jwt.claim.sub','user_q90',false) \g /dev/null
+select modo from propor_radar(:'q1', null, null, 10000);
+select modo from propor_radar(:'q2', null, null, 10000);
+select propostas_restantes() as sobra_uma;
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select dblink_connect('c1', 'dbname=olaki') as c1, dblink_connect('c2', 'dbname=olaki') as c2;
+select dblink_exec('c1', 'set role authenticated') \g /dev/null
+select dblink_exec('c1', 'set request.jwt.claim.role = ''authenticated''') \g /dev/null
+select dblink_exec('c1', 'set request.jwt.claim.sub = ''user_q90''') \g /dev/null
+select dblink_exec('c2', 'set role authenticated') \g /dev/null
+select dblink_exec('c2', 'set request.jwt.claim.role = ''authenticated''') \g /dev/null
+select dblink_exec('c2', 'set request.jwt.claim.sub = ''user_q90''') \g /dev/null
+select dblink_exec('c1', 'begin') \g /dev/null
+select modo as primeira_sem_commit from dblink('c1', format('select modo from propor_radar(%L, null, null, 10000)', :'q3')) as t(modo text);
+select dblink_send_query('c2', format('select modo from propor_radar(%L, null, null, 10000)', :'q4')) as segunda_enviada;
+select pg_sleep(1) \g /dev/null
+select dblink_is_busy('c2') = 1 as segunda_esperando_a_primeira;
+select dblink_exec('c1', 'commit') \g /dev/null
+select * from dblink_get_result('c2') as t(modo text);
+select * from dblink_get_result('c2') as t(modo text);
+select dblink_disconnect('c1'), dblink_disconnect('c2');
+select count(*) as propostas_da_loja_teste from radar_propostas where vitrine_id = (select id from vitrines_lojas where dono_id='user_q90');
+
+\echo '[43] pedidos mandados ao mesmo tempo nao passam do limite por dia (ERRO esperado: ja fez N pedidos hoje)'
+select count(*) as pedidos_hoje_b90 from radar_pedidos where comprador_id='user_b90' \gset
+update configuracoes set valor = (:pedidos_hoje_b90 + 1)::text::jsonb where chave='radar.pedidos_por_dia' and microrregiao_id is null;
+select dblink_connect('c1', 'dbname=olaki') as c1, dblink_connect('c2', 'dbname=olaki') as c2;
+select dblink_exec('c1', 'set role authenticated') \g /dev/null
+select dblink_exec('c1', 'set request.jwt.claim.role = ''authenticated''') \g /dev/null
+select dblink_exec('c1', 'set request.jwt.claim.sub = ''user_b90''') \g /dev/null
+select dblink_exec('c2', 'set role authenticated') \g /dev/null
+select dblink_exec('c2', 'set request.jwt.claim.role = ''authenticated''') \g /dev/null
+select dblink_exec('c2', 'set request.jwt.claim.sub = ''user_b90''') \g /dev/null
+select dblink_exec('c1', 'begin') \g /dev/null
+select status as primeiro_sem_commit from dblink('c1', 'select criar_pedido_radar(''Procuro sanduicheira elétrica'', ''Corrente'') ->> ''status''') as t(status text);
+select dblink_send_query('c2', 'select criar_pedido_radar(''Procuro torradeira elétrica'', ''Corrente'') ->> ''status''') as segundo_enviado;
+select pg_sleep(1) \g /dev/null
+select dblink_is_busy('c2') = 1 as segundo_esperando_o_primeiro;
+select dblink_exec('c1', 'commit') \g /dev/null
+select * from dblink_get_result('c2') as t(status text);
+select * from dblink_get_result('c2') as t(status text);
+select dblink_disconnect('c1'), dblink_disconnect('c2');
+select count(*) - :pedidos_hoje_b90 as pedidos_novos_b90 from radar_pedidos where comprador_id='user_b90';
+update configuracoes set valor='100' where chave='radar.pedidos_por_dia' and microrregiao_id is null;
+
+\echo '[44] endurecimento das partes novas'
+select has_function_privilege('authenticated', 'salvar_preferencia_aviso(text,boolean)', 'execute') as logado_escolhe,
+       has_function_privilege('anon', 'salvar_preferencia_aviso(text,boolean)', 'execute') as anon_escolhe,
+       relrowsecurity as rls_preferencias
+  from pg_class where relname='preferencias_avisos';
+
 -- volta os limites ao padrão
 update configuracoes set valor='10' where chave in ('radar.pedidos_por_dia','radar.pedidos_abertos_max') and microrregiao_id is null;

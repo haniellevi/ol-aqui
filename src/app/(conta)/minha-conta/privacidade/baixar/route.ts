@@ -8,6 +8,10 @@ export const dynamic = "force-dynamic";
 const COLUNAS_VITRINE =
   "id, tipo, slug, nome, descricao, logo_url, capa_url, whatsapp, cidade, bairro, plano, status, teste_expira_em, plano_expira_em, selo_loja_verificada, criado_em";
 
+// O IP de quem propôs não sai pela API (fica só no servidor): por isso a lista de colunas.
+const COLUNAS_PROPOSTA =
+  "id, pedido_id, anuncio_id, mensagem, preco_centavos, foto_url, escolhida, escolhida_em, status, moderado_motivo, criado_em, atualizado_em";
+
 export async function GET() {
   const { userId } = await auth();
   if (!userId) return new Response("Entre na sua conta para continuar.", { status: 401 });
@@ -30,7 +34,7 @@ export async function GET() {
   const [anuncios, propostas, pagamentos] = vitrineId
     ? await Promise.all([
         db.from("anuncios").select("*").eq("vitrine_id", vitrineId).order("criado_em", { ascending: false }),
-        db.from("radar_propostas").select("*").eq("vitrine_id", vitrineId).order("criado_em", { ascending: false }),
+        db.from("radar_propostas").select(COLUNAS_PROPOSTA).eq("vitrine_id", vitrineId).order("criado_em", { ascending: false }),
         db
           .from("pagamentos")
           .select("id, tipo, plano_codigo, anuncio_id, valor_centavos, forma, status, vencimento, pago_em, criado_em")
