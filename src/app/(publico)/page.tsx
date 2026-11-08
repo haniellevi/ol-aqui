@@ -111,7 +111,9 @@ export default async function Inicio() {
               ) : null;
 
             case "lojas_destaque":
-              return regiao ? <LojasEmDestaque key={bloco.chave} microrregiaoId={regiao.id} /> : null;
+              return regiao ? (
+                <LojasEmDestaque key={bloco.chave} microrregiaoId={regiao.id} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} />
+              ) : null;
 
             case "radar":
               return (
@@ -137,7 +139,9 @@ export default async function Inicio() {
               );
 
             case "lojas_regiao":
-              return regiao ? <LojasDaRegiao key={bloco.chave} microrregiaoId={regiao.id} lugar={lugar} /> : null;
+              return regiao ? (
+                <LojasDaRegiao key={bloco.chave} microrregiaoId={regiao.id} lugar={lugar} titulo={textoDe(bloco.titulo, "Lojas de {lugar}", lugar)} />
+              ) : null;
 
             case "recentes":
               return (
@@ -151,7 +155,7 @@ export default async function Inicio() {
                     vazio={
                       <Vazio
                         titulo="Ainda não tem anúncio por aqui."
-                        texto="Seja o primeiro: anunciar é rápido e você recebe as conversas no WhatsApp."
+                        texto={textoDe(bloco.texto, "Seja o primeiro: anunciar é rápido e você recebe as conversas no WhatsApp.", lugar)}
                       >
                         <Botao href="/anunciar" larguraTotal>
                           Anunciar agora

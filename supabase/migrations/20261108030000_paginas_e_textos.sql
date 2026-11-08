@@ -50,6 +50,8 @@ create unique index documentos_legais_um_ativo on public.documentos_legais (tipo
 
 -- Versão publicada não muda nem some (prova do que a pessoa aceitou). Só liga/desliga
 -- "ativo" e o selo "revisado por advogado". Vale até para a chave secreta.
+-- Exceção: publicado_por pode virar vazio. É o "on delete set null" quando a conta de
+-- quem publicou é apagada (LGPD); sem isso a conta do admin nunca se apagaria.
 create or replace function public.proteger_documento_legal()
 returns trigger language plpgsql
 as $$
@@ -60,7 +62,7 @@ begin
   if new.id is distinct from old.id or new.tipo is distinct from old.tipo or new.versao is distinct from old.versao
      or new.titulo is distinct from old.titulo or new.conteudo is distinct from old.conteudo
      or new.resumo_mudancas is distinct from old.resumo_mudancas or new.publicado_em is distinct from old.publicado_em
-     or new.publicado_por is distinct from old.publicado_por then
+     or (new.publicado_por is distinct from old.publicado_por and new.publicado_por is not null) then
     raise exception 'Versão publicada não muda. Publique uma versão nova.' using errcode = '42501';
   end if;
   return new;
@@ -79,8 +81,9 @@ grant select on public.documentos_legais to anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- 2. Aceites: quem aceitou qual versão
---    O IP fica em logs_atividade (Marco Civil, só o servidor lê). Aqui só um resumo
---    (hash) do IP, que também não sai pela API.
+--    O IP fica só em logs_atividade (Marco Civil, só o servidor lê; o log do INSERT
+--    aponta para a linha do aceite). Aqui não se guarda IP nem resumo dele: um hash
+--    sem segredo do IPv4 se desfaz em minutos, então seria dado pessoal repetido.
 -- ---------------------------------------------------------------------
 create table public.aceites (
   id            uuid primary key default gen_random_uuid(),
@@ -89,7 +92,6 @@ create table public.aceites (
   tipo          text not null check (tipo in ('termos', 'privacidade')),
   versao        integer not null check (versao >= 1),
   aceito_em     timestamptz not null default now(),
-  ip_hash       text,
   unique (usuario_id, documento_id)
 );
 create index aceites_usuario_idx on public.aceites (usuario_id, tipo, versao desc);
@@ -99,8 +101,7 @@ alter table public.aceites enable row level security;
 create policy "aceites leitura" on public.aceites for select
   using (usuario_id = public.usuario_id() or public.e_admin());
 revoke all on public.aceites from anon, authenticated;
--- Leitura por coluna: todas menos ip_hash. Coluna nova nesta tabela precisa entrar nesta lista.
-grant select (id, usuario_id, documento_id, tipo, versao, aceito_em) on public.aceites to authenticated;
+grant select on public.aceites to authenticated;
 
 -- O aceite no perfil (aceitou_termos_em, versao_termos) só a função grava: a pessoa não forja
 -- editando o próprio perfil (nem ao criar).
@@ -217,7 +218,6 @@ declare
   pedidos uuid[];
   novos integer := 0;
   n     integer;
-  ip    inet := public.ip_requisicao();
 begin
   if uid is null then
     raise exception 'Entre na sua conta para aceitar os termos.' using errcode = '42501';
@@ -237,9 +237,8 @@ begin
     if not d.ativo then
       raise exception 'Os termos mudaram agora. Leia a versão nova e aceite de novo.' using errcode = 'P0001';
     end if;
-    insert into public.aceites (usuario_id, documento_id, tipo, versao, ip_hash)
-    values (uid, d.id, d.tipo, d.versao,
-            case when ip is not null then left(encode(sha256(convert_to('olaki-aceite|' || host(ip), 'UTF8')), 'hex'), 32) end)
+    insert into public.aceites (usuario_id, documento_id, tipo, versao)
+    values (uid, d.id, d.tipo, d.versao)
     on conflict (usuario_id, documento_id) do nothing;
     get diagnostics n = row_count;
     novos := novos + n;
@@ -303,7 +302,9 @@ grant insert, update, delete on public.ajuda_categorias, public.ajuda_perguntas 
 -- ---------------------------------------------------------------------
 -- 5. Blocos da página inicial (ordem, ligado e textos)
 --    Busca e categorias ficam sempre no topo. Os blocos são fixos (não se cria nem apaga);
---    os pagos e os "mais recentes" não desligam, só mudam de lugar.
+--    os pagos e os "mais recentes" não desligam, só mudam de lugar. A ordem só muda
+--    pela função mover_bloco_home(), que mantém os pagos acima de "Mais recentes"
+--    (quem pagou destaque aparece no começo da página, não depois de 24 anúncios).
 -- ---------------------------------------------------------------------
 create table public.home_blocos (
   chave          text primary key check (chave in ('destaques', 'lojas_destaque', 'radar', 'lojas_regiao', 'recentes')),
@@ -312,6 +313,7 @@ create table public.home_blocos (
   ordem          integer not null default 0,
   ativo          boolean not null default true,
   pode_desligar  boolean not null default true,
+  pago           boolean not null default false,                   -- lugar vendido (destaques): fica acima de "recentes"
   campos         text[] not null default '{}' check (campos <@ array['titulo', 'texto', 'botao']),  -- textos que o painel edita
   titulo         text check (char_length(btrim(titulo)) between 2 and 80),
   texto          text check (char_length(btrim(texto)) between 2 and 200),
@@ -325,7 +327,7 @@ returns trigger language plpgsql
 as $$
 begin
   new.chave := old.chave;  new.id := old.id;  new.nome := old.nome;
-  new.pode_desligar := old.pode_desligar;  new.campos := old.campos;
+  new.pode_desligar := old.pode_desligar;  new.pago := old.pago;  new.campos := old.campos;
   if not new.ativo and not old.pode_desligar then
     raise exception 'Este bloco não pode ser desligado (tem anúncios pagos ou é a lista principal). Mude só a posição.' using errcode = '22023';
   end if;
@@ -343,15 +345,58 @@ create policy "home blocos leitura" on public.home_blocos for select using (true
 create policy "home blocos admin"   on public.home_blocos for update using (public.e_admin()) with check (public.e_admin());
 revoke all on public.home_blocos from anon, authenticated;
 grant select on public.home_blocos to anon, authenticated;
-grant update (ordem, ativo, titulo, texto, botao, atualizado_por) on public.home_blocos to authenticated;  -- RLS: só admin
+grant update (ativo, titulo, texto, botao, atualizado_por) on public.home_blocos to authenticated;  -- RLS: só admin; ordem só por mover_bloco_home()
 
-insert into public.home_blocos (chave, nome, ordem, ativo, pode_desligar, campos, titulo, texto, botao) values
-  ('destaques',      'Destaques perto de você (pago)', 10, true, false, '{titulo}', 'Destaques perto de você', null, null),
-  ('lojas_destaque', 'Lojas em destaque (pago)',       20, true, false, '{}',       null, null, null),
-  ('radar',          'Faixa do Radar',                 30, true, true,  '{titulo,texto,botao}', 'Não achou o que queria?',
+-- recentes: titulo = título da lista; texto = frase da tela vazia (quando ainda não há anúncio)
+insert into public.home_blocos (chave, nome, ordem, ativo, pode_desligar, pago, campos, titulo, texto, botao) values
+  ('destaques',      'Destaques perto de você (pago)', 10, true, false, true,  '{titulo}', 'Destaques perto de você', null, null),
+  ('lojas_destaque', 'Lojas em destaque (pago)',       20, true, false, true,  '{titulo}', 'Lojas em destaque', null, null),
+  ('radar',          'Faixa do Radar',                 30, true, true,  false, '{titulo,texto,botao}', 'Não achou o que queria?',
                      'Diga o que procura no Radar e as lojas da região te chamam.', 'Pedir no Radar'),
-  ('lojas_regiao',   'Lojas da região',                40, true, true,  '{}',       null, null, null),
-  ('recentes',       'Mais recentes',                  50, true, false, '{titulo}', 'Mais recentes em {lugar}', null, null);
+  ('lojas_regiao',   'Lojas da região',                40, true, true,  false, '{titulo}', 'Lojas de {lugar}', null, null),
+  ('recentes',       'Mais recentes',                  50, true, false, false, '{titulo,texto}', 'Mais recentes em {lugar}',
+                     'Seja o primeiro: anunciar é rápido e você recebe as conversas no WhatsApp.', null);
+
+-- Painel: sobe ou desce um bloco (troca com o vizinho), tudo de uma vez e com trava.
+-- Recusa deixar um bloco pago abaixo de "Mais recentes". Devolve 'ok' ou 'ponta'.
+create or replace function public.mover_bloco_home(p_chave text, p_direcao text)
+returns text language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare
+  lista text[];
+  i     integer;
+  j     integer;
+  tmp   text;
+  k     integer;
+begin
+  if not public.e_admin() then
+    raise exception 'Só a equipe do OLAKI muda a página inicial.' using errcode = '42501';
+  end if;
+  if coalesce(p_direcao, '') not in ('subir', 'descer') then
+    raise exception 'Direção inválida.' using errcode = '22023';
+  end if;
+  perform 1 from public.home_blocos for update;   -- dois cliques ao mesmo tempo não embaralham
+  select array_agg(chave order by ordem, chave) into lista from public.home_blocos;
+  i := array_position(lista, p_chave);
+  if i is null then
+    raise exception 'Bloco inválido.' using errcode = '22023';
+  end if;
+  j := i + case when p_direcao = 'subir' then -1 else 1 end;
+  if j < 1 or j > cardinality(lista) then
+    return 'ponta';
+  end if;
+  tmp := lista[i];  lista[i] := lista[j];  lista[j] := tmp;
+  if exists (select 1 from public.home_blocos b
+              where b.pago and array_position(lista, b.chave) > array_position(lista, 'recentes')) then
+    raise exception 'Os blocos pagos ficam acima de "Mais recentes": quem pagou destaque aparece no começo da página.' using errcode = '22023';
+  end if;
+  for k in 1 .. cardinality(lista) loop
+    update public.home_blocos set ordem = k * 10, atualizado_por = public.usuario_id()
+     where chave = lista[k] and ordem <> k * 10;
+  end loop;
+  return 'ok';
+end $$;
 
 -- ---------------------------------------------------------------------
 -- 6. Anúncio que saiu do ar (T44): só a categoria, para mostrar parecidos
@@ -657,12 +702,13 @@ end $$;
 -- Painel (a função confere e_admin() por dentro)
 revoke all on function public.publicar_documento_legal(text, text, text, text, boolean) from public, anon;
 revoke all on function public.marcar_documento_revisado(uuid, boolean) from public, anon;
+revoke all on function public.mover_bloco_home(text, text) from public, anon;
 -- Pessoa logada (a função usa o usuario_id() do token)
 revoke all on function public.termos_pendentes() from public, anon;
 revoke all on function public.aceitar_documentos_legais(uuid[]) from public, anon;
 grant execute on function
   public.publicar_documento_legal(text, text, text, text, boolean), public.marcar_documento_revisado(uuid, boolean),
-  public.termos_pendentes(), public.aceitar_documentos_legais(uuid[])
+  public.termos_pendentes(), public.aceitar_documentos_legais(uuid[]), public.mover_bloco_home(text, text)
   to authenticated;
 -- Público por desenho (devolve só a categoria)
 revoke all on function public.anuncio_fora_do_ar(uuid) from public;

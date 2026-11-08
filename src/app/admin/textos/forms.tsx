@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Loader2 } from "lucide-react";
 import { Aviso, estiloBotao, estiloBotaoPerigo, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { Markdown } from "@/components/paginas/markdown";
 import type { AjudaCategoria, AjudaPergunta, BlocoHome } from "@/lib/tipos-paginas";
+import { enviarSemLimpar } from "./enviar-sem-limpar";
 import { apagarCategoria, apagarPergunta, moverBloco, salvarBloco, salvarCategoria, salvarPergunta } from "./actions";
 
 // Formulários da tela 12 (Página inicial e textos). Cada botão mostra "Salvando…" e trava
@@ -36,9 +37,17 @@ export function FormPergunta({ pergunta, categorias }: { pergunta?: AjudaPergunt
   const [resposta, setResposta] = useState(pergunta?.resposta ?? "");
   const [previa, setPrevia] = useState(false);
   const id = pergunta?.id ?? "nova";
+  const ref = useRef<HTMLFormElement>(null);
+  // pergunta nova: depois de criar, o formulário volta em branco (só quando deu certo)
+  useEffect(() => {
+    if (estado?.ok && !pergunta) {
+      ref.current?.reset();
+      setResposta("");
+    }
+  }, [estado, pergunta]);
   return (
     <div className="space-y-3">
-      <form action={acao} className="space-y-3">
+      <form ref={ref} onSubmit={enviarSemLimpar(acao)} className="space-y-3">
         {pergunta && <input type="hidden" name="id" value={pergunta.id} />}
         <div>
           <label htmlFor={`cat-${id}`} className={rotulo}>
@@ -127,9 +136,13 @@ export function FormCategoria({ categoria, quantas }: { categoria?: AjudaCategor
   const [estado, acao, pendente] = useActionState(salvarCategoria, null);
   const [apagado, apagar, apagando] = useActionState(apagarCategoria, null);
   const id = categoria?.slug ?? "novo";
+  const ref = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (estado?.ok && !categoria) ref.current?.reset();
+  }, [estado, categoria]);
   return (
     <div className="space-y-3">
-      <form action={acao} className="space-y-3">
+      <form ref={ref} onSubmit={enviarSemLimpar(acao)} className="space-y-3">
         {categoria && <input type="hidden" name="original" value={categoria.slug} />}
         <div>
           <label htmlFor={`cnome-${id}`} className={rotulo}>
@@ -184,12 +197,16 @@ export function FormCategoria({ categoria, quantas }: { categoria?: AjudaCategor
 /* ---------------------------- Página inicial ----------------------------- */
 
 const NOMES_CAMPO = { titulo: "Título", texto: "Texto", botao: "Texto do botão" } as const;
+// nome do campo quando ele quer dizer outra coisa naquele bloco
+const NOMES_CAMPO_BLOCO: Partial<Record<BlocoHome["chave"], Partial<Record<keyof typeof NOMES_CAMPO, string>>>> = {
+  recentes: { texto: "Frase quando ainda não tem anúncio" },
+};
 const MAX_CAMPO = { titulo: 80, texto: 200, botao: 30 } as const;
 
 export function FormBloco({ bloco }: { bloco: BlocoHome }) {
   const [estado, acao, pendente] = useActionState(salvarBloco, null);
   return (
-    <form action={acao} className="space-y-3">
+    <form onSubmit={enviarSemLimpar(acao)} className="space-y-3">
       <input type="hidden" name="chave" value={bloco.chave} />
       {/* bloco que não desliga: o campo vai marcado (o navegador não envia checkbox desativado) */}
       {!bloco.pode_desligar && <input type="hidden" name="ativo" value="on" />}
@@ -203,7 +220,7 @@ export function FormBloco({ bloco }: { bloco: BlocoHome }) {
       {bloco.campos.map((c) => (
         <div key={c}>
           <label htmlFor={`${bloco.chave}-${c}`} className={rotulo}>
-            {NOMES_CAMPO[c]}
+            {NOMES_CAMPO_BLOCO[bloco.chave]?.[c] ?? NOMES_CAMPO[c]}
           </label>
           <input id={`${bloco.chave}-${c}`} name={c} defaultValue={bloco[c] ?? ""} maxLength={MAX_CAMPO[c]} className={estiloCampo} />
         </div>
@@ -224,7 +241,7 @@ export function FormBloco({ bloco }: { bloco: BlocoHome }) {
 export function MoverBloco({ chave, primeiro, ultimo }: { chave: string; primeiro: boolean; ultimo: boolean }) {
   const [estado, acao, pendente] = useActionState(moverBloco, null);
   return (
-    <form action={acao} className="flex items-center gap-1">
+    <form onSubmit={enviarSemLimpar(acao)} className="flex flex-wrap items-center gap-1">
       <input type="hidden" name="chave" value={chave} />
       <button
         name="direcao"
@@ -243,7 +260,11 @@ export function MoverBloco({ chave, primeiro, ultimo }: { chave: string; primeir
         <ArrowDown className="size-4" aria-hidden /> Descer
       </button>
       {pendente && <Girando />}
-      {estado?.erro && <span className="text-sm text-perigo">{estado.erro}</span>}
+      {estado?.erro && (
+        <span role="alert" className="basis-full text-sm text-perigo">
+          {estado.erro}
+        </span>
+      )}
     </form>
   );
 }

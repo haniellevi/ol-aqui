@@ -12,7 +12,7 @@ Tipos: `src/lib/tipos-paginas.ts` · Leituras: `src/lib/dados/paginas.ts` · Aç
 | Tabela | Para que serve | Quem lê | Quem grava |
 |---|---|---|---|
 | `documentos_legais` | Termos de uso e política de privacidade, **uma linha por versão**: `tipo` (`termos` ou `privacidade`), `versao` (1, 2, 3...), `titulo`, `conteudo` (markdown simples), `resumo_mudancas`, `revisado_advogado` (falso = RASCUNHO), `ativo`, `publicado_em`, `publicado_por` | todos (versões antigas ficam visíveis, transparência) | só `publicar_documento_legal()` e `marcar_documento_revisado()` (admin). Nenhum INSERT/UPDATE/DELETE direto |
-| `aceites` | quem aceitou qual versão: `usuario_id`, `tipo`, `versao`, `documento_id`, `aceito_em`, `criado_ip` | a própria pessoa e o admin (o IP fica fora da API: leitura por coluna, só o servidor lê) | só `aceitar_documentos_legais()` |
+| `aceites` | quem aceitou qual versão: `usuario_id`, `tipo`, `versao`, `documento_id`, `aceito_em` (sem IP) | a própria pessoa e o admin (o IP fica só em `logs_atividade`, que só o servidor lê) | só `aceitar_documentos_legais()` |
 | `ajuda_categorias` | grupos da Central de ajuda: `slug`, `nome`, `descricao`, `ordem`, `ativa` | todos (só as ativas; admin vê todas) | admin |
 | `ajuda_perguntas` | artigos da ajuda: `categoria` (slug), `pergunta`, `resposta` (markdown simples), `ordem`, `ativo` | todos (só ativos de categoria ativa; admin vê tudo) | admin |
 | `home_blocos` | blocos da página inicial que podem mudar de ordem: `chave` (`destaques`, `lojas_destaque`, `radar`, `lojas_regiao`, `recentes`), `nome`, `ordem`, `ativo`, `pode_desligar`, `titulo`, `texto`, `botao` | todos | admin, só UPDATE (os blocos são fixos; o trigger não deixa trocar a chave nem desligar bloco travado) |
@@ -72,13 +72,24 @@ o aceite editando o próprio perfil; só a função grava.
 
 - **Sem service worker** para o "Sem internet": um service worker com login (Clerk) e páginas dinâmicas pode guardar
   página velha ou de outra pessoa. Ficou o aviso no navegador (`AvisoSemInternet`), que é simples e seguro.
-- **IP do aceite:** o IP puro já vai para `logs_atividade` (Marco Civil, só o servidor lê). Em `aceites` fica só um
-  resumo (sha256) e nem ele sai pela API. Observação: quando o aceite vem pelo servidor do site (server action), o IP
+- **IP do aceite:** o IP fica só em `logs_atividade` (Marco Civil, só o servidor lê; o log do INSERT aponta para a
+  linha do aceite). Em `aceites` não guardamos IP nem hash dele: um hash sem segredo do IPv4 se desfaz em minutos,
+  então seria dado pessoal repetido. Observação: quando o aceite vem pelo servidor do site (server action), o IP
   que o banco enxerga é o do servidor da Vercel, igual às outras ações do site.
 - **/entrar/perfil** cobre só a parte dos termos da T13 (nome e cidade já ficam em Minha conta > Meus dados). Quem
   toca em "Agora não" continua usando o site e vê a faixa depois (não bloqueia).
 - **Blocos da home:** busca e categorias ficam fixos no topo; os 5 blocos seguintes mudam de ordem. Os pagos
-  (`destaques`, `lojas_destaque`) e o `recentes` não desligam, para quem pagou continuar aparecendo.
+  (`destaques`, `lojas_destaque`, coluna `pago`) e o `recentes` não desligam, para quem pagou continuar aparecendo.
+  A ordem só muda pela função `mover_bloco_home()` (de uma vez, com trava), que recusa deixar um bloco pago abaixo
+  de "Mais recentes" (24 anúncios): quem pagou destaque aparece no começo da página.
+- **Textos da home no painel:** título de todos os blocos, texto e botão da faixa do Radar e a frase da tela vazia
+  dos "Mais recentes". Os botões da tela vazia ("Anunciar agora", "Pedir no Radar") são nomes de ação do site e
+  ficam fixos, iguais aos do resto das telas.
+- **Banners da home (tela 12):** fora desta etapa. O lugar de banner pago na home já é a "Vitrine da página inicial"
+  (destaques, com vagas, preço e rodízio no painel de Destaques). Banner livre (imagem com link) pede regra de
+  "Patrocinado", tamanho de imagem e moderação próprios; fica para uma etapa futura, se a equipe pedir.
+- **Conta de admin apagada:** `documentos_legais.publicado_por` vira vazio (on delete set null). A trava de versão
+  publicada aceita só essa mudança, para a conta (e os aceites dela) sair de verdade (LGPD).
 - **Anúncio fora do ar** devolve só a categoria (sem título e sem vendedor), porque o dono escolheu tirar do ar.
 - **Textos legais semeados** são RASCUNHO honesto para o piloto, com campos "[a preencher pela equipe: razão social,
   CNPJ, endereço, encarregado]". Um advogado precisa revisar antes de divulgar o site.

@@ -69,6 +69,8 @@ export type BlocoHome = {
   ordem: number;
   ativo: boolean;
   pode_desligar: boolean;
+  /** lugar vendido (destaques): fica sempre acima de "Mais recentes" */
+  pago: boolean;
   campos: CampoBlocoHome[];
   titulo: string | null;
   texto: string | null;

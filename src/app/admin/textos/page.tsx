@@ -226,7 +226,7 @@ async function AbaTermos({ supabase, tipo }: { supabase: Db; tipo: TipoDocumento
 async function AbaInicio({ supabase }: { supabase: Db }) {
   const { data, error } = await supabase
     .from("home_blocos")
-    .select("chave, nome, ordem, ativo, pode_desligar, campos, titulo, texto, botao")
+    .select("chave, nome, ordem, ativo, pode_desligar, pago, campos, titulo, texto, botao")
     .order("ordem")
     .order("chave");
   const blocos = (data ?? []) as BlocoHome[];
@@ -235,13 +235,14 @@ async function AbaInicio({ supabase }: { supabase: Db }) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-texto-suave">
-        A busca e as categorias ficam sempre no topo. Os blocos abaixo aparecem nesta ordem. Os anúncios pagos continuam com a palavra Patrocinado.
+        A busca e as categorias ficam sempre no topo. Os blocos abaixo aparecem nesta ordem. Os anúncios pagos continuam com a palavra Patrocinado. Os blocos pagos ficam sempre acima de &quot;Mais recentes&quot;, para quem pagou aparecer no começo da página.
       </p>
       {blocos.map((b, i) => (
         <Cartao key={b.chave} className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold text-beringela">
               {i + 1}. {b.nome}
+              {b.pago && <span className="ml-2 rounded-full bg-patrocinado-fundo px-2 text-[13px] font-semibold text-beringela">pago</span>}
               {!b.ativo && <span className="ml-2 rounded-full bg-aviso-fundo px-2 text-[13px] font-semibold text-aviso">desligado</span>}
             </h2>
             <MoverBloco chave={b.chave} primeiro={i === 0} ultimo={i === blocos.length - 1} />

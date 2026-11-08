@@ -174,27 +174,17 @@ export async function salvarBloco(_: EstadoForm, form: FormData): Promise<Estado
   }
 }
 
-/** Sobe ou desce um bloco (troca a posição com o vizinho). */
+/** Sobe ou desce um bloco (troca a posição com o vizinho). Tudo de uma vez no banco
+ *  (mover_bloco_home), que não deixa bloco pago abaixo de "Mais recentes". */
 export async function moverBloco(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   try {
-    const { supabase, userId } = await exigirAdmin();
+    const { supabase } = await exigirAdmin();
     const chave = txt(form, "chave") as ChaveBlocoHome;
-    const direcao = txt(form, "direcao") === "subir" ? -1 : 1;
-    const { data, error } = await supabase.from("home_blocos").select("chave, ordem").order("ordem").order("chave");
-    if (error || !data) return { erro: traduzirErro(error).mensagem };
-    // posições 10, 20, 30... (arruma empates antigos) e troca com o vizinho
-    const lista = (data as { chave: ChaveBlocoHome; ordem: number }[]).map((b) => b.chave);
-    const i = lista.indexOf(chave);
-    const j = i + direcao;
-    if (i < 0 || j < 0 || j >= lista.length) return { ok: "Já está na ponta." };
-    [lista[i], lista[j]] = [lista[j], lista[i]];
-    for (const [pos, c] of lista.entries()) {
-      const atual = (data as { chave: string; ordem: number }[]).find((b) => b.chave === c)?.ordem;
-      const nova = (pos + 1) * 10;
-      if (atual === nova) continue;
-      const { error: e } = await supabase.from("home_blocos").update({ ordem: nova, atualizado_por: userId }).eq("chave", c);
-      if (e) return { erro: traduzirErro(e).mensagem };
-    }
+    if (!CHAVES_HOME.includes(chave)) return { erro: "Bloco inválido." };
+    const direcao = txt(form, "direcao") === "subir" ? "subir" : "descer";
+    const { data, error } = await supabase.rpc("mover_bloco_home", { p_chave: chave, p_direcao: direcao });
+    if (error) return { erro: traduzirErro(error).mensagem };
+    if (data === "ponta") return { ok: "Já está na ponta." };
     revalidatePath("/admin/textos");
     revalidatePath("/");
     return { ok: "Ordem salva." };

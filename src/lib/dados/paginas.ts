@@ -144,11 +144,11 @@ export async function precosDestaqueAjuda(microrregiaoId: string | null): Promis
 
 /** Blocos da página inicial na ordem do painel. Sem banco: a ordem de sempre, com os textos de sempre. */
 const BLOCOS_PADRAO: BlocoHome[] = [
-  { chave: "destaques", nome: "", ordem: 10, ativo: true, pode_desligar: false, campos: ["titulo"], titulo: null, texto: null, botao: null },
-  { chave: "lojas_destaque", nome: "", ordem: 20, ativo: true, pode_desligar: false, campos: [], titulo: null, texto: null, botao: null },
-  { chave: "radar", nome: "", ordem: 30, ativo: true, pode_desligar: true, campos: ["titulo", "texto", "botao"], titulo: null, texto: null, botao: null },
-  { chave: "lojas_regiao", nome: "", ordem: 40, ativo: true, pode_desligar: true, campos: [], titulo: null, texto: null, botao: null },
-  { chave: "recentes", nome: "", ordem: 50, ativo: true, pode_desligar: false, campos: ["titulo"], titulo: null, texto: null, botao: null },
+  { chave: "destaques", nome: "", ordem: 10, ativo: true, pode_desligar: false, pago: true, campos: ["titulo"], titulo: null, texto: null, botao: null },
+  { chave: "lojas_destaque", nome: "", ordem: 20, ativo: true, pode_desligar: false, pago: true, campos: ["titulo"], titulo: null, texto: null, botao: null },
+  { chave: "radar", nome: "", ordem: 30, ativo: true, pode_desligar: true, pago: false, campos: ["titulo", "texto", "botao"], titulo: null, texto: null, botao: null },
+  { chave: "lojas_regiao", nome: "", ordem: 40, ativo: true, pode_desligar: true, pago: false, campos: ["titulo"], titulo: null, texto: null, botao: null },
+  { chave: "recentes", nome: "", ordem: 50, ativo: true, pode_desligar: false, pago: false, campos: ["titulo", "texto"], titulo: null, texto: null, botao: null },
 ];
 
 export async function blocosHome(): Promise<BlocoHome[]> {
@@ -156,7 +156,7 @@ export async function blocosHome(): Promise<BlocoHome[]> {
     const db = await createClient();
     const { data, error } = await db
       .from("home_blocos")
-      .select("chave, nome, ordem, ativo, pode_desligar, campos, titulo, texto, botao")
+      .select("chave, nome, ordem, ativo, pode_desligar, pago, campos, titulo, texto, botao")
       .order("ordem")
       .order("chave");
     return error ? null : ((data ?? []) as BlocoHome[]);

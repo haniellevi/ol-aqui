@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Aviso, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { Markdown } from "@/components/paginas/markdown";
 import { contarMudancas, diffLinhas, type LinhaDiff } from "@/lib/diff-linhas";
 import { NOME_DOCUMENTO, type DocumentoLegal, type TipoDocumento } from "@/lib/tipos-paginas";
 import { marcarRevisado, publicarDocumento } from "./actions";
+import { enviarSemLimpar } from "./enviar-sem-limpar";
 
 // Publicar uma versão nova dos termos ou da privacidade: edita o texto, confere a diferença com a
 // versão no ar (linha a linha) e a prévia, e confirma. A versão anterior continua guardada e pública.
@@ -44,6 +45,18 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
   const [conteudo, setConteudo] = useState(atual?.conteudo ?? "");
   const [ver, setVer] = useState<"nada" | "diferencas" | "previa">("nada");
   const [confirmar, setConfirmar] = useState(false);
+  const [resumo, setResumo] = useState("");
+  const [revisado, setRevisado] = useState(false);
+  // deu erro: volta para antes da confirmação (a pessoa confere e confirma de novo);
+  // deu certo: limpa "o que mudou" e o selo para a próxima versão
+  useEffect(() => {
+    if (estado?.erro) setConfirmar(false);
+    if (estado?.ok) {
+      setConfirmar(false);
+      setResumo("");
+      setRevisado(false);
+    }
+  }, [estado]);
 
   const linhas = useMemo(() => (ver === "diferencas" || confirmar ? diffLinhas(atual?.conteudo ?? "", conteudo) : []), [ver, confirmar, atual?.conteudo, conteudo]);
   const mudancas = contarMudancas(linhas);
@@ -51,13 +64,21 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
   const proxima = (atual?.versao ?? 0) + 1;
 
   return (
-    <form action={acao} className="space-y-4">
+    <form onSubmit={enviarSemLimpar(acao)} className="space-y-4">
       <input type="hidden" name="tipo" value={tipo} />
       <div>
         <label htmlFor={`titulo-${tipo}`} className={rotulo}>
           Título
         </label>
-        <input id={`titulo-${tipo}`} name="titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={120} required className={estiloCampo} />
+        <input
+          id={`titulo-${tipo}`}
+          name="titulo"
+          value={titulo}
+          onChange={(e) => {
+            setTitulo(e.target.value);
+            setConfirmar(false);
+          }}
+          minLength={3} maxLength={120} required className={estiloCampo} />
       </div>
       <div>
         <label htmlFor={`texto-${tipo}`} className={rotulo}>
@@ -84,10 +105,15 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
         <label htmlFor={`resumo-${tipo}`} className={rotulo}>
           O que mudou (aparece no aviso para as pessoas)
         </label>
-        <input id={`resumo-${tipo}`} name="resumo" maxLength={500} placeholder="Ex.: Explicamos melhor como apagar a conta." className={estiloCampo} />
+        <input
+          id={`resumo-${tipo}`}
+          name="resumo"
+          value={resumo}
+          onChange={(e) => setResumo(e.target.value)}
+          maxLength={500} placeholder="Ex.: Explicamos melhor como apagar a conta." className={estiloCampo} />
       </div>
       <label className="flex min-h-12 items-center gap-3 text-base text-beringela">
-        <input type="checkbox" name="revisado" className="size-5 accent-laranja-escuro" />
+        <input type="checkbox" name="revisado" checked={revisado} onChange={(e) => setRevisado(e.target.checked)} className="size-5 accent-laranja-escuro" />
         <span>
           Um advogado revisou este texto
           <span className="block text-[13px] text-texto-suave">Deixe desmarcado se ninguém revisou: a versão fica marcada como RASCUNHO no painel.</span>
@@ -123,7 +149,7 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
       {igual && <p className="text-sm text-texto-suave">O texto está igual ao que está no ar. Mude alguma coisa para publicar.</p>}
 
       {!confirmar ? (
-        <button type="button" disabled={igual || conteudo.trim().length < 50} className={estiloBotao} onClick={() => setConfirmar(true)}>
+        <button type="button" disabled={igual || conteudo.trim().length < 50 || titulo.trim().length < 3} className={estiloBotao} onClick={() => setConfirmar(true)}>
           Publicar versão {proxima}
         </button>
       ) : (

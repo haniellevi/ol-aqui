@@ -24,13 +24,24 @@ async function lerLojas(microrregiaoId: string, limite: number): Promise<Vitrine
   }, []);
 }
 
-export async function LojasDaRegiao({ microrregiaoId, lugar, limite = 12 }: { microrregiaoId: string; lugar: string; limite?: number }) {
+export async function LojasDaRegiao({
+  microrregiaoId,
+  lugar,
+  limite = 12,
+  titulo,
+}: {
+  microrregiaoId: string;
+  lugar: string;
+  limite?: number;
+  /** vem do painel (tela 12, home_blocos); sem ele, "Lojas de {lugar}" */
+  titulo?: string;
+}) {
   const lojas = await lerLojas(microrregiaoId, limite);
   if (!lojas.length) return null;
   return (
     <section aria-labelledby="titulo-lojas" className="flex flex-col gap-3">
       <h2 id="titulo-lojas" className="text-lg font-semibold">
-        Lojas de {lugar}
+        {titulo ?? `Lojas de ${lugar}`}
       </h2>
       <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
         {lojas.map((l) => (

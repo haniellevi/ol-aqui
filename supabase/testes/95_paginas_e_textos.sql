@@ -37,7 +37,7 @@ insert into documentos_legais (tipo, versao, titulo, conteudo, ativo) values ('t
 set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_a95',false) \g /dev/null
 select tipo, versao, primeira_vez from termos_pendentes();
 
-\echo '[4] aceita os dois (2 novos); repetir nao duplica (0); perfil guarda a versao; hash do IP guardado, nunca o IP puro'
+\echo '[4] aceita os dois (2 novos); repetir nao duplica (0); perfil guarda a versao; aceites sem IP (coluna ip_hash nao existe); o IP fica no log'
 select set_config('request.headers', '{"x-forwarded-for": "200.1.2.3"}', false) \g /dev/null
 select aceitar_documentos_legais(array[:'termos_v1', :'priv_v1']::uuid[]) as aceites_novos;
 select aceitar_documentos_legais(array[:'termos_v1', :'priv_v1']::uuid[]) as repetido;
@@ -45,13 +45,13 @@ select count(*) as pendentes_depois from termos_pendentes();
 select set_config('request.headers', '', false) \g /dev/null
 reset role;
 select versao_termos, aceitou_termos_em is not null as tem_data from perfis where id='user_a95';
-select count(*) as aceites, bool_and(ip_hash ~ '^[0-9a-f]{32}$') as hash_ok, bool_and(ip_hash not like '%200.1.2.3%') as sem_ip_puro
-  from aceites where usuario_id='user_a95';
+select count(*) as aceites from aceites where usuario_id='user_a95';
+select count(*) as colunas_de_ip_em_aceites from information_schema.columns where table_schema='public' and table_name='aceites' and column_name in ('ip', 'ip_hash', 'criado_ip');
+select count(*) as logs_com_ip from logs_atividade where tabela='aceites' and usuario_id='user_a95' and ip = '200.1.2.3'::inet;
 
-\echo '[5] a pessoa ve os proprios aceites mas nao o hash do IP (ERRO esperado: permission denied); outra pessoa nao ve os dela'
+\echo '[5] a pessoa ve os proprios aceites; outra pessoa nao ve os dela'
 set role authenticated; select set_config('request.jwt.claim.sub','user_a95',false) \g /dev/null
 select tipo, versao from aceites order by tipo desc;
-select ip_hash from aceites;
 select set_config('request.jwt.claim.sub','user_b95',false) \g /dev/null
 select count(*) as aceites_de_outra_pessoa from aceites where usuario_id='user_a95';
 
@@ -131,13 +131,13 @@ select set_config('request.jwt.claim.sub','user_adm95',false) \g /dev/null
 delete from ajuda_categorias where slug='seguranca';
 insert into ajuda_perguntas (categoria, pergunta, resposta) values ('comprar', 'Oi', 'Resposta de teste.');
 
-\echo '[16] home: visitante le os blocos; nao admin nao muda (0 linhas); admin muda ordem e textos (no log)'
+\echo '[16] home: visitante le os blocos; nao admin nao muda (0 linhas); admin muda textos (no log)'
 set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
 select count(*) as blocos_visiveis from home_blocos;
 set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_b95',false) \g /dev/null
-with x as (update home_blocos set ordem=1 where chave='radar' returning 1) select count(*) as mudou_por_nao_admin from x;
+with x as (update home_blocos set titulo='Golpe aqui' where chave='radar' returning 1) select count(*) as mudou_por_nao_admin from x;
 select set_config('request.jwt.claim.sub','user_adm95',false) \g /dev/null
-update home_blocos set ordem=5, titulo='  Procurando algo?  ', botao='' where chave='radar';
+update home_blocos set titulo='  Procurando algo?  ', botao='' where chave='radar';
 reset role;
 select chave, ordem, titulo, botao from home_blocos where chave='radar';
 select count(*) as logs_home from logs_atividade where tabela='home_blocos' and usuario_id='user_adm95';
@@ -176,6 +176,46 @@ delete from perfis where id='user_x95';
 select count(*) as aceites_da_conta_apagada from aceites where usuario_id='user_x95';
 select count(*) as versoes_continuam from documentos_legais;
 
+\echo '[19b] conta de admin que publicou uma versao se apaga (LGPD): publicado_por vira vazio, a versao continua igual'
+insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values ('user_admx95',:'reg','Admin Que Sai','5589999995005','Corrente','pf');
+update perfis set e_admin=true where id='user_admx95';
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_admx95',false) \g /dev/null
+select (publicar_documento_legal('privacidade', 'Política de privacidade do OLAKI', (select conteudo from documentos_legais where tipo='privacidade' and ativo) || E'\n\nMudança de teste 19b.', 'Teste 19b')).id as priv_admx \gset
+select aceitar_documentos_legais(array[:'priv_admx']::uuid[]) as aceite_admx;
+reset role;
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+delete from perfis where id='user_admx95';
+reset role;
+select count(*) as admin_ainda_existe from perfis where id='user_admx95';
+select count(*) as aceites_do_admin from aceites where usuario_id='user_admx95';
+select versao, ativo, publicado_por is null as autor_vazio, resumo_mudancas from documentos_legais where id=:'priv_admx';
+
+\echo '[19c] trocar o autor por outra pessoa continua proibido, ate para a chave secreta (ERRO esperado: nao muda)'
+update documentos_legais set publicado_por='user_a95' where id=:'priv_admx';
+select publicado_por is null as autor_continua_vazio from documentos_legais where id=:'priv_admx';
+
+\echo '[19d] ordem da home: admin sobe/desce pela funcao (no log); nao admin e visitante nao (2 ERROS esperados: So a equipe / permission denied); ordem direta pela API nao (ERRO esperado: permission denied); recentes acima de bloco pago e bloco pago abaixo de recentes nao (2 ERROS esperados: blocos pagos ficam acima); trava pago nao muda; direcao/bloco invalido (2 ERROS esperados)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_adm95',false) \g /dev/null
+select mover_bloco_home('radar', 'subir') as subiu_radar;
+select mover_bloco_home('destaques', 'subir') as ja_na_ponta;
+select chave, ordem from home_blocos order by ordem;
+select mover_bloco_home('recentes', 'subir') as recentes_sobe;
+select mover_bloco_home('recentes', 'subir') as recentes_sobe_de_novo;
+select mover_bloco_home('lojas_destaque', 'descer');
+select mover_bloco_home('radar', 'para-o-lado');
+select mover_bloco_home('banner', 'subir');
+update home_blocos set ordem=99 where chave='destaques';
+select set_config('request.jwt.claim.sub','user_b95',false) \g /dev/null
+select mover_bloco_home('radar', 'descer');
+set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select mover_bloco_home('radar', 'descer');
+reset role;
+select chave, ordem, pago from home_blocos order by ordem;
+select count(*) > 0 as logs_ordem from logs_atividade where tabela='home_blocos' and usuario_id='user_adm95' and acao='UPDATE';
+update home_blocos set pago=false where chave='destaques';
+select pago as pago_continua from home_blocos where chave='destaques';
+update home_blocos set ordem = case chave when 'destaques' then 10 when 'lojas_destaque' then 20 when 'radar' then 30 when 'lojas_regiao' then 40 else 50 end;
+
 \echo '[20] endurecimento: RLS ligada, quem chama cada funcao, gatilhos fora da API'
 select relname, relrowsecurity from pg_class where relname in ('documentos_legais','aceites','ajuda_categorias','ajuda_perguntas','home_blocos') order by relname;
 select has_function_privilege('anon', 'termos_pendentes()', 'execute') as anon_pendentes,
@@ -183,9 +223,10 @@ select has_function_privilege('anon', 'termos_pendentes()', 'execute') as anon_p
        has_function_privilege('anon', 'publicar_documento_legal(text,text,text,text,boolean)', 'execute') as anon_publica,
        has_function_privilege('authenticated', 'aceitar_documentos_legais(uuid[])', 'execute') as logado_aceita,
        has_function_privilege('anon', 'anuncio_fora_do_ar(uuid)', 'execute') as anon_fora_do_ar,
+       has_function_privilege('anon', 'mover_bloco_home(text,text)', 'execute') as anon_move_bloco,
        has_function_privilege('authenticated', 'proteger_aceite_perfil()', 'execute') as logado_chama_gatilho,
        has_function_privilege('authenticated', 'proteger_home_bloco()', 'execute') as logado_chama_gatilho_home;
 select count(*) as funcoes_novas_sem_search_path from pg_proc p join pg_namespace n on n.oid=p.pronamespace
  where n.nspname='public' and p.proname in ('publicar_documento_legal','marcar_documento_revisado','termos_pendentes','aceitar_documentos_legais',
-                                            'anuncio_fora_do_ar','proteger_documento_legal','proteger_aceite_perfil','proteger_home_bloco')
+                                            'anuncio_fora_do_ar','mover_bloco_home','proteger_documento_legal','proteger_aceite_perfil','proteger_home_bloco')
    and not exists (select 1 from unnest(coalesce(p.proconfig,'{}')) c where c like 'search_path=%');
