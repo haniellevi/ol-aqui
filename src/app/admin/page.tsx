@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { exigirAdmin } from "@/lib/admin/auth";
+import { redirect } from "next/navigation";
+import { exigirEquipe } from "@/lib/admin/equipe";
+import { primeiraTela } from "@/lib/tipos-equipe";
 import { inteiro, reais } from "@/lib/admin/formato";
 import { Cartao, Numero, Titulo } from "@/components/admin/ui";
 
@@ -8,7 +10,9 @@ export const metadata = { title: "Resumo" };
 type Vitrine = { plano: string; status: string; teste_expira_em: string; plano_expira_em: string | null };
 
 export default async function ResumoPage() {
-  const { supabase } = await exigirAdmin();
+  // O Resumo (dinheiro de todas as regiões) é só do administrador; os outros papéis vão para a tela deles.
+  const { supabase, papel } = await exigirEquipe();
+  if (papel !== "administrador") redirect(primeiraTela(papel));
   const agora = new Date();
   const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
   const contar = (q: PromiseLike<{ count: number | null }>) => q.then((r) => r.count ?? 0);

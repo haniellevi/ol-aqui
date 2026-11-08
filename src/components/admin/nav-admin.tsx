@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bot, FileText, LayoutDashboard, MessageSquareText, Receipt, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags } from "lucide-react";
+import { BarChart3, Bot, FileText, FolderTree, LayoutDashboard, MapPinned, MessageSquareText, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
+import { podeVerLink, type Papel } from "@/lib/tipos-equipe";
 
 const ITENS = [
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
@@ -15,12 +16,18 @@ const ITENS = [
   { href: "/admin/destaques", rotulo: "Destaques", icone: Sparkles },
   { href: "/admin/robo", rotulo: "Robô Aki", curto: "Aki", icone: Bot },
   { href: "/admin/textos", rotulo: "Página inicial e textos", curto: "Textos", icone: FileText },
+  { href: "/admin/regioes", rotulo: "Regiões e cidades", curto: "Regiões", icone: MapPinned },
+  { href: "/admin/categorias", rotulo: "Categorias e campos", curto: "Categ.", icone: FolderTree },
+  { href: "/admin/equipe", rotulo: "Equipe e permissões", curto: "Equipe", icone: UsersRound },
+  { href: "/admin/compliance", rotulo: "Compliance jurídico", curto: "Jurídico", icone: Scale },
   { href: "/admin/mensagens", rotulo: "Mensagens automáticas", curto: "Mensagens", icone: MessageSquareText },
   { href: "/admin/relatorios", rotulo: "Relatórios", icone: BarChart3 },
 ];
 
-export function NavAdmin({ pendencias }: { pendencias: number }) {
+/** `papel`: o menu mostra só as telas que o papel usa (tela 14). Link sem regra = só administrador. */
+export function NavAdmin({ pendencias, papel }: { pendencias: number; papel: Papel }) {
   const atual = usePathname();
+  const itens = ITENS.filter((i) => podeVerLink(papel, i.href));
   const barra = useRef<HTMLElement>(null);
   // No celular a barra rola de lado: deixa o item aberto à vista
   useEffect(() => {
@@ -32,7 +39,7 @@ export function NavAdmin({ pendencias }: { pendencias: number }) {
       ref={barra}
       className="fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto overscroll-x-contain border-t [scrollbar-width:none] border-borda bg-cartao shadow-2 md:static md:flex md:w-56 md:flex-col md:gap-1 md:border-0 md:bg-transparent md:overflow-visible md:p-4 md:shadow-none"
     >
-      {ITENS.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
+      {itens.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
         const ativo = href === "/admin" ? atual === href : atual.startsWith(href);
         return (
           <Link

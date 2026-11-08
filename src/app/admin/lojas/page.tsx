@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { exigirAdmin } from "@/lib/admin/auth";
+import { exigirTela } from "@/lib/admin/equipe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { inteiro, quando } from "@/lib/admin/formato";
 import { ehUuid } from "@/lib/formato";
 import { LINK_ADMIN_LOJAS } from "@/lib/rotas";
 import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { FormAcaoLoja, FormVerificacao } from "./formularios";
-import type { LojaAdmin, SituacaoConta } from "@/lib/tipos-cobranca";
+import type { AcaoLoja, LojaAdmin, SituacaoConta } from "@/lib/tipos-cobranca";
 
 export const metadata = { title: "Lojas" };
 
@@ -67,7 +67,11 @@ async function linksDosArquivos(verificacoes: Verificacao[]): Promise<Map<string
 }
 
 export default async function LojasPage({ searchParams }: { searchParams: Params }) {
-  const { supabase } = await exigirAdmin();
+  // Administrador: tudo. Suporte: todas as regiões, só suspender/reativar e verificações.
+  // Franqueado: só a região dele (o banco troca o filtro pela região dele) e só leitura.
+  const { supabase, papel } = await exigirTela("lojas");
+  const franqueado = papel === "franqueado";
+  const acoesDoPapel: AcaoLoja[] | null = papel === "administrador" ? null : papel === "suporte" ? ["suspender", "reativar"] : [];
   const sp = await searchParams;
   const busca = um(sp.q).trim().slice(0, 80);
   const situacao = SITUACAO.has(um(sp.situacao) as SituacaoConta) ? um(sp.situacao) : "";
@@ -86,12 +90,14 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
     }),
     supabase.from("microrregioes").select("id, nome").order("nome"),
     supabase.from("planos").select("codigo, nome, ordem").order("ordem"),
-    supabase
-      .from("perfis_verificacoes")
-      .select("id, tipo, criado_em, perfil_id, arquivo_path, perfis!perfis_verificacoes_perfil_id_fkey(nome)")
-      .eq("status", "pendente")
-      .order("criado_em")
-      .limit(50),
+    franqueado
+      ? Promise.resolve({ data: [] })
+      : supabase
+          .from("perfis_verificacoes")
+          .select("id, tipo, criado_em, perfil_id, arquivo_path, perfis!perfis_verificacoes_perfil_id_fkey(nome)")
+          .eq("status", "pendente")
+          .order("criado_em")
+          .limit(50),
   ]);
 
   const lojas = ((lojasR.data ?? []) as LojaAdmin[]).map((l) => ({ ...l, total: Number(l.total) }));
@@ -120,7 +126,15 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
 
   return (
     <>
-      <Titulo sub="Lojas e vendedores pessoa física. Toda ação pede o motivo e fica no histórico.">Lojas</Titulo>
+      <Titulo
+        sub={
+          franqueado
+            ? "Lojas e vendedores da sua região. Só para ver: mudanças são feitas pela equipe OLAKI."
+            : "Lojas e vendedores pessoa física. Toda ação pede o motivo e fica no histórico."
+        }
+      >
+        Lojas
+      </Titulo>
 
       <Cartao className="mb-6">
         <form method="get" className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -147,17 +161,19 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
               <option value="pf">Pessoa física</option>
             </select>
           </label>
-          <label className="col-span-2 text-sm font-semibold md:col-span-1">
-            Região
-            <select name="regiao" defaultValue={regiao} className={estiloCampo}>
-              <option value="">Todas</option>
-              {regioes.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.nome}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!franqueado && (
+            <label className="col-span-2 text-sm font-semibold md:col-span-1">
+              Região
+              <select name="regiao" defaultValue={regiao} className={estiloCampo}>
+                <option value="">Todas</option>
+                {regioes.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <div className="col-span-2 flex flex-wrap gap-3 md:col-span-5">
             <button type="submit" className={estiloBotao}>
               Filtrar
@@ -275,12 +291,14 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                       Troca marcada: {l.plano_proximo_nome ?? l.plano_proximo} até {quando(l.plano_proximo_ate)} (já paga).
                     </p>
                   )}
-                  <details className="mt-3 border-t border-borda pt-3">
-                    <summary className="flex min-h-12 cursor-pointer items-center font-semibold text-laranja-escuro">Ações</summary>
-                    <div className="pt-2">
-                      <FormAcaoLoja loja={l} planos={planos} />
-                    </div>
-                  </details>
+                  {(acoesDoPapel === null || acoesDoPapel.length > 0) && (
+                    <details className="mt-3 border-t border-borda pt-3">
+                      <summary className="flex min-h-12 cursor-pointer items-center font-semibold text-laranja-escuro">Ações</summary>
+                      <div className="pt-2">
+                        <FormAcaoLoja loja={l} planos={planos} permitidas={acoesDoPapel} />
+                      </div>
+                    </details>
+                  )}
                 </li>
               );
             })}

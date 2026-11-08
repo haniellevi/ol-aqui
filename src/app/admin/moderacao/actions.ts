@@ -2,72 +2,68 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { exigirAdmin } from "@/lib/admin/auth";
+import { exigirTela } from "@/lib/admin/equipe";
+import { traduzirErro } from "@/lib/erros";
+import { ehUuid } from "@/lib/formato";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 type Decisao = "aprovar" | "recusar" | "congelar";
 
-async function fecharDenuncias(
-  supabase: Awaited<ReturnType<typeof exigirAdmin>>["supabase"],
-  userId: string,
-  alvoTipo: "anuncio" | "pedido",
-  alvoId: string,
-  procedente: boolean,
-) {
-  await supabase
-    .from("denuncias")
-    .update({ status: procedente ? "procedente" : "improcedente", resolvido_por: userId, resolvido_em: new Date().toISOString() })
-    .eq("alvo_tipo", alvoTipo)
-    .eq("alvo_id", alvoId)
-    .eq("status", "aberta");
+// Tela 4 · Moderação. Quem pode é o banco: moderar_anuncio, moderar_pedido, resolver_denuncia,
+// moderar_banner_vitrine e moderar_radar aceitam administrador e moderador; congelar_anuncio, só o
+// administrador (Compliance). Cada mudança fica em logs_atividade com quem fez.
+
+/** Volta para a tela com um aviso no topo (erro do banco em texto simples, sem detalhe técnico). */
+function voltar(falha: string | null, aviso?: string): never {
+  revalidatePath("/admin", "layout");
+  const q = falha ? `falha=${encodeURIComponent(falha.slice(0, 200))}` : `aviso=${encodeURIComponent(aviso ?? "Feito.")}`;
+  redirect(`/admin/moderacao?${q}`);
 }
 
 export async function decidirAnuncio(form: FormData): Promise<void> {
-  const { supabase, userId } = await exigirAdmin();
-  const id = String(form.get("id"));
+  const { supabase, userId } = await exigirTela("moderacao");
+  const id = String(form.get("id") ?? "");
   const decisao = String(form.get("decisao")) as Decisao;
-  const motivo = String(form.get("motivo") ?? "").trim();
+  const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
+  if (!ehUuid(id)) voltar("Anúncio não encontrado.");
 
+  const { error } =
+    decisao === "congelar"
+      ? await supabase.rpc("congelar_anuncio", { p_anuncio_id: id, p_motivo: motivo || "Congelado pelo Compliance" })
+      : await supabase.rpc("moderar_anuncio", { p_id: id, p_decisao: decisao, p_motivo: motivo || null });
+  if (error) voltar(traduzirErro(error).mensagem);
   if (decisao === "congelar") {
-    const { error } = await supabase.rpc("congelar_anuncio", { p_anuncio_id: id, p_motivo: motivo || "Congelado pelo Compliance" });
-    if (error) throw new Error(error.message);
-  } else {
-    const { error } = await supabase
-      .from("anuncios")
-      .update(
-        decisao === "aprovar"
-          ? { status: "ativo", motivo_analise: null }
-          : { status: "pausado", motivo_analise: `Recusado: ${motivo || "fora das regras do OLAKI"}` },
-      )
-      .eq("id", id);
-    if (error) throw new Error(error.message);
+    // congelar (só administrador) não fecha as denúncias sozinho: ficam como procedentes
+    await supabase
+      .from("denuncias")
+      .update({ status: "procedente", resolvido_por: userId, resolvido_em: new Date().toISOString() })
+      .eq("alvo_tipo", "anuncio")
+      .eq("alvo_id", id)
+      .eq("status", "aberta");
   }
-  await fecharDenuncias(supabase, userId, "anuncio", id, decisao !== "aprovar");
-  revalidatePath("/admin", "layout");
+  voltar(null, decisao === "aprovar" ? "Anúncio aprovado." : decisao === "recusar" ? "Anúncio recusado." : "Anúncio congelado.");
 }
 
 export async function decidirPedido(form: FormData): Promise<void> {
-  const { supabase, userId } = await exigirAdmin();
-  const id = String(form.get("id"));
+  const { supabase } = await exigirTela("moderacao");
+  const id = String(form.get("id") ?? "");
   const aprovar = form.get("decisao") === "aprovar";
-  const motivo = String(form.get("motivo") ?? "").trim();
-  const { error } = await supabase
-    .from("radar_pedidos")
-    .update(aprovar ? { status: "aberto", motivo_analise: null } : { status: "encerrado", motivo_analise: `Recusado: ${motivo || "fora das regras"}` })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
-  await fecharDenuncias(supabase, userId, "pedido", id, !aprovar);
-  revalidatePath("/admin", "layout");
+  const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
+  if (!ehUuid(id)) voltar("Pedido não encontrado.");
+  const { error } = await supabase.rpc("moderar_pedido", { p_id: id, p_decisao: aprovar ? "aprovar" : "recusar", p_motivo: motivo || null });
+  if (error) voltar(traduzirErro(error).mensagem);
+  revalidatePath("/radar", "layout");
+  voltar(null, aprovar ? "Pedido aprovado." : "Pedido recusado.");
 }
 
 export async function resolverDenuncia(form: FormData): Promise<void> {
-  const { supabase, userId } = await exigirAdmin();
-  const { error } = await supabase
-    .from("denuncias")
-    .update({ status: form.get("procedente") === "sim" ? "procedente" : "improcedente", resolvido_por: userId, resolvido_em: new Date().toISOString() })
-    .eq("id", String(form.get("id")));
-  if (error) throw new Error(error.message);
-  revalidatePath("/admin", "layout");
+  const { supabase } = await exigirTela("moderacao");
+  const id = String(form.get("id") ?? "");
+  if (!ehUuid(id)) voltar("Denúncia não encontrada.");
+  const procede = form.get("procedente") === "sim";
+  const { error } = await supabase.rpc("resolver_denuncia", { p_id: id, p_procedente: procede });
+  if (error) voltar(traduzirErro(error).mensagem);
+  voltar(null, procede ? "Denúncia marcada como procedente." : "Denúncia marcada como não procedente.");
 }
 
 /**
@@ -77,7 +73,7 @@ export async function resolverDenuncia(form: FormData): Promise<void> {
  * no servidor, o arquivo fica, mas a foto já saiu da vitrine.
  */
 export async function tirarFotoBanner(form: FormData): Promise<void> {
-  const { supabase } = await exigirAdmin();
+  const { supabase } = await exigirTela("moderacao");
   const id = String(form.get("id") ?? "");
   const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
   const { data, error } = await supabase.rpc("moderar_banner_vitrine", { p_vitrine: id, p_motivo: motivo || null });
@@ -108,7 +104,7 @@ function caminhoNoBucket(url: string | null): string | null {
  * O motivo é obrigatório para ocultar/remover; tudo fica no histórico (logs_atividade).
  */
 export async function moderarRadar(form: FormData): Promise<void> {
-  const { supabase } = await exigirAdmin();
+  const { supabase } = await exigirTela("moderacao");
   const tipo = form.get("tipo") === "proposta" ? "proposta" : "pedido";
   const acao = String(form.get("acao") ?? "");
   const id = String(form.get("id") ?? "");

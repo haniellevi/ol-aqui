@@ -1,4 +1,4 @@
-import { exigirAdmin } from "@/lib/admin/auth";
+import { exigirTela } from "@/lib/admin/equipe";
 import { quando, reais } from "@/lib/admin/formato";
 import { Aviso, Cartao, estiloCampo } from "@/components/admin/ui";
 import { BotaoEnviar } from "@/components/radar/botao-enviar";
@@ -35,7 +35,7 @@ type LinhaProposta = {
 const um = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? (v[0] ?? null) : v);
 
 export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string }) {
-  const { supabase } = await exigirAdmin();
+  const { supabase } = await exigirTela("moderacao");
   const [pedidosR, propostasR] = await Promise.all([
     supabase
       .from("radar_pedidos")
