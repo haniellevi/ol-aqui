@@ -5,7 +5,7 @@ Nota para o desenvolvedor. Base: PAINEL-ADMIN.md (telas 13 e 15), PRODUTO-CONTAS
 `pagamentos`, `robo_uso` e docs/DESIGN-SYSTEM.md.
 
 Migração: `supabase/migrations/20261108060000_mensagens_relatorios.sql` · Testes: `supabase/testes/98_mensagens_relatorios.sql`
-Tipos: `src/lib/tipos-relatorios.ts` · Leituras: `src/lib/admin/relatorios.ts` e `src/lib/admin/mensagens.ts`
+Tipos: `src/lib/tipos-relatorios.ts` · Leituras: `src/lib/admin/relatorios.ts` · Regras de texto (prévia e variáveis, também no navegador): `src/lib/admin/mensagens.ts`
 Ações: `src/app/admin/mensagens/actions.ts` · CSV: `src/app/admin/relatorios/csv/route.ts`
 
 ## 1. Mensagens automáticas (tela 13, `/admin/mensagens`)
@@ -42,11 +42,15 @@ Regras garantidas no banco:
 | `mensagem_montar(texto, vars jsonb)` | interna | troca `{variável}` pelos valores, junta espaços, corta em 500 |
 | `mensagem_aviso(usuario, chave, vars, link, chave_unica)` | interna (gatilhos/rotina) | lê o modelo `notificacao`; se desligado não grava; se não existir não grava; senão chama `notificar()` (que já respeita `preferencias_avisos` e não repete a mesma `chave_unica`) |
 | `radar_aviso(...)` (nova versão) | interna (Radar) | igual a antes (respeita `radar.avisos_ligados`), mas o título e o texto saem do modelo da tela 13. Sem modelo, cai no texto antigo de `configuracoes` |
-| `mensagens_avisar_planos()` | rotina (pg_cron de hora em hora; só service_role) | grava "plano vencendo" (dentro de `assinatura.aviso_vencimento_dias`) e "plano vencido" (até `mensagens.vencido_dias_max` dias depois), para plano pago e teste grátis. Uma vez por vencimento (chave única com a data) |
+| `mensagens_avisar_planos()` | rotina (pg_cron `olaki-mensagens-planos`, minuto 20 de cada hora; só service_role. Sem pg_cron, agendar `select public.mensagens_avisar_planos()` na mão) | grava "plano vencendo" (dentro de `assinatura.aviso_vencimento_dias`) e "plano vencido" (até `mensagens.vencido_dias_max` dias depois), para plano pago e teste grátis. Uma vez por vencimento (chave única com a data) |
 | gatilho `mensagens_destaque_acabou` | destaques: `ativo` → `encerrado` | aviso "destaque acabou" com visualizações e cliques do período (mesma conta de `resultados_destaques`) |
 | gatilho `mensagens_pagamento_confirmado` | pagamentos: status vira `pago` | aviso "pagamento confirmado" com valor e o que foi pago |
 
 Aviso nunca derruba a ação principal: os gatilhos pegam qualquer erro e só deixam de avisar.
+`mensagem_primeiro_nome(usuario)` (interna) dá o `{nome}` (primeiro nome do perfil).
+
+Os avisos novos (plano, destaque, pagamento) não entram na lista de "escolher meus avisos" de Minha conta
+(`radar.avisos_escolha`): são avisos de serviço da própria conta. Para desligar para todos, use a tela 13.
 
 ### Semente
 
