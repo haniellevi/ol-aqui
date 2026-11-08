@@ -93,7 +93,8 @@ export function FormAcaoLoja({ loja, planos }: { loja: LojaAdmin; planos: { codi
   );
 }
 
-export function FormVerificacao({ id }: { id: string }) {
+/** `podeAprovar` = false quando documento/selfie não tem arquivo para conferir (o banco também barra). */
+export function FormVerificacao({ id, podeAprovar = true }: { id: string; podeAprovar?: boolean }) {
   const [estado, acao, pendente] = useActionState(analisarVerificacao, null);
   const [decisao, setDecisao] = useState<"aprovar" | "recusar">("aprovar");
   return (
@@ -104,7 +105,7 @@ export function FormVerificacao({ id }: { id: string }) {
         <input name="motivo" maxLength={300} className={estiloCampo} />
       </label>
       <div className="flex flex-wrap gap-2">
-        <Botao type="submit" variante="secundario" carregando={pendente && decisao === "aprovar"} textoCarregando="Salvando..." disabled={pendente} name="decisao" value="aprovar" onClick={() => setDecisao("aprovar")}>
+        <Botao type="submit" variante="secundario" carregando={pendente && decisao === "aprovar"} textoCarregando="Salvando..." disabled={pendente || !podeAprovar} name="decisao" value="aprovar" onClick={() => setDecisao("aprovar")}>
           Aprovar
         </Botao>
         <Botao type="submit" variante="perigo" carregando={pendente && decisao === "recusar"} textoCarregando="Salvando..." disabled={pendente} name="decisao" value="recusar" onClick={() => setDecisao("recusar")}>

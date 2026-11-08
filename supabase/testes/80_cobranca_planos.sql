@@ -511,3 +511,13 @@ select plano, plano_proximo,
        plano_proximo_ate between now() + interval '29 days 23 hours' and now() + interval '30 days 1 minute' as slim_so_30_dias
   from vitrines_lojas where id=:'vit_rv';
 select (plano_efetivo(v)).codigo as vale_agora from vitrines_lojas v where id=:'vit_rv';
+
+\echo '[37] verificacao de documento sem arquivo: o admin nao aprova as cegas (ERRO esperado: nao tem arquivo); recusar pode; com arquivo aprova'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_rv80',false) \g /dev/null
+insert into perfis_verificacoes (perfil_id, tipo) values ('user_rv80', 'documento') returning id as verif_doc \gset
+insert into perfis_verificacoes (perfil_id, tipo, arquivo_path) values ('user_rv80', 'selfie', 'user_rv80/selfie.jpg') returning id as verif_selfie \gset
+select set_config('request.jwt.claim.sub','user_ad80',false) \g /dev/null
+select admin_analisar_verificacao(:'verif_doc', true);
+select admin_analisar_verificacao(:'verif_doc', false, 'Mande a foto do documento');
+select admin_analisar_verificacao(:'verif_selfie', true);
+select tipo, status from perfis_verificacoes where id in (:'verif_doc', :'verif_selfie') order by tipo;

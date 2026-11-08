@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { exigirAdmin } from "@/lib/admin/auth";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { inteiro, quando } from "@/lib/admin/formato";
 import { ehUuid } from "@/lib/formato";
 import { LINK_ADMIN_LOJAS } from "@/lib/rotas";
@@ -29,7 +31,40 @@ const SITUACAO = new Map(SITUACOES.map((s) => [s.valor, s]));
 type Params = Promise<Record<string, string | string[] | undefined>>;
 const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
-type Verificacao = { id: string; tipo: string; criado_em: string; perfil_id: string; perfis: { nome: string | null } | null };
+type Verificacao = {
+  id: string;
+  tipo: string;
+  criado_em: string;
+  perfil_id: string;
+  arquivo_path: string | null;
+  perfis: { nome: string | null } | null;
+};
+
+const BUCKET_VERIFICACOES = "verificacoes";
+const LINK_ARQUIVO_SEGUNDOS = 120; // o link do arquivo vale só 2 minutos
+const PRECISA_ARQUIVO = new Set(["documento", "selfie"]);
+
+/** Links temporários dos arquivos (bucket privado). Sem chave ou sem bucket: sem link (não quebra a tela). */
+async function linksDosArquivos(verificacoes: Verificacao[]): Promise<Map<string, string>> {
+  const links = new Map<string, string>();
+  const comArquivo = verificacoes.filter((v) => v.arquivo_path);
+  if (comArquivo.length === 0) return links;
+  try {
+    const { data } = await supabaseAdmin()
+      .storage.from(BUCKET_VERIFICACOES)
+      .createSignedUrls(
+        comArquivo.map((v) => v.arquivo_path!),
+        LINK_ARQUIVO_SEGUNDOS,
+      );
+    for (const item of data ?? []) {
+      const v = comArquivo.find((x) => x.arquivo_path === item.path);
+      if (v && item.signedUrl && !item.error) links.set(v.id, item.signedUrl);
+    }
+  } catch {
+    /* sem link: a tela mostra que não dá para conferir */
+  }
+  return links;
+}
 
 export default async function LojasPage({ searchParams }: { searchParams: Params }) {
   const { supabase } = await exigirAdmin();
@@ -53,7 +88,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
     supabase.from("planos").select("codigo, nome, ordem").order("ordem"),
     supabase
       .from("perfis_verificacoes")
-      .select("id, tipo, criado_em, perfil_id, perfis!perfis_verificacoes_perfil_id_fkey(nome)")
+      .select("id, tipo, criado_em, perfil_id, arquivo_path, perfis!perfis_verificacoes_perfil_id_fkey(nome)")
       .eq("status", "pendente")
       .order("criado_em")
       .limit(50),
@@ -61,10 +96,14 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
 
   const lojas = ((lojasR.data ?? []) as LojaAdmin[]).map((l) => ({ ...l, total: Number(l.total) }));
   const total = lojas[0]?.total ?? 0;
+  // Página depois do fim (endereço velho ou filtro novo numa página alta): volta para a primeira.
+  // O total vem das linhas da página, então numa página vazia ele não existe.
+  const paginaVazia = !lojasR.error && lojas.length === 0 && pagina > 1;
   const regioes = (regioesR.data ?? []) as { id: string; nome: string }[];
   const nomeRegiao = new Map(regioes.map((r) => [r.id, r.nome]));
   const planos = (planosR.data ?? []) as { codigo: string; nome: string }[];
   const verificacoes = (verifR.data ?? []) as unknown as Verificacao[];
+  const links = await linksDosArquivos(verificacoes);
   const filtrando = !!(busca || situacao || regiao || tipo);
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
   const linkPagina = (n: number) => {
@@ -77,6 +116,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
     const s = q.toString();
     return s ? `${LINK_ADMIN_LOJAS}?${s}` : LINK_ADMIN_LOJAS;
   };
+  if (paginaVazia) redirect(linkPagina(1));
 
   return (
     <>
@@ -144,7 +184,21 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                   <p className="mb-3 text-sm text-texto-suave">
                     {v.tipo === "documento" ? "Documento" : v.tipo === "selfie" ? "Selfie" : v.tipo === "cnpj" ? "CNPJ" : v.tipo} · enviado {quando(v.criado_em)}
                   </p>
-                  <FormVerificacao id={v.id} />
+                  {links.has(v.id) ? (
+                    <a
+                      href={links.get(v.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mb-3 inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                    >
+                      Ver o arquivo enviado (o link vale 2 minutos)
+                    </a>
+                  ) : PRECISA_ARQUIVO.has(v.tipo) ? (
+                    <p className="mb-3 text-sm font-semibold text-aviso">
+                      {v.arquivo_path ? "Não deu para abrir o arquivo agora. Atualize a página." : "Sem arquivo para conferir."} Só dá para recusar.
+                    </p>
+                  ) : null}
+                  <FormVerificacao id={v.id} podeAprovar={!PRECISA_ARQUIVO.has(v.tipo) || links.has(v.id)} />
                 </Cartao>
               </li>
             ))}

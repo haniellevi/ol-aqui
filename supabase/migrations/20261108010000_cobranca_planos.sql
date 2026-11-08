@@ -1130,6 +1130,12 @@ begin
   if not coalesce(p_aprovar, false) and char_length(btrim(coalesce(p_motivo, ''))) < 3 then
     raise exception 'Escreva o motivo da recusa.' using errcode = '23514';
   end if;
+  -- documento e selfie só se aprovam vendo o arquivo (link temporário do bucket privado)
+  if coalesce(p_aprovar, false) and exists (
+       select 1 from public.perfis_verificacoes x
+        where x.id = p_id and x.tipo in ('documento', 'selfie') and nullif(btrim(coalesce(x.arquivo_path, '')), '') is null) then
+    raise exception 'Esta verificação não tem arquivo para conferir. Só dá para recusar.' using errcode = 'P0001';
+  end if;
   update public.perfis_verificacoes
      set status = case when p_aprovar then 'aprovada'::public.status_verificacao else 'recusada'::public.status_verificacao end,
          analisado_por = public.usuario_id(), analisado_em = now(),
