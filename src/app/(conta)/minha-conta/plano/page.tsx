@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { LINK_PLANOS } from "@/lib/rotas";
 import { auth } from "@clerk/nextjs/server";
 import { Check, Radar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -165,9 +167,14 @@ export default async function PaginaMeuPlano() {
       {/* Planos do painel */}
       {opcoes.length > 0 && (
         <section aria-labelledby="planos" className="flex flex-col gap-3">
-          <h2 id="planos" className="text-lg font-bold">
-            Planos
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="planos" className="text-lg font-bold">
+              Planos
+            </h2>
+            <Link href={LINK_PLANOS} className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+              Comparar todos os planos
+            </Link>
+          </div>
           <ul className="flex flex-col gap-3">
             {opcoes.map((p) => {
               const atual = conta.plano?.codigo === p.codigo;

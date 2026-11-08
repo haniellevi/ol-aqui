@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { BarChart3, Clock, Eye, Heart, ImageOff, MessageCircle, Plus } from "lucide-react";
+import { BarChart3, Clock, Eye, Heart, ImageOff, MessageCircle, Pin, Plus } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { meusAnuncios } from "@/lib/dados/anuncios";
 import { fraseResultado, resultadosDestaques } from "@/lib/dados/destaques";
 import type { ResultadoDestaque } from "@/lib/tipos-destaques";
-import { linkDestacar } from "@/lib/rotas";
+import { LINK_PLANOS, linkDestacar } from "@/lib/rotas";
 import { inteiro, linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
 import type { MeuAnuncio, StatusAnuncio } from "@/lib/tipos";
 import { Botao } from "@/components/ui/botao";
@@ -15,6 +15,9 @@ import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { AcoesAnuncio } from "@/components/conta/acoes-anuncio";
 import { Aviso } from "@/components/conta/aviso";
 import { resumoPlano } from "@/components/conta/resumo-plano";
+import { BotaoFixar } from "@/components/vitrine/botao-fixar";
+import { meusFixados, meusRecursosVitrine, planosPublicos } from "@/lib/dados/vitrine-completa";
+import { textoDisponivelEm } from "@/components/vitrine/regras";
 
 export const metadata: Metadata = { title: "Meus anúncios" };
 
@@ -73,6 +76,12 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
       pagamentoPendente.set(d.anuncio_id, d);
     }
   }
+  // Loja com "fixar no topo" no plano: botão em cada anúncio no ar (o banco confere o limite)
+  const loja = conta.vitrine.tipo === "loja";
+  const [fixados, recursos] = loja ? await Promise.all([meusFixados(conta.vitrine.id), meusRecursosVitrine()]) : [new Set<string>(), null];
+  const podeFixar = !!recursos && recursos.fixados_max !== 0;
+  // Plano sem "fixar no topo": avisa uma vez, com os planos que têm (lidos da tabela de planos)
+  const disponivelFixar = loja && !podeFixar ? textoDisponivelEm(await planosPublicos(), "fixados") : null;
 
   return (
     <PaginaConta>
@@ -104,6 +113,19 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         </ul>
       </nav>
 
+      {loja && !podeFixar && aba.chave === "ativos" && lista.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 text-base text-texto-suave">
+          <Pin className="size-4 shrink-0 text-laranja-escuro" aria-hidden />
+          <span>Fixar produtos no topo da loja: {disponivelFixar ?? "não faz parte do seu plano agora"}.</span>
+          <Link
+            href={`${LINK_PLANOS}?origem=vitrine`}
+            className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+          >
+            Ver os planos
+          </Link>
+        </p>
+      )}
+
       {lista.length === 0 ? (
         <Vazio titulo={`Nenhum anúncio em "${aba.nome}"`} texto="Quando tiver, ele aparece aqui.">
           <Botao href="/anunciar" larguraTotal icone={<Plus />}>
@@ -114,7 +136,13 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         <ul className="flex flex-col gap-3">
           {lista.map((a) => (
             <li key={a.id}>
-              <LinhaAnuncio anuncio={a} destaque={ultimoDestaque.get(a.id)} pendente={pagamentoPendente.get(a.id)} />
+              <LinhaAnuncio
+                anuncio={a}
+                destaque={ultimoDestaque.get(a.id)}
+                pendente={pagamentoPendente.get(a.id)}
+                fixado={fixados.has(a.id)}
+                mostrarFixar={loja && (podeFixar || fixados.has(a.id))}
+              />
             </li>
           ))}
         </ul>
@@ -127,10 +155,14 @@ function LinhaAnuncio({
   anuncio: a,
   destaque: d,
   pendente: p,
+  fixado = false,
+  mostrarFixar = false,
 }: {
   anuncio: MeuAnuncio;
   destaque?: ResultadoDestaque;
   pendente?: ResultadoDestaque;
+  fixado?: boolean;
+  mostrarFixar?: boolean;
 }) {
   const titulo = a.titulo?.trim() || "Anúncio sem título";
   const rotulo = ROTULO[a.status];
@@ -168,6 +200,7 @@ function LinhaAnuncio({
             <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${rotulo.cor}`}>{rotulo.texto}</span>
             {destaque && <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-[13px] font-bold text-beringela">Destaque</span>}
             {pago && <span className="rounded-full bg-laranja-claro px-2 py-0.5 text-[13px] font-bold text-laranja-escuro">Avulso pago</span>}
+            {fixado && <span className="rounded-full bg-laranja-claro px-2 py-0.5 text-[13px] font-bold text-beringela">No topo da loja</span>}
           </div>
           <h2 className="line-clamp-2 text-base font-semibold leading-5">
             {publico ? (
@@ -220,6 +253,7 @@ function LinhaAnuncio({
       )}
 
       <AcoesAnuncio id={a.id} status={a.status} titulo={titulo} />
+      {mostrarFixar && (a.status === "ativo" || fixado) && <BotaoFixar anuncioId={a.id} fixado={fixado} />}
     </article>
   );
 }

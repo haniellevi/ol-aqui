@@ -71,9 +71,34 @@ async function apagarConta(id: string) {
     ok(
       await db
         .from("vitrines_lojas")
-        .update({ status: "suspensa", nome: "Loja encerrada", descricao: null, whatsapp: null, cnpj: null, logo_url: null, capa_url: null })
+        .update({
+          status: "suspensa",
+          nome: "Loja encerrada",
+          descricao: null,
+          whatsapp: null,
+          cnpj: null,
+          logo_url: null,
+          capa_url: null,
+          // dados da vitrine completa (endereço exato, localização, redes, textos, horários, banner)
+          sobre: null,
+          endereco: null,
+          lat: null,
+          lng: null,
+          instagram: null,
+          entrega_obs: null,
+          horarios: null,
+          formas_pagamento: [],
+          faz_entrega: null,
+          banner_tipo: "modelo",
+          banner_url: null,
+          banner_moderado_url: null,
+          banner_moderado_motivo: null,
+          banner_moderado_em: null,
+        })
         .in("id", ids),
     );
+    // seções próprias (os produtos delas saem junto, em cascata)
+    ok(await db.from("loja_secoes").delete().in("vitrine_id", ids));
   }
   ok(await db.from("radar_pedidos").update({ status: "encerrado" }).eq("comprador_id", id).in("status", ["aberto", "em_analise"]));
   ok(await db.from("perfis_verificacoes").delete().eq("perfil_id", id));

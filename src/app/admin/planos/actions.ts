@@ -19,6 +19,11 @@ function lerPlano(form: FormData) {
     propostas_radar_mes: inteiroOuNulo(form.get("propostas_radar_mes")),
     ordem: inteiroOuNulo(form.get("ordem")) ?? 0,
     ativo: form.get("ativo") === "on",
+    // Vitrine da loja (vazio = sem limite). Marcar um plano como recomendado desmarca o outro (gatilho do banco).
+    vitrine_foto_fachada: form.get("vitrine_foto_fachada") === "on",
+    vitrine_secoes_max: inteiroOuNulo(form.get("vitrine_secoes_max")),
+    vitrine_fixados_max: inteiroOuNulo(form.get("vitrine_fixados_max")),
+    recomendado: form.get("recomendado") === "on",
   };
 }
 
@@ -35,6 +40,7 @@ export async function salvarPlano(_: EstadoForm, form: FormData): Promise<Estado
     if (error) return { erro: error.message };
     revalidatePath("/admin", "layout");
     revalidatePath("/radar");
+    revalidatePath("/planos");
     return { ok: "Plano salvo. Vale para novas assinaturas." };
   } catch (e) {
     return { erro: e instanceof Error ? e.message : "Erro ao salvar." };
@@ -57,6 +63,7 @@ export async function criarPlano(_: EstadoForm, form: FormData): Promise<EstadoF
     const { error } = await supabase.from("planos").insert({ codigo, ...dados, atualizado_por: userId });
     if (error) return { erro: error.code === "23505" ? "Já existe um plano com esse código." : error.message };
     revalidatePath("/admin/planos");
+    revalidatePath("/planos");
     return { ok: `Plano "${dados.nome}" criado.` };
   } catch (e) {
     return { erro: e instanceof Error ? e.message : "Erro ao criar." };
