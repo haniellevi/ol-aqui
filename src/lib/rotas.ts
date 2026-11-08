@@ -47,3 +47,13 @@ export const linkPedirRadar = (texto?: string | null) => {
 export const linkMeuPedidoRadar = (pedidoId: string) => `/radar/pedido/${pedidoId}`;
 export const linkPedidoRadarLoja = (pedidoId: string) => `/radar/${pedidoId}`;
 export const LINK_AVISOS = "/minha-conta/notificacoes";
+
+/** Páginas e textos: ajuda, termos, privacidade, Aki em tela cheia, aceite no 1º acesso e painel (tela 12). */
+export const LINK_AJUDA = "/ajuda";
+export const LINK_TERMOS = "/termos";
+export const LINK_PRIVACIDADE = "/privacidade";
+export const linkDocumentoLegal = (tipo: "termos" | "privacidade", versao?: number | null) =>
+  `${tipo === "termos" ? LINK_TERMOS : LINK_PRIVACIDADE}${versao ? `?versao=${versao}` : ""}`;
+export const LINK_AKI = "/aki";
+export const LINK_ENTRAR_PERFIL = "/entrar/perfil";
+export const LINK_ADMIN_TEXTOS = "/admin/textos";

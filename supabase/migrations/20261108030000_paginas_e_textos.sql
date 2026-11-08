@@ -180,7 +180,7 @@ begin
   end if;
   update public.documentos_legais set revisado_advogado = coalesce(p_revisado, false) where id = p_documento_id;
   if not found then
-    raise exception 'Versão não encontrada.' using errcode = 'P0002';
+    raise exception 'Versão não encontrada.' using errcode = 'P0001';
   end if;
   return coalesce(p_revisado, false);
 end $$;
@@ -219,14 +219,14 @@ begin
     raise exception 'Entre na sua conta para aceitar os termos.' using errcode = '42501';
   end if;
   if not exists (select 1 from public.perfis where id = uid) then
-    raise exception 'Conta não encontrada. Saia e entre de novo.' using errcode = 'P0002';
+    raise exception 'Conta não encontrada. Saia e entre de novo.' using errcode = 'P0001';
   end if;
   select coalesce(array_agg(distinct x), '{}') into pedidos from unnest(coalesce(p_documentos, '{}')) x where x is not null;
   if cardinality(pedidos) = 0 or cardinality(pedidos) > 10 then
     raise exception 'Não há nada para aceitar.' using errcode = '22023';
   end if;
   if (select count(*) from public.documentos_legais where id = any(pedidos)) <> cardinality(pedidos) then
-    raise exception 'Documento não encontrado.' using errcode = 'P0002';
+    raise exception 'Documento não encontrado.' using errcode = 'P0001';
   end if;
 
   for d in select * from public.documentos_legais where id = any(pedidos) loop
