@@ -4,7 +4,7 @@ Nota para quem desenvolve. Base: `PRODUTO-CONTAS-ANUNCIOS-ROBO.md` seção 6, `P
 Regra de ouro mantida: preço, dias, vagas, créditos e prazos ficam em tabela/configuração, editáveis no painel,
 e toda mudança cai em `logs_atividade` pelos gatilhos de log.
 
-## 1. Banco (migração `20261107030000_destaques.sql`)
+## 1. Banco (migração `20261107030500_destaques.sql`)
 
 ### Tabelas novas (todas com RLS)
 
@@ -117,7 +117,7 @@ Link para o robô Aki: `linkDestacar(anuncioId)` em `src/lib/rotas.ts` e `gerarL
 
 ## 5. Arquivos
 
-- Banco: `supabase/migrations/20261107030000_destaques.sql`; testes: `supabase/testes/50_destaques.sql`.
+- Banco: `supabase/migrations/20261107030500_destaques.sql`; testes: `supabase/testes/50_destaques.sql`.
 - Tipos: `src/lib/tipos-destaques.ts`. CPF/CNPJ (dígitos e máscara): `src/lib/cpf-cnpj.ts`.
 - Asaas: `src/lib/asaas.ts` (cliente HTTP) e `src/lib/cobranca-destaque.ts` (cobrar um pedido, conferir a situação, saber se precisa do CPF).
 - Leituras: `src/lib/dados/destaques.ts` (opções, pedido, resultados, carrossel, lojas em destaque, `gerarLinkDestaque`).
