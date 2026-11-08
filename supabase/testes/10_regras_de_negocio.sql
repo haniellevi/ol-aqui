@@ -17,6 +17,8 @@ update vitrines_lojas set teste_expira_em=now()-interval '1 day' where slug='ze-
 select count(*) as cidades_piloto from cidades;
 -- Estes testes são de antes das fotos (anuncio.fotos_minimo): sem mínimo aqui. O 40_ volta para 1.
 update configuracoes set valor='0' where chave='anuncio.fotos_minimo' and microrregiao_id is null;
+-- Os testes rodam no modo com código (radar.exigir_celular_confirmado = true); o 90_ testa o modo sem código.
+update configuracoes set valor='true' where chave='radar.exigir_celular_confirmado' and microrregiao_id is null;
 
 set role authenticated;
 select set_config('request.jwt.claim.role','authenticated',false) \g /dev/null

@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, LayoutDashboard, ShieldAlert, SlidersHorizontal, Sparkles, Tags } from "lucide-react";
+import { Bot, LayoutDashboard, Receipt, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags } from "lucide-react";
 
 const ITENS = [
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
   { href: "/admin/planos", rotulo: "Planos", icone: Tags },
   { href: "/admin/configuracoes", rotulo: "Configurações", curto: "Config.", icone: SlidersHorizontal },
   { href: "/admin/moderacao", rotulo: "Moderação", icone: ShieldAlert },
+  { href: "/admin/lojas", rotulo: "Lojas", icone: Store },
+  { href: "/admin/pagamentos", rotulo: "Pagamentos", curto: "Pagtos.", icone: Receipt },
   { href: "/admin/destaques", rotulo: "Destaques", icone: Sparkles },
   { href: "/admin/robo", rotulo: "Robô Aki", curto: "Aki", icone: Bot },
 ];

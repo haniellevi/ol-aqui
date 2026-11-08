@@ -16,11 +16,14 @@ export function BotaoPublicar({
   editar,
   formId,
   modo,
+  linkAvulso,
 }: {
   id: string;
   editar: boolean;
   formId: string;
   modo: "publicar" | "republicar" | "salvar";
+  /** Pessoa física no limite com avulso ligado: o aviso de limite oferece "Pagar anúncio avulso". */
+  linkAvulso?: string | null;
 }) {
   const [estado, acao, enviando] = useActionState<EstadoForm, FormData>(publicarAnuncio, null);
   const passo = passoDoCampo(estado?.erro?.campo);
@@ -28,7 +31,9 @@ export function BotaoPublicar({
   const link = passo
     ? { href: urlPasso(passo, id, editar), texto: "Corrigir agora" }
     : limite
-      ? { href: LINK_PLANOS, texto: "Ver planos" }
+      ? linkAvulso
+        ? { href: linkAvulso, texto: "Pagar anúncio avulso" }
+        : { href: LINK_PLANOS, texto: "Ver planos" }
       : null;
 
   const texto = modo === "salvar" ? "Salvar alterações" : modo === "republicar" ? "Publicar de novo" : "Publicar anúncio";

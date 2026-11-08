@@ -5,7 +5,8 @@ import { ChevronRight, FileClock, ImageOff, ShieldAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { meusAnuncios } from "@/lib/dados/anuncios";
-import { lerConfigNumero } from "@/lib/dados/config";
+import { avulsoParaMim } from "@/lib/dados/cobranca";
+import { asaasConfigurado } from "@/lib/asaas";
 import { tempoRelativo } from "@/lib/formato";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
@@ -43,13 +44,15 @@ export default async function PaginaAnunciar() {
   const rascunhos = (await meusAnuncios()).filter((a) => a.status === "rascunho");
 
   if (!conta.podePublicar) {
-    const [avulsoPreco, avulsoDias] = await Promise.all([
-      lerConfigNumero("avulso.preco_centavos", conta.vitrine.microrregiao_id),
-      lerConfigNumero("avulso.dias", conta.vitrine.microrregiao_id),
-    ]);
+    const avulso = await avulsoParaMim(conta.vitrine);
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6">
-        <LimiteAtingido conta={conta} avulsoPreco={avulsoPreco} avulsoDias={avulsoDias} />
+        <LimiteAtingido
+          conta={conta}
+          avulsoPreco={avulso?.preco ?? null}
+          avulsoDias={avulso?.dias ?? null}
+          pagamentoLigado={asaasConfigurado()}
+        />
         {rascunhos.length > 0 && (
           <p className="text-center text-base text-texto-suave">
             Seus rascunhos continuam guardados em{" "}

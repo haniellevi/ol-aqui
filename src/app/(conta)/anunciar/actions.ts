@@ -10,6 +10,8 @@ import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { categoriaPorId } from "@/lib/dados/categorias";
 import { listarCidades } from "@/lib/dados/regiao";
 import { lerConfigNumero } from "@/lib/dados/config";
+import { avulsoParaMim } from "@/lib/dados/cobranca";
+import { asaasConfigurado } from "@/lib/asaas";
 import { traduzirErro } from "@/lib/erros";
 import { centavosDoTexto, ehUuid } from "@/lib/formato";
 import { filtrarAtributos, lerAtributos } from "@/components/anunciar/atributos";
@@ -72,13 +74,22 @@ async function gravar(id: string, colunas: Record<string, unknown>, antes?: MeuA
 
 /* ------------------------------ Começar ------------------------------ */
 
-/** Cria um rascunho novo e abre o passo 1 (botão "Começar um anúncio novo"). */
-export async function novoRascunho(): Promise<EstadoForm> {
+/**
+ * Cria um rascunho novo e abre o passo 1 (botão "Começar um anúncio novo").
+ * Com `avulso` (botão "Fazer um anúncio avulso" da tela de limite), cria mesmo no limite do plano,
+ * desde que o avulso seja oferecido para a pessoa e o pagamento esteja ligado. O banco segue
+ * barrando o excesso de rascunhos e só põe no ar com vaga no plano ou avulso pago.
+ */
+export async function novoRascunho(opcoes?: { avulso?: boolean }): Promise<EstadoForm> {
   const conta = await meuPerfilEVitrine();
   if (!conta) return { erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
   if (!conta.vitrine) redirect("/quero-vender");
-  // T16: limite do plano (ou vitrine suspensa) aparece ANTES do passo 1, na tela /anunciar
-  if (!conta.podePublicar || conta.vitrine.status === "suspensa") redirect("/anunciar");
+  if (conta.vitrine.status === "suspensa") redirect("/anunciar");
+  // T16: limite do plano aparece ANTES do passo 1, na tela /anunciar (menos no caminho do avulso)
+  if (!conta.podePublicar) {
+    const avulso = opcoes?.avulso === true && asaasConfigurado() ? await avulsoParaMim(conta.vitrine) : null;
+    if (!avulso) redirect("/anunciar");
+  }
   const db = await createClient();
   const { data, error } = await db
     .from("anuncios")
