@@ -22,15 +22,26 @@ const ROTULO: Record<AcaoLoja, string> = {
   tirar_selo: "Tirar Selo Loja Verificada",
 };
 
-export function FormAcaoLoja({ loja, planos }: { loja: LojaAdmin; planos: { codigo: string; nome: string }[] }) {
+/** `permitidas`: ações que o papel pode fazer (null = todas, administrador). O banco confere de novo. */
+export function FormAcaoLoja({
+  loja,
+  planos,
+  permitidas = null,
+}: {
+  loja: LojaAdmin;
+  planos: { codigo: string; nome: string }[];
+  permitidas?: AcaoLoja[] | null;
+}) {
   const [estado, acao, pendente] = useActionState(acaoLoja, null);
-  const opcoes: AcaoLoja[] = [
-    "cortesia",
-    "trocar_plano",
-    loja.status === "suspensa" ? "reativar" : "suspender",
-    ...(loja.tipo === "loja" ? [loja.selo_loja_verificada ? ("tirar_selo" as const) : ("dar_selo" as const)] : []),
-  ];
-  const [escolha, setEscolha] = useState<AcaoLoja>("cortesia");
+  const opcoes: AcaoLoja[] = (
+    [
+      "cortesia",
+      "trocar_plano",
+      loja.status === "suspensa" ? "reativar" : "suspender",
+      ...(loja.tipo === "loja" ? [loja.selo_loja_verificada ? ("tirar_selo" as const) : ("dar_selo" as const)] : []),
+    ] as AcaoLoja[]
+  ).filter((a) => permitidas === null || permitidas.includes(a));
+  const [escolha, setEscolha] = useState<AcaoLoja>(opcoes[0] ?? "suspender");
   const perigo = escolha === "suspender" || escolha === "tirar_selo";
 
   return (

@@ -57,3 +57,18 @@ export const linkDocumentoLegal = (tipo: "termos" | "privacidade", versao?: numb
 export const LINK_AKI = "/aki";
 export const LINK_ENTRAR_PERFIL = "/entrar/perfil";
 export const LINK_ADMIN_TEXTOS = "/admin/textos";
+
+/** Painel: tela 14 (equipe e permissões) e tela 8 (Compliance jurídico, com o relatório para imprimir). */
+export const LINK_ADMIN_EQUIPE = "/admin/equipe";
+export const LINK_ADMIN_COMPLIANCE = "/admin/compliance";
+export const linkRelatorioCompliance = (relatorioId: string) => `/admin/compliance/relatorio/${relatorioId}`;
+
+/** Painel: telas 7 (regiões e cidades) e 9 (categorias e campos). */
+export const LINK_ADMIN_REGIOES = "/admin/regioes";
+export const linkAdminRegiao = (id: string) => `${LINK_ADMIN_REGIOES}/${id}`;
+export const LINK_ADMIN_CATEGORIAS = "/admin/categorias";
+export const linkAdminCategoria = (id: string) => `${LINK_ADMIN_CATEGORIAS}/${id}`;
+
+/** Painel: telas 13 (mensagens automáticas) e 15 (relatórios). */
+export const LINK_ADMIN_MENSAGENS = "/admin/mensagens";
+export const LINK_ADMIN_RELATORIOS = "/admin/relatorios";

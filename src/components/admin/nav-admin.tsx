@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, FileText, LayoutDashboard, Receipt, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags } from "lucide-react";
+import { BarChart3, Bot, FileText, FolderTree, LayoutDashboard, MapPinned, MessageSquareText, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
+import { podeVerLink, type Papel } from "@/lib/tipos-equipe";
 
 const ITENS = [
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
@@ -14,24 +16,42 @@ const ITENS = [
   { href: "/admin/destaques", rotulo: "Destaques", icone: Sparkles },
   { href: "/admin/robo", rotulo: "Robô Aki", curto: "Aki", icone: Bot },
   { href: "/admin/textos", rotulo: "Página inicial e textos", curto: "Textos", icone: FileText },
+  { href: "/admin/regioes", rotulo: "Regiões e cidades", curto: "Regiões", icone: MapPinned },
+  { href: "/admin/categorias", rotulo: "Categorias e campos", curto: "Categ.", icone: FolderTree },
+  { href: "/admin/equipe", rotulo: "Equipe e permissões", curto: "Equipe", icone: UsersRound },
+  { href: "/admin/compliance", rotulo: "Compliance jurídico", curto: "Jurídico", icone: Scale },
+  { href: "/admin/mensagens", rotulo: "Mensagens automáticas", curto: "Mensagens", icone: MessageSquareText },
+  { href: "/admin/relatorios", rotulo: "Relatórios", icone: BarChart3 },
 ];
 
-export function NavAdmin({ pendencias }: { pendencias: number }) {
+/** `papel`: o menu mostra só as telas que o papel usa (tela 14). Link sem regra = só administrador. */
+export function NavAdmin({ pendencias, papel }: { pendencias: number; papel: Papel }) {
   const atual = usePathname();
+  const itens = ITENS.filter((i) => podeVerLink(papel, i.href));
+  const barra = useRef<HTMLElement>(null);
+  // No celular a barra rola de lado: deixa o item aberto à vista
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 768px)").matches) return;
+    barra.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [atual]);
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 grid auto-cols-fr grid-flow-col border-t border-borda bg-cartao shadow-2 md:static md:flex md:w-56 md:flex-col md:gap-1 md:border-0 md:bg-transparent md:p-4 md:shadow-none">
-      {ITENS.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
+    <nav
+      ref={barra}
+      className="fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto overscroll-x-contain border-t [scrollbar-width:none] border-borda bg-cartao shadow-2 md:static md:flex md:w-56 md:flex-col md:gap-1 md:border-0 md:bg-transparent md:overflow-visible md:p-4 md:shadow-none"
+    >
+      {itens.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
         const ativo = href === "/admin" ? atual === href : atual.startsWith(href);
         return (
           <Link
             key={href}
             href={href}
-            className={`relative flex h-16 min-w-0 flex-col items-center justify-center gap-1 text-[13px] font-semibold leading-4 md:h-12 md:flex-row md:justify-start md:gap-3 md:rounded-card md:px-3 md:text-sm md:leading-5 ${
+            aria-current={ativo ? "page" : undefined}
+            className={`relative flex h-16 w-20 shrink-0 flex-col items-center justify-center gap-1 text-[13px] font-semibold leading-4 md:h-12 md:w-auto md:flex-row md:justify-start md:gap-3 md:rounded-card md:px-3 md:text-sm md:leading-5 ${
               ativo ? "text-laranja-escuro md:bg-laranja-claro" : "text-texto-suave md:hover:bg-fundo"
             }`}
           >
             <Icone className="size-5" aria-hidden />
-            {/* no celular (5 itens lado a lado) o nome longo vira curto para caber inteiro */}
+            {/* no celular (itens de 80px, a barra rola de lado) o nome longo vira curto para caber inteiro */}
             {curto ? (
               <>
                 <span className="max-w-full truncate px-0.5 md:hidden" aria-hidden>

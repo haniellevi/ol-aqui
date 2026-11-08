@@ -56,3 +56,21 @@ export async function categoriaPorId(id: string): Promise<CategoriaEncontrada | 
   }
   return null;
 }
+
+/**
+ * Categoria de um anúncio que JÁ está nela, mesmo que o painel tenha escondido a categoria (ou a mãe).
+ * Esconder tira a categoria do cadastro, mas o anúncio publicado continua editável com os campos dela.
+ * Para escolher categoria nova use categoriaPorId (só as visíveis).
+ */
+export async function categoriaDoAnuncio(id: string): Promise<CategoriaEncontrada | null> {
+  const visivel = await categoriaPorId(id);
+  if (visivel) return visivel;
+  return seguro(async () => {
+    const db = await createClient();
+    const { data: cat } = await db.from("categorias").select(COLUNAS).eq("id", id).maybeSingle<Categoria>();
+    if (!cat) return null;
+    if (!cat.pai_id) return { categoria: cat, pai: null, filhas: [] };
+    const { data: pai } = await db.from("categorias").select(COLUNAS).eq("id", cat.pai_id).maybeSingle<Categoria>();
+    return { categoria: cat, pai: pai ? { ...pai, filhas: [] } : null, filhas: [] };
+  }, null);
+}
