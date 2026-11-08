@@ -88,10 +88,12 @@ const texto = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : nu
 export async function avisoTermos(): Promise<AvisoTermos | null> {
   const pendentes = await termosPendentes();
   if (pendentes.length === 0) return null;
-  const c = await configsPublicas(["termos.aviso_titulo", "termos.aviso_texto"], null);
+  // conta nova (nunca aceitou nada) vê "Falta aceitar"; quem já tinha aceitado vê "Atualizamos"
+  const novo = pendentes.every((p) => p.primeira_vez);
+  const c = await configsPublicas(["termos.aviso_titulo", "termos.aviso_texto", "termos.aviso_novo_titulo", "termos.aviso_novo_texto"], null);
   return {
-    titulo: texto(c.get("termos.aviso_titulo")) ?? "Atualizamos os termos",
-    texto: texto(c.get("termos.aviso_texto")) ?? "Leia o resumo e toque em Aceitar.",
+    titulo: (novo ? texto(c.get("termos.aviso_novo_titulo")) : null) ?? texto(c.get("termos.aviso_titulo")) ?? "Atualizamos os termos",
+    texto: (novo ? texto(c.get("termos.aviso_novo_texto")) : null) ?? texto(c.get("termos.aviso_texto")) ?? "Leia o resumo e toque em Aceitar.",
     pendentes,
   };
 }

@@ -22,7 +22,11 @@ insert into public.configuracoes (chave, valor, grupo, publico, descricao) value
   ('termos.aviso_titulo', '"Atualizamos os termos"', 'geral', true,
      'Título da faixa que aparece para quem ainda não aceitou a versão nova dos termos ou da privacidade'),
   ('termos.aviso_texto', '"Mudamos algumas regras do OLAKI. Leia o resumo e toque em Aceitar para continuar usando tudo."', 'geral', true,
-     'Texto da faixa "Atualizamos os termos"')
+     'Texto da faixa "Atualizamos os termos"'),
+  ('termos.aviso_novo_titulo', '"Falta aceitar os termos"', 'geral', true,
+     'Título da faixa para conta nova que ainda não aceitou os termos e a privacidade'),
+  ('termos.aviso_novo_texto', '"Para usar tudo no OLAKI, leia os termos de uso e a política de privacidade e toque em Aceitar."', 'geral', true,
+     'Texto da faixa para conta nova que ainda não aceitou os termos e a privacidade')
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------

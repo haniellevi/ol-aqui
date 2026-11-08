@@ -24,7 +24,7 @@ select tipo, versao, ativo, revisado_advogado, char_length(conteudo) > 2000 as t
 select count(*) as categorias from ajuda_categorias;
 select count(*) filter (where categoria='seguranca') as perguntas_seguranca, count(*) as perguntas from ajuda_perguntas;
 select chave, ordem, ativo, pode_desligar from home_blocos order by ordem;
-select chave, publico from configuracoes where chave in ('contato.email_suporte','ajuda.texto_contato','termos.aviso_titulo','termos.aviso_texto') and microrregiao_id is null order by chave;
+select chave, publico from configuracoes where chave in ('contato.email_suporte','ajuda.texto_contato','termos.aviso_titulo','termos.aviso_texto','termos.aviso_novo_titulo','termos.aviso_novo_texto') and microrregiao_id is null order by chave;
 
 \echo '[2] visitante le os termos e a ajuda; nao ve pendencias nem grava documento (2 ERROS esperados: permission denied)'
 set role anon; select set_config('request.jwt.claim.role','anon',false) \g /dev/null

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ptBR } from "@clerk/localizations";
+import { AvisoSemInternet } from "@/components/paginas/aviso-sem-internet";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -45,7 +46,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       }}
     >
       <html lang="pt-BR" className={poppins.variable}>
-        <body className="font-sans antialiased">{children}</body>
+        <body className="font-sans antialiased">
+          {children}
+          <AvisoSemInternet />
+        </body>
       </html>
     </ClerkProvider>
   );
