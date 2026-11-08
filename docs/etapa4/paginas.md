@@ -42,6 +42,7 @@ o aceite editando o próprio perfil; só a função grava.
 | `contato.email_suporte` | `null` | e-mail da equipe na Central de ajuda (o WhatsApp já existia: `contato.whatsapp_suporte`) |
 | `ajuda.texto_contato` | texto simples | frase acima dos botões de contato |
 | `termos.aviso_titulo` / `termos.aviso_texto` | textos simples | faixa "Atualizamos os termos" |
+| `termos.aviso_novo_titulo` / `termos.aviso_novo_texto` | textos simples | mesma faixa para conta nova que nunca aceitou ("Falta aceitar os termos") |
 
 ## Rotas e telas
 
@@ -66,3 +67,18 @@ o aceite editando o próprio perfil; só a função grava.
 - **Home:** os blocos pagos (`destaques`, `lojas_destaque`) e o `recentes` não podem ser desligados (`pode_desligar = false`), só mudar de lugar: quem pagou destaque continua aparecendo. "Patrocinado" continua nos cards.
 - **LGPD:** aceites entram no "Baixar meus dados" e somem com a conta (`on delete cascade`).
 - **Markdown seguro:** nada de `dangerouslySetInnerHTML`; HTML digitado aparece como texto.
+
+## Decisões
+
+- **Sem service worker** para o "Sem internet": um service worker com login (Clerk) e páginas dinâmicas pode guardar
+  página velha ou de outra pessoa. Ficou o aviso no navegador (`AvisoSemInternet`), que é simples e seguro.
+- **IP do aceite:** o IP puro já vai para `logs_atividade` (Marco Civil, só o servidor lê). Em `aceites` fica só um
+  resumo (sha256) e nem ele sai pela API. Observação: quando o aceite vem pelo servidor do site (server action), o IP
+  que o banco enxerga é o do servidor da Vercel, igual às outras ações do site.
+- **/entrar/perfil** cobre só a parte dos termos da T13 (nome e cidade já ficam em Minha conta > Meus dados). Quem
+  toca em "Agora não" continua usando o site e vê a faixa depois (não bloqueia).
+- **Blocos da home:** busca e categorias ficam fixos no topo; os 5 blocos seguintes mudam de ordem. Os pagos
+  (`destaques`, `lojas_destaque`) e o `recentes` não desligam, para quem pagou continuar aparecendo.
+- **Anúncio fora do ar** devolve só a categoria (sem título e sem vendedor), porque o dono escolheu tirar do ar.
+- **Textos legais semeados** são RASCUNHO honesto para o piloto, com campos "[a preencher pela equipe: razão social,
+  CNPJ, endereço, encarregado]". Um advogado precisa revisar antes de divulgar o site.
