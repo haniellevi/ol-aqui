@@ -99,6 +99,24 @@ create trigger log_vitrines_acoes_admin after insert on public.vitrines_acoes_ad
 create trigger log_perfis_verificacoes after insert or update on public.perfis_verificacoes
   for each row execute function public.registrar_log();
 
+-- Conta suspensa não põe anúncio no ar (nem com avulso pago, nem aprovado pela moderação).
+-- Vale para todos, até o sistema: para voltar, a equipe reativa a conta no painel.
+create or replace function public.barrar_anuncio_conta_suspensa()
+returns trigger language plpgsql security definer
+set search_path = public, extensions
+as $$
+begin
+  if (new.status = 'ativo' and (tg_op = 'INSERT' or old.status <> 'ativo'))
+     or (new.status = 'em_analise' and (tg_op = 'INSERT' or old.status not in ('ativo', 'em_analise'))) then
+    if exists (select 1 from public.vitrines_lojas v where v.id = new.vitrine_id and v.status = 'suspensa') then
+      raise exception 'Sua conta de vendedor está suspensa. Fale com o suporte.' using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end $$;
+create trigger anuncios_1_conta_suspensa before insert or update of status on public.anuncios
+  for each row execute function public.barrar_anuncio_conta_suspensa();
+
 -- ---------------------------------------------------------------------
 -- 3. Utilitários internos
 -- ---------------------------------------------------------------------
@@ -549,6 +567,51 @@ begin
   return query select pg.id, pg.valor_centavos, ndias;
 end $$;
 
+-- Antes de criar a cobrança no Asaas de um pagamento que já existia (a pessoa voltou com ?p=):
+-- confere de novo o que pedir_* conferiu. Devolve null quando pode cobrar, ou o motivo em
+-- palavras simples. Só o dono do pagamento pergunta (outro usuário: "não encontrado").
+create or replace function public.cobranca_pode_seguir(p_pagamento_id uuid)
+returns text language plpgsql stable security definer
+set search_path = public, extensions
+as $$
+declare
+  uid text := public.usuario_id();
+  pg  public.pagamentos;
+  v   public.vitrines_lojas;
+  a   public.anuncios;
+  p   public.planos;
+begin
+  if uid is null then
+    raise exception 'Entre na sua conta para continuar.' using errcode = '28000';
+  end if;
+  select * into pg from public.pagamentos x where x.id = p_pagamento_id;
+  select * into v from public.vitrines_lojas x where x.id = pg.vitrine_id;
+  if pg.id is null or v.dono_id is distinct from uid or pg.tipo not in ('assinatura', 'anuncio_avulso') then
+    return 'Pagamento não encontrado.';
+  end if;
+  if pg.status <> 'pendente' then
+    return 'Esta cobrança não está mais esperando pagamento. Comece de novo.';
+  end if;
+  if v.status = 'suspensa' then
+    return 'Sua conta de vendedor está suspensa. Fale com o suporte.';
+  end if;
+  if pg.tipo = 'anuncio_avulso' then
+    select * into a from public.anuncios x where x.id = pg.anuncio_id;
+    if a.id is null or a.status not in ('rascunho', 'pausado', 'expirado') then
+      return 'Este anúncio não precisa mais do avulso.';
+    end if;
+    if a.pago_ate > now() then
+      return 'Este anúncio já está pago. Toque em Publicar.';
+    end if;
+  else
+    select * into p from public.planos x where x.codigo = pg.plano_codigo;
+    if not coalesce(public.plano_a_venda(p, v), false) then
+      return 'Este plano não está mais à venda. Escolha outro em Meu plano.';
+    end if;
+  end if;
+  return null;
+end $$;
+
 -- ---------------------------------------------------------------------
 -- 5. Aplicar e desfazer (internas: só confirmar_pagamento / cancelar_pagamento chamam)
 -- ---------------------------------------------------------------------
@@ -614,11 +677,12 @@ returns void language plpgsql security definer
 set search_path = public, extensions
 as $$
 declare
-  pg    public.pagamentos;
-  v     public.vitrines_lojas;
-  falta interval;
-  novo  timestamptz;
-  antes text := coalesce(current_setting('olaki.sistema', true), '');
+  pg     public.pagamentos;
+  v      public.vitrines_lojas;
+  falta  interval;
+  recuo  interval;
+  novo   timestamptz;
+  antes  text := coalesce(current_setting('olaki.sistema', true), '');
 begin
   select * into pg from public.pagamentos where id = p_pagamento_id;
   if pg.concedido_ate is null then return; end if;
@@ -640,12 +704,23 @@ begin
        where id = v.id;
     end if;
   elsif v.plano = pg.plano_codigo and v.plano_expira_em is not null then
+    -- O plano marcado para depois começa quando o atual acaba: se o atual encurta, ele anda
+    -- para trás o mesmo tanto (senão o tempo tirado viraria tempo grátis do plano marcado).
     if pg.regra in ('inicio', 'troca_agora') and v.plano_expira_em = pg.concedido_ate then
+      recuo := v.plano_expira_em - greatest(coalesce(pg.expira_anterior, now()), now());
       update public.vitrines_lojas
          set plano = coalesce(pg.plano_anterior, plano), plano_expira_em = pg.expira_anterior
        where id = v.id;
     else
+      recuo := falta;
       update public.vitrines_lojas set plano_expira_em = plano_expira_em - falta where id = v.id;
+    end if;
+    if v.plano_proximo is not null and recuo > interval '0' then
+      if v.plano_proximo_ate - recuo <= now() then
+        update public.vitrines_lojas set plano_proximo = null, plano_proximo_ate = null, plano_proximo_pagamento_id = null where id = v.id;
+      else
+        update public.vitrines_lojas set plano_proximo_ate = plano_proximo_ate - recuo where id = v.id;
+      end if;
     end if;
   end if;
   perform set_config('olaki.sistema', antes, true);
@@ -658,16 +733,20 @@ returns void language plpgsql security definer
 set search_path = public, extensions
 as $$
 declare
-  pg    public.pagamentos;
-  a     public.anuncios;
-  ndias integer;
-  ini   timestamptz;
-  fimp  timestamptz;
-  novo  public.status_anuncio;
-  antes text := coalesce(current_setting('olaki.sistema', true), '');
+  pg     public.pagamentos;
+  a      public.anuncios;
+  v      public.vitrines_lojas;
+  ndias  integer;
+  minimo integer;
+  pronto boolean;
+  ini    timestamptz;
+  fimp   timestamptz;
+  novo   public.status_anuncio;
+  antes  text := coalesce(current_setting('olaki.sistema', true), '');
 begin
   select * into pg from public.pagamentos where id = p_pagamento_id;
   select * into a from public.anuncios where id = pg.anuncio_id for update;
+  select * into v from public.vitrines_lojas where id = a.vitrine_id;
   if a.id is null then
     update public.pagamentos set devolver_motivo = 'O anúncio foi apagado antes do pagamento chegar' where id = pg.id;
     return;
@@ -683,11 +762,17 @@ begin
   ini := greatest(coalesce(a.pago_ate, now()), now());
   fimp := ini + make_interval(days => ndias);
 
+  -- Com a flag do sistema os gatilhos de fotos não conferem nada: confere aqui o mínimo para publicar.
+  -- Loja suspensa: só soma o tempo (o anúncio fica fora do ar, como em aplicar_assinatura).
+  minimo := coalesce(public.numero_ou_nulo(public.config('anuncio.fotos_minimo', a.microrregiao_id, '1')), 0)::int;
+  pronto := v.id is not null and v.status <> 'suspensa' and a.categoria_id is not null
+            and coalesce(cardinality(a.fotos), 0) >= minimo;
+
   perform set_config('olaki.sistema', '1', true);
   begin
     update public.anuncios
        set pago_ate = fimp,
-           status = case when status in ('rascunho', 'pausado', 'expirado') then 'ativo'::public.status_anuncio else status end
+           status = case when pronto and status in ('rascunho', 'pausado', 'expirado') then 'ativo'::public.status_anuncio else status end
      where id = a.id
     returning status into novo;
   exception when others then
@@ -696,6 +781,7 @@ begin
   update public.pagamentos
      set concedido_de = ini, concedido_ate = fimp,
          observacao = case
+           when v.status = 'suspensa' then 'Pago com a conta suspensa: o tempo foi somado, mas o anúncio fica fora do ar.'
            when novo in ('rascunho', 'pausado', 'expirado') then 'Pago. O anúncio não entrou no ar sozinho: falta o dono tocar em Publicar.'
            when novo = 'em_analise' then 'Pago. O anúncio está em análise pela moderação.'
            else observacao end
@@ -835,10 +921,21 @@ begin
     end if;
   end loop;
 
-  -- Teste/plano vencido: pausa o excedente (mantém os 0 mais recentes = pausa tudo até assinar)
+  -- Conta suspensa: nada fica no ar (nem avulso pago; o tempo pago continua guardado em pago_ate)
   update public.anuncios a set status = 'pausado'
     from public.vitrines_lojas v
-   where a.vitrine_id = v.id and a.status = 'ativo' and public.limite_anuncios(v) = 0;
+   where a.vitrine_id = v.id and a.status = 'ativo' and v.status = 'suspensa';
+
+  -- Acima do limite do plano (teste/plano vencido = limite 0, ou plano menor que começou):
+  -- pausa o excedente e mantém no ar os mais recentes. Avulso pago não conta e não sai.
+  update public.anuncios a set status = 'pausado'
+    from (select x.id, x.lim, row_number() over (partition by x.vitrine_id
+                                                  order by x.publicado_em desc nulls last, x.criado_em desc, x.id) as pos
+            from (select an.id, an.vitrine_id, an.publicado_em, an.criado_em, public.limite_anuncios(v) as lim
+                    from public.anuncios an
+                    join public.vitrines_lojas v on v.id = an.vitrine_id
+                   where an.status = 'ativo' and (an.pago_ate is null or an.pago_ate <= now())) x) e
+   where a.id = e.id and e.lim is not null and e.pos > e.lim;
   perform public.expirar_destaques();
 
   -- cobrança de plano/avulso que ninguém pagou (se o Pix antigo for pago depois, confirmar_pagamento aceita)
@@ -992,6 +1089,8 @@ begin
       raise exception 'Esta loja já está suspensa.' using errcode = 'P0001';
     end if;
     update public.vitrines_lojas set status = 'suspensa' where id = v.id;
+    -- sai tudo do ar na hora (ao reativar, o dono publica de novo; avulso pago continua valendo)
+    update public.anuncios set status = 'pausado' where vitrine_id = v.id and status = 'ativo';
   elsif p_acao = 'reativar' then
     if v.status = 'ativa' then
       raise exception 'Esta loja já está ativa.' using errcode = 'P0001';
@@ -1124,6 +1223,8 @@ revoke all on function public.admin_lojas(text, text, uuid, text, integer, integ
 revoke all on function public.admin_acao_loja(uuid, text, text, integer, text) from public, anon;
 revoke all on function public.admin_analisar_verificacao(uuid, boolean, text) from public, anon;
 revoke all on function public.admin_resumo_pagamentos(text, text, uuid, date, date) from public, anon;
+revoke all on function public.cobranca_pode_seguir(uuid) from public, anon;
+grant execute on function public.cobranca_pode_seguir(uuid) to authenticated;
 grant execute on function public.minha_assinatura(), public.opcoes_assinatura(), public.pedir_assinatura(text, integer),
   public.pedir_anuncio_avulso(uuid), public.admin_lojas(text, text, uuid, text, integer, integer),
   public.admin_acao_loja(uuid, text, text, integer, text), public.admin_analisar_verificacao(uuid, boolean, text),

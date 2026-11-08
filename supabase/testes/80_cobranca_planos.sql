@@ -361,3 +361,153 @@ reset role; select set_config('request.jwt.claim.role','',false), set_config('re
 select count(*) filter (where confrelid = 'public.pagamentos'::regclass) as vitrine_para_pagamentos,
        count(*) filter (where confrelid = 'public.planos'::regclass) as vitrine_para_planos
   from pg_constraint where conrelid = 'public.vitrines_lojas'::regclass and contype = 'f';
+
+-- ---------------------------------------------------------------------
+-- Correções da revisão: conta suspensa, fotos, limite depois de descer de plano,
+-- avulso pago na rotina, devolução com plano marcado e cobrança retomada.
+-- ---------------------------------------------------------------------
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values
+ ('user_su80',:'reg','Sara Suspensa','5589999998585','Corrente','pf'),
+ ('user_ex80',:'reg','Eva Loja Vencida','5589999998686','Corrente','pj'),
+ ('user_dw80',:'reg','Davi Desce Plano','5589999998787','Corrente','pj'),
+ ('user_rv80',:'reg','Rita Devolve','5589999998888','Corrente','pj');
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_su80',false) \g /dev/null
+select tipo from quero_vender('pf') \g /dev/null
+select id as vit_su from vitrines_lojas where dono_id='user_su80' \gset
+\set foto_su '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_su80/x/1.webp}'
+insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos)
+values (:'vit_su', :'cat_moveis', 'Sofa suspensa numero um', 'Corrente', 30000, '{}', :'foto_su'),
+       (:'vit_su', :'cat_moveis', 'Sofa suspensa numero dois', 'Corrente', 30000, '{}', :'foto_su'),
+       (:'vit_su', :'cat_moveis', 'Sofa suspensa numero tres', 'Corrente', 30000, '{}', :'foto_su');
+insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos, status)
+values (:'vit_su', :'cat_moveis', 'Poltrona suspensa avulsa', 'Corrente', 9000, '{}', :'foto_su', 'rascunho') returning id as rasc_su \gset
+insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos, status)
+values (:'vit_su', :'cat_moveis', 'Banco sem foto avulso', 'Corrente', 9000, '{}', :'foto_su', 'rascunho') returning id as rasc_sf \gset
+
+\echo '[32] avulso confirmado depois que o dono tirou as fotos: so soma o tempo, fica rascunho e a equipe ve a nota'
+select pagamento_id as pg_sf from pedir_anuncio_avulso(:'rasc_sf') \gset
+update anuncios set fotos='{}' where id=:'rasc_sf';
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select registrar_cobranca_asaas(:'pg_sf', 'pay_80_sf', null, 'pix') \g /dev/null
+select confirmar_pagamento('pay_80_sf') \g /dev/null
+select status, pago_ate > now() as pago, cardinality(fotos) as fotos from anuncios where id=:'rasc_sf';
+select observacao from pagamentos where id=:'pg_sf';
+\echo '[32b] e o dono nao publica sem foto (ERRO esperado: pelo menos 1 foto)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_su80',false) \g /dev/null
+select publicar_anuncio(:'rasc_sf');
+
+\echo '[33] suspender tira do ar na hora os anuncios da conta (3 no ar -> 0)'
+select pagamento_id as pg_su from pedir_anuncio_avulso(:'rasc_su') \gset
+select set_config('request.jwt.claim.sub','user_ad80',false) \g /dev/null
+select admin_acao_loja(:'vit_su', 'suspender', 'Fraude em teste');
+reset role; select count(*) filter (where status='ativo') as no_ar, count(*) filter (where status='pausado') as pausados
+  from anuncios where vitrine_id=:'vit_su';
+\echo '[33b] Pix do avulso pago com a conta suspensa: soma o tempo, mas o anuncio nao entra no ar (nota para a equipe)'
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select registrar_cobranca_asaas(:'pg_su', 'pay_80_su', null, 'pix') \g /dev/null
+select confirmar_pagamento('pay_80_su') \g /dev/null
+select status, pago_ate > now() as pago from anuncios where id=:'rasc_su';
+select observacao from pagamentos where id=:'pg_su';
+\echo '[33c] dono suspenso nao poe no ar: update direto, publicar e anuncio pausado com avulso pago (ERRO esperado: suspensa x3)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_su80',false) \g /dev/null
+update anuncios set status='ativo' where id=:'rasc_su';
+select publicar_anuncio(:'rasc_su');
+reset role; update anuncios set status='pausado' where id=:'rasc_su';
+set role authenticated;
+update anuncios set status='ativo' where id=:'rasc_su';
+reset role; select status as continua_fora from anuncios where id=:'rasc_su';
+\echo '[33d] nem a moderacao aprova anuncio de conta suspensa (ERRO esperado: suspensa); a rotina nao devolve nada ao ar'
+update anuncios set status='ativo' where id=:'rasc_su';
+set role service_role; select expirar_rotina() \g /dev/null
+reset role; select count(*) filter (where status='ativo') as no_ar from anuncios where vitrine_id=:'vit_su';
+\echo '[33e] cobranca antiga retomada com a conta suspensa: o servidor pergunta antes e a resposta e "suspensa"'
+insert into pagamentos (vitrine_id, microrregiao_id, tipo, anuncio_id, valor_centavos, status)
+values (:'vit_su', :'reg', 'anuncio_avulso', :'rasc_sf', 990, 'pendente') returning id as pg_retoma \gset
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_su80',false) \g /dev/null
+select cobranca_pode_seguir(:'pg_retoma') as motivo;
+\echo '[33f] reativada: o avulso pago volta ao ar quando o dono publica (mesmo no limite do plano)'
+select set_config('request.jwt.claim.sub','user_ad80',false) \g /dev/null
+select admin_acao_loja(:'vit_su', 'reativar', 'Caso resolvido');
+reset role; update anuncios set status='ativo' where vitrine_id=:'vit_su' and titulo like 'Sofa suspensa%';
+set role authenticated; select set_config('request.jwt.claim.sub','user_su80',false) \g /dev/null
+select publicar_anuncio(:'rasc_su') as publicou;
+\echo '[33g] cobranca retomada: anuncio que ja tem avulso pago -> motivo; de outra pessoa -> nao encontrado; visitante (ERRO esperado: permission denied)'
+select cobranca_pode_seguir(:'pg_retoma') as motivo;
+reset role; update pagamentos set anuncio_id=:'rasc_su' where id=:'pg_retoma';
+set role authenticated;
+select cobranca_pode_seguir(:'pg_retoma') as motivo_ja_no_ar;
+select set_config('request.jwt.claim.sub','user_ou80',false) \g /dev/null
+select cobranca_pode_seguir(:'pg_retoma') as alheio;
+set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select cobranca_pode_seguir(:'pg_retoma');
+reset role; update pagamentos set status='cancelado' where id=:'pg_retoma';
+
+\echo '[34] avulso.publico = todos: loja com teste vencido paga o avulso e a rotina nao tira do ar o que esta pago'
+reset role; select set_config('request.jwt.claim.role','',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+update configuracoes set valor='"todos"' where chave='avulso.publico' and microrregiao_id is null;
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_ex80',false) \g /dev/null
+select tipo from quero_vender('loja', 'Loja Vencida Oitenta', 'loja-vencida-oitenta', '89999998686') \g /dev/null
+select id as vit_ex from vitrines_lojas where dono_id='user_ex80' \gset
+insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos, status)
+values (:'vit_ex', :'cat_moveis', 'Armario loja vencida', 'Corrente', 9000, '{}',
+        '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_ex80/x/1.webp}', 'rascunho') returning id as rasc_ex \gset
+reset role; update vitrines_lojas set teste_expira_em = now() - interval '1 day' where id=:'vit_ex';
+set role authenticated;
+select pagamento_id as pg_ex from pedir_anuncio_avulso(:'rasc_ex') \gset
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select registrar_cobranca_asaas(:'pg_ex', 'pay_80_ex', null, 'pix') \g /dev/null
+select confirmar_pagamento('pay_80_ex') \g /dev/null
+select expirar_rotina() \g /dev/null
+select status as continua_no_ar, pago_ate > now() as pago from anuncios where id=:'rasc_ex';
+reset role; update configuracoes set valor='"pf"' where chave='avulso.publico' and microrregiao_id is null;
+
+\echo '[35] desceu do Full (12 no ar) para o Slim (limite 10): quando o Slim comeca, a rotina pausa os 2 mais antigos'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_dw80',false) \g /dev/null
+select tipo from quero_vender('loja', 'Loja Desce Oitenta', 'loja-desce-oitenta', '89999998787') \g /dev/null
+select id as vit_dw from vitrines_lojas where dono_id='user_dw80' \gset
+select set_config('request.jwt.claim.sub','user_ad80',false) \g /dev/null
+select admin_acao_loja(:'vit_dw', 'trocar_plano', 'Teste de descida', 30, 'full');
+reset role;
+insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos, publicado_em)
+select :'vit_dw', :'cat_moveis', 'Item desce numero ' || g, 'Corrente', 1000, '{}',
+       '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_dw80/x/1.webp}', now() - make_interval(days => 20 - g)
+  from generate_series(1, 12) g;
+update anuncios set publicado_em = now() - make_interval(days => 20 - substring(titulo from '[0-9]+$')::int) where vitrine_id=:'vit_dw';
+set role authenticated; select set_config('request.jwt.claim.sub','user_dw80',false) \g /dev/null
+select regra from opcoes_assinatura() where codigo='slim' and meses=1;
+select pagamento_id as pg_dw from pedir_assinatura('slim', 1) \gset
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select registrar_cobranca_asaas(:'pg_dw', 'pay_80_dw', null, 'pix') \g /dev/null
+select confirmar_pagamento('pay_80_dw') \g /dev/null
+select expirar_rotina() \g /dev/null
+select count(*) filter (where status='ativo') as antes_no_ar from anuncios where vitrine_id=:'vit_dw';
+reset role; update vitrines_lojas set plano_expira_em = now() - interval '1 minute' where id=:'vit_dw';
+set role service_role; select expirar_rotina() \g /dev/null
+reset role; select plano, plano_proximo from vitrines_lojas where id=:'vit_dw';
+select count(*) filter (where status='ativo') as no_ar, string_agg(titulo, ', ' order by titulo) filter (where status='pausado') as pausados
+  from anuncios where vitrine_id=:'vit_dw';
+
+\echo '[36] devolucao do Full que veio antes de um Slim marcado: o Slim anda para tras (comeca agora e vale so os 30 dias pagos)'
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_rv80',false) \g /dev/null
+select tipo from quero_vender('loja', 'Loja Devolve Oitenta', 'loja-devolve-oitenta', '89999998888') \g /dev/null
+select id as vit_rv from vitrines_lojas where dono_id='user_rv80' \gset
+reset role; update vitrines_lojas set teste_expira_em = now() - interval '1 day' where id=:'vit_rv';
+set role authenticated;
+select pagamento_id as pg_rv_full from pedir_assinatura('full', 1) \gset
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select registrar_cobranca_asaas(:'pg_rv_full', 'pay_80_rv_full', null, 'pix') \g /dev/null
+select confirmar_pagamento('pay_80_rv_full') \g /dev/null
+set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_rv80',false) \g /dev/null
+select pagamento_id as pg_rv_slim from pedir_assinatura('slim', 1) \gset
+set role service_role; select set_config('request.jwt.claim.role','service_role',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
+select registrar_cobranca_asaas(:'pg_rv_slim', 'pay_80_rv_slim', null, 'pix') \g /dev/null
+select confirmar_pagamento('pay_80_rv_slim') \g /dev/null
+reset role; select plano, plano_proximo, plano_proximo_ate > now() + interval '59 days' as slim_ate_60 from vitrines_lojas where id=:'vit_rv';
+set role service_role; select set_config('request.jwt.claim.role','service_role',false) \g /dev/null
+select cancelar_pagamento('pay_80_rv_full', 'estornado') \g /dev/null
+reset role;
+select plano, plano_proximo,
+       plano_proximo_ate between now() + interval '29 days 23 hours' and now() + interval '30 days 1 minute' as slim_so_30_dias
+  from vitrines_lojas where id=:'vit_rv';
+select (plano_efetivo(v)).codigo as vale_agora from vitrines_lojas v where id=:'vit_rv';
