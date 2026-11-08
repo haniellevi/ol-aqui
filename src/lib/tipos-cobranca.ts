@@ -75,6 +75,8 @@ export type MeuPagamento = {
   pago_em: string | null;
   criado_em: string;
   observacao: string | null;
+  /** Pago, mas não pôde ser aplicado: a equipe devolve o dinheiro. */
+  devolver_motivo: string | null;
 };
 
 /** Resposta das ações de pagamento de plano e avulso. */

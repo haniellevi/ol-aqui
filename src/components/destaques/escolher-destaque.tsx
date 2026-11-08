@@ -474,7 +474,7 @@ function CartaoOpcao({
   );
 }
 
-function PagarPix({ cobranca }: { cobranca: Extract<Cobranca, { forma: "pix" }> }) {
+export function PagarPix({ cobranca }: { cobranca: Extract<Cobranca, { forma: "pix" }> }) {
   const [copiado, setCopiado] = useState(false);
   async function copiar() {
     if (!cobranca.copiaECola) return;

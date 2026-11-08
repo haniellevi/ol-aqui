@@ -4,6 +4,7 @@ import { AlertTriangle, Info } from "lucide-react";
 import { anuncioPublico } from "@/lib/dados/anuncios";
 import { categoriaPorId } from "@/lib/dados/categorias";
 import { lerConfigNumero } from "@/lib/dados/config";
+import { avulsoParaMim } from "@/lib/dados/cobranca";
 import { preco, valorDoCampo } from "@/lib/formato";
 import { CardAnuncio } from "@/components/anuncio/card-anuncio";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
@@ -11,7 +12,7 @@ import { CorpoPasso } from "@/components/anunciar/barra-continuar";
 import { BotaoPublicar } from "@/components/anunciar/botao-publicar";
 import { STATUS_PUBLICADO, urlPasso, type SlugPasso } from "@/components/anunciar/passos";
 import { carregarPasso, type ParamsPasso } from "../_carregar";
-import { LINK_PLANOS } from "@/lib/rotas";
+import { LINK_PLANOS, linkAvulso } from "@/lib/rotas";
 
 export const metadata: Metadata = { title: "Anunciar · Revisar" };
 
@@ -22,13 +23,16 @@ type Linha = { rotulo: string; valor: string; passo: SlugPasso; falta?: boolean 
 // T22 · Passo 6: o card exatamente como vai aparecer, o resumo com "Alterar" em cada item e Publicar.
 export default async function PassoRevisar({ searchParams }: { searchParams: ParamsPasso }) {
   const { anuncio, conta, editar } = await carregarPasso(searchParams);
-  const [publico, achada, minimoFotos] = await Promise.all([
+  const jaPublicado = (STATUS_PUBLICADO as readonly string[]).includes(anuncio.status);
+  const pagoAte = anuncio.pago_ate && new Date(anuncio.pago_ate).getTime() > Date.now() ? anuncio.pago_ate : null;
+  const [publico, achada, minimoFotos, avulso] = await Promise.all([
     anuncioPublico(anuncio.id),
     anuncio.categoria_id ? categoriaPorId(anuncio.categoria_id) : Promise.resolve(null),
     lerConfigNumero("anuncio.fotos_minimo", conta.vitrine.microrregiao_id),
+    !jaPublicado && !conta.podePublicar && !pagoAte ? avulsoParaMim(conta.vitrine) : Promise.resolve(null),
   ]);
+  const hrefAvulso = avulso ? linkAvulso(anuncio.id) : null;
 
-  const jaPublicado = (STATUS_PUBLICADO as readonly string[]).includes(anuncio.status);
   const modo = jaPublicado ? "salvar" : anuncio.status === "rascunho" ? "publicar" : "republicar";
   const campos = achada?.pai ? achada.categoria.campos : publico?.campos ?? [];
   const titulo = anuncio.titulo?.trim() ?? "";
@@ -113,13 +117,29 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
         </div>
       )}
 
-      {!jaPublicado && !conta.podePublicar && (
+      {!jaPublicado && pagoAte && (
+        <div className="flex gap-3 rounded-card bg-laranja-claro p-3 text-base">
+          <Info className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
+          <p>Anúncio avulso pago. Toque em Publicar para pôr no ar.</p>
+        </div>
+      )}
+
+      {!jaPublicado && !pagoAte && !conta.podePublicar && (
         <div className="flex gap-3 rounded-card bg-laranja-claro p-3 text-base">
           <Info className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
           <p>
             Você chegou ao limite de anúncios do seu plano. O anúncio fica guardado como rascunho.{" "}
+            {avulso && hrefAvulso ? (
+              <>
+                Para pôr só este no ar, pague o anúncio avulso por {preco(avulso.preco)}.{" "}
+                <Link href={hrefAvulso} className="font-semibold text-laranja-escuro underline underline-offset-4">
+                  Pagar anúncio avulso
+                </Link>{" "}
+                ou{" "}
+              </>
+            ) : null}
             <Link href={LINK_PLANOS} className="font-semibold text-laranja-escuro underline underline-offset-4">
-              Ver planos
+              {avulso ? "ver planos" : "Ver planos"}
             </Link>
           </p>
         </div>
@@ -154,7 +174,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
         </dl>
       </section>
 
-      <BotaoPublicar id={anuncio.id} editar={editar} formId={FORM} modo={modo} />
+      <BotaoPublicar id={anuncio.id} editar={editar} formId={FORM} modo={modo} linkAvulso={hrefAvulso} />
     </CorpoPasso>
   );
 }

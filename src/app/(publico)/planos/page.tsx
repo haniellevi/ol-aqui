@@ -53,7 +53,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
     if (p.e_teste) return vendedor ? null : { href: "/quero-vender/loja", texto: "Abrir minha loja grátis" };
     if (p.publico === "pf" && p.preco_centavos === 0) return vendedor ? null : { href: "/quero-vender", texto: "Começar a vender" };
     if (!vendedor) return { href: p.publico === "pf" ? "/quero-vender" : "/quero-vender/loja", texto: "Começar a vender" };
-    return { href: `/minha-conta/plano?origem=${origem ?? "planos"}`, texto: `Quero o ${p.nome.replace(/^Plano\s+/i, "")}` };
+    return { href: `/minha-conta/plano?origem=${encodeURIComponent(origem ?? "planos")}&plano=${encodeURIComponent(p.codigo)}`, texto: `Quero o ${p.nome.replace(/^Plano\s+/i, "")}` };
   }
 
   return (

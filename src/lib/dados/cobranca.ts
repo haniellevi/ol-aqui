@@ -43,7 +43,7 @@ export async function meuPagamento(id: string): Promise<MeuPagamento | null> {
     const { data, error } = await db
       .from("pagamentos")
       .select(
-        "id, tipo, status, valor_centavos, plano_codigo, meses, anuncio_id, regra, concedido_de, concedido_ate, forma, link_pagamento, asaas_cobranca_id, pago_em, criado_em, observacao, planos(nome)",
+        "id, tipo, status, valor_centavos, plano_codigo, meses, anuncio_id, regra, concedido_de, concedido_ate, forma, link_pagamento, asaas_cobranca_id, pago_em, criado_em, observacao, devolver_motivo, planos(nome)",
       )
       .eq("id", id)
       .maybeSingle();

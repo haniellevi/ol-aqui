@@ -1,23 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LINK_PLANOS } from "@/lib/rotas";
+import { LINK_PLANOS, linkAvulso, linkMeuPlano } from "@/lib/rotas";
 import { auth } from "@clerk/nextjs/server";
-import { Check, Radar } from "lucide-react";
+import { Radar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { seguro } from "@/lib/dados/seguro";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
-import { reais } from "@/lib/formato";
-import type { MinhaConta, Plano } from "@/lib/tipos";
+import { ehUuid, reais } from "@/lib/formato";
+import { asaasConfigurado } from "@/lib/asaas";
+import { precisaDocumento } from "@/lib/cobranca-destaque";
+import { meuPagamento, minhaAssinatura, opcoesAssinatura } from "@/lib/dados/cobranca";
+import type { Plano } from "@/lib/tipos";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { Aviso } from "@/components/conta/aviso";
 import { dataPorExtenso, resumoPlano } from "@/components/conta/resumo-plano";
+import { EscolherPlano } from "@/components/cobranca/escolher-plano";
 
 export const metadata: Metadata = { title: "Meu plano" };
 
-// T33 · Meu plano e faturas: plano atual, uso do limite, vencimento, planos do painel e pagamentos.
-// Preços e limites vêm da tabela planos. O pagamento (Asaas) ainda não existe: "Em breve".
+// T33 · Meu plano e faturas: plano atual, uso do limite, vencimento, aviso de renovar, troca marcada,
+// planos à venda com período e regra antes de pagar (Pix/cartão pelo Asaas) e pagamentos.
+// Preços, períodos e limites vêm do banco (planos e configuracoes). Sem ASAAS_API_KEY: "Pagamento em breve".
+// ?plano=<codigo> já escolhe um plano; ?p=<pagamento> retoma um pagamento.
 
 const COLUNAS_PLANO =
   "codigo, nome, descricao, publico, preco_centavos, periodo_dias, limite_anuncios, acesso_radar, propostas_radar_mes, e_teste, ordem";
@@ -26,6 +32,7 @@ type Pagamento = {
   id: string;
   tipo: "assinatura" | "anuncio_avulso" | "destaque";
   plano_codigo: string | null;
+  anuncio_id: string | null;
   valor_centavos: number;
   forma: "pix" | "boleto" | "cartao" | null;
   status: "pendente" | "pago" | "vencido" | "estornado" | "cancelado";
@@ -64,7 +71,7 @@ async function lerPagamentos(vitrineId: string): Promise<Pagamento[]> {
     const db = await createClient();
     const { data, error } = await db
       .from("pagamentos")
-      .select("id, tipo, plano_codigo, valor_centavos, forma, status, vencimento, pago_em, link_pagamento, criado_em")
+      .select("id, tipo, plano_codigo, anuncio_id, valor_centavos, forma, status, vencimento, pago_em, link_pagamento, criado_em")
       .eq("vitrine_id", vitrineId)
       .order("criado_em", { ascending: false })
       .limit(12);
@@ -72,12 +79,12 @@ async function lerPagamentos(vitrineId: string): Promise<Pagamento[]> {
   }, []);
 }
 
-/** Planos que fazem sentido para a pessoa (sem o teste; público dela ou "todos"). */
-function planosParaMim(planos: Plano[], conta: MinhaConta): Plano[] {
-  return planos.filter((p) => !p.e_teste && (p.publico === "todos" || p.publico === conta.perfil.tipo_pessoa));
-}
+type Params = Promise<{ plano?: string | string[]; p?: string | string[] }>;
 
-export default async function PaginaMeuPlano() {
+export default async function PaginaMeuPlano({ searchParams }: { searchParams: Params }) {
+  const busca = await searchParams;
+  const planoPedido = typeof busca.plano === "string" ? busca.plano.slice(0, 60) : null;
+  const pagamentoPedido = typeof busca.p === "string" && ehUuid(busca.p) ? busca.p : null;
   const conta = await meuPerfilEVitrine();
   if (!conta?.vitrine) {
     return (
@@ -90,13 +97,21 @@ export default async function PaginaMeuPlano() {
     );
   }
   const vitrine = conta.vitrine;
-  const [planos, pagamentos] = await Promise.all([lerPlanos(), lerPagamentos(vitrine.id)]);
+  const pagamentoLigado = asaasConfigurado();
+  const [planos, pagamentos, assinatura, opcoes, doc, retomado] = await Promise.all([
+    lerPlanos(),
+    lerPagamentos(vitrine.id),
+    minhaAssinatura(),
+    opcoesAssinatura(),
+    pagamentoLigado ? precisaDocumento(vitrine.id) : Promise.resolve(false),
+    pagamentoPedido ? meuPagamento(pagamentoPedido) : Promise.resolve(null),
+  ]);
   const resumo = resumoPlano(conta)!;
   const nomes = new Map(planos.map((p) => [p.codigo, p.nome]));
   const planoContratado = planos.find((p) => p.codigo === vitrine.plano);
   const contratado = planoContratado?.e_teste ? "período grátis" : `plano ${planoContratado?.nome ?? vitrine.plano}`;
   const pct = conta.limite ? Math.min(100, Math.round((conta.ativos / conta.limite) * 100)) : null;
-  const opcoes = planosParaMim(planos, conta);
+  const suspensa = assinatura?.situacao === "suspensa";
 
   return (
     <PaginaConta>
@@ -115,6 +130,28 @@ export default async function PaginaMeuPlano() {
             <span>
               Seu {contratado} terminou.
               {resumo.nome ? ` Agora você está no ${resumo.nome}.` : " Assine um plano para pôr anúncios no ar."}
+            </span>
+          </Aviso>
+        )}
+
+        {suspensa && (
+          <Aviso tipo="erro">
+            <span>Sua conta de vendedor está suspensa. Fale com o suporte do OLAKI para saber o que aconteceu.</span>
+          </Aviso>
+        )}
+        {!suspensa && assinatura?.renovar_agora && assinatura.situacao !== "vencida" && assinatura.situacao !== "teste_vencido" && assinatura.vence_em && (
+          <Aviso tipo="atencao">
+            <span>
+              Seu {assinatura.e_teste ? "teste grátis" : `plano ${assinatura.plano_nome ?? ""}`} termina em {dataPorExtenso(assinatura.vence_em)}.
+              {" "}Pague o próximo período abaixo para não ficar sem anúncios no ar.
+            </span>
+          </Aviso>
+        )}
+        {assinatura?.plano_proximo && (
+          <Aviso tipo="info">
+            <span>
+              Troca marcada: o plano {assinatura.plano_proximo_nome ?? assinatura.plano_proximo} começa em{" "}
+              {dataPorExtenso(assinatura.plano_proximo_inicio)} e vai até {dataPorExtenso(assinatura.plano_proximo_ate)}. Já está pago.
             </span>
           </Aviso>
         )}
@@ -164,68 +201,28 @@ export default async function PaginaMeuPlano() {
         )}
       </section>
 
-      {/* Planos do painel */}
-      {opcoes.length > 0 && (
+      {/* Planos à venda, com período e como o pagamento entra (antes de pagar) */}
+      {assinatura && !suspensa && (
         <section aria-labelledby="planos" className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id="planos" className="text-lg font-bold">
-              Planos
+              {assinatura.situacao === "ativa" ? "Renovar ou trocar de plano" : "Assinar um plano"}
             </h2>
             <Link href={LINK_PLANOS} className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4">
               Comparar todos os planos
             </Link>
           </div>
-          <ul className="flex flex-col gap-3">
-            {opcoes.map((p) => {
-              const atual = conta.plano?.codigo === p.codigo;
-              return (
-                <li
-                  key={p.codigo}
-                  className={`flex flex-col gap-2 rounded-card bg-cartao p-4 shadow-1 ${atual ? "border-2 border-laranja" : "border-2 border-transparent"}`}
-                >
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 className="text-lg font-bold">{p.nome}</h3>
-                    <p className="text-lg font-bold">
-                      {p.preco_centavos === 0 ? "Grátis" : reais(p.preco_centavos)}
-                      {p.preco_centavos > 0 && (
-                        <span className="text-sm font-normal text-texto-suave">
-                          {" "}
-                          a cada {p.periodo_dias} dias
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  {p.descricao && <p className="text-base text-texto-suave">{p.descricao}</p>}
-                  <ul className="flex flex-col gap-1 text-base">
-                    <li className="flex items-center gap-2">
-                      <Check className="size-5 shrink-0 text-verde-escuro" aria-hidden />
-                      {p.limite_anuncios === null ? "Anúncios sem limite" : `Até ${p.limite_anuncios} anúncios no ar`}
-                    </li>
-                    {p.acesso_radar && (
-                      <li className="flex items-center gap-2">
-                        <Check className="size-5 shrink-0 text-verde-escuro" aria-hidden />
-                        {p.propostas_radar_mes === null
-                          ? "Radar de Negócios"
-                          : `Radar com ${p.propostas_radar_mes} propostas por mês`}
-                      </li>
-                    )}
-                  </ul>
-                  {atual ? (
-                    <p className="inline-flex min-h-12 items-center font-semibold text-verde-escuro">Seu plano atual</p>
-                  ) : p.preco_centavos > 0 ? (
-                    <div className="flex flex-col gap-1">
-                      <Botao disabled larguraTotal aria-describedby={`em-breve-${p.codigo}`}>
-                        Assinar
-                      </Botao>
-                      <p id={`em-breve-${p.codigo}`} className="text-center text-sm text-texto-suave">
-                        Em breve: pagamento por Pix aqui mesmo.
-                      </p>
-                    </div>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
+          <EscolherPlano
+            opcoes={opcoes}
+            assinatura={assinatura}
+            pagamentoLigado={pagamentoLigado}
+            precisaDocumento={doc}
+            planoInicial={planoPedido}
+            pagamentoInicial={retomado?.tipo === "assinatura" ? retomado : null}
+          />
+          <p className="text-sm text-texto-suave">
+            Cada pagamento vale por um período. Na hora de renovar, avisamos aqui em Meu plano.
+          </p>
         </section>
       )}
 
@@ -255,15 +252,33 @@ export default async function PaginaMeuPlano() {
                     <span>{dataPorExtenso(quando)}</span>
                     {p.forma && <span>· {FORMA[p.forma]}</span>}
                   </div>
-                  {p.status === "pendente" && p.link_pagamento && /^https:\/\//.test(p.link_pagamento) && (
-                    <a
-                      href={p.link_pagamento}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  {p.status === "pendente" && p.tipo === "assinatura" ? (
+                    <Link
+                      href={linkMeuPlano({ pagamentoId: p.id })}
                       className="inline-flex min-h-12 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
                     >
                       Pagar agora
-                    </a>
+                    </Link>
+                  ) : p.status === "pendente" && p.tipo === "anuncio_avulso" && p.anuncio_id ? (
+                    <Link
+                      href={linkAvulso(p.anuncio_id, p.id)}
+                      className="inline-flex min-h-12 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                    >
+                      Pagar agora
+                    </Link>
+                  ) : (
+                    p.status === "pendente" &&
+                    p.link_pagamento &&
+                    /^https:\/\//.test(p.link_pagamento) && (
+                      <a
+                        href={p.link_pagamento}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-12 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                      >
+                        Pagar agora
+                      </a>
+                    )
                   )}
                 </li>
               );

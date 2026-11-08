@@ -1,20 +1,27 @@
 import { CalendarClock, Gauge, ListChecks, Receipt, Store } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
+import { BotaoNovoRascunho } from "@/components/anunciar/botao-novo-rascunho";
 import { preco } from "@/lib/formato";
 import type { MinhaConta } from "@/lib/tipos";
 import { LINK_PLANOS } from "@/lib/rotas";
 
 // T16 · Limite atingido: aparece ANTES do passo 1, com as saídas (avulso, planos, liberar vaga).
 // Preço e dias do avulso vêm do painel (config). Nada de número escrito no código.
+// "Fazer um anúncio avulso" começa um rascunho; no Revisar, ao tocar em Publicar, o aviso de limite
+// leva para o pagamento do avulso (/anunciar/avulso).
 
 export function LimiteAtingido({
   conta,
   avulsoPreco,
   avulsoDias,
+  pagamentoLigado = false,
 }: {
   conta: MinhaConta;
+  /** Preço do avulso para esta pessoa; null quando o avulso não é oferecido para ela. */
   avulsoPreco: number | null;
   avulsoDias: number | null;
+  /** O Asaas está ligado (ASAAS_API_KEY). Sem ele: "Pagamento em breve". */
+  pagamentoLigado?: boolean;
 }) {
   const semPlano = !conta.plano; // teste ou plano venceu
   const titulo = semPlano ? "Seu período grátis ou plano terminou" : `Você chegou ao limite de ${conta.limite} anúncios`;
@@ -34,7 +41,7 @@ export function LimiteAtingido({
       </div>
 
       <ul className="flex flex-col gap-3">
-        {ehPf && !semPlano && avulsoPreco != null && (
+        {avulsoPreco != null && avulsoPreco > 0 && (
           <li className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
             <div className="flex gap-3">
               <Receipt className="mt-0.5 size-6 shrink-0 text-beringela" aria-hidden />
@@ -45,10 +52,19 @@ export function LimiteAtingido({
                 </p>
               </div>
             </div>
-            <Botao variante="secundario" larguraTotal disabled aria-describedby="avulso-em-breve">
-              Pagar com Pix
-            </Botao>
-            <p id="avulso-em-breve" className="text-sm text-texto-suave">Em breve: o pagamento do avulso ainda não está pronto.</p>
+            {pagamentoLigado ? (
+              <>
+                <BotaoNovoRascunho variante="secundario" texto="Fazer um anúncio avulso" />
+                <p className="text-sm text-texto-suave">Monte o anúncio e, no fim, pague por Pix ou cartão para pôr no ar.</p>
+              </>
+            ) : (
+              <>
+                <Botao variante="secundario" larguraTotal disabled aria-describedby="avulso-em-breve">
+                  Fazer um anúncio avulso
+                </Botao>
+                <p id="avulso-em-breve" className="text-sm text-texto-suave">Pagamento em breve: o avulso ainda não pode ser pago.</p>
+              </>
+            )}
           </li>
         )}
         <li className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
