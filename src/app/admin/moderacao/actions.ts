@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { exigirAdmin } from "@/lib/admin/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -100,4 +101,21 @@ function caminhoNoBucket(url: string | null): string | null {
   if (!url || !base || !url.startsWith(prefixo)) return null;
   const caminho = decodeURIComponent(url.slice(prefixo.length).split("?")[0]);
   return /^[A-Za-z0-9_]+\/vitrine\/[A-Za-z0-9_-][A-Za-z0-9._-]*$/.test(caminho) ? caminho : null;
+}
+
+/**
+ * Radar: ocultar, devolver ou remover um pedido ou uma proposta (moderar_radar no banco).
+ * O motivo é obrigatório para ocultar/remover; tudo fica no histórico (logs_atividade).
+ */
+export async function moderarRadar(form: FormData): Promise<void> {
+  const { supabase } = await exigirAdmin();
+  const tipo = form.get("tipo") === "proposta" ? "proposta" : "pedido";
+  const acao = String(form.get("acao") ?? "");
+  const id = String(form.get("id") ?? "");
+  const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
+  const { error } = await supabase.rpc("moderar_radar", { p_tipo: tipo, p_id: id, p_acao: acao, p_motivo: motivo || null });
+  revalidatePath("/admin", "layout");
+  revalidatePath("/radar", "layout");
+  if (error) redirect(`/admin/moderacao?erro=${encodeURIComponent(error.message.slice(0, 200))}#radar`);
+  redirect(`/admin/moderacao?ok=${encodeURIComponent(acao === "devolver" ? "Devolvido ao ar." : acao === "remover" ? "Removido." : "Tirado do ar.")}#radar`);
 }
