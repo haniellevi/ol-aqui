@@ -45,6 +45,8 @@ try:
     print('PASS: anúncio público protege contato, rascunho, vendido e pessoa sem confirmação', flush=True)
     checked(sql((root/'supabase/testes/180_criar_publicar_anuncio.sql').read_text()))
     print('PASS: rascunho, fotos concorrentes, preço, localização, publicação idempotente e contato público', flush=True)
+    checked(sql((root/'supabase/testes/190_meus_anuncios.sql').read_text()))
+    print('PASS: lixeira, restauração, fotos, venda, moderação, idempotência e isolamento entre usuários', flush=True)
     def propose(i):
         return sql(f"begin; set role authenticated; set request.jwt.claim.role='authenticated'; set request.jwt.claim.sub='user_cota'; select * from revelar_contato_radar('20000000-0000-4000-a000-00000000000{i}',null,'Oferta concorrente',10000); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:

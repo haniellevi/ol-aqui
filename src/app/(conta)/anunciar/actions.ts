@@ -45,7 +45,7 @@ const publicado = (a: MeuAnuncio) => (STATUS_PUBLICADO as readonly string[]).inc
 
 /** Para onde ir depois de salvar: "Salvar e sair" → Meus anúncios; senão → próximo passo. */
 function destino(passo: SlugPasso, c: Comum): string {
-  if (c.sair) return DESTINO_SAIR;
+  if (c.sair) return `${DESTINO_SAIR}?salvo=${encodeURIComponent(c.id)}`;
   const prox = proximoPasso(passo);
   return prox ? urlPasso(prox, c.id, c.editar) : DESTINO_SAIR;
 }
@@ -53,7 +53,7 @@ function destino(passo: SlugPasso, c: Comum): string {
 async function abrir(id: string): Promise<MeuAnuncio | null> {
   if (!ehUuid(id)) return null;
   const a = await meuAnuncio(id);
-  return a && a.status !== "congelado" ? a : null;
+  return a && a.status !== "congelado" && a.status !== "excluido" ? a : null;
 }
 
 /**

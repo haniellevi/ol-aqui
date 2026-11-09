@@ -1,12 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { BarChart3, Clock, Eye, Heart, ImageOff, MessageCircle, Pin, Plus } from "lucide-react";
+import { BarChart3, Clock, Eye, Heart, MessageCircle, Pin, Plus } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { meusAnuncios } from "@/lib/dados/anuncios";
 import { fraseResultado, resultadosDestaques } from "@/lib/dados/destaques";
 import type { ResultadoDestaque } from "@/lib/tipos-destaques";
 import { LINK_PLANOS, linkDestacar } from "@/lib/rotas";
-import { inteiro, linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
+import { ehUuid, inteiro, linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
 import type { MeuAnuncio, StatusAnuncio } from "@/lib/tipos";
 import { Botao } from "@/components/ui/botao";
 import { Chip } from "@/components/ui/chip";
@@ -19,32 +19,17 @@ import { BotaoFixar } from "@/components/vitrine/botao-fixar";
 import { meusFixados, meusRecursosVitrine, planosPublicos } from "@/lib/dados/vitrine-completa";
 import { textoDisponivelEm } from "@/components/vitrine/regras";
 
+import { ABAS_ANUNCIOS as ABAS, ROTULO_ANUNCIO as ROTULO, RESULTADOS_ANUNCIO, abaDoStatus } from "@/components/conta/situacao-anuncios";
+import { FiltroMeusAnuncios } from "@/components/conta/filtro-meus-anuncios";
+import { FotoMeuAnuncio } from "@/components/conta/foto-meu-anuncio";
+
 export const metadata: Metadata = { title: "Meus anúncios" };
 
-// T32 · Meus anúncios: abas por situação; cada linha com foto, preço, números e botões.
-
-const ABAS = [
-  { chave: "ativos", nome: "Ativos", status: ["ativo"] },
-  { chave: "analise", nome: "Em análise", status: ["em_analise", "congelado"] },
-  { chave: "rascunhos", nome: "Rascunhos", status: ["rascunho"] },
-  { chave: "pausados", nome: "Pausados", status: ["pausado", "expirado"] },
-  { chave: "vendidos", nome: "Vendidos", status: ["vendido"] },
-] as const satisfies readonly { chave: string; nome: string; status: readonly StatusAnuncio[] }[];
-
-const ROTULO: Record<StatusAnuncio, { texto: string; cor: string }> = {
-  ativo: { texto: "No ar", cor: "bg-sucesso-fundo text-verde-escuro" },
-  em_analise: { texto: "Em análise", cor: "bg-aviso-fundo text-aviso" },
-  congelado: { texto: "Bloqueado", cor: "bg-perigo-fundo text-perigo" },
-  rascunho: { texto: "Rascunho", cor: "bg-fundo text-texto-suave" },
-  pausado: { texto: "Pausado", cor: "bg-fundo text-texto-suave" },
-  expirado: { texto: "Vencido", cor: "bg-fundo text-texto-suave" },
-  vendido: { texto: "Vendido", cor: "bg-beringela text-white" },
-};
-
-export default async function PaginaMeusAnuncios({ searchParams }: { searchParams: Promise<{ aba?: string | string[] }> }) {
+export default async function PaginaMeusAnuncios({ searchParams }: { searchParams: Promise<{ aba?: string | string[]; resultado?: string; anuncio?: string; salvo?: string }> }) {
   const [sp, conta, anuncios, destaques] = await Promise.all([searchParams, meuPerfilEVitrine(), meusAnuncios(), resultadosDestaques()]);
 
-  if (!conta?.vitrine) {
+  if (!conta) throw new Error("Não foi possível carregar sua conta. Tente novamente.");
+  if (!conta.vitrine) {
     return (
       <PaginaConta>
         <TopoConta titulo="Meus anúncios" />
@@ -59,9 +44,11 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
     ABAS.map((a) => [a.chave, anuncios.filter((x) => (a.status as readonly StatusAnuncio[]).includes(x.status)).length]),
   ) as Record<(typeof ABAS)[number]["chave"], number>;
   const pedida = Array.isArray(sp.aba) ? sp.aba[0] : sp.aba;
-  const aba =
-    ABAS.find((a) => a.chave === pedida) ??
-    (contagem.ativos === 0 && contagem.rascunhos > 0 ? ABAS[2] : ABAS[0]);
+  const salvo = typeof sp.salvo === "string" && ehUuid(sp.salvo) ? anuncios.find((a) => a.id === sp.salvo && a.status !== "excluido") : null;
+  const aba = ABAS.find((a) => a.chave === pedida) ?? (salvo ? ABAS.find((a) => a.chave === abaDoStatus(salvo.status))! : ABAS[0]);
+  const alterado = typeof sp.anuncio === "string" ? anuncios.find((a) => a.id === sp.anuncio) : null;
+  const resultado = typeof sp.resultado === "string" && Object.hasOwn(RESULTADOS_ANUNCIO, sp.resultado) ? sp.resultado as keyof typeof RESULTADOS_ANUNCIO : null;
+  const aviso = salvo ? RESULTADOS_ANUNCIO.salvo : alterado && resultado && (resultado === alterado.status || (resultado === "restaurado" && alterado.status !== "excluido")) ? RESULTADOS_ANUNCIO[resultado] : null;
   const lista = anuncios.filter((x) => (aba.status as readonly StatusAnuncio[]).includes(x.status));
   const plano = resumoPlano(conta);
   // resultado do destaque mais recente de cada anúncio (ativo ou que já acabou)
@@ -84,12 +71,14 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
   const disponivelFixar = loja && !podeFixar ? textoDisponivelEm(await planosPublicos(), "fixados") : null;
 
   return (
-    <PaginaConta>
+    <PaginaConta larga>
       <TopoConta titulo="Meus anúncios" texto={plano ? plano.uso : undefined}>
         <Botao href="/anunciar" icone={<Plus />} larguraTotal className="sm:w-fit">
           Novo anúncio
         </Botao>
       </TopoConta>
+
+      {aviso && <Aviso tipo="ok">{aviso}</Aviso>}
 
       {!conta.podePublicar && (
         <Aviso tipo="atencao">
@@ -100,8 +89,9 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         </Aviso>
       )}
 
-      <nav aria-label="Situação dos anúncios" className="-mx-4 overflow-x-auto px-4">
-        <ul className="flex gap-2 pb-1">
+      <FiltroMeusAnuncios aba={aba.chave} contagem={contagem} />
+      <nav aria-label="Situação dos anúncios" className="hidden min-w-0 sm:block">
+        <ul className="flex flex-wrap gap-2">
           {ABAS.map((a) => (
             <li key={a.chave}>
               <Chip href={`/minha-conta/anuncios?aba=${a.chave}`} ativo={a.chave === aba.chave} scroll={false}>
@@ -113,7 +103,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         </ul>
       </nav>
 
-      {loja && !podeFixar && aba.chave === "ativos" && lista.length > 0 && (
+      {loja && !podeFixar && (aba.chave === "ativos" || aba.chave === "todos") && lista.some((a) => a.status === "ativo") && (
         <p className="flex flex-wrap items-center gap-x-2 text-base text-texto-suave">
           <Pin className="size-4 shrink-0 text-laranja-escuro" aria-hidden />
           <span>Fixar produtos no topo da loja: {disponivelFixar ?? "não faz parte do seu plano agora"}.</span>
@@ -126,14 +116,17 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         </p>
       )}
 
+      {aba.chave === "lixeira" && <Aviso>As fotos e o histórico ficam guardados. Ao restaurar, anúncios que estavam no ar voltam pausados. Vendas e bloqueios são preservados.</Aviso>}
+      <p className="text-sm text-texto-suave" aria-live="polite">{lista.length} {lista.length === 1 ? "anúncio" : "anúncios"} em {aba.nome.toLowerCase()}</p>
       {lista.length === 0 ? (
-        <Vazio titulo={`Nenhum anúncio em "${aba.nome}"`} texto="Quando tiver, ele aparece aqui.">
-          <Botao href="/anunciar" larguraTotal icone={<Plus />}>
-            Criar anúncio
+        <Vazio titulo={aba.chave === "lixeira" ? "Sua lixeira está vazia" : aba.chave === "todos" ? "Seus anúncios começam aqui" : `Nenhum anúncio em "${aba.nome}"`}
+          texto={aba.chave === "lixeira" ? "Anúncios movidos para cá poderão ser restaurados." : aba.chave === "todos" ? "Crie um anúncio com fotos, preço e localização para vender na sua região." : "Escolha outra situação para encontrar seus anúncios."}>
+          <Botao href={aba.chave === "todos" ? "/anunciar" : "/minha-conta/anuncios"} larguraTotal>
+            {aba.chave === "todos" ? "Criar anúncio" : "Ver meus anúncios"}
           </Botao>
         </Vazio>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
           {lista.map((a) => (
             <li key={a.id}>
               <LinhaAnuncio
@@ -166,27 +159,15 @@ function LinhaAnuncio({
 }) {
   const titulo = a.titulo?.trim() || "Anúncio sem título";
   const rotulo = ROTULO[a.status];
-  const capa = a.fotos[0];
   const publico = a.status === "ativo" || a.status === "vendido";
   const pago = !!a.pago_ate && new Date(a.pago_ate).getTime() > Date.now();
   const destaque = !!a.destaque_ate && new Date(a.destaque_ate).getTime() > Date.now();
   const quando = tempoRelativo(a.status === "rascunho" ? a.atualizado_em : a.publicado_em ?? a.criado_em);
 
-  const foto = (
-    <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-campo bg-borda sm:w-28">
-      {capa ? (
-        // eslint-disable-next-line @next/next/no-img-element -- img simples: leve no 3G e funciona com qualquer host do Storage
-        <img src={capa} alt="" width={112} height={112} loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
-      ) : (
-        <span className="absolute inset-0 grid place-items-center text-texto-suave">
-          <ImageOff className="size-6" aria-hidden />
-        </span>
-      )}
-    </div>
-  );
+  const foto = <FotoMeuAnuncio key={a.fotos[0] ?? "sem-foto"} src={a.fotos[0]} />;
 
   return (
-    <article className="flex flex-col gap-3 rounded-card bg-cartao p-3 shadow-1">
+    <article aria-label={titulo} className="flex min-w-0 flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
       <div className="flex gap-3">
         {publico ? (
           <Link href={linkAnuncio(a.id, a.titulo)} aria-hidden tabIndex={-1}>
@@ -202,7 +183,7 @@ function LinhaAnuncio({
             {pago && <span className="rounded-full bg-laranja-claro px-2 py-0.5 text-[13px] font-bold text-laranja-escuro">Avulso pago</span>}
             {fixado && <span className="rounded-full bg-laranja-claro px-2 py-0.5 text-[13px] font-bold text-beringela">No topo da loja</span>}
           </div>
-          <h2 className="line-clamp-2 text-base font-semibold leading-5">
+          <h2 className="line-clamp-2 break-words text-base font-semibold leading-5">
             {publico ? (
               <Link href={linkAnuncio(a.id, a.titulo)} className="hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
                 {titulo}
@@ -212,10 +193,14 @@ function LinhaAnuncio({
             )}
           </h2>
           <p className="text-lg font-bold leading-6">{preco(a.preco_centavos)}</p>
+          {a.cidade && <p className="break-words text-sm text-texto-suave">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</p>}
           {quando && <p className="text-[13px] text-texto-suave">{a.status === "rascunho" ? `Salvo ${quando}` : quando}</p>}
         </div>
       </div>
 
+      {a.status === "excluido" && <p className="rounded-card bg-fundo p-3 text-sm text-texto-suave">Na lixeira{a.excluido_em ? ` ${tempoRelativo(a.excluido_em)}` : ""}. Antes: {a.status_antes_exclusao ? ROTULO[a.status_antes_exclusao].texto.toLowerCase() : "anúncio"}.</p>}
+      {(a.status === "pausado" || a.status === "expirado") && <p className="text-sm text-texto-suave">Fora da busca. Revise os dados antes de reativar.</p>}
+      {a.status === "vendido" && <p className="text-sm text-texto-suave">Venda concluída. O contato para este anúncio está encerrado.</p>}
       {a.status === "em_analise" && a.motivo_analise && (
         <p className="rounded-card bg-aviso-fundo p-2 text-sm font-semibold text-aviso">Motivo: {a.motivo_analise}</p>
       )}
@@ -252,8 +237,8 @@ function LinhaAnuncio({
         </div>
       )}
 
-      <AcoesAnuncio id={a.id} status={a.status} titulo={titulo} />
-      {mostrarFixar && (a.status === "ativo" || fixado) && <BotaoFixar anuncioId={a.id} fixado={fixado} />}
+      <AcoesAnuncio id={a.id} status={a.status} titulo={titulo} temPagamento={pago || destaque || !!p} />
+      {a.status !== "excluido" && mostrarFixar && (a.status === "ativo" || fixado) && <BotaoFixar anuncioId={a.id} fixado={fixado} />}
     </article>
   );
 }

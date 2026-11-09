@@ -41,7 +41,7 @@ export type Atributos = Record<string, string | number | boolean>;
 
 /* ----------------------------- Anúncios ----------------------------- */
 
-export type StatusAnuncio = "rascunho" | "ativo" | "pausado" | "vendido" | "expirado" | "em_analise" | "congelado";
+export type StatusAnuncio = "rascunho" | "ativo" | "pausado" | "vendido" | "expirado" | "em_analise" | "congelado" | "excluido";
 export type TipoVitrine = "pf" | "loja";
 
 /** Linha de buscar_anuncios(): o que o card precisa. */
@@ -143,6 +143,8 @@ export type MeuAnuncio = {
   destaque_ate: string | null;
   pago_ate: string | null;
   motivo_analise: string | null;
+  excluido_em: string | null;
+  status_antes_exclusao: StatusAnuncio | null;
   publicado_em: string | null;
   vendido_em: string | null;
   criado_em: string;

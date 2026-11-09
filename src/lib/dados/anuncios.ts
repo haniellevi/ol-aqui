@@ -57,7 +57,7 @@ export const anuncioPublico = cache(async (id: string): Promise<AnuncioPublico |
   const db = await createClient();
   const { data, error } = await db.rpc("anuncio_publico", { anuncio_id: id });
   if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar o anúncio. Tente novamente.");
-  if (!data[0]) return null;
+  if (!data[0] || data[0].status === "excluido") return null;
   const a = data[0] as AnuncioPublico;
   return { ...a, fotos: a.fotos ?? [], atributos: a.atributos ?? {}, campos: a.campos ?? [] };
 });
@@ -137,7 +137,7 @@ async function lerDaVitrine(v: Vitrine, limite: number): Promise<AnuncioCard[]> 
 }
 
 const COLUNAS_MEU =
-  "id, vitrine_id, categoria_id, titulo, descricao, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, status, visualizacoes, cliques_whatsapp, total_favoritos, destaque_ate, pago_ate, motivo_analise, publicado_em, vendido_em, criado_em, atualizado_em, vitrines_lojas!inner(dono_id)";
+  "id, vitrine_id, categoria_id, titulo, descricao, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, status, visualizacoes, cliques_whatsapp, total_favoritos, destaque_ate, pago_ate, motivo_analise, excluido_em, status_antes_exclusao, publicado_em, vendido_em, criado_em, atualizado_em, vitrines_lojas!inner(dono_id)";
 
 function semDono(a: MeuAnuncio & { vitrines_lojas?: unknown }): MeuAnuncio {
   const { vitrines_lojas: _dono, ...resto } = a;
