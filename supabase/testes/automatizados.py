@@ -21,6 +21,19 @@ try:
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+    migracao_home = (root/'supabase/migrations/20261109150000_texto_radar_inicio.sql').read_text()
+    checked(sql("""begin;
+      do $$ begin
+        assert (select texto = 'Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.' from home_blocos where chave = 'radar'), 'Texto padrão do Radar incorreto';
+      end $$;
+      update home_blocos set texto = 'Texto personalizado da equipe' where chave = 'radar';
+    """ + migracao_home + migracao_home + """
+      do $$ begin
+        assert (select texto = 'Texto personalizado da equipe' from home_blocos where chave = 'radar'), 'Migração sobrescreveu texto personalizado';
+      end $$;
+      rollback;
+    """))
+    print('PASS: texto do Radar atualizado sem sobrescrever personalização do painel', flush=True)
     checked(sql((root/'supabase/testes/150_fluxo_seguro.sql').read_text()))
     print('PASS: criação, repetição, RLS, regiões, proposta, escolha, encerramento e contato', flush=True)
     def propose(i):
