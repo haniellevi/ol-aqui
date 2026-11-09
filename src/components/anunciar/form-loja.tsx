@@ -170,7 +170,7 @@ export function FormLoja({
           erro={erroDe("slug")}
           dica={
             <>
-              Seu link: <strong className="break-all text-texto">olaki.com.br/loja/{slug || "nome-da-loja"}</strong>
+              Seu link: <strong className="break-all text-texto">{urlAbsoluta(linkLoja(slug || "nome-da-loja"))}</strong>
             </>
           }
         />

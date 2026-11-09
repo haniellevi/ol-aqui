@@ -28,7 +28,7 @@ function destinoSeguro(v: string | string[] | undefined) {
 export default async function CompletarPerfil({ searchParams }: { searchParams: Promise<{ redirect_url?: string | string[] }> }) {
   const destino = destinoSeguro((await searchParams).redirect_url);
   const { userId } = await auth();
-  if (!userId) redirect(`/entrar?redirect_url=${encodeURIComponent(LINK_ENTRAR_PERFIL)}`);
+  if (!userId) redirect(`/entrar?redirect_url=${encodeURIComponent(destino)}`);
   await garantirPerfil(); // 1º acesso: cria o perfil se o webhook do Clerk ainda não chegou
   const pendentes = await termosPendentes();
   if (pendentes.length === 0) redirect(destino);

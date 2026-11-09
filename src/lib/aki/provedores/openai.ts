@@ -1,4 +1,5 @@
 import "server-only";
+import { SITE } from "@/lib/formato";
 import {
   ErroProvedor,
   comUso,
@@ -174,6 +175,6 @@ export const openai = criarAdaptador("openai", "https://api.openai.com/v1/chat/c
 
 export const openrouter = criarAdaptador("openrouter", "https://openrouter.ai/api/v1/chat/completions", "OPENROUTER_API_KEY", () => ({
   // identificação opcional do site no OpenRouter
-  "HTTP-Referer": "https://olaki.com.br",
+  "HTTP-Referer": SITE,
   "X-Title": "OLAKI",
 }));

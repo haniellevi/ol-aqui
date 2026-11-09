@@ -32,7 +32,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center gap-6 px-4 py-10">
       <Image src="/logo/olaki-opcao1-pin.svg" alt="OLAKI" width={200} height={101} priority />
-      <SignIn path="/entrar" routing="path" withSignUp fallbackRedirectUrl="/" signUpForceRedirectUrl={depoisDeCriar} />
+      <SignIn path="/entrar" routing="path" withSignUp forceRedirectUrl={depoisDeCriar} signUpForceRedirectUrl={depoisDeCriar} />
       <p className="text-center text-sm text-texto-suave">
         Ao criar sua conta, você vai ler e aceitar os{" "}
         <Link href={LINK_TERMOS} className="font-semibold text-laranja-escuro underline underline-offset-4">

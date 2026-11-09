@@ -94,7 +94,7 @@ export async function concederCortesia(_: EstadoForm, form: FormData): Promise<E
     if (tipo === "loja") {
       const slug = alvo.replace(/^.*\/loja\//, "").replace(/[/?#].*$/, "").toLowerCase();
       const { data } = await supabase.from("vitrines_lojas").select("id").eq("slug", slug).eq("tipo", "loja").maybeSingle();
-      if (!data) return { erro: "Loja não encontrada. Use o endereço dela (ex.: olaki.com.br/loja/nome)." };
+      if (!data) return { erro: "Loja não encontrada. Use o endereço dela (ex.: /loja/nome)." };
       vitrineId = data.id as string;
     } else {
       anuncioId = ehUuid(alvo) ? alvo.toLowerCase() : idDoLinkAnuncio(alvo.replace(/^.*\/anuncio\//, ""));

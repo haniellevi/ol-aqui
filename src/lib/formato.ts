@@ -15,7 +15,7 @@ export function numeroDoTexto(t: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://olaki.com.br").replace(/\/$/, "");
+export const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://ol-aqui.vercel.app").replace(/\/$/, "");
 
 const moedaInteira = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const moedaCentavos = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });

@@ -151,7 +151,7 @@ export function FormCortesia({ tipos }: { tipos: { slug: SlugDestaque; nome: str
         <input
           name="alvo"
           required
-          placeholder={tipo === "loja" ? "olaki.com.br/loja/nome-da-loja" : "olaki.com.br/anuncio/..."}
+          placeholder={tipo === "loja" ? "/loja/nome-da-loja" : "/anuncio/..."}
           className={estiloCampo}
         />
       </label>

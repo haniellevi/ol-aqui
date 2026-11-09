@@ -155,7 +155,7 @@ export function FormCategoria({
             Nome
           </label>
           <input id="cat-nome" name="nome" required minLength={2} maxLength={60} defaultValue={categoria.nome} className={estiloCampo} />
-          <p className="mt-1 text-[13px] text-texto-suave">O endereço não muda: olaki.com.br/c/…/{categoria.slug}</p>
+          <p className="mt-1 text-[13px] text-texto-suave">O endereço não muda: /c/…/{categoria.slug}</p>
         </div>
         {sub && (
           <div>
