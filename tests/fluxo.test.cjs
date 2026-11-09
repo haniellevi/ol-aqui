@@ -14,13 +14,94 @@ function carregar(arquivo, mocks = {}) {
     if (Object.hasOwn(mocks, nome)) return mocks[nome];
     if (nome === 'server-only') return {};
     if (nome === 'react') return { cache: (f) => f };
-    if (nome.startsWith('@/')) return carregar(`src/${nome.slice(2)}.ts`, mocks);
+    if (nome.startsWith('@/')) {
+      const base = `src/${nome.slice(2)}`;
+      return carregar(fs.existsSync(`${base}.ts`) ? `${base}.ts` : `${base}.tsx`, mocks);
+    }
     return require(nome);
   };
   new Function('require', 'module', 'exports', js)(requireLocal, mod, mod.exports);
   return mod.exports;
 }
 const { centavosDoTexto } = carregar('src/lib/formato.ts');
+const React = require('react');
+const { renderToStaticMarkup } = require('react-dom/server');
+function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul' }, anuncios = [], total = anuncios.length, destaques = [], blocos, erro = false } = {}) {
+  return carregar('src/app/(publico)/page.tsx', {
+    '@/lib/dados/regiao': { regiaoAtual: async () => regiao },
+    '@/lib/dados/categorias': { listarCategorias: async () => [
+      { id: 'c1', slug: 'veiculos', nome: 'Veículos', icone: 'car' },
+      { id: 'c2', slug: 'casa-e-moveis', nome: 'Casa e móveis', icone: 'sofa' },
+    ] },
+    '@/lib/dados/anuncios': { buscarAnuncios: async (filtros) => {
+      assert.deepEqual(filtros, { ordem: 'recentes', limite: 24 });
+      if (erro) throw new Error('Não foi possível consultar os anúncios.');
+      return { anuncios, total };
+    } },
+    '@/lib/dados/destaques': { destaquesHome: async (id) => {
+      assert.equal(id, regiao.id);
+      return destaques;
+    } },
+    '@/lib/dados/paginas': { blocosHome: async () => blocos ?? ['destaques', 'radar', 'recentes'].map(chave => ({ chave, ativo: true })) },
+    '@/components/anuncio/card-anuncio': { CardAnuncio: ({ anuncio }) => React.createElement('article', null, anuncio.titulo) },
+    '@/components/vitrine/lojas-da-regiao': { LojasDaRegiao: () => null },
+    '@/components/destaques/lojas-em-destaque': { LojasEmDestaque: () => null },
+  });
+}
+test('início apresenta região, busca GET acessível e destinos das categorias', async () => {
+  const html = renderToStaticMarkup(await inicio().default());
+  assert.match(html, /<h1[^>]*>Compre e venda em Corrente e região<\/h1>/);
+  const form = html.match(/<form\b[^>]*>/)?.[0] ?? '';
+  for (const atributo of ['action="/busca"', 'method="get"', 'role="search"']) assert.ok(form.includes(atributo));
+  assert.match(html, /<label for="busca-inicio"[^>]*>O que você procura\?/);
+  const campo = html.match(/<input\b[^>]*>/)?.[0] ?? '';
+  for (const atributo of ['id="busca-inicio"', 'type="search"', 'name="q"']) assert.ok(campo.includes(atributo));
+  for (const href of ['/c/veiculos', '/c/casa-e-moveis', '/categorias']) assert.ok(html.includes(`href="${href}"`));
+});
+test('início vazio oferece anúncio e apenas um acesso ao pedido no Radar', async () => {
+  const html = renderToStaticMarkup(await inicio().default());
+  assert.match(html, /Seu anúncio pode ser o primeiro/);
+  assert.match(html, /href="\/anunciar"/);
+  assert.equal((html.match(/href="\/radar\/pedir"/g) ?? []).length, 1);
+  assert.match(html, /As lojas podem enviar propostas, e você escolhe com quem conversar/);
+  assert.doesNotMatch(html, /<article|Ver mais anúncios/);
+});
+test('início com anúncios mantém destaques e paginação sem mostrar estado vazio', async () => {
+  const anuncios = [{ id: 'a1', titulo: 'Mesa da região' }, { id: 'a2', titulo: 'Bicicleta da região' }];
+  for (const total of [2, 3]) {
+    const html = renderToStaticMarkup(await inicio({ anuncios, total, destaques: [{ id: 'd1', titulo: 'Destaque da região' }] }).default());
+    for (const titulo of ['Destaque da região', 'Mesa da região', 'Bicicleta da região']) assert.ok(html.includes(titulo));
+    assert.equal((html.match(/<article/g) ?? []).length, 3);
+    assert.equal(html.includes('/busca?ordem=recentes&amp;pagina=2'), total > anuncios.length);
+    assert.doesNotMatch(html, /Seu anúncio pode ser o primeiro|Anunciar agora/);
+  }
+});
+test('início respeita textos, ordem e visibilidade definidos no painel', async () => {
+  const blocos = [
+    { chave: 'recentes', ativo: true, titulo: 'Novidades de {lugar}', texto: 'Anuncie em {lugar}.' },
+    { chave: 'radar', ativo: true, titulo: 'Pedido em {lugar}', texto: 'Texto da equipe <seguro>', botao: 'Criar pedido' },
+  ];
+  const html = renderToStaticMarkup(await inicio({ blocos }).default());
+  assert.match(html, /Novidades de Corrente e região/);
+  assert.match(html, /Anuncie em Corrente e região\./);
+  assert.match(html, /Texto da equipe &lt;seguro&gt;/);
+  assert.match(html, /Criar pedido/);
+  assert.ok(html.indexOf('titulo-recentes') < html.indexOf('titulo-radar'));
+  const oculto = renderToStaticMarkup(await inicio({ blocos: blocos.map(b => ({ ...b, ativo: b.chave !== 'radar' })) }).default());
+  assert.doesNotMatch(oculto, /titulo-radar|href="\/radar\/pedir"/);
+});
+test('início sem região mantém busca e não inventa localização', async () => {
+  const pagina = inicio({ regiao: null });
+  const html = renderToStaticMarkup(await pagina.default());
+  assert.match(html, /Compre e venda em sua região/);
+  assert.match(html, /action="\/busca"/);
+  const metadata = await pagina.generateMetadata();
+  assert.equal(metadata.alternates.canonical, '/');
+  assert.equal(metadata.title.absolute, 'OLAKI · Compre e venda em sua região');
+});
+test('falha ao consultar anúncios não vira página inicial falsamente vazia', async () => {
+  await assert.rejects(inicio({ erro: true }).default(), /Não foi possível consultar os anúncios/);
+});
 for (const [texto, esperado] of [['1.500,50',150050],['1500.50',150050],['1.500',150000],['49,90',4990],['0',0],['R$ 12,90',1290],['',null],['abc',null],['1e5',null],['-1',null],['0x10',null],['12,345',null]]) {
   test(`preço ${JSON.stringify(texto)}`, () => assert.equal(centavosDoTexto(texto), esperado));
 }

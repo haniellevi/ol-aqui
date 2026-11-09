@@ -56,27 +56,36 @@ export default async function Inicio() {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4">
-      <h1 className="sr-only">OLAKI: compre e venda em {lugar}</h1>
-      <CampoBusca rotuloVisivel id="busca-inicio" />
+      <section aria-labelledby="titulo-inicio" className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 id="titulo-inicio" className="text-balance text-2xl font-bold sm:text-3xl">
+            Compre e venda em {lugar}
+          </h1>
+          <p className="text-pretty text-base text-texto-suave">
+            Encontre produtos e serviços ou anuncie para quem está perto.
+          </p>
+        </div>
+        <CampoBusca id="busca-inicio" />
+      </section>
 
       {categorias.length > 0 && (
-        <nav aria-label="Categorias" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none]">
-          <ul className="flex gap-1">
+        <nav aria-label="Categorias">
+          <ul className="grid grid-cols-4 gap-x-1 gap-y-2 min-[400px]:grid-cols-5 lg:grid-cols-10">
             {categorias.map((c) => (
-              <li key={c.id} className="w-[76px] shrink-0">
+              <li key={c.id} className="min-w-0">
                 <Link
                   href={linkCategoria(c.slug)}
-                  className="flex flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-[13px] font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                  className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-[13px] font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                 >
                   <CirculoCategoria nome={c.icone} />
-                  <span className="line-clamp-2">{c.nome}</span>
+                  <span className="max-w-full hyphens-auto break-words">{c.nome}</span>
                 </Link>
               </li>
             ))}
-            <li className="w-[76px] shrink-0">
+            <li className="min-w-0">
               <Link
                 href="/categorias"
-                className="flex flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-[13px] font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-[13px] font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
               >
                 <span className="grid size-12 place-items-center rounded-full border-2 border-borda bg-cartao text-beringela">
                   <Ellipsis className="size-6" aria-hidden />
@@ -120,7 +129,7 @@ export default async function Inicio() {
                 <section
                   key={bloco.chave}
                   aria-labelledby="titulo-radar"
-                  className="flex flex-col gap-3 rounded-card bg-laranja-claro p-4 sm:flex-row sm:items-center"
+                  className="flex flex-col gap-4 rounded-card border border-laranja/20 bg-laranja-claro p-4 sm:flex-row sm:items-center sm:p-5"
                 >
                   <div className="flex flex-1 gap-3">
                     <Radar className="mt-0.5 size-7 shrink-0 text-laranja-escuro" aria-hidden />
@@ -128,11 +137,10 @@ export default async function Inicio() {
                       <h2 id="titulo-radar" className="text-lg font-semibold">
                         {textoDe(bloco.titulo, "Não achou o que queria?", lugar)}
                       </h2>
-                      <p className="text-base">{textoDe(bloco.texto, "Diga o que procura no Radar e as lojas da região te chamam.", lugar)}</p>
+                      <p className="text-pretty text-base">{textoDe(bloco.texto, "Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.", lugar)}</p>
                     </div>
                   </div>
-                  {/* Um botão principal por tela: o laranja da home é o "Buscar" (ou o "Anunciar agora" da tela vazia) */}
-                  <Botao href={linkPedirRadar()} variante="secundario" className="sm:w-auto" larguraTotal>
+                  <Botao href={linkPedirRadar()} variante="secundario" className="sm:w-auto sm:shrink-0" larguraTotal>
                     {textoDe(bloco.botao, "Pedir no Radar", lugar)}
                   </Botao>
                 </section>
@@ -154,14 +162,11 @@ export default async function Inicio() {
                     prioridade={destaques.length ? 0 : 2}
                     vazio={
                       <Vazio
-                        titulo="Ainda não tem anúncio por aqui."
+                        titulo="Seu anúncio pode ser o primeiro"
                         texto={textoDe(bloco.texto, "Seja o primeiro: anunciar é rápido e você recebe as conversas no WhatsApp.", lugar)}
                       >
-                        <Botao href="/anunciar" larguraTotal>
+                        <Botao href="/anunciar" variante="secundario" larguraTotal>
                           Anunciar agora
-                        </Botao>
-                        <Botao href="/radar/pedir" variante="secundario" larguraTotal>
-                          Pedir no Radar
                         </Botao>
                       </Vazio>
                     }
