@@ -25,7 +25,10 @@ const OPCAO =
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 
 export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string; logado: boolean; entrarHref: string }) {
-  const [estado, enviar, enviando] = useActionState<EstadoDenuncia, FormData>(denunciarAnuncio, null);
+  const [estado, enviar, enviando] = useActionState<EstadoDenuncia, FormData>(async (anterior, form) => {
+    try { return await denunciarAnuncio(anterior, form); }
+    catch { return { ok: false, mensagem: "Não foi possível enviar a denúncia. Tente novamente." }; }
+  }, null);
 
   return (
     <details id="denunciar" className="group scroll-mt-20 rounded-card">

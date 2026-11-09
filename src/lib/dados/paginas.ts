@@ -168,11 +168,11 @@ export async function blocosHome(): Promise<BlocoHome[]> {
 
 /** Anúncio pausado/expirado (ou de loja fora do ar): só a categoria, para mostrar parecidos (T44). */
 export const anuncioForaDoAr = cache(async (id: string): Promise<{ categoria_slug: string | null; categoria_nome: string | null } | null> =>
-  seguro(async () => {
+  {
     const db = await createClient();
     const { data, error } = await db.rpc("anuncio_fora_do_ar", { p_anuncio_id: id });
-    if (error) return null;
+    if (error) throw new Error("Não foi possível verificar este anúncio. Tente novamente.");
     const linha = (Array.isArray(data) ? data[0] : data) as { categoria_slug: string | null; categoria_nome: string | null } | undefined;
     return linha ?? null;
-  }, null),
+  },
 );

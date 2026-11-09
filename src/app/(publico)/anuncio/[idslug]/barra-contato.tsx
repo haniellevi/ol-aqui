@@ -47,17 +47,23 @@ export function BarraContato({
   }
 
   function alternar() {
+    if (pendente) return;
     const novo = !favorito;
     setFavorito(novo); // mostra na hora; volta se der erro
     iniciar(async () => {
-      const r = await alternarFavorito(anuncioId, novo);
-      if (r.ok) {
-        mostrar(novo ? "Salvo nos seus favoritos." : "Tirado dos favoritos.");
-        return;
+      try {
+        const r = await alternarFavorito(anuncioId, novo);
+        if (r.ok) {
+          mostrar(novo ? "Salvo nos seus favoritos." : "Tirado dos favoritos.");
+          return;
+        }
+        setFavorito(!novo);
+        if (r.erro.codigo === "28000") router.push(entrarHref);
+        else mostrar(r.erro.mensagem, true);
+      } catch {
+        setFavorito(!novo);
+        mostrar("Não foi possível atualizar o favorito. Tente novamente.", true);
       }
-      setFavorito(!novo);
-      if (r.erro.codigo === "28000") router.push(entrarHref);
-      else mostrar(r.erro.mensagem, true);
     });
   }
 
@@ -69,14 +75,15 @@ export function BarraContato({
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => void registrarEvento(anuncioId, "clique_whatsapp")}
-            className={classesBotao("whatsapp", false, "flex-1")}
+            onClick={() => void registrarEvento(anuncioId, "clique_whatsapp").catch(() => undefined)}
+            aria-label="Chamar o vendedor no WhatsApp (abre em nova aba)"
+            className={classesBotao("whatsapp", false, "min-w-0 flex-1 px-3")}
           >
             <MessageCircle className="size-5" aria-hidden />
             Chamar no WhatsApp
           </a>
         ) : (
-          <p className="flex min-h-13 flex-1 items-center text-[15px] text-texto-suave">Este vendedor ainda não colocou o WhatsApp.</p>
+          <p className="flex min-h-13 min-w-0 flex-1 items-center text-[15px] text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
         )}
 
         {podeFavoritar &&
@@ -85,6 +92,7 @@ export function BarraContato({
               type="button"
               onClick={alternar}
               disabled={pendente}
+              aria-busy={pendente}
               aria-pressed={favorito}
               aria-label={favorito ? "Tirar dos favoritos" : "Salvar nos favoritos"}
               className={CORACAO}

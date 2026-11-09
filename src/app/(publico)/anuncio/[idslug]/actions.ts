@@ -44,9 +44,10 @@ const PRECISA_ENTRAR = { mensagem: "Entre na sua conta para continuar.", codigo:
 /** Liga/desliga o favorito. Sem login devolve código 28000 (a tela manda para /entrar). */
 export async function alternarFavorito(anuncioId: string, favoritar: boolean): Promise<Resultado<{ favorito: boolean }>> {
   if (!ehUuid(anuncioId)) return { ok: false, erro: { mensagem: "Anúncio não encontrado." } };
-  const { userId } = await auth();
-  if (!userId) return { ok: false, erro: { ...PRECISA_ENTRAR } };
+  if (typeof favoritar !== "boolean") return { ok: false, erro: { mensagem: "Escolha uma ação válida para o favorito." } };
   try {
+    const { userId } = await auth();
+    if (!userId) return { ok: false, erro: { ...PRECISA_ENTRAR } };
     await garantirPerfil(); // favorito aponta para o perfil (1º acesso)
     const db = await createClient();
     if (favoritar) {
@@ -80,14 +81,14 @@ export async function denunciarAnuncio(_anterior: EstadoDenuncia, form: FormData
   const anuncioId = String(form.get("anuncio_id") ?? "");
   const chave = String(form.get("motivo") ?? "");
   const texto = String(form.get("detalhes") ?? "").trim().slice(0, 900);
-  const m = MOTIVOS[chave];
+  const m = Object.hasOwn(MOTIVOS, chave) ? MOTIVOS[chave] : null;
   if (!ehUuid(anuncioId)) return { ok: false, mensagem: "Anúncio não encontrado." };
   if (!m) return { ok: false, mensagem: "Escolha um motivo." };
   if (chave === "outro" && texto.length < 5) return { ok: false, mensagem: "Conte em poucas palavras o que aconteceu." };
 
-  const { userId } = await auth();
-  if (!userId) return { ok: false, mensagem: PRECISA_ENTRAR.mensagem, precisaEntrar: true };
   try {
+    const { userId } = await auth();
+    if (!userId) return { ok: false, mensagem: PRECISA_ENTRAR.mensagem, precisaEntrar: true };
     await garantirPerfil();
     const db = await createClient();
     const detalhes = [m.detalhe, texto].filter(Boolean).join(": ") || null;
