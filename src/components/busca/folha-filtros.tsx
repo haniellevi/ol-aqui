@@ -3,14 +3,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Check, X } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
-import { ORDENS, lerEstadoBusca, paramCampo, type EstadoBusca } from "@/components/busca/parametros";
+import { ID_FOLHA, ID_RESULTADOS, ORDENS, lerEstadoBusca, paramCampo, type EstadoBusca } from "@/components/busca/parametros";
 import type { CampoCategoria, CategoriaComFilhas, Cidade } from "@/lib/tipos";
 
 // GET e :target preservam a busca sem JavaScript. Com JS, o diálogo nativo cuida
 // do foco, do fundo inativo e do Escape; os valores são validados também no servidor.
-
-export const ID_FOLHA = "filtros";
-export const ID_RESULTADOS = "resultados";
 
 const SELECT =
   "h-12 w-full rounded-campo border-2 border-borda bg-cartao px-3 text-base text-texto " +
@@ -40,6 +37,7 @@ export function FolhaFiltros({
   categorias?: CategoriaComFilhas[];
 }) {
   const dialogo = useRef<HTMLDialogElement>(null);
+  const [pronto, setPronto] = useState(false);
   const [categoria, setCategoria] = useState(estado.categoria);
   const [erros, setErros] = useState(estado.erros);
   const escolhida = categorias?.flatMap((p) => [p, ...p.filhas]).find((c) => c.slug === categoria);
@@ -50,6 +48,7 @@ export function FolhaFiltros({
   useEffect(() => {
     const el = dialogo.current;
     if (!el) return;
+    setPronto(true);
     let retorno: HTMLElement | null = null;
     let overflow: string | null = null;
     const liberar = () => {
@@ -59,11 +58,17 @@ export function FolhaFiltros({
       retorno = null;
     };
     const alvoAtual = () => document.getElementById(window.location.hash.slice(1));
+    const lembrarOrigem = (evento: MouseEvent) => {
+      const link = evento.target instanceof Element ? evento.target.closest("a") : null;
+      if (el.open || !link || link.origin !== window.location.origin || link.pathname !== window.location.pathname || link.search !== window.location.search) return;
+      const alvo = document.getElementById(link.hash.slice(1));
+      if (alvo && (alvo === el || el.contains(alvo))) retorno = link;
+    };
     const sincronizar = () => {
       const alvo = alvoAtual();
       if (alvo && (alvo === el || el.contains(alvo))) {
         if (!el.open) {
-          retorno = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          retorno ??= document.activeElement instanceof HTMLElement && !el.contains(document.activeElement) ? document.activeElement : null;
           overflow = document.body.style.overflow;
           document.body.style.overflow = "hidden";
           el.querySelector("form")?.reset();
@@ -85,10 +90,12 @@ export function FolhaFiltros({
       liberar();
     };
     window.addEventListener("hashchange", sincronizar);
+    document.addEventListener("click", lembrarOrigem, true);
     el.addEventListener("close", fechar);
     sincronizar();
     return () => {
       window.removeEventListener("hashchange", sincronizar);
+      document.removeEventListener("click", lembrarOrigem, true);
       el.removeEventListener("close", fechar);
       if (el.open) el.close();
       liberar();
@@ -114,8 +121,9 @@ export function FolhaFiltros({
     <dialog
       ref={dialogo}
       id={ID_FOLHA}
+      data-pronto={pronto}
       aria-labelledby="titulo-filtros"
-      className="fixed inset-0 z-40 m-0 hidden h-dvh max-h-none w-full max-w-none items-end justify-center border-0 bg-transparent p-0 text-texto backdrop:bg-transparent open:flex target:flex has-[:target]:flex md:items-center md:p-6"
+      className="fixed inset-0 z-40 m-0 hidden h-dvh max-h-none w-full max-w-none items-end justify-center border-0 bg-transparent p-0 text-texto backdrop:bg-transparent open:flex data-[pronto=false]:target:flex data-[pronto=false]:has-[:target]:flex md:items-center md:p-6"
     >
       <a href={`#${ID_RESULTADOS}`} tabIndex={-1} aria-hidden className="absolute inset-0 bg-beringela/50" />
       <section

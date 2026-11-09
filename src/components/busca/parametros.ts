@@ -7,6 +7,8 @@ import type { CampoCategoria, FiltrosBusca, OrdemBusca } from "@/lib/tipos";
 export type ParametrosUrl = Record<string, string | string[] | undefined>;
 
 export const POR_PAGINA = 24;
+export const ID_FOLHA = "filtros";
+export const ID_RESULTADOS = "resultados";
 
 export const ORDENS: { valor: OrdemBusca; rotulo: string }[] = [
   { valor: "relevancia", rotulo: "Mais relevantes" },

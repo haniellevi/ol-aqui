@@ -4,8 +4,8 @@ import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
 import { classesChip } from "@/components/ui/chip";
 import { classesBotao } from "@/components/ui/botao";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
-import { FolhaFiltros, ID_FOLHA, ID_RESULTADOS } from "@/components/busca/folha-filtros";
-import { ORDENS, POR_PAGINA, comParametros, paramCampo, textoPreco, type EstadoBusca, type ParametrosUrl } from "@/components/busca/parametros";
+import { FolhaFiltros } from "@/components/busca/folha-filtros";
+import { ID_FOLHA, ID_RESULTADOS, ORDENS, POR_PAGINA, comParametros, paramCampo, textoPreco, type EstadoBusca, type ParametrosUrl } from "@/components/busca/parametros";
 import { inteiro } from "@/lib/formato";
 import type { AnuncioCard, CampoCategoria, CategoriaComFilhas, Cidade } from "@/lib/tipos";
 
