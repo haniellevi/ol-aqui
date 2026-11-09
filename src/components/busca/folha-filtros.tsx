@@ -75,6 +75,7 @@ export function FolhaFiltros({
           setCategoria(estado.categoria);
           setErros(estado.erros);
           el.showModal();
+          el.querySelector<HTMLElement>("form a")?.focus({ preventScroll: true });
         }
         if (alvo !== el) {
           alvo.scrollIntoView({ block: "nearest" });
