@@ -1,5 +1,6 @@
 "use server";
 
+import { definirFavorito } from "@/app/(conta)/minha-conta/favoritos/actions";
 import { auth } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
@@ -43,24 +44,7 @@ const PRECISA_ENTRAR = { mensagem: "Entre na sua conta para continuar.", codigo:
 
 /** Liga/desliga o favorito. Sem login devolve código 28000 (a tela manda para /entrar). */
 export async function alternarFavorito(anuncioId: string, favoritar: boolean): Promise<Resultado<{ favorito: boolean }>> {
-  if (!ehUuid(anuncioId)) return { ok: false, erro: { mensagem: "Anúncio não encontrado." } };
-  if (typeof favoritar !== "boolean") return { ok: false, erro: { mensagem: "Escolha uma ação válida para o favorito." } };
-  try {
-    const { userId } = await auth();
-    if (!userId) return { ok: false, erro: { ...PRECISA_ENTRAR } };
-    await garantirPerfil(); // favorito aponta para o perfil (1º acesso)
-    const db = await createClient();
-    if (favoritar) {
-      const { error } = await db.from("favoritos").insert({ usuario_id: userId, anuncio_id: anuncioId });
-      if (error && error.code !== "23505") return { ok: false, erro: traduzirErro(error) }; // 23505: já era favorito
-    } else {
-      const { error } = await db.from("favoritos").delete().eq("usuario_id", userId).eq("anuncio_id", anuncioId);
-      if (error) return { ok: false, erro: traduzirErro(error) };
-    }
-    return { ok: true, dados: { favorito: favoritar } };
-  } catch {
-    return { ok: false, erro: traduzirErro(null) };
-  }
+  return definirFavorito(anuncioId, favoritar);
 }
 
 /** Motivos prontos (F9) → motivo aceito pelo banco (tabela denuncias). */

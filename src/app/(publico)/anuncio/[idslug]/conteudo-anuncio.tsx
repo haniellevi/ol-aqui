@@ -22,7 +22,7 @@ const STATUS_PREVIA: Partial<Record<StatusAnuncio, string>> = {
 
 const publico = (a: AnuncioPublico) => a.status === "ativo" || a.status === "vendido";
 
-export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: AnuncioPublico; favorito: boolean; logado: boolean; parecidos: AnuncioCard[] }) {
+export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: AnuncioPublico; favorito: boolean | null; logado: boolean; parecidos: AnuncioCard[] }) {
   const caminho = linkAnuncio(a.id, a.titulo);
   const titulo = a.titulo || "Anúncio sem título";
   const ativo = a.status === "ativo";
@@ -57,7 +57,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
     : null;
 
   return (
-    <main className={`mx-auto w-full max-w-6xl md:px-4 md:py-4 ${mostrarBarra ? "pb-24 md:pb-8" : "pb-8"}`}>
+    <main className={`mx-auto w-full max-w-6xl md:px-4 md:py-4 ${mostrarBarra ? "pb-56 md:pb-8" : "pb-8"}`}>
       {jsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       )}

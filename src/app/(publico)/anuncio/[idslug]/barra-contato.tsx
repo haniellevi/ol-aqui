@@ -27,7 +27,7 @@ export function BarraContato({
   /** Link wa.me com a mensagem pronta (null = vendedor sem WhatsApp). */
   whatsappHref: string | null;
   podeFavoritar: boolean;
-  favoritoInicial: boolean;
+  favoritoInicial: boolean | null;
   logado: boolean;
   /** /entrar com a volta para este anúncio. */
   entrarHref: string;
@@ -36,6 +36,8 @@ export function BarraContato({
   const [favorito, setFavorito] = useState(favoritoInicial);
   const [aviso, setAviso] = useState<{ texto: string; erro: boolean } | null>(null);
   const [pendente, iniciar] = useTransition();
+  const trava = useRef(false);
+  useEffect(() => { setFavorito(favoritoInicial); }, [favoritoInicial]);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -43,27 +45,28 @@ export function BarraContato({
   function mostrar(texto: string, erro = false) {
     setAviso({ texto, erro });
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => setAviso(null), 4000);
+    if (!erro) timer.current = setTimeout(() => setAviso(null), 6000);
   }
 
   function alternar() {
-    if (pendente) return;
+    if (trava.current || favorito === null) return;
+    trava.current = true;
     const novo = !favorito;
     setFavorito(novo); // mostra na hora; volta se der erro
     iniciar(async () => {
       try {
         const r = await alternarFavorito(anuncioId, novo);
-        if (r.ok) {
+        if (r.ok && r.dados.favorito === novo) {
           mostrar(novo ? "Salvo nos seus favoritos." : "Tirado dos favoritos.");
           return;
         }
         setFavorito(!novo);
-        if (r.erro.codigo === "28000") router.push(entrarHref);
-        else mostrar(r.erro.mensagem, true);
+        if (!r.ok && r.erro.codigo === "28000") router.push(entrarHref);
+        else mostrar(!r.ok ? r.erro.mensagem : "Não conseguimos confirmar a alteração. Atualize a página.", true);
       } catch {
         setFavorito(!novo);
         mostrar("Não foi possível atualizar o favorito. Tente novamente.", true);
-      }
+      } finally { trava.current = false; }
     });
   }
 
@@ -91,10 +94,10 @@ export function BarraContato({
             <button
               type="button"
               onClick={alternar}
-              disabled={pendente}
+              disabled={pendente || favorito === null}
               aria-busy={pendente}
-              aria-pressed={favorito}
-              aria-label={favorito ? "Tirar dos favoritos" : "Salvar nos favoritos"}
+              aria-pressed={favorito ?? undefined}
+              aria-label={favorito === null ? "Favorito indisponível" : favorito ? "Tirar dos favoritos" : "Salvar nos favoritos"}
               className={CORACAO}
             >
               <Heart className={`size-6 ${favorito ? "fill-laranja-escuro text-laranja-escuro" : ""}`} aria-hidden />
@@ -105,8 +108,12 @@ export function BarraContato({
             </Link>
           ))}
       </div>
+      {podeFavoritar && logado && <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 text-sm">
+        {favorito === null && <><span role="alert" className="text-perigo">Não conseguimos consultar seu favorito.</span><button type="button" onClick={() => router.refresh()} className="min-h-11 rounded-campo font-semibold text-laranja-escuro underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">Tentar novamente</button></>}
+        <Link href="/minha-conta/favoritos" className="inline-flex min-h-11 items-center rounded-campo font-semibold text-laranja-escuro underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">Ver meus favoritos</Link>
+      </div>}
       <p
-        role="status"
+        role={aviso?.erro ? "alert" : "status"}
         className={aviso ? `mx-auto max-w-6xl pt-1 text-[15px] font-semibold ${aviso.erro ? "text-perigo" : "text-verde-escuro"}` : "sr-only"}
       >
         {aviso?.texto}

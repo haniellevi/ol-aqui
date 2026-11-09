@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { anuncioPublico, buscarAnuncios } from "@/lib/dados/anuncios";
-import { createClient } from "@/lib/supabase/server";
+import { ehFavorito } from "@/lib/dados/favoritos";
 import { seguro } from "@/lib/dados/seguro";
 import { idDoLinkAnuncio, linkAnuncio, preco, slugDoTitulo } from "@/lib/formato";
 import type { AnuncioPublico } from "@/lib/tipos";
@@ -55,15 +55,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-async function ehFavorito(anuncioId: string, userId: string | null): Promise<boolean> {
-  if (!userId) return false;
-  return seguro(async () => {
-    const db = await createClient();
-    const { data } = await db.from("favoritos").select("anuncio_id").eq("usuario_id", userId).eq("anuncio_id", anuncioId).maybeSingle();
-    return !!data;
-  }, false);
-}
-
 export default async function PaginaAnuncio({ params }: Props) {
   const { idslug } = await params;
   const a = await carregar(idslug);
@@ -80,7 +71,7 @@ export default async function PaginaAnuncio({ params }: Props) {
 
   const { userId } = await auth();
   const [favorito, parecidosBusca] = await Promise.all([
-    a.status === "ativo" ? ehFavorito(a.id, userId) : Promise.resolve(false),
+    a.status === "ativo" ? ehFavorito(a.id, userId).catch(() => null) : Promise.resolve(false),
     // Recomendações são secundárias: sua falha não deve impedir o contato do anúncio aberto.
     a.categoria_slug ? seguro(() => buscarAnuncios({ categoria: a.categoria_slug!, limite: 9 }), null) : Promise.resolve(null),
   ]);
