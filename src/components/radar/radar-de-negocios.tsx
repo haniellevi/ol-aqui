@@ -7,6 +7,8 @@
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, MessageCircle, Radar, Send, Users } from "lucide-react";
+import { AtualizarRadar } from "./atualizar-radar";
+import { faixaPreco, dataHoraCurta } from "./util";
 import { LINK_PLANOS, linkMeuPedidoRadar, linkPedidoRadarLoja } from "@/lib/rotas";
 
 export type CategoriaRadar = "imovel" | "veiculo" | "movel" | "geral";
@@ -33,7 +35,7 @@ export type PedidoRadar = {
   categoriaNome: string | null;
 };
 
-export type PlanoResumo = { codigo: string; nome: string; preco_centavos: number };
+export type PlanoResumo = { codigo: string; nome: string; preco_centavos: number; periodo_dias?: number };
 
 const CATEGORIAS: { valor: CategoriaRadar | "todas"; rotulo: string }[] = [
   { valor: "todas", rotulo: "Tudo" },
@@ -43,9 +45,7 @@ const CATEGORIAS: { valor: CategoriaRadar | "todas"; rotulo: string }[] = [
   { valor: "geral", rotulo: "Outros" },
 ];
 
-const reais = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const reaisCentavos = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-const dataHora = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 function tempoAtras(iso: string) {
   const min = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
@@ -81,8 +81,8 @@ export function RadarDeNegocios({
   const podePropor = temAcesso && (restantes === null || restantes > 0);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-xl bg-fundo pb-28">
-      <header className="sticky top-16 z-10 border-b border-borda bg-cartao/95 px-4 pb-3 pt-4 backdrop-blur">
+    <main className="mx-auto min-h-dvh max-w-5xl bg-fundo pb-28">
+      <header className=" border-b border-borda bg-cartao/95 px-4 pb-3 pt-4 backdrop-blur">
         <div className="flex items-center gap-2">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
           <h1 className="text-xl font-bold tracking-tight text-beringela">Radar de Negócios</h1>
@@ -90,7 +90,7 @@ export function RadarDeNegocios({
         <p className="mt-0.5 text-sm text-texto-suave">
           {pedidos.length} {pedidos.length === 1 ? "comprador procurando" : "compradores procurando"} na sua região
         </p>
-        {abas}
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-3">{abas}<AtualizarRadar /></div>
 
         <nav className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]" aria-label="Filtrar por categoria">
           {categorias.map((c) => (
@@ -114,14 +114,14 @@ export function RadarDeNegocios({
       {temAcesso && restantes !== null && (
         restantes > 0 ? (
           <p className="mx-4 mt-4 rounded-card bg-laranja-claro px-4 py-3 text-sm text-beringela">
-            Você tem <strong>{restantes}</strong> {restantes === 1 ? "proposta grátis" : "propostas grátis"} no seu teste.
+            Você tem <strong>{restantes}</strong> {restantes === 1 ? "proposta disponível" : "propostas disponíveis"} no seu plano.
           </p>
         ) : (
-          <FaixaUpgrade planos={planos} titulo="Suas propostas grátis acabaram." />
+          <FaixaUpgrade planos={planos} titulo="Suas propostas disponíveis acabaram." />
         )
       )}
 
-      <ul className="space-y-3 px-4 pt-4">
+      <ul className="grid grid-cols-1 items-start gap-4 px-4 pt-4 md:grid-cols-2">
         {visiveis.map((p) => (
           <li key={p.id}>
             <CartaoPedido pedido={p} temAcesso={temAcesso} podePropor={podePropor} />
@@ -129,7 +129,7 @@ export function RadarDeNegocios({
         ))}
         {visiveis.length === 0 && (
           <li className="rounded-card border border-dashed border-borda bg-cartao p-8 text-center text-sm text-texto-suave">
-            Nenhum pedido aberto nesta categoria agora. Volte mais tarde, o Radar atualiza o tempo todo.
+            Nenhum pedido aberto nesta categoria agora. Use Atualizar para conferir novos pedidos.
           </li>
         )}
       </ul>
@@ -165,7 +165,7 @@ function CartaoPedido({
           {modoPrazo && p.propostasAte && (
             <span className="inline-flex items-center gap-1 rounded-full bg-aviso-fundo px-2 py-0.5 font-semibold text-aviso">
               <Hourglass className="size-3.5" aria-hidden />
-              Propostas até {dataHora.format(new Date(p.propostasAte))}
+              Propostas até {dataHoraCurta(p.propostasAte)}
             </span>
           )}
           {p.compradorCertificado && (
@@ -181,19 +181,15 @@ function CartaoPedido({
         </div>
 
         {/* O que procura: sempre visível, é o "gancho" que vende o plano */}
-        <h2 className="mt-2 text-base font-semibold leading-snug text-beringela">
+        <h2 className="mt-2 break-words text-base font-semibold leading-snug text-beringela">
           <Link href={p.souComprador ? linkMeuPedidoRadar(p.id) : linkPedido} className="hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
             {p.titulo}
           </Link>
         </h2>
 
-        <div className="mt-2 flex items-center justify-between gap-3">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <span className="text-lg font-bold text-beringela">
-            {p.precoMaxCentavos != null
-              ? `${p.precoMinCentavos != null ? `${reais.format(p.precoMinCentavos / 100)} a ` : "até "}${reais.format(p.precoMaxCentavos / 100)}`
-              : p.precoMinCentavos != null
-                ? `a partir de ${reais.format(p.precoMinCentavos / 100)}`
-                : "Valor a combinar"}
+            {faixaPreco(p.precoMinCentavos, p.precoMaxCentavos)}
           </span>
           <span className="inline-flex items-center gap-1 text-sm text-texto-suave">
             <MapPin className="size-4" aria-hidden />
@@ -204,7 +200,7 @@ function CartaoPedido({
         <div className="relative mt-3">
           {temAcesso ? (
             <div className="rounded-card bg-fundo p-3 text-sm text-beringela">
-              {p.detalhes ? <p className="whitespace-pre-line">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
+              {p.detalhes ? <p className="whitespace-pre-line break-words">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
               <p className="mt-2 text-[13px] text-texto-suave">
                 Comprador: {p.compradorNome}
                 {modoPrazo && " · prefere receber as ofertas e escolher com quem falar"}
@@ -278,7 +274,7 @@ function CartaoPedido({
 
 function FaixaUpgrade({ planos, titulo }: { planos: PlanoResumo[]; titulo: string }) {
   // Nomes e preços vêm do painel administrativo (tabela planos)
-  const lista = planos.map((p) => `${p.nome} (${reaisCentavos.format(p.preco_centavos / 100)}/mês)`).join(" ou ");
+  const lista = planos.map((p) => `${p.nome} (${reaisCentavos.format(p.preco_centavos / 100)}${!p.periodo_dias || p.periodo_dias === 30 ? "/mês" : ` a cada ${p.periodo_dias} dias`})`).join(" ou ");
   return (
     <section className="mx-4 mt-4 rounded-card bg-beringela p-4 text-white">
       <p className="text-base font-bold">{titulo}</p>

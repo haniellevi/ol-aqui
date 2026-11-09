@@ -4,8 +4,8 @@ import { linkPedirRadar } from "@/lib/rotas";
 
 const PASSOS = [
   { icone: <Megaphone />, titulo: "Você pede", texto: "Diga o que procura, quanto quer pagar e a cidade." },
-  { icone: <HandCoins />, titulo: "As lojas oferecem", texto: "As lojas da região mandam preço e foto." },
-  { icone: <MessageCircle />, titulo: "Você escolhe", texto: "Fale no WhatsApp só com quem você quiser." },
+  { icone: <HandCoins />, titulo: "As lojas oferecem", texto: "Receba ofertas de lojas da sua região." },
+  { icone: <MessageCircle />, titulo: "Você escolhe", texto: "Compare propostas aqui ou receba contatos pelo WhatsApp." },
 ];
 
 // T26 para quem ainda não entrou: o Radar em 3 desenhos e o botão para pedir.
@@ -37,7 +37,7 @@ export function ExplicacaoRadar({ textoBusca }: { textoBusca?: string | null }) 
       <Botao href={linkPedirRadar(textoBusca)} larguraTotal icone={<Megaphone />}>
         Pedir no Radar
       </Botao>
-      <p className="text-center text-sm text-texto-suave">É grátis. Para pedir, você entra com o seu celular.</p>
+      <p className="text-center text-sm text-texto-suave">Entre na sua conta para fazer um pedido grátis.</p>
     </main>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BadgeCheck, Inbox, MessageCircle, Star, Store } from "lucide-react";
@@ -75,11 +75,15 @@ export function PropostasRecebidas({
 
 function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher: boolean }) {
   const router = useRouter();
+  const trava = useRef(false);
+  const [linkContato, setLinkContato] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [abrindo, iniciar] = useTransition();
   const foto = p.foto_url ?? p.anuncio_capa;
 
   function chamar() {
+    if (trava.current) return;
+    trava.current = true;
     setErro(null);
     // Abre a aba já no toque (o Safari do iPhone bloqueia janelas abertas depois de esperar o servidor).
     const aba = window.open("", "_blank");
@@ -92,20 +96,21 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
           setErro(r.erro);
           return;
         }
+        setLinkContato(r.linkWhatsapp);
         if (aba) {
           aba.location.href = r.linkWhatsapp;
-          router.refresh(); // mostra "Você chamou" nesta proposta
-        } else window.location.href = r.linkWhatsapp;
+          router.refresh(); // mostra "Você escolheu" nesta proposta
+        } else router.refresh();
       } catch {
         aba?.close();
         setErro("Não foi possível abrir o contato. Tente novamente.");
-      }
+      } finally { trava.current = false; }
     });
   }
 
   return (
     <article className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1">
-      <header className="flex items-center gap-3">
+      <header className="flex flex-wrap items-center gap-3">
         {p.loja_logo ? (
           // eslint-disable-next-line @next/next/no-img-element -- logo da loja no Storage
           <img src={p.loja_logo} alt="" width={40} height={40} className="size-10 shrink-0 rounded-full bg-borda object-cover" />
@@ -135,19 +140,19 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
         {p.escolhida && (
           <span className="inline-flex items-center gap-1 rounded-full bg-sucesso-fundo px-2 py-0.5 text-[13px] font-semibold text-verde-escuro">
             <Star className="size-3.5" aria-hidden />
-            Você chamou
+            Você escolheu
           </span>
         )}
       </header>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         {foto && (
           // eslint-disable-next-line @next/next/no-img-element -- foto da proposta no Storage
           <img src={foto} alt={p.anuncio_titulo ?? "Foto da oferta"} width={96} height={96} className="size-24 shrink-0 rounded-campo bg-borda object-cover" />
         )}
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="text-xl font-bold text-beringela">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</span>
-          {p.mensagem && <p className="whitespace-pre-line text-[15px] text-texto">{p.mensagem}</p>}
+        <div className="flex min-w-40 flex-1 flex-col gap-1">
+          <span className="break-words text-xl font-bold text-beringela">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</span>
+          {p.mensagem && <p className="whitespace-pre-line break-words text-[15px] text-texto">{p.mensagem}</p>}
           {p.anuncio_id && p.anuncio_titulo && (
             <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo)} className="min-h-12 content-center text-[15px] font-semibold text-laranja-escuro underline underline-offset-4">
               Ver anúncio: {p.anuncio_titulo}
@@ -161,6 +166,7 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
           Chamar no WhatsApp
         </Botao>
       )}
+      {podeEscolher && linkContato && <Botao href={linkContato} target="_blank" rel="noopener noreferrer" variante="secundario" larguraTotal>Continuar no WhatsApp</Botao>}
       {erro && (
         <p role="alert" className="text-sm font-semibold text-perigo">
           {erro}

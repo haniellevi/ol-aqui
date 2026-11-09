@@ -35,7 +35,7 @@ export function ListaMeusPedidos({ pedidos, linkPedir }: { pedidos: MeuPedidoRad
             <Link href={linkMeuPedidoRadar(p.id)} className={CARTAO}>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className={`w-fit rounded-full px-2 py-0.5 text-[13px] font-semibold ${CLASSE_TOM[s.tom]}`}>{s.texto}</span>
-                <span className="text-base font-semibold leading-snug">{p.titulo}</span>
+                <span className="break-words text-base font-semibold leading-snug">{p.titulo}</span>
                 <span className="text-[15px] font-semibold text-laranja-escuro">{resumoPropostas(p.total_propostas, p.menor_preco_centavos)}</span>
                 <span className="flex flex-wrap items-center gap-x-2 text-[13px] text-texto-suave">
                   {p.modo_contato === "propostas_prazo" && p.propostas_ate && p.situacao === "aberto" ? (
@@ -88,14 +88,14 @@ export function ListaMinhasPropostas({ propostas }: { propostas: MinhaPropostaRa
               ) : p.escolhida ? (
                 <span className="inline-flex w-fit items-center gap-1 rounded-full bg-sucesso-fundo px-2 py-0.5 text-[13px] font-semibold text-verde-escuro">
                   <Star className="size-3.5" aria-hidden />
-                  Escolhida! O comprador vai te chamar
+                  O comprador escolheu sua proposta
                 </span>
               ) : (
                 <span className={`w-fit rounded-full px-2 py-0.5 text-[13px] font-semibold ${CLASSE_TOM[p.situacao === "aberto" ? "ok" : "neutro"]}`}>
                   {p.situacao === "aberto" ? "Pedido no ar" : p.situacao === "prazo_acabou" ? "Prazo acabou" : "Pedido encerrado"}
                 </span>
               )}
-              <span className="text-base font-semibold leading-snug">{p.pedido_titulo}</span>
+              <span className="break-words text-base font-semibold leading-snug">{p.pedido_titulo}</span>
               <span className="text-[15px] font-semibold text-laranja-escuro">Sua oferta: {preco(p.preco_centavos)}</span>
               <span className="text-[13px] text-texto-suave">
                 {p.pedido_cidade} · enviada {tempoRelativo(p.criado_em)}

@@ -58,3 +58,6 @@ export function resumoPropostas(total: number, menor: number | null): string {
   if (total === 1) return menor != null ? `1 proposta de ${preco(menor)}` : "1 proposta";
   return menor != null ? `${total} propostas, a menor ${preco(menor)}` : `${total} propostas`;
 }
+
+/** Valor editável em reais, preservando os centavos. */
+export const textoPrecoProposta = (centavos: number | null) => centavos === null ? "" : (centavos / 100).toFixed(2).replace(".", ",");

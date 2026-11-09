@@ -11,6 +11,7 @@ import { criarPedido } from "@/app/radar/actions";
 import { linkMeuPedidoRadar } from "@/lib/rotas";
 import { whatsappDigitado } from "@/lib/formato";
 import type { ModoContato, RegrasRadar } from "@/lib/tipos-radar";
+import { validarPedido } from "./validacao";
 import { dataHoraCurta, rotuloPrazo } from "./util";
 
 type Props = {
@@ -31,6 +32,8 @@ const ROTULO_GRUPO = "text-base font-semibold text-texto";
 
 export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", categorias, cidades, cidadeInicial, regras, pedirWhatsapp = false, whatsappInicial = "" }: Props) {
   const router = useRouter();
+  const formulario = useRef<HTMLFormElement>(null);
+  const trava = useRef(false);
   const chaveEnvio = useRef<string | null>(null);
   const [titulo, setTitulo] = useState(textoInicial);
   const [detalhes, setDetalhes] = useState("");
@@ -50,16 +53,25 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   const temPrazos = regras.prazosHoras.length > 0;
   const fimPrazo = agora && prazo ? dataHoraCurta(new Date(agora + prazo * 3600_000)) : null;
 
-  function enviar(e: React.FormEvent) {
-    e.preventDefault();
+  useEffect(() => {
+    if (!erro) return;
+    const campos: Record<string, string> = { preco_min_centavos: "preco_min", preco_max_centavos: "preco_max" };
+    const nome = campos[erro.campo ?? ""] ?? erro.campo;
+    const alvo = nome ? formulario.current?.elements.namedItem(nome) : null;
+    if (alvo instanceof HTMLElement) alvo.focus();
+    else formulario.current?.querySelector<HTMLElement>('[role="alert"]')?.focus();
+  }, [erro]);
+
+  async function enviar() {
+    if (trava.current) return;
     setErro(null);
-    if (titulo.trim().length < 8) return setErro({ texto: "Descreva o que você procura com pelo menos 8 caracteres.", campo: "titulo" });
-    if (!cidade) return setErro({ texto: "Escolha a cidade.", campo: "cidade" });
-    if (modo === "propostas_prazo" && !prazo) return setErro({ texto: "Escolha até quando quer receber propostas.", campo: "prazo" });
-    if (pedirWhatsapp && !whatsappDigitado(whatsapp)) {
-      return setErro({ texto: "Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.", campo: "whatsapp" });
-    }
     chaveEnvio.current ??= crypto.randomUUID();
+    const invalida = validarPedido({ chaveEnvio: chaveEnvio.current, titulo, detalhes, categoriaId, precoMin, precoMax, cidade: cidade ?? "", modo, prazoHoras: prazo });
+    if (invalida) return setErro({ texto: invalida.erro, campo: invalida.campo });
+    if (!cidades.includes(cidade ?? "")) return setErro({ texto: "Escolha uma cidade da lista.", campo: "cidade" });
+    if (modo === "propostas_prazo" && !regras.prazosHoras.includes(prazo ?? 0)) return setErro({ texto: "Escolha um prazo da lista.", campo: "prazo" });
+    if (pedirWhatsapp && !whatsappDigitado(whatsapp)) return setErro({ texto: "Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.", campo: "whatsapp" });
+    trava.current = true;
     iniciar(async () => {
       try {
         const r = await criarPedido({
@@ -69,7 +81,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           categoriaId,
           precoMin,
           precoMax,
-          cidade,
+          cidade: cidade!,
           modo,
           prazoHoras: prazo,
           whatsapp: pedirWhatsapp ? whatsapp : undefined,
@@ -81,15 +93,16 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         router.push(`${linkMeuPedidoRadar(r.id)}?novo=1`);
       } catch {
         setErro({ texto: "Não conseguimos confirmar o envio. Seus dados continuam aqui; tente novamente." });
-      }
+      } finally { trava.current = false; }
     });
   }
 
   const erroDe = (campo: string) => (erro?.campo === campo ? erro.texto : null);
-  const erroGeral = erro && !["titulo", "detalhes", "cidade", "prazo", "preco_min_centavos", "preco_max_centavos", "whatsapp"].includes(erro.campo ?? "") ? erro : null;
+  const erroGeral = erro && !["titulo", "detalhes", "categoria", "cidade", "prazo", "preco_min_centavos", "preco_max_centavos", "whatsapp"].includes(erro.campo ?? "") ? erro : null;
 
   return (
-    <form onSubmit={enviar} className="flex flex-col gap-6" noValidate>
+    <form ref={formulario} action={enviar} noValidate>
+      <fieldset disabled={enviando} className="flex min-w-0 flex-col gap-6">
       <Campo
         rotulo="O que você quer comprar?"
         name="titulo"
@@ -113,6 +126,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         erro={erroDe("detalhes")}
       />
 
+      {erroDe("categoria") && <p role="alert" tabIndex={-1} className="text-sm font-semibold text-perigo">{erroDe("categoria")}</p>}
       {categorias.length > 0 && (
         <fieldset className="flex flex-col gap-2">
           <legend className={`${ROTULO_GRUPO} mb-2`}>
@@ -170,7 +184,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           </div>
         )}
         {erroDe("cidade") && (
-          <p role="alert" className="text-sm font-semibold text-perigo">
+          <p role="alert" tabIndex={-1} className="text-sm font-semibold text-perigo">
             {erroDe("cidade")}
           </p>
         )}
@@ -205,7 +219,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
               ))}
             </div>
             {erroDe("prazo") && (
-              <p role="alert" className="text-sm font-semibold text-perigo">
+              <p role="alert" tabIndex={-1} className="text-sm font-semibold text-perigo">
                 {erroDe("prazo")}
               </p>
             )}
@@ -225,12 +239,12 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           placeholder="(89) 99999-0000"
           maxLength={20}
           erro={erroDe("whatsapp")}
-          dica="Com DDD. É por ele que as lojas falam com você."
+          dica={modo === "whatsapp_direto" ? "Com DDD. As lojas que enviarem uma proposta poderão ver este número." : "Com DDD. Seu número fica oculto; você escolhe com qual loja conversar."}
         />
       )}
 
       {erroGeral && (
-        <div role="alert" className="flex flex-col gap-2 rounded-card bg-perigo-fundo p-4 text-base font-semibold text-perigo">
+        <div role="alert" tabIndex={-1} className="flex flex-col gap-2 rounded-card bg-perigo-fundo p-4 text-base font-semibold text-perigo">
           <span>{erroGeral.texto}</span>
           {erroGeral.celular && (
             <Link href="/minha-conta/dados/foto" className="min-h-12 content-center underline underline-offset-4">
@@ -241,13 +255,14 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
       )}
 
       <div className="flex flex-col gap-2">
-        <Botao type="submit" larguraTotal carregando={enviando} textoCarregando="Enviando pedido..." icone={<Megaphone />}>
+        <Botao type="submit" larguraTotal disabled={cidades.length === 0} carregando={enviando} textoCarregando="Enviando pedido..." icone={<Megaphone />}>
           Pedir no Radar
         </Botao>
         {regras.pedidosAbertosMax != null && (
           <p className="text-center text-sm text-texto-suave">Você pode ter até {regras.pedidosAbertosMax} pedidos no ar ao mesmo tempo.</p>
         )}
       </div>
+      </fieldset>
     </form>
   );
 }
