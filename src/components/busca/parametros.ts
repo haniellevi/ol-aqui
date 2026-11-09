@@ -7,6 +7,8 @@ import type { CampoCategoria, FiltrosBusca, OrdemBusca } from "@/lib/tipos";
 export type ParametrosUrl = Record<string, string | string[] | undefined>;
 
 export const POR_PAGINA = 24;
+export const ID_FOLHA = "filtros";
+export const ID_RESULTADOS = "resultados";
 
 export const ORDENS: { valor: OrdemBusca; rotulo: string }[] = [
   { valor: "relevancia", rotulo: "Mais relevantes" },
@@ -33,12 +35,28 @@ export type EstadoBusca = {
   pagina: number;
   valores: ValoresCampos;
   filtros: FiltrosBusca;
+  /** Valores inválidos não podem ampliar a busca silenciosamente. Chave = nome do campo. */
+  erros: Record<string, string>;
   /** Quantos filtros estão ligados (para o chip "Filtros (n)"). */
   quantos: number;
 };
 
 function um(v: string | string[] | undefined): string {
-  return (Array.isArray(v) ? v[0] : v ?? "").trim().slice(0, 120);
+  return (Array.isArray(v) ? v[0] ?? "" : v ?? "").trim().slice(0, 120);
+}
+
+/** Só filtros conhecidos seguem ao trocar o termo; a nova busca começa na primeira página. */
+export function manterFiltros(sp: ParametrosUrl): ParametrosUrl {
+  return Object.fromEntries(Object.entries(sp).filter(([k]) =>
+    ["categoria", "cidade", "preco_min", "preco_max", "ordem"].includes(k) || /^c_[a-z0-9_]+$/.test(k),
+  ));
+}
+
+function numeroDoFiltro(texto: string): number | null {
+  const s = texto.replace(/\s/g, "");
+  if (!/^-?(?:(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d+)?|\d+\.\d+)$/.test(s)) return null;
+  const n = numeroDoTexto(s);
+  return n != null && Math.abs(n) <= Number.MAX_SAFE_INTEGER ? n : null;
 }
 
 function varios(v: string | string[] | undefined): string[] {
@@ -61,23 +79,31 @@ export function lerEstadoBusca(sp: ParametrosUrl, campos: CampoCategoria[] = [],
 
   const valores: ValoresCampos = {};
   const filtros: FiltrosBusca = {};
+  const erros: Record<string, string> = {};
   let quantosCampos = 0;
   for (const c of campos) {
     if (!c.filtro) continue;
     if (c.tipo === "numero") {
       const minT = um(sp[paramCampo(c.chave, "min")]);
       const maxT = um(sp[paramCampo(c.chave, "max")]);
-      const min = numeroDoTexto(minT);
-      const max = numeroDoTexto(maxT);
+      const min = numeroDoFiltro(minT);
+      const max = numeroDoFiltro(maxT);
+      for (const [parte, texto, n] of [["min", minT, min], ["max", maxT, max]] as const) {
+        const chave = paramCampo(c.chave, parte);
+        if (texto && n == null) erros[chave] = `${c.rotulo}: informe um número válido.`;
+        else if (n != null && c.min != null && n < c.min) erros[chave] = `${c.rotulo}: o valor mínimo permitido é ${c.min}.`;
+        else if (n != null && c.max != null && n > c.max) erros[chave] = `${c.rotulo}: o valor máximo permitido é ${c.max}.`;
+      }
+      if (min != null && max != null && min > max) erros[paramCampo(c.chave, "max")] = `${c.rotulo}: o valor máximo deve ser maior ou igual ao mínimo.`;
       if (minT) valores[paramCampo(c.chave, "min")] = minT;
       if (maxT) valores[paramCampo(c.chave, "max")] = maxT;
       if (min != null || max != null) {
         filtros[c.chave] = { ...(min != null ? { min } : {}), ...(max != null ? { max } : {}) };
-        quantosCampos++;
       }
+      if (minT || maxT) quantosCampos++;
     } else if (c.tipo === "lista") {
       const opcoes = new Set(c.opcoes ?? []);
-      const escolhidos = varios(sp[paramCampo(c.chave)]).filter((v) => opcoes.has(v));
+      const escolhidos = [...new Set(varios(sp[paramCampo(c.chave)]).filter((v) => opcoes.has(v)))];
       if (escolhidos.length) {
         valores[paramCampo(c.chave)] = escolhidos;
         filtros[c.chave] = escolhidos;
@@ -102,10 +128,13 @@ export function lerEstadoBusca(sp: ParametrosUrl, campos: CampoCategoria[] = [],
 
   const precoMin = centavosDoTexto(precoMinTexto);
   const precoMax = centavosDoTexto(precoMaxTexto);
+  if (precoMinTexto && precoMin == null) erros.preco_min = "Informe um preço mínimo válido, como 100 ou 1.500,50.";
+  if (precoMaxTexto && precoMax == null) erros.preco_max = "Informe um preço máximo válido, como 100 ou 1.500,50.";
+  if (precoMin != null && precoMax != null && precoMin > precoMax) erros.preco_max = "O preço máximo deve ser maior ou igual ao mínimo.";
   const quantos =
     quantosCampos +
     (cidade ? 1 : 0) +
-    (precoMin != null || precoMax != null ? 1 : 0) +
+    (precoMinTexto || precoMaxTexto ? 1 : 0) +
     (categoria ? 1 : 0) +
     (ordem !== "relevancia" ? 1 : 0);
 
@@ -121,6 +150,7 @@ export function lerEstadoBusca(sp: ParametrosUrl, campos: CampoCategoria[] = [],
     pagina,
     valores,
     filtros,
+    erros,
     quantos,
   };
 }

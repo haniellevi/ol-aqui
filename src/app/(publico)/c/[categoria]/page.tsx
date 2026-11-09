@@ -34,7 +34,7 @@ export default async function PaginaCategoria({ params, searchParams }: Props) {
       sp={sp}
       categoria={achada}
       categoriaPeloEndereco
-      topo={<CabecalhoCategoria achada={achada} q={q} />}
+      topo={<CabecalhoCategoria achada={achada} q={q} sp={sp} />}
     />
   );
 }
