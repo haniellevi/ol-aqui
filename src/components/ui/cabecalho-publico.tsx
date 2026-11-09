@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { SinoAvisos } from "@/components/conta/sino-avisos";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { ChevronDown, MapPin, Plus, Radar, Search, UserRound } from "lucide-react";
@@ -51,15 +52,16 @@ export async function CabecalhoPublico() {
           </Link>
         </nav>
 
-        <div className="ml-auto md:ml-1">
+        <div className="ml-auto flex shrink-0 items-center md:ml-1">
           <SignedOut>
             <Link href="/entrar" className={LINK}>
               <UserRound className="size-5" aria-hidden /> Entrar
             </Link>
           </SignedOut>
           <SignedIn>
-            <Link href="/minha-conta" className={LINK}>
-              <UserRound className="size-5" aria-hidden /> Conta
+            <SinoAvisos />
+            <Link href="/minha-conta" aria-label="Minha conta" className={LINK}>
+              <UserRound className="size-5" aria-hidden /> <span className="hidden sm:inline">Conta</span>
             </Link>
           </SignedIn>
         </div>

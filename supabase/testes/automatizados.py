@@ -49,6 +49,21 @@ try:
     print('PASS: lixeira, restauração, fotos, venda, moderação, idempotência e isolamento entre usuários', flush=True)
     checked(sql((root/'supabase/testes/200_radar_pedido_proposta_contato.sql').read_text()))
     print('PASS: Radar completo preserva centavos, valida fotos, entrega avisos e protege contato e prazo', flush=True)
+    checked(sql((root/'supabase/testes/210_notificacoes.sql').read_text()))
+    print('PASS: notificações isolam contas, canais, leitura, preferências e repetição', flush=True)
+    migracao_avisos = (root/'supabase/migrations/20261109195657_notificacoes_confiaveis.sql').read_text()
+    checked(sql("""begin;
+      update modelos_mensagem set texto='Texto personalizado da equipe' where chave='proposta_escolhida' and canal='notificacao';
+      update configuracoes set valor='"Texto regional personalizado"' where chave='radar.aviso.proposta_escolhida.texto';
+    """ + migracao_avisos + migracao_avisos + """
+      do $$ begin
+        assert (select texto='Texto personalizado da equipe' from modelos_mensagem where chave='proposta_escolhida' and canal='notificacao'), 'Texto personalizado foi substituído';
+        assert not exists(select 1 from configuracoes where chave='radar.aviso.proposta_escolhida.texto' and valor <> '"Texto regional personalizado"'::jsonb), 'Configuração personalizada foi substituída';
+        assert (select tgenabled='O' from pg_trigger where tgrelid='modelos_mensagem'::regclass and tgname='modelos_mensagem_proteger'), 'Protetor de modelos desabilitado';
+      end $$;
+      rollback;
+    """))
+    print('PASS: migração de avisos repetida preserva textos personalizados e protetor', flush=True)
     def propose(i):
         return sql(f"begin; set role authenticated; set request.jwt.claim.role='authenticated'; set request.jwt.claim.sub='user_cota'; select * from revelar_contato_radar('20000000-0000-4000-a000-00000000000{i}',null,'Oferta concorrente',10000); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:

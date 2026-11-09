@@ -148,36 +148,32 @@ export async function meusAnunciosNoAr(): Promise<AnuncioParaProposta[]> {
 
 /* ------------------------------ Avisos ------------------------------ */
 
-export async function minhasNotificacoes(limite = 60): Promise<Notificacao[]> {
-  return seguro(async () => {
-    const { userId } = await auth();
-    if (!userId) return [];
-    const db = await createClient();
-    const { data, error } = await db
-      .from("notificacoes")
-      .select("id, tipo, titulo, texto, link, lida_em, criado_em")
-      .eq("usuario_id", userId)
-      .order("criado_em", { ascending: false })
-      .limit(limite);
-    return error ? [] : ((data ?? []) as Notificacao[]);
-  }, []);
+export const AVISOS_POR_PAGINA = 30;
+export async function minhasNotificacoes(pagina = 1, somenteNaoLidas = false): Promise<{ avisos: Notificacao[]; total: number }> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Entre na sua conta para acessar seus avisos.");
+  const db = await createClient();
+  const inicio = (Math.max(1, Math.min(10000, Number.isSafeInteger(pagina) ? pagina : 1)) - 1) * AVISOS_POR_PAGINA;
+  let consulta = db.from("notificacoes")
+    .select("id, tipo, titulo, texto, link, lida_em, criado_em", { count: "exact" })
+    .eq("usuario_id", userId).eq("canal", "app")
+    .order("criado_em", { ascending: false }).order("id", { ascending: false });
+  if (somenteNaoLidas) consulta = consulta.is("lida_em", null);
+  const { data, error, count } = await consulta.range(inicio, inicio + AVISOS_POR_PAGINA - 1);
+  if (error || !Array.isArray(data) || typeof count !== "number" || count < 0) throw new Error("Não foi possível carregar seus avisos.");
+  return { avisos: data as Notificacao[], total: count };
 }
 
-/** Quantos avisos não lidos (0 em erro: a tela nunca quebra por isso). */
-export const avisosNaoLidos = cache(
-  (): Promise<number> =>
-    seguro(async () => {
-      const { userId } = await auth();
-      if (!userId) return 0;
-      const db = await createClient();
-      const { count } = await db
-        .from("notificacoes")
-        .select("id", { count: "exact", head: true })
-        .eq("usuario_id", userId)
-        .is("lida_em", null);
-      return count ?? 0;
-    }, 0),
-);
+/** Contagem de todos os avisos do app, inclusive os que estão nas páginas seguintes. */
+export const avisosNaoLidos = cache(async (): Promise<number> => {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Entre na sua conta para acessar seus avisos.");
+  const db = await createClient();
+  const { count, error } = await db.from("notificacoes")
+    .select("id", { count: "exact", head: true }).eq("usuario_id", userId).eq("canal", "app").is("lida_em", null);
+  if (error || typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) throw new Error("Não foi possível contar seus avisos.");
+  return count;
+});
 
 // Nome e explicação de cada aviso na tela. A lista de quais a pessoa pode escolher vem do painel
 // (radar.avisos_escolha); aviso novo sem nome aqui aparece com um nome simples.
@@ -190,22 +186,15 @@ const NOMES_AVISO: Record<string, { nome: string; explicacao: string }> = {
 
 /** Avisos que a pessoa pode ligar ou desligar, com o que ela já escolheu (sem linha = ligado). */
 export async function minhasPreferenciasAvisos(): Promise<PreferenciaAviso[]> {
-  return seguro(async () => {
-    const { userId } = await auth();
-    if (!userId) return [];
-    const db = await createClient();
-    const [tipos, { data }] = await Promise.all([
-      lerConfig<unknown>("radar.avisos_escolha", null, []),
-      db.from("preferencias_avisos").select("tipo, ligado").eq("usuario_id", userId).eq("canal", "app"),
-    ]);
-    const desligados = new Set((data ?? []).filter((p) => p.ligado === false).map((p) => p.tipo as string));
-    return (Array.isArray(tipos) ? tipos : [])
-      .filter((t): t is string => typeof t === "string" && /^[a-z0-9_]{3,40}$/.test(t))
-      .map((tipo) => ({
-        tipo,
-        nome: NOMES_AVISO[tipo]?.nome ?? tipo.replace(/_/g, " "),
-        explicacao: NOMES_AVISO[tipo]?.explicacao ?? "",
-        ligado: !desligados.has(tipo),
-      }));
-  }, []);
+  const { userId } = await auth();
+  if (!userId) throw new Error("Entre na sua conta para acessar suas preferências.");
+  const db = await createClient();
+  const [config, preferencias] = await Promise.all([
+    db.rpc("config", { p_chave: "radar.avisos_escolha", p_microrregiao: null, p_padrao: [] }),
+    db.from("preferencias_avisos").select("tipo, ligado").eq("usuario_id", userId).eq("canal", "app"),
+  ]);
+  if (config.error || !Array.isArray(config.data) || preferencias.error || !Array.isArray(preferencias.data)) throw new Error("Não foi possível carregar suas preferências.");
+  const desligados = new Set(preferencias.data.filter((p) => p.ligado === false).map((p) => p.tipo as string));
+  return [...new Set(config.data.filter((t): t is string => typeof t === "string" && /^[a-z0-9_]{3,40}$/.test(t)))]
+    .map((tipo) => ({ tipo, nome: NOMES_AVISO[tipo]?.nome ?? tipo.replace(/_/g, " "), explicacao: NOMES_AVISO[tipo]?.explicacao ?? "", ligado: !desligados.has(tipo) }));
 }
