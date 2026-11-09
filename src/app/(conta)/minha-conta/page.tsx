@@ -33,7 +33,7 @@ const CLASSE_ITEM =
 
 // T31 · Minha conta: lista simples com ícone + nome. Itens de vendedor só para quem vende.
 export default async function PaginaMinhaConta() {
-  const [conta, naoLidos] = await Promise.all([meuPerfilEVitrine(), avisosNaoLidos()]);
+  const [conta, naoLidos] = await Promise.all([meuPerfilEVitrine(), avisosNaoLidos().catch(() => null)]);
   if (!conta) {
     return (
       <PaginaConta>
@@ -70,7 +70,7 @@ export default async function PaginaMinhaConta() {
       href: "/minha-conta/notificacoes",
       nome: "Notificações",
       icone: <Bell />,
-      detalhe: naoLidos > 0 ? `${naoLidos} ${naoLidos === 1 ? "aviso novo" : "avisos novos"}` : undefined,
+      detalhe: naoLidos === null ? "Consulte seus avisos" : naoLidos > 0 ? `${naoLidos} ${naoLidos === 1 ? "aviso novo" : "avisos novos"}` : undefined,
     },
     { href: "/minha-conta/dados", nome: "Meus dados", icone: <UserRound /> },
     { href: "/minha-conta/privacidade", nome: "Privacidade", icone: <Lock /> },
