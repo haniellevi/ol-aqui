@@ -24,15 +24,14 @@ export default async function PassoFotos({ searchParams }: { searchParams: Param
     <CorpoPasso>
       <CabecalhoPasso
         passo="fotos"
+        formId="form-fotos"
         id={anuncio.id}
         editar={editar}
         titulo={editar ? "Fotos do anúncio" : "Tire fotos do que você quer vender"}
-        subtitulo="As fotos ficam salvas assim que terminam de enviar."
+        subtitulo="Escolha fotos nítidas. A primeira será a capa do anúncio."
       />
       {!editar && (
-        <div className="mb-4">
-          <BotaoAbrirAki pedido={{ foto: true, rascunhoId: anuncio.id }}>Cadastrar com o Aki pela foto</BotaoAbrirAki>
-        </div>
+        <BotaoAbrirAki pedido={{ foto: true, rascunhoId: anuncio.id }}>Cadastrar com o Aki pela foto</BotaoAbrirAki>
       )}
       <EnvioFotos id={anuncio.id} editar={editar} fotosIniciais={anuncio.fotos} maximo={maximo} minimo={minimo ?? 0} />
     </CorpoPasso>

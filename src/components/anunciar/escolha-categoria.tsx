@@ -1,15 +1,14 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ChevronRight, Search } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { CirculoCategoria } from "@/components/ui/icone-categoria";
 import { salvarCategoria } from "@/app/(conta)/anunciar/actions";
 import type { Categoria, CategoriaComFilhas } from "@/lib/tipos";
 import { AvisoErro } from "./aviso-erro";
-import { aoEnviar } from "./enviar";
+import { useEnvioAnuncio } from "./enviar";
 import { BarraContinuar } from "./barra-continuar";
-import type { EstadoForm } from "./passos";
 
 // Passo 2 · Categoria: primeiro a categoria grande (com ícone), depois o tipo (subcategoria).
 // A busca filtra direto as subcategorias ("geladeira", "moto"...), sem ligar para acento.
@@ -34,7 +33,7 @@ export function EscolhaCategoria({
   arvore: CategoriaComFilhas[];
   selecionadaId: string | null;
 }) {
-  const [estado, acao, enviando] = useActionState<EstadoForm, FormData>(salvarCategoria, null);
+  const [estado, onSubmit, enviando, enviar] = useEnvioAnuncio(salvarCategoria);
   const paiInicial = arvore.find((p) => p.filhas.some((f) => f.id === selecionadaId))?.id ?? null;
   const [paiId, setPaiId] = useState<string | null>(paiInicial);
   const [filhaId, setFilhaId] = useState<string | null>(selecionadaId);
@@ -81,7 +80,7 @@ export function EscolhaCategoria({
   }
 
   return (
-    <form id={formId} onSubmit={aoEnviar(acao)} className="flex flex-col gap-5">
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-5">
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
       <input type="hidden" name="categoria_id" value={filhaId ?? ""} />

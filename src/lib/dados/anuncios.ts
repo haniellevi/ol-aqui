@@ -149,7 +149,7 @@ function semDono(a: MeuAnuncio & { vitrines_lojas?: unknown }): MeuAnuncio {
  * Um anúncio do usuário logado (rascunho para continuar, editar, prévia).
  * Confere o dono pela vitrine: anúncio de outra pessoa ou sem login → null.
  */
-export const meuAnuncio = cache(async (id: string): Promise<MeuAnuncio | null> => seguro(async () => {
+export const meuAnuncio = cache(async (id: string): Promise<MeuAnuncio | null> => {
   const { userId } = await auth();
   if (!userId || !ehUuid(id)) return null;
   const db = await createClient();
@@ -159,13 +159,14 @@ export const meuAnuncio = cache(async (id: string): Promise<MeuAnuncio | null> =
     .eq("id", id)
     .eq("vitrines_lojas.dono_id", userId)
     .maybeSingle();
-  if (error || !data) return null;
+  if (error) throw new Error("Não foi possível carregar seu rascunho. Tente de novo.");
+  if (!data) return null;
   return semDono(data as unknown as MeuAnuncio);
-}, null));
+});
 
 /** Todos os anúncios do usuário logado (tela "Meus anúncios"), mais novos primeiro. */
 export async function meusAnuncios(): Promise<MeuAnuncio[]> {
-  return seguro(lerMeus, []);
+  return lerMeus();
 }
 
 async function lerMeus(): Promise<MeuAnuncio[]> {
@@ -178,7 +179,7 @@ async function lerMeus(): Promise<MeuAnuncio[]> {
     .eq("vitrines_lojas.dono_id", userId)
     .order("atualizado_em", { ascending: false })
     .limit(500);
-  if (error || !data) return [];
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar seus anúncios. Tente de novo.");
   return (data as unknown as MeuAnuncio[]).map(semDono);
 }
 

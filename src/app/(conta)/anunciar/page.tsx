@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronRight, FileClock, ImageOff, ShieldAlert } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { meusAnuncios } from "@/lib/dados/anuncios";
 import { avulsoParaMim } from "@/lib/dados/cobranca";
@@ -17,7 +16,7 @@ import { urlPasso } from "@/components/anunciar/passos";
 export const metadata: Metadata = { title: "Anunciar" };
 
 // /anunciar: confere se a pessoa já vende e o limite do plano (T16) e então
-// retoma o rascunho que ficou pela metade ou cria um novo e abre o passo 1 (Fotos).
+// oferece retomar ou começar. Abrir/pré-carregar a página nunca grava no banco.
 export default async function PaginaAnunciar() {
   const conta = await meuPerfilEVitrine();
   if (!conta) {
@@ -67,18 +66,18 @@ export default async function PaginaAnunciar() {
   }
 
   if (rascunhos.length === 0) {
-    const db = await createClient();
-    const { data } = await db
-      .from("anuncios")
-      .insert({ vitrine_id: conta.vitrine.id, status: "rascunho" })
-      .select("id")
-      .single();
-    if (data?.id) redirect(urlPasso("fotos", String(data.id)));
     return (
-      <main className="mx-auto w-full max-w-xl px-4 py-6">
-        <Vazio titulo="Algo deu errado" texto="Não conseguimos começar o anúncio agora. Confira sua internet e tente de novo.">
-          <Botao href="/anunciar" larguraTotal>Tentar de novo</Botao>
-        </Vazio>
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-bold text-beringela">O que você quer vender?</h1>
+          <p className="text-base text-texto-suave">Coloque as fotos, conte sobre o produto e escolha o preço e a cidade. Você confere tudo antes de publicar.</p>
+        </div>
+        <ol className="grid gap-3 rounded-card bg-cartao p-5 shadow-1">
+          <li><strong>1. Mostre o produto</strong><p className="text-texto-suave">Escolha a capa e acrescente fotos dos detalhes.</p></li>
+          <li><strong>2. Preencha as informações</strong><p className="text-texto-suave">Preço, categoria e localização, sem expor seu endereço.</p></li>
+          <li><strong>3. Confira e publique</strong><p className="text-texto-suave">Cada etapa concluída fica salva como rascunho.</p></li>
+        </ol>
+        <BotaoNovoRascunho texto="Começar meu anúncio" />
       </main>
     );
   }

@@ -1,12 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
 import { Send, Save } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { publicarAnuncio } from "@/app/(conta)/anunciar/actions";
+import { useEnvioAnuncio } from "./enviar";
 import { AvisoErro } from "./aviso-erro";
 import { BarraContinuar } from "./barra-continuar";
-import { passoDoCampo, urlPasso, type EstadoForm } from "./passos";
+import { passoDoCampo, urlPasso } from "./passos";
 import { LINK_PLANOS } from "@/lib/rotas";
 
 // Botão final do Revisar: "Publicar anúncio" (rascunho), "Publicar de novo" (pausado/expirado)
@@ -25,7 +25,7 @@ export function BotaoPublicar({
   /** Pessoa física no limite com avulso ligado: o aviso de limite oferece "Pagar anúncio avulso". */
   linkAvulso?: string | null;
 }) {
-  const [estado, acao, enviando] = useActionState<EstadoForm, FormData>(publicarAnuncio, null);
+  const [estado, onSubmit, enviando, enviar] = useEnvioAnuncio(publicarAnuncio);
   const passo = passoDoCampo(estado?.erro?.campo);
   const limite = estado?.erro?.codigo === "P0001";
   const link = passo
@@ -39,7 +39,7 @@ export function BotaoPublicar({
   const texto = modo === "salvar" ? "Salvar alterações" : modo === "republicar" ? "Publicar de novo" : "Publicar anúncio";
 
   return (
-    <form id={formId} action={acao} className="flex flex-col gap-3">
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3">
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
       <AvisoErro mensagem={estado?.erro?.mensagem} link={link} />
