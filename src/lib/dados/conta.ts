@@ -29,7 +29,8 @@ async function lerConta(): Promise<MinhaConta | null> {
   const perfilLinha = Array.isArray(perfilRes.data) ? perfilRes.data[0] : perfilRes.data;
   if (perfilRes.error || !perfilLinha) return null;
   const perfil = paraPerfil(perfilLinha);
-  const vitrine = vitrineRes.error ? null : vitrineRes.data;
+  if (vitrineRes.error) throw new Error("Não foi possível carregar sua vitrine.");
+  const vitrine = vitrineRes.data;
 
   if (!vitrine) {
     return { perfil, vitrine: null, plano: null, limite: 0, ativos: 0, rascunhos: 0, podePublicar: false };

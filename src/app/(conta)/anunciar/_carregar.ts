@@ -29,7 +29,7 @@ export async function carregarPasso(searchParams: ParamsPasso): Promise<DadosPas
   if (!conta.vitrine) redirect("/quero-vender");
 
   const anuncio = await meuAnuncio(id);
-  if (!anuncio || anuncio.status === "congelado") notFound();
+  if (!anuncio || (anuncio.status === "congelado" || anuncio.status === "excluido")) notFound();
 
   // anúncio já publicado abre sempre no modo edição
   const editar = um(sp.editar) === "1" || anuncio.status !== "rascunho";
