@@ -68,92 +68,82 @@ export const planosComRadar = cache(
 );
 
 /** Acesso ao Radar e propostas que sobram (null = sem limite). */
-export const acessoRadar = cache(
-  (): Promise<{ temAcesso: boolean; restantes: number | null }> =>
-    seguro(async () => {
-      const db = await createClient();
-      const [{ data: acesso }, { data: restantes }] = await Promise.all([db.rpc("tem_plano_pago"), db.rpc("propostas_restantes")]);
-      return { temAcesso: acesso === true, restantes: acesso === true ? ((restantes as number | null) ?? null) : 0 };
-    }, { temAcesso: false, restantes: 0 }),
-);
+export const acessoRadar = cache(async (): Promise<{ temAcesso: boolean; restantes: number | null }> => {
+  const db = await createClient();
+  const [acesso, restantes] = await Promise.all([db.rpc("tem_plano_pago"), db.rpc("propostas_restantes")]);
+  if (acesso.error || restantes.error) throw new Error("Não foi possível consultar seu acesso ao Radar.");
+  return { temAcesso: acesso.data === true, restantes: acesso.data === true ? (restantes.data as number | null) : 0 };
+});
 
 export async function meusPedidos(): Promise<MeuPedidoRadar[]> {
-  return seguro(async () => {
-    const db = await createClient();
-    const { data, error } = await db.rpc("meus_pedidos_radar");
-    return error ? [] : ((data ?? []) as MeuPedidoRadar[]);
-  }, []);
+  const db = await createClient();
+  const { data, error } = await db.rpc("meus_pedidos_radar");
+  if (error) throw new Error("Não foi possível carregar seus pedidos.");
+  return (data ?? []) as MeuPedidoRadar[];
 }
 
 export async function minhasPropostas(): Promise<MinhaPropostaRadar[]> {
-  return seguro(async () => {
-    const db = await createClient();
-    const { data, error } = await db.rpc("minhas_propostas_radar");
-    return error ? [] : ((data ?? []) as MinhaPropostaRadar[]);
-  }, []);
+  const db = await createClient();
+  const { data, error } = await db.rpc("minhas_propostas_radar");
+  if (error) throw new Error("Não foi possível carregar suas propostas.");
+  return (data ?? []) as MinhaPropostaRadar[];
 }
 
 /** Um pedido (null = não existe ou a pessoa não pode ver). */
-export const pedidoRadar = cache(
-  (id: string): Promise<PedidoRadarDetalhe | null> =>
-    seguro(async () => {
-      if (!ehUuid(id)) return null;
-      const db = await createClient();
-      const { data, error } = await db.rpc("radar_pedido", { p_id: id });
-      const linha = Array.isArray(data) ? data[0] : data;
-      return error || !linha ? null : (linha as PedidoRadarDetalhe);
-    }, null),
-);
+export const pedidoRadar = cache(async (id: string): Promise<PedidoRadarDetalhe | null> => {
+  if (!ehUuid(id)) return null;
+  const db = await createClient();
+  const { data, error } = await db.rpc("radar_pedido", { p_id: id });
+  if (error) throw new Error("Não foi possível carregar este pedido.");
+  return (Array.isArray(data) ? data[0] : data) as PedidoRadarDetalhe | null ?? null;
+});
 
 export async function propostasDoPedido(id: string): Promise<PropostaRecebida[]> {
-  return seguro(async () => {
-    if (!ehUuid(id)) return [];
-    const db = await createClient();
-    const { data, error } = await db.rpc("propostas_do_pedido", { p_pedido: id });
-    return error ? [] : ((data ?? []) as PropostaRecebida[]);
-  }, []);
+  if (!ehUuid(id)) return [];
+  const db = await createClient();
+  const { data, error } = await db.rpc("propostas_do_pedido", { p_pedido: id });
+  if (error) throw new Error("Não foi possível carregar as propostas.");
+  return (data ?? []) as PropostaRecebida[];
 }
 
 /** A proposta da minha loja neste pedido (para editar), ou null. */
 export async function minhaPropostaNoPedido(pedidoId: string): Promise<MinhaPropostaNoPedido | null> {
-  return seguro(async () => {
-    const { userId } = await auth();
-    if (!userId || !ehUuid(pedidoId)) return null;
-    const db = await createClient();
-    const { data } = await db
-      .from("radar_propostas")
-      .select("id, preco_centavos, mensagem, foto_url, anuncio_id, status, moderado_motivo, escolhida, vitrines_lojas!inner(dono_id)")
-      .eq("pedido_id", pedidoId)
-      .eq("vitrines_lojas.dono_id", userId)
-      .maybeSingle();
-    if (!data) return null;
-    const { vitrines_lojas: _v, ...resto } = data as unknown as MinhaPropostaNoPedido & { vitrines_lojas: unknown };
-    void _v;
-    return resto;
-  }, null);
+  const { userId } = await auth();
+  if (!userId || !ehUuid(pedidoId)) return null;
+  const db = await createClient();
+  const { data, error } = await db
+    .from("radar_propostas")
+    .select("id, preco_centavos, mensagem, foto_url, anuncio_id, status, moderado_motivo, escolhida, vitrines_lojas!inner(dono_id)")
+    .eq("pedido_id", pedidoId)
+    .eq("vitrines_lojas.dono_id", userId)
+    .maybeSingle();
+  if (error) throw new Error("Não foi possível carregar sua proposta.");
+  if (!data) return null;
+  const { vitrines_lojas: _v, ...resto } = data as unknown as MinhaPropostaNoPedido & { vitrines_lojas: unknown };
+  void _v;
+  return resto;
 }
 
 /** Anúncios no ar da minha vitrine (para escolher na proposta). */
 export async function meusAnunciosNoAr(): Promise<AnuncioParaProposta[]> {
-  return seguro(async () => {
-    const { userId } = await auth();
-    if (!userId) return [];
-    const db = await createClient();
-    const { data, error } = await db
-      .from("anuncios")
-      .select("id, titulo, preco_centavos, fotos, vitrines_lojas!inner(dono_id)")
-      .eq("vitrines_lojas.dono_id", userId)
-      .eq("status", "ativo")
-      .order("atualizado_em", { ascending: false })
-      .limit(60);
-    if (error || !data) return [];
-    return (data as unknown as { id: string; titulo: string; preco_centavos: number | null; fotos: string[] | null }[]).map((a) => ({
-      id: a.id,
-      titulo: a.titulo,
-      preco_centavos: a.preco_centavos,
-      capa: a.fotos?.[0] ?? null,
-    }));
-  }, []);
+  const { userId } = await auth();
+  if (!userId) return [];
+  const db = await createClient();
+  const { data, error } = await db
+    .from("anuncios")
+    .select("id, titulo, preco_centavos, fotos, vitrines_lojas!inner(dono_id)")
+    .eq("vitrines_lojas.dono_id", userId)
+    .eq("status", "ativo")
+    .order("atualizado_em", { ascending: false })
+    .limit(60);
+  if (error) throw new Error("Não foi possível carregar seus anúncios.");
+  if (!data) return [];
+  return (data as unknown as { id: string; titulo: string; preco_centavos: number | null; fotos: string[] | null }[]).map((a) => ({
+    id: a.id,
+    titulo: a.titulo,
+    preco_centavos: a.preco_centavos,
+    capa: a.fotos?.[0] ?? null,
+  }));
 }
 
 /* ------------------------------ Avisos ------------------------------ */

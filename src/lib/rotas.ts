@@ -40,9 +40,14 @@ export const LINK_ADMIN_PAGAMENTOS = "/admin/pagamentos";
 
 /** Radar: pedir (com o texto já preenchido), pedido do comprador e pedido visto pela loja. */
 export const LINK_RADAR = "/radar";
-export const linkPedirRadar = (texto?: string | null) => {
-  const t = (texto ?? "").trim().slice(0, 120);
-  return t ? `/radar/pedir?q=${encodeURIComponent(t)}` : "/radar/pedir";
+export type FiltrosPedido = { categoria?: string | null; cidade?: string | null; precoMin?: string | null; precoMax?: string | null };
+export const linkPedirRadar = (texto?: string | null, filtros: FiltrosPedido = {}) => {
+  const params = new URLSearchParams();
+  for (const [chave, valor] of Object.entries({ q: texto, categoria: filtros.categoria, cidade: filtros.cidade, preco_min: filtros.precoMin, preco_max: filtros.precoMax })) {
+    const t = (valor ?? "").trim().slice(0, 120);
+    if (t) params.set(chave, t);
+  }
+  return params.size ? `/radar/pedir?${params}` : "/radar/pedir";
 };
 export const linkMeuPedidoRadar = (pedidoId: string) => `/radar/pedido/${pedidoId}`;
 export const linkPedidoRadarLoja = (pedidoId: string) => `/radar/${pedidoId}`;

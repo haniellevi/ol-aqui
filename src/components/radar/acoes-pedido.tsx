@@ -18,10 +18,14 @@ export function AcoesPedido({ pedidoId }: { pedidoId: string }) {
     setAviso(null);
     setAcao(motivo);
     iniciar(async () => {
-      const r = await fecharPedido(pedidoId, motivo);
-      // deu certo: a página recarrega e mostra o pedido fechado (este bloco some)
-      if (r.ok) router.refresh();
-      else setAviso({ ok: false, texto: r.erro });
+      try {
+        const r = await fecharPedido(pedidoId, motivo);
+        // deu certo: a página recarrega e mostra o pedido fechado (este bloco some)
+        if (r.ok) router.refresh();
+        else setAviso({ ok: false, texto: r.erro });
+      } catch {
+        setAviso({ ok: false, texto: "Não conseguimos encerrar o pedido. Tente novamente." });
+      }
     });
   }
 

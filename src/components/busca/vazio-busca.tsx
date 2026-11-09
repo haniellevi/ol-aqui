@@ -3,22 +3,24 @@ import { Vazio } from "@/components/ui/vazio";
 import { Botao } from "@/components/ui/botao";
 import { BotaoAbrirAki } from "@/components/aki/botao-abrir-aki";
 import { DicaAki } from "@/components/aki/dica-aki";
-import { linkPedirRadar } from "@/lib/rotas";
+import { linkPedirRadar, type FiltrosPedido } from "@/lib/rotas";
 
 // Busca sem resultado: nunca beco sem saída (USABILIDADE.md, regra 10).
 // Oferece o Radar já preenchido com o que a pessoa procurou e o Aki (quando ligado).
 export function VazioBusca({
   termo,
+  filtros,
   limparHref,
   outrasHref = "/categorias",
 }: {
   termo?: string | null;
+  filtros?: FiltrosPedido;
   /** Link para tirar os filtros (só quando há filtro ligado). */
   limparHref?: string | null;
   outrasHref?: string;
 }) {
   const t = (termo ?? "").trim();
-  const pedido = linkPedirRadar(t);
+  const pedido = linkPedirRadar(t, filtros);
   return (
     <Vazio
       titulo={t ? `Não achamos “${t}” por aqui ainda.` : "Ainda não tem anúncio aqui."}

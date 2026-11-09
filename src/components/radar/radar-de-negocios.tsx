@@ -14,6 +14,7 @@ export type CategoriaRadar = "imovel" | "veiculo" | "movel" | "geral";
 export type PedidoRadar = {
   id: string;
   categoria: CategoriaRadar;
+  categoriaFiltro?: string;
   titulo: string;
   detalhes: string | null; // null quando o usuário não tem acesso
   cidade: string;
@@ -61,18 +62,20 @@ export function RadarDeNegocios({
   propostasRestantes,
   planos,
   abas,
+  categorias = CATEGORIAS,
 }: {
   pedidos: PedidoRadar[];
+  categorias?: { valor: string; rotulo: string }[];
   temAcesso: boolean;
   propostasRestantes: number | null; // null = ilimitado
   planos: PlanoResumo[];
   /** Abas da tela /radar (Meus pedidos, Pedidos na região, Minhas propostas). */
   abas?: ReactNode;
 }) {
-  const [filtro, setFiltro] = useState<CategoriaRadar | "todas">("todas");
+  const [filtro, setFiltro] = useState("todas");
   const restantes = propostasRestantes;
   const visiveis = useMemo(
-    () => (filtro === "todas" ? pedidos : pedidos.filter((p) => p.categoria === filtro)),
+    () => (filtro === "todas" ? pedidos : pedidos.filter((p) => (p.categoriaFiltro ?? p.categoria) === filtro)),
     [pedidos, filtro],
   );
   const podePropor = temAcesso && (restantes === null || restantes > 0);
@@ -90,7 +93,7 @@ export function RadarDeNegocios({
         {abas}
 
         <nav className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]" aria-label="Filtrar por categoria">
-          {CATEGORIAS.map((c) => (
+          {categorias.map((c) => (
             <button
               key={c.valor}
               onClick={() => setFiltro(c.valor)}

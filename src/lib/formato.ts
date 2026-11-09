@@ -40,10 +40,11 @@ export function precoFalado(centavos: number | null | undefined): string {
 
 /** "8.500", "8500,50" ou "R$ 8.500" → centavos. Vazio ou inválido → null (não lança erro). */
 export function centavosDoTexto(texto: string | null | undefined): number | null {
-  const t = String(texto ?? "").replace(/[R$\s]/g, "").trim();
-  if (!t) return null;
-  const n = Number(t.replace(/\./g, "").replace(",", "."));
-  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
+  const t = String(texto ?? "").trim().replace(/^R\$\s*/, "").replace(/\s/g, "");
+  if (!/^(?:(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?|\d+\.\d{1,2})$/.test(t)) return null;
+  const n = numeroDoTexto(t);
+  const centavos = n === null ? NaN : Math.round(n * 100);
+  return Number.isSafeInteger(centavos) && centavos >= 0 ? centavos : null;
 }
 
 /** "agora", "há 5 min", "há 3 h", "ontem", "há 2 dias", "há 1 mês", "há 2 anos". */

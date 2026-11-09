@@ -33,7 +33,8 @@ export async function sincronizarPerfil(u: UsuarioClerk) {
   const whatsapp = whatsappDe(tel?.phoneNumber);
   const nome = [u.firstName, u.lastName].filter(Boolean).join(" ").trim() || "Usuário OLAKI";
 
-  const { data: existente } = await db.from("perfis").select("id, whatsapp, whatsapp_verificado_em").eq("id", u.id).maybeSingle();
+  const { data: existente, error: erroLeitura } = await db.from("perfis").select("id, whatsapp, whatsapp_verificado_em").eq("id", u.id).maybeSingle();
+  if (erroLeitura) throw new Error("Não foi possível consultar o perfil.");
 
   if (!existente) {
     const { data: regiao } = await db.from("microrregioes").select("id").eq("slug", REGIAO_PADRAO).single();
@@ -53,10 +54,12 @@ export async function sincronizarPerfil(u: UsuarioClerk) {
   // Atualiza só o que vem do Clerk; nome e cidade editados no site são do usuário.
   const mudou = whatsapp !== existente.whatsapp;
   if (whatsapp && (mudou || !existente.whatsapp_verificado_em)) {
-    await db.from("perfis").update({ whatsapp, whatsapp_verificado_em: new Date().toISOString(), avatar_url: u.imageUrl }).eq("id", u.id);
+    const { error } = await db.from("perfis").update({ whatsapp, whatsapp_verificado_em: new Date().toISOString(), avatar_url: u.imageUrl }).eq("id", u.id);
+    if (error) throw new Error("Não foi possível sincronizar o telefone confirmado.");
   } else if (!whatsapp && existente.whatsapp_verificado_em) {
     // número removido ou não verificado no Clerk: deixa de valer para o Radar
-    await db.from("perfis").update({ whatsapp_verificado_em: null }).eq("id", u.id);
+    const { error } = await db.from("perfis").update({ whatsapp: null, whatsapp_verificado_em: null }).eq("id", u.id);
+    if (error) throw new Error("Não foi possível remover a confirmação do telefone.");
   }
 }
 
@@ -68,7 +71,8 @@ export async function garantirPerfil() {
   const { userId } = await auth();
   if (!userId) return null;
   const db = supabaseAdmin();
-  const { data } = await db.from("perfis").select("id").eq("id", userId).maybeSingle();
+  const { data, error } = await db.from("perfis").select("id").eq("id", userId).maybeSingle();
+  if (error) throw new Error("Não foi possível consultar o perfil.");
   if (!data) {
     const u = await currentUser();
     if (u) await sincronizarPerfil(u);

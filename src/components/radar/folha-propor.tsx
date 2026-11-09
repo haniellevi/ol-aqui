@@ -87,22 +87,28 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
     if (modoPrazo && !anuncioId && !fotoUrl) return setErro({ texto: "Escolha um anúncio ou mande uma foto.", campo: "foto" });
     // No modo WhatsApp a conversa abre numa aba nova: abrimos já no toque (o iPhone bloqueia depois).
     const aba = modoPrazo || minha ? null : window.open("", "_blank");
+    if (aba) aba.opener = null;
     iniciar(async () => {
-      const r = await enviarProposta({ pedidoId, anuncioId, fotoUrl, preco: valor, mensagem });
-      if (!r.ok) {
+      try {
+        const r = await enviarProposta({ pedidoId, anuncioId, fotoUrl, preco: valor, mensagem });
+        if (!r.ok) {
+          aba?.close();
+          setErro({ texto: r.erro, campo: r.campo });
+          return;
+        }
+        if (r.modo === "whatsapp_direto") {
+          if (aba) aba.location.href = r.linkWhatsapp;
+          else if (!r.editada) window.location.href = r.linkWhatsapp;
+          setSucesso(r.editada ? "Proposta atualizada." : "Pronto! Continue a conversa no WhatsApp.");
+        } else {
+          setSucesso(r.editada ? "Proposta atualizada." : r.mensagem);
+        }
+        setAberta(false);
+        router.refresh();
+      } catch {
         aba?.close();
-        setErro({ texto: r.erro, campo: r.campo });
-        return;
+        setErro({ texto: "Não conseguimos confirmar o envio. Tente novamente." });
       }
-      if (r.modo === "whatsapp_direto") {
-        if (aba) aba.location.href = r.linkWhatsapp;
-        else if (!r.editada) window.location.href = r.linkWhatsapp;
-        setSucesso(r.editada ? "Proposta atualizada." : "Pronto! Continue a conversa no WhatsApp.");
-      } else {
-        setSucesso(r.editada ? "Proposta atualizada." : r.mensagem);
-      }
-      setAberta(false);
-      router.refresh();
     });
   }
 
@@ -110,15 +116,21 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
   function chamarDeNovo() {
     setErroChamar(null);
     const aba = window.open("", "_blank");
+    if (aba) aba.opener = null;
     iniciarChamar(async () => {
-      const r = await enviarProposta({ pedidoId });
-      if (!r.ok || r.modo !== "whatsapp_direto") {
+      try {
+        const r = await enviarProposta({ pedidoId });
+        if (!r.ok || r.modo !== "whatsapp_direto") {
+          aba?.close();
+          setErroChamar(r.ok ? "Não deu para abrir o WhatsApp. Tente de novo." : r.erro);
+          return;
+        }
+        if (aba) aba.location.href = r.linkWhatsapp;
+        else window.location.href = r.linkWhatsapp;
+      } catch {
         aba?.close();
-        setErroChamar(r.ok ? "Não deu para abrir o WhatsApp. Tente de novo." : r.erro);
-        return;
+        setErroChamar("Não foi possível abrir o contato. Tente novamente.");
       }
-      if (aba) aba.location.href = r.linkWhatsapp;
-      else window.location.href = r.linkWhatsapp;
     });
   }
 

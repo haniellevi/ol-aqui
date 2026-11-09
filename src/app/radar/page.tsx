@@ -6,6 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Radar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { garantirPerfil } from "@/lib/perfil";
+import { listarCategorias } from "@/lib/dados/categorias";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { acessoRadar, meusPedidos, minhasPropostas, planosComRadar } from "@/lib/dados/radar";
 import { linkPedirRadar } from "@/lib/rotas";
@@ -23,6 +24,7 @@ export const metadata = {
 type LinhaFeed = {
   id: string;
   categoria: CategoriaRadar;
+  categoria_id: string | null;
   titulo: string;
   detalhes: string | null;
   preco_min_centavos: number | null;
@@ -83,19 +85,23 @@ export default async function RadarPage({ searchParams }: { searchParams: Promis
 
   // Aba "Pedidos na região".
   const supabase = await createClient();
-  const [{ temAcesso, restantes }, planos] = await Promise.all([acessoRadar(), planosComRadar()]);
-  const { data } = await supabase
+  const [{ temAcesso, restantes }, planos, categorias] = await Promise.all([acessoRadar(), planosComRadar(), listarCategorias()]);
+  const grupoCategoria = new Map(categorias.flatMap((c) => [c, ...c.filhas].map((f) => [f.id, c.id])));
+  const { data, error } = await supabase
     .rpc("radar_feed")
     .eq("microrregiao_id", conta?.perfil.microrregiao_id ?? "")
     .select(
-      "id, categoria, titulo, detalhes, preco_min_centavos, preco_max_centavos, categoria_nome, cidade, urgencia, total_propostas, max_propostas, modo_contato, propostas_ate, criado_em, comprador_certificado, comprador_primeiro_nome, ja_propus, sou_comprador",
+      "id, categoria, categoria_id, titulo, detalhes, preco_min_centavos, preco_max_centavos, categoria_nome, cidade, urgencia, total_propostas, max_propostas, modo_contato, propostas_ate, criado_em, comprador_certificado, comprador_primeiro_nome, ja_propus, sou_comprador",
     )
     .order("criado_em", { ascending: false })
     .limit(40);
 
+  if (error) throw new Error("Não foi possível carregar os pedidos da região.");
+
   const pedidos: PedidoRadar[] = ((data ?? []) as unknown as LinhaFeed[]).map((p) => ({
     id: p.id,
     categoria: p.categoria,
+    categoriaFiltro: (p.categoria_id && grupoCategoria.get(p.categoria_id)) || "sem_categoria",
     titulo: p.titulo,
     cidade: p.cidade,
     urgencia: p.urgencia,
@@ -118,6 +124,7 @@ export default async function RadarPage({ searchParams }: { searchParams: Promis
   return (
     <RadarDeNegocios
       pedidos={pedidos}
+      categorias={[{ valor: "todas", rotulo: "Tudo" }, ...categorias.map((c) => ({ valor: c.id, rotulo: c.nome })), { valor: "sem_categoria", rotulo: "Sem categoria" }]}
       temAcesso={temAcesso}
       propostasRestantes={temAcesso ? restantes : 0}
       planos={planos.map((p) => ({ codigo: p.codigo, nome: p.nome, preco_centavos: p.preco_centavos }))}

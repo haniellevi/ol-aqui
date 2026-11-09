@@ -18,10 +18,10 @@ import type {
 /**
  * Busca de anúncios (public.buscar_anuncios). Só anúncios ativos de vendedores ativos.
  * Sem `regiao` usa a região do visitante; passe `regiao: null` para buscar em todas.
- * Em erro devolve lista vazia.
+ * Falhas são tratadas pela tela de erro, sem simular catálogo vazio.
  */
 export async function buscarAnuncios(p: ParametrosBusca = {}): Promise<ResultadoBusca> {
-  return seguro(() => lerBusca(p), { anuncios: [], total: 0 });
+  return lerBusca(p);
 }
 
 async function lerBusca(p: ParametrosBusca): Promise<ResultadoBusca> {
@@ -43,7 +43,7 @@ async function lerBusca(p: ParametrosBusca): Promise<ResultadoBusca> {
 
   const db = await createClient();
   const { data, error } = await db.rpc("buscar_anuncios", args);
-  if (error || !Array.isArray(data)) return { anuncios: [], total: 0 };
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível consultar os anúncios.");
   const anuncios = (data as AnuncioCard[]).map((a) => ({ ...a, atributos: a.atributos ?? {}, total: Number(a.total) }));
   return { anuncios, total: anuncios[0]?.total ?? 0 };
 }

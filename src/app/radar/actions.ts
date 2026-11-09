@@ -38,12 +38,9 @@ const linkWa = (numero: string, texto: string) => `https://wa.me/${numero.replac
 
 /** Celular confirmado: a fonte é o Clerk. Atualiza o perfil antes de o banco conferir. */
 async function atualizarCelularDoClerk() {
-  try {
-    const u = await currentUser();
-    if (u) await sincronizarPerfil(u);
-  } catch {
-    // sem a chave secreta ou Clerk fora do ar: vale o que já está no banco
-  }
+  const u = await currentUser();
+  if (!u) throw new Error(SEM_LOGIN);
+  await sincronizarPerfil(u);
 }
 
 /**
@@ -71,6 +68,7 @@ async function guardarWhatsappDigitado(userId: string, texto: string | undefined
 }
 
 export async function criarPedido(entrada: {
+  chaveEnvio: string;
   titulo: string;
   detalhes?: string;
   categoriaId?: string | null;
@@ -84,12 +82,23 @@ export async function criarPedido(entrada: {
 }): Promise<RespostaCriarPedido> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: SEM_LOGIN };
-  await atualizarCelularDoClerk();
+  if (!["whatsapp_direto", "propostas_prazo"].includes(entrada.modo)) return { ok: false, erro: "Escolha como quer receber as propostas." };
+  if (entrada.categoriaId && !ehUuid(entrada.categoriaId)) return { ok: false, erro: "Escolha uma categoria válida." };
+  if (!ehUuid(entrada.chaveEnvio)) return { ok: false, erro: "Atualize a página e tente novamente." };
+  for (const [valor, campo] of [[entrada.precoMin, "preco_min_centavos"], [entrada.precoMax, "preco_max_centavos"]]) {
+    if (valor?.trim() && centavosDoTexto(valor) === null) return { ok: false, erro: "Digite um preço válido.", campo };
+  }
+  try {
+    await atualizarCelularDoClerk();
+  } catch {
+    return { ok: false, erro: "Não conseguimos confirmar seus dados agora. Tente novamente." };
+  }
   const semCelular = await guardarWhatsappDigitado(userId, entrada.whatsapp);
   if (semCelular) return { ok: false, ...semCelular };
 
   const db = await createClient();
-  const { data, error } = await db.rpc("criar_pedido_radar", {
+  const { data, error } = await db.rpc("criar_pedido_radar_site", {
+    p_chave: entrada.chaveEnvio,
     p_titulo: String(entrada.titulo ?? "").slice(0, 200),
     p_cidade: String(entrada.cidade ?? "").slice(0, 80),
     p_modo: entrada.modo === "propostas_prazo" ? "propostas_prazo" : "whatsapp_direto",
@@ -98,7 +107,6 @@ export async function criarPedido(entrada: {
     p_categoria_id: entrada.categoriaId && ehUuid(entrada.categoriaId) ? entrada.categoriaId : null,
     p_preco_min_centavos: centavosDoTexto(entrada.precoMin),
     p_preco_max_centavos: centavosDoTexto(entrada.precoMax),
-    p_origem: "site",
   });
   if (error || !data) {
     const m = mensagemDe(error);
@@ -133,6 +141,9 @@ export async function enviarProposta(entrada: {
   if (!userId) return { ok: false, erro: SEM_LOGIN };
   if (!ehUuid(entrada.pedidoId)) return { ok: false, erro: "Pedido não encontrado." };
 
+  if (entrada.preco?.trim() && centavosDoTexto(entrada.preco) === null) {
+    return { ok: false, erro: "Digite um preço válido.", campo: "preco" };
+  }
   const db = await createClient();
   const { data, error } = await db
     .rpc("propor_radar", {
@@ -151,6 +162,7 @@ export async function enviarProposta(entrada: {
     return { ok: false, ...m, precisaPlano };
   }
   revalidatePath(`/radar/${entrada.pedidoId}`);
+  revalidatePath(`/radar/pedido/${entrada.pedidoId}`);
   revalidatePath("/radar");
   if (data.modo === "propostas_prazo") return { ok: true, modo: "propostas_prazo", mensagem: data.mensagem, editada: data.editada };
   if (!data.whatsapp) return { ok: false, erro: "O comprador ainda não confirmou o celular. Tente mais tarde." };

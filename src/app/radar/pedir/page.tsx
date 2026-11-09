@@ -18,15 +18,13 @@ import { FormPedido } from "@/components/radar/form-pedido";
 
 export const metadata = { title: "Pedir no Radar · OLAKI" };
 
-export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const { q } = await searchParams;
+export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; cidade?: string; preco_min?: string; preco_max?: string }> }) {
+  const params = await searchParams;
+  const textoParametro = (v: unknown) => typeof v === "string" ? v.slice(0, 120) : "";
   await garantirPerfil();
-  try {
-    const u = await currentUser();
-    if (u) await sincronizarPerfil(u);
-  } catch {
-    // sem a chave do Clerk: vale o que já está no banco
-  }
+  const u = await currentUser();
+  if (!u) throw new Error("Não foi possível confirmar sua sessão.");
+  await sincronizarPerfil(u);
   const conta = await meuPerfilEVitrine();
   const confirmado = !!conta?.perfil.whatsapp && !!conta.perfil.whatsapp_verificado_em;
   const exigeCodigo = conta && !confirmado ? await exigeCelularConfirmado(conta.perfil.microrregiao_id) : false;
@@ -64,7 +62,11 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
         <Formulario
           microrregiaoId={conta.perfil.microrregiao_id}
           cidadePerfil={conta.perfil.cidade}
-          texto={q ?? ""}
+          texto={textoParametro(params.q)}
+          categoriaSlug={textoParametro(params.categoria)}
+          cidadeBusca={textoParametro(params.cidade)}
+          precoMin={textoParametro(params.preco_min)}
+          precoMax={textoParametro(params.preco_max)}
           pedirWhatsapp={!confirmado}
           whatsappInicial={conta.perfil.whatsapp ? telefone(conta.perfil.whatsapp) : ""}
         />
@@ -77,25 +79,37 @@ async function Formulario({
   microrregiaoId,
   cidadePerfil,
   texto,
+  categoriaSlug, cidadeBusca, precoMin, precoMax,
   pedirWhatsapp,
   whatsappInicial,
 }: {
   microrregiaoId: string;
   cidadePerfil: string | null;
   texto: string;
+  categoriaSlug: string; cidadeBusca: string; precoMin: string; precoMax: string;
   pedirWhatsapp: boolean;
   whatsappInicial: string;
 }) {
   const [categorias, cidades, regras] = await Promise.all([listarCategorias(), listarCidades(microrregiaoId), regrasRadar(microrregiaoId)]);
+  const opcoes = categorias.flatMap((c) => [c, ...c.filhas]);
+  const categoriaInicial = opcoes.find((c) => c.slug === categoriaSlug);
+  const cidadeFora = !!cidadeBusca && !cidades.some((c) => c.nome === cidadeBusca);
+  const cidadeInicial = cidades.some((c) => c.nome === cidadeBusca) ? cidadeBusca : cidadePerfil;
   return (
-    <FormPedido
-      textoInicial={texto.slice(0, 120)}
-      categorias={categorias.map((c) => ({ id: c.id, nome: c.nome }))}
-      cidades={cidades.map((c) => c.nome)}
-      cidadeInicial={cidades.some((c) => c.nome === cidadePerfil) ? cidadePerfil : (cidades[0]?.nome ?? null)}
-      regras={regras}
-      pedirWhatsapp={pedirWhatsapp}
-      whatsappInicial={whatsappInicial}
-    />
+    <>
+      {cidadeFora && <p role="status" className="rounded-card bg-aviso-fundo p-4 text-aviso">A cidade da busca fica fora da região do seu cadastro. Escolha abaixo uma cidade dessa região para publicar seu pedido.</p>}
+      <FormPedido
+        textoInicial={texto.slice(0, 120)}
+        categorias={[...categorias, ...(categoriaInicial?.pai_id ? [categoriaInicial] : [])].map((c) => ({ id: c.id, nome: c.nome }))}
+        categoriaInicial={categoriaInicial?.id ?? null}
+        precoMinInicial={precoMin}
+        precoMaxInicial={precoMax}
+        cidades={cidades.map((c) => c.nome)}
+        cidadeInicial={cidadeFora ? null : cidades.some((c) => c.nome === cidadeInicial) ? cidadeInicial : (cidades[0]?.nome ?? null)}
+        regras={regras}
+        pedirWhatsapp={pedirWhatsapp}
+        whatsappInicial={whatsappInicial}
+      />
+    </>
   );
 }

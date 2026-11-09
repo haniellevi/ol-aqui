@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
 import { seguro } from "@/lib/dados/seguro";
+import { createClient } from "@/lib/supabase/server";
 import type { Categoria, CategoriaComFilhas } from "@/lib/tipos";
 
 const COLUNAS =
@@ -11,7 +11,7 @@ const COLUNAS =
  * Árvore de categorias ativas (pais com as filhas), na ordem do painel.
  * Guardada durante a requisição: pode chamar em vários componentes sem repetir a consulta.
  */
-export const listarCategorias = cache((): Promise<CategoriaComFilhas[]> => seguro(lerArvore, []));
+export const listarCategorias = cache(lerArvore);
 
 async function lerArvore(): Promise<CategoriaComFilhas[]> {
   const db = await createClient();
@@ -21,7 +21,7 @@ async function lerArvore(): Promise<CategoriaComFilhas[]> {
     .eq("ativa", true)
     .order("ordem")
     .order("nome");
-  if (error || !data) return [];
+  if (error || !data) throw new Error("Não foi possível carregar as categorias.");
   const todas = data as Categoria[];
   const pais = todas.filter((c) => !c.pai_id).map((p) => ({ ...p, filhas: [] as Categoria[] }));
   const porId = new Map(pais.map((p) => [p.id, p]));
