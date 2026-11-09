@@ -37,7 +37,7 @@ export default async function MeuPedidoPage({
         Meus pedidos
       </Link>
 
-      {novo === "1" &&
+      {novo === "1" && ["aberto", "em_analise"].includes(pedido.situacao) &&
         (pedido.status === "em_analise" ? (
           <section role="status" className="flex items-start gap-3 rounded-card bg-aviso-fundo p-4 text-aviso">
             <ShieldAlert className="mt-0.5 size-6 shrink-0" aria-hidden />

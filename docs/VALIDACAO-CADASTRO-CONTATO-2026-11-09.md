@@ -8,6 +8,7 @@
 - Compartilhamento, metadados, vitrine e exportação de dados usam `NEXT_PUBLIC_SITE_URL`, com `https://ol-aqui.vercel.app` como padrão enquanto não há domínio próprio. Exemplos administrativos deixaram de indicar o domínio não registrado.
 - Falhas na consulta de termos pendentes geram uma tentativa recuperável, sem simular que nada falta aceitar.
 - A confirmação da proposta informa que ela já está disponível ao comprador. A mensagem anterior sugeria que as ofertas só seriam vistas no final do prazo, embora o comprador já pudesse escolher.
+- O aviso de pedido recém-publicado desaparece quando ele é encerrado, mesmo que o endereço ainda contenha `novo=1`.
 
 ## Evidências de execução
 
