@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { seguro } from "@/lib/dados/seguro";
 import { lerConfig } from "@/lib/dados/config";
+import { ehUuid, numeroDoTexto } from "@/lib/formato";
 import type {
   AnuncioVitrine,
   MeuAnuncioVitrine,
@@ -19,7 +20,7 @@ import type {
 
 // Leituras da vitrine completa (página /loja/[slug], telas "Minha loja" e página /planos).
 // Quem garante o que cada um vê é o banco: funções vitrine_publica/anuncios_vitrine (só campos
-// públicos, regras do plano) e RLS (o dono só lê o que é dele). Em erro, a tela recebe o padrão.
+// públicos, regras do plano) e RLS (o dono só lê o que é dele). A página pública distingue erro de vazio.
 
 const SLUG = /^[a-z0-9-]{3,60}$/;
 
@@ -27,11 +28,13 @@ const SLUG = /^[a-z0-9-]{3,60}$/;
 export const vitrinePublica = cache(async (slug: string): Promise<VitrinePublica | null> => {
   const s = slug.trim().toLowerCase();
   if (!SLUG.test(s)) return null;
-  return seguro(async () => {
+  {
     const db = await createClient();
     const { data, error } = await db.rpc("vitrine_publica", { p_slug: s });
-    if (error || !data) return null;
+    if (error) throw new Error("Não foi possível carregar a loja.");
+    if (data === null) return null;
     const v = data as VitrinePublica;
+    if (!v || !ehUuid(v.id) || v.slug !== s || typeof v.nome !== "string" || !["ativa", "suspensa", "inadimplente"].includes(v.status) || !Number.isSafeInteger(v.total_anuncios) || v.total_anuncios < 0 || !Array.isArray(v.secoes)) throw new Error("Resposta da loja inválida.");
     return {
       ...v,
       lat: v.lat == null ? null : Number(v.lat),
@@ -39,7 +42,7 @@ export const vitrinePublica = cache(async (slug: string): Promise<VitrinePublica
       formas_pagamento: Array.isArray(v.formas_pagamento) ? v.formas_pagamento : [],
       secoes: Array.isArray(v.secoes) ? v.secoes : [],
     };
-  }, null);
+  }
 });
 
 /**
@@ -47,13 +50,13 @@ export const vitrinePublica = cache(async (slug: string): Promise<VitrinePublica
  * fixados (do plano) primeiro e mais novos, ou do menor preço. Os produtos das seções vêm sempre
  * (na_pagina = false quando estão fora desta página).
  */
-export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitrine = "recentes", pagina = 1): Promise<AnuncioVitrine[]> =>
-  seguro(async () => {
+export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitrine = "recentes", pagina = 1): Promise<AnuncioVitrine[]> => {
+    if (!ehUuid(vitrineId) || !["recentes", "menor_preco"].includes(ordem) || !Number.isSafeInteger(pagina) || pagina < 1 || pagina > 1000) throw new Error("Consulta de produtos inválida.");
     const db = await createClient();
     const { data, error } = await db.rpc("anuncios_vitrine", { p_vitrine_id: vitrineId, p_ordem: ordem, p_pagina: pagina });
-    return error ? [] : ((data ?? []) as AnuncioVitrine[]);
-  }, []),
-);
+    if (error || !Array.isArray(data) || data.some((a) => !a || !ehUuid(a.id) || typeof a.na_pagina !== "boolean")) throw new Error("Não foi possível carregar os produtos.");
+    return data as AnuncioVitrine[];
+});
 
 const COLUNAS_MINHA =
   "id, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_modelo, banner_cor, " +
@@ -199,9 +202,12 @@ async function lerConfigPublica<T>(chave: string, microrregiaoId: string | null,
 
 /** Produtos por página na vitrine (painel → configurações: vitrine.anuncios_por_pagina). Mesmo padrão do banco. */
 export async function anunciosPorPaginaVitrine(microrregiaoId: string | null): Promise<number> {
-  const v = await lerConfigPublica<unknown>("vitrine.anuncios_por_pagina", microrregiaoId, 120);
-  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
-  return Number.isFinite(n) ? Math.max(Math.trunc(n), 1) : 120;
+  const db = await createClient();
+  const { data, error } = await db.from("configuracoes").select("valor, microrregiao_id").eq("chave", "vitrine.anuncios_por_pagina");
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar a paginação.");
+  const v = (data.find((l) => l.microrregiao_id === microrregiaoId) ?? data.find((l) => l.microrregiao_id === null))?.valor ?? 120;
+  const n = typeof v === "number" ? v : typeof v === "string" ? numeroDoTexto(v) : null;
+  return n !== null && Number.isFinite(n) ? Math.max(Math.round(n), 1) : 120;
 }
 
 /** Perguntas da página de planos: cada linha da configuração é "Pergunta | Resposta". */

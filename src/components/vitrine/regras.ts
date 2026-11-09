@@ -92,7 +92,7 @@ export function textoDoDia(faixas: FaixaHorario[]): string {
 
 /** Link "Como chegar" no Google Maps: pela localização marcada ou pelo endereço escrito. */
 export function linkComoChegar(p: { lat: number | null; lng: number | null; endereco: string | null; cidade?: string | null }): string | null {
-  if (p.lat != null && p.lng != null && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng))) {
+  if (p.lat != null && p.lng != null && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && Math.abs(Number(p.lat)) <= 90 && Math.abs(Number(p.lng)) <= 180) {
     return `https://www.google.com/maps/dir/?api=1&destination=${Number(p.lat)},${Number(p.lng)}`;
   }
   const texto = [p.endereco, p.cidade].filter(Boolean).join(", ").trim();

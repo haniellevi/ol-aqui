@@ -55,6 +55,8 @@ try:
     print('PASS: Minha conta protege identidade, perfil, confirmação e privilégios', flush=True)
     checked(sql((root/'supabase/testes/230_favoritos.sql').read_text()))
     print('PASS: favoritos protegem contas e anúncios privados, mantêm contagem e repetição', flush=True)
+    checked(sql((root/'supabase/testes/240_pagina_loja.sql').read_text()))
+    print('PASS: vitrine preserva contato permitido, seções, fixados, preços e paginação sem expor prévias privadas', flush=True)
     migracao_avisos = (root/'supabase/migrations/20261109195657_notificacoes_confiaveis.sql').read_text()
     checked(sql("""begin;
       update modelos_mensagem set texto='Texto personalizado da equipe' where chave='proposta_escolhida' and canal='notificacao';

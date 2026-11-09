@@ -9,7 +9,11 @@ import { iniciais } from "@/components/vitrine/util";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const v = await vitrinePublica(slug);
+  // A função também permite prévias do dono/admin; nenhuma delas pode virar imagem pública.
+  const v = await vitrinePublica(slug).catch(() => undefined);
+  const headers = { "Cache-Control": "private, no-store" };
+  if (v === undefined) return new Response("Imagem temporariamente indisponível", { status: 503, headers });
+  if (!v || v.status !== "ativa") return new Response("Loja não encontrada", { status: 404, headers });
   const nome = v?.nome ?? "Loja no OLAKI";
   const fundo = corSegura(v?.banner_cor);
   const texto = corDoTextoSobre(fundo);
@@ -52,7 +56,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", fontSize: "36px" }}>
-          <div style={{ display: "flex" }}>Veja os produtos e chame no WhatsApp</div>
+          <div style={{ display: "flex" }}>Conheça esta loja da sua região</div>
           <div style={{ display: "flex", fontWeight: 700, fontSize: "48px" }}>
             <span>OL</span>
             <span style={{ color: texto === "#FFFFFF" ? "#FFE4D1" : "#C2410C" }}>AKI</span>
@@ -63,7 +67,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     {
       width: 1200,
       height: 630,
-      headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400" },
+      headers,
     },
   );
 }
