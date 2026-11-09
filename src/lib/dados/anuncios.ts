@@ -52,14 +52,15 @@ async function lerBusca(p: ParametrosBusca): Promise<ResultadoBusca> {
  * Anúncio para a página pública (ou prévia "Revisar" do dono).
  * Visitante só vê ativo/vendido; dono e admin veem qualquer status. Não achou → null.
  */
-export const anuncioPublico = cache(async (id: string): Promise<AnuncioPublico | null> => seguro(async () => {
+export const anuncioPublico = cache(async (id: string): Promise<AnuncioPublico | null> => {
   if (!ehUuid(id)) return null;
   const db = await createClient();
   const { data, error } = await db.rpc("anuncio_publico", { anuncio_id: id });
-  if (error || !Array.isArray(data) || !data[0]) return null;
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar o anúncio. Tente novamente.");
+  if (!data[0]) return null;
   const a = data[0] as AnuncioPublico;
   return { ...a, fotos: a.fotos ?? [], atributos: a.atributos ?? {}, campos: a.campos ?? [] };
-}, null));
+});
 
 /** Faixa de preço dos anúncios parecidos na região (25% a 75%). minimo/maximo null = poucos anúncios. */
 export async function faixaPreco(categoriaId: string, microrregiaoId: string | null = null): Promise<FaixaPreco | null> {

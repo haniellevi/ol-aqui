@@ -16,6 +16,10 @@ function carregar(arquivo, mocks = {}) {
       const base = `src/${nome.slice(2)}`;
       return carregar(fs.existsSync(`${base}.ts`) ? `${base}.ts` : `${base}.tsx`, mocks);
     }
+    if (nome.startsWith('.')) {
+      const base = path.resolve(path.dirname(filename), nome);
+      return carregar(fs.existsSync(`${base}.ts`) ? `${base}.ts` : `${base}.tsx`, mocks);
+    }
     return require(nome);
   };
   new Function('require', 'module', 'exports', js)(requireLocal, mod, mod.exports);

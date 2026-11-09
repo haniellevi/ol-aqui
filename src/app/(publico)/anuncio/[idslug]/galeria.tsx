@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ChevronLeft, ChevronRight, ImageOff, Maximize2, X } from "lucide-react";
 
 // Galeria do anúncio (T7/T8): deslizar com o dedo (scroll-snap, funciona sem JavaScript),
@@ -14,43 +14,72 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
   const trilho = useRef<HTMLUListElement>(null);
   const trilhoCheio = useRef<HTMLUListElement>(null);
   const janela = useRef<HTMLDialogElement>(null);
+  const origem = useRef<HTMLElement | null>(null);
+  const overflow = useRef<string | null>(null);
   const [atual, setAtual] = useState(0);
+  const atualRef = useRef(0);
   const total = fotos.length;
 
   function aoRolar(el: HTMLUListElement | null) {
     if (!el || !el.clientWidth) return;
-    setAtual(Math.min(total - 1, Math.max(0, Math.round(el.scrollLeft / el.clientWidth))));
+    const indice = Math.min(total - 1, Math.max(0, Math.round(el.scrollLeft / el.clientWidth)));
+    atualRef.current = indice;
+    setAtual(indice);
   }
 
   function irPara(el: HTMLUListElement | null, i: number, suave = true) {
     if (!el) return;
     const alvo = Math.min(total - 1, Math.max(0, i));
-    el.scrollTo({ left: alvo * el.clientWidth, behavior: suave ? "smooth" : "auto" });
+    el.scrollTo({ left: alvo * el.clientWidth, behavior: suave && !window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "auto" });
   }
 
   function abrir(i: number) {
+    if (janela.current?.open) return;
+    origem.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    overflow.current = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    atualRef.current = i;
     janela.current?.showModal();
-    requestAnimationFrame(() => irPara(trilhoCheio.current, i, false));
+    setAtual(i);
+    irPara(trilhoCheio.current, i, false);
   }
 
   function fechar() {
     janela.current?.close();
   }
 
+  function teclado(evento: KeyboardEvent) {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(evento.key)) return;
+    evento.preventDefault();
+    const i = evento.key === "Home" ? 0 : evento.key === "End" ? total - 1 : atual + (evento.key === "ArrowRight" ? 1 : -1);
+    irPara(janela.current?.open ? trilhoCheio.current : trilho.current, i);
+  }
+
   // ao fechar a tela cheia, a galeria pequena fica na mesma foto
-  const atualRef = useRef(0);
-  useEffect(() => {
-    atualRef.current = atual;
-  }, [atual]);
   useEffect(() => {
     const d = janela.current;
     if (!d) return;
     const aoFechar = () => {
       const el = trilho.current;
       if (el) el.scrollTo({ left: atualRef.current * el.clientWidth, behavior: "auto" });
+      if (overflow.current != null) document.body.style.overflow = overflow.current;
+      overflow.current = null;
+      const fotoAtual = el?.children[atualRef.current]?.querySelector("button");
+      (fotoAtual ?? origem.current)?.focus({ preventScroll: true });
     };
     d.addEventListener("close", aoFechar);
-    return () => d.removeEventListener("close", aoFechar);
+    const redimensionar = new ResizeObserver(() => {
+      for (const el of [trilho.current, trilhoCheio.current]) {
+        if (el?.clientWidth) el.scrollTo({ left: atualRef.current * el.clientWidth, behavior: "auto" });
+      }
+    });
+    if (trilho.current) redimensionar.observe(trilho.current);
+    if (trilhoCheio.current) redimensionar.observe(trilhoCheio.current);
+    return () => {
+      d.removeEventListener("close", aoFechar);
+      redimensionar.disconnect();
+      if (overflow.current != null) document.body.style.overflow = overflow.current;
+    };
   }, []);
 
   if (total === 0) {
@@ -65,7 +94,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
   }
 
   return (
-    <div className="relative" role="region" aria-roledescription="galeria" aria-label={`Fotos de ${titulo}`}>
+    <div className="relative min-w-0" role="region" aria-roledescription="galeria" aria-label={`Fotos de ${titulo}`} onKeyDown={teclado}>
       <ul
         ref={trilho}
         onScroll={(e) => aoRolar(e.currentTarget)}
@@ -75,21 +104,12 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
           <li key={f + i} className="relative h-full w-full shrink-0 snap-center">
             <button
               type="button"
+              tabIndex={i === atual ? 0 : -1}
               onClick={() => abrir(i)}
               className="block size-full focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja"
               aria-label={`Foto ${i + 1} de ${total} de ${titulo}. Abrir em tela cheia`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- foto do Storage, img simples carrega leve */}
-              <img
-                src={f}
-                alt={`Foto ${i + 1} de ${total} de ${titulo}`}
-                width={800}
-                height={600}
-                loading={i === 0 ? "eager" : "lazy"}
-                fetchPriority={i === 0 ? "high" : undefined}
-                decoding="async"
-                className="size-full object-contain"
-              />
+              <Foto src={f} alt={`Foto ${i + 1} de ${total} de ${titulo}`} principal={i === 0} />
             </button>
           </li>
         ))}
@@ -103,12 +123,12 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
           >
             {atual + 1}/{total}
           </span>
-          <div className="absolute inset-y-0 left-2 hidden items-center md:flex">
+          <div className="pointer-events-none absolute inset-y-0 left-2 flex items-center [&>button]:pointer-events-auto">
             <button type="button" className={BOTAO_REDONDO} onClick={() => irPara(trilho.current, atual - 1)} aria-label="Foto anterior" disabled={atual === 0}>
               <ChevronLeft className="size-6" aria-hidden />
             </button>
           </div>
-          <div className="absolute inset-y-0 right-2 hidden items-center md:flex">
+          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center [&>button]:pointer-events-auto">
             <button type="button" className={BOTAO_REDONDO} onClick={() => irPara(trilho.current, atual + 1)} aria-label="Próxima foto" disabled={atual === total - 1}>
               <ChevronRight className="size-6" aria-hidden />
             </button>
@@ -146,8 +166,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
           >
             {fotos.map((f, i) => (
               <li key={f + i} className="grid h-full w-full shrink-0 snap-center place-items-center">
-                {/* eslint-disable-next-line @next/next/no-img-element -- tela cheia: foto inteira */}
-                <img src={f} alt={`Foto ${i + 1} de ${total} de ${titulo}`} loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" />
+                <Foto src={f} alt={`Foto ${i + 1} de ${total} de ${titulo}`} />
               </li>
             ))}
           </ul>
@@ -165,4 +184,12 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
       </dialog>
     </div>
   );
+}
+
+function Foto({ src, alt, principal = false }: { src: string; alt: string; principal?: boolean }) {
+  const [erro, setErro] = useState(false);
+  if (erro) return <span role="img" aria-label={`${alt}: indisponível`} className="flex size-full flex-col items-center justify-center gap-2 bg-fundo p-6 text-center text-texto-suave"><ImageOff className="size-10" aria-hidden />Não foi possível carregar esta foto.</span>;
+  // Fotos públicas do Storage, com alternativa explícita quando o arquivo não responde.
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt={alt} width={800} height={600} loading={principal ? "eager" : "lazy"} fetchPriority={principal ? "high" : undefined} decoding="async" onError={() => setErro(true)} className="size-full object-contain" />;
 }

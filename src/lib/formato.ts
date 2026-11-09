@@ -88,7 +88,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 /** Tira o id do parâmetro "[id]-[slug]" da rota. Inválido → null. */
 export function idDoLinkAnuncio(param: string): string | null {
-  const m = decodeURIComponent(param).match(UUID);
+  let texto: string;
+  try { texto = decodeURIComponent(param); } catch { return null; }
+  const m = texto.match(UUID);
   return m ? m[0].toLowerCase() : null;
 }
 
