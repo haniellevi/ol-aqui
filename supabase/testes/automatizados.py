@@ -21,7 +21,7 @@ try:
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
-    migracao_home = (root/'supabase/migrations/20261109150000_texto_radar_inicio.sql').read_text()
+    migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
         assert (select texto = 'Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.' from home_blocos where chave = 'radar'), 'Texto padrão do Radar incorreto';
