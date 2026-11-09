@@ -83,17 +83,23 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
     setErro(null);
     // Abre a aba já no toque (o Safari do iPhone bloqueia janelas abertas depois de esperar o servidor).
     const aba = window.open("", "_blank");
+    if (aba) aba.opener = null;
     iniciar(async () => {
-      const r = await escolherProposta(p.id);
-      if (!r.ok) {
+      try {
+        const r = await escolherProposta(p.id);
+        if (!r.ok) {
+          aba?.close();
+          setErro(r.erro);
+          return;
+        }
+        if (aba) {
+          aba.location.href = r.linkWhatsapp;
+          router.refresh(); // mostra "Você chamou" nesta proposta
+        } else window.location.href = r.linkWhatsapp;
+      } catch {
         aba?.close();
-        setErro(r.erro);
-        return;
+        setErro("Não foi possível abrir o contato. Tente novamente.");
       }
-      if (aba) {
-        aba.location.href = r.linkWhatsapp;
-        router.refresh(); // mostra "Você chamou" nesta proposta
-      } else window.location.href = r.linkWhatsapp;
     });
   }
 

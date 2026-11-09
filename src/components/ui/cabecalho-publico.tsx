@@ -9,7 +9,7 @@ import { classesBotao } from "@/components/ui/botao";
 // No computador mostra também Buscar, Radar e Anunciar (a barra de baixo some).
 
 /** Para onde vai o toque na cidade (a tela T1 "Escolher cidade" vem depois). */
-export const HREF_ESCOLHER_CIDADE = "/?cidade=escolher";
+export const HREF_ESCOLHER_CIDADE = "/cidades";
 
 const LINK = "inline-flex h-12 items-center gap-2 rounded-card px-3 text-base font-semibold text-texto hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 

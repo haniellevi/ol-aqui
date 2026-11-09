@@ -91,7 +91,7 @@ export async function Listagem({
         lugar={lugarDaRegiao(regiao)}
         anuncios={anuncios}
         total={total}
-        vazio={<VazioBusca termo={termoRadar} limparHref={limpar} />}
+        vazio={<VazioBusca termo={termoRadar} limparHref={limpar} filtros={{ categoria: slugCategoria, cidade: estado.cidade, precoMin: estado.precoMinTexto, precoMax: estado.precoMaxTexto }} />}
       />
       {parecidos.length > 0 && (
         <section aria-labelledby="titulo-parecidos" className="flex flex-col gap-3">

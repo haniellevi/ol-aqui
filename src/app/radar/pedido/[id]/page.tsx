@@ -109,7 +109,7 @@ export default async function MeuPedidoPage({
         </section>
       )}
 
-      <PropostasRecebidas propostas={propostas} podeEscolher={pedido.status !== "em_analise" && !(fechado && pedido.moderado_motivo)} modoPrazo={modoPrazo} />
+      <PropostasRecebidas propostas={propostas} podeEscolher={!["em_analise", "congelado"].includes(pedido.status) && !["cancelado", "moderacao"].includes(pedido.fechado_motivo ?? "")} modoPrazo={modoPrazo} />
 
       {!fechado && <AcoesPedido pedidoId={pedido.id} />}
     </main>

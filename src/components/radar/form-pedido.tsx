@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Hourglass, Megaphone, MessageCircle } from "lucide-react";
@@ -15,6 +15,9 @@ import { dataHoraCurta, rotuloPrazo } from "./util";
 
 type Props = {
   textoInicial: string;
+  categoriaInicial?: string | null;
+  precoMinInicial?: string;
+  precoMaxInicial?: string;
   categorias: { id: string; nome: string }[];
   cidades: string[];
   cidadeInicial: string | null;
@@ -26,13 +29,14 @@ type Props = {
 
 const ROTULO_GRUPO = "text-base font-semibold text-texto";
 
-export function FormPedido({ textoInicial, categorias, cidades, cidadeInicial, regras, pedirWhatsapp = false, whatsappInicial = "" }: Props) {
+export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", categorias, cidades, cidadeInicial, regras, pedirWhatsapp = false, whatsappInicial = "" }: Props) {
   const router = useRouter();
+  const chaveEnvio = useRef<string | null>(null);
   const [titulo, setTitulo] = useState(textoInicial);
   const [detalhes, setDetalhes] = useState("");
-  const [categoriaId, setCategoriaId] = useState<string | null>(null);
-  const [precoMin, setPrecoMin] = useState("");
-  const [precoMax, setPrecoMax] = useState("");
+  const [categoriaId, setCategoriaId] = useState<string | null>(categoriaInicial);
+  const [precoMin, setPrecoMin] = useState(precoMinInicial);
+  const [precoMax, setPrecoMax] = useState(precoMaxInicial);
   const [cidade, setCidade] = useState<string | null>(cidadeInicial);
   const [whatsapp, setWhatsapp] = useState(whatsappInicial);
   const [modo, setModo] = useState<ModoContato>("whatsapp_direto");
@@ -49,29 +53,35 @@ export function FormPedido({ textoInicial, categorias, cidades, cidadeInicial, r
   function enviar(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
-    if (titulo.trim().length < 3) return setErro({ texto: "Escreva o que você procura.", campo: "titulo" });
+    if (titulo.trim().length < 8) return setErro({ texto: "Descreva o que você procura com pelo menos 8 caracteres.", campo: "titulo" });
     if (!cidade) return setErro({ texto: "Escolha a cidade.", campo: "cidade" });
     if (modo === "propostas_prazo" && !prazo) return setErro({ texto: "Escolha até quando quer receber propostas.", campo: "prazo" });
     if (pedirWhatsapp && !whatsappDigitado(whatsapp)) {
       return setErro({ texto: "Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.", campo: "whatsapp" });
     }
+    chaveEnvio.current ??= crypto.randomUUID();
     iniciar(async () => {
-      const r = await criarPedido({
-        titulo,
-        detalhes,
-        categoriaId,
-        precoMin,
-        precoMax,
-        cidade,
-        modo,
-        prazoHoras: prazo,
-        whatsapp: pedirWhatsapp ? whatsapp : undefined,
-      });
-      if (!r.ok) {
-        setErro({ texto: r.erro, campo: r.campo, celular: r.precisaCelular });
-        return;
+      try {
+        const r = await criarPedido({
+          chaveEnvio: chaveEnvio.current!,
+          titulo,
+          detalhes,
+          categoriaId,
+          precoMin,
+          precoMax,
+          cidade,
+          modo,
+          prazoHoras: prazo,
+          whatsapp: pedirWhatsapp ? whatsapp : undefined,
+        });
+        if (!r.ok) {
+          setErro({ texto: r.erro, campo: r.campo, celular: r.precisaCelular });
+          return;
+        }
+        router.push(`${linkMeuPedidoRadar(r.id)}?novo=1`);
+      } catch {
+        setErro({ texto: "Não conseguimos confirmar o envio. Seus dados continuam aqui; tente novamente." });
       }
-      router.push(`${linkMeuPedidoRadar(r.id)}?novo=1`);
     });
   }
 
