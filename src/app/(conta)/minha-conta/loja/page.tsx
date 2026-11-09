@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ChevronRight, Clock, ExternalLink, Image as IconeImagem, LayoutList, Pin, Sparkles, Store } from "lucide-react";
-import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { listarCidades } from "@/lib/dados/regiao";
 import { meusRecursosVitrine, minhaVitrineCompleta, planosPublicos } from "@/lib/dados/vitrine-completa";
 import { linkLoja, preco, urlAbsoluta } from "@/lib/formato";
@@ -22,8 +21,7 @@ export const metadata: Metadata = { title: "Minha loja" };
 // T38 · Minha loja (só para lojas): dados e logo aqui; banner, informações, seções próprias e
 // produtos no topo em telas próprias (vitrine completa). O que o plano libera vem do banco.
 export default async function PaginaMinhaLoja() {
-  const conta = await meuPerfilEVitrine();
-  const v = conta?.vitrine;
+  const v = await minhaVitrineCompleta(true);
   if (!v || v.tipo !== "loja") {
     return (
       <PaginaConta>
@@ -39,13 +37,13 @@ export default async function PaginaMinhaLoja() {
       </PaginaConta>
     );
   }
-  const [cidades, completa, recursos, planos, destaques] = await Promise.all([
+  const [cidades, recursos, planos, destaques] = await Promise.all([
     listarCidades(v.microrregiao_id),
-    minhaVitrineCompleta(),
-    meusRecursosVitrine(),
+    meusRecursosVitrine(true),
     planosPublicos(),
     resultadosDestaques(),
   ]);
+  const completa = v;
   const destaquesLoja = destaques.filter((d) => d.tipo === "loja");
   const lojaPendente = destaquesLoja.find((d) => d.status === "aguardando_pagamento" && d.pagamento_status === "pendente");
   const endereco = urlAbsoluta(linkLoja(v.slug)).replace(/^https?:\/\//, "");
@@ -91,6 +89,50 @@ export default async function PaginaMinhaLoja() {
         </Aviso>
       )}
 
+      {completa && (
+        <section aria-labelledby="titulo-vitrine" className="flex flex-col gap-3">
+          <h2 id="titulo-vitrine" className="text-lg font-bold">
+            Sua vitrine
+          </h2>
+          <div className="overflow-hidden rounded-card shadow-1">
+            <BannerLoja
+              tipo={recursos.foto_fachada ? completa.banner_tipo : "modelo"}
+              url={completa.banner_url}
+              modelo={completa.banner_modelo}
+              cor={completa.banner_cor}
+              nome={completa.nome}
+              logo={completa.logo_url}
+            />
+          </div>
+          {fotoGuardadaSemPlano && (
+            <p className="text-sm text-texto-suave">
+              Sua foto da fachada está guardada, mas o seu plano de agora mostra o banner modelo. Ela volta quando o plano tiver foto.
+            </p>
+          )}
+          <ul className="flex flex-col divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
+            <ItemMenu href={LINK_LOJA_BANNER} icone={<IconeImagem />} titulo="Capa da loja" detalhe={completa.banner_tipo === "foto" && recursos.foto_fachada ? "Foto da fachada" : "Modelo com cor"} />
+            <ItemMenu href={LINK_LOJA_INFORMACOES} icone={<Store />} titulo="Horários e informações" detalhe="Endereço, Instagram, pagamento e entrega" />
+            <ItemMenu href={LINK_LOJA_SECOES} icone={<LayoutList />} titulo="Seções próprias" detalhe={usoSecoes} />
+            <ItemMenu href={LINK_LOJA_FIXADOS} icone={<Pin />} titulo="Produtos no topo" detalhe={usoFixados} />
+          </ul>
+        </section>
+      )}
+
+      <section aria-labelledby="titulo-dados" className="flex flex-col gap-3">
+        <h2 id="titulo-dados" className="text-lg font-bold">
+          Dados da loja
+        </h2>
+        <FormMinhaLoja
+          loja={{
+            nome: v.nome,
+            whatsapp: v.whatsapp,
+            cidade: v.cidade,
+            bairro: v.bairro,
+            logo_url: v.logo_url,
+          }}
+          cidades={cidades}
+        />
+      </section>
       {v.status === "ativa" && (
         <section aria-labelledby="titulo-destacar-loja" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
           <h2 id="titulo-destacar-loja" className="flex items-center gap-2 text-lg font-semibold">
@@ -116,52 +158,6 @@ export default async function PaginaMinhaLoja() {
         </section>
       )}
       <DestaquesAtivos lista={destaquesLoja} titulo="Destaques da loja" />
-
-
-      {completa && (
-        <section aria-labelledby="titulo-vitrine" className="flex flex-col gap-3">
-          <h2 id="titulo-vitrine" className="text-lg font-bold">
-            Sua vitrine
-          </h2>
-          <div className="overflow-hidden rounded-card shadow-1">
-            <BannerLoja
-              tipo={recursos.foto_fachada ? completa.banner_tipo : "modelo"}
-              url={completa.banner_url}
-              modelo={completa.banner_modelo}
-              cor={completa.banner_cor}
-              nome={completa.nome}
-              logo={completa.logo_url}
-            />
-          </div>
-          {fotoGuardadaSemPlano && (
-            <p className="text-sm text-texto-suave">
-              Sua foto da fachada está guardada, mas o seu plano de agora mostra o banner modelo. Ela volta quando o plano tiver foto.
-            </p>
-          )}
-          <ul className="flex flex-col divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
-            <ItemMenu href={LINK_LOJA_BANNER} icone={<IconeImagem />} titulo="Banner" detalhe={completa.banner_tipo === "foto" && recursos.foto_fachada ? "Foto da fachada" : "Modelo com cor"} />
-            <ItemMenu href={LINK_LOJA_INFORMACOES} icone={<Store />} titulo="Informações da loja" detalhe="Endereço, horário, Instagram, pagamento e entrega" />
-            <ItemMenu href={LINK_LOJA_SECOES} icone={<LayoutList />} titulo="Seções próprias" detalhe={usoSecoes} />
-            <ItemMenu href={LINK_LOJA_FIXADOS} icone={<Pin />} titulo="Produtos no topo" detalhe={usoFixados} />
-          </ul>
-        </section>
-      )}
-
-      <section aria-labelledby="titulo-dados" className="flex flex-col gap-3">
-        <h2 id="titulo-dados" className="text-lg font-bold">
-          Dados da loja
-        </h2>
-        <FormMinhaLoja
-          loja={{
-            nome: v.nome,
-            whatsapp: v.whatsapp,
-            cidade: v.cidade,
-            bairro: v.bairro,
-            logo_url: v.logo_url,
-          }}
-          cidades={cidades}
-        />
-      </section>
     </PaginaConta>
   );
 }

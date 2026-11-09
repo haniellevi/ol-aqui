@@ -22,7 +22,7 @@ const DIAS_UTEIS: DiaSemana[] = ["seg", "ter", "qua", "qui", "sex"];
 function semanaInicial(h: Horarios | null): Semana {
   const s = {} as Semana;
   for (const d of DIAS_EM_ORDEM) {
-    const faixas = (h?.[d] ?? []).filter((f) => f?.abre && f?.fecha).map((f) => ({ abre: f.abre, fecha: f.fecha === "24:00" ? "23:59" : f.fecha }));
+    const faixas = (h?.[d] ?? []).filter((f) => f?.abre && f?.fecha).map((f) => ({ abre: f.abre, fecha: f.fecha }));
     s[d] = { aberto: faixas.length > 0, faixas: faixas.length ? faixas : [{ ...FAIXA_PADRAO }] };
   }
   return s;
@@ -49,7 +49,15 @@ export type DadosInformacoes = {
 };
 
 export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInformacoes; formasDoPainel: string[] }) {
-  const [estado, acao, salvando] = useActionState<EstadoVitrine, FormData>(salvarInformacoes, null);
+  const [mostrarSucesso, setMostrarSucesso] = useState(false);
+  const [estado, acao, salvando] = useActionState<EstadoVitrine, FormData>(async (anterior, form) => {
+    setMostrarSucesso(true);
+    try {
+      return await salvarInformacoes(anterior, form);
+    } catch {
+      return { erro: "Confira a conexão e tente salvar de novo. Seus dados continuam preenchidos." };
+    }
+  }, null);
   const campos = estado?.campos ?? {};
 
   // Todos os campos são controlados: o React limpa campo solto depois de cada envio, mesmo com erro.
@@ -102,12 +110,19 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
   }
 
   return (
-    <form action={acao} className="flex flex-col gap-5" noValidate>
+    <form
+      action={acao}
+      onReset={(e) => e.preventDefault()}
+      onChangeCapture={() => setMostrarSucesso(false)}
+      onClickCapture={(e) => { if ((e.target as HTMLElement).closest('button[type="button"]')) setMostrarSucesso(false); }}
+      className="flex flex-col gap-5" noValidate
+    >
       <div aria-live="polite">
         {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
-        {estado?.ok && <Aviso tipo="ok">Informações salvas. Sua vitrine já mostra as mudanças.</Aviso>}
+        {mostrarSucesso && !salvando && estado?.ok && <Aviso tipo="ok">Informações da loja salvas.</Aviso>}
       </div>
 
+      <fieldset disabled={salvando} className="flex min-w-0 flex-col gap-5">
       {/* Endereço */}
       <section aria-labelledby="titulo-endereco" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
         <h2 id="titulo-endereco" className="text-lg font-bold">
@@ -175,10 +190,10 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-base font-semibold">{NOME_DIA[d]}</span>
                   <div className="flex gap-2">
-                    <Chip ativo={dia.aberto} onClick={() => mudarDia(d, (x) => ({ ...x, aberto: true }))}>
+                    <Chip aria-label={`Aberto: ${NOME_DIA[d]}`} ativo={dia.aberto} onClick={() => mudarDia(d, (x) => ({ ...x, aberto: true }))}>
                       Aberto
                     </Chip>
-                    <Chip ativo={!dia.aberto} onClick={() => mudarDia(d, (x) => ({ ...x, aberto: false }))}>
+                    <Chip aria-label={`Fechado: ${NOME_DIA[d]}`} ativo={!dia.aberto} onClick={() => mudarDia(d, (x) => ({ ...x, aberto: false }))}>
                       Fechado
                     </Chip>
                   </div>
@@ -191,6 +206,7 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
                           Abre
                           <input
                             type="time"
+                            aria-label={`Abre: ${NOME_DIA[d]}, horário ${i + 1}`}
                             value={f.abre}
                             required
                             onChange={(e) => mudarDia(d, (x) => ({ ...x, faixas: x.faixas.map((y, j) => (j === i ? { ...y, abre: e.target.value } : y)) }))}
@@ -201,11 +217,20 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
                           Fecha
                           <input
                             type="time"
-                            value={f.fecha}
+                            aria-label={`Fecha: ${NOME_DIA[d]}, horário ${i + 1}`}
+                            value={f.fecha === "24:00" ? "00:00" : f.fecha}
+                            disabled={f.fecha === "24:00"}
                             required
                             onChange={(e) => mudarDia(d, (x) => ({ ...x, faixas: x.faixas.map((y, j) => (j === i ? { ...y, fecha: e.target.value } : y)) }))}
                             className="h-12 rounded-campo border-2 border-borda bg-cartao px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
                           />
+                        </label>
+                        <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
+                          <input type="checkbox" className="size-5 accent-laranja-escuro"
+                            aria-label={`Fecha à meia-noite: ${NOME_DIA[d]}, horário ${i + 1}`}
+                            checked={f.fecha === "24:00"}
+                            onChange={(e) => mudarDia(d, (x) => ({ ...x, faixas: x.faixas.map((y, j) => j === i ? { ...y, fecha: e.target.checked ? "24:00" : "23:59" } : y) }))} />
+                          Fecha à meia-noite
                         </label>
                         {dia.faixas.length > 1 && (
                           <button
@@ -219,11 +244,11 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
                         )}
                       </div>
                     ))}
-                    {dia.faixas.length < 3 && (
+                    {dia.faixas.length < 3 && dia.faixas.at(-1)?.fecha !== "24:00" && (
                       <Botao
                         variante="texto"
                         icone={<Plus />}
-                        className="w-fit px-0"
+                        className="h-auto min-h-12 w-fit whitespace-normal px-0 text-left"
                         onClick={() => {
                           const ultimo = dia.faixas[dia.faixas.length - 1];
                           mudarDia(d, (x) => ({ ...x, faixas: [...x.faixas, { abre: ultimo?.fecha ?? "14:00", fecha: "23:59" }] }));
@@ -235,8 +260,8 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
                   </div>
                 )}
                 {d === "seg" && (
-                  <Botao variante="texto" icone={<Copy />} className="w-fit px-0" onClick={copiarParaDiasUteis}>
-                    Usar o horário de segunda de segunda a sexta
+                  <Botao variante="texto" icone={<Copy />} className="h-auto min-h-12 w-fit whitespace-normal px-0 text-left" onClick={copiarParaDiasUteis}>
+                    Copiar segunda para os dias úteis
                   </Botao>
                 )}
               </li>
@@ -343,6 +368,8 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
         {entrega !== "sim" && <input type="hidden" name="entrega_obs" value={entrega === "nao" ? "" : obs} />}
       </section>
 
+      </fieldset>
+      {estado?.erro && <p role="alert" className="text-sm font-semibold text-perigo">{estado.erro}</p>}
       <Botao type="submit" larguraTotal icone={<Save />} carregando={salvando} textoCarregando="Salvando..." disabled={localizando}>
         Salvar informações
       </Botao>

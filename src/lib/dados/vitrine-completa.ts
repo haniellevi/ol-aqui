@@ -59,26 +59,29 @@ export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitri
 });
 
 const COLUNAS_MINHA =
-  "id, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_modelo, banner_cor, " +
+  "id, dono_id, whatsapp, cidade, bairro, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_modelo, banner_cor, " +
   "endereco, lat, lng, horarios, instagram, sobre, formas_pagamento, faz_entrega, entrega_obs";
 
 /** Vitrine do usuário logado com os campos da vitrine completa. Sem login ou sem vitrine → null. */
-export const minhaVitrineCompleta = cache(async (): Promise<MinhaVitrineCompleta | null> =>
-  seguro(async () => {
+export const minhaVitrineCompleta = cache(async (exigirLeitura = false): Promise<MinhaVitrineCompleta | null> => {
+  const ler = async () => {
     const { userId } = await auth();
     if (!userId) return null;
     const db = await createClient();
     const { data, error } = await db.from("vitrines_lojas").select(COLUNAS_MINHA).eq("dono_id", userId).maybeSingle();
-    if (error || !data) return null;
+    if (error) throw new Error("Não foi possível carregar sua loja. Tente novamente.");
+    if (!data) return null;
     const v = data as unknown as MinhaVitrineCompleta;
+    if (exigirLeitura && (v.dono_id !== userId || !ehUuid(v.id))) throw new Error("Não foi possível confirmar sua loja.");
     return {
       ...v,
       lat: v.lat == null ? null : Number(v.lat),
       lng: v.lng == null ? null : Number(v.lng),
       formas_pagamento: v.formas_pagamento ?? [],
     };
-  }, null),
-);
+  };
+  return exigirLeitura ? ler() : seguro(ler, null);
+});
 
 const SEM_RECURSOS: RecursosVitrine = {
   foto_fachada: false,
@@ -91,14 +94,17 @@ const SEM_RECURSOS: RecursosVitrine = {
 };
 
 /** O que o plano de agora libera na minha vitrine e quanto já uso (calculado pelo banco). */
-export const meusRecursosVitrine = cache(async (): Promise<RecursosVitrine> =>
-  seguro(async () => {
+export const meusRecursosVitrine = cache(async (exigirLeitura = false): Promise<RecursosVitrine> => {
+  const ler = async () => {
     const db = await createClient();
     const { data, error } = await db.rpc("minha_vitrine_recursos");
+    if (error) throw new Error("Não foi possível carregar os recursos do plano.");
     const linha = (Array.isArray(data) ? data[0] : data) as RecursosVitrine | undefined;
-    return error || !linha ? SEM_RECURSOS : linha;
-  }, SEM_RECURSOS),
-);
+    if (exigirLeitura && (!linha || typeof linha.foto_fachada !== "boolean")) throw new Error("Não foi possível confirmar os recursos da loja.");
+    return linha ?? SEM_RECURSOS;
+  };
+  return exigirLeitura ? ler() : seguro(ler, SEM_RECURSOS);
+});
 
 /** Minhas seções (todas, inclusive escondidas), na ordem, com os anúncios de cada uma. */
 export const minhasSecoes = cache(async (vitrineId: string): Promise<MinhaSecao[]> =>

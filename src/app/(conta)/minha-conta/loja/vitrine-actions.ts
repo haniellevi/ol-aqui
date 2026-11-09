@@ -21,11 +21,11 @@ const SO_LOJA = { ok: false as const, erro: { mensagem: "Só lojas têm vitrine 
 
 export type EstadoVitrine = { ok?: boolean; erro?: string; campos?: Record<string, string> } | null;
 
-async function minhaLoja() {
+async function minhaLoja(exigirLeitura = false) {
   const { userId } = await auth();
   if (!userId) return { userId: null, v: null } as const;
-  const v = await minhaVitrineCompleta();
-  return { userId, v: v && v.tipo === "loja" ? v : null } as const;
+  const v = await minhaVitrineCompleta(exigirLeitura);
+  return { userId, v: v && v.tipo === "loja" && (!exigirLeitura || v.dono_id === userId) ? v : null } as const;
 }
 
 function atualizar(slug: string) {
@@ -41,7 +41,7 @@ function bannerValido(url: string, userId: string): boolean {
   const prefixo = `${base}/storage/v1/object/public/${BUCKET}/${userId}/vitrine/`;
   if (!url.startsWith(prefixo)) return false;
   const resto = url.slice(prefixo.length);
-  return /^[A-Za-z0-9_-][A-Za-z0-9._-]*$/.test(resto);
+  return /^[A-Za-z0-9_-][A-Za-z0-9._-]*$/.test(resto) && !resto.includes("..");
 }
 
 /** Arquivo do próprio usuário no Storage (pasta vitrine ou loja), para apagar quando sai de uso. */
@@ -57,75 +57,90 @@ export type EnvioBanner = { urlEnvio: string; urlPublica: string };
 
 /** Prepara o envio da foto da fachada (já cortada no aparelho) direto do navegador para o Storage. */
 export async function prepararEnvioBanner(formato: "webp" | "jpg"): Promise<Resultado<EnvioBanner>> {
-  const { userId, v } = await minhaLoja();
-  if (!userId) return SEM_LOGIN;
-  if (!v) return SO_LOJA;
-  const recursos = await meusRecursosVitrine();
-  if (!recursos.foto_fachada) return { ok: false, erro: { mensagem: "A foto da fachada não faz parte do seu plano.", campo: "banner" } };
-  const fmt = formato === "jpg" ? "jpg" : "webp";
-  const db = await createClient();
-  const caminho = `${userId}/vitrine/banner-${crypto.randomUUID()}.${fmt}`;
-  const { data, error } = await db.storage.from(BUCKET).createSignedUploadUrl(caminho);
-  if (error || !data) return { ok: false, erro: { mensagem: "Não deu para preparar o envio da foto. Tente de novo." } };
-  const urlPublica = db.storage.from(BUCKET).getPublicUrl(caminho).data.publicUrl;
-  return { ok: true, dados: { urlEnvio: data.signedUrl, urlPublica } };
+  try {
+    const { userId, v } = await minhaLoja(true);
+    if (!userId) return SEM_LOGIN;
+    if (!v) return SO_LOJA;
+    const recursos = await meusRecursosVitrine(true);
+    if (!recursos.foto_fachada) return { ok: false, erro: { mensagem: "A foto da fachada não faz parte do seu plano.", campo: "banner" } };
+    if (!["webp", "jpg"].includes(formato) || v.status === "suspensa") return { ok: false, erro: { mensagem: "Não é possível enviar esta foto." } };
+    const fmt = formato;
+    const db = await createClient();
+    const caminho = `${userId}/vitrine/banner-${crypto.randomUUID()}.${fmt}`;
+    const { data, error } = await db.storage.from(BUCKET).createSignedUploadUrl(caminho);
+    if (error || !data) return { ok: false, erro: { mensagem: "Não deu para preparar o envio da foto. Tente de novo." } };
+    const urlPublica = db.storage.from(BUCKET).getPublicUrl(caminho).data.publicUrl;
+    return { ok: true, dados: { urlEnvio: data.signedUrl, urlPublica } };
+  } catch {
+    return { ok: false, erro: { mensagem: "Não foi possível preparar a foto. Tente novamente." } };
+  }
 }
 
 export async function salvarBanner(_antes: EstadoVitrine, form: FormData): Promise<EstadoVitrine> {
-  const { userId, v } = await minhaLoja();
-  if (!userId) return { erro: SEM_LOGIN.erro.mensagem };
-  if (!v) return { erro: SO_LOJA.erro.mensagem };
+  try {
+    const { userId, v } = await minhaLoja(true);
+    if (!userId) return { erro: SEM_LOGIN.erro.mensagem };
+    if (!v) return { erro: SO_LOJA.erro.mensagem };
 
-  let tipo = form.get("banner_tipo") === "foto" ? "foto" : "modelo";
-  let url = String(form.get("banner_url") ?? "").trim();
-  // Plano sem foto da fachada (plano menor): a tela só mostra o modelo, mas a foto guardada fica
-  // como está para voltar quando o plano tiver foto de novo. Aqui só mudam a cor e o desenho.
-  if (v.banner_tipo === "foto" && v.banner_url && !(await meusRecursosVitrine()).foto_fachada) {
-    tipo = "foto";
-    url = v.banner_url;
-  }
-  const cor = String(form.get("banner_cor") ?? "").trim().toUpperCase();
-  const modeloBruto = String(form.get("banner_modelo") ?? "liso");
-  const modelo = (BANNER_MODELOS as readonly string[]).includes(modeloBruto) ? modeloBruto : "liso";
+    if (["banner_tipo", "banner_url", "banner_cor", "banner_modelo"].some((k) => typeof form.get(k) !== "string") || !["foto", "modelo"].includes(String(form.get("banner_tipo"))) || !(BANNER_MODELOS as readonly string[]).includes(String(form.get("banner_modelo")))) return { erro: "Escolha o tipo e o modelo da capa." };
+    let tipo = form.get("banner_tipo") === "foto" ? "foto" : "modelo";
+    let url = String(form.get("banner_url") ?? "").trim();
+    // Plano sem foto da fachada (plano menor): a tela só mostra o modelo, mas a foto guardada fica
+    // como está para voltar quando o plano tiver foto de novo. Aqui só mudam a cor e o desenho.
+    if (v.banner_tipo === "foto" && v.banner_url && !(await meusRecursosVitrine(true)).foto_fachada) {
+      tipo = "foto";
+      url = v.banner_url;
+    }
+    const cor = String(form.get("banner_cor") ?? "").trim().toUpperCase();
+    const modeloBruto = String(form.get("banner_modelo") ?? "liso");
+    const modelo = (BANNER_MODELOS as readonly string[]).includes(modeloBruto) ? modeloBruto : "liso";
 
-  const opcoes = await opcoesVitrine(v.microrregiao_id);
-  if (!/^#[0-9A-F]{6}$/.test(cor) || (opcoes.cores.length > 0 && !opcoes.cores.includes(cor) && cor !== v.banner_cor)) {
-    return { erro: "Escolha uma das cores da lista.", campos: { banner_cor: "Escolha uma das cores da lista." } };
-  }
-  // Foto nova precisa ser do Storage do OLAKI; a atual (mesmo endereço) pode ficar.
-  if (url && url !== v.banner_url && !bannerValido(url, userId)) {
-    return { erro: "Envie a foto pelo botão.", campos: { banner: "Envie a foto pelo botão." } };
-  }
-  if (tipo === "foto" && !url) {
-    return { erro: "Envie a foto da fachada ou escolha um banner modelo.", campos: { banner: "Envie a foto da fachada." } };
-  }
+    const opcoes = await opcoesVitrine(v.microrregiao_id);
+    if (!/^#[0-9A-F]{6}$/.test(cor) || (opcoes.cores.length > 0 && !opcoes.cores.includes(cor) && cor !== v.banner_cor)) {
+      return { erro: "Escolha uma das cores da lista.", campos: { banner_cor: "Escolha uma das cores da lista." } };
+    }
+    // Foto nova precisa ser do Storage do OLAKI; a atual (mesmo endereço) pode ficar.
+    if (url && url !== v.banner_url && !bannerValido(url, userId)) {
+      return { erro: "Envie a foto pelo botão.", campos: { banner: "Envie a foto pelo botão." } };
+    }
+    if (tipo === "foto" && !url) {
+      return { erro: "Envie a foto da fachada ou escolha um banner modelo.", campos: { banner: "Envie a foto da fachada." } };
+    }
 
-  // Quem escolhe o modelo e tira a foto: a foto antiga sai do banco e do Storage.
-  const novaUrl = url || null;
-  const mudancas: Record<string, unknown> = { banner_tipo: tipo, banner_url: novaUrl, banner_cor: cor, banner_modelo: modelo };
-  // A capa antiga (etapa 2) virou o banner na migração: quando o banner muda, ela sai junto.
-  if (v.capa_url && v.capa_url === v.banner_url && novaUrl !== v.banner_url) mudancas.capa_url = null;
+    // Trocar para modelo preserva a foto guardada; substituir a URL libera a anterior.
+    const novaUrl = url || null;
+    const mudancas: Record<string, unknown> = { banner_tipo: tipo, banner_url: novaUrl, banner_cor: cor, banner_modelo: modelo };
+    // A capa antiga (etapa 2) virou o banner na migração: quando o banner muda, ela sai junto.
+    if (v.capa_url && v.capa_url === v.banner_url && novaUrl !== v.banner_url) mudancas.capa_url = null;
 
-  const db = await createClient();
-  const { error } = await db.from("vitrines_lojas").update(mudancas).eq("id", v.id).eq("dono_id", userId);
-  if (error) {
-    const e = traduzirErro(error);
-    return { erro: e.mensagem, campos: e.campo ? { [e.campo]: e.mensagem } : undefined };
+    const db = await createClient();
+    const { data, error } = await db.from("vitrines_lojas").update(mudancas).eq("id", v.id).eq("dono_id", userId).select("id").maybeSingle();
+    if (error) {
+      const e = traduzirErro(error);
+      return { erro: e.mensagem, campos: e.campo ? { [e.campo]: e.mensagem } : undefined };
+    }
+    if (data?.id !== v.id) return { erro: "A capa não foi atualizada. Recarregue a página e tente novamente." };
+    if (v.banner_url && v.banner_url !== novaUrl && arquivoMeu(v.banner_url, userId)) {
+      await Promise.allSettled([apagarFoto(v.banner_url)]);
+    }
+    atualizar(v.slug);
+    return { ok: true };
+  } catch {
+    return { erro: "Não foi possível confirmar o salvamento da capa. Tente novamente." };
   }
-  if (v.banner_url && v.banner_url !== novaUrl && arquivoMeu(v.banner_url, userId)) {
-    await Promise.allSettled([apagarFoto(v.banner_url)]);
-  }
-  atualizar(v.slug);
-  return { ok: true };
 }
 
 /** Apaga do Storage uma foto do banner que foi enviada mas não chegou a ser salva (trocou de ideia). */
 export async function descartarFotoBanner(url: string): Promise<Resultado> {
-  const { userId, v } = await minhaLoja();
-  if (!userId) return SEM_LOGIN;
-  if (!v) return SO_LOJA;
-  if (!bannerValido(url, userId) || url === v.banner_url) return { ok: true, dados: undefined };
-  return apagarFoto(url);
+  try {
+    const { userId, v } = await minhaLoja(true);
+    if (!userId) return SEM_LOGIN;
+    if (!v) return SO_LOJA;
+    if (!bannerValido(url, userId) || url === v.banner_url) return { ok: true, dados: undefined };
+    return apagarFoto(url);
+  } catch {
+    return { ok: false, erro: { mensagem: "Não foi possível descartar a foto." } };
+  }
 }
 
 /* ------------------------------ Informações ----------------------------- */
@@ -140,6 +155,7 @@ function lerHorarios(bruto: string): { horarios: Horarios | null; erro?: string 
     return { horarios: null, erro: "Não deu para ler os horários. Confira e tente de novo." };
   }
   if (!obj || typeof obj !== "object" || Array.isArray(obj)) return { horarios: null, erro: "Horários inválidos." };
+  if (Object.keys(obj).some((k) => !(DIAS_SEMANA as readonly string[]).includes(k))) return { horarios: null, erro: "Dia da semana inválido." };
   const saida: Horarios = {};
   let algum = false;
   for (const dia of DIAS_SEMANA) {
@@ -169,63 +185,70 @@ function lerHorarios(bruto: string): { horarios: Horarios | null; erro?: string 
 }
 
 export async function salvarInformacoes(_antes: EstadoVitrine, form: FormData): Promise<EstadoVitrine> {
-  const { userId, v } = await minhaLoja();
-  if (!userId) return { erro: SEM_LOGIN.erro.mensagem };
-  if (!v) return { erro: SO_LOJA.erro.mensagem };
+  try {
+    const { userId, v } = await minhaLoja(true);
+    if (!userId) return { erro: SEM_LOGIN.erro.mensagem };
+    if (!v) return { erro: SO_LOJA.erro.mensagem };
 
-  const endereco = String(form.get("endereco") ?? "").replace(/\s+/g, " ").trim();
-  const latTxt = String(form.get("lat") ?? "").trim();
-  const lngTxt = String(form.get("lng") ?? "").trim();
-  const instagram = limparInstagram(String(form.get("instagram") ?? ""));
-  const sobre = String(form.get("sobre") ?? "").trim();
-  const entrega = String(form.get("faz_entrega") ?? "");
-  const entregaObs = String(form.get("entrega_obs") ?? "").replace(/\s+/g, " ").trim();
-  const formas = form.getAll("formas_pagamento").map((f) => String(f).trim()).filter(Boolean);
-  const { horarios, erro: erroHorario } = lerHorarios(String(form.get("horarios") ?? ""));
+    if (["endereco", "lat", "lng", "instagram", "sobre", "faz_entrega", "entrega_obs", "horarios"].some((k) => typeof form.get(k) !== "string") || form.getAll("formas_pagamento").some((f) => typeof f !== "string")) return { erro: "Recarregue a página e preencha as informações da loja." };
+    const endereco = String(form.get("endereco") ?? "").replace(/\s+/g, " ").trim();
+    const latTxt = String(form.get("lat") ?? "").trim();
+    const lngTxt = String(form.get("lng") ?? "").trim();
+    const instagram = limparInstagram(String(form.get("instagram") ?? ""));
+    const sobre = String(form.get("sobre") ?? "").trim();
+    const entrega = String(form.get("faz_entrega") ?? "");
+    const entregaObs = String(form.get("entrega_obs") ?? "").replace(/\s+/g, " ").trim();
+    const formas = form.getAll("formas_pagamento").map((f) => String(f).trim()).filter(Boolean);
+    const { horarios, erro: erroHorario } = lerHorarios(String(form.get("horarios") ?? ""));
 
-  const campos: Record<string, string> = {};
-  if (endereco.length > 160) campos.endereco = "O endereço pode ter até 160 letras.";
-  const lat = latTxt ? Number(latTxt) : null;
-  const lng = lngTxt ? Number(lngTxt) : null;
-  if ((lat === null) !== (lng === null) || (lat !== null && (!Number.isFinite(lat) || Math.abs(lat) > 90)) ||
-      (lng !== null && (!Number.isFinite(lng) || Math.abs(lng) > 180))) {
-    campos.localizacao = "A localização não ficou certa. Toque de novo em \"Usar minha localização\".";
-  }
-  if (instagram && (!/^[a-z0-9._]{1,30}$/.test(instagram) || instagram.includes(".."))) {
-    campos.instagram = "Instagram inválido. Escreva só o nome, ex.: @minhaloja.";
-  }
-  if (sobre.length > 1500) campos.sobre = "O texto \"Sobre nós\" pode ter até 1500 letras.";
-  if (entregaObs.length > 200) campos.entrega_obs = "O recado da entrega pode ter até 200 letras.";
-  if (erroHorario) campos.horarios = erroHorario;
-  const opcoes = await opcoesVitrine(v.microrregiao_id);
-  if (formas.some((f) => !opcoes.formasPagamento.includes(f) && !v.formas_pagamento.includes(f))) {
-    campos.formas_pagamento = "Escolha as formas de pagamento da lista.";
-  }
-  if (Object.keys(campos).length) return { erro: "Confira os campos marcados.", campos };
+    const campos: Record<string, string> = {};
+    if (!["", "sim", "nao"].includes(entrega)) campos.faz_entrega = "Escolha uma opção de entrega.";
+    if (endereco.length > 160) campos.endereco = "O endereço pode ter até 160 letras.";
+    const lat = latTxt ? Number(latTxt) : null;
+    const lng = lngTxt ? Number(lngTxt) : null;
+    if ((lat === null) !== (lng === null) || (lat !== null && (!Number.isFinite(lat) || Math.abs(lat) > 90)) ||
+        (lng !== null && (!Number.isFinite(lng) || Math.abs(lng) > 180))) {
+      campos.localizacao = "A localização não ficou certa. Toque de novo em \"Usar minha localização\".";
+    }
+    if (instagram && (!/^[a-z0-9._]{1,30}$/.test(instagram) || instagram.includes(".."))) {
+      campos.instagram = "Instagram inválido. Escreva só o nome, ex.: @minhaloja.";
+    }
+    if (sobre.length > 1500) campos.sobre = "O texto \"Sobre nós\" pode ter até 1500 letras.";
+    if (entregaObs.length > 200) campos.entrega_obs = "O recado da entrega pode ter até 200 letras.";
+    if (erroHorario) campos.horarios = erroHorario;
+    const opcoes = await opcoesVitrine(v.microrregiao_id);
+    if (formas.some((f) => !opcoes.formasPagamento.includes(f) && !v.formas_pagamento.includes(f))) {
+      campos.formas_pagamento = "Escolha as formas de pagamento da lista.";
+    }
+    if (Object.keys(campos).length) return { erro: "Confira os campos marcados.", campos };
 
-  const db = await createClient();
-  const { error } = await db
-    .from("vitrines_lojas")
-    .update({
-      endereco: endereco || null,
-      lat: lat === null ? null : Math.round(lat * 1e6) / 1e6,
-      lng: lng === null ? null : Math.round(lng * 1e6) / 1e6,
-      horarios,
-      instagram: instagram || null,
-      sobre: sobre || null,
-      // a descrição curta (etapa 2) acompanha o "Sobre nós": o banco copia (só o texto que passou no filtro)
-      formas_pagamento: [...new Set(formas)],
-      faz_entrega: entrega === "sim" ? true : entrega === "nao" ? false : null,
-      entrega_obs: entregaObs || null,
-    })
-    .eq("id", v.id)
-    .eq("dono_id", userId);
-  if (error) {
-    const e = traduzirErro(error);
-    return { erro: e.mensagem, campos: e.campo ? { [e.campo]: e.mensagem } : undefined };
+    const db = await createClient();
+    const { data, error } = await db
+      .from("vitrines_lojas")
+      .update({
+        endereco: endereco || null,
+        lat: lat === null ? null : Math.round(lat * 1e6) / 1e6,
+        lng: lng === null ? null : Math.round(lng * 1e6) / 1e6,
+        horarios,
+        instagram: instagram || null,
+        sobre: sobre || null,
+        // a descrição curta (etapa 2) acompanha o "Sobre nós": o banco copia (só o texto que passou no filtro)
+        formas_pagamento: [...new Set(formas)],
+        faz_entrega: entrega === "sim" ? true : entrega === "nao" ? false : null,
+        entrega_obs: entregaObs || null,
+      })
+      .eq("id", v.id)
+      .eq("dono_id", userId).select("id").maybeSingle();
+    if (error) {
+      const e = traduzirErro(error);
+      return { erro: e.mensagem, campos: e.campo ? { [e.campo]: e.mensagem } : undefined };
+    }
+    if (data?.id !== v.id) return { erro: "As informações não foram atualizadas. Recarregue a página e tente novamente." };
+    atualizar(v.slug);
+    return { ok: true };
+  } catch {
+    return { erro: "Não foi possível confirmar o salvamento. Seus dados continuam preenchidos; tente novamente." };
   }
-  atualizar(v.slug);
-  return { ok: true };
 }
 
 /* -------------------------------- Seções -------------------------------- */

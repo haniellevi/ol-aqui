@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Informações da loja" };
 
 // Informações da vitrine (todas opcionais). As formas de pagamento vêm da lista do painel.
 export default async function PaginaInformacoesLoja() {
-  const v = await minhaVitrineCompleta();
+  const v = await minhaVitrineCompleta(true);
   if (!v || v.tipo !== "loja") {
     return (
       <PaginaConta>

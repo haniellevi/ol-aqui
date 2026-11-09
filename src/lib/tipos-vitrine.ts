@@ -95,6 +95,10 @@ export type RecursosVitrine = {
 /** Campos da vitrine que o dono edita nas telas novas. */
 export type MinhaVitrineCompleta = {
   id: string;
+  dono_id: string;
+  whatsapp: string | null;
+  cidade: string;
+  bairro: string | null;
   slug: string;
   nome: string;
   tipo: TipoVitrine;
