@@ -15,6 +15,7 @@ import {
   UserRound,
   Lock,
   LifeBuoy,
+  Pencil,
 } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { avisosNaoLidos } from "@/lib/dados/radar";
@@ -72,14 +73,14 @@ export default async function PaginaMinhaConta() {
       icone: <Bell />,
       detalhe: naoLidos === null ? "Consulte seus avisos" : naoLidos > 0 ? `${naoLidos} ${naoLidos === 1 ? "aviso novo" : "avisos novos"}` : undefined,
     },
-    { href: "/minha-conta/dados", nome: "Meus dados", icone: <UserRound /> },
+    { href: "/minha-conta/dados", nome: "Meus dados", icone: <UserRound />, detalhe: "Perfil, foto e WhatsApp" },
     { href: "/minha-conta/privacidade", nome: "Privacidade", icone: <Lock /> },
     { href: "/ajuda", nome: "Ajuda", icone: <LifeBuoy /> },
   ];
 
   return (
     <PaginaConta>
-      <h1 className="sr-only">Minha conta</h1>
+      <h1 className="text-2xl font-bold">Minha conta</h1>
 
       {/* Cartão do topo: nome, selo e, para quem vende, o plano e o uso */}
       <section aria-label="Sua conta" className="flex flex-col gap-3 rounded-card bg-beringela p-4 text-white shadow-1">
@@ -103,6 +104,9 @@ export default async function PaginaMinhaConta() {
             )}
           </div>
         </div>
+        <Link href="/minha-conta/dados" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-campo bg-white/10 px-3 py-2 font-semibold hover:bg-white/15 focus-visible:outline-3 focus-visible:outline-laranja">
+          <Pencil className="size-4" aria-hidden />Editar perfil, foto e WhatsApp
+        </Link>
         {plano && (
           <Link
             href="/minha-conta/plano"
@@ -160,8 +164,10 @@ function Lista({ titulo, itens }: { titulo: string; itens: Item[] }) {
               <span className="inline-flex shrink-0 text-laranja-escuro [&>svg]:size-6" aria-hidden>
                 {i.icone}
               </span>
-              <span className="flex-1">{i.nome}</span>
-              {i.detalhe && <span className="text-sm font-normal text-texto-suave">{i.detalhe}</span>}
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span>{i.nome}</span>
+                {i.detalhe && <span className="text-sm font-normal text-texto-suave">{i.detalhe}</span>}
+              </span>
               <ChevronRight className="size-5 shrink-0 text-texto-suave" aria-hidden />
             </Link>
           </li>

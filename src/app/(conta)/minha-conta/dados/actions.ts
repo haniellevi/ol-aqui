@@ -1,44 +1,90 @@
 "use server";
-// Meus dados: nome, cidade e bairro do perfil. O celular e a foto são do Clerk.
-// A RLS só deixa editar o próprio perfil; o gatilho do banco protege selos, admin e região.
+
 import { revalidatePath } from "next/cache";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { listarCidades } from "@/lib/dados/regiao";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
-import { traduzirErro } from "@/lib/erros";
+import { exigeCelularConfirmado } from "@/lib/dados/radar";
+import { sincronizarPerfil } from "@/lib/perfil";
+import { whatsappDigitado } from "@/lib/formato";
 
 export type EstadoDados = { ok?: boolean; erro?: string; campos?: Record<string, string> } | null;
+const SEM_LOGIN = "Entre na sua conta para continuar.";
+const FALHOU = "Não conseguimos salvar agora. Seu preenchimento foi mantido; tente novamente.";
+const texto = (form: FormData, campo: string) => {
+  const valor = form.get(campo);
+  return typeof valor === "string" ? valor.replace(/\s+/g, " ").trim() : "";
+};
+
+function atualizarTelas() {
+  revalidatePath("/minha-conta", "layout");
+  revalidatePath("/radar", "layout");
+}
 
 export async function salvarDados(_antes: EstadoDados, form: FormData): Promise<EstadoDados> {
-  const { userId } = await auth();
-  if (!userId) return { erro: "Entre na sua conta para continuar." };
+  try {
+    const { userId } = await auth();
+    if (!userId) return { erro: SEM_LOGIN };
+    const nome = texto(form, "nome"), cidade = texto(form, "cidade"), bairro = texto(form, "bairro");
+    const campos: Record<string, string> = {};
+    for (const campo of ["nome", "cidade", "bairro"]) {
+      if (form.has(campo) && typeof form.get(campo) !== "string") campos[campo] = "Preencha este campo com texto.";
+    }
+    if (nome.length < 2 || nome.length > 120) campos.nome = "Escreva seu nome com 2 a 120 caracteres.";
+    if (bairro.length > 80) campos.bairro = "Use até 80 caracteres no bairro.";
+    if (cidade.length > 100) campos.cidade = "Escolha uma cidade da lista.";
+    if (Object.keys(campos).length) return { erro: "Confira os campos marcados.", campos };
+    const conta = await meuPerfilEVitrine();
+    if (conta?.perfil.id !== userId) return { erro: "Não conseguimos abrir sua conta agora. Tente novamente." };
+    const cidades = await listarCidades(conta.perfil.microrregiao_id);
+    if (cidade && !cidades.some((c) => c.nome === cidade)) {
+      return { erro: "Confira a cidade.", campos: { cidade: "Escolha uma cidade disponível na sua região." } };
+    }
+    const db = await createClient();
+    const { data, error } = await db.from("perfis").update({ nome, cidade: cidade || null, bairro: bairro || null })
+      .eq("id", userId).select("id").maybeSingle();
+    if (error || data?.id !== userId) return { erro: FALHOU };
+    atualizarTelas();
+    return { ok: true };
+  } catch { return { erro: FALHOU }; }
+}
 
-  const nome = String(form.get("nome") ?? "").replace(/\s+/g, " ").trim();
-  const cidade = String(form.get("cidade") ?? "").trim();
-  const bairro = String(form.get("bairro") ?? "").replace(/\s+/g, " ").trim();
+/** Foto e confirmação vêm somente do usuário autenticado no Clerk, nunca do formulário. */
+export async function atualizarPerfilClerk(): Promise<EstadoDados> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { erro: SEM_LOGIN };
+    const usuario = await currentUser();
+    if (!usuario || usuario.id !== userId) return { erro: SEM_LOGIN };
+    await sincronizarPerfil(usuario);
+    atualizarTelas();
+    return { ok: true };
+  } catch { return { erro: "Não conseguimos atualizar a foto e a confirmação no OL-AKI. Tente novamente." }; }
+}
 
-  const conta = await meuPerfilEVitrine();
-  if (!conta) return { erro: "Não conseguimos abrir sua conta agora. Tente de novo." };
-  const cidades = await listarCidades(conta.perfil.microrregiao_id);
-
-  const campos: Record<string, string> = {};
-  if (nome.length < 2 || nome.length > 120) campos.nome = "Escreva seu nome (de 2 a 120 letras).";
-  if (cidade && cidades.length > 0 && !cidades.some((c) => c.nome === cidade)) campos.cidade = "Escolha uma cidade da lista.";
-  if (bairro.length > 80) campos.bairro = "Bairro muito longo (até 80 letras).";
-  if (Object.keys(campos).length) return { erro: "Confira os campos marcados.", campos };
-
-  // A foto mostrada no site é a do Clerk (trocada em "Mudar foto ou celular").
-  const usuario = await currentUser();
-  const db = await createClient();
-  const { error } = await db
-    .from("perfis")
-    .update({ nome, cidade: cidade || null, bairro: bairro || null, ...(usuario?.imageUrl ? { avatar_url: usuario.imageUrl } : {}) })
-    .eq("id", userId);
-  if (error) {
-    const e = traduzirErro(error);
-    return { erro: e.mensagem, campos: e.campo ? { [e.campo]: e.mensagem } : undefined };
-  }
-  revalidatePath("/minha-conta", "layout");
-  return { ok: true };
+/** Respeita a opção regional de contato sem código e não altera número confirmado. */
+export async function salvarWhatsapp(_antes: EstadoDados, form: FormData): Promise<EstadoDados> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { erro: SEM_LOGIN };
+    const entrada = form.get("whatsapp");
+    const numero = typeof entrada === "string" && entrada.length <= 30 && /^[\d+().\s-]+$/.test(entrada) ? whatsappDigitado(entrada) : null;
+    if (!numero) return { erro: "Confira o WhatsApp.", campos: { whatsapp: "Digite um celular brasileiro com DDD, por exemplo (89) 99999-0000." } };
+    const usuario = await currentUser();
+    if (!usuario || usuario.id !== userId) return { erro: SEM_LOGIN };
+    await sincronizarPerfil(usuario);
+    const conta = await meuPerfilEVitrine();
+    if (conta?.perfil.id !== userId) return { erro: "Não conseguimos abrir sua conta agora. Tente novamente." };
+    if (conta.perfil.whatsapp_verificado_em || await exigeCelularConfirmado(conta.perfil.microrregiao_id)) {
+      return { erro: "Para trocar este número, use Confirmar ou trocar celular e conclua a verificação." };
+    }
+    const { data, error } = await supabaseAdmin().from("perfis")
+      .update({ whatsapp: numero, whatsapp_verificado_em: null }).eq("id", userId)
+      .is("whatsapp_verificado_em", null).select("id").maybeSingle();
+    if (error || data?.id !== userId) return { erro: "Não conseguimos trocar o WhatsApp. Atualize a página para conferir sua conta e tente novamente." };
+    atualizarTelas();
+    return { ok: true };
+  } catch { return { erro: FALHOU }; }
 }

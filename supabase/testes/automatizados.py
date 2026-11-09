@@ -51,6 +51,8 @@ try:
     print('PASS: Radar completo preserva centavos, valida fotos, entrega avisos e protege contato e prazo', flush=True)
     checked(sql((root/'supabase/testes/210_notificacoes.sql').read_text()))
     print('PASS: notificações isolam contas, canais, leitura, preferências e repetição', flush=True)
+    checked(sql((root/'supabase/testes/220_minha_conta.sql').read_text()))
+    print('PASS: Minha conta protege identidade, perfil, confirmação e privilégios', flush=True)
     migracao_avisos = (root/'supabase/migrations/20261109195657_notificacoes_confiaveis.sql').read_text()
     checked(sql("""begin;
       update modelos_mensagem set texto='Texto personalizado da equipe' where chave='proposta_escolhida' and canal='notificacao';
