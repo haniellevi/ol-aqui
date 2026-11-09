@@ -16,7 +16,7 @@ import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { FormPedido } from "@/components/radar/form-pedido";
 
-export const metadata = { title: "Pedir no Radar · OLAKI" };
+export const metadata = { title: "Pedir no Radar" };
 
 export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; cidade?: string; preco_min?: string; preco_max?: string }> }) {
   const params = await searchParams;

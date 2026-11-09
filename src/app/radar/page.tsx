@@ -14,10 +14,11 @@ import { Botao } from "@/components/ui/botao";
 import { RadarDeNegocios, type PedidoRadar, type CategoriaRadar } from "@/components/radar/radar-de-negocios";
 import { AbasRadar, type AbaRadar } from "@/components/radar/abas-radar";
 import { ExplicacaoRadar } from "@/components/radar/explicacao-radar";
+import { AtualizarRadar } from "@/components/radar/atualizar-radar";
 import { ListaMeusPedidos, ListaMinhasPropostas } from "@/components/radar/listas-radar";
 
 export const metadata = {
-  title: "Radar de Negócios · OLAKI",
+  title: "Radar de Negócios",
   description: "Peça o que você procura e as lojas da região mandam ofertas.",
 };
 
@@ -52,7 +53,8 @@ export default async function RadarPage({ searchParams }: { searchParams: Promis
 
   await garantirPerfil();
   const conta = await meuPerfilEVitrine();
-  const vende = Boolean(conta?.vitrine);
+  if (!conta) throw new Error("Não foi possível carregar sua conta. Tente novamente.");
+  const vende = Boolean(conta.vitrine);
 
   // Quem vende vê os pedidos da região e as propostas que mandou; todos veem os próprios pedidos.
   const abas: AbaRadar[] = vende ? ["regiao", "meus", "propostas"] : ["meus", "regiao"];
@@ -127,7 +129,7 @@ export default async function RadarPage({ searchParams }: { searchParams: Promis
       categorias={[{ valor: "todas", rotulo: "Tudo" }, ...categorias.map((c) => ({ valor: c.id, rotulo: c.nome })), { valor: "sem_categoria", rotulo: "Sem categoria" }]}
       temAcesso={temAcesso}
       propostasRestantes={temAcesso ? restantes : 0}
-      planos={planos.map((p) => ({ codigo: p.codigo, nome: p.nome, preco_centavos: p.preco_centavos }))}
+      planos={planos.map((p) => ({ codigo: p.codigo, nome: p.nome, preco_centavos: p.preco_centavos, periodo_dias: p.periodo_dias }))}
       abas={navAbas}
     />
   );
@@ -144,7 +146,7 @@ function Moldura({ titulo, abas, children }: { titulo: string; abas: React.React
         <p className="mt-0.5 text-sm text-texto-suave">{titulo}</p>
         {abas}
       </header>
-      <div className="flex flex-col gap-4 px-4 pt-4">{children}</div>
+      <div className="flex flex-col gap-4 px-4 pt-4"><div className="flex justify-end"><AtualizarRadar /></div>{children}</div>
     </main>
   );
 }

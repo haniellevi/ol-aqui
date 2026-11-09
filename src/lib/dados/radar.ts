@@ -78,14 +78,14 @@ export const acessoRadar = cache(async (): Promise<{ temAcesso: boolean; restant
 export async function meusPedidos(): Promise<MeuPedidoRadar[]> {
   const db = await createClient();
   const { data, error } = await db.rpc("meus_pedidos_radar");
-  if (error) throw new Error("Não foi possível carregar seus pedidos.");
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar seus pedidos.");
   return (data ?? []) as MeuPedidoRadar[];
 }
 
 export async function minhasPropostas(): Promise<MinhaPropostaRadar[]> {
   const db = await createClient();
   const { data, error } = await db.rpc("minhas_propostas_radar");
-  if (error) throw new Error("Não foi possível carregar suas propostas.");
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar suas propostas.");
   return (data ?? []) as MinhaPropostaRadar[];
 }
 
@@ -94,7 +94,7 @@ export const pedidoRadar = cache(async (id: string): Promise<PedidoRadarDetalhe 
   if (!ehUuid(id)) return null;
   const db = await createClient();
   const { data, error } = await db.rpc("radar_pedido", { p_id: id });
-  if (error) throw new Error("Não foi possível carregar este pedido.");
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar este pedido.");
   return (Array.isArray(data) ? data[0] : data) as PedidoRadarDetalhe | null ?? null;
 });
 
@@ -102,7 +102,7 @@ export async function propostasDoPedido(id: string): Promise<PropostaRecebida[]>
   if (!ehUuid(id)) return [];
   const db = await createClient();
   const { data, error } = await db.rpc("propostas_do_pedido", { p_pedido: id });
-  if (error) throw new Error("Não foi possível carregar as propostas.");
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar as propostas.");
   return (data ?? []) as PropostaRecebida[];
 }
 

@@ -10,6 +10,7 @@ import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { exigeCelularConfirmado } from "@/lib/dados/radar";
 import { traduzirErro } from "@/lib/erros";
 import { centavosDoTexto, ehUuid, whatsappDigitado } from "@/lib/formato";
+import { validarPedido, validarProposta, type EntradaPedido, type EntradaProposta } from "@/components/radar/validacao";
 import type {
   EnvioFotoProposta,
   ModoContato,
@@ -34,7 +35,11 @@ function mensagemDe(e: ErroBanco): { erro: string; campo?: string } {
   return { erro: t.mensagem, campo: t.campo };
 }
 
-const linkWa = (numero: string, texto: string) => `https://wa.me/${numero.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
+function linkWa(numero: unknown, texto: unknown): string | null {
+  if (typeof numero !== "string" || typeof texto !== "string") return null;
+  const digitos = numero.replace(/\D/g, "");
+  return /^55[1-9][0-9][0-9]{8,9}$/.test(digitos) ? `https://wa.me/${digitos}?text=${encodeURIComponent(texto)}` : null;
+}
 
 /** Celular confirmado: a fonte é o Clerk. Atualiza o perfil antes de o banco conferir. */
 async function atualizarCelularDoClerk() {
@@ -67,27 +72,11 @@ async function guardarWhatsappDigitado(userId: string, texto: string | undefined
   return error ? { erro: "Não conseguimos guardar seu WhatsApp. Tente de novo." } : null;
 }
 
-export async function criarPedido(entrada: {
-  chaveEnvio: string;
-  titulo: string;
-  detalhes?: string;
-  categoriaId?: string | null;
-  precoMin?: string;
-  precoMax?: string;
-  cidade: string;
-  modo: ModoContato;
-  prazoHoras?: number | null;
-  /** Só quando o celular não está confirmado e o painel não exige o código. */
-  whatsapp?: string;
-}): Promise<RespostaCriarPedido> {
+export async function criarPedido(entrada: EntradaPedido): Promise<RespostaCriarPedido> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: SEM_LOGIN };
-  if (!["whatsapp_direto", "propostas_prazo"].includes(entrada.modo)) return { ok: false, erro: "Escolha como quer receber as propostas." };
-  if (entrada.categoriaId && !ehUuid(entrada.categoriaId)) return { ok: false, erro: "Escolha uma categoria válida." };
-  if (!ehUuid(entrada.chaveEnvio)) return { ok: false, erro: "Atualize a página e tente novamente." };
-  for (const [valor, campo] of [[entrada.precoMin, "preco_min_centavos"], [entrada.precoMax, "preco_max_centavos"]]) {
-    if (valor?.trim() && centavosDoTexto(valor) === null) return { ok: false, erro: "Digite um preço válido.", campo };
-  }
+  const invalida = validarPedido(entrada);
+  if (invalida) return { ok: false, ...invalida };
   try {
     await atualizarCelularDoClerk();
   } catch {
@@ -113,6 +102,7 @@ export async function criarPedido(entrada: {
     return { ok: false, ...m, precisaCelular: m.campo === "celular" };
   }
   const r = data as { id: string; status: "aberto" | "em_analise" };
+  if (!ehUuid(r.id) || !["aberto", "em_analise"].includes(r.status)) return { ok: false, erro: "Não foi possível confirmar o pedido. Tente novamente." };
   revalidatePath("/radar");
   return { ok: true, id: r.id, status: r.status };
 }
@@ -130,20 +120,11 @@ export async function criarUrlFotoProposta(pedidoId: string, formato: "webp" | "
   return { ok: true, urlEnvio: data.signedUrl, urlPublica };
 }
 
-export async function enviarProposta(entrada: {
-  pedidoId: string;
-  anuncioId?: string | null;
-  fotoUrl?: string | null;
-  preco?: string;
-  mensagem?: string;
-}): Promise<RespostaProposta> {
+export async function enviarProposta(entrada: EntradaProposta): Promise<RespostaProposta> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: SEM_LOGIN };
-  if (!ehUuid(entrada.pedidoId)) return { ok: false, erro: "Pedido não encontrado." };
-
-  if (entrada.preco?.trim() && centavosDoTexto(entrada.preco) === null) {
-    return { ok: false, erro: "Digite um preço válido.", campo: "preco" };
-  }
+  const invalida = validarProposta(entrada);
+  if (invalida) return { ok: false, ...invalida };
   const db = await createClient();
   const { data, error } = await db
     .rpc("propor_radar", {
@@ -168,8 +149,9 @@ export async function enviarProposta(entrada: {
     ok: true, modo: "propostas_prazo", editada: data.editada,
     mensagem: "Sua proposta está disponível. O comprador já pode comparar as ofertas e escolher com quem falar.",
   };
-  if (!data.whatsapp) return { ok: false, erro: "O comprador ainda não confirmou o celular. Tente mais tarde." };
-  return { ok: true, modo: "whatsapp_direto", linkWhatsapp: linkWa(data.whatsapp, data.mensagem), editada: data.editada };
+  const linkWhatsapp = data.modo === "whatsapp_direto" ? linkWa(data.whatsapp, data.mensagem) : null;
+  if (!linkWhatsapp) return { ok: false, erro: "Não foi possível confirmar o contato do comprador. Atualize o pedido e tente novamente." };
+  return { ok: true, modo: "whatsapp_direto", linkWhatsapp, editada: data.editada };
 }
 
 /** Comprador escolhe uma proposta: o banco confere que o pedido é dele e devolve o WhatsApp da loja. */
@@ -181,7 +163,10 @@ export async function escolherProposta(propostaId: string): Promise<RespostaEsco
   const { data, error } = await db.rpc("escolher_proposta", { p_proposta_id: propostaId }).single<{ whatsapp: string; mensagem: string }>();
   if (error || !data?.whatsapp) return { ok: false, erro: mensagemDe(error).erro };
   revalidatePath("/radar/pedido/[id]", "page");
-  return { ok: true, linkWhatsapp: linkWa(data.whatsapp, data.mensagem) };
+  const linkWhatsapp = linkWa(data.whatsapp, data.mensagem);
+  if (!linkWhatsapp) return { ok: false, erro: "O contato da loja está indisponível. Tente novamente mais tarde." };
+  revalidatePath("/radar");
+  return { ok: true, linkWhatsapp };
 }
 
 /** "Já resolvi" ou "Cancelar pedido". */
@@ -190,9 +175,11 @@ export async function fecharPedido(pedidoId: string, motivo: "resolvido" | "canc
   if (!userId) return { ok: false, erro: SEM_LOGIN };
   if (!ehUuid(pedidoId) || (motivo !== "resolvido" && motivo !== "cancelado")) return { ok: false, erro: "Pedido não encontrado." };
   const db = await createClient();
-  const { error } = await db.rpc("fechar_pedido_radar", { p_pedido: pedidoId, p_motivo: motivo });
+  const { data, error } = await db.rpc("fechar_pedido_radar", { p_pedido: pedidoId, p_motivo: motivo });
   if (error) return { ok: false, erro: mensagemDe(error).erro };
+  if (data !== (motivo === "resolvido" ? "atendido" : "encerrado")) return { ok: false, erro: "Não foi possível confirmar o encerramento. Atualize o pedido e tente novamente." };
   revalidatePath(`/radar/pedido/${pedidoId}`);
+  revalidatePath(`/radar/${pedidoId}`);
   revalidatePath("/radar");
   return { ok: true, mensagem: motivo === "resolvido" ? "Que bom! Pedido marcado como resolvido." : "Pedido cancelado." };
 }

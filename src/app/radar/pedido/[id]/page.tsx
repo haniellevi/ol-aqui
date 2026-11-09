@@ -8,9 +8,10 @@ import { LINK_RADAR, linkPedidoRadarLoja, linkPedirRadar } from "@/lib/rotas";
 import { tempoRelativo } from "@/lib/formato";
 import { CLASSE_TOM, dataHoraCurta, faixaPreco, resumoPropostas, rotuloSituacao } from "@/components/radar/util";
 import { PropostasRecebidas } from "@/components/radar/propostas-recebidas";
+import { AtualizarRadar } from "@/components/radar/atualizar-radar";
 import { AcoesPedido } from "@/components/radar/acoes-pedido";
 
-export const metadata = { title: "Meu pedido · Radar OLAKI" };
+export const metadata = { title: "Meu pedido no Radar" };
 
 export default async function MeuPedidoPage({
   params,
@@ -43,7 +44,7 @@ export default async function MeuPedidoPage({
             <ShieldAlert className="mt-0.5 size-6 shrink-0" aria-hidden />
             <div className="flex flex-col gap-1">
               <p className="text-lg font-bold">Pedido recebido!</p>
-              <p className="text-base">A equipe vai dar uma olhada antes de mostrar para as lojas. É rapidinho.</p>
+              <p className="text-base">A equipe vai dar uma olhada antes de mostrar para as lojas. Você pode acompanhar a situação nesta página.</p>
             </div>
           </section>
         ) : (
@@ -53,7 +54,7 @@ export default async function MeuPedidoPage({
               <p className="text-lg font-bold">Pedido no ar!</p>
               <p className="text-base text-texto">
                 {modoPrazo
-                  ? "As lojas da região já podem mandar propostas. Avisamos você quando chegar uma."
+                  ? "As lojas da região já podem mandar propostas. As novas ofertas aparecem aqui e nas notificações da sua conta."
                   : "As lojas da região já podem te chamar no WhatsApp."}
               </p>
             </div>
@@ -62,8 +63,8 @@ export default async function MeuPedidoPage({
 
       <section className="flex flex-col gap-2 rounded-card bg-cartao p-4 shadow-1">
         <span className={`w-fit rounded-full px-2 py-0.5 text-[13px] font-semibold ${CLASSE_TOM[s.tom]}`}>{s.texto}</span>
-        <h1 className="text-xl font-bold leading-7">{pedido.titulo}</h1>
-        {pedido.detalhes && <p className="whitespace-pre-line text-base text-texto-suave">{pedido.detalhes}</p>}
+        <h1 className="break-words text-xl font-bold leading-7">{pedido.titulo}</h1>
+        {pedido.detalhes && <p className="whitespace-pre-line break-words text-base text-texto-suave">{pedido.detalhes}</p>}
         <p className="text-[15px] font-semibold">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
         <p className="flex flex-wrap items-center gap-x-2 text-sm text-texto-suave">
           {pedido.categoria_nome && <span>{pedido.categoria_nome} ·</span>}
@@ -109,9 +110,10 @@ export default async function MeuPedidoPage({
         </section>
       )}
 
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-bold">Ofertas recebidas</h2><AtualizarRadar /></div>
       <PropostasRecebidas propostas={propostas} podeEscolher={!["em_analise", "congelado"].includes(pedido.status) && !["cancelado", "moderacao"].includes(pedido.fechado_motivo ?? "")} modoPrazo={modoPrazo} />
 
-      {!fechado && <AcoesPedido pedidoId={pedido.id} />}
+      {!fechado && <AcoesPedido pedidoId={pedido.id} podeResolver={pedido.status === "aberto"} />}
     </main>
   );
 }

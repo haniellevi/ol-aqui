@@ -7,6 +7,8 @@ import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { criarUrlFotoProposta, enviarProposta } from "@/app/radar/actions";
 import { enviarFoto, reduzirFoto } from "@/lib/fotos";
+import { textoPrecoProposta as textoPreco } from "./util";
+import { validarProposta } from "./validacao";
 import { preco } from "@/lib/formato";
 import type { AnuncioParaProposta, MinhaPropostaNoPedido } from "@/lib/tipos-radar";
 
@@ -20,11 +22,9 @@ type Props = {
   anuncios: AnuncioParaProposta[];
   mensagemMax: number;
   minha: MinhaPropostaNoPedido | null;
-  /** Propostas grátis que sobram (null = sem limite ou já propus). */
+  /** Propostas disponíveis (null = sem limite ou já propus). */
   restantes: number | null;
 };
-
-const textoPreco = (centavos: number | null) => (centavos == null ? "" : String(Math.round(centavos / 100)));
 
 // Folha "Propor": escolher um anúncio no ar ou mandar uma foto, preço e mensagem curta.
 export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrirLogo, anuncios, mensagemMax, minha, restantes }: Props) {
@@ -40,18 +40,34 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
   const [enviando, iniciar] = useTransition();
   const [chamando, iniciarChamar] = useTransition();
   const [erroChamar, setErroChamar] = useState<string | null>(null);
+  const trava = useRef(false);
+  const fotoEmCurso = useRef(false);
+  const dialogo = useRef<HTMLDialogElement>(null);
+  const formulario = useRef<HTMLFormElement>(null);
+  const [linkContato, setLinkContato] = useState<string | null>(null);
   const arquivo = useRef<HTMLInputElement>(null);
   const fechar = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!aberta) return;
-    fechar.current?.focus();
-    const tecla = (e: KeyboardEvent) => e.key === "Escape" && setAberta(false);
-    window.addEventListener("keydown", tecla);
-    return () => window.removeEventListener("keydown", tecla);
+    if (aberta) {
+      dialogo.current?.showModal();
+      fechar.current?.focus();
+    } else dialogo.current?.close();
   }, [aberta]);
 
+  useEffect(() => {
+    if (!erro) return;
+    const campo = erro.campo === "preco_centavos" ? "preco" : erro.campo;
+    const alvo = campo ? formulario.current?.elements.namedItem(campo) : null;
+    if (alvo instanceof HTMLElement) alvo.focus();
+    else formulario.current?.querySelector<HTMLElement>('[role="alert"]')?.focus();
+  }, [erro]);
+
+  const ocupado = enviando || enviandoFoto || chamando;
+
   function escolherAnuncio(a: AnuncioParaProposta) {
+    if (trava.current || fotoEmCurso.current) return;
+    setErro(null);
     const novo = anuncioId === a.id ? null : a.id;
     setAnuncioId(novo);
     if (novo) {
@@ -63,7 +79,8 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
   async function aoEscolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     e.target.value = "";
-    if (!f) return;
+    if (!f || trava.current || fotoEmCurso.current) return;
+    fotoEmCurso.current = true;
     setErro(null);
     setEnviandoFoto(true);
     try {
@@ -76,15 +93,20 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
     } catch (falha) {
       setErro({ texto: falha instanceof Error && falha.message ? falha.message : "Não deu para usar esta foto. Tente outra.", campo: "foto" });
     } finally {
+      fotoEmCurso.current = false;
       setEnviandoFoto(false);
     }
   }
 
-  function enviar(e: React.FormEvent) {
-    e.preventDefault();
+  async function enviar() {
+    if (trava.current || fotoEmCurso.current) return;
+    if (erro?.campo === "foto") return;
+    const invalida = validarProposta({ pedidoId, anuncioId, fotoUrl, preco: valor, mensagem });
+    if (invalida) return setErro({ texto: invalida.erro, campo: invalida.campo });
     setErro(null);
     if (modoPrazo && !valor.trim()) return setErro({ texto: "Diga o preço da sua oferta.", campo: "preco" });
     if (modoPrazo && !anuncioId && !fotoUrl) return setErro({ texto: "Escolha um anúncio ou mande uma foto.", campo: "foto" });
+    trava.current = true;
     // No modo WhatsApp a conversa abre numa aba nova: abrimos já no toque (o iPhone bloqueia depois).
     const aba = modoPrazo || minha ? null : window.open("", "_blank");
     if (aba) aba.opener = null;
@@ -97,8 +119,8 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
           return;
         }
         if (r.modo === "whatsapp_direto") {
+          setLinkContato(r.linkWhatsapp);
           if (aba) aba.location.href = r.linkWhatsapp;
-          else if (!r.editada) window.location.href = r.linkWhatsapp;
           setSucesso(r.editada ? "Proposta atualizada." : "Pronto! Continue a conversa no WhatsApp.");
         } else {
           setSucesso(r.editada ? "Proposta atualizada." : r.mensagem);
@@ -108,12 +130,14 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
       } catch {
         aba?.close();
         setErro({ texto: "Não conseguimos confirmar o envio. Tente novamente." });
-      }
+      } finally { trava.current = false; }
     });
   }
 
   // Abre de novo a conversa com o comprador (o banco confere tudo de novo e não muda a proposta).
   function chamarDeNovo() {
+    if (trava.current || fotoEmCurso.current) return;
+    trava.current = true;
     setErroChamar(null);
     const aba = window.open("", "_blank");
     if (aba) aba.opener = null;
@@ -125,12 +149,12 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
           setErroChamar(r.ok ? "Não deu para abrir o WhatsApp. Tente de novo." : r.erro);
           return;
         }
+        setLinkContato(r.linkWhatsapp);
         if (aba) aba.location.href = r.linkWhatsapp;
-        else window.location.href = r.linkWhatsapp;
       } catch {
         aba?.close();
         setErroChamar("Não foi possível abrir o contato. Tente novamente.");
-      }
+      } finally { trava.current = false; }
     });
   }
 
@@ -145,6 +169,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
           {sucesso}
         </p>
       )}
+      {podeChamar && linkContato && <Botao href={linkContato} target="_blank" rel="noopener noreferrer" variante="whatsapp" larguraTotal>Continuar no WhatsApp</Botao>}
       {podeChamar && (
         <div className="flex flex-col gap-2">
           <Botao
@@ -152,13 +177,13 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
             variante="whatsapp"
             icone={<MessageCircle />}
             onClick={chamarDeNovo}
-            carregando={chamando}
+            disabled={ocupado} carregando={chamando}
             textoCarregando="Abrindo o WhatsApp..."
           >
             Chamar no WhatsApp de novo
           </Botao>
           {erroChamar && (
-            <p role="alert" className="text-center text-sm font-semibold text-perigo">
+            <p role="alert" tabIndex={-1} className="text-center text-sm font-semibold text-perigo">
               {erroChamar}
             </p>
           )}
@@ -166,26 +191,21 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
       )}
       {podeEditar && (
         <div className="flex flex-col gap-2">
-          <Botao larguraTotal variante={minha ? "secundario" : "primario"} onClick={() => setAberta(true)} icone={minha ? <Pencil /> : <Send />}>
+          <Botao larguraTotal variante={minha ? "secundario" : "primario"} disabled={ocupado} onClick={() => { setErro(null); setAberta(true); }} icone={minha ? <Pencil /> : <Send />}>
             {minha ? "Mudar minha proposta" : "Propor Produto"}
           </Botao>
           {!minha && restantes != null && (
             <p className="text-center text-sm text-texto-suave">
-              Você tem {restantes} {restantes === 1 ? "proposta grátis" : "propostas grátis"}.
+              Você tem {restantes} {restantes === 1 ? "proposta disponível" : "propostas disponíveis"}.
             </p>
           )}
         </div>
       )}
 
-      {aberta && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center" onClick={() => !enviando && setAberta(false)}>
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="titulo-propor"
-            className="flex max-h-[92dvh] w-full max-w-xl flex-col overflow-y-auto rounded-t-card bg-cartao p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:rounded-card"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <dialog ref={dialogo} aria-labelledby="titulo-propor"
+        onCancel={(e) => { if (trava.current || fotoEmCurso.current) e.preventDefault(); }}
+        onClose={() => setAberta(false)}
+        className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%_-_2rem)] max-w-xl overflow-y-auto rounded-card bg-cartao p-4 text-texto shadow-2 backdrop:bg-beringela/50">
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 id="titulo-propor" className="text-lg font-bold">
                 {minha ? "Mudar minha proposta" : "Sua proposta"}
@@ -193,7 +213,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
               <button
                 ref={fechar}
                 type="button"
-                onClick={() => setAberta(false)}
+                disabled={ocupado} onClick={() => setAberta(false)}
                 className="grid size-12 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                 aria-label="Fechar"
               >
@@ -201,14 +221,15 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
               </button>
             </div>
 
-            <form onSubmit={enviar} className="flex flex-col gap-5" noValidate>
-              <fieldset className="flex flex-col gap-2">
-                <legend className="mb-2 text-base font-semibold">
+            <form ref={formulario} action={enviar} noValidate>
+              <fieldset disabled={ocupado} className="flex min-w-0 flex-col gap-5">
+              <fieldset className="flex min-w-0 flex-col gap-2">
+                <legend className="mb-2 max-w-full text-base font-semibold">
                   O que você oferece? {!modoPrazo && <span className="font-normal text-texto-suave">(opcional)</span>}
                 </legend>
                 {anuncios.length > 0 && (
-                  <ul className="flex flex-col gap-2">
-                    {anuncios.slice(0, 20).map((a) => {
+                  <ul className="flex max-h-64 flex-col gap-2 overflow-y-auto">
+                    {anuncios.map((a) => {
                       const ativo = anuncioId === a.id;
                       return (
                         <li key={a.id}>
@@ -239,17 +260,17 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                     })}
                   </ul>
                 )}
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   {fotoUrl && (
                     // eslint-disable-next-line @next/next/no-img-element -- foto enviada agora
                     <img src={fotoUrl} alt="Foto da oferta" width={64} height={64} className="size-16 shrink-0 rounded-campo bg-borda object-cover" />
                   )}
                   <Botao
                     variante="secundario"
-                    className="flex-1"
+                    className="min-w-0 flex-1 whitespace-normal"
                     icone={<ImagePlus />}
                     onClick={() => arquivo.current?.click()}
-                    disabled={enviandoFoto}
+                    disabled={ocupado}
                     carregando={enviandoFoto}
                     textoCarregando="Enviando foto..."
                   >
@@ -258,7 +279,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                   <input ref={arquivo} type="file" accept="image/*" className="sr-only" tabIndex={-1} aria-hidden onChange={aoEscolherFoto} />
                 </div>
                 {erroCampo("foto") && (
-                  <p role="alert" className="text-sm font-semibold text-perigo">
+                  <p role="alert" tabIndex={-1} className="text-sm font-semibold text-perigo">
                     {erroCampo("foto")}
                   </p>
                 )}
@@ -289,7 +310,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
               />
 
               {erroGeral && (
-                <p role="alert" className="rounded-card bg-perigo-fundo p-3 text-base font-semibold text-perigo">
+                <p role="alert" tabIndex={-1} className="rounded-card bg-perigo-fundo p-3 text-base font-semibold text-perigo">
                   {erroGeral}
                 </p>
               )}
@@ -299,16 +320,15 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                 larguraTotal
                 variante={modoPrazo ? "primario" : "whatsapp"}
                 carregando={enviando}
-                disabled={enviandoFoto}
+                disabled={ocupado}
                 textoCarregando="Enviando..."
                 icone={<Send />}
               >
                 {minha ? "Salvar mudanças" : modoPrazo ? "Mandar proposta" : "Propor e chamar no WhatsApp"}
               </Botao>
+              </fieldset>
             </form>
-          </div>
-        </div>
-      )}
+      </dialog>
     </>
   );
 }

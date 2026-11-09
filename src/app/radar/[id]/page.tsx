@@ -13,7 +13,7 @@ import { dataHoraCurta, faixaPreco } from "@/components/radar/util";
 import { FolhaPropor } from "@/components/radar/folha-propor";
 import type { PlanoRadar } from "@/lib/tipos-radar";
 
-export const metadata = { title: "Pedido no Radar · OLAKI" };
+export const metadata = { title: "Pedido no Radar" };
 
 export default async function PedidoLojaPage({
   params,
@@ -46,6 +46,7 @@ export default async function PedidoLojaPage({
   if (pedido.sou_comprador) redirect(linkMeuPedidoRadar(id));
 
   const [conta, minha, acesso, planos] = await Promise.all([meuPerfilEVitrine(), minhaPropostaNoPedido(id), acessoRadar(), planosComRadar()]);
+  if (!conta) throw new Error("Não foi possível carregar sua conta. Tente novamente.");
   const modoPrazo = pedido.modo_contato === "propostas_prazo";
   const aberto = pedido.situacao === "aberto";
   const cheio = pedido.total_propostas >= pedido.max_propostas;
@@ -70,7 +71,7 @@ export default async function PedidoLojaPage({
     );
   } else if (!aberto && !minha) {
     rodape = <p className="rounded-card bg-fundo p-4 text-center text-base text-texto-suave">Este pedido não recebe mais propostas.</p>;
-  } else if (!minha && !temCredito) {
+  } else if (!acesso.temAcesso || (!minha && !temCredito)) {
     rodape = <Planos planos={planos} semCredito={acesso.temAcesso} />;
   } else if (!minha && cheio) {
     rodape = <p className="rounded-card bg-fundo p-4 text-center text-base text-texto-suave">Este pedido já recebeu todas as propostas.</p>;
@@ -100,9 +101,9 @@ export default async function PedidoLojaPage({
           <span>{pedido.cidade} ·</span>
           <span>{tempoRelativo(pedido.criado_em)}</span>
         </p>
-        <h1 className="text-xl font-bold leading-7">{pedido.titulo}</h1>
+        <h1 className="break-words text-xl font-bold leading-7">{pedido.titulo}</h1>
         {pedido.detalhes ? (
-          <p className="whitespace-pre-line text-base text-texto">{pedido.detalhes}</p>
+          <p className="whitespace-pre-line break-words text-base text-texto">{pedido.detalhes}</p>
         ) : (
           !pedido.tem_acesso && (
             <p className="inline-flex items-center gap-1.5 text-[15px] text-texto-suave">
@@ -148,11 +149,11 @@ export default async function PedidoLojaPage({
           ) : minha.escolhida ? (
             <p className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-verde-escuro">
               <Star className="size-4" aria-hidden />
-              Escolhida! O comprador vai te chamar no WhatsApp.
+              O comprador escolheu sua proposta para conversar.
             </p>
           ) : null}
           <p className="text-lg font-bold text-beringela">{minha.preco_centavos != null ? preco(minha.preco_centavos) : "Preço a combinar"}</p>
-          {minha.mensagem && <p className="whitespace-pre-line text-[15px]">{minha.mensagem}</p>}
+          {minha.mensagem && <p className="whitespace-pre-line break-words text-[15px]">{minha.mensagem}</p>}
         </section>
       )}
 
@@ -164,7 +165,7 @@ export default async function PedidoLojaPage({
 function Planos({ planos, semCredito }: { planos: PlanoRadar[]; semCredito: boolean }) {
   return (
     <section className="flex flex-col gap-3 rounded-card bg-beringela p-4 text-white">
-      <p className="text-lg font-bold">{semCredito ? "Suas propostas grátis acabaram" : "Este cliente já quer comprar"}</p>
+      <p className="text-lg font-bold">{semCredito ? "Suas propostas disponíveis acabaram" : "Este cliente já quer comprar"}</p>
       <p className="text-base text-white/85">Com um plano com Radar você vê os detalhes e manda sua oferta antes da concorrência.</p>
       {planos.length > 0 && (
         <ul className="flex flex-col gap-2">
