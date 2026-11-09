@@ -1,5 +1,5 @@
 "use server";
-// Aceite dos termos e da privacidade (faixa "Atualizamos os termos" e /entrar/perfil).
+// Aceite dos termos e da privacidade (faixa "Atualizamos os termos" e /completar-perfil).
 // Usa a sessão da pessoa: a função do banco confere quem é e se as versões ainda estão no ar.
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";

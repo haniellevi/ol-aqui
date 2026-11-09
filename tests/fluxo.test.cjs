@@ -119,13 +119,13 @@ test('login e cadastro preservam destino passando pela conclusão de perfil',asy
     const tela=await pagina.default({searchParams:Promise.resolve({redirect_url:valor})});
     const login=tela.props.children.find(e=>e.type==='ClerkSignIn');
     const destino=new URL(login.props.forceRedirectUrl,'https://teste.local');
-    assert.equal(destino.pathname,'/entrar/perfil');
+    assert.equal(destino.pathname,'/completar-perfil');
     assert.equal(destino.searchParams.get('redirect_url'),new URL(valor,'https://teste.local').pathname+new URL(valor,'https://teste.local').search);
     assert.equal(login.props.signUpForceRedirectUrl,login.props.forceRedirectUrl);
   }
 });
 test('perfil sem sessão mantém o destino original ao pedir login',async()=>{
-  const pagina=carregar('src/app/entrar/perfil/page.tsx',{
+  const pagina=carregar('src/app/completar-perfil/page.tsx',{
     'next/image':{},'next/link':{},'lucide-react':{},
     'next/navigation':{redirect:(url)=>{throw Error(url);}},
     '@clerk/nextjs/server':{auth:async()=>({userId:null})},

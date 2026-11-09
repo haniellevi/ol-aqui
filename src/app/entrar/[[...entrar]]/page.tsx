@@ -7,7 +7,7 @@ import { caminhoInterno } from "@/lib/caminho-seguro";
 export const metadata = { title: "Entrar" };
 
 // Tela de login do Clerk: Google ou celular com código (configurados no painel do Clerk).
-// withSignUp junta "entrar" e "criar conta" no mesmo lugar. Conta nova passa por /entrar/perfil
+// withSignUp junta "entrar" e "criar conta" no mesmo lugar. Conta nova passa por /completar-perfil
 // (aceite dos termos e da privacidade na versão que está no ar) e depois volta para onde estava.
 // "Force" porque quase toda entrada chega com redirect_url (auth.protect, anúncio, planos, Aki), e
 // com redirect_url o Clerk ignoraria o "Fallback".
@@ -23,7 +23,7 @@ function voltarPara(v: string | string[] | undefined): string {
   } catch {
     caminho = null;
   }
-  return caminho && !caminho.startsWith("/entrar") ? caminho : "/";
+  return caminho && !caminho.startsWith("/entrar") && !caminho.startsWith(LINK_ENTRAR_PERFIL) ? caminho : "/";
 }
 
 export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ redirect_url?: string | string[] }> }) {
