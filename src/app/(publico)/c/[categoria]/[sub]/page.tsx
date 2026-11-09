@@ -29,6 +29,6 @@ export default async function PaginaSubcategoria({ params, searchParams }: Props
   const q = (Array.isArray(sp.q) ? sp.q[0] : sp.q) ?? "";
 
   return (
-    <Listagem caminho={certo} sp={sp} categoria={achada} categoriaPeloEndereco topo={<CabecalhoCategoria achada={achada} q={q} />} />
+    <Listagem caminho={certo} sp={sp} categoria={achada} categoriaPeloEndereco topo={<CabecalhoCategoria achada={achada} q={q} sp={sp} />} />
   );
 }

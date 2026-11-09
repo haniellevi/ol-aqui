@@ -5,13 +5,18 @@ import { CirculoCategoria } from "@/components/ui/icone-categoria";
 import { CampoBusca } from "@/components/busca/campo-busca";
 import { linkCategoria } from "@/lib/formato";
 import type { CategoriaEncontrada } from "@/lib/dados/categorias";
+import { comParametros, manterFiltros, type ParametrosUrl } from "@/components/busca/parametros";
 
 // Topo da lista de categoria (T4): caminho (Início › Veículos › Motos), título,
 // busca dentro da categoria e as subcategorias em chips (rolagem para o lado).
-export function CabecalhoCategoria({ achada, q }: { achada: CategoriaEncontrada; q?: string }) {
+export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEncontrada; q?: string; sp?: ParametrosUrl }) {
   const { categoria, pai } = achada;
   const raiz = pai ?? { ...categoria, filhas: achada.filhas };
   const irmas = raiz.filhas;
+  const caminho = linkCategoria(raiz.slug, pai ? categoria.slug : null);
+  // Mudar de tipo preserva a busca geral, mas remove atributos próprios da categoria anterior.
+  const filtrosGerais = Object.fromEntries(Object.entries(manterFiltros(sp)).filter(([k]) => k !== "categoria" && !k.startsWith("c_")));
+  const linkTipo = (slug?: string) => comParametros(linkCategoria(raiz.slug, slug), { ...filtrosGerais, q });
 
   return (
     <div className="flex flex-col gap-3">
@@ -38,19 +43,19 @@ export function CabecalhoCategoria({ achada, q }: { achada: CategoriaEncontrada;
         <h1 className="text-[22px] font-semibold leading-7">{categoria.nome}</h1>
       </div>
 
-      <CampoBusca valor={q} manter={{ categoria: categoria.slug }} id="busca-categoria" />
+      <CampoBusca valor={q} manter={sp} caminho={caminho} id="busca-categoria" />
 
       {irmas.length > 0 && (
         <nav aria-label={`Tipos de ${raiz.nome}`} className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none]">
           <ul className="flex gap-2 py-1">
             <li>
-              <Chip href={linkCategoria(raiz.slug)} ativo={!pai}>
+              <Chip href={linkTipo()} ativo={!pai}>
                 Tudo
               </Chip>
             </li>
             {irmas.map((f) => (
               <li key={f.id}>
-                <Chip href={linkCategoria(raiz.slug, f.slug)} ativo={f.id === categoria.id}>
+                <Chip href={linkTipo(f.slug)} ativo={f.id === categoria.id}>
                   {f.nome}
                 </Chip>
               </li>

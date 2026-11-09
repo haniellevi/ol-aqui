@@ -39,6 +39,8 @@ try:
     print('PASS: texto do Radar atualizado sem sobrescrever personalização do painel', flush=True)
     checked(sql((root/'supabase/testes/150_fluxo_seguro.sql').read_text()))
     print('PASS: criação, repetição, RLS, regiões, proposta, escolha, encerramento e contato', flush=True)
+    checked(sql((root/'supabase/testes/160_busca_filtros.sql').read_text()))
+    print('PASS: busca combina filtros, ordena, pagina e isola região e status', flush=True)
     def propose(i):
         return sql(f"begin; set role authenticated; set request.jwt.claim.role='authenticated'; set request.jwt.claim.sub='user_cota'; select * from revelar_contato_radar('20000000-0000-4000-a000-00000000000{i}',null,'Oferta concorrente',10000); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:

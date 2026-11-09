@@ -28,7 +28,6 @@ export default async function PaginaBusca({ searchParams }: Props) {
   const q = termo(sp);
   const slug = (Array.isArray(sp.categoria) ? sp.categoria[0] : sp.categoria)?.trim().toLowerCase() ?? "";
   const categoria = slug ? await categoriaPorSlug(slug) : null;
-  const cidade = (Array.isArray(sp.cidade) ? sp.cidade[0] : sp.cidade) ?? null;
 
   return (
     <Listagem
@@ -39,7 +38,8 @@ export default async function PaginaBusca({ searchParams }: Props) {
       topo={
         <>
           <h1 className="text-[22px] font-semibold leading-7">{q ? `Resultados para “${q}”` : "Buscar anúncios"}</h1>
-          <CampoBusca valor={q} manter={{ categoria: categoria?.categoria.slug, cidade }} autoFocus={!q && !categoria} />
+          <p className="text-base text-texto-suave">Combine categoria, cidade e preço para encontrar o que precisa.</p>
+          <CampoBusca valor={q} manter={sp} />
         </>
       }
     />

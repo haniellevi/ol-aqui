@@ -32,11 +32,13 @@ export async function Listagem({
 }) {
   const campos = categoria && !categoria.filhas.length ? categoria.categoria.campos.filter((c) => c.filtro) : [];
   const estado = lerEstadoBusca(sp, campos, !categoriaPeloEndereco);
+  if (estado.categoria && !categoria) estado.erros.categoria = "Essa categoria não está disponível. Escolha outra categoria.";
   const [regiao, categorias] = await Promise.all([regiaoAtual(), categoriaPeloEndereco ? null : listarCategorias()]);
   const cidades = regiao ? await listarCidades(regiao.id) : [];
   const slugCategoria = categoria?.categoria.slug ?? null;
 
-  const { anuncios, total } = await buscarAnuncios({
+  const temErro = Object.keys(estado.erros).length > 0;
+  const { anuncios, total } = temErro ? { anuncios: [], total: 0 } : await buscarAnuncios({
     q: estado.q,
     categoria: slugCategoria,
     cidade: estado.cidade,
@@ -49,21 +51,20 @@ export async function Listagem({
   });
 
   // Página além da última (link antigo, anúncios vendidos): volta para a 1ª página.
-  if (!anuncios.length && estado.pagina > 1) redirect(comParametros(caminho, sp));
+  if (!temErro && !anuncios.length && estado.pagina > 1) redirect(comParametros(caminho, sp));
 
   // Nada achado: procura algo parecido (sem filtros; depois em outras regiões).
   let parecidos: AnuncioCard[] = [];
   let tituloParecidos = "";
-  const temFiltro = estado.quantos > 0 || (!!slugCategoria && categoriaPeloEndereco);
-  if (total === 0 && estado.pagina === 1) {
-    if (estado.q && temFiltro) {
-      parecidos = (await buscarAnuncios({ q: estado.q, limite: 10 })).anuncios;
-      tituloParecidos = `“${estado.q}” em outras categorias e cidades`;
-    }
-    if (!parecidos.length && estado.quantos > 0) {
+  if (!temErro && total === 0 && estado.pagina === 1) {
+    if (estado.cidade || estado.precoMin != null || estado.precoMax != null || Object.keys(estado.filtros).length) {
       // mesma região, mesma busca e categoria, sem cidade/preço/campos
       parecidos = (await buscarAnuncios({ q: estado.q, categoria: slugCategoria, limite: 10 })).anuncios;
       tituloParecidos = "Sem esses filtros";
+    }
+    if (!parecidos.length && estado.q && slugCategoria) {
+      parecidos = (await buscarAnuncios({ q: estado.q, limite: 10 })).anuncios;
+      tituloParecidos = `“${estado.q}” em outras categorias e cidades`;
     }
     // Aqui a região do visitante já não tem nada com essa busca/categoria (nem sem filtros):
     // o que vier sem região é mesmo de outras regiões.
