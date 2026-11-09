@@ -1,6 +1,8 @@
 // Corta a foto da fachada no tamanho do banner (3 por 1) no próprio aparelho, antes de enviar.
 // Só roda no navegador. Sai em WebP (ou JPEG quando o navegador não faz WebP), 1500 x 500.
 
+import { MAX_FOTO_ORIGINAL } from "@/lib/fotos";
+
 export const BANNER_LARGURA = 1500;
 export const BANNER_ALTURA = 500;
 export const BANNER_PROPORCAO = BANNER_LARGURA / BANNER_ALTURA; // 3
@@ -9,6 +11,7 @@ export type FotoAberta = { url: string; largura: number; altura: number; liberar
 
 /** Abre o arquivo para a prévia do corte (respeita a rotação da câmera). */
 export async function abrirFoto(arquivo: Blob): Promise<FotoAberta> {
+  if (!arquivo.size || arquivo.size > MAX_FOTO_ORIGINAL) throw new Error("Escolha uma foto de até 20 MB que não esteja vazia.");
   const url = URL.createObjectURL(arquivo);
   try {
     const img = new Image();

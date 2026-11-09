@@ -38,7 +38,15 @@ export function FormBanner({
   /** "Disponível no Slim e no Full" (da tabela de planos). */
   disponivelFoto: string | null;
 }) {
-  const [estado, acao, salvando] = useActionState<EstadoVitrine, FormData>(salvarBanner, null);
+  const [mostrarSucesso, setMostrarSucesso] = useState(false);
+  const [estado, acao, salvando] = useActionState<EstadoVitrine, FormData>(async (anterior, form) => {
+    setMostrarSucesso(true);
+    try {
+      return await salvarBanner(anterior, form);
+    } catch {
+      return { erro: "Confira a conexão e tente salvar a capa de novo." };
+    }
+  }, null);
   const [tipo, setTipo] = useState<BannerTipo>(podeFoto ? inicial.tipo : "modelo");
   const [url, setUrl] = useState(inicial.url ?? "");
   const [modelo, setModelo] = useState<BannerModelo>(inicial.modelo);
@@ -51,6 +59,7 @@ export function FormBanner({
   const [posicao, setPosicao] = useState(0.5);
   const [enviando, setEnviando] = useState(false);
   const [erroFoto, setErroFoto] = useState<string | null>(null);
+  const emCurso = useRef(false);
   const pendente = useRef<string | null>(null); // foto enviada e ainda não salva
 
   useEffect(() => () => foto?.liberar(), [foto]);
@@ -59,7 +68,9 @@ export function FormBanner({
   }, [estado]);
 
   async function escolher(arquivo: File | undefined) {
-    if (!arquivo) return;
+    if (!arquivo || salvando || emCurso.current) return;
+    emCurso.current = true;
+    setEnviando(true);
     setErroFoto(null);
     try {
       const aberta = await abrirFoto(arquivo);
@@ -68,12 +79,15 @@ export function FormBanner({
     } catch (e) {
       setErroFoto(e instanceof Error ? e.message : "Essa foto não abriu. Tente outra.");
     } finally {
+      emCurso.current = false;
+      setEnviando(false);
       if (entrada.current) entrada.current.value = "";
     }
   }
 
   async function usarFoto() {
-    if (!foto) return;
+    if (!foto || salvando || emCurso.current) return;
+    emCurso.current = true;
     setErroFoto(null);
     setEnviando(true);
     try {
@@ -82,7 +96,7 @@ export function FormBanner({
       if (!envio.ok) throw new Error(envio.erro.mensagem);
       const foi = await enviarFoto(cortada.blob, envio.dados.urlEnvio);
       if (!foi) throw new Error("Não deu para enviar a foto. Confira a internet e tente de novo.");
-      if (pendente.current) void descartarFotoBanner(pendente.current);
+      if (pendente.current) void descartarFotoBanner(pendente.current).catch(() => undefined);
       pendente.current = envio.dados.urlPublica;
       setUrl(envio.dados.urlPublica);
       setTipo("foto");
@@ -90,6 +104,7 @@ export function FormBanner({
     } catch (e) {
       setErroFoto(e instanceof Error && e.message ? e.message : "Não deu para usar esta foto. Tente outra.");
     } finally {
+      emCurso.current = false;
       setEnviando(false);
     }
   }
@@ -99,7 +114,13 @@ export function FormBanner({
   const erroCampo = estado?.campos?.banner ?? estado?.campos?.banner_cor;
 
   return (
-    <form action={acao} className="flex flex-col gap-5" noValidate>
+    <form
+      action={acao}
+      onReset={(e) => e.preventDefault()}
+      onChangeCapture={() => setMostrarSucesso(false)}
+      onClickCapture={(e) => { if ((e.target as HTMLElement).closest('button[type="button"]')) setMostrarSucesso(false); }}
+      className="flex flex-col gap-5" noValidate
+    >
       <input type="hidden" name="banner_tipo" value={tipo} />
       {/* a foto fica guardada mesmo com o modelo escolhido (plano menor não apaga nada) */}
       <input type="hidden" name="banner_url" value={url} />
@@ -108,7 +129,7 @@ export function FormBanner({
 
       <div aria-live="polite">
         {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
-        {estado?.ok && <Aviso tipo="ok">Banner salvo. Sua vitrine já mostra o novo banner.</Aviso>}
+        {mostrarSucesso && !salvando && estado?.ok && <Aviso tipo="ok">Capa da loja salva.</Aviso>}
       </div>
 
       <section aria-labelledby="titulo-previa" className="flex flex-col gap-2">
@@ -121,7 +142,7 @@ export function FormBanner({
       </section>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-base font-semibold">Tipo de banner</legend>
+        <legend className="mb-2 text-base font-semibold">Tipo de capa</legend>
         <div className="flex flex-wrap gap-2">
           <Chip ativo={tipo === "modelo"} onClick={() => setTipo("modelo")} disabled={ocupado}>
             Modelo pronto
@@ -225,7 +246,7 @@ export function FormBanner({
           ) : (
             <>
               <p className="text-base text-texto-suave">
-                Tire uma foto de frente, de dia, com o nome da loja aparecendo. O OLAKI corta no tamanho certo.
+                Escolha uma foto de até 20 MB. Ajuste o corte para destacar a fachada ou a identidade da loja.
               </p>
               <input
                 ref={entrada}
@@ -252,6 +273,8 @@ export function FormBanner({
         </section>
       )}
 
+      {estado?.erro && <p role="alert" className="text-sm font-semibold text-perigo">{estado.erro}</p>}
+      <p className="text-sm text-texto-suave">A capa só muda na vitrine depois de salvar. Escolher um modelo mantém sua foto guardada.</p>
       <Botao
         type="submit"
         larguraTotal
@@ -260,7 +283,7 @@ export function FormBanner({
         textoCarregando="Salvando..."
         disabled={enviando || !!foto || (tipo === "foto" && (!podeFoto || !url))}
       >
-        Salvar banner
+        Salvar capa
       </Botao>
     </form>
   );

@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState, useId, useRef, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { reduzirFoto, enviarFoto } from "@/lib/fotos";
-import { prepararEnvioImagemLoja, salvarLoja, type EstadoLojaConta } from "@/app/(conta)/minha-conta/loja/actions";
+import { prepararEnvioImagemLoja, salvarLoja, descartarLogo, type EstadoLojaConta } from "@/app/(conta)/minha-conta/loja/actions";
 import { Seletor } from "./seletor";
 import { Aviso } from "./aviso";
 
@@ -34,7 +34,25 @@ export type DadosLoja = {
 };
 
 export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { nome: string; uf: string }[] }) {
-  const [estado, acao, enviando] = useActionState<EstadoLojaConta, FormData>(salvarLoja, null);
+  const [mostrarSucesso, setMostrarSucesso] = useState(false);
+  const [estado, acao, enviando] = useActionState<EstadoLojaConta, FormData>(async (anterior, form) => {
+    setMostrarSucesso(true);
+    try {
+      return await salvarLoja(anterior, form);
+    } catch {
+      return { erro: "Confira a conexão e tente salvar de novo. Seus dados continuam preenchidos." };
+    }
+  }, null);
+  const [nome, setNome] = useState(loja.nome);
+  const [cidade, setCidade] = useState(loja.cidade);
+  const [bairro, setBairro] = useState(loja.bairro ?? "");
+  const pendente = useRef<string | null>(null);
+  useEffect(() => { if (estado?.ok) pendente.current = null; }, [estado]);
+  function mudarLogo(url: string) {
+    if (pendente.current && pendente.current !== url) void descartarLogo(pendente.current).catch(() => undefined);
+    pendente.current = url || null;
+    setLogo(url);
+  }
   const [fone, setFone] = useState(mascaraFone(loja.whatsapp ?? ""));
   const [logo, setLogo] = useState(loja.logo_url ?? "");
   const [subindo, setSubindo] = useState<"logo" | null>(null);
@@ -42,20 +60,27 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
   const cidadeFora = loja.cidade && !cidades.some((c) => c.nome === loja.cidade);
 
   return (
-    <form action={acao} className="flex flex-col gap-5" noValidate>
+    <form
+      action={acao}
+      onReset={(e) => e.preventDefault()}
+      onChangeCapture={() => setMostrarSucesso(false)}
+      onClickCapture={(e) => { if ((e.target as HTMLElement).closest('button[type="button"]')) setMostrarSucesso(false); }}
+      className="flex flex-col gap-5" noValidate
+    >
       <div aria-live="polite">
         {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
-        {estado?.ok && <Aviso tipo="ok">Loja salva. Sua vitrine já mostra as mudanças.</Aviso>}
+        {mostrarSucesso && !enviando && estado?.ok && <Aviso tipo="ok">Dados da loja salvos.</Aviso>}
       </div>
 
+      <fieldset disabled={enviando || subindo !== null} className="flex min-w-0 flex-col gap-5">
       <section aria-label="Logo" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
         <EnvioImagem
           qual="logo"
           rotulo="Logo"
-          dica="Imagem quadrada fica melhor."
+          dica="Use uma imagem quadrada de até 20 MB. A troca ou remoção só aparece na vitrine depois de salvar."
           url={logo}
-          aoMudar={setLogo}
-          ocupado={subindo !== null}
+          aoMudar={mudarLogo}
+          ocupado={enviando || subindo !== null}
           aoSubir={setSubindo}
           erro={campos.logo_url}
         />
@@ -63,7 +88,7 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
       </section>
 
       <section aria-label="Dados da loja" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
-        <Campo rotulo="Nome da loja" name="nome" defaultValue={loja.nome} required minLength={2} maxLength={80} erro={campos.nome} />
+        <Campo rotulo="Nome da loja" name="nome" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={80} erro={campos.nome} />
         <Campo
           rotulo="WhatsApp da loja"
           name="whatsapp"
@@ -73,11 +98,11 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
           placeholder="(89) 99999-0000"
           value={fone}
           onChange={(e) => setFone(mascaraFone(e.target.value))}
-          dica="É para este número que os clientes vão chamar."
+          dica="Número público para receber clientes. Se deixar vazio, a vitrine usa o WhatsApp confirmado da sua conta, quando houver."
           erro={campos.whatsapp}
         />
         {cidades.length > 0 ? (
-          <Seletor rotulo="Cidade" name="cidade" defaultValue={loja.cidade} erro={campos.cidade}>
+          <Seletor rotulo="Cidade" name="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} erro={campos.cidade}>
             {cidadeFora && <option value={loja.cidade}>{loja.cidade}</option>}
             {cidades.map((c) => (
               <option key={`${c.nome}-${c.uf}`} value={c.nome}>
@@ -86,11 +111,13 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
             ))}
           </Seletor>
         ) : (
-          <Campo rotulo="Cidade" name="cidade" defaultValue={loja.cidade} erro={campos.cidade} />
+          <Campo rotulo="Cidade" name="cidade" value={cidade} readOnly dica="A lista de cidades está indisponível. Sua cidade atual será mantida." erro={campos.cidade} />
         )}
-        <Campo rotulo="Bairro ou endereço" name="bairro" opcional defaultValue={loja.bairro ?? ""} maxLength={80} erro={campos.bairro} />
+        <Campo rotulo="Bairro" name="bairro" opcional value={bairro} onChange={(e) => setBairro(e.target.value)} maxLength={80} erro={campos.bairro} />
       </section>
 
+      </fieldset>
+      {estado?.erro && <p role="alert" className="text-sm font-semibold text-perigo">{estado.erro}</p>}
       <Botao type="submit" larguraTotal icone={<Save />} carregando={enviando} textoCarregando="Salvando..." disabled={subindo !== null}>
         Salvar loja
       </Botao>
@@ -119,12 +146,14 @@ function EnvioImagem({
 }) {
   const id = useId();
   const entrada = useRef<HTMLInputElement>(null);
+  const emCurso = useRef(false);
   const [subindo, setSubindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const mensagem = erro ?? erroServidor ?? null;
 
   async function escolher(arquivo: File | undefined) {
-    if (!arquivo) return;
+    if (!arquivo || ocupado || emCurso.current) return;
+    emCurso.current = true;
     setErro(null);
     setSubindo(true);
     aoSubir(qual);
@@ -138,6 +167,7 @@ function EnvioImagem({
     } catch (e) {
       setErro(e instanceof Error && e.message ? e.message : "Não deu para usar esta imagem. Tente outra.");
     } finally {
+      emCurso.current = false;
       setSubindo(false);
       aoSubir(null);
       if (entrada.current) entrada.current.value = "";
@@ -193,7 +223,7 @@ function EnvioImagem({
         </Botao>
         {url && !subindo && (
           <Botao variante="texto" icone={<Trash2 />} disabled={ocupado} onClick={() => aoMudar("")}>
-            Tirar
+            Remover logo
           </Botao>
         )}
       </div>
