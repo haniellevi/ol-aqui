@@ -8,7 +8,7 @@ import { ChevronLeft, Smartphone } from "lucide-react";
 import { garantirPerfil, sincronizarPerfil } from "@/lib/perfil";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { listarCategorias } from "@/lib/dados/categorias";
-import { listarCidades } from "@/lib/dados/regiao";
+import { listarCidades, regiaoAtual } from "@/lib/dados/regiao";
 import { exigeCelularConfirmado, regrasRadar } from "@/lib/dados/radar";
 import { telefone } from "@/lib/formato";
 import { LINK_RADAR } from "@/lib/rotas";
@@ -90,11 +90,12 @@ async function Formulario({
   pedirWhatsapp: boolean;
   whatsappInicial: string;
 }) {
-  const [categorias, cidades, regras] = await Promise.all([listarCategorias(), listarCidades(microrregiaoId), regrasRadar(microrregiaoId)]);
+  const [categorias, cidades, regras, regiao] = await Promise.all([listarCategorias(), listarCidades(microrregiaoId), regrasRadar(microrregiaoId), regiaoAtual()]);
   const opcoes = categorias.flatMap((c) => [c, ...c.filhas]);
   const categoriaInicial = opcoes.find((c) => c.slug === categoriaSlug);
-  const cidadeFora = !!cidadeBusca && !cidades.some((c) => c.nome === cidadeBusca);
-  const cidadeInicial = cidades.some((c) => c.nome === cidadeBusca) ? cidadeBusca : cidadePerfil;
+  const cidadeEscolhida = cidadeBusca || regiao?.cidade;
+  const cidadeFora = !!cidadeEscolhida && !cidades.some((c) => c.nome === cidadeEscolhida);
+  const cidadeInicial = cidadeEscolhida || cidadePerfil || (regiao?.id === microrregiaoId ? regiao.cidadeSede : null);
   return (
     <>
       {cidadeFora && <p role="status" className="rounded-card bg-aviso-fundo p-4 text-aviso">A cidade da busca fica fora da região do seu cadastro. Escolha abaixo uma cidade dessa região para publicar seu pedido.</p>}
@@ -105,7 +106,7 @@ async function Formulario({
         precoMinInicial={precoMin}
         precoMaxInicial={precoMax}
         cidades={cidades.map((c) => c.nome)}
-        cidadeInicial={cidadeFora ? null : cidades.some((c) => c.nome === cidadeInicial) ? cidadeInicial : (cidades[0]?.nome ?? null)}
+        cidadeInicial={cidades.some((c) => c.nome === cidadeInicial) ? cidadeInicial ?? null : null}
         regras={regras}
         pedirWhatsapp={pedirWhatsapp}
         whatsappInicial={whatsappInicial}

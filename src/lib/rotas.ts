@@ -60,7 +60,7 @@ export const LINK_PRIVACIDADE = "/privacidade";
 export const linkDocumentoLegal = (tipo: "termos" | "privacidade", versao?: number | null) =>
   `${tipo === "termos" ? LINK_TERMOS : LINK_PRIVACIDADE}${versao ? `?versao=${versao}` : ""}`;
 export const LINK_AKI = "/aki";
-export const LINK_ENTRAR_PERFIL = "/entrar/perfil";
+export const LINK_ENTRAR_PERFIL = "/completar-perfil";
 export const LINK_ADMIN_TEXTOS = "/admin/textos";
 
 /** Painel: tela 14 (equipe e permissões) e tela 8 (Compliance jurídico, com o relatório para imprimir). */

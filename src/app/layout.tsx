@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ptBR } from "@clerk/localizations";
+import { SITE } from "@/lib/formato";
 import { AvisoSemInternet } from "@/components/paginas/aviso-sem-internet";
 import "./globals.css";
 
@@ -13,7 +14,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://olaki.com.br"),
+  metadataBase: new URL(SITE),
   title: { default: "OLAKI · olha aqui o que você procura", template: "%s · OLAKI" },
   description: "Shopping digital e classificados da sua região. Compre, venda e peça no Radar de Negócios.",
 };

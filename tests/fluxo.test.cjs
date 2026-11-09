@@ -7,7 +7,7 @@ const ts = require('typescript');
 function carregar(arquivo, mocks = {}) {
   const filename = path.resolve(arquivo);
   const js = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const mod = { exports: {} };
   const requireLocal = (nome) => {
@@ -85,4 +85,69 @@ test('criação recusa confirmação indisponível sem gravar pedido',async()=>{
   });
   const resposta=await actions.criarPedido({chaveEnvio:'10000000-0000-4000-a000-000000000001',titulo:'Procuro bicicleta',cidade:'Corrente',modo:'whatsapp_direto'});
   assert.equal(resposta.ok,false); assert.match(resposta.erro,/confirmar seus dados/);assert.equal(consultas,0);
+});
+
+
+test('compartilhamento usa o endereço do site e respeita domínio configurado', () => {
+  const antigo=process.env.NEXT_PUBLIC_SITE_URL;
+  try {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    const f=carregar('src/lib/formato.ts');
+    const url=f.urlAbsoluta('/loja/loja-teste');
+    assert.equal(url,'https://ol-aqui.vercel.app/loja/loja-teste');
+    assert.ok(new URL(f.linkWhatsApp('55109000000002','Teste',url)).searchParams.get('text').includes(url));
+    process.env.NEXT_PUBLIC_SITE_URL='https://mercado.example/';
+    assert.equal(carregar('src/lib/formato.ts').urlAbsoluta('loja/teste'),'https://mercado.example/loja/teste');
+  } finally {
+    if (antigo === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL=antigo;
+  }
+});
+test('falha na consulta de termos não equivale a aceite concluído',async()=>{
+  const paginas=carregar('src/lib/dados/paginas.ts',{
+    '@clerk/nextjs/server':{auth:async()=>({userId:'user_teste'})},
+    '@/lib/dados/seguro':{},
+    '@/lib/supabase/server':{createClient:async()=>({rpc:async()=>({data:null,error:{message:'offline'}})})},
+  });
+  await assert.rejects(paginas.termosPendentes(),/consultar os termos/);
+});
+test('login e cadastro preservam destino passando pela conclusão de perfil',async()=>{
+  const pagina=carregar('src/app/entrar/[[...entrar]]/page.tsx',{
+    'next/image':{},'next/link':{},'@clerk/nextjs':{SignIn:'ClerkSignIn'},
+  });
+  for (const valor of ['/radar/pedir?q=Bicicleta&preco_max=1500','https://ol-aqui.vercel.app/radar/pedir?q=Bicicleta']) {
+    const tela=await pagina.default({searchParams:Promise.resolve({redirect_url:valor})});
+    const login=tela.props.children.find(e=>e.type==='ClerkSignIn');
+    const destino=new URL(login.props.forceRedirectUrl,'https://teste.local');
+    assert.equal(destino.pathname,'/completar-perfil');
+    assert.equal(destino.searchParams.get('redirect_url'),new URL(valor,'https://teste.local').pathname+new URL(valor,'https://teste.local').search);
+    assert.equal(login.props.signUpForceRedirectUrl,login.props.forceRedirectUrl);
+  }
+});
+test('perfil sem sessão mantém o destino original ao pedir login',async()=>{
+  const pagina=carregar('src/app/completar-perfil/page.tsx',{
+    'next/image':{},'next/link':{},'lucide-react':{},
+    'next/navigation':{redirect:(url)=>{throw Error(url);}},
+    '@clerk/nextjs/server':{auth:async()=>({userId:null})},
+    '@/lib/perfil':{},'@/lib/dados/paginas':{},'./botao-aceitar':{},
+  });
+  await assert.rejects(pagina.default({searchParams:Promise.resolve({redirect_url:'/radar/pedir?q=Bicicleta'})}),e=>e.message==='/entrar?redirect_url=%2Fradar%2Fpedir%3Fq%3DBicicleta');
+});
+test('pedido usa cidade da busca, cidade escolhida ou sede e nunca a primeira alfabética',async()=>{
+  for (const [busca,selecionada,esperado] of [['',null,'Corrente'],['','Bom Jesus','Bom Jesus'],['Corrente','Bom Jesus','Corrente'],['Outra região',null,null]]) {
+    const pagina=carregar('src/app/radar/pedir/page.tsx',{
+      'next/link':{},'lucide-react':{},
+      '@clerk/nextjs/server':{currentUser:async()=>({id:'user_teste'})},
+      '@/lib/perfil':{garantirPerfil:async()=>{},sincronizarPerfil:async()=>{}},
+      '@/lib/dados/conta':{meuPerfilEVitrine:async()=>({perfil:{microrregiao_id:'r',cidade:null}})},
+      '@/lib/dados/categorias':{listarCategorias:async()=>[]},
+      '@/lib/dados/regiao':{listarCidades:async()=>['Avelino Lopes','Bom Jesus','Corrente'].map(nome=>({nome})),regiaoAtual:async()=>({id:'r',cidade:selecionada,cidadeSede:'Corrente'})},
+      '@/lib/dados/radar':{exigeCelularConfirmado:async()=>false,regrasRadar:async()=>({})},
+      '@/components/ui/botao':{},'@/components/ui/vazio':{},'@/components/radar/form-pedido':{FormPedido:'FormPedido'},
+    });
+    const tela=await pagina.default({searchParams:Promise.resolve({cidade:busca})});
+    const formulario=tela.props.children.find(e=>typeof e.type==='function');
+    const campos=await formulario.type(formulario.props);
+    assert.equal(campos.props.children.find(e=>e.type==='FormPedido').props.cidadeInicial,esperado);
+  }
 });

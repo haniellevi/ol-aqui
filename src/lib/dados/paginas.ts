@@ -15,8 +15,7 @@ import type {
   VersaoDocumento,
 } from "@/lib/tipos-paginas";
 
-// Leituras das páginas e textos (migração 20261108030000). Em erro devolvem o padrão:
-// a tela mostra "em breve"/vazio com saída, nunca erro técnico.
+// Leituras editoriais têm padrões; consulta de aceite propaga falhas para permitir nova tentativa.
 
 const COLUNAS_VERSAO = "id, tipo, versao, titulo, resumo_mudancas, revisado_advogado, ativo, publicado_em";
 
@@ -51,14 +50,14 @@ export async function versoesDocumento(tipo: TipoDocumento): Promise<VersaoDocum
 
 /** Versões no ar que a pessoa logada ainda não aceitou (visitante: nenhuma). */
 export const termosPendentes = cache(
-  (): Promise<TermoPendente[]> =>
-    seguro(async () => {
-      const { userId } = await auth();
-      if (!userId) return [];
-      const db = await createClient();
-      const { data, error } = await db.rpc("termos_pendentes");
-      return error ? [] : ((data ?? []) as TermoPendente[]);
-    }, []),
+  async (): Promise<TermoPendente[]> => {
+    const { userId } = await auth();
+    if (!userId) return [];
+    const db = await createClient();
+    const { data, error } = await db.rpc("termos_pendentes");
+    if (error) throw new Error("Não foi possível consultar os termos pendentes.");
+    return (data ?? []) as TermoPendente[];
+  },
 );
 
 /**

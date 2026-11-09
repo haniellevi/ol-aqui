@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
+import { SITE } from "@/lib/formato";
 
 // LGPD · "Baixar meus dados": JSON com o que é da pessoa, lido com o cliente dela (RLS).
 // Fica de fora o que é interno (ids do gateway de pagamento) e o que é de outras pessoas.
@@ -48,7 +49,7 @@ export async function GET() {
   const linhaPerfil = Array.isArray(perfil.data) ? perfil.data[0] ?? null : perfil.data;
   const dados = {
     gerado_em: new Date().toISOString(),
-    site: "OLAKI (olaki.com.br)",
+    site: `OLAKI (${SITE})`,
     aviso: "Estes são os dados da sua conta no OLAKI. Guarde este arquivo com cuidado: ele tem informações pessoais.",
     perfil: linhaPerfil,
     vitrine: vitrine.data ?? null,
