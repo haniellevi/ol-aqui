@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
 import { corDoTextoSobre, corSegura } from "@/components/vitrine/regras";
 import type { BannerModelo, BannerTipo } from "@/lib/tipos-vitrine";
@@ -32,12 +35,15 @@ export function BannerLoja({
   prioridade?: boolean;
   className?: string;
 }) {
-  if (tipo === "foto" && url) {
+  const [falhou, setFalhou] = useState<string | null>(null);
+  if (tipo === "foto" && url && falhou !== url) {
     return (
       <div className={`relative aspect-[3/1] w-full overflow-hidden bg-borda ${className}`}>
         {/* eslint-disable-next-line @next/next/no-img-element -- foto do Storage; img simples é leve no 3G */}
         <img
           src={url}
+          ref={(img) => { if (img?.complete && img.naturalWidth === 0) setFalhou(url); }}
+          onError={() => setFalhou(url)}
           alt={`Fachada da loja ${nome}`}
           width={1500}
           height={500}

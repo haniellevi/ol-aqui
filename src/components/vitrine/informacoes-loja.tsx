@@ -21,9 +21,9 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
 
       {(v.endereco || comoChegar) && (
         <Bloco icone={<MapPin />} titulo="Endereço">
-          <p className="text-base">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>
+          <p className="break-words text-base">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>
           {comoChegar && (
-            <a href={comoChegar} target="_blank" rel="noopener noreferrer" className={classesBotao("secundario", false, "mt-1 w-full sm:w-fit")}>
+            <a href={comoChegar} target="_blank" rel="noopener noreferrer" aria-label="Como chegar à loja (abre em nova aba)" className={classesBotao("secundario", false, "mt-1 w-full sm:w-fit")}>
               <Navigation className="size-5" aria-hidden />
               Como chegar
             </a>
@@ -38,7 +38,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
               {situacao.texto}
             </p>
           )}
-          <table className="w-full text-base">
+          <table className="w-full text-sm tabular-nums">
             <caption className="sr-only">Horário de cada dia da semana</caption>
             <tbody>
               {DIAS_EM_ORDEM.map((d) => (
@@ -47,7 +47,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
                     {NOME_DIA[d]}
                     {d === hoje && <span className="sr-only"> (hoje)</span>}
                   </th>
-                  <td className="py-1 text-right">{textoDoDia(faixasDoDia(v.horarios, d))}</td>
+                  <td className="py-1 text-right text-pretty">{textoDoDia(faixasDoDia(v.horarios, d))}</td>
                 </tr>
               ))}
             </tbody>
@@ -58,7 +58,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
 
       {insta && (
         <Bloco icone={<Instagram />} titulo="Instagram">
-          <a href={insta} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4">
+          <a href={insta} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da loja: @${v.instagram} (abre em nova aba)`} className="inline-flex min-h-12 max-w-full items-center break-all font-semibold text-laranja-escuro underline underline-offset-4">
             @{v.instagram}
           </a>
         </Bloco>
