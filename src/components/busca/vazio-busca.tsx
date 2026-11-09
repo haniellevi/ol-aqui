@@ -24,7 +24,7 @@ export function VazioBusca({
   return (
     <Vazio
       titulo={t ? `Não achamos “${t}” por aqui ainda.` : "Ainda não tem anúncio aqui."}
-      texto="Peça no Radar: as lojas e vendedores da região recebem seu pedido e te chamam."
+      texto="Peça no Radar. As lojas podem enviar propostas, e você escolhe com quem conversar."
     >
       <Botao href={pedido} larguraTotal icone={<Radar />}>
         Pedir no Radar
