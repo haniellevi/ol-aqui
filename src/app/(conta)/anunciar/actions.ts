@@ -80,7 +80,7 @@ async function gravar(id: string, colunas: Record<string, unknown>, antes?: MeuA
  * desde que o avulso seja oferecido para a pessoa e o pagamento esteja ligado. O banco segue
  * barrando o excesso de rascunhos e só põe no ar com vaga no plano ou avulso pago.
  */
-export async function novoRascunho(opcoes?: { avulso?: boolean }): Promise<EstadoForm> {
+export async function novoRascunho(opcoes?: { avulso?: boolean; chave?: string }): Promise<EstadoForm> {
   const conta = await meuPerfilEVitrine();
   if (!conta) return { erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
   if (!conta.vitrine) redirect("/quero-vender");
@@ -90,12 +90,17 @@ export async function novoRascunho(opcoes?: { avulso?: boolean }): Promise<Estad
     const avulso = opcoes?.avulso === true && asaasConfigurado() ? await avulsoParaMim(conta.vitrine) : null;
     if (!avulso) redirect("/anunciar");
   }
+  if (opcoes?.chave && !ehUuid(opcoes.chave)) return { erro: { mensagem: "Não foi possível começar. Abra esta página novamente." } };
   const db = await createClient();
   const { data, error } = await db
     .from("anuncios")
-    .insert({ vitrine_id: conta.vitrine.id, status: "rascunho" })
+    .insert({ ...(opcoes?.chave ? { id: opcoes.chave } : {}), vitrine_id: conta.vitrine.id, status: "rascunho" })
     .select("id")
     .single();
+  if (error?.code === "23505" && opcoes?.chave) {
+    const existente = await meuAnuncio(opcoes.chave);
+    if (existente?.status === "rascunho") redirect(urlPasso("fotos", existente.id));
+  }
   if (error || !data) return { erro: traduzirErro(error) };
   redirect(urlPasso("fotos", String(data.id)));
 }
@@ -106,13 +111,16 @@ export async function novoRascunho(opcoes?: { avulso?: boolean }): Promise<Estad
  * Salva a lista de fotos (na ordem; a primeira é a capa). Chamado pelo passo Fotos
  * a cada envio, troca de ordem ou remoção.
  */
-export async function salvarFotos(id: string, fotos: string[]): Promise<Resultado> {
+export async function salvarFotos(id: string, fotos: string[], fotosAntes?: string[]): Promise<Resultado & { fotosAtuais?: string[] }> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
   const anuncio = await abrir(id);
   if (!anuncio) return { ok: false, erro: { mensagem: NAO_ACHOU } };
 
-  const maximo = Math.min((await lerConfigNumero("anuncio.fotos_maximo")) ?? MAX_FOTOS_BANCO, MAX_FOTOS_BANCO);
+  const conta = await meuPerfilEVitrine();
+  if (!conta?.vitrine) return { ok: false, erro: { mensagem: NAO_ACHOU } };
+  const regiao = conta.vitrine.microrregiao_id;
+  const maximo = Math.min((await lerConfigNumero("anuncio.fotos_maximo", regiao)) ?? MAX_FOTOS_BANCO, MAX_FOTOS_BANCO);
   if (!Array.isArray(fotos) || fotos.length > maximo) {
     return { ok: false, erro: { mensagem: `Use no máximo ${maximo} fotos.`, campo: "fotos" } };
   }
@@ -139,12 +147,26 @@ export async function salvarFotos(id: string, fotos: string[]): Promise<Resultad
   if (!fotos.every(valida) || new Set(fotos).size !== fotos.length) {
     return { ok: false, erro: { mensagem: "Use só fotos enviadas pelo OLAKI.", campo: "fotos" } };
   }
-  if (publicado(anuncio) && fotos.length < ((await lerConfigNumero("anuncio.fotos_minimo")) ?? 0)) {
+  if (publicado(anuncio) && fotos.length < ((await lerConfigNumero("anuncio.fotos_minimo", regiao)) ?? 0)) {
     return { ok: false, erro: { mensagem: "Anúncio publicado precisa de foto. Coloque outra antes de tirar esta.", campo: "fotos" } };
   }
 
-  const r = await gravar(id, { fotos });
-  return r?.erro ? { ok: false, erro: r.erro } : { ok: true, dados: undefined };
+  const db = await createClient();
+  const anteriores = fotosAntes ?? anuncio.fotos;
+  if (!Array.isArray(anteriores) || anteriores.length > MAX_FOTOS_BANCO || !anteriores.every((f) => typeof f === "string" && f.length <= 500)) {
+    return { ok: false, erro: { mensagem: "Lista de fotos inválida." } };
+  }
+  // Comparação atômica: outra aba ou o Aki não podem perder fotos por uma lista desatualizada.
+  const { data, error } = await db.from("anuncios").update({ fotos }).eq("id", id)
+    .filter("fotos", "eq", `{${anteriores.map((f) => JSON.stringify(f)).join(",")}}`).select("id").maybeSingle();
+  if (error) return { ok: false, erro: traduzirErro(error) };
+  if (data) return { ok: true, dados: undefined };
+  const atual = await db.from("anuncios").select("fotos, vitrines_lojas!inner(dono_id)").eq("id", id).eq("vitrines_lojas.dono_id", userId).maybeSingle();
+  if (atual.error || !atual.data) return { ok: false, erro: { mensagem: "Não foi possível confirmar as fotos. Tente de novo." } };
+  const fotosAtuais = (atual.data.fotos ?? []) as string[];
+  // Uma resposta perdida pode ter sido gravada. Repetir a mesma lista é seguro.
+  if (JSON.stringify(fotosAtuais) === JSON.stringify(fotos)) return { ok: true, dados: undefined };
+  return { ok: false, fotosAtuais, erro: { mensagem: "As fotos mudaram em outra janela ou pelo Aki. A lista salva foi atualizada nesta tela. Confira e tente novamente." } };
 }
 
 /* ----------------------------- Categoria ----------------------------- */
@@ -243,7 +265,7 @@ export async function salvarPreco(_antes: EstadoForm, form: FormData): Promise<E
 
   if (!aCombinar) {
     centavos = centavosDoTexto(texto);
-    if (texto && centavos === null) return { erro: { mensagem: "Escreva só números no preço. Ex.: 8.500" }, campos: { preco: "Escreva só números. Ex.: 8.500" } };
+    if (texto && centavos === null) return { erro: { mensagem: "Use um preço como 1.500,50, com no máximo duas casas decimais." }, campos: { preco: "Ex.: 1.500,50. Use no máximo duas casas decimais." } };
     if (centavos !== null && centavos > MAX_PRECO_CENTAVOS) return { erro: { mensagem: "Esse preço está alto demais. Confira." }, campos: { preco: "Confira o valor." } };
     if (centavos === 0) return { erro: { mensagem: "O preço não pode ser zero. Marque \"A combinar\" se preferir." }, campos: { preco: "O preço não pode ser zero." } };
     if (centavos === null && exigir) {
@@ -272,7 +294,8 @@ export async function salvarLocal(_antes: EstadoForm, form: FormData): Promise<E
   if (!cidade && exigir) return { erro: { mensagem: "Escolha a cidade." }, campos: { cidade: "Escolha a cidade." } };
   if (cidade) {
     const cidades = await listarCidades(conta.vitrine.microrregiao_id);
-    if (cidades.length && !cidades.some((x) => x.nome === cidade)) {
+    if (!cidades.length) return { erro: { mensagem: "Não foi possível carregar as cidades desta região. Tente de novo." }, campos: { cidade: "As cidades estão indisponíveis." } };
+    if (!cidades.some((x) => x.nome === cidade)) {
       return { erro: { mensagem: "Escolha uma cidade da lista." }, campos: { cidade: "Escolha uma cidade da lista." } };
     }
   }

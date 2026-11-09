@@ -14,7 +14,7 @@ export default async function PassoLocal({ searchParams }: { searchParams: Param
   const { anuncio, conta, editar } = await carregarPasso(searchParams);
   const cidades = await listarCidades(conta.vitrine.microrregiao_id);
   const sugerida = anuncio.cidade ?? conta.perfil.cidade ?? conta.vitrine.cidade ?? "";
-  const cidadeInicial = !cidades.length || cidades.some((c) => c.nome === sugerida) ? sugerida : "";
+  const cidadeInicial = !cidades.length ? anuncio.cidade ?? "" : cidades.some((c) => c.nome === sugerida) ? sugerida : "";
   const bairroInicial = anuncio.cidade ? anuncio.bairro ?? "" : anuncio.bairro ?? conta.perfil.bairro ?? "";
 
   return (

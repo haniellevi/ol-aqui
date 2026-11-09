@@ -1,16 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { Check } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { salvarDetalhes } from "@/app/(conta)/anunciar/actions";
 import type { Atributos, CampoCategoria } from "@/lib/tipos";
 import { AvisoErro } from "./aviso-erro";
-import { aoEnviar } from "./enviar";
+import { useEnvioAnuncio } from "./enviar";
 import { BarraContinuar } from "./barra-continuar";
 import { nomeAtributo } from "./atributos";
-import type { EstadoForm } from "./passos";
 
 // Passo 3 · Detalhes: título, descrição e só os campos da categoria.
 // Lista e sim/não viram botões grandes (menos digitação). Os campos são controlados para não
@@ -48,7 +47,7 @@ export function FormDetalhes({
   campos: CampoCategoria[];
   atributos: Atributos;
 }) {
-  const [estado, acao, enviando] = useActionState<EstadoForm, FormData>(salvarDetalhes, null);
+  const [estado, onSubmit, enviando, enviar] = useEnvioAnuncio(salvarDetalhes);
   const [titulo, setTitulo] = useState(tituloInicial);
   const [descricao, setDescricao] = useState(descricaoInicial);
   const [valores, setValores] = useState<Record<string, string>>(() =>
@@ -58,7 +57,7 @@ export function FormDetalhes({
   const mudar = (chave: string, v: string) => setValores((a) => ({ ...a, [chave]: v }));
 
   return (
-    <form id={formId} onSubmit={aoEnviar(acao)} className="flex flex-col gap-6" noValidate>
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-6" noValidate>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
 

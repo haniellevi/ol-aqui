@@ -1,14 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { Lightbulb } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { salvarPreco } from "@/app/(conta)/anunciar/actions";
 import { AvisoErro } from "./aviso-erro";
-import { aoEnviar } from "./enviar";
+import { useEnvioAnuncio } from "./enviar";
 import { BarraContinuar } from "./barra-continuar";
-import type { EstadoForm } from "./passos";
 
 // Passo 4 · Preço: teclado de número com "R$" fixo, "A combinar" e "Aceito troca".
 // A dica "Parecidos na região" só aparece quando o banco tem anúncios suficientes.
@@ -17,21 +16,8 @@ const CAIXA =
   "flex min-h-12 cursor-pointer items-center gap-3 rounded-card border-2 border-borda bg-cartao px-3 py-2 text-base font-semibold " +
   "text-beringela hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-laranja-claro has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
-/** Digitação → "8.500" ou "8.500,50" (agrupa milhar, no máximo 2 casas depois da vírgula). */
-function mascara(t: string): string {
-  const limpo = t.replace(/[^\d,]/g, "");
-  const [inteiro = "", ...resto] = limpo.split(",");
-  const int = inteiro.replace(/^0+(?=\d)/, "").slice(0, 12);
-  const agrupado = int.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return resto.length ? `${agrupado || "0"},${resto.join("").slice(0, 2)}` : agrupado;
-}
-
-/** Centavos → texto do campo. */
 function paraTexto(centavos: number | null): string {
-  if (centavos == null) return "";
-  const reais = Math.floor(centavos / 100);
-  const cent = centavos % 100;
-  return mascara(cent ? `${reais},${String(cent).padStart(2, "0")}` : String(reais));
+  return centavos == null ? "" : (centavos / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function FormPreco({
@@ -52,13 +38,13 @@ export function FormPreco({
   /** Texto pronto, ex.: "R$ 8 mil a R$ 11 mil" (null = sem dados suficientes). */
   dicaFaixa: string | null;
 }) {
-  const [estado, acao, enviando] = useActionState<EstadoForm, FormData>(salvarPreco, null);
+  const [estado, onSubmit, enviando, enviar] = useEnvioAnuncio(salvarPreco);
   const [preco, setPreco] = useState(paraTexto(precoInicial));
   const [aCombinar, setACombinar] = useState(aCombinarInicial);
   const [troca, setTroca] = useState(aceitaTrocaInicial);
 
   return (
-    <form id={formId} onSubmit={aoEnviar(acao)} className="flex flex-col gap-5" noValidate>
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-5" noValidate>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
 
@@ -69,7 +55,9 @@ export function FormPreco({
         name="preco"
         prefixo="R$"
         value={aCombinar ? "" : preco}
-        onChange={(e) => setPreco(mascara(e.target.value))}
+        onChange={(e) => setPreco(e.target.value)}
+        maxLength={30}
+        dica="Ex.: 1.500,50. Confira o valor antes de continuar."
         inputMode="decimal"
         autoComplete="off"
         enterKeyHint="done"

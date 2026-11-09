@@ -1,6 +1,8 @@
 // Fotos no navegador: reduzir antes de enviar (internet fraca) e mandar ao Storage.
 // Seguro para componente de cliente (não usa nada do servidor).
 
+export const MAX_FOTO_ORIGINAL = 20 * 1024 * 1024;
+
 export type OpcoesReducao = { ladoMaximo?: number; qualidade?: number };
 
 /** Resultado da redução: o arquivo pronto e o formato (para pedir o endereço certo de envio). */
@@ -11,6 +13,7 @@ export type FotoReduzida = { blob: Blob; formato: "webp" | "jpg"; largura: numbe
  * Se o navegador não gera WebP, usa JPEG. Respeita a rotação da câmera (EXIF).
  */
 export async function reduzirFoto(arquivo: Blob, opcoes: OpcoesReducao = {}): Promise<FotoReduzida> {
+  if (!arquivo.size || arquivo.size > MAX_FOTO_ORIGINAL) throw new Error("Escolha uma foto de até 20 MB.");
   const ladoMaximo = opcoes.ladoMaximo ?? 1600;
   const qualidade = opcoes.qualidade ?? 0.8;
 
@@ -23,10 +26,11 @@ export async function reduzirFoto(arquivo: Blob, opcoes: OpcoesReducao = {}): Pr
   canvas.width = largura;
   canvas.height = altura;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Não deu para preparar a foto.");
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(imagem.fonte, 0, 0, largura, altura);
-  imagem.liberar();
+  try {
+    if (!ctx) throw new Error("Não deu para preparar a foto.");
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(imagem.fonte, 0, 0, largura, altura);
+  } finally { imagem.liberar(); }
 
   const webp = await paraBlob(canvas, "image/webp", qualidade);
   if (webp && webp.type === "image/webp") return { blob: webp, formato: "webp", largura, altura };
@@ -46,12 +50,14 @@ export async function enviarFoto(foto: Blob, urlEnvio: string): Promise<boolean>
   const cabecalhos: Record<string, string> = { "x-upsert": "false" };
   const chave = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (chave) cabecalhos.apikey = chave; // chave pública (não é segredo)
+  const controle = new AbortController();
+  const tempo = setTimeout(() => controle.abort(), 90_000);
   try {
-    const r = await fetch(urlEnvio, { method: "PUT", body: corpo, headers: cabecalhos });
+    const r = await fetch(urlEnvio, { method: "PUT", body: corpo, headers: cabecalhos, signal: controle.signal });
     return r.ok;
   } catch {
     return false;
-  }
+  } finally { clearTimeout(tempo); }
 }
 
 /** Endereço público de uma foto do bucket "anuncios" a partir do caminho. */

@@ -4,12 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Camera, ImagePlus, Loader2, RotateCw, X } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
-import { reduzirFoto, enviarFoto } from "@/lib/fotos";
+import { reduzirFoto, enviarFoto, MAX_FOTO_ORIGINAL } from "@/lib/fotos";
 import { apagarFoto, criarUrlEnvioFoto } from "@/lib/dados/fotos";
 import { salvarFotos } from "@/app/(conta)/anunciar/actions";
 import { AvisoErro } from "./aviso-erro";
 import { BarraContinuar } from "./barra-continuar";
-import { urlPasso } from "./passos";
+import { DESTINO_SAIR, urlPasso } from "./passos";
 import { EVENTO_FOTO_AKI, type FotoGuardadaAki } from "@/components/aki/abrir";
 
 // Passo 1 · Fotos. Reduz cada foto no celular, envia uma por vez (com progresso e "Tentar de novo")
@@ -44,12 +44,14 @@ export function EnvioFotos({
   fotosIniciais,
   maximo,
   minimo,
+  formId = "form-fotos",
 }: {
   id: string;
   editar: boolean;
   fotosIniciais: string[];
   maximo: number;
   minimo: number;
+  formId?: string;
 }) {
   const router = useRouter();
   const [itens, setItens] = useState<Item[]>(() => fotosIniciais.map((url) => ({ chave: novaChave(), estado: "pronta", url })));
@@ -58,78 +60,116 @@ export function EnvioFotos({
   const [indo, setIndo] = useState(false);
   const itensRef = useRef(itens);
   itensRef.current = itens;
-  const fila = useRef<Promise<unknown>>(Promise.resolve()); // salva na ordem em que mudou
+  const confirmadas = useRef(fotosIniciais);
+  const operacao = useRef(false);
+  const [salvando, setSalvando] = useState(false);
   const camera = useRef<HTMLInputElement>(null);
   const galeria = useRef<HTMLInputElement>(null);
 
   const prontas = itens.filter((i) => i.estado === "pronta");
   const ocupado = itens.some((i) => i.estado === "enviando" || i.estado === "fila");
+  const travado = ocupado || salvando || indo;
   const vagas = maximo - itens.length;
 
-  /** Salva no rascunho a lista de fotos prontas, na ordem da tela. */
-  const salvar = useCallback(
-    (lista: Item[]) => {
+  const mudar = useCallback((fn: (atual: Item[]) => Item[]) => {
+    const nova = fn(itensRef.current);
+    itensRef.current = nova;
+    setItens(nova);
+  }, []);
+
+  const salvar = useCallback(async (lista: Item[]) => {
+    try {
       const urls = lista.filter((i) => i.estado === "pronta" && i.url).map((i) => i.url as string);
-      const p = fila.current.then(async () => {
-        const r = await salvarFotos(id, urls);
-        if (!r.ok) setErro(r.erro.mensagem);
-        return r.ok;
-      });
-      fila.current = p.catch(() => false);
-      return p;
-    },
-    [id],
-  );
+      const resultado = await salvarFotos(id, urls, confirmadas.current);
+      if (resultado.ok) confirmadas.current = urls;
+      else {
+        setErro(resultado.erro.mensagem);
+        if (resultado.fotosAtuais) {
+          const atuais = resultado.fotosAtuais;
+          confirmadas.current = atuais;
+          mudar((l) => [
+            ...atuais.map<Item>((url) => ({ ...l.find((i) => i.url === url), chave: l.find((i) => i.url === url)?.chave ?? novaChave(), url, estado: "pronta" })),
+            ...l.filter((i) => i.estado !== "pronta" && (!i.url || !atuais.includes(i.url))),
+          ]);
+        }
+      }
+      return resultado.ok;
+    } catch {
+      setErro("Não conseguimos confirmar o salvamento das fotos. Confira a conexão e tente de novo.");
+      return false;
+    }
+  }, [id, mudar]);
 
-  const mudar = useCallback(
-    (fn: (atual: Item[]) => Item[], salvarDepois = false) => {
-      const nova = fn(itensRef.current);
-      itensRef.current = nova;
-      setItens(nova);
-      if (salvarDepois) return salvar(nova);
-      return Promise.resolve(true);
-    },
-    [salvar],
-  );
-
-  // Envia a próxima foto da fila (uma por vez: internet fraca).
+  // Só confirma uma foto depois de guardar o arquivo E a referência no anúncio.
+  // Se apenas o salvamento falha, repetir reaproveita o arquivo que já foi enviado.
   useEffect(() => {
-    const atual = itensRef.current; // a ref já tem a última mudança (evita enviar a mesma foto 2 vezes)
-    if (atual.some((i) => i.estado === "enviando")) return;
-    const proxima = atual.find((i) => i.estado === "fila");
-    if (!proxima?.arquivo) return;
-    const pendentes = atual.filter((i) => i.estado === "fila").length;
-    const feitas = atual.filter((i) => i.estado === "pronta").length;
-    setAviso(`Enviando foto ${feitas + 1}. Faltam ${pendentes}.`);
-    mudar((l) => l.map((i) => (i.chave === proxima.chave ? { ...i, estado: "enviando", erro: undefined } : i)));
-
+    if (operacao.current) return;
+    const proxima = itensRef.current.find((i) => i.estado === "fila");
+    if (!proxima) return;
+    operacao.current = true;
+    setSalvando(true);
+    mudar((l) => l.map((i) => i.chave === proxima.chave ? { ...i, estado: "enviando", erro: undefined } : i));
+    setAviso("Enviando e salvando a foto...");
     (async () => {
       try {
-        const reduzida = await reduzirFoto(proxima.arquivo as Blob);
-        const previa = URL.createObjectURL(reduzida.blob);
-        mudar((l) => l.map((i) => (i.chave === proxima.chave ? { ...i, previa } : i)));
-        const envio = await criarUrlEnvioFoto(id, reduzida.formato);
-        if (!envio.ok) throw new Error(envio.erro.mensagem);
-        const ok = await enviarFoto(reduzida.blob, envio.dados.urlEnvio);
-        if (!ok) throw new Error("A foto não foi enviada. Confira a internet e toque em Tentar de novo.");
-        await mudar(
-          (l) => l.map((i) => (i.chave === proxima.chave ? { ...i, estado: "pronta", url: envio.dados.urlPublica, arquivo: undefined } : i)),
-          true,
-        );
-        setAviso("Foto enviada.");
+        let url = proxima.url;
+        if (!url) {
+          if (!proxima.arquivo) throw new Error("Escolha esta foto novamente.");
+          const reduzida = await reduzirFoto(proxima.arquivo);
+          if (proxima.previa) URL.revokeObjectURL(proxima.previa);
+          const previa = URL.createObjectURL(reduzida.blob);
+          mudar((l) => l.map((i) => i.chave === proxima.chave ? { ...i, previa } : i));
+          const envio = await criarUrlEnvioFoto(id, reduzida.formato);
+          if (!envio.ok) throw new Error(envio.erro.mensagem);
+          if (!await enviarFoto(reduzida.blob, envio.dados.urlEnvio)) {
+            throw new Error("A foto não foi enviada. Confira a internet e tente de novo.");
+          }
+          url = envio.dados.urlPublica;
+          mudar((l) => l.map((i) => i.chave === proxima.chave ? { ...i, url } : i));
+        }
+        const pronta: Item = { ...itensRef.current.find((i) => i.chave === proxima.chave)!, estado: "pronta", url, arquivo: undefined };
+        const lista = itensRef.current.map((i) => i.chave === proxima.chave ? pronta : i);
+        if (!await salvar(lista)) throw new Error("A foto foi enviada, mas falta salvá-la no anúncio. Toque em Tentar de novo.");
+        mudar(() => lista);
+        setAviso("Foto salva no rascunho.");
       } catch (e) {
-        const msg = e instanceof Error && e.message ? e.message : "Não deu para enviar a foto. Tente de novo.";
-        mudar((l) => l.map((i) => (i.chave === proxima.chave ? { ...i, estado: "erro", erro: msg } : i)));
-        setAviso(`Uma foto não foi enviada. ${msg}`);
+        const mensagem = e instanceof Error ? e.message : "Não foi possível salvar esta foto. Tente de novo.";
+        mudar((l) => l.map((i) => i.chave === proxima.chave ? { ...i, estado: "erro", erro: mensagem } : i));
+        setAviso(mensagem);
+      } finally {
+        operacao.current = false;
+        setSalvando(false);
       }
     })();
-  }, [itens, id, mudar]);
+  }, [itens, salvando, id, mudar, salvar]);
+
+  // Evita sair sem perceber que ainda há arquivos sem confirmação de salvamento.
+  const pendente = travado || itens.some((i) => i.estado === "erro");
+  useEffect(() => {
+    if (!pendente) return;
+    const antesDeSair = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    const aoNavegar = (e: MouseEvent) => {
+      const link = (e.target as Element)?.closest?.("a[href]");
+      if (!link) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setErro("Antes de sair, espere o envio terminar e tente novamente ou remova as fotos com erro.");
+    };
+    window.addEventListener("beforeunload", antesDeSair);
+    document.addEventListener("click", aoNavegar, true);
+    return () => {
+      window.removeEventListener("beforeunload", antesDeSair);
+      document.removeEventListener("click", aoNavegar, true);
+    };
+  }, [pendente]);
 
   // O Aki guardou no rascunho a foto que a pessoa mandou para ele: mostra aqui sem salvar de novo.
   useEffect(() => {
     const ouvir = (e: Event) => {
       const { anuncioId, url } = (e as CustomEvent<FotoGuardadaAki>).detail ?? {};
       if (anuncioId !== id || !url) return;
+      if (operacao.current) return; // a comparação no servidor reconcilia o envio em andamento
+      confirmadas.current = confirmadas.current.includes(url) ? confirmadas.current : [...confirmadas.current, url];
       mudar((l) => (l.some((i) => i.url === url) ? l : [...l, { chave: novaChave(), estado: "pronta", url }]));
     };
     window.addEventListener(EVENTO_FOTO_AKI, ouvir);
@@ -140,74 +180,88 @@ export function EnvioFotos({
   useEffect(() => () => itensRef.current.forEach((i) => i.previa && URL.revokeObjectURL(i.previa)), []);
 
   function escolher(arquivos: FileList | null) {
+    if (operacao.current || indo) return;
     setErro(null);
     if (!arquivos?.length) return;
-    const lista = Array.from(arquivos).filter((a) => a.type.startsWith("image/") || a.type === "");
-    if (!lista.length) {
-      setErro("Escolha um arquivo de foto.");
-      return;
-    }
-    const cabe = lista.slice(0, Math.max(0, vagas));
-    if (cabe.length < lista.length) setErro(`Cabem só ${maximo} fotos. Enviamos as primeiras ${cabe.length}.`);
+    const lista = Array.from(arquivos).filter((a) => (a.type.startsWith("image/") || a.type === "") && a.size > 0 && a.size <= MAX_FOTO_ORIGINAL);
+    const cabe = lista.slice(0, Math.max(0, maximo - itensRef.current.length));
+    if (lista.length < arquivos.length) setErro("Alguns arquivos não foram incluídos. Escolha fotos de até 20 MB cada.");
+    else if (cabe.length < lista.length) setErro(`Cabem no máximo ${maximo} fotos. Foram incluídas ${cabe.length}.`);
     mudar((l) => [...l, ...cabe.map<Item>((arquivo) => ({ chave: novaChave(), estado: "fila", arquivo }))]);
   }
 
   function tentarDeNovo(chave: string) {
+    if (operacao.current || indo) return;
     setErro(null);
-    mudar((l) => l.map((i) => (i.chave === chave ? { ...i, estado: "fila", erro: undefined } : i)));
+    mudar((l) => l.map((i) => i.chave === chave ? { ...i, estado: "fila", erro: undefined } : i));
+  }
+
+  async function alterar(lista: Item[], mensagem: string) {
+    if (operacao.current || indo || ocupado) return false;
+    operacao.current = true;
+    setSalvando(true);
+    setErro(null);
+    try {
+      if (!await salvar(lista)) return false;
+      mudar(() => lista);
+      setAviso(mensagem);
+      return true;
+    } finally {
+      operacao.current = false;
+      setSalvando(false);
+    }
   }
 
   async function tirar(chave: string) {
-    setErro(null);
     const item = itensRef.current.find((i) => i.chave === chave);
     if (!item) return;
-    const ok = await mudar((l) => l.filter((i) => i.chave !== chave), item.estado === "pronta");
-    if (!ok) {
-      mudar((l) => (l.some((i) => i.chave === chave) ? l : [...l, item])); // não salvou: devolve a foto
-      return;
-    }
+    if (!await alterar(itensRef.current.filter((i) => i.chave !== chave), "Foto removida do anúncio.")) return;
     if (item.previa) URL.revokeObjectURL(item.previa);
-    if (item.url) void apagarFoto(item.url); // limpa o arquivo do Storage (se falhar, não atrapalha)
-    setAviso("Foto tirada.");
+    if (item.url) void apagarFoto(item.url).catch(() => undefined);
   }
 
-  function mover(chave: string, passo: -1 | 1) {
-    const l = [...itensRef.current];
-    const i = l.findIndex((x) => x.chave === chave);
+  async function mover(chave: string, passo: -1 | 1) {
+    const lista = [...itensRef.current];
+    const i = lista.findIndex((x) => x.chave === chave);
     const j = i + passo;
-    if (i < 0 || j < 0 || j >= l.length) return;
-    [l[i], l[j]] = [l[j], l[i]];
-    mudar(() => l, true);
-    setAviso(`Foto movida para a posição ${j + 1}${j === 0 ? ", agora é a capa" : ""}.`);
+    if (i < 0 || j < 0 || j >= lista.length) return;
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+    await alterar(lista, `Foto movida para a posição ${j + 1}${j === 0 ? ", agora é a capa" : ""}.`);
   }
 
-  async function continuar() {
+  async function continuar(sair: boolean) {
+    if (operacao.current || indo) return;
     setErro(null);
-    if (ocupado) {
-      setErro("Espere as fotos terminarem de enviar.");
+    if (ocupado || itens.some((i) => i.estado === "erro")) {
+      setErro("Espere o envio terminar. Tente novamente ou remova as fotos com erro antes de continuar.");
       return;
     }
-    if (prontas.length < minimo) {
-      setErro(minimo === 1 ? "Coloque pelo menos 1 foto." : `Coloque pelo menos ${minimo} fotos.`);
+    if (!sair && prontas.length < minimo) {
+      setErro(`Coloque pelo menos ${minimo} ${minimo === 1 ? "foto" : "fotos"}.`);
       return;
     }
+    operacao.current = true;
     setIndo(true);
-    const ok = await salvar(itensRef.current);
-    if (!ok) {
+    if (!await salvar(itensRef.current)) {
+      operacao.current = false;
       setIndo(false);
       return;
     }
-    router.push(urlPasso("categoria", id, editar));
+    router.push(sair ? DESTINO_SAIR : urlPasso("categoria", id, editar));
   }
 
   return (
-    <>
+    <form id={formId} action={async (dados) => continuar(dados.get("acao") === "sair")} onSubmit={(e) => {
+      e.preventDefault();
+      const botao = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+      void continuar(botao?.value === "sair");
+    }} aria-busy={travado} className="flex flex-col gap-4">
       <div className="flex gap-3">
-        <button type="button" className={BOTAO_FOTO} onClick={() => camera.current?.click()} disabled={vagas <= 0}>
+        <button type="button" className={BOTAO_FOTO} onClick={() => camera.current?.click()} disabled={vagas <= 0 || travado}>
           <Camera className="size-8" aria-hidden />
           Tirar foto
         </button>
-        <button type="button" className={BOTAO_FOTO} onClick={() => galeria.current?.click()} disabled={vagas <= 0}>
+        <button type="button" className={BOTAO_FOTO} onClick={() => galeria.current?.click()} disabled={vagas <= 0 || travado}>
           <ImagePlus className="size-8" aria-hidden />
           Escolher da galeria
         </button>
@@ -240,7 +294,7 @@ export function EnvioFotos({
       />
 
       <p className="text-base text-texto-suave">
-        {itens.length} de {maximo} fotos. A primeira é a capa. Dica: foto de dia, com o produto inteiro, vende mais rápido.
+        {itens.length} de {maximo} fotos. A primeira é a capa. Use fotos nítidas, de até 20 MB cada. Você pode mudar a ordem abaixo.
       </p>
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
@@ -276,6 +330,7 @@ export function EnvioFotos({
                       <button
                         type="button"
                         onClick={() => tentarDeNovo(item.chave)}
+                        disabled={travado}
                         className="inline-flex min-h-12 items-center gap-1.5 rounded-card border-2 border-beringela bg-cartao px-3 text-sm font-semibold text-beringela hover:bg-fundo active:bg-borda focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                       >
                         <RotateCw className="size-4" aria-hidden />
@@ -285,33 +340,33 @@ export function EnvioFotos({
                   )}
                 </div>
                 {item.erro && <p className="px-1 text-sm font-semibold text-perigo">{item.erro}</p>}
-                <div className="flex gap-1">
+                <div className="grid grid-cols-2 gap-1">
                   <button
                     type="button"
                     className={BOTAO_MINI}
                     onClick={() => mover(item.chave, -1)}
-                    disabled={i === 0}
+                    disabled={i === 0 || travado || item.estado !== "pronta"}
                     aria-label={`Mover ${nome} para antes`}
                   >
                     <ArrowLeft className="size-5" aria-hidden />
                   </button>
                   <button
                     type="button"
-                    className={`${BOTAO_MINI} text-perigo`}
-                    onClick={() => tirar(item.chave)}
-                    disabled={item.estado === "enviando"}
-                    aria-label={`Tirar ${nome}`}
-                  >
-                    <X className="size-5" aria-hidden />
-                  </button>
-                  <button
-                    type="button"
                     className={BOTAO_MINI}
                     onClick={() => mover(item.chave, 1)}
-                    disabled={i === itens.length - 1}
+                    disabled={i === itens.length - 1 || travado || item.estado !== "pronta"}
                     aria-label={`Mover ${nome} para depois`}
                   >
                     <ArrowRight className="size-5" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    className={`${BOTAO_MINI} col-span-2 flex items-center justify-center gap-1 text-perigo`}
+                    onClick={() => tirar(item.chave)}
+                    disabled={travado}
+                    aria-label={`Tirar ${nome}`}
+                  >
+                    <X className="size-5" aria-hidden /> Remover
                   </button>
                 </div>
               </li>
@@ -320,11 +375,11 @@ export function EnvioFotos({
         </ol>
       )}
 
-      <BarraContinuar aviso="Seu anúncio fica salvo se a internet cair">
-        <Botao larguraTotal onClick={continuar} carregando={indo} textoCarregando="Salvando..." disabled={ocupado}>
+      <BarraContinuar aviso="Fotos confirmadas ficam salvas no seu rascunho.">
+        <Botao type="submit" name="acao" value="seguir" larguraTotal carregando={indo} textoCarregando="Salvando..." disabled={travado}>
           {ocupado ? "Enviando fotos..." : "Continuar"}
         </Botao>
       </BarraContinuar>
-    </>
+    </form>
   );
 }

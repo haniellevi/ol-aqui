@@ -4,7 +4,7 @@ import { DESTINO_SAIR, PASSOS, TOTAL_PASSOS, numeroPasso, passoAnterior, urlPass
 
 // Topo de cada passo: "Voltar", "Passo N de 6 · Nome", barra de progresso e "Salvar e sair".
 // "Salvar e sair" envia o formulário do passo (atributo form) para não perder o que foi digitado.
-// Sem formulário (passo Fotos, que salva sozinho), vira um link.
+// Sem formulário (revisão, que não tem campos editáveis), vira um link.
 
 const LINK_TOPO =
   "inline-flex min-h-12 items-center gap-1 rounded-card px-2 text-base font-semibold text-laranja-escuro " +

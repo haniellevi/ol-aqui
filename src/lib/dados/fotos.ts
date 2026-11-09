@@ -26,15 +26,17 @@ export type EnvioFoto = {
 export async function criarUrlEnvioFoto(anuncioId: string, formato: "webp" | "jpg" = "webp"): Promise<Resultado<EnvioFoto>> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
+  if (formato !== "webp" && formato !== "jpg") return { ok: false, erro: { mensagem: "Formato de foto inválido." } };
   if (!ehUuid(anuncioId)) return { ok: false, erro: { mensagem: "Anúncio não encontrado." } };
 
   const db = await createClient();
-  const { data: anuncio } = await db
+  const { data: anuncio, error: erroAnuncio } = await db
     .from("anuncios")
     .select("id, fotos, vitrines_lojas!inner(dono_id)")
     .eq("id", anuncioId)
     .eq("vitrines_lojas.dono_id", userId)
     .maybeSingle();
+  if (erroAnuncio) return { ok: false, erro: { mensagem: "Não foi possível abrir o anúncio. Tente de novo." } };
   if (!anuncio) return { ok: false, erro: { mensagem: "Anúncio não encontrado." } };
   if (((anuncio.fotos as string[] | null)?.length ?? 0) >= MAX_FOTOS) {
     return { ok: false, erro: { mensagem: `Você já colocou ${MAX_FOTOS} fotos. Tire uma para pôr outra.`, campo: "fotos" } };
@@ -57,6 +59,15 @@ export async function apagarFoto(urlOuCaminho: string): Promise<Resultado> {
   const caminho = caminhoDaFoto(urlOuCaminho);
   if (!caminho || !caminho.startsWith(`${userId}/`)) return { ok: false, erro: { mensagem: "Foto não encontrada." } };
   const db = await createClient();
+  // Pode ter sido usada em outro anúncio, na vitrine ou em uma proposta.
+  // Falha de consulta também impede apagar: uma resposta perdida não pode quebrar uma foto salva.
+  const publica = db.storage.from(BUCKET).getPublicUrl(caminho).data.publicUrl;
+  const referencias = await Promise.all([
+    db.from("anuncios").select("id").contains("fotos", [publica]).limit(1),
+    db.from("vitrines_lojas").select("id").or(`logo_url.eq.${publica},capa_url.eq.${publica},banner_url.eq.${publica}`).limit(1),
+    db.from("radar_propostas").select("id").eq("foto_url", publica).limit(1),
+  ]);
+  if (referencias.some((r) => r.error || r.data?.length)) return { ok: false, erro: { mensagem: "Esta foto ainda pode estar em uso e foi mantida." } };
   const { error } = await db.storage.from(BUCKET).remove([caminho]);
   return error ? { ok: false, erro: { mensagem: "Não deu para apagar a foto. Tente de novo." } } : { ok: true, dados: undefined };
 }
