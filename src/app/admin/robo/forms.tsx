@@ -1,10 +1,78 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { Aviso, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
+import { CampoBusca, type OpcaoBusca } from "@/components/admin/campo-busca";
 import { reais } from "@/lib/admin/formato";
-import type { ModeloIA, ResultadoTeste } from "@/lib/aki/tipos";
-import { escolherModelo, ligarGeral, ligarRegiao, resolverBuscaVazia, salvarLimites, salvarModelo, salvarTextos, testarModelo } from "./actions";
+import type { ModeloAoVivo } from "@/lib/aki/catalogo-ao-vivo";
+import type { ModeloIA, ProvedorIA, ResultadoTeste } from "@/lib/aki/tipos";
+import {
+  buscarModelos,
+  escolherModelo,
+  ligarGeral,
+  ligarRegiao,
+  resolverBuscaVazia,
+  salvarLimites,
+  salvarModelo,
+  salvarTextos,
+  testarModelo,
+} from "./actions";
+
+const NOMES_PROVEDOR: Record<ProvedorIA, string> = { openrouter: "OpenRouter", anthropic: "Anthropic", openai: "OpenAI" };
+
+const us = (n: number | null) => (n == null ? "?" : `US$ ${n.toLocaleString("pt-BR", { maximumFractionDigits: 3 })}`);
+
+/** Linha de apoio de cada modelo na lista: preço e data. */
+function detalheModelo(m: ModeloAoVivo): string {
+  const preco = m.preco_entrada_usd == null ? "preço não informado" : `entrada ${us(m.preco_entrada_usd)} · saída ${us(m.preco_saida_usd)} por milhão`;
+  return [preco, m.lancado_em ? `lançado em ${m.lancado_em.split("-").reverse().join("/")}` : ""].filter(Boolean).join(" · ");
+}
+
+/** Mesma regra do servidor: lê imagem, usa ferramentas e tem preço. */
+const serveParaOAki = (m: ModeloAoVivo) => m.le_imagem && m.usa_ferramentas && m.preco_entrada_usd !== null && m.preco_saida_usd !== null;
+
+/** Carrega a lista ao vivo sempre que o provedor muda. */
+function useModelosAoVivo(provedor: ProvedorIA | "") {
+  const [estado, setEstado] = useState<{ carregando: boolean; modelos: ModeloAoVivo[]; erro: string | null }>({
+    carregando: false,
+    modelos: [],
+    erro: null,
+  });
+  useEffect(() => {
+    if (!provedor) return;
+    let vivo = true;
+    setEstado({ carregando: true, modelos: [], erro: null });
+    buscarModelos(provedor).then((r) => {
+      if (!vivo) return;
+      setEstado(r.ok ? { carregando: false, modelos: r.modelos, erro: null } : { carregando: false, modelos: [], erro: r.erro });
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [provedor]);
+  return estado;
+}
+
+function SeletorProvedor({ valor, onMudar, chaves, nome }: { valor: string; onMudar: (p: ProvedorIA) => void; chaves?: Record<string, boolean>; nome?: string }) {
+  return (
+    <label className="block text-sm font-semibold">
+      Provedor
+      <select name={nome} value={valor} onChange={(e) => onMudar(e.target.value as ProvedorIA)} className={estiloCampo}>
+        {!valor && (
+          <option value="" disabled>
+            Escolha o provedor
+          </option>
+        )}
+        {(Object.keys(NOMES_PROVEDOR) as ProvedorIA[]).map((p) => (
+          <option key={p} value={p}>
+            {NOMES_PROVEDOR[p]}
+            {chaves && !chaves[p] ? " (falta a chave)" : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
 
 function Retorno({ estado }: { estado: { ok?: string; erro?: string } | null }) {
   if (!estado) return null;
@@ -65,46 +133,69 @@ export function FormModeloEscolhido({
 }: {
   tipo: "conversa" | "foto";
   titulo: string;
+  /** "provedor|modelo" salvo agora */
   atual: string;
+  /** catálogo (ativos que servem): usado só para avisar se o salvo saiu de uso */
   modelos: ModeloIA[];
   chaves: Record<string, boolean>;
 }) {
   const [estado, acao, pendente] = useActionState(escolherModelo, null);
   const [teste, setTeste] = useState<ResultadoTeste | null>(null);
   const [testando, iniciarTeste] = useTransition();
-  const atualNaLista = modelos.some((m) => `${m.provedor}|${m.modelo}` === atual);
-  // o "Testar" usa o modelo marcado na lista agora (mesmo antes de salvar)
-  const [escolhido, setEscolhido] = useState(atualNaLista ? atual : "");
-  const NOMES: Record<string, string> = { anthropic: "Anthropic", openrouter: "OpenRouter", openai: "OpenAI" };
+  const [provAtual, ...resto] = atual.split("|");
+  const modeloAtual = resto.join("|");
+  const provedorValido = (Object.keys(NOMES_PROVEDOR) as string[]).includes(provAtual);
+  // provedor salvo inválido (ex.: "deepseek"): começa pelo OpenRouter, que tem a lista pública
+  const [provedor, setProvedor] = useState<ProvedorIA>(provedorValido ? (provAtual as ProvedorIA) : "openrouter");
+  const [modelo, setModelo] = useState(provedorValido && provAtual === provedor ? modeloAtual : "");
+  const { carregando, modelos: aoVivo, erro } = useModelosAoVivo(provedor);
+  const servem = aoVivo.filter(serveParaOAki);
+  const opcoes: OpcaoBusca[] = servem.map((m) => ({ valor: m.modelo, nome: m.nome, detalhe: `${m.modelo} · ${detalheModelo(m)}` }));
+  // o modelo salvo continua aparecendo mesmo que tenha saído da lista do provedor
+  if (modelo && !opcoes.some((o) => o.valor === modelo)) opcoes.unshift({ valor: modelo, nome: modelo, detalhe: "modelo salvo agora" });
+  const atualServe = modelos.some((m) => `${m.provedor}|${m.modelo}` === atual);
+  const escolhido = modelo ? `${provedor}|${modelo}` : "";
 
   return (
     <div className="space-y-3">
       <form action={acao} className="space-y-2">
         <input type="hidden" name="tipo" value={tipo} />
-        <label className="block text-sm font-semibold">
-          {titulo}
-          <select
-            name="modelo"
-            value={escolhido}
-            onChange={(e) => {
-              setEscolhido(e.target.value);
+        <input type="hidden" name="modelo" value={escolhido} />
+        <h3 className="text-base font-semibold text-beringela">{titulo}</h3>
+        <SeletorProvedor
+          valor={provedor}
+          chaves={chaves}
+          onMudar={(p) => {
+            setProvedor(p);
+            setModelo("");
+            setTeste(null);
+          }}
+        />
+        <div className="text-sm font-semibold">
+          Modelo
+          <CampoBusca
+            key={`${provedor}|${carregando}`}
+            rotulo={`Modelo de ${titulo.toLowerCase()}`}
+            opcoes={opcoes}
+            valorInicial={modelo}
+            desativado={carregando || !!erro}
+            placeholder={carregando ? "Carregando a lista do provedor…" : "Digite parte do nome. Ex.: deepseek flash"}
+            onEscolher={(v) => {
+              setModelo(v);
               setTeste(null);
             }}
-            className={estiloCampo}
-          >
-            <option value="" disabled>
-              Escolha um modelo
-            </option>
-            {modelos.map((m) => (
-              <option key={m.id} value={`${m.provedor}|${m.modelo}`}>
-                {NOMES[m.provedor]} · {m.nome}
-                {chaves[m.provedor] ? "" : " (falta a chave)"}
-              </option>
-            ))}
-          </select>
-        </label>
-        {!atualNaLista && (
-          <p className="text-[13px] text-aviso">O modelo salvo não está ativo no catálogo (ou não lê imagem e usa ferramentas). O Aki fica descansando até escolher outro.</p>
+          />
+          {!carregando && !erro && (
+            <p className="mt-1 text-[13px] font-normal text-texto-suave">
+              {servem.length} modelos que leem foto e usam as funções do site, do mais novo para o mais antigo. A lista vem do {NOMES_PROVEDOR[provedor]} na hora.
+            </p>
+          )}
+        </div>
+        {erro && <Aviso tipo="erro">{erro}</Aviso>}
+        {!atualServe && (
+          <p className="text-[13px] text-aviso">
+            O modelo salvo ({atual.replace("|", " · ") || "nenhum"}) não está pronto para uso. O Aki fica descansando até escolher outro e salvar.
+          </p>
         )}
         <div className="flex flex-wrap gap-2">
           <button disabled={pendente} className={estiloBotaoSec}>
@@ -222,58 +313,76 @@ const usd = (n: number | null) => (n == null ? "" : String(n));
 export function FormModelo({ modelo }: { modelo?: ModeloIA }) {
   const novo = !modelo;
   const [estado, acao, pendente] = useActionState(salvarModelo, null);
-  const [provedor, setProvedor] = useState<string>(modelo?.provedor ?? "openrouter");
+  const [provedor, setProvedor] = useState<ProvedorIA>(modelo?.provedor ?? "openrouter");
+  // novo modelo: a lista vem do provedor e, ao escolher, preenche nome, preços e capacidades
+  const { carregando, modelos: aoVivo, erro } = useModelosAoVivo(novo ? provedor : "");
+  const [pre, setPre] = useState<ModeloAoVivo | null>(null);
+  const base = modelo ?? pre;
+  const chaveCampos = novo ? `${provedor}|${pre?.modelo ?? ""}` : modelo.id;
   return (
     <form action={acao} className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {novo ? (
         <>
-          <label className="text-sm font-semibold">
-            Provedor
-            <select name="provedor" value={provedor} onChange={(e) => setProvedor(e.target.value)} className={estiloCampo}>
-              <option value="anthropic">Anthropic</option>
-              <option value="openrouter">OpenRouter</option>
-              <option value="openai">OpenAI</option>
-            </select>
-          </label>
-          <label className="text-sm font-semibold">
-            Id do modelo
-            <input name="modelo" required placeholder="ex.: openai/gpt-…" className={`${estiloCampo} font-mono`} />
-          </label>
+          <SeletorProvedor
+            nome="provedor"
+            valor={provedor}
+            onMudar={(p) => {
+              setProvedor(p);
+              setPre(null);
+            }}
+          />
+          <div className="col-span-2 text-sm font-semibold md:col-span-3">
+            Modelo
+            <CampoBusca
+              key={`${provedor}|${carregando}`}
+              nome="modelo"
+              rotulo="Modelo do provedor"
+              opcoes={aoVivo.map((m) => ({ valor: m.modelo, nome: m.nome, detalhe: `${m.modelo} · ${detalheModelo(m)}` }))}
+              desativado={carregando || !!erro}
+              placeholder={carregando ? "Carregando a lista do provedor…" : "Digite parte do nome para filtrar"}
+              onEscolher={(v) => setPre(aoVivo.find((m) => m.modelo === v) ?? null)}
+            />
+            {erro && (
+              <div className="mt-1">
+                <Aviso tipo="erro">{erro}</Aviso>
+              </div>
+            )}
+          </div>
         </>
       ) : (
         <input type="hidden" name="id" value={modelo.id} />
       )}
-      <label className="col-span-2 text-sm font-semibold">
+      <label key={`nome-${chaveCampos}`} className="col-span-2 text-sm font-semibold">
         Nome no painel
-        <input name="nome" required defaultValue={modelo?.nome} className={estiloCampo} />
+        <input name="nome" required defaultValue={base?.nome} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label key={`e-${chaveCampos}`} className="text-sm font-semibold">
         Entrada (US$/milhão)
-        <input name="preco_entrada_usd" inputMode="decimal" defaultValue={usd(modelo?.preco_entrada_usd ?? null)} className={estiloCampo} />
+        <input name="preco_entrada_usd" inputMode="decimal" defaultValue={usd(base?.preco_entrada_usd ?? null)} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label key={`s-${chaveCampos}`} className="text-sm font-semibold">
         Saída (US$/milhão)
-        <input name="preco_saida_usd" inputMode="decimal" defaultValue={usd(modelo?.preco_saida_usd ?? null)} className={estiloCampo} />
+        <input name="preco_saida_usd" inputMode="decimal" defaultValue={usd(base?.preco_saida_usd ?? null)} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label key={`cl-${chaveCampos}`} className="text-sm font-semibold">
         Leitura de cache (US$/milhão)
-        <input name="preco_cache_leitura_usd" inputMode="decimal" placeholder="igual à entrada" defaultValue={usd(modelo?.preco_cache_leitura_usd ?? null)} className={estiloCampo} />
+        <input name="preco_cache_leitura_usd" inputMode="decimal" placeholder="igual à entrada" defaultValue={usd(base?.preco_cache_leitura_usd ?? null)} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label key={`ce-${chaveCampos}`} className="text-sm font-semibold">
         Escrita de cache (US$/milhão)
-        <input name="preco_cache_escrita_usd" inputMode="decimal" placeholder="igual à entrada" defaultValue={usd(modelo?.preco_cache_escrita_usd ?? null)} className={estiloCampo} />
+        <input name="preco_cache_escrita_usd" inputMode="decimal" placeholder="igual à entrada" defaultValue={usd(base?.preco_cache_escrita_usd ?? null)} className={estiloCampo} />
       </label>
-      <div className="col-span-2 flex flex-wrap gap-x-4 md:col-span-4">
+      <div key={`caps-${chaveCampos}`} className="col-span-2 flex flex-wrap gap-x-4 md:col-span-4">
         <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
-          <input type="checkbox" name="le_imagem" defaultChecked={modelo?.le_imagem ?? false} className="size-5 accent-laranja-escuro" />
+          <input type="checkbox" name="le_imagem" defaultChecked={base?.le_imagem ?? false} className="size-5 accent-laranja-escuro" />
           Lê imagem
         </label>
         <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
-          <input type="checkbox" name="usa_ferramentas" defaultChecked={modelo?.usa_ferramentas ?? false} className="size-5 accent-laranja-escuro" />
+          <input type="checkbox" name="usa_ferramentas" defaultChecked={base?.usa_ferramentas ?? false} className="size-5 accent-laranja-escuro" />
           Usa ferramentas
         </label>
         <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
-          <input type="checkbox" name="ativo" defaultChecked={modelo?.ativo ?? false} className="size-5 accent-laranja-escuro" />
+          <input type="checkbox" name="ativo" defaultChecked={modelo?.ativo ?? !!pre} className="size-5 accent-laranja-escuro" />
           Ativo (aparece na escolha)
         </label>
         {(modelo?.provedor ?? provedor) === "anthropic" && (

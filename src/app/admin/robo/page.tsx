@@ -140,7 +140,7 @@ export default async function RoboPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[13px] text-texto-suave">A lista mostra só modelos ativos do catálogo que leem imagem e usam ferramentas.</p>
+          <p className="mt-2 text-[13px] text-texto-suave">Escolha o provedor e a lista de modelos vem dele na hora. Digite parte do nome para filtrar. Ao salvar, o modelo entra no catálogo com o preço do provedor.</p>
         </Cartao>
         <div className="grid gap-3 md:grid-cols-2">
           <Cartao>
