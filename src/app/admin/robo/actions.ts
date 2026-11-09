@@ -11,6 +11,7 @@ import { adaptador, ErroProvedor, lerArgumentos, type ParteIA, type UsoIA } from
 import { ERROS_PROVEDOR } from "@/lib/aki/textos";
 import { ehId } from "@/lib/aki/validar";
 import { PROVEDORES, type ProvedorIA, type ResultadoTeste } from "@/lib/aki/tipos";
+import { listarModelosAoVivo, serveParaOAki, type ModeloAoVivo } from "@/lib/aki/catalogo-ao-vivo";
 
 const CAMINHO = "/admin/robo";
 const NOME_CHAVE: Record<ProvedorIA, string> = {
@@ -110,6 +111,63 @@ export async function ligarRegiao(_: EstadoForm, form: FormData): Promise<Estado
 
 /* ---------------------------- Provedor e modelo ---------------------------- */
 
+export type ResultadoModelos = { ok: true; modelos: ModeloAoVivo[] } | { ok: false; erro: string };
+
+/** Lista ao vivo do provedor, para o campo de escolha do painel (só admin). */
+export async function buscarModelos(provedor: string): Promise<ResultadoModelos> {
+  try {
+    await exigirAdmin();
+    if (!(PROVEDORES as readonly string[]).includes(provedor)) return { ok: false, erro: "Escolha o provedor." };
+    return { ok: true, modelos: await listarModelosAoVivo(provedor as ProvedorIA) };
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error ? e.message : "Não consegui listar os modelos agora. Tente de novo em instantes." };
+  }
+}
+
+/** Procura o modelo na lista ao vivo do provedor (null se não existir lá). */
+async function modeloAoVivo(provedor: ProvedorIA, modelo: string): Promise<ModeloAoVivo | null> {
+  const lista = await listarModelosAoVivo(provedor);
+  return lista.find((m) => m.modelo === modelo) ?? null;
+}
+
+/**
+ * Garante que o modelo escolhido está ativo no catálogo (o custo de cada resposta usa o preço de lá).
+ * Se não estiver, copia nome, preços e capacidades da lista ao vivo do provedor.
+ */
+async function garantirNoCatalogo(supabase: Supa, userId: string, provedor: ProvedorIA, modelo: string): Promise<string | null> {
+  const { data: m } = await supabase
+    .from("robo_modelos")
+    .select("id, ativo, le_imagem, usa_ferramentas")
+    .eq("provedor", provedor)
+    .eq("modelo", modelo)
+    .maybeSingle();
+  if (m?.ativo && m.le_imagem && m.usa_ferramentas) return null;
+
+  const vivo = await modeloAoVivo(provedor, modelo);
+  if (!vivo) return "Esse modelo não aparece mais na lista do provedor.";
+  if (!serveParaOAki(vivo)) {
+    return vivo.preco_entrada_usd === null || vivo.preco_saida_usd === null
+      ? "Não achei o preço desse modelo. Cadastre o preço no catálogo de modelos, lá embaixo, e escolha de novo."
+      : "Esse modelo não lê imagem ou não usa ferramentas, e o Aki precisa das duas coisas. Escolha outro.";
+  }
+  const dados = {
+    nome: vivo.nome,
+    le_imagem: true,
+    usa_ferramentas: true,
+    preco_entrada_usd: vivo.preco_entrada_usd,
+    preco_saida_usd: vivo.preco_saida_usd,
+    preco_cache_leitura_usd: vivo.preco_cache_leitura_usd,
+    preco_cache_escrita_usd: vivo.preco_cache_escrita_usd,
+    ativo: true,
+    observacao: "Preço copiado da lista do provedor ao escolher o modelo.",
+    atualizado_por: userId,
+  };
+  const { error } = m
+    ? await supabase.from("robo_modelos").update(dados).eq("id", m.id)
+    : await supabase.from("robo_modelos").insert({ ...dados, provedor, modelo });
+  return error ? error.message : null;
+}
+
 export async function escolherModelo(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   try {
     const { supabase, userId } = await exigirAdmin();
@@ -117,16 +175,8 @@ export async function escolherModelo(_: EstadoForm, form: FormData): Promise<Est
     const [provedor, ...resto] = String(form.get("modelo") ?? "").split("|");
     const modelo = resto.join("|");
     if (!(PROVEDORES as readonly string[]).includes(provedor) || !modelo) return { erro: "Escolha um modelo da lista." };
-    const { data: m } = await supabase
-      .from("robo_modelos")
-      .select("id")
-      .eq("provedor", provedor)
-      .eq("modelo", modelo)
-      .eq("ativo", true)
-      .eq("le_imagem", true)
-      .eq("usa_ferramentas", true)
-      .maybeSingle();
-    if (!m) return { erro: "Esse modelo não está ativo ou não lê imagem e usa ferramentas." };
+    const recusa = await garantirNoCatalogo(supabase, userId, provedor as ProvedorIA, modelo);
+    if (recusa) return { erro: recusa };
     await gravarConfig(supabase, userId, `robo.provedor_${tipo}`, provedor);
     await gravarConfig(supabase, userId, `robo.modelo_${tipo}`, modelo);
     revalidatePath(CAMINHO);
@@ -156,8 +206,8 @@ export async function testarModelo(tipo: "conversa" | "foto", escolhido: string)
     const modelo = resto.join("|");
     const prov = adaptador(provedor);
     if (!prov || !modelo) return { ok: false, erro: "Escolha um modelo da lista primeiro." };
-    // o mesmo filtro da escolha: ativo no catálogo, lê imagem e usa ferramentas
-    const { data: linha } = await supabase
+    // o mesmo filtro da escolha: ativo no catálogo, ou ainda fora dele mas servindo para o Aki na lista ao vivo
+    const { data: noCatalogo } = await supabase
       .from("robo_modelos")
       .select("fallback_servidor")
       .eq("provedor", prov.nome)
@@ -166,7 +216,14 @@ export async function testarModelo(tipo: "conversa" | "foto", escolhido: string)
       .eq("le_imagem", true)
       .eq("usa_ferramentas", true)
       .maybeSingle();
-    if (!linha) return { ok: false, erro: "Esse modelo não está ativo no catálogo (ou não lê imagem e usa ferramentas)." };
+    let linha = noCatalogo;
+    if (!linha) {
+      const vivo = await modeloAoVivo(prov.nome, modelo).catch(() => null);
+      if (!vivo || !vivo.le_imagem || !vivo.usa_ferramentas) {
+        return { ok: false, erro: "Esse modelo não lê imagem ou não usa ferramentas, e o Aki precisa das duas coisas." };
+      }
+      linha = { fallback_servidor: false };
+    }
     if (!prov.temChave()) return { ok: false, erro: `Falta a chave ${NOME_CHAVE[prov.nome]} nas variáveis de ambiente da Vercel. ${ERROS_PROVEDOR.sem_chave}` };
 
     gravarCusto = async (uso, latenciaMs, erro) => {

@@ -2,8 +2,12 @@
 
 import { useActionState } from "react";
 import { Aviso, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
+import { CampoBusca } from "@/components/admin/campo-busca";
 import { emCentavos, valorParaForm, type Opcao, type TipoValor } from "@/lib/admin/config";
 import { criarExcecao, salvarConfig } from "./actions";
+
+/** Até este tanto de opções, lista simples; acima, campo com filtro digitando. */
+const LISTA_CURTA = 6;
 
 const AJUDA: Record<TipoValor, string> = {
   numero: "",
@@ -24,6 +28,11 @@ function CampoValor({ tipo, valor, chave, opcoes }: { tipo: TipoValor; valor: un
         <option value="false">Não</option>
       </select>
     );
+  }
+  if (opcoes && opcoes.length > LISTA_CURTA) {
+    // lista longa: a pessoa digita algumas letras e a lista filtra na hora
+    const comAtual = opcoes.some((o) => o.valor === texto) || !texto ? opcoes : [{ valor: texto, nome: `${texto} (valor atual, fora da lista)` }, ...opcoes];
+    return <CampoBusca nome="valor" opcoes={comAtual} valorInicial={texto} rotulo={chave} placeholder="Digite parte do nome para filtrar" />;
   }
   if (opcoes && opcoes.length > 0) {
     const conhecido = opcoes.some((o) => o.valor === texto);
