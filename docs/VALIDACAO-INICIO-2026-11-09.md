@@ -13,6 +13,7 @@ Alteração: [PR 23](https://github.com/haniellevi/ol-aqui/pull/23). Destino: ht
 
 - `npm test`: 31 testes aprovados, incluindo seis novos cenários da página inicial: busca/categorias, estado vazio, anúncios/paginação, painel, região ausente e falha de consulta.
 - `npm run test:db`: testes de fluxo, RLS, concorrência e migração de texto aprovados em PostgreSQL isolado, sem rede ou credenciais externas.
+- Uma repetição revelou uma corrida na inicialização do próprio teste: o `pg_isready` aceitava o servidor temporário por socket. A espera agora usa TCP no loopback do contêiner, disponível no servidor definitivo, e falha explicitamente se o tempo se esgotar.
 - `npm run typecheck`: aprovado. `npm run lint`: nenhum erro; dez avisos preexistentes no kit de demonstração. Arquivos alterados sem avisos.
 - Build local concluído após fornecer ao processo a chave pública do Clerk já disponível no site. O ambiente local não contém as demais configurações da Vercel; a execução integrada foi conferida no preview.
 - Preview da versão de aplicação `a2d3454cfc7049ae620317b859f792b6aba01f6e`: build da Vercel concluído e navegação verificada em `ol-aqui-edt2gj8wi-raniel-levis-projects.vercel.app`.

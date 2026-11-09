@@ -15,8 +15,11 @@ def checked(result):
 try:
     checked(run('docker','run','-d','--rm','--name',container,'--network','none','--tmpfs','/var/lib/postgresql/data:rw','-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:17-alpine'))
     for _ in range(60):
-        if run('docker','exec',container,'pg_isready','-U','postgres').returncode == 0: break
+        # O servidor temporário do entrypoint só aceita socket e reinicia antes do definitivo.
+        if run('docker','exec',container,'pg_isready','-h','127.0.0.1','-U','postgres').returncode == 0: break
         time.sleep(.25)
+    else:
+        raise RuntimeError('PostgreSQL isolado não ficou pronto em 15 segundos')
     init = (root/'supabase/testes/00_simula_supabase.sql').read_text()
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
