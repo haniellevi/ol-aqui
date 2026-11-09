@@ -164,7 +164,10 @@ export async function enviarProposta(entrada: {
   revalidatePath(`/radar/${entrada.pedidoId}`);
   revalidatePath(`/radar/pedido/${entrada.pedidoId}`);
   revalidatePath("/radar");
-  if (data.modo === "propostas_prazo") return { ok: true, modo: "propostas_prazo", mensagem: data.mensagem, editada: data.editada };
+  if (data.modo === "propostas_prazo") return {
+    ok: true, modo: "propostas_prazo", editada: data.editada,
+    mensagem: "Sua proposta está disponível. O comprador já pode comparar as ofertas e escolher com quem falar.",
+  };
   if (!data.whatsapp) return { ok: false, erro: "O comprador ainda não confirmou o celular. Tente mais tarde." };
   return { ok: true, modo: "whatsapp_direto", linkWhatsapp: linkWa(data.whatsapp, data.mensagem), editada: data.editada };
 }
