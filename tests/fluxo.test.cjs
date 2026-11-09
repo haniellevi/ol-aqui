@@ -95,8 +95,8 @@ function perfil(existente, erroLeitura = null, erroEscrita = null) {
   const gravacoes=[];
   const query = {
     select() { return this; }, eq() { return this; },
-    maybeSingle: async () => ({data:existente,error:erroLeitura}),
-    update(dados) { gravacoes.push(dados); return {eq:async()=>({error:erroEscrita})}; },
+    maybeSingle: async () => ({data:gravacoes.length ? {id:usuario.id} : existente && {avatar_url:"",...existente},error:gravacoes.length ? erroEscrita : erroLeitura}),
+    update(dados) { gravacoes.push(dados); return this; },
   };
   const mod = carregar('src/lib/perfil.ts', {
     '@/lib/supabase/admin': {supabaseAdmin:()=>({from:()=>query})},
@@ -120,7 +120,7 @@ test('troca confirmada sincroniza novo telefone',async()=>{
 });
 test('erro ao revogar telefone propaga falha para repetir webhook',async()=>{
   const p=perfil({id:usuario.id,whatsapp:'5589999990000',whatsapp_verificado_em:'2026-01-01'},null,{message:'offline'});
-  await assert.rejects(p.sincronizarPerfil(usuario),/remover a confirmação/);
+  await assert.rejects(p.sincronizarPerfil(usuario),/atualizar a foto e o telefone/);
 });
 test('erro de leitura não tenta criar ou atualizar perfil',async()=>{
   const p=perfil(null,{message:'offline'});

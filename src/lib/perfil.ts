@@ -8,6 +8,7 @@ type UsuarioClerk = {
   firstName: string | null;
   lastName: string | null;
   imageUrl: string;
+  hasImage?: boolean;
   primaryPhoneNumberId: string | null;
   phoneNumbers: { id: string; phoneNumber: string; verification: { status: string } | null }[];
 };
@@ -27,13 +28,12 @@ function whatsappDe(e164?: string) {
  */
 export async function sincronizarPerfil(u: UsuarioClerk) {
   const db = supabaseAdmin();
-  const tel =
-    u.phoneNumbers.find((p) => p.id === u.primaryPhoneNumberId && p.verification?.status === "verified") ??
-    u.phoneNumbers.find((p) => p.verification?.status === "verified");
+  const tel = u.phoneNumbers.find((p) => p.id === u.primaryPhoneNumberId && p.verification?.status === "verified");
   const whatsapp = whatsappDe(tel?.phoneNumber);
+  const avatar = u.hasImage === false ? null : u.imageUrl;
   const nome = [u.firstName, u.lastName].filter(Boolean).join(" ").trim() || "Usuário OLAKI";
 
-  const { data: existente, error: erroLeitura } = await db.from("perfis").select("id, whatsapp, whatsapp_verificado_em").eq("id", u.id).maybeSingle();
+  const { data: existente, error: erroLeitura } = await db.from("perfis").select("id, whatsapp, whatsapp_verificado_em, avatar_url").eq("id", u.id).maybeSingle();
   if (erroLeitura) throw new Error("Não foi possível consultar o perfil.");
 
   if (!existente) {
@@ -43,7 +43,7 @@ export async function sincronizarPerfil(u: UsuarioClerk) {
       id: u.id,
       microrregiao_id: regiao.id,
       nome,
-      avatar_url: u.imageUrl,
+      avatar_url: avatar,
       whatsapp,
       whatsapp_verificado_em: whatsapp ? new Date().toISOString() : null,
     });
@@ -52,14 +52,19 @@ export async function sincronizarPerfil(u: UsuarioClerk) {
   }
 
   // Atualiza só o que vem do Clerk; nome e cidade editados no site são do usuário.
-  const mudou = whatsapp !== existente.whatsapp;
-  if (whatsapp && (mudou || !existente.whatsapp_verificado_em)) {
-    const { error } = await db.from("perfis").update({ whatsapp, whatsapp_verificado_em: new Date().toISOString(), avatar_url: u.imageUrl }).eq("id", u.id);
-    if (error) throw new Error("Não foi possível sincronizar o telefone confirmado.");
+  const alteracoes: Record<string, string | null> = {};
+  if (avatar !== existente.avatar_url) alteracoes.avatar_url = avatar;
+  if (whatsapp && (whatsapp !== existente.whatsapp || !existente.whatsapp_verificado_em)) {
+    alteracoes.whatsapp = whatsapp;
+    alteracoes.whatsapp_verificado_em = new Date().toISOString();
   } else if (!whatsapp && existente.whatsapp_verificado_em) {
-    // número removido ou não verificado no Clerk: deixa de valer para o Radar
-    const { error } = await db.from("perfis").update({ whatsapp: null, whatsapp_verificado_em: null }).eq("id", u.id);
-    if (error) throw new Error("Não foi possível remover a confirmação do telefone.");
+    // Não substitui o principal por outro telefone. Preserva o contato digitado sem confirmação.
+    alteracoes.whatsapp = null;
+    alteracoes.whatsapp_verificado_em = null;
+  }
+  if (Object.keys(alteracoes).length) {
+    const { data, error } = await db.from("perfis").update(alteracoes).eq("id", u.id).select("id").maybeSingle();
+    if (error || data?.id !== u.id) throw new Error("Não foi possível atualizar a foto e o telefone da conta.");
   }
 }
 
