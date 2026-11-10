@@ -247,7 +247,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         <div role="alert" tabIndex={-1} className="flex flex-col gap-2 rounded-card bg-perigo-fundo p-4 text-base font-semibold text-perigo">
           <span>{erroGeral.texto}</span>
           {erroGeral.celular && (
-            <Link href="/minha-conta/dados/foto" className="min-h-12 content-center underline underline-offset-4">
+            <Link href="/confirmar-celular?destino=%2Fradar%2Fpedir" className="min-h-12 content-center underline underline-offset-4">
               Confirmar meu celular
             </Link>
           )}

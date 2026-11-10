@@ -1,0 +1,71 @@
+name: olaki-whatsapp
+services:
+  api:
+    image: evoapicloud/evolution-api:v2.3.7@sha256:1bd8afc4a6cf48822e6cf02469aeae7bd35a12a6b616eacd1291926307f4d339
+    restart: unless-stopped
+    mem_limit: 768m
+    cpus: 0.50
+    pids_limit: 160
+    ports: ["127.0.0.1:8087:8080"]
+    volumes: ["instances:/evolution/instances"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    environment:
+      SERVER_URL: ${SERVER_URL:?Defina o HTTPS exclusivo}
+      SERVER_PORT: 8080
+      AUTHENTICATION_API_KEY: ${EVOLUTION_ADMIN_KEY:?Gere uma chave exclusiva}
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: "false"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://olaki:${POSTGRES_PASSWORD:?Gere uma senha exclusiva}@postgres:5432/olaki?schema=public&connection_limit=5
+      DATABASE_CONNECTION_CLIENT_NAME: olaki
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "false"
+      DATABASE_SAVE_MESSAGE_UPDATE: "false"
+      DATABASE_SAVE_DATA_CONTACTS: "false"
+      DATABASE_SAVE_DATA_CHATS: "false"
+      DATABASE_SAVE_DATA_LABELS: "false"
+      DATABASE_SAVE_DATA_HISTORIC: "false"
+      DATABASE_SAVE_IS_ON_WHATSAPP: "false"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379/0
+      CACHE_REDIS_PREFIX_KEY: olaki
+      CACHE_REDIS_SAVE_INSTANCES: "false"
+      CACHE_REDIS_TTL: 600
+      CACHE_LOCAL_ENABLED: "false"
+      WEBHOOK_GLOBAL_ENABLED: "false"
+      TELEMETRY_ENABLED: "false"
+      LOG_LEVEL: ERROR,WARN
+      LOG_BAILEYS: error
+      CORS_ORIGIN: ${SERVER_URL:?Defina o HTTPS exclusivo}
+      CORS_CREDENTIALS: "false"
+      CONFIG_SESSION_PHONE_CLIENT: OL-AKI
+      CONFIG_SESSION_PHONE_NAME: Chrome
+      NODE_OPTIONS: --max-old-space-size=512
+    logging: {driver: json-file, options: {max-size: 5m, max-file: "2"}}
+  postgres:
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.25
+    pids_limit: 80
+    environment:
+      POSTGRES_DB: olaki
+      POSTGRES_USER: olaki
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Gere uma senha exclusiva}
+    command: [postgres, -c, shared_buffers=32MB, -c, max_connections=30]
+    volumes: ["postgres:/var/lib/postgresql/data"]
+    healthcheck: {test: [CMD-SHELL, "pg_isready -U olaki -d olaki"], interval: 10s, timeout: 5s, retries: 6}
+    logging: {driver: json-file, options: {max-size: 5m, max-file: "2"}}
+  redis:
+    image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    restart: unless-stopped
+    mem_limit: 96m
+    cpus: 0.10
+    pids_limit: 40
+    command: [redis-server, --appendonly, "no", --save, "", --maxmemory, 48mb, --maxmemory-policy, allkeys-lru]
+    healthcheck: {test: [CMD, redis-cli, ping], interval: 10s, timeout: 5s, retries: 6}
+    logging: {driver: json-file, options: {max-size: 5m, max-file: "2"}}
+volumes:
+  instances:
+  postgres:

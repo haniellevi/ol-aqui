@@ -54,13 +54,10 @@ test('perfil: zero linhas, retorno de outra pessoa, erro de banco ou rede não c
     assert.equal(chamadas.some(c=>c[0]==='cache'),false);
   }
 });
-test('WhatsApp: aceita DDD 55 e formato internacional sem duplicar país',async()=>{
-  for(const [entrada,numero] of [['(89) 99999-0001','5589999990001'],['+55 (55) 99999-0001','5555999990001'],['55999990001','5555999990001']]) {
-    const {a,chamadas}=ambiente();assert.equal((await a.salvarWhatsapp(null,form({whatsapp:entrada,id:'outro',whatsapp_verificado_em:'2026-11-09'}))).ok,true);
-    assert.deepEqual(chamadas.find(c=>c[0]==='update')[1],{whatsapp:numero,whatsapp_verificado_em:null});
-    assert.ok(chamadas.some(c=>c[0]==='eq'&&c[1]==='id'&&c[2]===id));
-    assert.ok(chamadas.some(c=>c[0]==='is'&&c[1]==='whatsapp_verificado_em'&&c[2]===null));
-    assert.ok(chamadas.findIndex(c=>c[0]==='sync')<chamadas.findIndex(c=>c[0]==='update'));
+test('WhatsApp: nenhum formato pode salvar um contato sem o código',async()=>{
+  for(const entrada of ['(89) 99999-0001','+55 (55) 99999-0001','55999990001']) {
+    const {a,chamadas}=ambiente();const r=await a.salvarWhatsapp(null,form({whatsapp:entrada,id:'outro',whatsapp_verificado_em:'2026-11-09'}));
+    assert.match(r.erro,/confirme o código/);assert.equal(chamadas.some(c=>c[0]==='update'),false);
   }
 });
 test('WhatsApp: recusa inválidos, telefone fixo, texto e número estrangeiro',async()=>{
@@ -101,7 +98,7 @@ test('sincronização: não regrava quando não há mudanças e propaga falha do
 });
 test('sincronização: número principal não confirmado não usa um secundário antigo',async()=>{
   const a=syncAmbiente({user:{primaryPhoneNumberId:'phone2',phoneNumbers:[{id:'phone1',phoneNumber:'+5589999990001',verification:{status:'verified'}},{id:'phone2',phoneNumber:'+5589999990002',verification:{status:'unverified'}}]}});
-  await a.run();assert.deepEqual(a.updates,[{avatar_url:'https://img/nova',whatsapp:null,whatsapp_verificado_em:null}]);
+  await a.run();assert.deepEqual(a.updates,[{whatsapp:null,whatsapp_verificado_em:null},{avatar_url:'https://img/nova'}]);
 });
 test('sincronização: mantém WhatsApp digitado sem código e atualiza foto',async()=>{
   const a=syncAmbiente({existente:{whatsapp_verificado_em:null},user:{phoneNumbers:[],primaryPhoneNumberId:null}});await a.run();assert.deepEqual(a.updates,[{avatar_url:'https://img/nova'}]);

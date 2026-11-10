@@ -4,6 +4,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // e a área da conta (anunciar, quero vender, minha conta, destacar). O resto do site é público.
 const exigeLogin = createRouteMatcher([
   "/admin(.*)",
+  "/confirmar-celular(.*)",
   "/radar/(.*)",
   "/anunciar(.*)",
   "/quero-vender(.*)",

@@ -3,10 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 import { listarCidades } from "@/lib/dados/regiao";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
-import { exigeCelularConfirmado } from "@/lib/dados/radar";
 import { sincronizarPerfil } from "@/lib/perfil";
 import { whatsappDigitado } from "@/lib/formato";
 
@@ -64,27 +62,13 @@ export async function atualizarPerfilClerk(): Promise<EstadoDados> {
   } catch { return { erro: "Não conseguimos atualizar a foto e a confirmação no OL-AKI. Tente novamente." }; }
 }
 
-/** Respeita a opção regional de contato sem código e não altera número confirmado. */
+/** Compatibilidade com formulários antigos: nunca salva contato sem comprovar a posse. */
 export async function salvarWhatsapp(_antes: EstadoDados, form: FormData): Promise<EstadoDados> {
-  try {
-    const { userId } = await auth();
-    if (!userId) return { erro: SEM_LOGIN };
-    const entrada = form.get("whatsapp");
-    const numero = typeof entrada === "string" && entrada.length <= 30 && /^[\d+().\s-]+$/.test(entrada) ? whatsappDigitado(entrada) : null;
-    if (!numero) return { erro: "Confira o WhatsApp.", campos: { whatsapp: "Digite um celular brasileiro com DDD, por exemplo (89) 99999-0000." } };
-    const usuario = await currentUser();
-    if (!usuario || usuario.id !== userId) return { erro: SEM_LOGIN };
-    await sincronizarPerfil(usuario);
-    const conta = await meuPerfilEVitrine();
-    if (conta?.perfil.id !== userId) return { erro: "Não conseguimos abrir sua conta agora. Tente novamente." };
-    if (conta.perfil.whatsapp_verificado_em || await exigeCelularConfirmado(conta.perfil.microrregiao_id)) {
-      return { erro: "Para trocar este número, use Confirmar ou trocar celular e conclua a verificação." };
-    }
-    const { data, error } = await supabaseAdmin().from("perfis")
-      .update({ whatsapp: numero, whatsapp_verificado_em: null }).eq("id", userId)
-      .is("whatsapp_verificado_em", null).select("id").maybeSingle();
-    if (error || data?.id !== userId) return { erro: "Não conseguimos trocar o WhatsApp. Atualize a página para conferir sua conta e tente novamente." };
-    atualizarTelas();
-    return { ok: true };
-  } catch { return { erro: FALHOU }; }
+  const { userId } = await auth();
+  if (!userId) return { erro: SEM_LOGIN };
+  const entrada = form.get("whatsapp");
+  if (typeof entrada !== "string" || entrada.length > 30 || !/^[\d+().\s-]+$/.test(entrada) || !whatsappDigitado(entrada)) {
+    return { erro: "Confira o WhatsApp.", campos: { whatsapp: "Digite um celular brasileiro com DDD." } };
+  }
+  return { erro: "Para salvar o contato, use Confirmar ou trocar celular e confirme o código recebido no WhatsApp." };
 }

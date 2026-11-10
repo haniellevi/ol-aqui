@@ -51,7 +51,7 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
           titulo="Confirme seu celular primeiro"
           texto="As lojas falam com você pelo WhatsApp. Para pedir no Radar, seu celular precisa estar confirmado."
         >
-          <Botao href="/minha-conta/dados/foto" larguraTotal>
+          <Botao href="/confirmar-celular?destino=%2Fradar%2Fpedir" larguraTotal>
             Confirmar meu celular
           </Botao>
           <Botao href={LINK_RADAR} variante="texto">

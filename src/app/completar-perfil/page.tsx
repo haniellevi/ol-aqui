@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { FileText } from "lucide-react";
+import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { garantirPerfil } from "@/lib/perfil";
 import { termosPendentes } from "@/lib/dados/paginas";
 import { linkDocumentoLegal, LINK_ENTRAR_PERFIL } from "@/lib/rotas";
@@ -30,6 +31,8 @@ export default async function CompletarPerfil({ searchParams }: { searchParams: 
   const { userId } = await auth();
   if (!userId) redirect(`/entrar?redirect_url=${encodeURIComponent(destino)}`);
   await garantirPerfil(); // 1º acesso: cria o perfil se o webhook do Clerk ainda não chegou
+  const conta = await meuPerfilEVitrine(true);
+  if (!conta?.perfil.whatsapp || !conta.perfil.whatsapp_verificado_em) redirect(`/confirmar-celular?destino=${encodeURIComponent(`/completar-perfil?redirect_url=${encodeURIComponent(destino)}`)}`);
   const pendentes = await termosPendentes();
   if (pendentes.length === 0) redirect(destino);
 
