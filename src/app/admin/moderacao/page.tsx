@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { exigirTela } from "@/lib/admin/equipe";
 import { quando, reais } from "@/lib/admin/formato";
+import { LINK_ADMIN_ANUNCIOS } from "@/lib/rotas";
 import { Aviso, Cartao, Titulo, estiloBotaoAprovar, estiloBotaoPerigo, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { decidirAnuncio, decidirPedido, resolverDenuncia, tirarFotoBanner } from "./actions";
 import { BotaoDecisao } from "./botao-decisao";
@@ -64,6 +66,10 @@ export default async function ModeracaoPage({
       <Titulo sub="A IA analisa anúncios retidos pelo filtro e libera os casos claros. Denúncias, dúvidas e restrições ficam para a equipe. Aprovar devolve ao ar; recusar tira do ar; congelar é para Compliance Jurídico.">
         Moderação
       </Titulo>
+
+      {papel === "administrador" && (
+        <Link href={LINK_ADMIN_ANUNCIOS} className={`${estiloBotaoSec} mb-4`}>Ver todos os anúncios</Link>
+      )}
 
       <Cartao className="mb-4 space-y-2 text-sm">
         <h2 className="font-semibold">Análise automática {iaAtivaR.data === true ? "ligada" : "desligada"}</h2>

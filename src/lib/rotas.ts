@@ -37,6 +37,7 @@ export const linkAvulso = (anuncioId: string, pagamentoId?: string | null) =>
 /** Painel: telas 5 (lojas e vendedores) e 6 (pagamentos). */
 export const LINK_ADMIN_LOJAS = "/admin/lojas";
 export const LINK_ADMIN_PAGAMENTOS = "/admin/pagamentos";
+export const LINK_ADMIN_ANUNCIOS = "/admin/anuncios";
 
 /** Radar: pedir (com o texto já preenchido), pedido do comprador e pedido visto pela loja. */
 export const LINK_RADAR = "/radar";

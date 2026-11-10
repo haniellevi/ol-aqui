@@ -27,6 +27,7 @@ export type TelaAdmin =
   | "resumo"
   | "planos"
   | "configuracoes"
+  | "anuncios"
   | "moderacao"
   | "lojas"
   | "pagamentos"
