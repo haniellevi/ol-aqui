@@ -24,6 +24,8 @@ try:
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+    checked(sql((root/'supabase/testes/420_gerentes_loja.sql').read_text()))
+    print('PASS: convites e edição de gerentes isolados por loja, com expiração e revogação', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
