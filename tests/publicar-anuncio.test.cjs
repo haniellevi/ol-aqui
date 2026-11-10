@@ -24,6 +24,23 @@ function fronteiras(op = {}) {
   return { a: carregar(base + 'actions.ts', mocks), mocks, gravacoes, filtros };
 }
 function form(valores = {}) { const f = new FormData(); for (const [k, v] of Object.entries({ id, acao: 'seguir', ...valores })) f.set(k, v); return f; }
+
+test('busca sem categoria oferece Diversos ativo sem selecionar automaticamente', () => {
+  let indice = 0;
+  const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
+    react: { ...React, useState: inicial => [indice++ === 2 ? 'Desenho para colorir' : inicial, () => {}], useMemo: fn => fn() },
+    './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
+    '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
+  });
+  const diversos = { id: 'tipo-diversos', slug: 'diversos', nome: 'Diversos' };
+  const arvore = [{ id: 'grupo-outros', slug: 'outros', nome: 'Outros', filhas: [diversos] }];
+  const html = render(EscolhaCategoria({ id, editar: false, formId: 'categoria', arvore, selecionadaId: null }));
+  assert.match(html, /Ver todas as categorias/);
+  assert.match(html, /name="escolha-categoria" value="tipo-diversos"/);
+  assert.match(html, /name="categoria_id" value=""/);
+  assert.doesNotMatch(html, /<input[^>]*\schecked(?:=|\s|>)/);
+});
+
 for (const [texto, centavos] of [['1500.50',150050],['1.500,50',150050],['1.500',150000],['49,90',4990]]) {
   test(`salvar preço ${texto} mantém o valor exato`, async () => {
     const { a, gravacoes } = fronteiras();
