@@ -66,15 +66,15 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
 
     {(emAnalise || podeRevisar) && <Cartao aria-labelledby="acao-anuncio" className="space-y-3">
       <h2 id="acao-anuncio" className="text-lg text-beringela">Gerenciar situação</h2>
-      {emAnalise && <form action={administrarAnuncio.bind(null, id, a.status, a.atualizado_em)}>
-        <Botao type="submit" name="acao" value="aprovar">Aprovar e colocar no ar</Botao>
+      {emAnalise && <form action={administrarAnuncio.bind(null, id, a.status, a.atualizado_em, "aprovar")}>
+        <Botao type="submit">Aprovar e colocar no ar</Botao>
       </form>}
-      <form action={administrarAnuncio.bind(null, id, a.status, a.atualizado_em)} className="space-y-2">
+      <form action={administrarAnuncio.bind(null, id, a.status, a.atualizado_em, emAnalise ? "recusar" : "revisar")} className="space-y-2">
         <label htmlFor="motivo-administracao" className="block text-rotulo font-semibold">Motivo da decisão</label>
         <textarea id="motivo-administracao" name="motivo" rows={2} required minLength={3} maxLength={280}
           className={`${estiloCampo} h-auto min-h-20 py-2`} aria-describedby="ajuda-motivo-administracao" />
         <p id="ajuda-motivo-administracao" className="text-sm text-texto-suave">O anunciante pode ler o motivo em Meus anúncios.</p>
-        <Botao type="submit" name="acao" value={emAnalise ? "recusar" : "revisar"} variante="secundario">
+        <Botao type="submit" variante="secundario">
           {emAnalise ? "Recusar anúncio" : a.status === "ativo" ? "Retirar do ar para revisão" : "Enviar para nova revisão"}
         </Botao>
       </form>

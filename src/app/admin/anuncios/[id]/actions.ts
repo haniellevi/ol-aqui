@@ -12,10 +12,9 @@ function aviso(id: string, chave: "erro" | "ok", texto: string, conversa = false
   redirect(`${linkAdminAnuncio(id)}?${new URLSearchParams({ [chave]: texto })}${conversa ? "#conversa" : ""}`);
 }
 
-export async function administrarAnuncio(id: string, esperado: StatusAnuncio, atualizado: string, form: FormData) {
+export async function administrarAnuncio(id: string, esperado: StatusAnuncio, atualizado: string, acao: string, form: FormData) {
   const { supabase } = await exigirTela("anuncios");
   if (!ehUuid(id)) notFound();
-  const acao = form.get("acao");
   const motivo = String(form.get("motivo") ?? "").trim();
   if (acao !== "revisar" && acao !== "aprovar" && acao !== "recusar") aviso(id, "erro", "Escolha uma ação válida.");
   if (acao !== "aprovar" && (motivo.length < 3 || motivo.length > 280)) aviso(id, "erro", "Informe um motivo entre 3 e 280 caracteres.");
