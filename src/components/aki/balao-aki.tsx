@@ -25,6 +25,7 @@ import {
   type PedidoAbrirAki,
 } from "./abrir";
 import { RespostaAki } from "./resposta-aki";
+import { classesCampo } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 
 // Balão flutuante do Aki + folha de conversa (DESIGN-SYSTEM.md: folha rounded-t-folha, shadow-2,
@@ -589,9 +590,9 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
 
             <footer className="border-t border-borda px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2">
               {aviso && (
-                <p role="status" className="mb-2 rounded-card bg-fundo px-3 py-2 text-sm text-beringela">
+                <Alert variant="info" role="status" className="mb-2">
                   {aviso}
-                </p>
+                </Alert>
               )}
               {estado.logado && motivoTexto && (
                 <Alert variant="warning" role="status" className="mb-2">
@@ -659,7 +660,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     rows={1}
                     disabled={!podeEscrever}
                     placeholder={podeEscrever ? "Escreva para o Aki" : DESCANSANDO}
-                    className="max-h-32 min-h-10 flex-1 resize-none rounded-campo border border-borda bg-cartao px-3 py-2.5 text-base leading-6 text-texto placeholder:text-texto-suave/80 focus:outline-none focus-visible:border-laranja-escuro disabled:bg-fundo"
+                    className={`${classesCampo} max-h-32 min-h-10 flex-1 resize-none py-2.5 leading-6`}
                   />
                   <Botao
                     type="submit"
