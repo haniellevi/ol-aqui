@@ -19,7 +19,7 @@ export async function CabecalhoPublico() {
   const cidade = regiao?.cidade ?? regiao?.cidadeSede ?? regiao?.nome ?? null;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-borda bg-cartao/95 backdrop-blur supports-[backdrop-filter]:bg-cartao/85">
+    <header className="olaki-material sticky top-0 z-30">
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-card focus:bg-laranja focus:px-4 focus:py-3 focus:font-bold focus:text-beringela">
         Pular para o conteúdo
       </a>

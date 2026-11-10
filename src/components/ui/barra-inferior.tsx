@@ -24,7 +24,7 @@ export function BarraInferior() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-borda bg-cartao pb-[env(safe-area-inset-bottom)] shadow-2 md:hidden"
+      className="olaki-material fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <ul className="mx-auto grid h-14 max-w-lg grid-cols-5">
         {ITENS.map(({ href, rotulo, Icone, ativo }) => {

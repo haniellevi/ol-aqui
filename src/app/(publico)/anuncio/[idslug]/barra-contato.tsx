@@ -71,7 +71,7 @@ export function BarraContato({
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 border-t border-borda bg-cartao px-4 py-2 shadow-2 md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+    <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] olaki-material z-20 px-4 py-2 md:static md:z-auto md:bg-transparent md:p-0 md:shadow-none md:backdrop-filter-none">
       <div className="mx-auto flex max-w-6xl items-center gap-2">
         {whatsappHref ? (
           <a
