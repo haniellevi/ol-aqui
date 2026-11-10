@@ -65,6 +65,12 @@ begin
  assert (select estado='manual' from moderacao_ia where id=(j->>'id')::uuid), 'Worker interrompido vai para exceção';
  assert moderacao_ia_concluir((j->>'id')::uuid,(j->>'reserva')::uuid,r,0.001)='ignorado', 'Resposta atrasada não publica';
 
+ a:=pg_temp.anuncio_ia(); j:=moderacao_ia_reservar();
+ update vitrines_lojas set plano='teste',teste_expira_em=now()+interval '1 day' where dono_id='user_loja';
+ assert moderacao_ia_concluir((j->>'id')::uuid,(j->>'reserva')::uuid,r,0.001)='manual', 'A aprovação não contorna a cota ocupada';
+ assert (select status='em_analise' from anuncios where id=a);
+ update vitrines_lojas set plano='full' where dono_id='user_loja';
+
  a:=pg_temp.anuncio_ia();
  update configuracoes set valor='0' where chave='robo.orcamento_mensal_centavos';
  select count(*) into n from robo_uso where tipo='moderacao';
