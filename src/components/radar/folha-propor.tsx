@@ -237,7 +237,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                             type="button"
                             onClick={() => escolherAnuncio(a)}
                             aria-pressed={ativo}
-                            className={`flex min-h-12 w-full items-center gap-3 rounded-campo border-2 p-2 text-left focus-visible:outline-3 focus-visible:outline-laranja-escuro ${
+                            className={`flex min-h-11 w-full items-center gap-3 rounded-campo border-2 p-2 text-left focus-visible:outline-3 focus-visible:outline-laranja-escuro ${
                               ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao hover:bg-fundo"
                             }`}
                           >
@@ -250,7 +250,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                               </span>
                             )}
                             <span className="flex min-w-0 flex-1 flex-col">
-                              <span className="truncate text-[15px] font-semibold">{a.titulo}</span>
+                              <span className="truncate text-base font-semibold">{a.titulo}</span>
                               {a.preco_centavos != null && <span className="text-legenda text-texto-suave">{preco(a.preco_centavos)}</span>}
                             </span>
                             {ativo && <Check className="size-5 shrink-0 text-laranja-escuro" aria-hidden />}

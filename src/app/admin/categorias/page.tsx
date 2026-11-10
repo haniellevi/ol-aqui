@@ -15,7 +15,7 @@ export const metadata = { title: "Categorias e campos" };
 
 function Etiquetas({ c, maeEscondida }: { c: CategoriaAdmin; maeEscondida?: boolean }) {
   return (
-    <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-texto-suave">
+    <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-legenda text-texto-suave">
       {!c.ativa && <span className="rounded-full bg-borda px-2 font-semibold text-texto-suave">Escondida</span>}
       {c.ativa && maeEscondida && <span className="rounded-full bg-borda px-2 font-semibold text-texto-suave">Escondida pela principal</span>}
       <span>
@@ -57,7 +57,7 @@ export default async function CategoriasPage() {
               <div className="flex items-start gap-3">
                 <CirculoCategoria nome={p.icone} />
                 <div className="min-w-0 flex-1">
-                  <Link href={linkAdminCategoria(p.id)} className="inline-flex min-h-12 items-center text-lg font-semibold text-beringela underline-offset-4 hover:underline">
+                  <Link href={linkAdminCategoria(p.id)} className="inline-flex min-h-11 items-center text-lg font-semibold text-beringela underline-offset-4 hover:underline">
                     {p.nome}
                   </Link>
                   <Etiquetas c={p} />
@@ -71,7 +71,7 @@ export default async function CategoriasPage() {
                     <li key={s.id} className="flex items-center gap-3 py-2 pl-2 md:pl-14">
                       <IconeCategoria nome={s.icone} className="size-5 shrink-0 text-beringela" />
                       <div className="min-w-0 flex-1">
-                        <Link href={linkAdminCategoria(s.id)} className="inline-flex min-h-12 items-center text-base font-semibold text-beringela underline-offset-4 hover:underline">
+                        <Link href={linkAdminCategoria(s.id)} className="inline-flex min-h-11 items-center text-base font-semibold text-beringela underline-offset-4 hover:underline">
                           {s.nome}
                         </Link>
                         <Etiquetas c={s} maeEscondida={!p.ativa} />

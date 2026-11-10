@@ -87,10 +87,10 @@ export default async function PaginaPrivacidade() {
               <li key={tipo}>
                 <Link
                   href={linkDocumentoLegal(tipo, ultimo?.versao)}
-                  className="flex min-h-12 flex-col justify-center text-base font-semibold text-laranja-escuro underline-offset-4 hover:underline"
+                  className="flex min-h-11 flex-col justify-center text-base font-semibold text-laranja-escuro underline-offset-4 hover:underline"
                 >
                   {NOME_DOCUMENTO[tipo]}
-                  <span className="text-[13px] font-normal text-texto-suave">
+                  <span className="text-legenda font-normal text-texto-suave">
                     {ultimo ? `Versão ${ultimo.versao}, aceita em ${dataCurta.format(new Date(ultimo.aceito_em))}` : "Ainda não aceitou"}
                   </span>
                 </Link>

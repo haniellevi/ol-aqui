@@ -94,7 +94,7 @@ export function EscolherProdutos({
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="line-clamp-2 text-base leading-5">{a.titulo}</span>
                   <span className="text-base font-bold">{preco(a.preco_centavos)}</span>
-                  {a.status === "pausado" && <span className="text-[13px] text-texto-suave">Pausado: só aparece quando voltar ao ar</span>}
+                  {a.status === "pausado" && <span className="text-legenda text-texto-suave">Pausado: só aparece quando voltar ao ar</span>}
                 </span>
               </label>
             </li>

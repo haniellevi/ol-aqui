@@ -19,11 +19,11 @@ function Girando() {
 
 function Marcar({ nome, rotuloTexto, marcado, desligado, dica }: { nome: string; rotuloTexto: string; marcado: boolean; desligado?: boolean; dica?: string }) {
   return (
-    <label className={`flex min-h-12 items-center gap-3 text-base text-beringela ${desligado ? "opacity-70" : ""}`}>
+    <label className={`flex min-h-11 items-center gap-3 text-base text-beringela ${desligado ? "opacity-70" : ""}`}>
       <input type="checkbox" name={nome} defaultChecked={marcado} disabled={desligado} className="size-5 accent-laranja-escuro" />
       <span>
         {rotuloTexto}
-        {dica && <span className="block text-[13px] text-texto-suave">{dica}</span>}
+        {dica && <span className="block text-legenda text-texto-suave">{dica}</span>}
       </span>
     </label>
   );
@@ -82,7 +82,7 @@ export function FormPergunta({ pergunta, categorias }: { pergunta?: AjudaPergunt
             required
             className={`${estiloCampo} h-auto py-2`}
           />
-          <p className="mt-1 text-[13px] text-texto-suave">
+          <p className="mt-1 text-legenda text-texto-suave">
             Frases curtas. **negrito**, lista com &quot;- &quot; no começo da linha, link assim: [Planos](/planos). HTML não funciona.
           </p>
         </div>
@@ -109,7 +109,7 @@ export function FormPergunta({ pergunta, categorias }: { pergunta?: AjudaPergunt
       </form>
       {previa && (
         <div className="rounded-card border border-borda bg-fundo p-3">
-          <p className="mb-2 text-[13px] font-semibold uppercase text-texto-suave">Prévia</p>
+          <p className="mb-2 text-legenda font-semibold uppercase text-texto-suave">Prévia</p>
           <Markdown texto={resposta || "(vazio)"} />
         </div>
       )}
@@ -186,7 +186,7 @@ export function FormCategoria({ categoria, quantas }: { categoria?: AjudaCategor
             {apagando && <Girando />}
             {apagando ? "Apagando…" : "Apagar assunto"}
           </button>
-          {(quantas ?? 0) > 0 && <p className="mt-1 text-[13px] text-texto-suave">Só dá para apagar assunto sem perguntas.</p>}
+          {(quantas ?? 0) > 0 && <p className="mt-1 text-legenda text-texto-suave">Só dá para apagar assunto sem perguntas.</p>}
           {apagado?.erro && <Aviso tipo="erro">{apagado.erro}</Aviso>}
         </form>
       )}
@@ -229,7 +229,7 @@ export function FormBloco({ bloco }: { bloco: BlocoHome }) {
           )}
         </div>
       ))}
-      {bloco.campos.includes("titulo") && <p className="text-[13px] text-texto-suave">Use {"{lugar}"} para mostrar a cidade ou região da pessoa.</p>}
+      {bloco.campos.includes("titulo") && <p className="text-legenda text-texto-suave">Use {"{lugar}"} para mostrar a cidade ou região da pessoa.</p>}
       <div className="flex flex-wrap items-center gap-3">
         <button disabled={pendente} className={estiloBotaoSec}>
           {pendente && <Girando />}
@@ -251,7 +251,7 @@ export function MoverBloco({ chave, primeiro, ultimo }: { chave: string; primeir
         name="direcao"
         value="subir"
         disabled={pendente || primeiro}
-        className="flex h-12 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-sm font-semibold text-beringela disabled:opacity-40"
+        className="flex h-11 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-sm font-semibold text-beringela disabled:opacity-40"
       >
         <ArrowUp className="size-4" aria-hidden /> Subir
       </button>
@@ -259,7 +259,7 @@ export function MoverBloco({ chave, primeiro, ultimo }: { chave: string; primeir
         name="direcao"
         value="descer"
         disabled={pendente || ultimo}
-        className="flex h-12 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-sm font-semibold text-beringela disabled:opacity-40"
+        className="flex h-11 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-sm font-semibold text-beringela disabled:opacity-40"
       >
         <ArrowDown className="size-4" aria-hidden /> Descer
       </button>

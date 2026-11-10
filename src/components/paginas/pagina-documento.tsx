@@ -30,7 +30,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
   if (!doc) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-6">
-        <h1 className="text-[22px] font-semibold leading-7">{NOME_DOCUMENTO[tipo]}</h1>
+        <h1 className="text-titulo font-semibold">{NOME_DOCUMENTO[tipo]}</h1>
         <Vazio titulo="Este texto não abriu agora." texto="Confira sua internet e tente de novo em instantes." icone={<FileText />}>
           <Botao href={linkDocumentoLegal(tipo)} larguraTotal>
             Tentar de novo
@@ -49,7 +49,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-[22px] font-semibold leading-7">{doc.titulo}</h1>
+        <h1 className="text-titulo font-semibold">{doc.titulo}</h1>
         <p className="text-sm text-texto-suave">
           Versão {doc.versao} · publicada em {data.format(new Date(doc.publicado_em))}
         </p>
@@ -59,7 +59,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
         <div role="status" className="flex flex-col gap-2 rounded-card bg-aviso-fundo p-4 text-aviso">
           <p className="text-base font-semibold">Esta é uma versão antiga e não vale mais.</p>
           {atual && (
-            <Link href={linkDocumentoLegal(tipo)} className="inline-flex min-h-12 items-center font-semibold underline underline-offset-4">
+            <Link href={linkDocumentoLegal(tipo)} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">
               Ver a versão que vale hoje (versão {atual.versao})
             </Link>
           )}
@@ -68,11 +68,11 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
 
       {indice.length > 2 && (
         <details className="rounded-card bg-cartao px-4 shadow-1">
-          <summary className="min-h-12 cursor-pointer py-3 text-base font-semibold">Nesta página</summary>
+          <summary className="min-h-11 cursor-pointer py-3 text-base font-semibold">Nesta página</summary>
           <ol className="flex flex-col pb-3">
             {indice.map((t) => (
               <li key={t.id}>
-                <a href={`#${t.id}`} className="flex min-h-12 items-center text-base text-laranja-escuro underline-offset-4 hover:underline">
+                <a href={`#${t.id}`} className="flex min-h-11 items-center text-base text-laranja-escuro underline-offset-4 hover:underline">
                   {t.texto}
                 </a>
               </li>
@@ -105,13 +105,13 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
                 <Link
                   href={linkDocumentoLegal(tipo, v.ativo ? null : v.versao)}
                   aria-current={v.id === doc.id ? "page" : undefined}
-                  className="flex min-h-12 flex-col justify-center px-4 py-2 hover:bg-fundo"
+                  className="flex min-h-11 flex-col justify-center px-4 py-2 hover:bg-fundo"
                 >
                   <span className="text-base font-semibold">
                     Versão {v.versao}
                     {v.ativo ? " · vale hoje" : ""}
                   </span>
-                  <span className="text-[13px] text-texto-suave">
+                  <span className="text-legenda text-texto-suave">
                     {data.format(new Date(v.publicado_em))}
                     {v.resumo_mudancas ? ` · ${v.resumo_mudancas}` : ""}
                   </span>

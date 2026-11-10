@@ -57,7 +57,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4">
       <section aria-labelledby="titulo-inicio" className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <h1 id="titulo-inicio" className="text-balance text-titulo font-semibold text-beringela sm:text-[1.75rem]">
+          <h1 id="titulo-inicio" className="text-balance text-titulo font-semibold text-beringela">
             Compre e venda em {lugar}
           </h1>
           <p className="max-w-[65ch] text-pretty text-base text-texto-suave">
@@ -65,7 +65,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           </p>
         </div>
         <CampoBusca id="busca-inicio" />
-        <Link href="/lojas" className="flex items-center justify-between gap-3 rounded-card border border-borda bg-cartao px-4 py-3 font-semibold text-beringela hover:border-laranja-escuro">
+        <Link href="/lojas" className="flex min-h-11 items-center justify-between gap-3 rounded-card border border-borda bg-cartao px-3 py-2 text-sm font-semibold text-beringela hover:border-laranja-escuro">
           <span>Conheça as lojas de {lugar}</span>
           <span className="shrink-0 text-sm text-laranja-escuro">Ver lojas</span>
         </Link>
@@ -78,7 +78,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
               <li key={c.id} className="min-w-0">
                 <Link
                   href={linkCategoria(c.slug)}
-                  className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-[13px] font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                  className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-legenda font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                 >
                   <CirculoCategoria nome={c.icone} className={estilos.categoria} />
                   <span className="max-w-full hyphens-auto break-words">{c.nome}</span>
@@ -88,7 +88,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
             <li className="min-w-0">
               <Link
                 href="/categorias"
-                className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-[13px] font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-legenda font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
               >
                 <span className="grid size-12 place-items-center rounded-full border-2 border-borda bg-cartao text-beringela">
                   <Ellipsis className="size-6" aria-hidden />
@@ -189,14 +189,14 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           }
         })}
 
-      <nav aria-label="Ajuda e textos" className="flex flex-wrap justify-center gap-x-4 border-t border-borda pt-2 text-[15px]">
-        <Link href={LINK_AJUDA} className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline-offset-4 hover:underline">
+      <nav aria-label="Ajuda e textos" className="flex flex-wrap justify-center gap-x-4 border-t border-borda pt-2 text-base">
+        <Link href={LINK_AJUDA} className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline-offset-4 hover:underline">
           Ajuda e segurança
         </Link>
-        <Link href={LINK_TERMOS} className="inline-flex min-h-12 items-center text-texto-suave underline-offset-4 hover:underline">
+        <Link href={LINK_TERMOS} className="inline-flex min-h-11 items-center text-texto-suave underline-offset-4 hover:underline">
           Termos de uso
         </Link>
-        <Link href={LINK_PRIVACIDADE} className="inline-flex min-h-12 items-center text-texto-suave underline-offset-4 hover:underline">
+        <Link href={LINK_PRIVACIDADE} className="inline-flex min-h-11 items-center text-texto-suave underline-offset-4 hover:underline">
           Privacidade
         </Link>
       </nav>

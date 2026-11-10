@@ -128,7 +128,7 @@ function Linha({ anuncio: a, aviso, children }: { anuncio: MeuAnuncioVitrine; av
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="line-clamp-2 text-base leading-5">{a.titulo}</span>
           <span className="text-base font-bold">{preco(a.preco_centavos)}</span>
-          {aviso && <span className="text-[13px] font-semibold text-aviso">{aviso}</span>}
+          {aviso && <span className="text-legenda font-semibold text-aviso">{aviso}</span>}
         </span>
       </div>
       {children}

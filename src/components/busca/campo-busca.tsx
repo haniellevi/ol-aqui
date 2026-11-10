@@ -22,14 +22,14 @@ export function CampoBusca({
 }) {
   return (
     <form action={caminho} method="get" role="search" className="flex flex-col gap-2">
-      <label htmlFor={id} className={rotuloVisivel ? "text-[22px] font-semibold leading-7" : "sr-only"}>
+      <label htmlFor={id} className={rotuloVisivel ? "text-titulo font-semibold" : "sr-only"}>
         O que você procura?
       </label>
       {Object.entries(manterFiltros(manter)).flatMap(([k, v]) =>
         (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean).map((valor, i) => <input key={`${k}-${i}`} type="hidden" name={k} value={valor} />),
       )}
-      <div className="flex h-14 items-center gap-2 rounded-card border-2 border-beringela bg-cartao pl-3 pr-1 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro">
-        <Search className="size-6 shrink-0 text-beringela" aria-hidden />
+      <div className="flex h-12 items-center gap-2 rounded-card border-2 border-beringela bg-cartao pl-3 pr-1 md:h-11 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro">
+        <Search className="size-5 shrink-0 text-beringela" aria-hidden />
         <input
           id={id}
           type="search"
@@ -44,7 +44,7 @@ export function CampoBusca({
         />
         <button
           type="submit"
-          className="inline-flex h-12 shrink-0 items-center rounded-campo bg-laranja px-4 text-base font-semibold text-beringela hover:brightness-95 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+          className="inline-flex h-9 shrink-0 items-center rounded-campo bg-laranja px-3.5 text-sm font-semibold text-beringela md:h-8 hover:brightness-95 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
         >
           Buscar
         </button>

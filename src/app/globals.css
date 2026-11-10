@@ -47,6 +47,10 @@
   --shadow-2: 0 -2px 12px rgb(75 18 72 / 0.12);
 
   --spacing-toque: 2.75rem; /* 44px, área mínima de toque */
+
+  /* Régua de tamanhos (docs/DESIGN-SYSTEM.md, seção 3). Toque / mouse. */
+  --spacing-controle: 2.75rem;         /* 44px: botão normal, campo, select */
+  --spacing-controle-pequeno: 2.25rem; /* 36px: ações dentro de cards, listas e tabelas */
 }
 
 body {
@@ -70,15 +74,29 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
 }
 
 @layer utilities {
+  /* Título da tela: 20px no celular, 22px do tablet para cima. */
+  @media (min-width: 48rem) {
+    .text-titulo { font-size: 1.375rem; line-height: 1.3; }
+  }
   .text-base:where(input, select, textarea) { font-size: 1rem; }
   @media (min-width: 48rem) and (pointer: fine) {
     .text-base:where(input, select, textarea) { font-size: 0.875rem; }
   }
 }
 
+/* Lista de escolha nativa: mesma altura e letra dos campos em todo o app. */
+@layer base {
+  select:not([multiple]):not([size]) {
+    min-height: var(--spacing-controle);
+    border-radius: var(--radius-campo);
+  }
+}
+
 @media (min-width: 48rem) and (pointer: fine) {
   .olaki-controle { min-height: 2.5rem; }
+  .olaki-controle-pequeno { min-height: 2rem; }
   :is(input, select).olaki-campo { height: 2.5rem; }
+  select:not([multiple]):not([size]) { min-height: 2.5rem; }
 }
 
 /* Feedback de pressão, sem animar navegação, leitura ou entrada de páginas. */

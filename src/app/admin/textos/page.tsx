@@ -43,7 +43,7 @@ export default async function TextosPage({ searchParams }: { searchParams: Promi
             key={a.id}
             href={`/admin/textos?aba=${a.id}`}
             aria-current={a.id === aba ? "page" : undefined}
-            className={`inline-flex h-12 shrink-0 items-center rounded-campo border px-4 text-sm font-semibold text-beringela active:brightness-90 ${
+            className={`inline-flex h-11 shrink-0 items-center rounded-campo border px-4 text-sm font-semibold text-beringela active:brightness-90 ${
               a.id === aba ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
             }`}
           >
@@ -74,7 +74,7 @@ async function AbaAjuda({ supabase }: { supabase: Db }) {
     <div className="space-y-6">
       <Cartao>
         <details>
-          <summary className="min-h-12 cursor-pointer py-3 font-semibold text-beringela">+ Nova pergunta</summary>
+          <summary className="min-h-11 cursor-pointer py-3 font-semibold text-beringela">+ Nova pergunta</summary>
           {categorias.length > 0 ? <FormPergunta categorias={categorias} /> : <p className="text-sm text-texto-suave">Crie um assunto primeiro.</p>}
         </details>
       </Cartao>
@@ -85,23 +85,23 @@ async function AbaAjuda({ supabase }: { supabase: Db }) {
           <section key={c.slug} className="space-y-2">
             <div className="flex flex-wrap items-baseline gap-2">
               <h2 className="text-lg font-semibold text-beringela">{c.nome}</h2>
-              <span className="text-[13px] text-texto-suave">
+              <span className="text-legenda text-texto-suave">
                 {itens.length} {itens.length === 1 ? "pergunta" : "perguntas"} · posição {c.ordem}
                 {c.ativa ? "" : " · ESCONDIDO"}
               </span>
             </div>
             <Cartao className="space-y-1 p-0">
               <details className="border-b border-borda px-4">
-                <summary className="min-h-12 cursor-pointer py-3 text-sm font-semibold text-beringela">Editar assunto</summary>
+                <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-beringela">Editar assunto</summary>
                 <div className="pb-4">
                   <FormCategoria categoria={c} quantas={itens.length} />
                 </div>
               </details>
               {itens.map((p) => (
                 <details key={p.id} className="border-b border-borda px-4 last:border-0">
-                  <summary className="min-h-12 cursor-pointer py-3 text-base text-beringela">
+                  <summary className="min-h-11 cursor-pointer py-3 text-base text-beringela">
                     {p.pergunta}
-                    {!p.ativo && <span className="ml-2 rounded-full bg-aviso-fundo px-2 text-[13px] font-semibold text-aviso">escondida</span>}
+                    {!p.ativo && <span className="ml-2 rounded-full bg-aviso-fundo px-2 text-legenda font-semibold text-aviso">escondida</span>}
                   </summary>
                   <div className="pb-4">
                     <FormPergunta pergunta={p} categorias={categorias} />
@@ -115,11 +115,11 @@ async function AbaAjuda({ supabase }: { supabase: Db }) {
 
       <Cartao>
         <details>
-          <summary className="min-h-12 cursor-pointer py-3 font-semibold text-beringela">+ Novo assunto</summary>
+          <summary className="min-h-11 cursor-pointer py-3 font-semibold text-beringela">+ Novo assunto</summary>
           <FormCategoria />
         </details>
       </Cartao>
-      <p className="text-[13px] text-texto-suave">
+      <p className="text-legenda text-texto-suave">
         O WhatsApp e o e-mail da equipe que aparecem na Ajuda ficam em{" "}
         <Link href="/admin/configuracoes?grupo=geral" className="font-semibold text-laranja-escuro underline">
           Configurações &gt; Geral
@@ -150,7 +150,7 @@ async function AbaTermos({ supabase, tipo }: { supabase: Db; tipo: TipoDocumento
             key={t}
             href={`/admin/textos?aba=termos&doc=${t}`}
             aria-current={t === tipo ? "page" : undefined}
-            className={`inline-flex h-12 items-center rounded-campo border px-4 text-sm font-semibold text-beringela ${
+            className={`inline-flex h-11 items-center rounded-campo border px-4 text-sm font-semibold text-beringela ${
               t === tipo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
             }`}
           >
@@ -168,9 +168,9 @@ async function AbaTermos({ supabase, tipo }: { supabase: Db; tipo: TipoDocumento
               No ar: versão {atual.versao} · {quando(atual.publicado_em)}
             </h2>
             {atual.revisado_advogado ? (
-              <span className="rounded-full bg-sucesso-fundo px-3 py-0.5 text-[13px] font-semibold text-verde-escuro">Revisado por advogado</span>
+              <span className="rounded-full bg-sucesso-fundo px-3 py-0.5 text-legenda font-semibold text-verde-escuro">Revisado por advogado</span>
             ) : (
-              <span className="rounded-full bg-perigo-fundo px-3 py-0.5 text-[13px] font-bold text-perigo">RASCUNHO: um advogado precisa revisar</span>
+              <span className="rounded-full bg-perigo-fundo px-3 py-0.5 text-legenda font-bold text-perigo">RASCUNHO: um advogado precisa revisar</span>
             )}
           </div>
           {!atual.revisado_advogado && (
@@ -203,11 +203,11 @@ async function AbaTermos({ supabase, tipo }: { supabase: Db; tipo: TipoDocumento
           <Cartao className="p-0">
             <ul>
               {versoes.map((v) => (
-                <li key={v.id} className="flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1 border-b border-borda px-4 py-2 last:border-0">
+                <li key={v.id} className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 border-b border-borda px-4 py-2 last:border-0">
                   <Link href={linkDocumentoLegal(tipo, v.ativo ? null : v.versao)} target="_blank" className="font-semibold text-laranja-escuro underline">
                     Versão {v.versao}
                   </Link>
-                  <span className="text-[13px] text-texto-suave">
+                  <span className="text-legenda text-texto-suave">
                     {quando(v.publicado_em)}
                     {v.ativo ? " · no ar" : ""}
                     {v.revisado_advogado ? " · revisada" : " · rascunho"}
@@ -242,8 +242,8 @@ async function AbaInicio({ supabase }: { supabase: Db }) {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold text-beringela">
               {i + 1}. {b.nome}
-              {b.pago && <span className="ml-2 rounded-full bg-patrocinado-fundo px-2 text-[13px] font-semibold text-beringela">pago</span>}
-              {!b.ativo && <span className="ml-2 rounded-full bg-aviso-fundo px-2 text-[13px] font-semibold text-aviso">desligado</span>}
+              {b.pago && <span className="ml-2 rounded-full bg-patrocinado-fundo px-2 text-legenda font-semibold text-beringela">pago</span>}
+              {!b.ativo && <span className="ml-2 rounded-full bg-aviso-fundo px-2 text-legenda font-semibold text-aviso">desligado</span>}
             </h2>
             <MoverBloco chave={b.chave} primeiro={i === 0} ultimo={i === blocos.length - 1} />
           </div>

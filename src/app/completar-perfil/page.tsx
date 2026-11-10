@@ -57,7 +57,7 @@ export default async function CompletarPerfil({ searchParams }: { searchParams: 
               <FileText className="size-6 shrink-0 text-laranja-escuro" aria-hidden />
               <span className="flex flex-col">
                 <span className="text-base font-semibold">{NOME_DOCUMENTO[p.tipo]}</span>
-                <span className="text-[13px] text-texto-suave">
+                <span className="text-legenda text-texto-suave">
                   Versão {p.versao} · abre em outra aba
                 </span>
               </span>

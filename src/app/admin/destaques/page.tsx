@@ -123,7 +123,7 @@ export default async function DestaquesAdminPage() {
 
       <nav aria-label="Seções de destaques" className="mb-6 flex flex-wrap gap-x-5 gap-y-1 border-b border-borda pb-2 text-sm">
         {[["tipos", "Tipos"], ["regioes", "Regiões"], ["creditos", "Créditos"], ["cortesias", "Cortesias"], ["ativos", "Ativos"], ["cobranca", "Cobrança"]].map(([id, nome]) => (
-          <a key={id} href={`#${id}`} className="inline-flex min-h-12 items-center text-texto-suave underline-offset-4 hover:text-laranja-escuro hover:underline focus-visible:outline-2 focus-visible:outline-laranja-escuro">{nome}</a>
+          <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center text-texto-suave underline-offset-4 hover:text-laranja-escuro hover:underline focus-visible:outline-2 focus-visible:outline-laranja-escuro">{nome}</a>
         ))}
       </nav>
 
@@ -144,7 +144,7 @@ export default async function DestaquesAdminPage() {
             </li>
           </ul>
           <details className="mt-2 text-legenda text-texto-suave">
-            <summary className="flex min-h-12 cursor-pointer items-center font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro">Detalhes da integração</summary>
+            <summary className="flex min-h-11 cursor-pointer items-center font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro">Detalhes da integração</summary>
             <p className="max-w-[70ch] pb-2">Chaves na Vercel: ASAAS_API_KEY e ASAAS_WEBHOOK_TOKEN. Ambiente: <strong>{String(ambiente ?? "sandbox")}</strong>. Mude em &quot;asaas.ambiente&quot; abaixo: sandbox para testes, producao para valer.</p>
           </details>
           {!temAsaas && (
@@ -159,7 +159,7 @@ export default async function DestaquesAdminPage() {
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold text-beringela">{t.nome}</h3>
                 <span className="text-legenda text-texto-suave">{t.alvo === "loja" ? "para lojas" : "para anúncios"}</span>
-                {!t.ativo && <span className="rounded-full bg-borda px-2 py-0.5 text-[13px] font-semibold text-texto-suave">desligado</span>}
+                {!t.ativo && <span className="rounded-full bg-borda px-2 py-0.5 text-legenda font-semibold text-texto-suave">desligado</span>}
                 <span className="ml-auto text-sm font-semibold text-beringela">
                   {t.preco_centavos ? reais(t.preco_centavos) : "Grátis"}
                   {t.dias ? ` / ${t.dias} dias` : ""}
@@ -231,11 +231,11 @@ export default async function DestaquesAdminPage() {
                         r.vitrine_nome
                       )}
                     </p>
-                    <p className="text-[13px] text-texto-suave">
+                    <p className="text-legenda text-texto-suave">
                       {r.tipo_nome} · {ORIGEM[r.origem] ?? r.origem}
                       {r.origem === "pago" ? ` · ${reais(r.preco_centavos)}` : ""} · {r.vitrine_nome} · de {quando(r.inicio)} até {quando(r.fim)}
                     </p>
-                    {r.motivo && <p className="text-[13px] text-texto-suave">Motivo: {r.motivo}</p>}
+                    {r.motivo && <p className="text-legenda text-texto-suave">Motivo: {r.motivo}</p>}
                   </div>
                   <p className="text-sm font-semibold tabular-nums text-beringela">
                     {inteiro(r.visualizacoes)} visualizações · {inteiro(r.cliques_whatsapp)} cliques no WhatsApp
@@ -272,7 +272,7 @@ export default async function DestaquesAdminPage() {
                         {!p.asaas_cobranca_id ? " · sem cobrança no Asaas" : ""}
                       </span>
                       {p.link_pagamento && (
-                        <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline">
+                        <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline">
                           Ver no Asaas
                         </a>
                       )}
@@ -306,7 +306,7 @@ export default async function DestaquesAdminPage() {
                       {p.pago_em ? ` · pago em ${quando(p.pago_em)}` : ""}
                     </span>
                     {p.link_pagamento && (
-                      <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline">
+                      <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline">
                         Ver no Asaas
                       </a>
                     )}
@@ -318,13 +318,13 @@ export default async function DestaquesAdminPage() {
         )}
 
         <details className="rounded-card border border-borda bg-cartao p-4">
-          <summary className="min-h-12 cursor-pointer text-lg font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">Prazos dos destaques e da cobrança</summary>
+          <summary className="min-h-11 cursor-pointer text-lg font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">Prazos dos destaques e da cobrança</summary>
           <div className="space-y-4 pt-3">
           {configs.map((c) => (
             <section key={c.id} className="border-t border-borda pt-4">
               <div className="mb-3">
                 <h3 className="font-semibold text-beringela">{c.descricao ?? c.chave}</h3>
-                <p className="text-[13px] text-texto-suave">{c.chave}</p>
+                <p className="text-legenda text-texto-suave">{c.chave}</p>
               </div>
               <FormConfig id={c.id} chave={c.chave} tipo={tipoDe(c.valor)} valor={c.valor} />
             </section>

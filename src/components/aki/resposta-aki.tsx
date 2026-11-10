@@ -46,7 +46,7 @@ function BotaoRadar({
       <div className="rounded-card border border-borda px-3 py-2 text-sm">
         <p className="font-semibold">{acao.dados.titulo}</p>
         {acao.dados.detalhes && <p className="text-texto-suave">{acao.dados.detalhes}</p>}
-        <p className="text-[13px] text-texto-suave">{acao.dados.cidade}</p>
+        <p className="text-legenda text-texto-suave">{acao.dados.cidade}</p>
       </div>
       <Botao
         variante="secundario"
@@ -96,10 +96,10 @@ function CardRascunho({ acao }: { acao: Extract<AcaoAki, { tipo: "rascunho" }> }
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold text-texto-suave">Rascunho guardado · ainda não publicado</p>
+          <p className="text-legenda font-semibold text-texto-suave">Rascunho guardado · ainda não publicado</p>
           <p className="text-lg font-bold leading-6">{preco(acao.preco_centavos)}</p>
-          <p className="line-clamp-2 text-[15px] leading-5">{acao.titulo ?? "Sem título ainda"}</p>
-          <p className="text-[13px] text-texto-suave">{acao.fotos === 1 ? "1 foto" : `${acao.fotos} fotos`}</p>
+          <p className="line-clamp-2 text-base leading-5">{acao.titulo ?? "Sem título ainda"}</p>
+          <p className="text-legenda text-texto-suave">{acao.fotos === 1 ? "1 foto" : `${acao.fotos} fotos`}</p>
         </div>
       </div>
       <div className="border-t border-borda p-2.5">
@@ -152,7 +152,7 @@ function Avaliacao({ mensagem, aoAvaliar, atendimentoHref }: {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1">
-        <span className="mr-1 text-[13px] text-texto-suave">Ajudou?</span>
+        <span className="mr-1 text-legenda text-texto-suave">Ajudou?</span>
         <button type="button" aria-label="Ajudou" aria-pressed={mensagem.nota === 1} disabled={salvando} onClick={() => void marcar(1)} className={estiloIcone(mensagem.nota === 1)}>
           <ThumbsUp className="size-5" aria-hidden />
         </button>
@@ -184,14 +184,14 @@ function Avaliacao({ mensagem, aoAvaliar, atendimentoHref }: {
             onChange={(e) => setComentario(e.target.value)}
             maxLength={500}
             placeholder="O que faltou? (opcional)"
-            className="h-12 min-w-0 flex-1 rounded-campo border-2 border-borda px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
+            className="h-11 min-w-0 flex-1 rounded-campo border-2 border-borda px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
           />
           <Botao type="submit" variante="secundario" carregando={salvando} textoCarregando="…">
             Mandar
           </Botao>
         </form>
       )}
-      {agradecido && <p className="text-[13px] text-verde-escuro">Obrigado! Isso ajuda o Aki a melhorar.</p>}
+      {agradecido && <p className="text-legenda text-verde-escuro">Obrigado! Isso ajuda o Aki a melhorar.</p>}
     </div>
   );
 }

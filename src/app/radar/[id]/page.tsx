@@ -25,7 +25,7 @@ export default async function PedidoLojaPage({
   const [{ id }, { propor }] = await Promise.all([params, searchParams]);
   const pedido = await pedidoRadar(id);
   const voltar = (
-    <Link href={LINK_RADAR} className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 px-2 text-base font-semibold text-laranja-escuro">
+    <Link href={LINK_RADAR} className="-ml-2 inline-flex min-h-11 w-fit items-center gap-1 px-2 text-base font-semibold text-laranja-escuro">
       <ChevronLeft className="size-5" aria-hidden />
       Radar
     </Link>
@@ -106,7 +106,7 @@ export default async function PedidoLojaPage({
           <p className="whitespace-pre-line break-words text-base text-texto">{pedido.detalhes}</p>
         ) : (
           !pedido.tem_acesso && (
-            <p className="inline-flex items-center gap-1.5 text-[15px] text-texto-suave">
+            <p className="inline-flex items-center gap-1.5 text-base text-texto-suave">
               <Lock className="size-4" aria-hidden />
               Detalhes só para quem tem plano com Radar.
             </p>
@@ -126,12 +126,12 @@ export default async function PedidoLojaPage({
           </span>
         </p>
         {modoPrazo && pedido.propostas_ate ? (
-          <p className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-laranja-escuro">
+          <p className="inline-flex items-center gap-1.5 text-base font-semibold text-laranja-escuro">
             <Hourglass className="size-4" aria-hidden />
             {aberto ? `Propostas até ${dataHoraCurta(pedido.propostas_ate)}` : "O prazo das propostas acabou"}
           </p>
         ) : (
-          <p className="inline-flex items-center gap-1.5 text-[15px] text-texto-suave">
+          <p className="inline-flex items-center gap-1.5 text-base text-texto-suave">
             <MessageCircle className="size-4" aria-hidden />
             Ao propor, você chama o comprador no WhatsApp.
           </p>
@@ -142,18 +142,18 @@ export default async function PedidoLojaPage({
         <section className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-4">
           <h2 className="text-base font-bold">Sua proposta</h2>
           {minha.status === "oculta" ? (
-            <p className="inline-flex items-start gap-1.5 text-[15px] font-semibold text-perigo">
+            <p className="inline-flex items-start gap-1.5 text-base font-semibold text-perigo">
               <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
               Tirada pela equipe{minha.moderado_motivo ? `: ${minha.moderado_motivo}` : ""}
             </p>
           ) : minha.escolhida ? (
-            <p className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-verde-escuro">
+            <p className="inline-flex items-center gap-1.5 text-base font-semibold text-verde-escuro">
               <Star className="size-4" aria-hidden />
               O comprador escolheu sua proposta para conversar.
             </p>
           ) : null}
           <p className="text-lg font-bold text-beringela">{minha.preco_centavos != null ? preco(minha.preco_centavos) : "Preço a combinar"}</p>
-          {minha.mensagem && <p className="whitespace-pre-line break-words text-[15px]">{minha.mensagem}</p>}
+          {minha.mensagem && <p className="whitespace-pre-line break-words text-base">{minha.mensagem}</p>}
         </section>
       )}
 
@@ -172,10 +172,10 @@ function Planos({ planos, semCredito }: { planos: PlanoRadar[]; semCredito: bool
           {planos.map((p) => (
             <li key={p.codigo} className="flex items-center justify-between gap-3 rounded-campo bg-white/10 px-3 py-2">
               <span className="font-semibold">{p.nome}</span>
-              <span className="text-right text-[15px]">
+              <span className="text-right text-base">
                 {preco(p.preco_centavos)}
                 {p.periodo_dias === 30 ? "/mês" : ` a cada ${p.periodo_dias} dias`}
-                {p.propostas_radar_mes != null && <span className="block text-[13px] text-white/80">{p.propostas_radar_mes} propostas por mês</span>}
+                {p.propostas_radar_mes != null && <span className="block text-legenda text-white/80">{p.propostas_radar_mes} propostas por mês</span>}
               </span>
             </li>
           ))}

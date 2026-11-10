@@ -60,7 +60,7 @@ export function ConfirmarWhatsapp({ siteKey, destino, numero = "" }: { siteKey: 
   }
   if (estado.confirmado) return <section className="flex flex-col gap-5 rounded-card bg-cartao p-5 shadow-1" aria-live="polite">
     <CheckCircle2 className="size-10 text-verde-escuro" aria-hidden />
-    <h2 className="text-xl font-bold">WhatsApp confirmado</h2><p>Seu contato foi confirmado. Você já pode continuar no OL-AKI.</p>
+    <h2 className="text-xl font-semibold">WhatsApp confirmado</h2><p>Seu contato foi confirmado. Você já pode continuar no OL-AKI.</p>
     <Botao href={destino} larguraTotal>Continuar</Botao>
   </section>;
   return <section className="flex flex-col gap-5 rounded-card bg-cartao p-5 shadow-1">

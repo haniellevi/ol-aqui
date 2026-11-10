@@ -91,12 +91,31 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 
 ---
 
-## 3. Espaços, cantos e sombras
+## 3. Régua de tamanhos, espaços, cantos e sombras
 
-- **Espaçamento em múltiplos de 4:** 4, 8, 12, 16, 24, 32, 48. Margem lateral das telas: **16**.
-- **Cantos arredondados:** 8 (campos, chips, botões), 10 (cards), 20 (folhas que sobem de baixo), cheio (selos e avatar). Combina com o ícone do app.
-- **Cards:** preenchimento usual de 12 px e espaço de 8 a 12 px entre elementos. Preferir borda discreta; `sombra-1` fica nos cards públicos que precisam de separação e `sombra-2` nas folhas e barras fixas.
-- **Controles:** altura mínima de 44 px no celular e no toque. Com mouse e largura mínima de 768 px, os controles compartilhados usam 40 px. Ações só com ícone mantêm área de toque de pelo menos 44 × 44 px. Linhas de listas podem ser maiores conforme o conteúdo; não cortar texto para cumprir uma altura fixa.
+> **Plano de design de 10/11/2026.** O Raniel achou botões grandes, textos enormes e falta de harmonia. A revisão das telas mostrou que a letra já estava boa; o peso vinha de botões esticados na largura toda no computador, cards com até seis botões empilhados e três alturas de controle misturadas (44, 48 e 56 px). A régua abaixo vale para o app inteiro. Nada de tamanho escrito à mão (`text-[13px]`, `h-12`): use os nomes da régua.
+
+| Peça | Celular / toque | Computador (mouse, a partir de 768 px) | Como usar no código |
+|---|---|---|---|
+| Texto normal | 15 px | 15 px | `text-base` |
+| Legenda (cidade, data) | 13 px | 13 px | `text-legenda` |
+| Título da tela | 20 px | 22 px | `text-titulo` (muda sozinho no computador) |
+| Título de seção | 16 px | 16 px | `text-lg font-semibold` |
+| Botão normal | 44 px | 40 px | `<Botao>` |
+| Botão pequeno | 36 px | 32 px | `<Botao tamanho="pequeno">`: ações dentro de cards, listas e tabelas |
+| Campo e lista de escolha | 44 px | 40 px | `<Campo>`, `<Seletor>`; `select` solto já recebe a altura pelo CSS base |
+| Barra de busca | 48 px | 44 px | `CampoBusca` |
+| Cabeçalho | 56 px | 60 px | `CabecalhoPublico` |
+| Botão do Aki | 44 px | 44 px | `BalaoAki` |
+
+- **Largura do botão:** `larguraTotal` ocupa a largura toda só no celular; do tablet para cima o botão para em 320 px (`sm:max-w-xs`). Em telas centralizadas, centralize o grupo de botões (`items-center`).
+- **Um botão laranja por tela.** O resto é secundário (borda) ou texto.
+- **Card com no máximo duas ações à vista**, em botões pequenos; as outras vão para o menu "Mais" (ex.: `AcoesAnuncio` em Meus anúncios: Vendi/Reativar/Continuar + Editar + Mais).
+- **Espaçamento em múltiplos de 4:** 4, 8, 12, 16, 24, 32. Margem lateral das telas: **16**. Entre blocos: 24 no celular e 32 no computador. Dentro de card: 12 no celular e 16 no computador.
+- **Largura de página:** formulários até 640 px, conta e listas até 1000 px, busca e início até 1150 px.
+- **Cantos arredondados:** 8 (campos, chips, botões), 10 (cards), 20 (folhas que sobem de baixo), cheio (selos, avatar e o seletor de cidade do cabeçalho).
+- **Sombras:** preferir borda discreta; `sombra-1` nos cards públicos que precisam de separação e `sombra-2` em folhas, menus e barras fixas.
+- **Toque:** nada tocável abaixo de 36 px no celular (botão pequeno). Ações só com ícone mantêm 44 × 44 px. Linhas de listas podem ser maiores conforme o conteúdo; não cortar texto para cumprir uma altura fixa.
 
 ---
 
@@ -117,7 +136,7 @@ Base técnica: Tailwind + lucide-react com os tokens abaixo (é o que o app já 
 
 | Tipo | Visual | Quando |
 |---|---|---|
-| **Principal** | Laranja, texto beringela, 44 px no toque e 40 px com mouse | Uma vez por tela: "Publicar", "Continuar", "Entrar" |
+| **Principal** | Laranja, texto beringela, 44 px no toque e 40 px com mouse (pequeno: 36/32 px) | Uma vez por tela: "Publicar", "Continuar", "Entrar" |
 | **WhatsApp** | Verde-escuro, texto branco, ícone de conversa, mesma altura dos demais botões | Só para chamar o vendedor ou o comprador |
 | **Secundário** | Borda beringela, fundo branco | "Salvar rascunho", "Compartilhar" |
 | **Texto** | Só o texto em laranja-escuro | "Pular", "Ver todos" |

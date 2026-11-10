@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Pause, Pencil, Play, Sparkles, Trash2, ArrowRight, RotateCcw } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, Ellipsis, Pause, Pencil, Play, Sparkles, Trash2, ArrowRight, RotateCcw } from "lucide-react";
 import { linkDestacar } from "@/lib/rotas";
-import { Botao } from "@/components/ui/botao";
+import { Botao, classesBotao } from "@/components/ui/botao";
 import { marcarVendido, moverParaLixeira, pausarAnuncio, reativarAnuncio, restaurarAnuncio } from "@/app/(conta)/minha-conta/anuncios/actions";
 import { abaDoStatus } from "./situacao-anuncios";
 import type { Resultado, StatusAnuncio } from "@/lib/tipos";
@@ -12,7 +13,17 @@ import type { Resultado, StatusAnuncio } from "@/lib/tipos";
 type Acao = "pausar" | "reativar" | "vendido-sim" | "vendido-nao" | "excluir" | "restaurar";
 type Confirmacao = "pausar" | "vendido" | "excluir";
 
-export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id: string; status: StatusAnuncio; titulo: string; temPagamento?: boolean }) {
+// Plano de design: no card ficam à vista só a ação do momento e Editar (botões pequenos).
+// O resto (pausar, destacar, fixar, lixeira) fica no menu "Mais".
+const ITEM_MENU =
+  "olaki-acao flex min-h-10 w-full items-center gap-2 rounded-campo px-3 text-left text-sm font-semibold text-beringela hover:bg-fundo " +
+  "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:opacity-60 [&>svg]:size-4 [&>svg]:shrink-0";
+
+export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAcoes }: {
+  id: string; status: StatusAnuncio; titulo: string; temPagamento?: boolean;
+  /** Ações extras que entram no menu "Mais" (ex.: fixar no topo da loja). */
+  maisAcoes?: ReactNode;
+}) {
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
   const trava = useRef(false);
@@ -25,8 +36,10 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id:
   const cancelar = useRef<HTMLButtonElement>(null);
   const ocupado = pendente || emCurso !== null;
   const editar = `/anunciar/detalhes?rascunho=${id}&editar=1`;
+  const menu = useRef<HTMLDetailsElement>(null);
 
   function abrir(tipo: Confirmacao) {
+    if (menu.current) menu.current.open = false;
     setErro(null);
     setConfirmacao(tipo);
     dialogo.current?.showModal();
@@ -76,18 +89,26 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id:
 
   return (
     <div className="flex flex-col gap-2" aria-label={`Ações de ${titulo}`}>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {status === "excluido" ? (
-          <Botao icone={<RotateCcw />} className="col-span-2 px-3" disabled={ocupado} carregando={emCurso === "restaurar"} textoCarregando="Restaurando..." onClick={() => rodar("restaurar", () => restaurarAnuncio(id))}>Restaurar anúncio</Botao>
+          <Botao tamanho="pequeno" icone={<RotateCcw />} disabled={ocupado} carregando={emCurso === "restaurar"} textoCarregando="Restaurando..." onClick={() => rodar("restaurar", () => restaurarAnuncio(id))}>Restaurar anúncio</Botao>
         ) : (
           <>
-            {status === "rascunho" && <Botao href={`/anunciar/fotos?rascunho=${id}`} icone={<ArrowRight />} className="col-span-2 px-3" carregando={ocupado}>Continuar rascunho</Botao>}
-            {["ativo", "pausado", "expirado"].includes(status) && <Botao href={editar} variante="secundario" icone={<Pencil />} className="px-3" carregando={ocupado}>Editar</Botao>}
-            {status === "ativo" && <Botao variante="secundario" icone={<Pause />} className="px-3" disabled={ocupado} onClick={() => abrir("pausar")}>Pausar</Botao>}
-            {(status === "pausado" || status === "expirado") && <Botao variante="secundario" icone={<Play />} className="px-3" disabled={ocupado} carregando={emCurso === "reativar"} textoCarregando="Reativando..." onClick={() => rodar("reativar", () => reativarAnuncio(id))}>Reativar</Botao>}
-            {status === "ativo" && <Botao href={linkDestacar(id)} variante="secundario" icone={<Sparkles />} className="px-3" carregando={ocupado}>Destacar</Botao>}
-            {status === "ativo" && <Botao icone={<CheckCircle2 />} className="px-3" disabled={ocupado} onClick={() => abrir("vendido")}>Vendi</Botao>}
-            <Botao variante="texto" icone={<Trash2 />} className="col-span-2 px-3 text-perigo" disabled={ocupado} onClick={() => abrir("excluir")}>Mover para lixeira</Botao>
+            {status === "rascunho" && <Botao tamanho="pequeno" href={`/anunciar/fotos?rascunho=${id}`} icone={<ArrowRight />} carregando={ocupado}>Continuar rascunho</Botao>}
+            {status === "ativo" && <Botao tamanho="pequeno" icone={<CheckCircle2 />} disabled={ocupado} onClick={() => abrir("vendido")}>Vendi</Botao>}
+            {(status === "pausado" || status === "expirado") && <Botao tamanho="pequeno" icone={<Play />} disabled={ocupado} carregando={emCurso === "reativar"} textoCarregando="Reativando..." onClick={() => rodar("reativar", () => reativarAnuncio(id))}>Reativar</Botao>}
+            {["ativo", "pausado", "expirado"].includes(status) && <Botao tamanho="pequeno" href={editar} variante="secundario" icone={<Pencil />} carregando={ocupado}>Editar</Botao>}
+            <details ref={menu} className="group relative">
+              <summary className={classesBotao("secundario", false, "list-none cursor-pointer [&::-webkit-details-marker]:hidden", "pequeno")} aria-label={`Mais ações de ${titulo}`}>
+                <Ellipsis className="size-4" aria-hidden /> Mais
+              </summary>
+              <div className="absolute right-0 z-20 mt-1 flex w-56 flex-col gap-0.5 rounded-card border border-borda bg-cartao p-1 shadow-2">
+                {status === "ativo" && <button type="button" className={ITEM_MENU} disabled={ocupado} onClick={() => abrir("pausar")}><Pause aria-hidden />Pausar</button>}
+                {status === "ativo" && <Link href={linkDestacar(id)} className={ITEM_MENU}><Sparkles aria-hidden />Destacar</Link>}
+                {maisAcoes}
+                <button type="button" className={`${ITEM_MENU} text-perigo`} disabled={ocupado} onClick={() => abrir("excluir")}><Trash2 aria-hidden />Mover para lixeira</button>
+              </div>
+            </details>
           </>
         )}
       </div>
@@ -95,7 +116,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id:
       <dialog ref={dialogo} role="alertdialog" aria-labelledby={`confirmar-${id}`} aria-describedby={`explicacao-${id}`}
         onClose={() => setConfirmacao(null)} onCancel={(e) => { if (trava.current) e.preventDefault(); }}
         className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%_-_2rem)] max-w-sm overflow-y-auto rounded-folha bg-cartao p-5 text-texto shadow-2 backdrop:bg-beringela/50">
-        <h2 id={`confirmar-${id}`} className="text-xl font-bold">
+        <h2 id={`confirmar-${id}`} className="text-xl font-semibold">
           {confirmacao === "excluir" ? "Mover para a lixeira?" : confirmacao === "pausar" ? "Pausar este anúncio?" : "Vendeu pelo OLAKI?"}
         </h2>
         <p className="mt-2 break-words font-semibold">{titulo}</p>

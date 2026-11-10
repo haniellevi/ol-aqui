@@ -22,7 +22,7 @@ export function Barras({ itens, cor = "laranja", rotulo }: { itens: ItemBarra[];
           <div className="mt-1 h-3 w-full overflow-hidden rounded-full bg-fundo" aria-hidden>
             <div className={`h-full rounded-full ${COR[cor]}`} style={{ width: `${i.valor > 0 ? Math.max(2, (i.valor / maior) * 100) : 0}%` }} />
           </div>
-          {i.detalhe && <p className="mt-1 text-[13px] text-texto-suave">{i.detalhe}</p>}
+          {i.detalhe && <p className="mt-1 text-legenda text-texto-suave">{i.detalhe}</p>}
         </li>
       ))}
     </ul>

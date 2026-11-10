@@ -16,11 +16,11 @@ export default function NaoEncontrado() {
           <span className="grid size-16 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
             <Compass className="size-8" />
           </span>
-          <h1 className="text-[22px] font-semibold leading-7">Não achamos esta página</h1>
+          <h1 className="text-titulo font-semibold">Não achamos esta página</h1>
           <p className="text-base text-texto-suave">O endereço pode estar errado ou o conteúdo saiu do ar. Busque o que você procura:</p>
         </div>
         <CampoBusca id="busca-nao-encontrado" />
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col items-center gap-2">
           <Botao href="/" variante="secundario" larguraTotal>
             Voltar ao início
           </Botao>

@@ -107,7 +107,7 @@ export function ResultadosBusca({
         <nav aria-label="Filtros ativos" className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-3">
           <div className="flex flex-wrap items-center justify-between gap-x-4">
             <p className="text-sm font-semibold">Sua busca está filtrada</p>
-            <Link href={limpar} className="inline-flex min-h-12 items-center text-sm font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro">Limpar filtros</Link>
+            <Link href={limpar} className="inline-flex min-h-11 items-center text-sm font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro">Limpar filtros</Link>
           </div>
           <ul className="flex flex-wrap gap-2">
             {ativos.map((a) => (
@@ -115,7 +115,7 @@ export function ResultadosBusca({
                 <Link
                   href={comParametros(caminho, sp, Object.fromEntries(a.parametros.map((p) => [p, null])))}
                   aria-label={`Remover filtro: ${a.rotulo}`}
-                  className="inline-flex min-h-12 max-w-full items-center gap-2 rounded-campo border border-laranja-escuro bg-selecao px-3 py-2 text-sm text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                  className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-campo border border-laranja-escuro bg-selecao px-3 py-2 text-sm text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                 >
                   <span className="min-w-0 break-words">{a.rotulo}</span><X className="size-4 shrink-0" aria-hidden />
                 </Link>
@@ -175,7 +175,7 @@ function Paginacao({ caminho, sp, pagina, paginas }: { caminho: string; sp: Para
       ) : (
         <span className="order-2 sm:order-1" />
       )}
-      <span className="order-1 col-span-2 text-center text-[15px] text-texto-suave sm:order-2 sm:col-span-1">
+      <span className="order-1 col-span-2 text-center text-base text-texto-suave sm:order-2 sm:col-span-1">
         Página {pagina} de {paginas}
       </span>
       {pagina < paginas ? (

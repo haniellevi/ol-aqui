@@ -26,18 +26,18 @@ function Membro({ m, eu, regioes }: { m: MembroEquipe; eu: boolean; regioes: Reg
         <div className="min-w-0">
           <p className="text-base font-semibold text-beringela">
             {m.nome}
-            {eu && <span className="ml-2 text-[13px] font-bold text-texto-suave">(você)</span>}
+            {eu && <span className="ml-2 text-legenda font-bold text-texto-suave">(você)</span>}
           </p>
           <p className="text-sm text-texto-suave">
             {[m.whatsapp ? telefone(m.whatsapp) : null, m.cidade].filter(Boolean).join(" · ") || "Sem celular no cadastro"}
           </p>
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${COR_PAPEL[m.papel] ?? "bg-fundo"}`}>
+        <span className={`rounded-full px-2 py-0.5 text-legenda font-bold ${COR_PAPEL[m.papel] ?? "bg-fundo"}`}>
           {NOME_PAPEL[m.papel]}
           {m.papel === "franqueado" && m.regiao_nome ? ` · ${m.regiao_nome}` : ""}
         </span>
       </div>
-      <p className="mt-2 text-[13px] text-texto-suave">
+      <p className="mt-2 text-legenda text-texto-suave">
         {m.ativo ? "Na equipe desde" : "Saiu em"} {quando(m.ativo ? m.criado_em : m.desativado_em)}
         {m.ativo
           ? m.adicionado_por_nome
@@ -49,7 +49,7 @@ function Membro({ m, eu, regioes }: { m: MembroEquipe; eu: boolean; regioes: Reg
       {!eu && (
         <div className="mt-3 flex flex-col border-t border-borda">
           <details className="pt-1">
-            <summary className="flex min-h-12 cursor-pointer items-center font-semibold text-laranja-escuro">
+            <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-laranja-escuro">
               {m.ativo ? "Trocar o papel" : "Pôr de volta na equipe"}
             </summary>
             <div className="pb-2 pt-2">
@@ -64,7 +64,7 @@ function Membro({ m, eu, regioes }: { m: MembroEquipe; eu: boolean; regioes: Reg
           </details>
           {m.ativo && (
             <details className="border-t border-borda pt-1">
-              <summary className="flex min-h-12 cursor-pointer items-center font-semibold text-perigo">Tirar da equipe</summary>
+              <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-perigo">Tirar da equipe</summary>
               <div className="pb-2 pt-2">
                 <FormDesativar usuarioId={m.usuario_id} nome={m.nome.split(" ")[0] ?? m.nome} />
               </div>
@@ -113,7 +113,7 @@ export default async function EquipePage() {
 
       {sairam.length > 0 && (
         <details className="mb-6">
-          <summary className="flex min-h-12 cursor-pointer items-center text-sm font-semibold uppercase tracking-wide text-texto-suave">
+          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold uppercase tracking-wide text-texto-suave">
             Saíram da equipe ({sairam.length})
           </summary>
           <ul className="mt-2 flex flex-col gap-3">

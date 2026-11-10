@@ -11,12 +11,12 @@ import type { CampoCategoria, CategoriaComFilhas, Cidade, FacetaBusca, FacetasBu
 // do foco, do fundo inativo e do Escape; os valores são validados também no servidor.
 
 const SELECT =
-  "h-12 w-full rounded-campo border-2 border-borda bg-cartao px-3 text-base text-texto " +
+  "h-11 w-full rounded-campo border-2 border-borda bg-cartao px-3 text-base text-texto " +
   "focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30";
 const ENTRADA = `${SELECT} placeholder:text-texto-suave`;
 // Chip de escolha (igual ao <Chip>): selecionado = borda laranja-escuro, fundo laranja-claro, texto beringela e ✓.
 const OPCAO =
-  "group inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-campo border border-borda bg-cartao px-4 text-[15px] font-semibold text-beringela " +
+  "group inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-campo border border-borda bg-cartao px-4 text-base font-semibold text-beringela " +
   "has-checked:border-laranja-escuro has-checked:bg-selecao " +
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 const LEGENDA = "mb-2 text-base font-semibold";
@@ -249,7 +249,7 @@ function CaixaNumero({ rotulo, name, valor, exemplo, erro }: { rotulo: string; n
   const id = `f-${name}`;
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-[15px] text-texto-suave">
+      <label htmlFor={id} className="text-base text-texto-suave">
         {rotulo}
       </label>
       <input id={id} name={name} defaultValue={valor} inputMode="decimal" placeholder={exemplo} maxLength={20} aria-invalid={!!erro || undefined} aria-describedby={erro ? `${id}-erro` : undefined} className={ENTRADA} />

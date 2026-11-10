@@ -51,7 +51,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
             key={g}
             href={`/admin/configuracoes?grupo=${g}`}
             aria-current={g === grupoAtual ? "page" : undefined}
-            className={`inline-flex h-12 shrink-0 items-center rounded-campo border px-4 text-sm font-semibold text-beringela active:brightness-90 ${
+            className={`inline-flex h-11 shrink-0 items-center rounded-campo border px-4 text-sm font-semibold text-beringela active:brightness-90 ${
               g === grupoAtual ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
             }`}
           >
@@ -77,12 +77,12 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
               {excecoes.length > 0 && (
                 <ul className="mt-4 space-y-2">
                   {excecoes.map((e) => (
-                    <li key={e.id} className="flex min-h-12 flex-wrap items-center gap-3 rounded-card bg-selecao pl-3 pr-1 text-sm text-beringela">
+                    <li key={e.id} className="flex min-h-11 flex-wrap items-center gap-3 rounded-card bg-selecao pl-3 pr-1 text-sm text-beringela">
                       <span className="font-semibold">{nomesRegiao.get(e.microrregiao_id!) ?? "Região"}:</span>
-                      <span className="truncate font-mono text-[13px]">{nomeValor(tipoDe(e.valor), e.valor, opcoesDe(c.chave))}</span>
+                      <span className="truncate font-mono text-legenda">{nomeValor(tipoDe(e.valor), e.valor, opcoesDe(c.chave))}</span>
                       <form action={removerExcecao} className="ml-auto">
                         <input type="hidden" name="id" value={e.id} />
-                        <button className="h-12 px-3 text-sm font-semibold text-perigo underline">remover</button>
+                        <button className="h-11 px-3 text-sm font-semibold text-perigo underline">remover</button>
                       </form>
                     </li>
                   ))}

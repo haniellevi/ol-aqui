@@ -87,7 +87,7 @@ export function AcoesPedido({
     <dialog ref={dialogo} role="alertdialog" aria-labelledby="acao-pedido-titulo" aria-describedby="acao-pedido-detalhe"
       onCancel={(e) => { if (trava.current) e.preventDefault(); }}
       className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%_-_2rem)] max-w-sm overflow-y-auto rounded-card bg-cartao p-5 text-texto shadow-2 backdrop:bg-beringela/50">
-      <h2 id="acao-pedido-titulo" className="text-xl font-bold">{textos.titulo}</h2>
+      <h2 id="acao-pedido-titulo" className="text-xl font-semibold">{textos.titulo}</h2>
       <p id="acao-pedido-detalhe" className="mt-2 text-base text-texto-suave">{textos.detalhe}</p>
       {erro && <p role="alert" className="mt-3 text-sm font-semibold text-perigo">{erro}</p>}
       <div className="mt-4 flex flex-col gap-2">

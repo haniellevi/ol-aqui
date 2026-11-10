@@ -88,10 +88,10 @@ export default async function PaginaAjuda() {
       <ContatoSuporte contato={contato} />
 
       <nav aria-label="Textos do OLAKI" className="flex flex-col gap-1">
-        <Link href={LINK_TERMOS} className="inline-flex min-h-12 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_TERMOS} className="inline-flex min-h-11 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4">
           <FileText className="size-5" aria-hidden /> Termos de uso
         </Link>
-        <Link href={LINK_PRIVACIDADE} className="inline-flex min-h-12 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_PRIVACIDADE} className="inline-flex min-h-11 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4">
           <FileText className="size-5" aria-hidden /> Política de privacidade
         </Link>
       </nav>

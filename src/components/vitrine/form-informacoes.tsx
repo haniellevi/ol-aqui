@@ -218,7 +218,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                             value={f.abre}
                             required
                             onChange={(e) => mudarDia(d, (x) => ({ ...x, faixas: x.faixas.map((y, j) => (j === i ? { ...y, abre: e.target.value } : y)) }))}
-                            className="h-12 rounded-campo border-2 border-borda bg-cartao px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
+                            className="h-11 rounded-campo border-2 border-borda bg-cartao px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
                           />
                         </label>
                         <label className="flex flex-col gap-1 text-sm font-semibold">
@@ -230,10 +230,10 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                             disabled={f.fecha === "24:00"}
                             required
                             onChange={(e) => mudarDia(d, (x) => ({ ...x, faixas: x.faixas.map((y, j) => (j === i ? { ...y, fecha: e.target.value } : y)) }))}
-                            className="h-12 rounded-campo border-2 border-borda bg-cartao px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
+                            className="h-11 rounded-campo border-2 border-borda bg-cartao px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
                           />
                         </label>
-                        <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
+                        <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
                           <input type="checkbox" className="size-5 accent-laranja-escuro"
                             aria-label={`Fecha à meia-noite: ${NOME_DIA[d]}, horário ${i + 1}`}
                             checked={f.fecha === "24:00"}
@@ -256,7 +256,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                       <Botao
                         variante="texto"
                         icone={<Plus />}
-                        className="h-auto min-h-12 w-fit whitespace-normal px-0 text-left"
+                        className="h-auto min-h-11 w-fit whitespace-normal px-0 text-left"
                         onClick={() => {
                           const ultimo = dia.faixas[dia.faixas.length - 1];
                           mudarDia(d, (x) => ({ ...x, faixas: [...x.faixas, { abre: ultimo?.fecha ?? "14:00", fecha: "23:59" }] }));
@@ -268,7 +268,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                   </div>
                 )}
                 {d === "seg" && (
-                  <Botao variante="texto" icone={<Copy />} className="h-auto min-h-12 w-fit whitespace-normal px-0 text-left" onClick={copiarParaDiasUteis}>
+                  <Botao variante="texto" icone={<Copy />} className="h-auto min-h-11 w-fit whitespace-normal px-0 text-left" onClick={copiarParaDiasUteis}>
                     Copiar segunda para os dias úteis
                   </Botao>
                 )}

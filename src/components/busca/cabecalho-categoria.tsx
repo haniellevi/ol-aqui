@@ -20,17 +20,17 @@ export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEn
 
   return (
     <div className="flex flex-col gap-3">
-      <nav aria-label="Você está em" className="text-[15px] text-texto-suave">
+      <nav aria-label="Você está em" className="text-base text-texto-suave">
         <ol className="flex flex-wrap items-center gap-1">
           <li>
-            <Link href="/categorias" className="inline-flex min-h-12 items-center underline-offset-4 hover:underline">
+            <Link href="/categorias" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
               Categorias
             </Link>
           </li>
           {pai && (
             <li className="flex items-center gap-1">
               <ChevronRight className="size-4" aria-hidden />
-              <Link href={linkCategoria(pai.slug)} className="inline-flex min-h-12 items-center underline-offset-4 hover:underline">
+              <Link href={linkCategoria(pai.slug)} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
                 {pai.nome}
               </Link>
             </li>
@@ -40,7 +40,7 @@ export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEn
 
       <div className="flex items-center gap-3">
         <CirculoCategoria nome={categoria.icone} />
-        <h1 className="text-[22px] font-semibold leading-7">{categoria.nome}</h1>
+        <h1 className="text-titulo font-semibold">{categoria.nome}</h1>
       </div>
 
       <CampoBusca valor={q} manter={sp} caminho={caminho} id="busca-categoria" />

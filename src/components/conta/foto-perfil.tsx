@@ -91,7 +91,7 @@ export function FotoPerfil({ foto }: { foto: string | null }) {
       {atual && !pendente && !faltaSincronizar && <Botao variante="texto" className="text-perigo" icone={<Trash2 />} disabled={ocupada || !user} onClick={() => { setErro(null); dialogo.current?.showModal(); }}>Remover foto</Botao>}
       <dialog ref={dialogo} role="alertdialog" aria-labelledby="remover-foto-titulo" aria-describedby="remover-foto-texto" onCancel={(e) => { if (trava.current) e.preventDefault(); }}
         className="m-auto w-[calc(100%_-_2rem)] max-w-sm rounded-folha bg-cartao p-5 text-texto shadow-2 backdrop:bg-beringela/50">
-        <h2 id="remover-foto-titulo" className="text-xl font-bold">Remover sua foto?</h2>
+        <h2 id="remover-foto-titulo" className="text-xl font-semibold">Remover sua foto?</h2>
         <p id="remover-foto-texto" className="mt-2 text-texto-suave">Seu perfil ficará sem foto. Você pode escolher outra depois.</p>
         {erro && <div className="mt-3"><Aviso tipo="erro">{erro}</Aviso></div>}
         <div className="mt-4 flex flex-col gap-2">

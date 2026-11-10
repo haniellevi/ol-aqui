@@ -48,7 +48,7 @@ export default async function CategoriaPage({ params }: { params: Promise<{ id: 
 
   return (
     <>
-      <Link href={LINK_ADMIN_CATEGORIAS} className="mb-3 inline-flex min-h-12 items-center gap-2 text-sm font-semibold text-laranja-escuro">
+      <Link href={LINK_ADMIN_CATEGORIAS} className="mb-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-laranja-escuro">
         <ArrowLeft className="size-5" aria-hidden />
         Todas as categorias
       </Link>

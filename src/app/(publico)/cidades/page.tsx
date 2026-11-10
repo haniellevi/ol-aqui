@@ -12,7 +12,7 @@ export default async function Cidades({ searchParams }: { searchParams: Promise<
     {(await searchParams).erro && <p role="alert" className="text-perigo">Escolha uma cidade disponível.</p>}
     <form action={escolherCidade} className="flex flex-col gap-4">
       <label htmlFor="cidade" className="font-semibold">Cidade</label>
-      <select id="cidade" name="cidade" required defaultValue="" className="min-h-12 rounded-campo border-2 border-borda bg-cartao px-3">
+      <select id="cidade" name="cidade" required defaultValue="" className="min-h-11 rounded-campo border-2 border-borda bg-cartao px-3">
         <option value="">Escolha a cidade</option>
         {(data ?? []).map(c => <option key={c.id} value={c.id}>{c.nome} ({c.uf})</option>)}
       </select>

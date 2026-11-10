@@ -114,7 +114,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
             <ul className="list-disc pl-5">
               {faltando.map((l) => (
                 <li key={l.rotulo}>
-                  <Link href={urlPasso(l.passo, anuncio.id, editar)} className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+                  <Link href={urlPasso(l.passo, anuncio.id, editar)} className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
                     {l.rotulo}
                   </Link>
                 </li>
@@ -178,7 +178,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
               </div>
               <Link
                 href={urlPasso(l.passo, anuncio.id, editar)}
-                className="inline-flex min-h-12 shrink-0 items-center rounded-card px-2 text-base font-semibold text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                className="inline-flex min-h-11 shrink-0 items-center rounded-card px-2 text-base font-semibold text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                 aria-label={`Alterar ${l.rotulo.toLowerCase()}`}
               >
                 Alterar

@@ -118,7 +118,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
       {total > 1 && (
         <>
           <span
-            className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-beringela/80 px-3 py-1 text-[13px] font-semibold text-white"
+            className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-beringela/80 px-3 py-1 text-legenda font-semibold text-white"
             aria-live="polite"
           >
             {atual + 1}/{total}

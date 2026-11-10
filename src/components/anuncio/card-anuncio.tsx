@@ -44,7 +44,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
             </span>
           )}
           {a.destaque && (
-            <span className="absolute left-2 top-2 rounded-full bg-patrocinado-fundo px-2 py-0.5 text-[13px] font-bold text-beringela">
+            <span className="absolute left-2 top-2 rounded-full bg-patrocinado-fundo px-2 py-0.5 text-legenda font-bold text-beringela">
               Patrocinado
             </span>
           )}
@@ -52,7 +52,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
         <div className="flex flex-1 flex-col gap-0.5 p-2.5">
           <span className="text-lg font-bold leading-5 tabular-nums">{preco(a.preco_centavos)}</span>
           <h3 className="line-clamp-2 text-sm leading-5">{a.titulo}</h3>
-          <span className="mt-auto pt-1 text-[13px] leading-[18px] text-texto-suave">
+          <span className="mt-auto pt-1 text-legenda leading-[18px] text-texto-suave">
             {a.cidade}
             {quando && (
               <>
@@ -72,7 +72,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
             </span>
           )}
           {a.vitrine_tipo === "loja" && (
-            <span className="flex items-center gap-1 truncate text-[13px] leading-[18px] text-texto-suave">
+            <span className="flex items-center gap-1 truncate text-legenda leading-[18px] text-texto-suave">
               {a.vitrine_selo && <ShieldCheck className="size-4 shrink-0 text-verde-escuro" aria-hidden />}
               <span className="truncate">
                 {a.vitrine_nome}

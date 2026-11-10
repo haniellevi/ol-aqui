@@ -24,12 +24,12 @@ export async function LojasEmDestaque({ regiao, titulo = "Lojas em destaque" }: 
               href={linkLoja(l.slug)}
               className="flex h-full flex-col items-center gap-1.5 rounded-card bg-cartao p-3 text-center shadow-1 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
             >
-              <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-[13px] font-bold text-beringela">Patrocinado</span>
+              <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-legenda font-bold text-beringela">Patrocinado</span>
               <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="lg" />
-              <span className="line-clamp-2 text-[15px] font-semibold leading-5">{l.nome}</span>
-              <span className="text-[13px] leading-[18px] text-texto-suave">{l.cidade}</span>
+              <span className="line-clamp-2 text-base font-semibold leading-5">{l.nome}</span>
+              <span className="text-legenda leading-[18px] text-texto-suave">{l.cidade}</span>
               {l.verificada && (
-                <span className="flex items-center gap-1 text-[13px] font-semibold leading-[18px] text-verde-escuro">
+                <span className="flex items-center gap-1 text-legenda font-semibold leading-[18px] text-verde-escuro">
                   <ShieldCheck className="size-4" aria-hidden />
                   Verificada
                 </span>

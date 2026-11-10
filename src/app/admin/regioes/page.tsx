@@ -37,17 +37,17 @@ export default async function RegioesPage() {
               <li key={r.id}>
                 <Link
                   href={linkAdminRegiao(r.id)}
-                  className="flex min-h-12 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 active:brightness-95 md:hover:bg-fundo"
+                  className="flex min-h-11 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 active:brightness-95 md:hover:bg-fundo"
                 >
                   <span className="grid size-12 shrink-0 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
                     <MapPin className="size-6" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-base font-semibold text-beringela">{r.nome}</span>
-                    <span className="block text-[13px] text-texto-suave">
+                    <span className="block text-legenda text-texto-suave">
                       Sede: {r.cidade_sede ?? "sem sede"} · {inteiro(r.cidades_ativas)} de {inteiro(r.cidades_total)} cidades ativas
                     </span>
-                    <span className="block text-[13px] text-texto-suave">
+                    <span className="block text-legenda text-texto-suave">
                       {inteiro(r.lojas)} {r.lojas === 1 ? "loja" : "lojas"} · {inteiro(r.vendedores_pf)} {r.vendedores_pf === 1 ? "pessoa vendendo" : "pessoas vendendo"} ·{" "}
                       {inteiro(r.anuncios_ativos)} {r.anuncios_ativos === 1 ? "anúncio no ar" : "anúncios no ar"} · {inteiro(r.pessoas)}{" "}
                       {r.pessoas === 1 ? "conta" : "contas"}

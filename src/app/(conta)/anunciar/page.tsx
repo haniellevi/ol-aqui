@@ -93,7 +93,7 @@ export default async function PaginaAnunciar() {
           <li key={r.id}>
             <Link
               href={urlPasso(r.fotos.length ? (r.categoria_id ? "detalhes" : "categoria") : "fotos", r.id)}
-              className="flex min-h-12 items-center gap-3 rounded-card bg-cartao p-3 shadow-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+              className="flex min-h-11 items-center gap-3 rounded-card bg-cartao p-3 shadow-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
             >
               <span className="relative grid size-16 shrink-0 place-items-center overflow-hidden rounded-campo bg-borda text-texto-suave">
                 {r.fotos[0] ? (

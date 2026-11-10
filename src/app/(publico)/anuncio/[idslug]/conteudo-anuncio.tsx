@@ -64,10 +64,10 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
       {ativo && !a.e_dono && <RegistrarVisita anuncioId={a.id} />}
 
       {a.categoria_pai_slug && a.categoria_slug && (
-        <nav aria-label="Você está em" className="px-4 text-[15px] text-texto-suave md:px-0">
+        <nav aria-label="Você está em" className="px-4 text-base text-texto-suave md:px-0">
           <ol className="flex flex-wrap items-center gap-1">
             <li>
-              <Link href={linkCategoria(a.categoria_pai_slug)} className="inline-flex min-h-12 items-center underline-offset-4 hover:underline">
+              <Link href={linkCategoria(a.categoria_pai_slug)} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
                 {a.categoria_pai_nome}
               </Link>
             </li>
@@ -75,7 +75,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
               <ChevronRight className="size-4" aria-hidden />
               <Link
                 href={linkCategoria(a.categoria_pai_slug, a.categoria_slug)}
-                className="inline-flex min-h-12 items-center underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
               >
                 {a.categoria_nome}
               </Link>
@@ -101,7 +101,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
           <p className="text-base font-semibold">Prévia: só você vê esta página.</p>
           <p className="text-base">{STATUS_PREVIA[a.status] ?? "Fora do ar."}</p>
           {a.e_dono && (
-            <Link href="/minha-conta/anuncios" className="inline-flex min-h-12 items-center self-start font-semibold underline underline-offset-4">
+            <Link href="/minha-conta/anuncios" className="inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4">
               Ir para Meus anúncios
             </Link>
           )}
@@ -117,9 +117,9 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
           <div className="flex flex-col gap-1.5 md:sticky md:top-20">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-xl font-bold tabular-nums">{preco(a.preco_centavos)}</p>
-              {vendido && <span className="rounded-full bg-beringela px-3 py-0.5 text-[13px] font-bold text-white">Vendido</span>}
+              {vendido && <span className="rounded-full bg-beringela px-3 py-0.5 text-legenda font-bold text-white">Vendido</span>}
               {a.destaque && ativo && (
-                <span className="rounded-full bg-patrocinado-fundo px-3 py-0.5 text-[13px] font-bold text-beringela">Patrocinado</span>
+                <span className="rounded-full bg-patrocinado-fundo px-3 py-0.5 text-legenda font-bold text-beringela">Patrocinado</span>
               )}
             </div>
             {a.aceita_troca && (
@@ -186,7 +186,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-card bg-cartao p-4 shadow-1">
                 {detalhes.map(({ c, texto }) => (
                   <div key={c.chave} className="flex min-w-0 flex-col">
-                    <dt className="text-[13px] text-texto-suave">{c.rotulo}</dt>
+                    <dt className="text-legenda text-texto-suave">{c.rotulo}</dt>
                     <dd className="break-words text-base font-semibold">{texto}</dd>
                   </div>
                 ))}
@@ -203,7 +203,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
             </section>
           )}
 
-          <aside aria-label="Dica de segurança" className="flex gap-3 rounded-card bg-aviso-fundo p-4 text-[15px] leading-6 text-beringela">
+          <aside aria-label="Dica de segurança" className="flex gap-3 rounded-card bg-aviso-fundo p-4 text-base leading-6 text-beringela">
             <ShieldAlert className="mt-0.5 size-6 shrink-0 text-aviso" aria-hidden />
             <p>
               <strong className="font-semibold">Nunca pague nada antes de ver o produto.</strong> Desconfie de preço muito abaixo do normal e
@@ -220,7 +220,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
               {a.categoria_pai_slug && a.categoria_slug && (
                 <Link
                   href={linkCategoria(a.categoria_pai_slug, a.categoria_slug)}
-                  className="inline-flex min-h-12 items-center self-start font-semibold text-laranja-escuro underline-offset-4 hover:underline"
+                  className="inline-flex min-h-11 items-center self-start font-semibold text-laranja-escuro underline-offset-4 hover:underline"
                 >
                   Ver todos em {a.categoria_nome}
                 </Link>

@@ -90,14 +90,14 @@ export function FormRegiao({ regiao, cidades }: { regiao: RegiaoAdmin; cidades: 
             </option>
           ))}
         </select>
-        <p className="mt-1 text-[13px] text-texto-suave">Só cidades ativas desta região.</p>
+        <p className="mt-1 text-legenda text-texto-suave">Só cidades ativas desta região.</p>
       </div>
       <div className="md:col-span-2">
         <label htmlFor="regiao-repasse" className={rotulo}>
           Repasse do franqueado (%)
         </label>
         <input id="regiao-repasse" disabled readOnly value="" placeholder="a definir" className={`${estiloCampo} bg-fundo`} aria-describedby="regiao-repasse-dica" />
-        <p id="regiao-repasse-dica" className="mt-1 text-[13px] text-texto-suave">
+        <p id="regiao-repasse-dica" className="mt-1 text-legenda text-texto-suave">
           A definir: fica vazio até o modelo de franquia ser decidido. Nada é repassado enquanto isso.
         </p>
       </div>
@@ -187,9 +187,9 @@ export function AcoesCidade({ cidade, regiaoId, uso }: { cidade: CidadeAdmin; re
           </form>
         )}
       </div>
-      {cidade.e_sede && <p className="text-[13px] text-texto-suave">É a sede: para desativar, escolha outra sede antes.</p>}
+      {cidade.e_sede && <p className="text-legenda text-texto-suave">É a sede: para desativar, escolha outra sede antes.</p>}
       {!cidade.e_sede && uso && (
-        <p className="text-[13px] text-texto-suave">Não dá para remover (tem {uso}). Desative para sair das listas e guardar o histórico.</p>
+        <p className="text-legenda text-texto-suave">Não dá para remover (tem {uso}). Desative para sair das listas e guardar o histórico.</p>
       )}
       <Retorno estado={estadoAtiva} />
       <Retorno estado={estadoRemover} />

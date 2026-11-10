@@ -15,7 +15,7 @@ export function UpsellPlano({ titulo, texto, disponivel }: { titulo: string; tex
       <p className="text-base font-semibold">{disponivel ?? "Não faz parte do seu plano agora."}</p>
       <Link
         href={`${LINK_PLANOS}?origem=vitrine`}
-        className="inline-flex min-h-12 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+        className="inline-flex min-h-11 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
       >
         Ver os planos
       </Link>

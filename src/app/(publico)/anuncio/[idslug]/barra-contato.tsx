@@ -86,7 +86,7 @@ export function BarraContato({
             Chamar no WhatsApp
           </a>
         ) : (
-          <p className="flex min-h-13 min-w-0 flex-1 items-center text-[15px] text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
+          <p className="flex min-h-13 min-w-0 flex-1 items-center text-base text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
         )}
 
         {podeFavoritar &&
@@ -114,7 +114,7 @@ export function BarraContato({
       </div>}
       <p
         role={aviso?.erro ? "alert" : "status"}
-        className={aviso ? `mx-auto max-w-6xl pt-1 text-[15px] font-semibold ${aviso.erro ? "text-perigo" : "text-verde-escuro"}` : "sr-only"}
+        className={aviso ? `mx-auto max-w-6xl pt-1 text-base font-semibold ${aviso.erro ? "text-perigo" : "text-verde-escuro"}` : "sr-only"}
       >
         {aviso?.texto}
       </p>

@@ -135,16 +135,16 @@ export function CampoBusca({
                 escolher(o);
               }}
               onMouseEnter={() => setAtivo(i)}
-              className={`min-h-12 cursor-pointer px-3 py-2 text-base text-beringela ${i === ativo ? "bg-selecao" : ""} ${
+              className={`min-h-11 cursor-pointer px-3 py-2 text-base text-beringela ${i === ativo ? "bg-selecao" : ""} ${
                 o.valor === valor ? "font-semibold" : ""
               }`}
             >
               <span className="block">{o.nome}</span>
-              {o.detalhe && <span className="block text-[13px] text-texto-suave">{o.detalhe}</span>}
+              {o.detalhe && <span className="block text-legenda text-texto-suave">{o.detalhe}</span>}
             </li>
           ))}
           {filtradas.length > MAX_NA_TELA && (
-            <li className="px-3 py-2 text-[13px] text-texto-suave">
+            <li className="px-3 py-2 text-legenda text-texto-suave">
               Mostrando {MAX_NA_TELA} de {filtradas.length}. Digite mais letras para achar o seu.
             </li>
           )}

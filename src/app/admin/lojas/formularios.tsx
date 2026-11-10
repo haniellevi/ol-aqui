@@ -83,12 +83,12 @@ export function FormAcaoLoja({
         <input name="motivo" required minLength={3} maxLength={300} placeholder="Ex.: compensação pela queda do site" className={estiloCampo} />
       </label>
       {escolha === "trocar_plano" && loja.plano_proximo && (
-        <p className="col-span-2 text-[13px] text-aviso @3xl/painel:col-span-4">
+        <p className="col-span-2 text-legenda text-aviso @3xl/painel:col-span-4">
           Esta loja tem uma troca já paga para {loja.plano_proximo_nome ?? loja.plano_proximo}. Trocar o plano aqui desfaz essa troca marcada.
         </p>
       )}
       {escolha === "trocar_plano" && (
-        <p className="col-span-2 text-[13px] text-texto-suave @3xl/painel:col-span-4">
+        <p className="col-span-2 text-legenda text-texto-suave @3xl/painel:col-span-4">
           Plano pago ou teste: diga por quantos dias vale. Plano grátis não vence (deixe os dias em branco). Nada é cobrado.
         </p>
       )}

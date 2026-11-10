@@ -49,7 +49,7 @@ export function NavAdmin({ pendencias, papel }: { pendencias: number; papel: Pap
             key={href}
             href={href}
             aria-current={ativo ? "page" : undefined}
-            className={`admin-menu-item relative flex min-h-16 w-20 shrink-0 flex-col items-center justify-center gap-1 text-legenda leading-4 outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-laranja-escuro md:min-h-12 md:w-auto md:flex-row md:justify-start md:gap-2.5 md:rounded-campo md:px-3 md:py-2 md:leading-5 ${
+            className={`admin-menu-item relative flex min-h-16 w-20 shrink-0 flex-col items-center justify-center gap-1 text-legenda leading-4 outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-laranja-escuro md:min-h-11 md:w-auto md:flex-row md:justify-start md:gap-2.5 md:rounded-campo md:px-3 md:py-2 md:leading-5 ${
               ativo ? "bg-selecao font-semibold text-beringela" : "font-normal text-texto-suave hover:bg-fundo"
             }`}
           >
@@ -66,7 +66,7 @@ export function NavAdmin({ pendencias, papel }: { pendencias: number; papel: Pap
               <span className="max-w-full truncate px-0.5">{rotulo}</span>
             )}
             {href === "/admin/moderacao" && pendencias > 0 && (
-              <span className="absolute right-[22%] top-1 rounded-full bg-perigo px-1.5 text-[13px] font-bold leading-5 text-white md:static md:ml-auto">
+              <span className="absolute right-[22%] top-1 rounded-full bg-perigo px-1.5 text-legenda font-bold leading-5 text-white md:static md:ml-auto">
                 {pendencias}
               </span>
             )}

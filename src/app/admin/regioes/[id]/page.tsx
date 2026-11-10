@@ -43,7 +43,7 @@ export default async function RegiaoPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <Link href={LINK_ADMIN_REGIOES} className="mb-3 inline-flex min-h-12 items-center gap-2 text-sm font-semibold text-laranja-escuro">
+      <Link href={LINK_ADMIN_REGIOES} className="mb-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-laranja-escuro">
         <ArrowLeft className="size-5" aria-hidden />
         Todas as regiões
       </Link>
@@ -73,10 +73,10 @@ export default async function RegiaoPage({ params }: { params: Promise<{ id: str
                     <div className="min-w-0">
                       <p className="flex flex-wrap items-center gap-2 text-base font-semibold text-beringela">
                         {c.nome}-{c.uf}
-                        {c.e_sede && <span className="rounded-full bg-selecao px-2 py-0.5 text-[13px] font-semibold text-beringela">sede</span>}
-                        {!c.ativa && <span className="rounded-full bg-borda px-2 py-0.5 text-[13px] font-semibold text-texto-suave">desativada</span>}
+                        {c.e_sede && <span className="rounded-full bg-selecao px-2 py-0.5 text-legenda font-semibold text-beringela">sede</span>}
+                        {!c.ativa && <span className="rounded-full bg-borda px-2 py-0.5 text-legenda font-semibold text-texto-suave">desativada</span>}
                       </p>
-                      <p className="text-[13px] text-texto-suave">{uso || "Sem anúncios, lojas nem pessoas"}</p>
+                      <p className="text-legenda text-texto-suave">{uso || "Sem anúncios, lojas nem pessoas"}</p>
                     </div>
                     <AcoesCidade cidade={c} regiaoId={regiao.id} uso={uso} />
                   </li>

@@ -106,7 +106,7 @@ export function FormModelo({ modelo }: { modelo: ModeloMensagem }) {
             aria-describedby={`txt-conta-${id}${erroTexto ? ` txt-erro-${id}` : ""}`}
             className={`${estiloCampo} h-auto py-2 ${erroTexto ? "border-perigo" : ""}`}
           />
-          <p id={`txt-conta-${id}`} className="mt-1 text-[13px] text-texto-suave">
+          <p id={`txt-conta-${id}`} className="mt-1 text-legenda text-texto-suave">
             {texto.length.toLocaleString("pt-BR")} de {limites.texto.toLocaleString("pt-BR")} letras
           </p>
           {erroTexto && (
@@ -125,28 +125,28 @@ export function FormModelo({ modelo }: { modelo: ModeloMensagem }) {
                   key={v}
                   type="button"
                   onClick={() => inserir(v)}
-                  className="inline-flex min-h-12 flex-col items-start justify-center rounded-campo border border-borda bg-cartao px-3 text-left active:brightness-90"
+                  className="inline-flex min-h-11 flex-col items-start justify-center rounded-campo border border-borda bg-cartao px-3 text-left active:brightness-90"
                 >
-                  <span className="text-[15px] font-semibold text-beringela">{`{${v}}`}</span>
-                  <span className="text-[13px] text-texto-suave">{EXEMPLOS_VARIAVEIS[v]?.explica ?? v}</span>
+                  <span className="text-base font-semibold text-beringela">{`{${v}}`}</span>
+                  <span className="text-legenda text-texto-suave">{EXEMPLOS_VARIAVEIS[v]?.explica ?? v}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        <label className="flex min-h-12 items-center gap-3 text-base text-beringela">
+        <label className="flex min-h-11 items-center gap-3 text-base text-beringela">
           <input type="checkbox" name="ativo" defaultChecked={modelo.ativo} key={`${modelo.atualizado_em}`} className="size-5 accent-laranja-escuro" />
           <span>
             {enviaHoje ? "Ligada (a mensagem é mandada)" : "Ligada (vai ser mandada quando o envio começar)"}
-            <span className="block text-[13px] text-texto-suave">
+            <span className="block text-legenda text-texto-suave">
               {enviaHoje ? "Desligada, ninguém recebe este aviso." : "Hoje nada é mandado por este canal."}
             </span>
           </span>
         </label>
 
         <div className="rounded-card border border-borda bg-fundo p-3" aria-live="polite">
-          <p className="mb-2 text-[13px] font-semibold uppercase text-texto-suave">Prévia com exemplo</p>
+          <p className="mb-2 text-legenda font-semibold uppercase text-texto-suave">Prévia com exemplo</p>
           {modelo.canal === "whatsapp" ? (
             <p className="min-w-0 max-w-sm [overflow-wrap:anywhere] whitespace-pre-line rounded-card bg-sucesso-fundo px-3 py-2 text-base text-texto shadow-1">
               {previa(texto, modelo.variaveis) || "(vazio)"}
