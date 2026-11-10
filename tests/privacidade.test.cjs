@@ -19,7 +19,15 @@ function exportacao(op = {}) {
     ...op.tabelas,
   };
   const db = {
-    rpc: async () => ({ data: op.perfilVazio ? [] : [{ id: op.perfilId ?? usuario }], error: op.perfilErro ? { message: 'interno' } : null }),
+    rpc(nome) {
+      if (nome === 'meus_contatos_vitrine') return {
+        async maybeSingle() {
+          return { data: { whatsapp: '5589999990101', instagram: 'loja.piloto' }, error: op.contatosErro ? { message: 'interno' } : null };
+        },
+      };
+      assert.equal(nome, 'meu_perfil');
+      return Promise.resolve({ data: op.perfilVazio ? [] : [{ id: op.perfilId ?? usuario }], error: op.perfilErro ? { message: 'interno' } : null });
+    },
     from(tabela) {
       const c = { tabela, filtros: [], ordem: [], inicio: 0, fim: 499 };
       const q = {
@@ -58,6 +66,8 @@ test('exportação: sem sessão não consulta dados e nunca permite cache', asyn
 test('exportação: pagina coleções e mensagens sem truncar pelo limite menor do servidor', async () => {
   const a = exportacao(); const r = await a.get(); const dados = await r.json();
   assert.equal(r.status, 200); assert.equal(dados.favoritos.length, 5);
+  assert.equal(dados.vitrine.whatsapp, '5589999990101');
+  assert.equal(dados.vitrine.instagram, 'loja.piloto');
   assert.equal(dados.conversas_com_o_aki[0].robo_mensagens.length, 5);
   assert.deepEqual(a.consultas.filter(c => c.tabela === 'robo_mensagens').map(c => c.inicio), [0, 2, 4, 5]);
   assert.match(r.headers.get('content-disposition'), /attachment/);
@@ -70,7 +80,7 @@ test('exportação: propostas recebidas são apenas ativas de pedidos próprios 
   assert.ok(a.consultas.filter(c => c.tabela === 'radar_propostas').every(c => !c.colunas.includes('*') && !c.colunas.includes('criado_ip')));
 });
 test('exportação: qualquer coleção com erro, inclusive página posterior, falha sem arquivo parcial', async () => {
-  for (const op of [{ perfilErro: true }, { perfilVazio: true }, { perfilId: "outro" }, { erro: 'vitrines_lojas' }, { erro: 'favoritos', erroDepois: true }, { erro: 'pagamentos' }, { erro: 'radar_propostas' }, { erro: 'robo_mensagens' }, { rede: 'aceites' }]) {
+  for (const op of [{ contatosErro: true }, { perfilErro: true }, { perfilVazio: true }, { perfilId: "outro" }, { erro: 'vitrines_lojas' }, { erro: 'favoritos', erroDepois: true }, { erro: 'pagamentos' }, { erro: 'radar_propostas' }, { erro: 'robo_mensagens' }, { rede: 'aceites' }]) {
     const r = await exportacao(op).get();
     assert.equal(r.status, 500, JSON.stringify(op));
     assert.equal(r.headers.get('content-disposition'), null);

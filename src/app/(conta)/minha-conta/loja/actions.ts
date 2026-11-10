@@ -91,7 +91,8 @@ export async function salvarLoja(_antes: EstadoLojaConta, form: FormData): Promi
       .eq("dono_id", userId).select("id").maybeSingle();
     if (error) {
       const e = traduzirErro(error);
-      return { erro: e.mensagem, campos: e.campo ? { [e.campo]: e.mensagem } : undefined };
+      if (e.campo) return { erro: "Confira o campo marcado.", campos: { [e.campo]: e.mensagem } };
+      return { erro: e.mensagem };
     }
 
     if (data?.id !== v.id) return { erro: "A loja não foi atualizada. Recarregue a página e tente novamente." };

@@ -6,7 +6,7 @@ import { SITE } from "@/lib/formato";
 export const dynamic = "force-dynamic";
 
 const COLUNAS_VITRINE =
-  "id, tipo, slug, nome, descricao, logo_url, capa_url, whatsapp, cidade, bairro, plano, status, teste_expira_em, plano_expira_em, selo_loja_verificada, criado_em, banner_tipo, banner_url, banner_modelo, banner_cor, endereco, lat, lng, horarios, instagram, sobre, formas_pagamento, faz_entrega, entrega_obs";
+  "id, tipo, slug, nome, descricao, logo_url, capa_url, cidade, bairro, plano, status, teste_expira_em, plano_expira_em, selo_loja_verificada, criado_em, banner_tipo, banner_url, banner_modelo, banner_cor, endereco, lat, lng, horarios, sobre, formas_pagamento, faz_entrega, entrega_obs";
 // O IP da loja e os identificadores internos do gateway não saem pela API.
 const COLUNAS_PROPOSTA =
   "id, pedido_id, vitrine_id, anuncio_id, mensagem, preco_centavos, foto_url, escolhida, escolhida_em, status, moderado_motivo, criado_em, atualizado_em";
@@ -32,9 +32,10 @@ export async function GET() {
     const db = await createClient();
     const proprios = (tabela: string, colunas: string, dono = "usuario_id", ordem = "id") =>
       lerPaginas((inicio, fim) => db.from(tabela).select(colunas).eq(dono, userId).order(ordem).range(inicio, fim).returns<Record<string, unknown>[]>());
-    const [perfil, vitrine, favoritos, pedidos, conversas, mensagens, aceites, notificacoes, preferencias, avaliacoes, verificacoes] = await Promise.all([
+    const [perfil, vitrine, contatos, favoritos, pedidos, conversas, mensagens, aceites, notificacoes, preferencias, avaliacoes, verificacoes] = await Promise.all([
       db.rpc("meu_perfil"),
       db.from("vitrines_lojas").select(COLUNAS_VITRINE).eq("dono_id", userId).maybeSingle<{ id: string }>(),
+      db.rpc("meus_contatos_vitrine").maybeSingle<{ whatsapp: string | null; instagram: string | null }>(),
       proprios("favoritos", "anuncio_id, criado_em", "usuario_id", "anuncio_id"),
       proprios("radar_pedidos", "*", "comprador_id"),
       proprios("robo_conversas", "id, titulo, criado_em, atualizado_em"),
@@ -48,7 +49,7 @@ export async function GET() {
       proprios("perfis_verificacoes", "id, tipo, status, analisado_em, motivo_recusa, criado_em", "perfil_id"),
     ]);
     const linhaPerfil = Array.isArray(perfil.data) ? perfil.data[0] : perfil.data;
-    if (perfil.error || vitrine.error || linhaPerfil?.id !== userId) throw new Error("Falha na exportação");
+    if (perfil.error || vitrine.error || contatos.error || linhaPerfil?.id !== userId) throw new Error("Falha na exportação");
 
     const daVitrine = (tabela: string, colunas: string) => vitrine.data
       ? lerPaginas((inicio, fim) => db.from(tabela).select(colunas).eq("vitrine_id", vitrine.data!.id).order("id").range(inicio, fim))
@@ -67,7 +68,7 @@ export async function GET() {
       site: `OLAKI (${SITE})`,
       aviso: "Este arquivo reúne os dados disponíveis na sua conta. Guarde com cuidado: ele contém informações pessoais. Registros internos de segurança e cobrança não estão incluídos.",
       perfil: linhaPerfil,
-      vitrine: vitrine.data ?? null,
+      vitrine: vitrine.data ? { ...vitrine.data, ...contatos.data } : null,
       anuncios,
       propostas_radar_enviadas: propostasEnviadas,
       propostas_radar_recebidas: propostasRecebidas.map((proposta) => {

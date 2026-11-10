@@ -18,20 +18,21 @@ async function lerConta(exigirLeitura = false): Promise<MinhaConta | null> {
   if (!userId) return null;
   const db = await createClient();
 
-  const [perfilRes, vitrineRes] = await Promise.all([
+  const [perfilRes, vitrineRes, contatosRes] = await Promise.all([
     db.rpc("meu_perfil"),
     db
       .from("vitrines_lojas")
       .select(`${COLUNAS_VITRINE}, dono_id, plano, teste_expira_em, plano_expira_em`)
       .eq("dono_id", userId)
-      .maybeSingle<MinhaVitrine>(),
+      .maybeSingle<Omit<MinhaVitrine, "whatsapp">>(),
+    db.rpc("meus_contatos_vitrine").maybeSingle<{ whatsapp: string | null }>(),
   ]);
   const perfilLinha = Array.isArray(perfilRes.data) ? perfilRes.data[0] : perfilRes.data;
   if (perfilRes.error) throw new Error("Não foi possível carregar sua conta.");
   if (!perfilLinha) return null;
   const perfil = paraPerfil(perfilLinha);
-  if (vitrineRes.error) throw new Error("Não foi possível carregar sua vitrine.");
-  const vitrine = vitrineRes.data;
+  if (vitrineRes.error || contatosRes.error) throw new Error("Não foi possível carregar sua vitrine.");
+  const vitrine = vitrineRes.data ? { ...vitrineRes.data, whatsapp: contatosRes.data?.whatsapp ?? null } : null;
   if (exigirLeitura && (perfil.id !== userId || (vitrine && vitrine.dono_id !== userId))) throw new Error("Não foi possível confirmar sua conta.");
 
   if (!vitrine) {

@@ -20,7 +20,8 @@ export function ConcluirDadosClerk() {
         try {
           const r = await atualizarPerfilClerk();
           if (!r?.ok) { setErro(r?.erro ?? "Não conseguimos atualizar seus dados. Tente novamente."); return; }
-          router.push("/minha-conta/dados"); router.refresh();
+          router.push(r.whatsappVinculado ? "/confirmar-celular?aviso=numero_vinculado" : "/minha-conta/dados");
+          router.refresh();
         } catch { setErro("A conexão falhou. Tente concluir novamente para atualizar o OL-AKI."); }
         finally { trava.current = false; }
       });

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { Aviso, estiloCampo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
-import { acaoLoja, analisarVerificacao } from "./actions";
+import { acaoLoja, analisarVerificacao, revisarLoja } from "./actions";
 import type { AcaoLoja, LojaAdmin } from "@/lib/tipos-cobranca";
 
 // Formulários da tela 5. Cada ação pede o motivo (fica no histórico) e mostra "carregando".
@@ -13,13 +13,13 @@ function Retorno({ estado }: { estado: { ok?: string; erro?: string } | null }) 
   return estado.erro ? <Aviso tipo="erro">{estado.erro}</Aviso> : estado.ok ? <Aviso tipo="ok">{estado.ok}</Aviso> : null;
 }
 
-const ROTULO: Record<AcaoLoja, string> = {
+type AcaoOperacional = Exclude<AcaoLoja, "dar_selo" | "tirar_selo">;
+
+const ROTULO: Record<AcaoOperacional, string> = {
   cortesia: "Dar dias de cortesia",
   trocar_plano: "Trocar o plano",
   suspender: "Suspender",
   reativar: "Reativar",
-  dar_selo: "Dar Selo Loja Verificada",
-  tirar_selo: "Tirar Selo Loja Verificada",
 };
 
 /** `permitidas`: ações que o papel pode fazer (null = todas, administrador). O banco confere de novo. */
@@ -33,23 +33,22 @@ export function FormAcaoLoja({
   permitidas?: AcaoLoja[] | null;
 }) {
   const [estado, acao, pendente] = useActionState(acaoLoja, null);
-  const opcoes: AcaoLoja[] = (
+  const opcoes: AcaoOperacional[] = (
     [
       "cortesia",
       "trocar_plano",
       loja.status === "suspensa" ? "reativar" : "suspender",
-      ...(loja.tipo === "loja" ? [loja.selo_loja_verificada ? ("tirar_selo" as const) : ("dar_selo" as const)] : []),
-    ] as AcaoLoja[]
+    ] as AcaoOperacional[]
   ).filter((a) => permitidas === null || permitidas.includes(a));
-  const [escolha, setEscolha] = useState<AcaoLoja>(opcoes[0] ?? "suspender");
-  const perigo = escolha === "suspender" || escolha === "tirar_selo";
+  const [escolha, setEscolha] = useState<AcaoOperacional>(opcoes[0] ?? "suspender");
+  const perigo = escolha === "suspender";
 
   return (
     <form action={acao} className="grid grid-cols-2 items-end gap-3 @3xl/painel:grid-cols-4">
       <input type="hidden" name="vitrine" value={loja.id} />
       <label className="col-span-2 text-sm font-semibold">
         O que fazer
-        <select name="acao" value={escolha} onChange={(e) => setEscolha(e.target.value as AcaoLoja)} className={estiloCampo}>
+        <select name="acao" value={escolha} onChange={(e) => setEscolha(e.target.value as AcaoOperacional)} className={estiloCampo}>
           {opcoes.map((a) => (
             <option key={a} value={a}>
               {ROTULO[a]}
@@ -100,6 +99,82 @@ export function FormAcaoLoja({
       <div className="col-span-2 @3xl/painel:col-span-4">
         <Retorno estado={estado} />
       </div>
+    </form>
+  );
+}
+
+type DecisaoLoja = "aprovar" | "correcao" | "recusar";
+
+export function FormRevisaoLoja({
+  loja, revisao, motivos, whatsappConfirmado, instagramValido, aprovada,
+}: {
+  loja: string;
+  revisao: number;
+  motivos: { valor: string; rotulo: string }[];
+  whatsappConfirmado: boolean;
+  instagramValido: boolean;
+  aprovada: boolean;
+}) {
+  const [estado, acao, pendente] = useActionState(revisarLoja, null);
+  const [decisao, setDecisao] = useState<DecisaoLoja>("aprovar");
+  const [motivo, setMotivo] = useState("");
+  const [conferido, setConferido] = useState({ dados: false, link: false, whatsapp: false });
+  const itens = [
+    ["dados", "Conferi o nome, a titularidade e os dados comerciais cadastrados."],
+    ["link", "Abri a vitrine e conferi manualmente o Instagram, quando cadastrado."],
+    ["whatsapp", "Conferi o contato. Se o WhatsApp comercial difere do número da conta, verifiquei que a loja controla esse número."],
+  ] as const;
+
+  return (
+    <form action={acao} className="mt-4 flex flex-col gap-3">
+      <input type="hidden" name="loja" value={loja} />
+      <input type="hidden" name="revisao" value={revisao} />
+      {!aprovada && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 font-semibold">Conferências para aprovar</legend>
+          {itens.map(([campo, rotulo]) => (
+            <label key={campo} className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                name={campo}
+                checked={conferido[campo]}
+                onChange={(e) => setConferido({ ...conferido, [campo]: e.target.checked })}
+                className="mt-0.5 size-5 shrink-0 accent-laranja-escuro"
+              />
+              {rotulo}
+            </label>
+          ))}
+          {!instagramValido && <p className="text-sm font-semibold text-aviso">Peça a correção do Instagram cadastrado antes de aprovar.</p>}
+          {!whatsappConfirmado && <p className="text-sm font-semibold text-aviso">A aprovação exige que o responsável confirme o WhatsApp da conta.</p>}
+        </fieldset>
+      )}
+      <label className="text-sm font-semibold">
+        Motivo para pedir correção ou {aprovada ? "revogar" : "recusar"}
+        <select name="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} className={estiloCampo}>
+          <option value="">Selecione o motivo</option>
+          {motivos.map(({ valor, rotulo }) => <option key={valor} value={valor}>{rotulo}</option>)}
+        </select>
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {!aprovada && (
+          <Botao type="submit" name="decisao" value="aprovar" onClick={() => setDecisao("aprovar")}
+            disabled={pendente || !whatsappConfirmado || !instagramValido || !Object.values(conferido).every(Boolean)}
+            carregando={pendente && decisao === "aprovar"} textoCarregando="Salvando...">
+            Aprovar e conceder selo
+          </Botao>
+        )}
+        <Botao type="submit" name="decisao" value="correcao" onClick={() => setDecisao("correcao")}
+          variante="secundario" disabled={pendente || !motivo}
+          carregando={pendente && decisao === "correcao"} textoCarregando="Salvando...">
+          Pedir correção
+        </Botao>
+        <Botao type="submit" name="decisao" value="recusar" onClick={() => setDecisao("recusar")}
+          variante="perigo" disabled={pendente || !motivo}
+          carregando={pendente && decisao === "recusar"} textoCarregando="Salvando...">
+          {aprovada ? "Revogar verificação" : "Recusar verificação"}
+        </Botao>
+      </div>
+      <Retorno estado={estado} />
     </form>
   );
 }
