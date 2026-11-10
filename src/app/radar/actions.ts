@@ -4,12 +4,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sincronizarPerfil } from "@/lib/perfil";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
-import { exigeCelularConfirmado } from "@/lib/dados/radar";
 import { traduzirErro } from "@/lib/erros";
-import { centavosDoTexto, ehUuid, whatsappDigitado } from "@/lib/formato";
+import { centavosDoTexto, ehUuid } from "@/lib/formato";
 import { validarPedido, validarProposta, type EntradaPedido, type EntradaProposta } from "@/components/radar/validacao";
 import type {
   EnvioFotoProposta,
@@ -48,28 +46,12 @@ async function atualizarCelularDoClerk() {
   await sincronizarPerfil(u);
 }
 
-/**
- * Sem celular confirmado (o SMS do login ainda não chega): guarda o WhatsApp digitado no pedido,
- * se o painel deixar (radar.exigir_celular_confirmado = false). Nunca troca um número já confirmado
- * pelo Clerk. Grava com a chave secreta porque perfis.whatsapp não é editável pelo navegador.
- */
-async function guardarWhatsappDigitado(userId: string, texto: string | undefined): Promise<{ erro: string; campo?: string; precisaCelular?: boolean } | null> {
+/** O contato do Radar vem exclusivamente do perfil confirmado. */
+async function guardarWhatsappDigitado(userId: string): Promise<{ erro: string; campo?: string; precisaCelular?: boolean } | null> {
   const conta = await meuPerfilEVitrine();
-  if (!conta) return { erro: "Termine seu cadastro antes de pedir no Radar." };
-  const perfil = conta.perfil;
-  if (perfil.whatsapp && perfil.whatsapp_verificado_em) return null;
-  if (await exigeCelularConfirmado(perfil.microrregiao_id)) {
-    return { erro: "Confirme seu celular para pedir no Radar.", campo: "celular", precisaCelular: true };
-  }
-  const numero = whatsappDigitado(texto);
-  if (!numero) return { erro: "Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.", campo: "whatsapp" };
-  if (numero === perfil.whatsapp) return null;
-  const { error } = await supabaseAdmin()
-    .from("perfis")
-    .update({ whatsapp: numero, whatsapp_verificado_em: null })
-    .eq("id", userId)
-    .is("whatsapp_verificado_em", null);
-  return error ? { erro: "Não conseguimos guardar seu WhatsApp. Tente de novo." } : null;
+  if (conta?.perfil.id !== userId) return { erro: "Termine seu cadastro antes de pedir no Radar." };
+  return conta.perfil.whatsapp && conta.perfil.whatsapp_verificado_em ? null
+    : { erro: "Confirme seu WhatsApp para pedir no Radar.", campo: "celular", precisaCelular: true };
 }
 
 export async function criarPedido(entrada: EntradaPedido): Promise<RespostaCriarPedido> {
@@ -82,7 +64,7 @@ export async function criarPedido(entrada: EntradaPedido): Promise<RespostaCriar
   } catch {
     return { ok: false, erro: "Não conseguimos confirmar seus dados agora. Tente novamente." };
   }
-  const semCelular = await guardarWhatsappDigitado(userId, entrada.whatsapp);
+  const semCelular = await guardarWhatsappDigitado(userId);
   if (semCelular) return { ok: false, ...semCelular };
 
   const db = await createClient();

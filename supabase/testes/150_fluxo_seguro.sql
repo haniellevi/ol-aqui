@@ -81,11 +81,11 @@ select pg_temp.confere(:'contato'='5589999990001','WhatsApp direto entrega núme
 select whatsapp from propor_radar('20000000-0000-4000-a000-000000000001');
 reset role;
 select pg_temp.confere((select total_propostas=1 from radar_pedidos where id='20000000-0000-4000-a000-000000000001'),'repetir contato não duplica proposta');
--- Sem confirmação: só permite o modo explicitamente liberado pelo painel.
+-- Sem confirmação: nem a configuração antiga permite negociar.
 update configuracoes set valor='false' where chave='radar.exigir_celular_confirmado' and microrregiao_id is null;
 set role authenticated;
 set request.jwt.claim.sub='user_semcodigo';
-select pg_temp.confere(criar_pedido_radar('Procuro bicicleta para trabalhar','Corrente')->>'id' is not null,'WhatsApp digitado respeita configuração');
+select pg_temp.recusa($q$select criar_pedido_radar('Procuro bicicleta para trabalhar','Corrente')$q$, '42501');
 reset role;
 update configuracoes set valor='true' where chave='radar.exigir_celular_confirmado' and microrregiao_id is null;
 -- Três anúncios em rascunho para disputar a única vaga de publicação.

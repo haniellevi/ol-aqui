@@ -61,6 +61,22 @@ try:
     print('PASS: Minha loja protege edição e uploads, salva contato, fotos e horários até meia-noite', flush=True)
     checked(sql((root/'supabase/testes/260_meu_plano.sql').read_text()))
     print('PASS: Meu plano protege preço, histórico, reserva e confirmação repetida', flush=True)
+    checked(sql((root/'supabase/testes/270_confirmacao_whatsapp.sql').read_text()))
+    print('PASS: OTP privado, três erros, prazo, consumo único, cotas, troca segura e contadores públicos', flush=True)
+    def solicitar_otp(i):
+        return sql("select reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990088',repeat('a',64));")
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        pedidos=list(pool.map(solicitar_otp,range(4)))
+    for result in pedidos: checked(result)
+    assert sum('reservado' in r.stdout for r in pedidos)==1, [r.stdout for r in pedidos]
+    print('PASS: quatro envios simultâneos reservam um único código', flush=True)
+    def confirmar_otp(i):
+        return sql("select confirmar_codigo_whatsapp('user_semcodigo',(select id from whatsapp_desafios where usuario_id='user_semcodigo' and not cancelado),repeat('a',64));")
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        confirmacoes=list(pool.map(confirmar_otp,range(4)))
+    for result in confirmacoes: checked(result)
+    assert sum('confirmado' in r.stdout for r in confirmacoes)==1, [r.stdout for r in confirmacoes]
+    print('PASS: quatro confirmações simultâneas consomem o código uma única vez', flush=True)
     def reservar(i):
         return sql("begin; select reservar_criacao_asaas('60000000-0000-4000-a000-000000000026','sandbox'); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:

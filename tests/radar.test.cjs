@@ -25,7 +25,7 @@ function ambiente(resposta,{login=true}={}){
   '@clerk/nextjs/server':{auth:async()=>({userId:login?'user_loja':null}),currentUser:async()=>({id:'user_loja'})},
   'next/cache':{revalidatePath:p=>chamadas.push(['cache',p])},
   '@/lib/perfil':{sincronizarPerfil:async()=>{}},
-  '@/lib/dados/conta':{meuPerfilEVitrine:async()=>({perfil:{whatsapp:'5589999990001',whatsapp_verificado_em:'2026-11-01'}})},
+  '@/lib/dados/conta':{meuPerfilEVitrine:async()=>({perfil:{id:'user_loja',whatsapp:'5589999990001',whatsapp_verificado_em:'2026-11-01'}})},
   '@/lib/dados/radar':{},'@/lib/supabase/admin':{},
   '@/lib/supabase/server':{createClient:async()=>({rpc:(...args)=>{chamadas.push(args);return {single:async()=>resposta,then:resolve=>Promise.resolve(resposta).then(resolve)};}})},
  });return {a,chamadas};

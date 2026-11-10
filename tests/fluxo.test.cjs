@@ -95,6 +95,7 @@ function perfil(existente, erroLeitura = null, erroEscrita = null) {
   const gravacoes=[];
   const query = {
     select() { return this; }, eq() { return this; },
+    then(resolve) { return Promise.resolve({data:null,error:erroEscrita}).then(resolve); },
     maybeSingle: async () => ({data:gravacoes.length ? {id:usuario.id} : existente && {avatar_url:"",...existente},error:gravacoes.length ? erroEscrita : erroLeitura}),
     update(dados) { gravacoes.push(dados); return this; },
   };

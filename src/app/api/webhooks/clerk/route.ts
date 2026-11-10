@@ -102,12 +102,13 @@ async function apagarConta(id: string) {
   }
   ok(await db.from("radar_pedidos").update({ status: "encerrado" }).eq("comprador_id", id).in("status", ["aberto", "em_analise"]));
   ok(await db.from("perfis_verificacoes").delete().eq("perfil_id", id));
+  ok(await db.from("whatsapp_desafios").delete().eq("usuario_id", id));
   ok(await db.from("favoritos").delete().eq("usuario_id", id));
   ok(await db.from("notificacoes").delete().eq("usuario_id", id)); // avisos do Radar
   ok(
     await db
       .from("perfis")
-      .update({ nome: "Conta excluída", whatsapp: null, whatsapp_verificado_em: null, avatar_url: null, cidade: null, bairro: null })
+      .update({ nome: "Conta excluída", whatsapp: null, whatsapp_verificado_em: null, whatsapp_origem: "clerk", avatar_url: null, cidade: null, bairro: null })
       .eq("id", id),
   );
 }
