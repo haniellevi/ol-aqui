@@ -129,6 +129,8 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 
 **4ª passada (10/11/2026), "telas poluídas":** a escala desceu mais um degrau e vale no lugar das anteriores: legenda 11px, apoio/botões/rótulos 12, texto 13, título de card 14, seção 15, título da tela 16 (18 no computador). Campos 13px (16 só no iPhone). Regras de limpeza: um selo por card no máximo, "Patrocinado" uma vez por seção quando a seção inteira é paga, números do anúncio em uma linha só, sem frase de apoio embaixo do título da tela quando o título já explica.
 
+**Princípios da skill apple-design aplicados (10/11/2026):** resposta na hora do toque (`.olaki-acao` e `.olaki-toque` encolhem para 97/98% ao encostar, 100ms); barras flutuantes usam `.olaki-material` (translúcido com desfoque, fio de luz no lugar da linha divisória, sólido em `prefers-reduced-transparency` e `prefers-contrast`); espaçamento entre letras por tamanho (títulos apertados, legendas levemente abertas); movimento desligado em `prefers-reduced-motion`. Gestos com mola (arrastar folhas, carrossel com impulso) ficam para quando houver biblioteca de animação.
+
 ## 4. Ícones e imagens
 
 - Ícones: **lucide-react** (já está no projeto), traço 2px, sempre **com texto embaixo ou ao lado** nos menus. Ícone sozinho só em coisas universais (fechar, voltar, coração de favorito, lupa).

@@ -20,7 +20,7 @@ export type CardAnuncioProps = {
 export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnuncioProps) {
   const quando = tempoRelativo(a.criado_em);
   return (
-    <article className="relative flex flex-col overflow-hidden rounded-card bg-cartao shadow-1">
+    <article className="olaki-toque relative flex flex-col overflow-hidden rounded-card bg-cartao shadow-1">
       <Link
         href={linkAnuncio(a.id, a.titulo)}
         className="flex flex-1 flex-col focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
