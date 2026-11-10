@@ -58,7 +58,7 @@ function paraBase64(blob: Blob): Promise<string> {
   });
 }
 
-export function BalaoAki({ modo = "balao" }: { modo?: "balao" | "pagina" } = {}) {
+export function BalaoAki({ modo = "balao", voltarDaAjuda }: { modo?: "balao" | "pagina"; voltarDaAjuda?: string } = {}) {
   const pagina = modo === "pagina";
   const caminho = usePathname() ?? "/";
   const [estado, setEstado] = useState<EstadoAki | null>(null);
@@ -370,12 +370,12 @@ export function BalaoAki({ modo = "balao" }: { modo?: "balao" | "pagina" } = {})
                   Tentar de novo
                 </Botao>
               ) : (
-                <Botao href="/busca" larguraTotal>
-                  Buscar no OLAKI
+                <Botao href={voltarDaAjuda ? "/ajuda" : "/busca"} larguraTotal>
+                  {voltarDaAjuda ? "Abrir a Central de ajuda" : "Buscar no OLAKI"}
                 </Botao>
               )}
-              <Botao href="/" variante="secundario" larguraTotal>
-                Voltar ao início
+              <Botao href={voltarDaAjuda ?? "/"} variante="secundario" larguraTotal>
+                {voltarDaAjuda ? "Voltar à confirmação" : "Voltar ao início"}
               </Botao>
             </div>
           </>
@@ -457,7 +457,7 @@ export function BalaoAki({ modo = "balao" }: { modo?: "balao" | "pagina" } = {})
           >
             <header className={`flex items-center gap-2 border-b border-borda py-1 pr-1 ${pagina ? "pl-1" : "pl-4"}`}>
               {pagina && (
-                <Link href="/" aria-label="Voltar ao início" className="grid size-12 shrink-0 place-items-center text-beringela">
+                <Link href={voltarDaAjuda ?? "/"} aria-label={voltarDaAjuda ? "Voltar à confirmação" : "Voltar ao início"} className="grid size-12 shrink-0 place-items-center text-beringela">
                   <ArrowLeft className="size-6" aria-hidden />
                 </Link>
               )}
@@ -497,6 +497,12 @@ export function BalaoAki({ modo = "balao" }: { modo?: "balao" | "pagina" } = {})
               <p className="flex items-start gap-2 bg-laranja-claro px-4 py-2 text-[13px] leading-[18px] text-beringela">
                 <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
                 {estado.avisoIa}
+              </p>
+            )}
+
+            {voltarDaAjuda && (
+              <p className="border-b border-borda bg-fundo px-4 py-3 text-sm text-texto-suave">
+                Conte ao Aki o que aconteceu com a confirmação do WhatsApp. Nunca envie o código pelo bate-papo.
               </p>
             )}
 
