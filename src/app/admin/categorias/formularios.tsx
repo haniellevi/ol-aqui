@@ -12,6 +12,7 @@ import type { CategoriaAdmin } from "@/lib/tipos-cadastros";
 import { enviarSemLimpar } from "../textos/enviar-sem-limpar";
 import { apagarCategoria, criarCategoria, moverCategoria, salvarCategoria } from "./actions";
 import { EditorCampos } from "./editor-campos";
+import { confirmarAntes, useConfirmar } from "@/components/ui/confirmar";
 
 // Formulários da tela 9 (Categorias e campos). Cada botão mostra a bolinha girando, troca o texto e
 // não deixa enviar duas vezes. Se der erro, o que foi digitado continua no lugar.
@@ -227,8 +228,9 @@ export function FormCategoria({
 
 export function BotaoApagarCategoria({ categoria }: { categoria: CategoriaAdmin }) {
   const [estado, acao, pendente] = useActionState(apagarCategoria, null);
+  const confirmar = useConfirmar();
   return (
-    <form onSubmit={enviarSemLimpar(acao, () => window.confirm(`Apagar "${categoria.nome}" de vez? Não dá para desfazer.`))} className="space-y-2">
+    <form onSubmit={confirmarAntes(confirmar, { titulo: `Apagar "${categoria.nome}" de vez?`, texto: "Não dá para desfazer.", acao: "Apagar categoria", perigo: true }, enviarSemLimpar(acao))} className="space-y-2">
       <input type="hidden" name="id" value={categoria.id} />
       <Botao type="submit" variante="perigo" carregando={pendente} textoCarregando="Apagando..." icone={<Trash2 />}>
         Apagar categoria

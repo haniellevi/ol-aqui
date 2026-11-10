@@ -8,6 +8,7 @@ import { erroVariaveis, previa, variaveisInvalidas } from "@/lib/admin/mensagens
 import { CANAIS_ATIVOS, EXEMPLOS_VARIAVEIS, LIMITES_CANAL, type ModeloMensagem } from "@/lib/tipos-relatorios";
 import { enviarSemLimpar } from "../textos/enviar-sem-limpar";
 import { salvarModelo, voltarTextoOriginal } from "./actions";
+import { confirmarAntes, useConfirmar } from "@/components/ui/confirmar";
 
 // Formulário de um modelo (mensagem + canal): título, texto, ligado, botões das variáveis,
 // prévia ao vivo com valores de exemplo e aviso na hora de variável que não existe.
@@ -22,6 +23,7 @@ function Girando() {
 export function FormModelo({ modelo }: { modelo: ModeloMensagem }) {
   const [estado, acao, pendente] = useActionState(salvarModelo, null);
   const [voltou, voltar, voltando] = useActionState(voltarTextoOriginal, null);
+  const confirmar = useConfirmar();
   const [titulo, setTitulo] = useState(modelo.titulo ?? "");
   const [texto, setTexto] = useState(modelo.texto);
   const [ultimoCampo, setUltimoCampo] = useState<"titulo" | "texto">("texto");
@@ -179,9 +181,7 @@ export function FormModelo({ modelo }: { modelo: ModeloMensagem }) {
       {!igualOriginal && (
         <form
           action={voltar}
-          onSubmit={(e) => {
-            if (!window.confirm("Voltar para o texto original? O texto de agora fica guardado no histórico.")) e.preventDefault();
-          }}
+          onSubmit={confirmarAntes(confirmar, { titulo: "Voltar para o texto original?", texto: "O texto de agora fica guardado no histórico.", acao: "Voltar ao original" })}
           className="flex flex-wrap items-center gap-3"
         >
           <input type="hidden" name="id" value={id} />

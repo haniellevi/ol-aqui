@@ -7,6 +7,7 @@ import { Markdown } from "@/components/paginas/markdown";
 import type { AjudaCategoria, AjudaPergunta, BlocoHome } from "@/lib/tipos-paginas";
 import { enviarSemLimpar } from "./enviar-sem-limpar";
 import { apagarCategoria, apagarPergunta, moverBloco, salvarBloco, salvarCategoria, salvarPergunta } from "./actions";
+import { confirmarAntes, useConfirmar } from "@/components/ui/confirmar";
 
 // Formulários da tela 12 (Página inicial e textos). Cada botão mostra "Salvando…" e trava
 // enquanto envia (sem envio duplo). Os gatilhos do banco gravam cada mudança no histórico.
@@ -34,6 +35,7 @@ function Marcar({ nome, rotuloTexto, marcado, desligado, dica }: { nome: string;
 export function FormPergunta({ pergunta, categorias }: { pergunta?: AjudaPergunta; categorias: AjudaCategoria[] }) {
   const [estado, acao, pendente] = useActionState(salvarPergunta, null);
   const [apagado, apagar, apagando] = useActionState(apagarPergunta, null);
+  const confirmar = useConfirmar();
   const [resposta, setResposta] = useState(pergunta?.resposta ?? "");
   const [previa, setPrevia] = useState(false);
   const id = pergunta?.id ?? "nova";
@@ -116,9 +118,7 @@ export function FormPergunta({ pergunta, categorias }: { pergunta?: AjudaPergunt
       {pergunta && (
         <form
           action={apagar}
-          onSubmit={(e) => {
-            if (!window.confirm("Apagar esta pergunta da Ajuda? Para só esconder, desmarque \"Aparece na Ajuda\".")) e.preventDefault();
-          }}
+          onSubmit={confirmarAntes(confirmar, { titulo: "Apagar esta pergunta da Ajuda?", texto: "Para só esconder, desmarque “Aparece na Ajuda”.", acao: "Apagar pergunta", perigo: true })}
         >
           <input type="hidden" name="id" value={pergunta.id} />
           <button disabled={apagando} className={estiloBotaoPerigo}>
@@ -135,6 +135,7 @@ export function FormPergunta({ pergunta, categorias }: { pergunta?: AjudaPergunt
 export function FormCategoria({ categoria, quantas }: { categoria?: AjudaCategoria; quantas?: number }) {
   const [estado, acao, pendente] = useActionState(salvarCategoria, null);
   const [apagado, apagar, apagando] = useActionState(apagarCategoria, null);
+  const confirmar = useConfirmar();
   const id = categoria?.slug ?? "novo";
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
@@ -177,9 +178,7 @@ export function FormCategoria({ categoria, quantas }: { categoria?: AjudaCategor
       {categoria && (
         <form
           action={apagar}
-          onSubmit={(e) => {
-            if (!window.confirm(`Apagar o assunto "${categoria.nome}"?`)) e.preventDefault();
-          }}
+          onSubmit={confirmarAntes(confirmar, { titulo: `Apagar o assunto "${categoria.nome}"?`, acao: "Apagar assunto", perigo: true })}
         >
           <input type="hidden" name="slug" value={categoria.slug} />
           <button disabled={apagando || (quantas ?? 0) > 0} className={estiloBotaoPerigo} title={(quantas ?? 0) > 0 ? "Tem perguntas neste assunto" : undefined}>
