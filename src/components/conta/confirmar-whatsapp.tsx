@@ -1,11 +1,11 @@
 "use client";
 import Script from "next/script";
-import { useCallback, useEffect, useRef, useState, useTransition, type ChangeEvent } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { CheckCircle2, Smartphone } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
 import { Botao } from "@/components/ui/botao";
 import { Aviso } from "./aviso";
-import { mascaraCelular, whatsappDigitado } from "@/lib/formato";
+import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import { solicitarCodigo, confirmarCodigo, type EstadoCodigo } from "@/app/confirmar-celular/actions";
 
 type Turnstile = { render: (el: HTMLElement, options: Record<string, unknown>) => string; remove: (id: string) => void };
@@ -29,43 +29,20 @@ function DesafioSeguranca({ siteKey, onToken }: { siteKey: string; onToken: (tok
 
 export function ConfirmarWhatsapp({ siteKey, destino, numero = "" }: { siteKey: string; destino: string; numero?: string }) {
   const trava = useRef(false), campoCodigo = useRef<HTMLInputElement>(null);
-  const [fone, setFone] = useState(() => mascaraCelular(numero)), [codigo, setCodigo] = useState(""), [desafio, setDesafio] = useState("");
-  const [foneVisitado, setFoneVisitado] = useState(false);
+  const fone = useCampoTelefone(numero, { obrigatorio: true });
+  const [codigo, setCodigo] = useState(""), [desafio, setDesafio] = useState("");
   const [token, setToken] = useState(""), [captcha, setCaptcha] = useState(0), [restante, setRestante] = useState(0);
   const [estado, setEstado] = useState<EstadoCodigo>({}), [pendente, iniciar] = useTransition();
   const receberToken = useCallback((t: string) => setToken(t), []);
-  const foneValido = /^\([1-9][0-9]\) 9[0-9]{4}-[0-9]{4}$/.test(fone) && !!whatsappDigitado(fone);
-  const erroFone = foneVisitado && !foneValido ? "Digite o DDD e os 9 dígitos do celular. Ex.: (89) 99999-0000." : undefined;
   useEffect(() => { if (!restante) return; const t = setTimeout(() => setRestante(r => Math.max(0, r - 1)), 1000); return () => clearTimeout(t); }, [restante]);
   useEffect(() => { if (desafio && !pendente) campoCodigo.current?.focus(); }, [desafio, pendente]);
-  function mudarFone(e: ChangeEvent<HTMLInputElement>) {
-    const campo = e.currentTarget;
-    let texto = campo.value, cursor = campo.selectionStart ?? texto.length;
-    const tipo = (e.nativeEvent as InputEvent).inputType;
-    // Ao apagar um separador, apaga o dígito vizinho para a máscara não prender o cursor.
-    if (texto !== fone && mascaraCelular(texto) === fone && tipo?.startsWith("deleteContent")) {
-      const passo = tipo === "deleteContentBackward" ? -1 : 1;
-      let indice = passo < 0 ? cursor - 1 : cursor;
-      while (indice >= 0 && indice < texto.length && /\D/.test(texto[indice])) indice += passo;
-      if (indice >= 0 && indice < texto.length) {
-        texto = texto.slice(0, indice) + texto.slice(indice + 1);
-        if (indice < cursor) cursor--;
-      }
-    }
-    const formatado = mascaraCelular(texto);
-    const removidos = texto.replace(/\D/g, "").length - formatado.replace(/\D/g, "").length;
-    let faltam = Math.max(0, texto.slice(0, cursor).replace(/\D/g, "").length - removidos), posicao = 0;
-    while (posicao < formatado.length && faltam > 0) if (/\d/.test(formatado[posicao++])) faltam--;
-    setFone(formatado);
-    requestAnimationFrame(() => { if (document.activeElement === campo) campo.setSelectionRange(posicao, posicao); });
-  }
   function enviar() {
-    if (!foneValido) { setFoneVisitado(true); return; }
+    if (!fone.valido) { fone.marcarVisitado(); return; }
     if (trava.current || !token || restante) return;
     trava.current = true; setEstado({});
     iniciar(async () => {
       try {
-        const r = await solicitarCodigo(fone, token); setEstado(r);
+        const r = await solicitarCodigo(fone.campo.value, token); setEstado(r);
         if (r.desafio) { setDesafio(r.desafio); setCodigo(""); }
         if (r.aguardar) setRestante(r.aguardar);
       } catch { setEstado({ erro: "A conexão falhou. Aguarde um minuto antes de solicitar novamente." }); setRestante(60); }
@@ -89,13 +66,11 @@ export function ConfirmarWhatsapp({ siteKey, destino, numero = "" }: { siteKey: 
   return <section className="flex flex-col gap-5 rounded-card bg-cartao p-5 shadow-1">
     <div className="flex items-center gap-2 font-bold text-laranja-escuro"><Smartphone aria-hidden className="size-5" />Confirmação pelo WhatsApp</div>
     <form onSubmit={e => { e.preventDefault(); enviar(); }} className="flex flex-col gap-4">
-      <Campo rotulo="Seu WhatsApp com DDD" name="whatsapp" type="tel" autoComplete="tel-national" inputMode="numeric" required maxLength={30}
-        placeholder="(89) 99999-0000" prefixo="+55" pattern="\([1-9][0-9]\) 9[0-9]{4}-[0-9]{4}" value={fone} disabled={pendente || !!desafio}
-        onChange={mudarFone} onBlur={() => setFoneVisitado(true)} erro={erroFone}
+      <Campo rotulo="Seu WhatsApp com DDD" name="whatsapp" {...fone.campo} disabled={pendente || !!desafio} erro={fone.erro}
         dica="Digite o DDD e o celular com 9 dígitos. O código do Brasil (+55) já está incluído." />
       <p className="text-sm text-texto-suave">Ao solicitar, você receberá uma mensagem com um código de seis números. Ele vale por cinco minutos e pode ser usado uma vez.</p>
       <DesafioSeguranca key={captcha} siteKey={siteKey} onToken={receberToken} />
-      <Botao type="submit" larguraTotal variante={desafio ? "secundario" : "primario"} disabled={!foneValido || !token || restante > 0 || pendente}>
+      <Botao type="submit" larguraTotal variante={desafio ? "secundario" : "primario"} disabled={!fone.valido || !token || restante > 0 || pendente}>
         {restante ? `Novo envio em ${restante}s` : pendente ? "Aguarde..." : desafio ? "Solicitar novo código" : "Enviar código no WhatsApp"}
       </Botao>
     </form>
