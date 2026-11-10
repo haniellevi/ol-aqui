@@ -102,6 +102,23 @@ test('publicação não permite editar anúncio de outro usuário', async () => 
   const { a, gravacoes } = fronteiras({ semAnuncio: true });
   assert.ok((await a.publicarAnuncio(null, form())).erro); assert.equal(gravacoes.length, 0);
 });
+test('confirmação mostra o estado do banco, inclusive quando a URL diz o contrário', async () => {
+  const motivo = 'Termo sexual ou violento: exemplo';
+  for (const status of ['ativo', 'em_analise']) {
+    const { mocks } = fronteiras({ anuncio: { status, titulo: 'Anúncio de teste', motivo_analise: motivo } });
+    const { default: Pagina } = carregar(base + 'pronto/page.tsx', mocks);
+    const html = render(await Pagina({ searchParams: Promise.resolve({ id, status: status === 'ativo' ? 'analise' : 'ativo' }) }));
+    if (status === 'ativo') {
+      assert.match(html, /Seu anúncio está no ar!/);
+      assert.doesNotMatch(html, /Seu anúncio está em análise/);
+    } else {
+      assert.match(html, /Seu anúncio está em análise/);
+      assert.match(html, /A equipe precisa conferir/);
+      assert.ok(html.includes(motivo));
+      assert.doesNotMatch(html, /Seu anúncio está no ar!|automática|em até \d+/);
+    }
+  }
+});
 test('foto vazia ou acima de 20 MB é recusada antes da decodificação', async () => {
   const { reduzirFoto, MAX_FOTO_ORIGINAL } = carregar('src/lib/fotos.ts');
   await assert.rejects(reduzirFoto(new Blob()), /até 20 MB/);

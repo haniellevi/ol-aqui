@@ -53,8 +53,8 @@ export default async function CatalogoLojas({ searchParams }: {
       </header>
       <form method="get" action="/lojas" className="flex flex-wrap items-end gap-3">
         <div className="w-full max-w-sm">
-          <Seletor name="nicho" rotulo="Filtrar por nicho" defaultValue={nicho ?? ""}>
-            <option value="">Todos os nichos</option>
+          <Seletor name="nicho" rotulo="Filtrar por categoria" defaultValue={nicho ?? ""}>
+            <option value="">Todas as categorias</option>
             {categorias.map((c) => (
               <optgroup key={c.id} label={c.nome}>
                 <option value={c.slug}>Todos em {c.nome}</option>

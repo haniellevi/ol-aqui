@@ -63,7 +63,7 @@ export default async function ModeracaoPage({
 
   return (
     <>
-      <Titulo sub="A IA analisa anúncios retidos pelo filtro e libera os casos claros. Denúncias, dúvidas e restrições ficam para a equipe. Aprovar devolve ao ar; recusar tira do ar; congelar é para Compliance Jurídico.">
+      <Titulo sub="Anúncios entram no ar ao publicar. Termos sexuais ou violentos ficam para conferência da equipe. Denúncias e restrições continuam sendo revisadas. Aprovar devolve ao ar; recusar tira do ar; congelar é para Compliance Jurídico.">
         Moderação
       </Titulo>
 
@@ -73,7 +73,7 @@ export default async function ModeracaoPage({
 
       <Cartao className="mb-4 space-y-2 text-sm">
         <h2 className="font-semibold">Análise automática {iaAtivaR.data === true ? "ligada" : "desligada"}</h2>
-        <p>Texto e todas as fotos passam pela IA. Uma resposta incompleta, falha ou mudança no anúncio mantém a revisão manual. O orçamento é compartilhado com o Aki e pode ser ajustado em Configurações.</p>
+        <p>A análise automática pode concluir pendências da regra anterior. Anúncios retidos por termos sexuais ou violentos aguardam a equipe. O orçamento da IA é compartilhado com o Aki e pode ser ajustado em Configurações.</p>
         {(iaR.error || iaAtivaR.error) && <p className="text-perigo">Não foi possível consultar a análise automática agora.</p>}
         {analisesIA.length > 0 && <details>
           <summary className="cursor-pointer font-semibold">Últimas análises</summary>

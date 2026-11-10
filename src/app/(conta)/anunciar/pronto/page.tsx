@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, Clock, Eye, MessageCircle, Sparkles } from "lucide-react";
 import { meuAnuncio } from "@/lib/dados/anuncios";
-import { lerConfigNumero } from "@/lib/dados/config";
 import { ehUuid, linkAnuncio, urlAbsoluta } from "@/lib/formato";
 import { Botao } from "@/components/ui/botao";
 import { BotaoNovoRascunho } from "@/components/anunciar/botao-novo-rascunho";
@@ -27,7 +26,6 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   const emAnalise = anuncio.status === "em_analise"; // o banco decide (?status=analise só deixa o link legível)
 
   if (emAnalise) {
-    const horas = await lerConfigNumero("moderacao.prazo_horas");
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-4 py-8 text-center">
         <span className="grid size-20 place-items-center rounded-full bg-aviso-fundo text-aviso" aria-hidden>
@@ -35,8 +33,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
         </span>
         <h1 className="text-titulo font-semibold text-beringela">Seu anúncio está em análise</h1>
         <p className="max-w-sm text-base text-texto-suave">
-          Vamos conferir o anúncio antes de ele aparecer. A análise pode ser automática ou, quando necessário, feita pela equipe.{" "}
-          {horas ? `Avisamos em até ${horas} ${horas === 1 ? "hora" : "horas"}.` : "Avisamos assim que ele for liberado."}
+          A equipe precisa conferir este anúncio antes de ele aparecer. Você pode acompanhar a situação em Meus anúncios.
         </p>
         {anuncio.motivo_analise && (
           <p className="w-full max-w-sm rounded-card bg-aviso-fundo p-3 text-base text-aviso">

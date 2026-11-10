@@ -58,7 +58,7 @@ async function abrir(id: string): Promise<MeuAnuncio | null> {
 
 /**
  * Grava as colunas no anúncio. Erro do banco já volta traduzido.
- * Com `antes` (anúncio já publicado): se a moderação do banco segurou a edição (texto ou preço),
+ * Com `antes` (anúncio já publicado): se a moderação do banco segurou o texto da edição,
  * leva para a tela "em análise" em vez de seguir como se nada tivesse acontecido.
  */
 async function gravar(id: string, colunas: Record<string, unknown>, antes?: MeuAnuncio, versao?: string): Promise<EstadoForm> {
