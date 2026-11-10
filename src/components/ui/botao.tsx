@@ -57,7 +57,7 @@ export function Botao(props: BotaoProps) {
       ) : (
         icone && <span className="inline-flex shrink-0 [&>svg]:size-5" aria-hidden>{icone}</span>
       )}
-      <span>{carregando && textoCarregando ? textoCarregando : children}</span>
+      <span className="inline-flex items-center justify-center gap-2">{carregando && textoCarregando ? textoCarregando : children}</span>
     </>
   );
 

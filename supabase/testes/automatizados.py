@@ -63,6 +63,8 @@ try:
     print('PASS: Meu plano protege preço, histórico, reserva e confirmação repetida', flush=True)
     checked(sql((root/'supabase/testes/270_confirmacao_whatsapp.sql').read_text()))
     print('PASS: OTP privado, três erros, prazo, consumo único, cotas, troca segura e contadores públicos', flush=True)
+    checked(sql((root/'supabase/testes/280_moderacao_aluguel.sql').read_text()))
+    print('PASS: aluguel não herda piso de venda, preserva limites e conteúdo e reavalia mudança de finalidade', flush=True)
     def solicitar_otp(i):
         return sql("select reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990088',repeat('a',64));")
     with ThreadPoolExecutor(max_workers=4) as pool:
