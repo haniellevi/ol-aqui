@@ -281,3 +281,16 @@ A página Minha conta usa duas colunas a partir de 768 px, com identificação e
 `TopoConta` e `CabecalhoPasso` usam título de 20 px em rem. Pedidos e propostas usam corpo de 15 px, com descrições compactas de 14 px quando necessário. Datas, selos e metadados usam 13 px. `Seletor` acompanha Campo: altura de 44 px e texto de 16 px no toque, com 40 px e 14 px para mouse em telas a partir de 768 px. Filtros do Radar reutilizam Chip com seleção lavanda, marca de seleção e foco. Ações de card crescem quando o texto precisa de mais linhas.
 
 No painel, datas e filtros começam em uma coluna quando o cartão é estreito. Indicadores só passam a quatro colunas em telas de 1280 px. Tabelas roláveis têm região nomeada, foco por teclado e rolagem local. Abas administrativas mostram a possibilidade de rolar no celular e quebram linha no desktop. Campos de configuração têm nome acessível e ajuda associada; descrições longas e prévias admitem quebra. O editor de campos adapta os controles numéricos e de ordenação à largura do próprio cartão.
+
+---
+
+## shadcn/ui (instalado em 10/11/2026)
+
+O projeto agora tem o shadcn/ui configurado (`components.json`, estilo `base-nova`, Base UI). Regras:
+
+- As cores do shadcn (`primary`, `muted`, `border`, `destructive`...) apontam para os tokens do OLAKI no fim de `src/app/globals.css`. Botão `primary` = laranja com texto beringela. Não trocar por cinza nem por branco sobre laranja.
+- Arredondamentos e fonte continuam os do OLAKI (Poppins, `radius-campo`); o shadcn não muda as telas que já existem.
+- `src/components/ui/button.tsx` segue a régua: 40px no toque e 36px no computador (`size="default"`), 32/28px no `size="sm"`.
+- Componentes novos: `npx shadcn@latest add <nome>`. Depois de adicionar, conferir alturas (40/36), texto 14px e cores da marca antes de usar numa tela.
+- Os componentes antigos (`botao.tsx`, `campo.tsx`, `chip.tsx`) continuam valendo. Trocar uma tela para shadcn só quando ela for mexida de propósito.
+- O Claude Code do projeto já vem com o servidor MCP do shadcn (`.mcp.json`) e a skill `shadcn` (`.claude/skills/`).

@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 /* Tokens do Mercado da Região (docs/DESIGN-SYSTEM.md, seção 6).
    Botão primário = fundo laranja + texto beringela (4,95:1). Branco sobre laranja reprova (2,87:1). */
@@ -152,4 +156,77 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
   @media (prefers-contrast: more) {
     .olaki-material { background: var(--color-cartao); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 0 0 1px var(--color-texto); }
   }
+}
+
+/* shadcn/ui: os nomes que os componentes usam (primary, muted, border...) apontam para os
+   tokens do OLAKI acima. Assim um componente novo já nasce com as cores da marca.
+   Arredondamentos e fonte continuam os do Tailwind/OLAKI; nada aqui muda as telas atuais. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: var(--color-fundo);
+  --foreground: var(--color-texto);
+  --card: var(--color-cartao);
+  --card-foreground: var(--color-texto);
+  --popover: var(--color-cartao);
+  --popover-foreground: var(--color-texto);
+  /* Botão principal: laranja com texto beringela (4,95:1). Nunca branco sobre laranja. */
+  --primary: var(--color-laranja);
+  --primary-foreground: var(--color-beringela);
+  --secondary: var(--color-selecao);
+  --secondary-foreground: var(--color-beringela);
+  --muted: var(--color-selecao);
+  --muted-foreground: var(--color-texto-suave);
+  --accent: var(--color-selecao);
+  --accent-foreground: var(--color-beringela);
+  --destructive: var(--color-perigo);
+  --border: var(--color-borda);
+  --input: var(--color-borda-campo);
+  --ring: var(--color-laranja-escuro);
+  --chart-1: var(--color-beringela);
+  --chart-2: var(--color-laranja);
+  --chart-3: var(--color-verde-escuro);
+  --chart-4: var(--color-laranja-escuro);
+  --chart-5: var(--color-texto-suave);
+  --sidebar: var(--color-cartao);
+  --sidebar-foreground: var(--color-texto);
+  --sidebar-primary: var(--color-beringela);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--color-selecao);
+  --sidebar-accent-foreground: var(--color-beringela);
+  --sidebar-border: var(--color-borda);
+  --sidebar-ring: var(--color-laranja-escuro);
 }
