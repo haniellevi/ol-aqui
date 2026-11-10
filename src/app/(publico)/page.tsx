@@ -60,14 +60,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           <h1 id="titulo-inicio" className="text-balance text-titulo font-semibold text-beringela">
             Compre e venda em {lugar}
           </h1>
-          <p className="max-w-[65ch] text-pretty text-base text-texto-suave">
-            Encontre produtos e serviços ou anuncie para quem está perto.
-          </p>
         </div>
         <CampoBusca id="busca-inicio" />
-        <Link href="/lojas" className="flex min-h-10 items-center justify-between gap-3 rounded-card border border-borda bg-cartao px-3 py-2 text-sm font-semibold text-beringela hover:border-laranja-escuro">
-          <span>Conheça as lojas de {lugar}</span>
-          <span className="shrink-0 text-sm text-laranja-escuro">Ver lojas</span>
+        <Link href="/lojas" className="inline-flex min-h-8 w-fit items-center gap-1 self-end rounded-campo text-sm font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro">
+          <span>Ver lojas de {lugar}</span>
         </Link>
       </section>
 
@@ -78,7 +74,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
               <li key={c.id} className="min-w-0">
                 <Link
                   href={linkCategoria(c.slug)}
-                  className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-legenda font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                  className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-legenda font-medium leading-4 hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                 >
                   <CirculoCategoria nome={c.icone} className={estilos.categoria} />
                   <span className="max-w-full hyphens-auto break-words">{c.nome}</span>
@@ -88,7 +84,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
             <li className="min-w-0">
               <Link
                 href="/categorias"
-                className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-legenda font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-legenda font-medium leading-4 hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
               >
                 <span className="grid size-10 place-items-center rounded-full border-2 border-borda bg-cartao text-beringela">
                   <Ellipsis className="size-6" aria-hidden />
