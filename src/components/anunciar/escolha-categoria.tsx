@@ -114,7 +114,7 @@ export function EscolhaCategoria({
       {busca.trim() ? (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 text-base font-semibold" aria-live="polite">
-            {achadas.length ? `${achadas.length} encontradas` : "Nenhuma categoria com esse nome. Tente outra palavra."}
+            {achadas.length ? `${achadas.length} ${achadas.length === 1 ? "encontrada" : "encontradas"}` : "Nenhuma categoria com esse nome. Tente outra palavra."}
           </legend>
           <ul className="flex flex-col gap-2">{achadas.map(({ filha, pai: p }) => opcao(filha, p, true))}</ul>
         </fieldset>

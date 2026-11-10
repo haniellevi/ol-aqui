@@ -9,7 +9,7 @@ import { BotaoNovoRascunho } from "@/components/anunciar/botao-novo-rascunho";
 import { urlPasso } from "@/components/anunciar/passos";
 import { linkDestacar } from "@/lib/rotas";
 
-export const metadata: Metadata = { title: "Anúncio publicado" };
+export const metadata: Metadata = { title: "Situação do anúncio" };
 
 type Params = Promise<{ id?: string | string[]; status?: string | string[] }>;
 const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
@@ -38,9 +38,17 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
           Nossa equipe vai dar uma olhada antes de ele aparecer.{" "}
           {horas ? `Avisamos em até ${horas} ${horas === 1 ? "hora" : "horas"}.` : "Avisamos assim que ele for liberado."}
         </p>
+        {anuncio.motivo_analise && (
+          <p className="w-full max-w-sm rounded-card bg-aviso-fundo p-3 text-base text-aviso">
+            <strong>Motivo:</strong> {anuncio.motivo_analise}
+          </p>
+        )}
         <div className="flex w-full max-w-sm flex-col gap-3">
           <Botao href="/minha-conta/anuncios" larguraTotal>
             Ver meus anúncios
+          </Botao>
+          <Botao href={urlPasso("revisar", anuncio.id, true)} variante="secundario" larguraTotal>
+            Revisar anúncio
           </Botao>
           <BotaoNovoRascunho variante="secundario" texto="Anunciar outro" />
         </div>

@@ -24,7 +24,17 @@ export const viewport: Viewport = { themeColor: "#ff6a13", width: "device-width"
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
-      localization={ptBR}
+      localization={{
+        ...ptBR,
+        signIn: {
+          ...ptBR.signIn,
+          start: {
+            ...ptBR.signIn?.start,
+            titleCombined: "Entre ou crie sua conta",
+            subtitleCombined: "Use seu e-mail ou continue com o Google.",
+          },
+        },
+      }}
       signInUrl="/entrar"
       signUpUrl="/entrar"
       appearance={{

@@ -1,0 +1,13 @@
+.fundo {
+  min-height: calc(100svh - 4rem);
+  background: #faf8ff;
+}
+
+.categoria {
+  background: #eee4f7;
+  border: 1px solid #dfcdeb;
+}
+
+.vazio > span {
+  background: #eee4f7;
+}
