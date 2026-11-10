@@ -1,3 +1,4 @@
+import { API_VERIFICACAO_VENDEDOR } from "@/lib/verificacao-vendedor";
 import { linkSiteLoja } from "@/components/vitrine/regras";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -8,7 +9,7 @@ import { ehUuid, linkLoja, telefone } from "@/lib/formato";
 import { LINK_ADMIN_LOJAS } from "@/lib/rotas";
 import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { linkInstagram } from "@/components/vitrine/regras";
-import { FormAcaoLoja, FormRevisaoLoja, FormVerificacao, FormVerificarVendedorPf } from "./formularios";
+import { FormAcaoLoja, FormRevisaoLoja, FormVerificacao, FormRevogarVendedorPf, FormDecidirVerificacaoPf } from "./formularios";
 import type { AcaoLoja, LojaAdmin, SituacaoConta } from "@/lib/tipos-cobranca";
 
 export const metadata = { title: "Lojas" };
@@ -159,11 +160,12 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
   };
   if (paginaVazia) redirect(linkPagina(1));
   const idsLojas = lojas.filter((loja) => loja.tipo === "loja").map((loja) => loja.id);
-  const [links, revisoesR] = await Promise.all([
+  const [links, revisoesR, filaPf] = await Promise.all([
     linksDosArquivos(verificacoes),
     idsLojas.length
       ? supabase.rpc("admin_verificacoes_lojas", { p_ids: idsLojas })
       : Promise.resolve({ data: [], error: null }),
+    franqueado ? Promise.resolve({ data: [], error: null }) : supabase.rpc("admin_fila_verificacao_pf"),
   ]);
   const revisoes = new Map(((revisoesR.data ?? []) as RevisaoLoja[]).map((revisao) => [revisao.id, revisao]));
 
@@ -229,6 +231,29 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
           </div>
         </form>
       </Cartao>
+
+      {!franqueado && (
+        <section aria-labelledby="fila-pf" className="mb-6 space-y-3">
+          <h2 id="fila-pf" className="text-sm font-semibold uppercase tracking-wide text-texto-suave">Documentos de vendedores individuais</h2>
+          {filaPf.error ? <Aviso tipo="erro">Não foi possível carregar a fila de documentos.</Aviso>
+            : !filaPf.data?.length ? <p className="text-sm text-texto-suave">Nenhum envio aguardando conferência.</p>
+              : <ul className="grid gap-3 md:grid-cols-2">
+                {(filaPf.data as { id: string; nome: string; cidade: string | null; criado_em: string; dados_atuais: boolean }[]).map((envio) => (
+                  <li key={envio.id}>
+                    <Cartao>
+                      <p className="font-semibold text-beringela">{envio.nome}</p>
+                      <p className="text-sm text-texto-suave">{envio.cidade ? `${envio.cidade} · ` : ""}Enviado {quando(envio.criado_em)}</p>
+                      <div className="my-2 flex flex-wrap gap-3">
+                        <a href={`${API_VERIFICACAO_VENDEDOR}/${envio.id}/documento`} download className={estiloBotaoSec}>Baixar documento</a>
+                        <a href={`${API_VERIFICACAO_VENDEDOR}/${envio.id}/comprovante`} download className={estiloBotaoSec}>Baixar comprovante</a>
+                      </div>
+                      <FormDecidirVerificacaoPf id={envio.id} dadosAtuais={envio.dados_atuais} />
+                    </Cartao>
+                  </li>
+                ))}
+              </ul>}
+        </section>
+      )}
 
       {verificacoes.length > 0 && (
         <section aria-labelledby="verificacoes" className="mb-6">
@@ -347,8 +372,8 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                   )}
                   {l.tipo === "pf" && !franqueado && l.dono_nome && (
                     <details className="mt-3 border-t border-borda pt-3">
-                      <summary className="cursor-pointer font-semibold text-laranja-escuro">Verificar vendedor individual</summary>
-                      <FormVerificarVendedorPf vitrine={l.id} nome={l.dono_nome} />
+                      <summary className="cursor-pointer font-semibold text-laranja-escuro">Verificação do vendedor individual</summary>
+                      <FormRevogarVendedorPf vitrine={l.id} nome={l.dono_nome} />
                     </details>
                   )}
                   {(acoesDoPapel === null || acoesDoPapel.length > 0) && (

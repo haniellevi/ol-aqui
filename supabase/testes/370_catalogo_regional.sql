@@ -53,16 +53,14 @@ do $$ begin
   end;
 end $$;
 
+reset role;
+select enviar_verificacao_vendedor_pf('user_pf370', encode(convert_to('%PDF-1.7 Documento de teste','UTF8'),'base64'),
+  encode(convert_to('%PDF-1.7 Comprovante de teste','UTF8'),'base64'));
+select id as revisao from verificacoes_vendedor_pf where perfil_id='user_pf370' \gset
+set local role authenticated;
 set local request.jwt.claim.sub='user_admin370';
 select admin_revisar_loja('37000000-0000-4000-a000-000000000001',1,'aprovar',null,true,true,true);
-do $$ begin
-  begin
-    perform admin_verificar_vendedor_pf('37000000-0000-4000-a000-000000000002','Pessoa Teste 370',true,true,true,false);
-    raise exception 'PF aprovado sem endereço';
-  exception when check_violation then null;
-  end;
-end $$;
-select admin_verificar_vendedor_pf('37000000-0000-4000-a000-000000000002','Pessoa Teste 370',true,true,true,true);
+select admin_decidir_verificacao_pf(:'revisao',true,true,true,true,null);
 
 set local role anon;
 set local request.jwt.claim.sub='';

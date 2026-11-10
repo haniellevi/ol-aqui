@@ -87,6 +87,8 @@ try:
     print('PASS: estatísticas separam receitas e propostas, preservam recortes e restringem papéis', flush=True)
     checked(sql((root/'supabase/testes/370_catalogo_regional.sql').read_text()))
     print('PASS: catálogo, cidade, campanhas e contatos verificados', flush=True)
+    checked(sql((root/'supabase/testes/380_documentos_vendedor_pf.sql').read_text()))
+    print('PASS: documentos PF privados, revisão autorizada, reenvio e limpeza', flush=True)
     def solicitar_otp(i):
         return sql("select reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990088',repeat('a',64));")
     with ThreadPoolExecutor(max_workers=4) as pool:

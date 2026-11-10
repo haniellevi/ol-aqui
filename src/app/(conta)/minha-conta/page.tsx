@@ -61,7 +61,9 @@ export default async function PaginaMinhaConta() {
           detalhe: conta.rascunhos > 0 ? `${conta.rascunhos} ${conta.rascunhos === 1 ? "rascunho" : "rascunhos"}` : undefined,
         },
         { href: "/minha-conta/plano", nome: "Meu plano", icone: <CreditCard /> },
-        ...(ehLoja ? [{ href: "/minha-conta/loja", nome: "Minha loja", icone: <Store /> }] : []),
+        ...(ehLoja
+          ? [{ href: "/minha-conta/loja", nome: "Minha loja", icone: <Store /> }]
+          : [{ href: "/minha-conta/verificacao", nome: "Verificação de vendedor", icone: <ShieldCheck /> }]),
       ]
     : [];
   const paraTodos: Item[] = [

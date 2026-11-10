@@ -3,7 +3,8 @@
 import { useActionState, useState } from "react";
 import { Aviso, estiloCampo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
-import { acaoLoja, analisarVerificacao, revisarLoja, verificarVendedorPf } from "./actions";
+import { acaoLoja, analisarVerificacao, revisarLoja, decidirVerificacaoPf, revogarVendedorPf } from "./actions";
+import { MOTIVOS_VERIFICACAO_PF } from "@/lib/verificacao-vendedor";
 import type { AcaoLoja, LojaAdmin } from "@/lib/tipos-cobranca";
 
 // Formulários da tela 5. Cada ação pede o motivo (fica no histórico) e mostra "carregando".
@@ -203,26 +204,54 @@ export function FormVerificacao({ id, podeAprovar = true }: { id: string; podeAp
   );
 }
 
-export function FormVerificarVendedorPf({ vitrine, nome }: { vitrine: string; nome: string }) {
-  const [estado, acao, pendente] = useActionState(verificarVendedorPf, null);
+export function FormRevogarVendedorPf({ vitrine, nome }: { vitrine: string; nome: string }) {
+  const [estado, acao, pendente] = useActionState(revogarVendedorPf, null);
   return (
     <form action={acao} className="mt-3 space-y-3">
       <input type="hidden" name="vitrine" value={vitrine} />
       <input type="hidden" name="nome" value={nome} />
-      <p className="text-sm text-texto-suave">Confira as evidências por um canal privado da equipe. Aqui fica registrado o resultado da conferência.</p>
-      <fieldset disabled={pendente} className="space-y-2">
-        <legend className="font-semibold">Conferências de {nome}</legend>
-        {[
-          ["dados", "Dados oficiais correspondem ao vendedor"],
-          ["documento", "Documento oficial e identidade conferidos"],
-          ["endereco", "Comprovante de endereço conferido"],
-        ].map(([campo, texto]) => (
-          <label key={campo} className="flex gap-2 text-sm"><input type="checkbox" name={campo} />{texto}</label>
-        ))}
-      </fieldset>
+      <p className="text-sm text-texto-suave">Ao revogar, o selo sai dos anúncios e o vendedor pode enviar os arquivos novamente.</p>
+      <Botao type="submit" disabled={pendente} variante="secundario">Revogar verificação</Botao>
+      <Retorno estado={estado} />
+    </form>
+  );
+}
+
+export function FormDecidirVerificacaoPf({ id, dadosAtuais }: { id: string; dadosAtuais: boolean }) {
+  const [estado, acao, pendente] = useActionState(decidirVerificacaoPf, null);
+  const [motivo, setMotivo] = useState("");
+  const [conferidos, setConferidos] = useState<string[]>([]);
+  const itens = [
+    ["dados", "Os dados oficiais correspondem ao vendedor"],
+    ["documento", "Conferi o documento oficial com foto"],
+    ["endereco", "Conferi o comprovante de endereço"],
+  ];
+  return (
+    <form action={acao} className="mt-3 space-y-3">
+      <input type="hidden" name="id" value={id} />
+      {dadosAtuais ? (
+        <fieldset className="space-y-2">
+          <legend className="font-semibold">Conferências para aprovar</legend>
+          {itens.map(([campo, texto]) => (
+            <label key={campo} className="flex items-start gap-2 text-sm">
+              <input type="checkbox" name={campo} checked={conferidos.includes(campo)}
+                onChange={(e) => setConferidos(e.target.checked ? [...conferidos, campo] : conferidos.filter((c) => c !== campo))}
+                className="mt-0.5 size-5 shrink-0 accent-laranja-escuro" />
+              {texto}
+            </label>
+          ))}
+        </fieldset>
+      ) : <p className="text-sm font-semibold text-aviso">Os dados do perfil mudaram. Peça um novo envio.</p>}
+      <label className="block text-sm font-semibold">
+        Motivo para pedir novo envio
+        <select name="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} className={estiloCampo}>
+          <option value="">Selecione o motivo</option>
+          {Object.entries(MOTIVOS_VERIFICACAO_PF).map(([valor, texto]) => <option key={valor} value={valor}>{texto}</option>)}
+        </select>
+      </label>
       <div className="flex flex-wrap gap-2">
-        <Botao name="decisao" value="aprovar" type="submit" disabled={pendente}>Aprovar identidade</Botao>
-        <Botao name="decisao" value="revogar" type="submit" disabled={pendente} variante="secundario">Revogar verificação</Botao>
+        <Botao type="submit" name="decisao" value="aprovar" disabled={pendente || !dadosAtuais || conferidos.length !== itens.length}>Aprovar identidade</Botao>
+        <Botao type="submit" name="decisao" value="recusar" variante="secundario" disabled={pendente || !motivo}>Pedir novo envio</Botao>
       </div>
       <Retorno estado={estado} />
     </form>

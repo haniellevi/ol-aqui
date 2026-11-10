@@ -147,6 +147,7 @@ async function apagarConta(id: string) {
   ok(await db.from("preferencias_avisos").delete().eq("usuario_id", id));
   ok(await db.from("equipe").delete().eq("usuario_id", id));
   ok(await db.from("perfis_verificacoes").delete().eq("perfil_id", id));
+  ok(await db.from("verificacoes_vendedor_pf").delete().eq("perfil_id", id));
   ok(await db.from("whatsapp_desafios").delete().eq("usuario_id", id));
   ok(await db.from("favoritos").delete().eq("usuario_id", id));
   ok(await db.from("notificacoes").delete().eq("usuario_id", id)); // avisos do Radar
