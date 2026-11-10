@@ -10,6 +10,8 @@ import { CLASSE_TOM, dataHoraCurta, faixaPreco, resumoPropostas, rotuloSituacao 
 import { PropostasRecebidas } from "@/components/radar/propostas-recebidas";
 import { AtualizarRadar } from "@/components/radar/atualizar-radar";
 import { AcoesPedido } from "@/components/radar/acoes-pedido";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata = { title: "Meu pedido no Radar" };
 
@@ -40,15 +42,15 @@ export default async function MeuPedidoPage({
 
       {novo === "1" && ["aberto", "em_analise"].includes(pedido.situacao) &&
         (pedido.status === "em_analise" ? (
-          <section role="status" className="flex items-start gap-3 rounded-card bg-aviso-fundo p-4 text-aviso">
+          <Alert variant="warning" role="status" className="flex items-start gap-3">
             <ShieldAlert className="mt-0.5 size-6 shrink-0" aria-hidden />
             <div className="flex flex-col gap-1">
               <p className="text-lg font-bold">Pedido recebido!</p>
               <p className="text-base">A equipe vai dar uma olhada antes de mostrar para as lojas. Você pode acompanhar a situação nesta página.</p>
             </div>
-          </section>
+          </Alert>
         ) : (
-          <section role="status" className="flex items-start gap-3 rounded-card bg-sucesso-fundo p-4 text-verde-escuro">
+          <Alert variant="success" role="status" className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 size-6 shrink-0" aria-hidden />
             <div className="flex flex-col gap-1">
               <p className="text-lg font-bold">Pedido no ar!</p>
@@ -58,13 +60,13 @@ export default async function MeuPedidoPage({
                   : "As lojas da região já podem te chamar no WhatsApp."}
               </p>
             </div>
-          </section>
+          </Alert>
         ))}
 
       <section className="flex flex-col gap-2 rounded-card bg-cartao p-4 shadow-1">
         <div className="flex flex-wrap gap-2">
-          <span className={`w-fit rounded-full px-2 py-0.5 text-legenda font-semibold ${CLASSE_TOM[s.tom]}`}>{s.texto}</span>
-          {arquivado && <span className="w-fit rounded-full bg-fundo px-2 py-0.5 text-legenda font-semibold text-texto-suave">Arquivado</span>}
+          <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
+          {arquivado && <Badge variant="secondary">Arquivado</Badge>}
         </div>
         <h1 className="break-words text-xl font-bold leading-7">{pedido.titulo}</h1>
         {pedido.detalhes && <p className="whitespace-pre-line break-words text-base text-texto-suave">{pedido.detalhes}</p>}

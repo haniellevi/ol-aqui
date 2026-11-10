@@ -9,6 +9,7 @@ import { Botao, classesBotao } from "@/components/ui/botao";
 import { marcarVendido, moverParaLixeira, pausarAnuncio, reativarAnuncio, restaurarAnuncio } from "@/app/(conta)/minha-conta/anuncios/actions";
 import { abaDoStatus } from "./situacao-anuncios";
 import type { Resultado, StatusAnuncio } from "@/lib/tipos";
+import { Alert } from "@/components/ui/alert";
 
 type Acao = "pausar" | "reativar" | "vendido-sim" | "vendido-nao" | "excluir" | "restaurar";
 type Confirmacao = "pausar" | "vendido" | "excluir";
@@ -80,11 +81,11 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAco
   }
 
   const mensagemErro = erro && (
-    <div role="alert" className="rounded-card bg-perigo-fundo p-3 text-sm font-semibold text-perigo">
+    <Alert variant="destructive" role="alert">
       <p>{erro}</p>
       {sessaoExpirada && <Botao href="/entrar?redirect_url=%2Fminha-conta%2Fanuncios" variante="texto">Entrar novamente</Botao>}
       {recarregar && <Botao variante="texto" onClick={() => window.location.reload()}>Atualizar página</Botao>}
-    </div>
+    </Alert>
   );
 
   return (

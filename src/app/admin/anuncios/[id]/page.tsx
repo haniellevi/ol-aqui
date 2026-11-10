@@ -8,6 +8,7 @@ import { ehUuid, linkAnuncio, preco } from "@/lib/formato";
 import { LINK_ADMIN_ANUNCIOS, linkAdminAnuncio } from "@/lib/rotas";
 import type { MeuAnuncio } from "@/lib/tipos";
 import { abrirAtendimento, administrarAnuncio, delegarAtendimento } from "./actions";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Gerenciar anúncio" };
 
@@ -47,7 +48,7 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
     {(erro || ok) && <Aviso tipo={erro ? "erro" : "ok"}>{erro || ok}</Aviso>}
     <Cartao className="space-y-3 [overflow-wrap:anywhere]">
       <div className="flex flex-wrap items-center gap-3">
-        <span className={`rounded-full px-2.5 py-1 text-legenda font-semibold ${situacao.cor}`}>{situacao.texto}</span>
+        <Badge variant={situacao.cor}>{situacao.texto}</Badge>
         <p className="font-semibold">{preco(a.preco_centavos)}</p>
         {(a.status === "ativo" || a.status === "vendido") && <Botao href={linkAnuncio(id, a.titulo)} variante="texto" prefetch={false}>Ver no site</Botao>}
       </div>

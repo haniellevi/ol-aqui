@@ -11,6 +11,7 @@ import { textoPrecoProposta as textoPreco } from "./util";
 import { validarProposta } from "./validacao";
 import { preco } from "@/lib/formato";
 import type { AnuncioParaProposta, MinhaPropostaNoPedido } from "@/lib/tipos-radar";
+import { Alert } from "@/components/ui/alert";
 
 type Props = {
   pedidoId: string;
@@ -164,10 +165,10 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
   return (
     <>
       {sucesso && (
-        <p role="status" className="flex items-center gap-2 rounded-card bg-sucesso-fundo p-4 text-base font-semibold text-verde-escuro">
+        <Alert variant="success" role="status" className="flex items-center gap-2">
           <Check className="size-5 shrink-0" aria-hidden />
           {sucesso}
-        </p>
+        </Alert>
       )}
       {podeChamar && linkContato && <Botao href={linkContato} target="_blank" rel="noopener noreferrer" variante="whatsapp" larguraTotal>Continuar no WhatsApp</Botao>}
       {podeChamar && (
@@ -310,9 +311,9 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
               />
 
               {erroGeral && (
-                <p role="alert" tabIndex={-1} className="rounded-card bg-perigo-fundo p-3 text-base font-semibold text-perigo">
+                <Alert variant="destructive" role="alert" tabIndex={-1}>
                   {erroGeral}
-                </p>
+                </Alert>
               )}
 
               <Botao

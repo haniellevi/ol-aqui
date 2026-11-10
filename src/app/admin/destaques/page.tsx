@@ -15,6 +15,7 @@ import {
   FormTipoDestaque,
 } from "./formularios";
 import type { ResultadoDestaque, TipoDestaque } from "@/lib/tipos-destaques";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Destaques" };
 
@@ -159,7 +160,7 @@ export default async function DestaquesAdminPage() {
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold text-beringela">{t.nome}</h3>
                 <span className="text-legenda text-texto-suave">{t.alvo === "loja" ? "para lojas" : "para anúncios"}</span>
-                {!t.ativo && <span className="rounded-full bg-borda px-2 py-0.5 text-legenda font-semibold text-texto-suave">desligado</span>}
+                {!t.ativo && <Badge variant="secondary">desligado</Badge>}
                 <span className="ml-auto text-sm font-semibold text-beringela">
                   {t.preco_centavos ? reais(t.preco_centavos) : "Grátis"}
                   {t.dias ? ` / ${t.dias} dias` : ""}

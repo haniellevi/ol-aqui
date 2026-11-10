@@ -11,6 +11,7 @@ import { AvisoErro } from "./aviso-erro";
 import { BarraContinuar } from "./barra-continuar";
 import { DESTINO_SAIR, urlPasso } from "./passos";
 import { EVENTO_FOTO_AKI, type FotoGuardadaAki } from "@/components/aki/abrir";
+import { Badge } from "@/components/ui/badge";
 
 // Passo 1 · Fotos. Reduz cada foto no celular, envia uma por vez (com progresso e "Tentar de novo")
 // e salva a lista no rascunho a cada mudança. A primeira foto é a capa.
@@ -315,7 +316,7 @@ export function EnvioFotos({
                     <img src={src} alt={nome} className="absolute inset-0 size-full object-cover" />
                   )}
                   {i === 0 && (
-                    <span className="absolute left-1.5 top-1.5 rounded-full bg-beringela px-2 py-0.5 text-legenda font-bold text-white">Capa</span>
+                    <Badge variant="solid" className="absolute left-1.5 top-1.5">Capa</Badge>
                   )}
                   {(item.estado === "enviando" || item.estado === "fila") && (
                     <span className="absolute inset-0 grid place-items-center bg-beringela/70 text-center text-sm font-semibold text-white">

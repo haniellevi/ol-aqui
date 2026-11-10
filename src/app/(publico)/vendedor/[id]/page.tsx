@@ -48,7 +48,7 @@ export default async function PaginaVendedor({ params }: Props) {
   const anuncios = await anunciosDaVitrine(v);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 pb-8 md:px-4 md:py-4">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 pb-8 md:px-4 md:py-4">
       <CabecalhoVitrine rotulo="Vendedor" nome={nome} cidade={v.cidade} criadoEm={v.criado_em} />
       <section aria-labelledby="titulo-anuncios-vendedor" className="flex flex-col gap-3 px-4 md:px-0">
         <h2 id="titulo-anuncios-vendedor" className="text-lg font-semibold">

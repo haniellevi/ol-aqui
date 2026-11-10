@@ -5,18 +5,19 @@ import { telefone } from "@/lib/formato";
 import { NOME_PAPEL, O_QUE_FAZ, PAPEIS, type MembroEquipe, type Regiao } from "@/lib/tipos-equipe";
 import { Aviso, Cartao, Titulo } from "@/components/admin/ui";
 import { BuscaConta, FormDesativar, FormPapel } from "./formularios";
+import { Badge, type TomSelo } from "@/components/ui/badge";
 
 export const metadata = { title: "Equipe e permissões" };
 
 // Tela 14 · Equipe e permissões (só administrador). Quem trabalha no painel, com que papel e em que região.
 // O banco recusa o que o papel não pode (tem_papel); aqui é só a tela. Tudo fica no histórico.
 
-const COR_PAPEL: Record<string, string> = {
-  administrador: "bg-selecao text-beringela",
-  moderador: "bg-fundo text-beringela",
-  financeiro: "bg-sucesso-fundo text-verde-escuro",
-  suporte: "bg-fundo text-beringela",
-  franqueado: "bg-aviso-fundo text-aviso",
+const COR_PAPEL: Record<string, TomSelo> = {
+  administrador: "default",
+  moderador: "secondary",
+  financeiro: "success",
+  suporte: "secondary",
+  franqueado: "warning",
 };
 
 function Membro({ m, eu, regioes }: { m: MembroEquipe; eu: boolean; regioes: Regiao[] }) {
@@ -32,10 +33,10 @@ function Membro({ m, eu, regioes }: { m: MembroEquipe; eu: boolean; regioes: Reg
             {[m.whatsapp ? telefone(m.whatsapp) : null, m.cidade].filter(Boolean).join(" · ") || "Sem celular no cadastro"}
           </p>
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-legenda font-bold ${COR_PAPEL[m.papel] ?? "bg-fundo"}`}>
+        <Badge variant={COR_PAPEL[m.papel] ?? "secondary"}>
           {NOME_PAPEL[m.papel]}
           {m.papel === "franqueado" && m.regiao_nome ? ` · ${m.regiao_nome}` : ""}
-        </span>
+        </Badge>
       </div>
       <p className="mt-2 text-legenda text-texto-suave">
         {m.ativo ? "Na equipe desde" : "Saiu em"} {quando(m.ativo ? m.criado_em : m.desativado_em)}

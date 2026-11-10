@@ -7,6 +7,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { LINK_ADMIN_MENSAGENS } from "@/lib/rotas";
 import { CANAIS_ATIVOS, NOME_CANAL, type ModeloMensagem } from "@/lib/tipos-relatorios";
 import { FormModelo } from "./form-modelo";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Mensagens automáticas" };
 
@@ -19,15 +20,15 @@ function Situacao({ modelo }: { modelo: ModeloMensagem }) {
   const enviaHoje = CANAIS_ATIVOS.includes(modelo.canal);
   if (!enviaHoje) {
     return (
-      <span className="rounded-full bg-fundo px-2 text-legenda font-semibold text-texto-suave">
+      <Badge variant="secondary">
         Envio em breve{modelo.ativo ? "" : " · desligada"}
-      </span>
+      </Badge>
     );
   }
   return modelo.ativo ? (
-    <span className="rounded-full bg-sucesso-fundo px-2 text-legenda font-semibold text-verde-escuro">Ligada</span>
+    <Badge variant="success">Ligada</Badge>
   ) : (
-    <span className="rounded-full bg-aviso-fundo px-2 text-legenda font-semibold text-aviso">Desligada</span>
+    <Badge variant="warning">Desligada</Badge>
   );
 }
 

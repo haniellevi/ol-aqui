@@ -6,6 +6,7 @@ import { NOME_DOCUMENTO, type TipoDocumento } from "@/lib/tipos-paginas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { Markdown, titulosDoTexto } from "./markdown";
+import { Alert } from "@/components/ui/alert";
 
 // T41 · Termos de uso e Política de privacidade. Mostra a versão no ar (ou uma antiga, com
 // ?versao=N), com número e data, um índice "Nesta página" e a lista de versões.
@@ -56,14 +57,14 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
       </header>
 
       {antiga && (
-        <div role="status" className="flex flex-col gap-2 rounded-card bg-aviso-fundo p-4 text-aviso">
+        <Alert variant="warning" role="status" className="flex flex-col gap-2">
           <p className="text-base font-semibold">Esta é uma versão antiga e não vale mais.</p>
           {atual && (
             <Link href={linkDocumentoLegal(tipo)} className="inline-flex min-h-10 items-center font-semibold underline underline-offset-4">
               Ver a versão que vale hoje (versão {atual.versao})
             </Link>
           )}
-        </div>
+        </Alert>
       )}
 
       {indice.length > 2 && (

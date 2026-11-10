@@ -36,7 +36,7 @@ export default async function PaginaQueroVender() {
   ].filter(Boolean);
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6">
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-titulo font-semibold text-beringela">Como você quer vender?</h1>
         <p className="text-base text-texto-suave">Escolha uma opção. Dá para virar loja depois, sem perder seus anúncios.</p>

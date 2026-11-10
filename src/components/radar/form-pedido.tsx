@@ -14,6 +14,7 @@ import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import type { ModoContato, RegrasRadar } from "@/lib/tipos-radar";
 import { validarPedido } from "./validacao";
 import { dataHoraCurta, rotuloPrazo } from "./util";
+import { Alert } from "@/components/ui/alert";
 
 type Props = {
   textoInicial: string;
@@ -242,14 +243,14 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
       )}
 
       {erroGeral && (
-        <div role="alert" tabIndex={-1} className="flex flex-col gap-2 rounded-card bg-perigo-fundo p-4 text-base font-semibold text-perigo">
+        <Alert variant="destructive" role="alert" tabIndex={-1} className="flex flex-col gap-2">
           <span>{erroGeral.texto}</span>
           {erroGeral.celular && (
             <Link href="/confirmar-celular?destino=%2Fradar%2Fpedir" className="min-h-10 content-center underline underline-offset-4">
               Confirmar meu celular
             </Link>
           )}
-        </div>
+        </Alert>
       )}
 
       <div className="flex flex-col gap-2">

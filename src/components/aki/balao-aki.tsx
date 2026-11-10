@@ -25,6 +25,7 @@ import {
   type PedidoAbrirAki,
 } from "./abrir";
 import { RespostaAki } from "./resposta-aki";
+import { Alert } from "@/components/ui/alert";
 
 // Balão flutuante do Aki + folha de conversa (DESIGN-SYSTEM.md: folha rounded-t-folha, shadow-2,
 // 48px de toque, texto mínimo 13px, campo 16px, um botão laranja por tela = "Enviar").
@@ -593,9 +594,9 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                 </p>
               )}
               {estado.logado && motivoTexto && (
-                <p role="status" className="mb-2 rounded-card bg-aviso-fundo px-3 py-2 text-sm text-aviso">
+                <Alert variant="warning" role="status" className="mb-2">
                   {motivoTexto}
-                </p>
+                </Alert>
               )}
               {podeEscrever && estado.restantes !== null && estado.restantes <= 5 && (
                 <p className="mb-1 text-legenda text-texto-suave">

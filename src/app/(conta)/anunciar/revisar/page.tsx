@@ -13,6 +13,7 @@ import { BotaoPublicar } from "@/components/anunciar/botao-publicar";
 import { STATUS_PUBLICADO, urlPasso, type SlugPasso } from "@/components/anunciar/passos";
 import { carregarPasso, type ParamsPasso } from "../_carregar";
 import { LINK_PLANOS, linkAvulso } from "@/lib/rotas";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata: Metadata = { title: "Anunciar · Revisar" };
 
@@ -107,7 +108,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
       </div>
 
       {faltando.length > 0 && (
-        <div role="status" className="flex gap-3 rounded-card border-2 border-aviso bg-aviso-fundo p-3 text-base">
+        <Alert variant="warning" role="status" className="flex gap-3">
           <AlertTriangle className="mt-0.5 size-5 shrink-0 text-aviso" aria-hidden />
           <div className="flex flex-col gap-1">
             <p className="font-semibold">Falta pouco. Complete para publicar:</p>
@@ -121,7 +122,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
               ))}
             </ul>
           </div>
-        </div>
+        </Alert>
       )}
 
       {!jaPublicado && pagoAte && (
@@ -153,10 +154,10 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
       )}
 
       {anuncio.status === "em_analise" && (
-        <p className="rounded-card bg-aviso-fundo p-3 text-base text-aviso">
+        <Alert variant="warning" role="note">
           Este anúncio aguarda conferência da equipe.
           {anuncio.motivo_analise && <> <strong>Motivo:</strong> {anuncio.motivo_analise}</>}
-        </p>
+        </Alert>
       )}
 
       {!jaPublicado && (

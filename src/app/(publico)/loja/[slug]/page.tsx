@@ -17,6 +17,7 @@ import { situacaoAgora } from "@/components/vitrine/regras";
 import { inteiro, linkLoja, urlAbsoluta } from "@/lib/formato";
 import { LINK_MINHA_LOJA } from "@/lib/rotas";
 import type { AnuncioVitrine, OrdemVitrine, VitrinePublica } from "@/lib/tipos-vitrine";
+import { Alert } from "@/components/ui/alert";
 
 // T10 · Vitrine da loja: mercadodaregiao.com.br/loja/<slug>. "Site grátis" que a loja divulga no Instagram.
 // Ordem da página: topo (banner, logo, nome, selo, WhatsApp) → destaques da loja (produtos fixados
@@ -111,7 +112,7 @@ function agrupar(anuncios: AnuncioVitrine[]) {
 export default async function PaginaLoja({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const v = await vitrinePublica(slug).catch(() => undefined);
-  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-8"><h1 className="text-balance text-titulo font-semibold">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} larguraTotal>Tentar novamente</Botao></main>;
+  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8"><h1 className="text-balance text-titulo font-semibold">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} larguraTotal>Tentar novamente</Botao></main>;
   if (!v) notFound();
   const ordem = lerOrdem(sp.ordem);
   const pagina = lerPagina(sp.pagina);
@@ -143,11 +144,11 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const base = linkLoja(v.slug);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 pb-8 md:px-4 md:py-4">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 pb-8 md:px-4 md:py-4">
       {v.status !== "ativa" && (
-        <p role="status" className="mx-4 mt-3 rounded-card bg-aviso-fundo p-4 text-base font-semibold text-aviso md:mx-0 md:mt-0">
+        <Alert variant="warning" role="status" className="mx-4 mt-3 md:mx-0 md:mt-0">
           Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : "plano vencido"}). Visível apenas para o responsável e a equipe Mercado da Região.
-        </p>
+        </Alert>
       )}
 
       {/* Topo */}

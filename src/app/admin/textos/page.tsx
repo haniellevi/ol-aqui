@@ -13,6 +13,7 @@ import {
 } from "@/lib/tipos-paginas";
 import { FormBloco, FormCategoria, FormPergunta, MoverBloco } from "./forms";
 import { MarcarRevisado, PublicarDocumento } from "./publicar-documento";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Textos" };
 
@@ -101,7 +102,7 @@ async function AbaAjuda({ supabase }: { supabase: Db }) {
                 <details key={p.id} className="border-b border-borda px-4 last:border-0">
                   <summary className="min-h-10 cursor-pointer py-3 text-base text-beringela">
                     {p.pergunta}
-                    {!p.ativo && <span className="ml-2 rounded-full bg-aviso-fundo px-2 text-legenda font-semibold text-aviso">escondida</span>}
+                    {!p.ativo && <Badge variant="warning" className="ml-2">escondida</Badge>}
                   </summary>
                   <div className="pb-4">
                     <FormPergunta pergunta={p} categorias={categorias} />
@@ -242,8 +243,8 @@ async function AbaInicio({ supabase }: { supabase: Db }) {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold text-beringela">
               {i + 1}. {b.nome}
-              {b.pago && <span className="ml-2 rounded-full bg-patrocinado-fundo px-2 text-legenda font-semibold text-beringela">pago</span>}
-              {!b.ativo && <span className="ml-2 rounded-full bg-aviso-fundo px-2 text-legenda font-semibold text-aviso">desligado</span>}
+              {b.pago && <Badge variant="featured" className="ml-2">pago</Badge>}
+              {!b.ativo && <Badge variant="warning" className="ml-2">desligado</Badge>}
             </h2>
             <MoverBloco chave={b.chave} primeiro={i === 0} ultimo={i === blocos.length - 1} />
           </div>

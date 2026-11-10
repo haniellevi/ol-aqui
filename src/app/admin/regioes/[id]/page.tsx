@@ -11,6 +11,7 @@ import { Cartao, Titulo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { AcoesCidade, BotaoApagarRegiao, FormAdicionarCidade, FormRegiao } from "../formularios";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Região" };
 
@@ -73,8 +74,8 @@ export default async function RegiaoPage({ params }: { params: Promise<{ id: str
                     <div className="min-w-0">
                       <p className="flex flex-wrap items-center gap-2 text-base font-semibold text-beringela">
                         {c.nome}-{c.uf}
-                        {c.e_sede && <span className="rounded-full bg-selecao px-2 py-0.5 text-legenda font-semibold text-beringela">sede</span>}
-                        {!c.ativa && <span className="rounded-full bg-borda px-2 py-0.5 text-legenda font-semibold text-texto-suave">desativada</span>}
+                        {c.e_sede && <Badge variant="default">sede</Badge>}
+                        {!c.ativa && <Badge variant="secondary">desativada</Badge>}
                       </p>
                       <p className="text-legenda text-texto-suave">{uso || "Sem anúncios, lojas nem pessoas"}</p>
                     </div>

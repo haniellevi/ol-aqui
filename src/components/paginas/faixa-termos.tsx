@@ -8,6 +8,7 @@ import { Botao } from "@/components/ui/botao";
 import { aceitarTermos } from "@/app/(publico)/termos/actions";
 import { linkDocumentoLegal } from "@/lib/rotas";
 import { NOME_DOCUMENTO, type AvisoTermos } from "@/lib/tipos-paginas";
+import { Alert } from "@/components/ui/alert";
 
 // Faixa "Atualizamos os termos": aparece para quem está logado e ainda não aceitou a versão no ar.
 // Não bloqueia nada: Aceitar, ler cada texto ou "Agora não" (some até a próxima visita ao site).
@@ -60,9 +61,9 @@ export function FaixaTermos({ aviso }: { aviso: AvisoTermos }) {
   if (feito) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 pt-3">
-        <p role="status" className="rounded-card bg-sucesso-fundo px-4 py-3 text-base font-semibold text-verde-escuro">
+        <Alert variant="success" role="status">
           Pronto, obrigado!
-        </p>
+        </Alert>
       </div>
     );
   }
@@ -100,9 +101,9 @@ export function FaixaTermos({ aviso }: { aviso: AvisoTermos }) {
           ))}
         </ul>
         {erro && (
-          <p role="alert" className="rounded-card bg-perigo-fundo px-3 py-2 text-sm font-semibold text-perigo">
+          <Alert variant="destructive" role="alert">
             {erro}
-          </p>
+          </Alert>
         )}
         <div className="flex flex-col gap-2 sm:flex-row">
           {/* secundário: a faixa não disputa com o botão principal da tela */}

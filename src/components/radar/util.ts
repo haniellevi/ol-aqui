@@ -1,6 +1,7 @@
 // Textos e formatos do Radar (servem no servidor e no navegador).
 import { preco } from "@/lib/formato";
 import type { MotivoFechamento, SituacaoPedido } from "@/lib/tipos-radar";
+import type { TomSelo } from "@/components/ui/badge";
 
 const FUSO = "America/Fortaleza";
 const diaHora = new Intl.DateTimeFormat("pt-BR", { timeZone: FUSO, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -46,10 +47,10 @@ export function rotuloSituacao(s: SituacaoPedido, motivo: MotivoFechamento): { t
   }
 }
 
-export const CLASSE_TOM: Record<"ok" | "aviso" | "neutro", string> = {
-  ok: "bg-sucesso-fundo text-verde-escuro",
-  aviso: "bg-aviso-fundo text-aviso",
-  neutro: "bg-fundo text-texto-suave",
+export const CLASSE_TOM: Record<"ok" | "aviso" | "neutro", TomSelo> = {
+  ok: "success",
+  aviso: "warning",
+  neutro: "secondary",
 };
 
 /** "6 propostas, a menor R$ 1.850" / "1 proposta de R$ 900" / "Nenhuma proposta ainda". */

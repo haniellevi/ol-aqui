@@ -10,6 +10,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { escolherProposta } from "@/app/radar/actions";
 import { linkAnuncio, linkLoja, preco, tempoRelativo } from "@/lib/formato";
 import type { PropostaRecebida } from "@/lib/tipos-radar";
+import { Badge } from "@/components/ui/badge";
 
 type Ordem = "preco" | "novas";
 
@@ -138,10 +139,10 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
           </span>
         </div>
         {p.escolhida && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-sucesso-fundo px-2 py-0.5 text-legenda font-semibold text-verde-escuro">
+          <Badge variant="success">
             <Star className="size-3.5" aria-hidden />
             Você escolheu
-          </span>
+          </Badge>
         )}
       </header>
 

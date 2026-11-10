@@ -12,6 +12,7 @@ import { documentoValido, mascaraDocumento } from "@/lib/cpf-cnpj";
 import { pagarCobranca, verificarCobranca } from "@/app/(conta)/pagar/actions";
 import type { ResultadoCobranca } from "@/app/(conta)/pagar/actions";
 import type { Cobranca, FormaPagamento, MeuPagamento, RespostaCobranca } from "@/lib/tipos-cobranca";
+import { Alert } from "@/components/ui/alert";
 
 // Pagamento de plano ou de anúncio avulso: Pix ou cartão → espera (a tela pergunta sozinha) → pronto.
 // O mesmo jeito da tela de destaques: um botão principal por etapa, todos com "carregando".
@@ -255,10 +256,10 @@ export function FluxoCobranca({
   if (etapa === "aguardando") {
     return (
       <section className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
-        <div className="flex items-center gap-2 rounded-card bg-aviso-fundo p-3 text-aviso" role="status" aria-live="polite">
+        <Alert variant="warning" role="status" aria-live="polite" className="flex items-center gap-2">
           <Loader2 className="size-5 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden />
           <p className="text-base font-semibold">Aguardando pagamento{pagamento ? ` de ${preco(pagamento.valor_centavos)}` : ""}...</p>
-        </div>
+        </Alert>
 
         {!cobranca ? (
           <div className="flex flex-col gap-2">

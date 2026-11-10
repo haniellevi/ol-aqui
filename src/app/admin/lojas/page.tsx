@@ -11,6 +11,7 @@ import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from 
 import { linkInstagram } from "@/components/vitrine/regras";
 import { FormAcaoLoja, FormRevisaoLoja, FormVerificacao, FormRevogarVendedorPf, FormDecidirVerificacaoPf } from "./formularios";
 import type { AcaoLoja, LojaAdmin, SituacaoConta } from "@/lib/tipos-cobranca";
+import { Badge, type TomSelo } from "@/components/ui/badge";
 
 export const metadata = { title: "Lojas" };
 
@@ -20,14 +21,14 @@ export const metadata = { title: "Lojas" };
 
 const POR_PAGINA = 30;
 
-const SITUACOES: { valor: SituacaoConta; nome: string; cor: string }[] = [
-  { valor: "teste", nome: "Em teste", cor: "bg-selecao text-beringela" },
-  { valor: "teste_vencido", nome: "Teste vencido", cor: "bg-aviso-fundo text-aviso" },
-  { valor: "ativa", nome: "Plano em dia", cor: "bg-sucesso-fundo text-verde-escuro" },
-  { valor: "vencida", nome: "Plano vencido", cor: "bg-aviso-fundo text-aviso" },
-  { valor: "gratis", nome: "Grátis", cor: "bg-fundo text-texto-suave" },
-  { valor: "inadimplente", nome: "Inadimplente", cor: "bg-perigo-fundo text-perigo" },
-  { valor: "suspensa", nome: "Suspensa", cor: "bg-perigo-fundo text-perigo" },
+const SITUACOES: { valor: SituacaoConta; nome: string; cor: TomSelo }[] = [
+  { valor: "teste", nome: "Em teste", cor: "default" },
+  { valor: "teste_vencido", nome: "Teste vencido", cor: "warning" },
+  { valor: "ativa", nome: "Plano em dia", cor: "success" },
+  { valor: "vencida", nome: "Plano vencido", cor: "warning" },
+  { valor: "gratis", nome: "Grátis", cor: "secondary" },
+  { valor: "inadimplente", nome: "Inadimplente", cor: "destructive" },
+  { valor: "suspensa", nome: "Suspensa", cor: "destructive" },
 ];
 const SITUACAO = new Map(SITUACOES.map((s) => [s.valor, s]));
 
@@ -43,11 +44,11 @@ type Verificacao = {
   perfis: { nome: string | null } | null;
 };
 
-const ESTADO_REVISAO = {
-  pendente: { rotulo: "Verificação pendente", cor: "bg-aviso-fundo text-aviso" },
-  aprovada: { rotulo: "Loja verificada", cor: "bg-sucesso-fundo text-verde-escuro" },
-  correcao: { rotulo: "Correção solicitada", cor: "bg-aviso-fundo text-aviso" },
-  recusada: { rotulo: "Verificação recusada", cor: "bg-perigo-fundo text-perigo" },
+const ESTADO_REVISAO: Record<string, { rotulo: string; cor: TomSelo }> = {
+  pendente: { rotulo: "Verificação pendente", cor: "warning" },
+  aprovada: { rotulo: "Loja verificada", cor: "success" },
+  correcao: { rotulo: "Correção solicitada", cor: "warning" },
+  recusada: { rotulo: "Verificação recusada", cor: "destructive" },
 };
 
 const MOTIVOS_REVISAO = [
@@ -323,7 +324,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                           {l.nome}
                         </Link>
                         {estadoRevisao && (
-                          <span className={`ml-2 rounded-full px-2 py-0.5 text-legenda font-bold ${estadoRevisao.cor}`}>{estadoRevisao.rotulo}</span>
+                          <Badge variant={estadoRevisao.cor} className="ml-2">{estadoRevisao.rotulo}</Badge>
                         )}
                       </p>
                       <p className="text-sm text-texto-suave">
@@ -331,7 +332,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                         {!franqueado && l.whatsapp ? ` · ${telefone(l.whatsapp)}` : ""} · {l.cidade ?? nomeRegiao.get(l.microrregiao_id) ?? ""}
                       </p>
                     </div>
-                    {sit && <span className={`rounded-full px-2 py-0.5 text-legenda font-bold ${sit.cor}`}>{sit.nome}</span>}
+                    {sit && <Badge variant={sit.cor}>{sit.nome}</Badge>}
                   </div>
                   <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-4">
                     <div>

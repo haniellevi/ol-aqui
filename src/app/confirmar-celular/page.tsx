@@ -27,7 +27,7 @@ export default async function ConfirmarCelular({ searchParams }: { searchParams:
   const ajuda = new URLSearchParams({ ajuda: "whatsapp", voltar: `/confirmar-celular?${retorno}` });
   let siteKey = "";
   try { siteKey = configuracaoWhatsapp().siteKey; } catch { /* Indisponível: nunca aceitar um telefone sem confirmação. */ }
-  return <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col gap-6 px-4 py-8 sm:py-12">
+  return <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 py-8 sm:py-12">
     <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={123} height={45} priority className="self-center" />
     <header><h1 className="text-titulo font-semibold text-beringela">Confirme seu WhatsApp</h1><p className="mt-2 text-texto-suave">Para concluir seu cadastro e negociar, precisamos confirmar que você tem acesso a este número. Você pode explorar a vitrine enquanto isso.</p></header>
     <nav aria-label="Opções de saída" className="flex flex-wrap items-center justify-between gap-2">

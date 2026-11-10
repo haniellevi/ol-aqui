@@ -15,6 +15,7 @@ import { LINK_RADAR } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { FormPedido } from "@/components/radar/form-pedido";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata = { title: "Pedir no Radar" };
 
@@ -98,7 +99,7 @@ async function Formulario({
   const cidadeInicial = cidadeEscolhida || cidadePerfil || (regiao?.id === microrregiaoId ? regiao.cidadeSede : null);
   return (
     <>
-      {cidadeFora && <p role="status" className="rounded-card bg-aviso-fundo p-4 text-aviso">A cidade da busca fica fora da região do seu cadastro. Escolha abaixo uma cidade dessa região para publicar seu pedido.</p>}
+      {cidadeFora && <Alert variant="warning" role="status">A cidade da busca fica fora da região do seu cadastro. Escolha abaixo uma cidade dessa região para publicar seu pedido.</Alert>}
       <FormPedido
         textoInicial={texto.slice(0, 120)}
         categorias={categorias.map((c) => ({ id: c.id, nome: c.nome, filhas: c.filhas.map(({ id, nome }) => ({ id, nome })) }))}

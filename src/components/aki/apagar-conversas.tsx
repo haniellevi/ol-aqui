@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { apagarMinhasConversas } from "@/lib/aki/acoes";
+import { Alert } from "@/components/ui/alert";
 
 // Privacidade (LGPD): apagar o histórico com o Aki, com confirmação antes.
 export function ApagarConversasAki() {
@@ -15,9 +16,9 @@ export function ApagarConversasAki() {
 
   if (resultado?.ok) {
     return (
-      <p role="status" className="rounded-card bg-sucesso-fundo px-4 py-3 text-sm text-verde-escuro">
+      <Alert variant="success" role="status">
         {resultado.texto}
-      </p>
+      </Alert>
     );
   }
   if (!confirmar) {

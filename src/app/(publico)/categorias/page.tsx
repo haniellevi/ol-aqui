@@ -17,7 +17,7 @@ export default async function PaginaCategorias() {
   const categorias = await listarCategorias();
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-4">
       <h1 className="text-titulo font-semibold text-beringela">Todas as categorias</h1>
       {categorias.length === 0 ? (
         <Vazio titulo="Não conseguimos carregar as categorias." texto="Confira a internet e tente de novo.">

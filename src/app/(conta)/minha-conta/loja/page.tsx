@@ -16,6 +16,7 @@ import { resultadosDestaques } from "@/lib/dados/destaques";
 import { BannerLoja } from "@/components/vitrine/banner-loja";
 import { textoDisponivelEm } from "@/components/vitrine/regras";
 import { createClient } from "@/lib/supabase/server";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata: Metadata = { title: "Minha loja" };
 
@@ -168,10 +169,10 @@ export default async function PaginaMinhaLoja() {
           <p className="text-base text-texto-suave">Sua loja aparece em &quot;Lojas em destaque&quot; na página inicial da sua região.</p>
           {lojaPendente ? (
             <>
-              <p className="flex items-start gap-2 rounded-card bg-aviso-fundo p-3 text-sm font-semibold text-aviso">
+              <Alert variant="warning" role="note" className="flex items-start gap-2">
                 <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
                 Pagamento pendente: {lojaPendente.tipo_nome} ({preco(lojaPendente.preco_centavos)})
-              </p>
+              </Alert>
               <Botao href={linkDestacarLoja(lojaPendente.id)} variante="secundario" larguraTotal className="sm:w-fit">
                 Continuar o pagamento
               </Botao>

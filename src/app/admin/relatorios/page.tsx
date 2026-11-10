@@ -21,6 +21,7 @@ import { LINK_ADMIN_RELATORIOS } from "@/lib/rotas";
 import type { FiltrosRelatorio as Filtros, RelatorioId } from "@/lib/tipos-relatorios";
 import { Barras } from "./barras";
 import { FiltrosRelatorio } from "./filtros";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata = { title: "Relatórios" };
 
@@ -126,9 +127,9 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           Mostrando de {dataBr(filtros.de)} até {dataBr(filtros.ate)} · {nomeRegiao}. Datas no horário de Fortaleza.
         </p>
         {aviso && (
-          <p role="status" className="rounded-card bg-aviso-fundo px-4 py-3 text-sm text-aviso">
+          <Alert variant="warning" role="status">
             {aviso}
-          </p>
+          </Alert>
         )}
       </Cartao>
 

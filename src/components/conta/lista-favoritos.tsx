@@ -5,6 +5,7 @@ import { PackageX } from "lucide-react";
 import type { Favorito } from "@/lib/dados/favoritos";
 import { CardAnuncio } from "@/components/anuncio/card-anuncio";
 import { BotaoRemoverFavorito } from "./botao-remover-favorito";
+import { Badge } from "@/components/ui/badge";
 
 export function ListaFavoritos({ itens }: { itens: Favorito[] }) {
   const [removido, setRemovido] = useState<string | null>(null);
@@ -16,9 +17,9 @@ export function ListaFavoritos({ itens }: { itens: Favorito[] }) {
       {itens.map((f, indice) => {
         const titulo = f.anuncio?.titulo ?? `Anúncio indisponível ${indice + 1}`;
         return <li key={f.id} className="flex min-w-0 flex-col gap-2 rounded-card bg-cartao p-2 shadow-1">
-          <span className={`w-fit rounded-full px-2 py-1 text-legenda font-semibold ${f.situacao === "ativo" ? "bg-sucesso-fundo text-verde-escuro" : "bg-fundo text-texto-suave"}`}>
+          <Badge variant={f.situacao === "ativo" ? "success" : "secondary"}>
             {f.situacao === "ativo" ? "Disponível" : f.situacao === "vendido" ? "Vendido" : "Fora do ar"}
-          </span>
+          </Badge>
           {f.anuncio ? <div className="flex flex-1 flex-col [&>article]:flex-1 [&>article]:shadow-none"><CardAnuncio anuncio={f.anuncio} prioridade={indice < 2} /></div> :
             <div className="flex flex-1 flex-col gap-3 px-1 py-3">
               <PackageX className="size-8 text-texto-suave" aria-hidden />
