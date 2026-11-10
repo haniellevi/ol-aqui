@@ -72,5 +72,9 @@ select pg_temp.checar(confirmar_codigo_whatsapp('user_semcodigo','70000000-0000-
 update whatsapp_desafios set criado_em=now()-interval '61 seconds';
 select reservar_codigo_whatsapp('user_semcodigo','70000000-0000-4000-a000-000000000005','5589999990015',repeat('f',64));
 update whatsapp_desafios set criado_em=now()-interval '61 seconds';
-select pg_temp.checar(reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990016',repeat('f',64))='limite','Cota diária');
+select pg_temp.checar(reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990016',repeat('f',64))='reservado','A conta pode pedir outro código após cinco reservas no dia');
+insert into whatsapp_desafios(id,usuario_id,numero,resumo,criado_em)
+select gen_random_uuid(),'user_semcodigo','5589999990017',repeat('a',64),now()-(n+2)*interval '1 minute'
+from generate_series(1,100) as n;
+select pg_temp.checar(reservar_codigo_whatsapp('user_loja',gen_random_uuid(),'5589999990017',repeat('f',64))='reservado','O histórico diário do destinatário e do serviço permite novo envio');
 rollback;

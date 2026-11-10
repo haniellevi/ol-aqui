@@ -21,7 +21,6 @@ export async function solicitarCodigo(numero: unknown, token: unknown): Promise<
     const { data, error } = await db.rpc("reservar_codigo_whatsapp", { p_usuario: userId, p_id: codigo.id, p_numero: fone, p_resumo: codigo.resumo });
     if (error) return { erro: "Não conseguimos preparar o código. Tente novamente mais tarde." };
     if (data === "aguarde") return { erro: "Aguarde um minuto antes de pedir outro código.", aguardar: 60 };
-    if (data === "limite") return { erro: "O limite de envios foi atingido. Tente novamente em 24 horas." };
     if (data !== "reservado") return { erro: "Não conseguimos preparar o código." };
     const envio = await enviarCodigo(fone, codigo.codigo, config);
     const { error: erroRegistro } = await db.from("whatsapp_desafios").update({ envio }).eq("id", codigo.id).eq("usuario_id", userId);
