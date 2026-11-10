@@ -61,11 +61,13 @@ async function abrir(id: string): Promise<MeuAnuncio | null> {
  * Com `antes` (anúncio já publicado): se a moderação do banco segurou a edição (texto ou preço),
  * leva para a tela "em análise" em vez de seguir como se nada tivesse acontecido.
  */
-async function gravar(id: string, colunas: Record<string, unknown>, antes?: MeuAnuncio): Promise<EstadoForm> {
+async function gravar(id: string, colunas: Record<string, unknown>, antes?: MeuAnuncio, versao?: string): Promise<EstadoForm> {
   const db = await createClient();
-  const { data, error } = await db.from("anuncios").update(colunas).eq("id", id).select("id, status").maybeSingle();
+  let atualizacao = db.from("anuncios").update(colunas).eq("id", id);
+  if (versao) atualizacao = atualizacao.eq("atualizado_em", versao);
+  const { data, error } = await atualizacao.select("id, status").maybeSingle();
   if (error) return { erro: traduzirErro(error) };
-  if (!data) return { erro: { mensagem: NAO_ACHOU } };
+  if (!data) return { erro: { mensagem: versao ? "O anúncio mudou. Recarregue esta página e confira os dados antes de salvar." : NAO_ACHOU } };
   if (antes && publicado(antes) && antes.status !== "em_analise" && data.status === "em_analise") {
     redirect(`/anunciar/pronto?id=${encodeURIComponent(id)}&status=analise`);
   }
@@ -190,11 +192,12 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
   }
 
   if (categoriaId !== anuncio.categoria_id) {
-    // troca de categoria: guarda só os campos que existem na nova
+    const origem = anuncio.categoria_id ? await categoriaDoAnuncio(anuncio.categoria_id) : null;
+    if (anuncio.categoria_id && !origem) return { erro: { mensagem: "Não foi possível conferir a categoria atual. Tente novamente." } };
     const r = await gravar(c.id, {
       categoria_id: categoriaId,
-      atributos: filtrarAtributos(anuncio.atributos, achada.categoria.campos),
-    });
+      atributos: filtrarAtributos(anuncio.atributos, achada.categoria.campos, origem?.categoria.campos ?? []),
+    }, undefined, anuncio.atualizado_em);
     if (r) {
       if (publicado(anuncio) && r.erro?.campo && r.erro.campo !== "categoria") {
         r.erro.mensagem += " Esse anúncio já está publicado: para trocar de categoria, preencha antes os campos novos ou crie outro anúncio.";
@@ -211,6 +214,10 @@ export async function salvarDetalhes(_antes: EstadoForm, form: FormData): Promis
   const c = lerComum(form);
   const anuncio = await abrir(c.id);
   if (!anuncio) return { erro: { mensagem: NAO_ACHOU } };
+  const categoriaDoForm = form.get("categoria_id");
+  if (categoriaDoForm != null && categoriaDoForm !== (anuncio.categoria_id ?? "")) {
+    return { erro: { mensagem: "A categoria mudou. Recarregue esta página para ver os campos atuais." } };
+  }
   const exigir = !c.sair || publicado(anuncio); // rascunho pode sair incompleto
 
   const campos: Record<string, string> = {};
@@ -225,7 +232,8 @@ export async function salvarDetalhes(_antes: EstadoForm, form: FormData): Promis
   const cat = anuncio.categoria_id
     ? await (anuncio.publicado_em ? categoriaDoAnuncio(anuncio.categoria_id) : categoriaPorId(anuncio.categoria_id))
     : null;
-  const lidos = lerAtributos(cat?.categoria.campos ?? [], form, exigir);
+  const definicoes = cat?.categoria.campos ?? [];
+  const lidos = lerAtributos(definicoes, form, exigir);
   Object.assign(campos, lidos.erros);
 
   if (Object.keys(campos).length) {
@@ -233,7 +241,8 @@ export async function salvarDetalhes(_antes: EstadoForm, form: FormData): Promis
   }
 
   // atributos de fora da categoria (anúncio antigo) são mantidos como estão
-  const extras = cat ? {} : anuncio.atributos;
+  const chaves = new Set(definicoes.map((campo) => campo.chave));
+  const extras = Object.fromEntries(Object.entries(anuncio.atributos).filter(([chave]) => !chaves.has(chave)));
   const r = await gravar(
     c.id,
     {
@@ -242,6 +251,7 @@ export async function salvarDetalhes(_antes: EstadoForm, form: FormData): Promis
       atributos: { ...extras, ...lidos.atributos },
     },
     anuncio,
+    anuncio.atualizado_em,
   );
   if (r) {
     if (r.erro?.campo) r.campos = { [r.erro.campo === "titulo" || r.erro.campo === "descricao" ? r.erro.campo : `attr_${r.erro.campo}`]: r.erro.mensagem };

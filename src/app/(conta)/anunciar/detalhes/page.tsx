@@ -37,6 +37,7 @@ export default async function PassoDetalhes({ searchParams }: { searchParams: Pa
       />
       <FormDetalhes
         id={anuncio.id}
+        categoriaId={anuncio.categoria_id}
         editar={editar}
         formId={FORM}
         tituloInicial={anuncio.titulo ?? ""}

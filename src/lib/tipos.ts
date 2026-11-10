@@ -82,11 +82,14 @@ export type ParametrosBusca = {
   filtros?: FiltrosBusca | null;
   ordem?: OrdemBusca | null;
   regiao?: string | null; // slug da microrregião
+  facetas?: boolean;
   limite?: number; // 1 a 48 (padrão 24)
   deslocamento?: number;
 };
 
-export type ResultadoBusca = { anuncios: AnuncioCard[]; total: number };
+export type FacetaBusca = { opcoes?: Record<string, number>; min?: number; max?: number };
+export type FacetasBusca = Partial<Record<string, FacetaBusca>>;
+export type ResultadoBusca = { anuncios: AnuncioCard[]; total: number; facetas?: FacetasBusca | null };
 
 /** Linha de anuncio_publico(): página do anúncio e prévia "Revisar". */
 export type AnuncioPublico = {

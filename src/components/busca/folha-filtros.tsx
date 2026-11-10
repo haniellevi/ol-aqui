@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Check, X } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
 import { ID_FOLHA, ID_RESULTADOS, ORDENS, lerEstadoBusca, paramCampo, type EstadoBusca } from "@/components/busca/parametros";
-import type { CampoCategoria, CategoriaComFilhas, Cidade } from "@/lib/tipos";
+import { inteiro, valorDoCampo } from "@/lib/formato";
+import type { CampoCategoria, CategoriaComFilhas, Cidade, FacetaBusca, FacetasBusca } from "@/lib/tipos";
 
 // GET e :target preservam a busca sem JavaScript. Com JS, o diálogo nativo cuida
 // do foco, do fundo inativo e do Escape; os valores são validados também no servidor.
@@ -24,6 +25,7 @@ export function FolhaFiltros({
   caminho,
   estado,
   campos,
+  facetas,
   cidades,
   categorias,
 }: {
@@ -32,6 +34,7 @@ export function FolhaFiltros({
   estado: EstadoBusca;
   /** Campos da subcategoria marcados como filtro. */
   campos: CampoCategoria[];
+  facetas?: FacetasBusca | null;
   cidades: Cidade[];
   /** Mostra a escolha de categoria (só na tela de busca). */
   categorias?: CategoriaComFilhas[];
@@ -43,6 +46,7 @@ export function FolhaFiltros({
   const escolhida = categorias?.flatMap((p) => [p, ...p.filhas]).find((c) => c.slug === categoria);
   const filtraveis = (categorias ? escolhida?.campos ?? [] : campos).filter((c) => c.filtro);
   const estadoCampos = categoria === estado.categoria ? estado : { ...estado, valores: {} };
+  const facetasAtuais = categoria === estado.categoria ? facetas : null;
   const limpar = estado.q ? `${caminho}?q=${encodeURIComponent(estado.q)}` : caminho;
 
   useEffect(() => {
@@ -201,9 +205,11 @@ export function FolhaFiltros({
               </div>
             </fieldset>
 
-            {filtraveis.map((c) => (
-              <FiltroCampo key={`${categoria}-${c.chave}`} campo={c} estado={estadoCampos} erros={erros} />
-            ))}
+            {filtraveis.map((c) => {
+              const faceta = facetasAtuais && Object.hasOwn(facetasAtuais, c.chave) ? facetasAtuais[c.chave] : undefined;
+              if (facetasAtuais && !faceta && !Object.hasOwn(estadoCampos.filtros, c.chave)) return null;
+              return <FiltroCampo key={`${categoria}-${c.chave}`} campo={c} estado={estadoCampos} erros={erros} faceta={facetasAtuais ? faceta ?? {} : undefined} />;
+            })}
 
             <fieldset id="filtro-ordem" className="scroll-mt-4">
               <legend className={LEGENDA}>Ordenar por</legend>
@@ -252,13 +258,22 @@ function CaixaNumero({ rotulo, name, valor, exemplo, erro }: { rotulo: string; n
   );
 }
 
-function FiltroCampo({ campo: c, estado, erros }: { campo: CampoCategoria; estado: EstadoBusca; erros: Record<string, string> }) {
+function FiltroCampo({ campo: c, estado, erros, faceta }: {
+  campo: CampoCategoria; estado: EstadoBusca; erros: Record<string, string>; faceta?: FacetaBusca;
+}) {
   const id = `filtro-${c.chave}`;
   if (c.tipo === "numero") {
     const unidade = c.unidade ? ` (${c.unidade})` : "";
     return (
       <fieldset id={id} className="scroll-mt-4">
         <legend className={LEGENDA}>{c.rotulo}</legend>
+        {faceta?.min != null && faceta.max != null && (
+          <p className="mb-2 text-sm text-texto-suave">
+            {faceta.min === faceta.max
+              ? `Valor disponível de ${valorDoCampo(c, faceta.min)}`
+              : `Disponível de ${valorDoCampo(c, faceta.min)} a ${valorDoCampo(c, faceta.max)}`}
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <CaixaNumero
             rotulo={`De${unidade}`}
@@ -280,38 +295,42 @@ function FiltroCampo({ campo: c, estado, erros }: { campo: CampoCategoria; estad
   }
   if (c.tipo === "lista") {
     const marcados = new Set([estado.valores[paramCampo(c.chave)] ?? []].flat());
+    const opcoes = (c.opcoes ?? []).filter((o) => !faceta || marcados.has(o) || quantidadeNaFaceta(faceta, o) > 0);
+    const erro = erros[paramCampo(c.chave)];
     return (
-      <fieldset id={id} className="scroll-mt-4">
+      <fieldset id={id} className="scroll-mt-4" aria-describedby={erro ? `${id}-erro` : undefined}>
         <legend className={LEGENDA}>
           {c.rotulo} <span className="font-normal text-texto-suave">(pode marcar mais de um)</span>
         </legend>
         <div className="flex flex-wrap gap-2">
-          {(c.opcoes ?? []).map((o) => (
+          {opcoes.map((o) => (
             <label key={o} className={OPCAO}>
               <input type="checkbox" name={paramCampo(c.chave)} value={o} defaultChecked={marcados.has(o)} className="sr-only" />
               <Check className="hidden size-4 shrink-0 group-has-checked:inline" aria-hidden />
-              {o}
+              {faceta ? `${o} (${inteiro(quantidadeNaFaceta(faceta, o))})` : o}
             </label>
           ))}
         </div>
+        {erro && <p id={`${id}-erro`} role="alert" className="mt-1 text-sm text-perigo">{erro}</p>}
       </fieldset>
     );
   }
   if (c.tipo === "sim_nao") {
     const atual = String(estado.valores[paramCampo(c.chave)] ?? "");
+    const opcoes = [
+      { v: "", r: "Tanto faz" },
+      { v: "sim", r: "Sim" },
+      { v: "nao", r: "Não" },
+    ].filter((o) => !faceta || !o.v || o.v === atual || quantidadeNaFaceta(faceta, o.v) > 0);
     return (
       <fieldset id={id} className="scroll-mt-4">
         <legend className={LEGENDA}>{c.rotulo}</legend>
         <div className="flex flex-wrap gap-2">
-          {[
-            { v: "", r: "Tanto faz" },
-            { v: "sim", r: "Sim" },
-            { v: "nao", r: "Não" },
-          ].map((o) => (
+          {opcoes.map((o) => (
             <label key={o.v} className={OPCAO}>
               <input type="radio" name={paramCampo(c.chave)} value={o.v} defaultChecked={atual === o.v} className="sr-only" />
               <Check className="hidden size-4 shrink-0 group-has-checked:inline" aria-hidden />
-              {o.r}
+              {faceta && o.v ? `${o.r} (${inteiro(quantidadeNaFaceta(faceta, o.v))})` : o.r}
             </label>
           ))}
         </div>
@@ -334,4 +353,9 @@ function FiltroCampo({ campo: c, estado, erros }: { campo: CampoCategoria; estad
       />
     </fieldset>
   );
+}
+
+function quantidadeNaFaceta(faceta: FacetaBusca, opcao: string): number {
+  const quantidade = faceta.opcoes?.[opcao];
+  return typeof quantidade === "number" ? quantidade : 0;
 }
