@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { SearchX } from "lucide-react";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
 // Tela vazia: sempre com uma saída (USABILIDADE.md, regra 10). Ponha os botões em `children`.
 export function Vazio({
@@ -7,7 +8,7 @@ export function Vazio({
   texto,
   icone,
   children,
-  className = "",
+  className,
 }: {
   titulo: string;
   texto?: ReactNode;
@@ -16,13 +17,15 @@ export function Vazio({
   className?: string;
 }) {
   return (
-    <section className={`flex flex-col items-center gap-2 rounded-card border border-borda bg-cartao p-4 text-center ${className}`}>
-      <span className="grid size-10 place-items-center rounded-full bg-selecao text-beringela [&>svg]:size-5" aria-hidden>
-        {icone ?? <SearchX />}
-      </span>
-      <h2 className="text-balance text-base font-semibold text-beringela">{titulo}</h2>
-      {texto && <p className="max-w-sm text-pretty text-sm text-texto-suave">{texto}</p>}
-      {children && <div className="mt-1 flex w-full max-w-sm flex-col items-center gap-2">{children}</div>}
-    </section>
+    <Empty className={className}>
+      <EmptyHeader>
+        <EmptyMedia variant="icon" aria-hidden>
+          {icone ?? <SearchX />}
+        </EmptyMedia>
+        <EmptyTitle>{titulo}</EmptyTitle>
+        {texto && <EmptyDescription>{texto}</EmptyDescription>}
+      </EmptyHeader>
+      {children && <EmptyContent>{children}</EmptyContent>}
+    </Empty>
   );
 }

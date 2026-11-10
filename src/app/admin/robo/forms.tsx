@@ -17,6 +17,7 @@ import {
   salvarTextos,
   testarModelo,
 } from "./actions";
+import { Alert } from "@/components/ui/alert";
 
 const NOMES_PROVEDOR: Record<ProvedorIA, string> = { openrouter: "OpenRouter", anthropic: "Anthropic", openai: "OpenAI" };
 
@@ -219,14 +220,14 @@ export function FormModeloEscolhido({
       </form>
       {teste &&
         (teste.ok ? (
-          <div role="status" className="space-y-1 rounded-card bg-sucesso-fundo px-4 py-3 text-sm text-verde-escuro">
+          <Alert variant="success" role="status" className="flex flex-col gap-1">
             <p>
               <strong>Resposta:</strong> {teste.resposta}
             </p>
             <p>
               Tempo: {(teste.latenciaMs / 1000).toFixed(1)} s · Custo: {teste.custoCentavos == null ? "não gravado" : reais(teste.custoCentavos)} · Modelo: {teste.modelo}
             </p>
-          </div>
+          </Alert>
         ) : (
           <Aviso tipo="erro">{teste.erro}</Aviso>
         ))}

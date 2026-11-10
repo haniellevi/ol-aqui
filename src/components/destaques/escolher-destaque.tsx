@@ -17,6 +17,7 @@ import {
   verificarPedidoDestaque,
 } from "@/app/(conta)/destacar/actions";
 import type { Cobranca, FormaPagamento, OpcaoDestaque, PedidoDestaque, RespostaPagamento } from "@/lib/tipos-destaques";
+import { Alert } from "@/components/ui/alert";
 
 // Tela "Destacar": escolher o tipo → pagar (Pix ou cartão) ou usar crédito grátis → esperar → pronto.
 // Um botão principal por etapa, todos com "carregando" e sem toque duplo.
@@ -265,12 +266,12 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
   if (etapa === "aguardando") {
     return (
       <section className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
-        <div className="flex items-center gap-2 rounded-card bg-aviso-fundo p-3 text-aviso" role="status" aria-live="polite">
+        <Alert variant="warning" role="status" aria-live="polite" className="flex items-center gap-2">
           <Loader2 className="size-5 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden />
           <p className="text-base font-semibold">
             Aguardando pagamento{pedido ? ` de ${preco(pedido.preco_centavos)}` : ""}...
           </p>
-        </div>
+        </Alert>
 
         {!cobranca ? (
           <p className="flex items-center gap-2 text-base text-texto-suave">

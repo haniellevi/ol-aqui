@@ -10,6 +10,7 @@ import { apagarSecao, criarSecao, mostrarSecao, moverSecao, renomearSecao } from
 import { LINK_LOJA_SECOES } from "@/lib/rotas";
 import type { MinhaSecao } from "@/lib/tipos-vitrine";
 import type { Resultado } from "@/lib/tipos";
+import { Alert } from "@/components/ui/alert";
 
 // Seções próprias da loja: criar, renomear, subir/descer, esconder, apagar e escolher os produtos.
 // O limite do plano é conferido no banco; aqui só avisamos antes.
@@ -87,9 +88,9 @@ export function GerenciarSecoes({
 
       <div aria-live="polite">
         {erro && (
-          <p role="alert" className="rounded-card border-2 border-perigo bg-perigo-fundo p-3 text-base font-semibold text-perigo">
+          <Alert variant="destructive" role="alert">
             {erro}
-          </p>
+          </Alert>
         )}
       </div>
 

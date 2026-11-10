@@ -17,6 +17,7 @@ import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { Aviso } from "@/components/conta/aviso";
 import { dataPorExtenso, resumoPlano } from "@/components/conta/resumo-plano";
 import { EscolherPlano } from "@/components/cobranca/escolher-plano";
+import { Badge, type TomSelo } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "Meu plano" };
 
@@ -47,12 +48,12 @@ const TIPO_PAGAMENTO: Record<Pagamento["tipo"], string> = {
   anuncio_avulso: "Anúncio avulso",
   destaque: "Destaque",
 };
-const STATUS_PAGAMENTO: Record<Pagamento["status"], { texto: string; cor: string }> = {
-  pendente: { texto: "Aguardando", cor: "bg-aviso-fundo text-aviso" },
-  pago: { texto: "Pago", cor: "bg-sucesso-fundo text-verde-escuro" },
-  vencido: { texto: "Vencido", cor: "bg-perigo-fundo text-perigo" },
-  estornado: { texto: "Devolvido", cor: "bg-fundo text-texto-suave" },
-  cancelado: { texto: "Cancelado", cor: "bg-fundo text-texto-suave" },
+const STATUS_PAGAMENTO: Record<Pagamento["status"], { texto: string; cor: TomSelo }> = {
+  pendente: { texto: "Aguardando", cor: "warning" },
+  pago: { texto: "Pago", cor: "success" },
+  vencido: { texto: "Vencido", cor: "destructive" },
+  estornado: { texto: "Devolvido", cor: "secondary" },
+  cancelado: { texto: "Cancelado", cor: "secondary" },
 };
 const FORMA: Record<NonNullable<Pagamento["forma"]>, string> = { pix: "Pix", boleto: "Boleto", cartao: "Cartão" };
 
@@ -248,7 +249,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
         ) : (
           <ul className="divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
             {pagamentos.map((p) => {
-              const st = STATUS_PAGAMENTO[p.status] ?? { texto: "Em análise", cor: "bg-fundo text-texto-suave" };
+              const st = STATUS_PAGAMENTO[p.status] ?? { texto: "Em análise", cor: "secondary" };
               const linkSeguro = linkPagamentoSeguro(p.link_pagamento);
               const quando = p.pago_em ?? p.vencimento ?? p.criado_em;
               return (
@@ -261,7 +262,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
                     <span className="text-base font-bold tabular-nums">{preco(p.valor_centavos)}</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-sm text-texto-suave">
-                    <span className={`rounded-full px-2 py-0.5 text-legenda font-bold ${st.cor}`}>{st.texto}</span>
+                    <Badge variant={st.cor}>{st.texto}</Badge>
                     <span>{dataPorExtenso(quando)}</span>
                     {p.forma && <span>· {FORMA[p.forma]}</span>}
                   </div>

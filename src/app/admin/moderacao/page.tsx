@@ -7,6 +7,7 @@ import { decidirAnuncio, decidirPedido, resolverDenuncia, tirarFotoBanner } from
 import { BotaoDecisao } from "./botao-decisao";
 import { BotaoTirarBanner } from "./botao-tirar-banner";
 import { RadarModeracao } from "./radar-moderacao";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Moderação" };
 
@@ -116,7 +117,7 @@ export default async function ModeracaoPage({
                   <p className="text-sm text-texto-suave">
                     {a.preco_centavos != null ? reais(a.preco_centavos) : "A combinar"} · {a.cidade} · {loja?.nome ?? "—"}
                   </p>
-                  <p className="mt-1 inline-block rounded-full bg-aviso-fundo px-2 py-0.5 text-legenda font-semibold text-aviso">{a.motivo_analise}</p>
+                  <Badge variant="warning" className="mt-1 h-auto max-w-full py-0.5 whitespace-normal">{a.motivo_analise}</Badge>
                 </div>
               </div>
               {a.descricao && <p className="mt-3 line-clamp-3 text-sm text-texto-suave">{a.descricao}</p>}
@@ -155,7 +156,7 @@ export default async function ModeracaoPage({
           <Cartao key={p.id}>
             <p className="font-semibold text-beringela">{p.titulo}</p>
             <p className="text-sm text-texto-suave">{p.cidade} · {quando(p.criado_em)}</p>
-            <p className="mt-1 inline-block rounded-full bg-aviso-fundo px-2 py-0.5 text-legenda font-semibold text-aviso">{p.motivo_analise}</p>
+            <Badge variant="warning" className="mt-1 h-auto max-w-full py-0.5 whitespace-normal">{p.motivo_analise}</Badge>
             {p.detalhes && <p className="mt-2 text-sm text-texto-suave">{p.detalhes}</p>}
             <form action={decidirPedido.bind(null, "")} className="mt-4 space-y-2">
               <input type="hidden" name="id" value={p.id} />

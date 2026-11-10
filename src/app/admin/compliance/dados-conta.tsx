@@ -1,6 +1,7 @@
 import { quando, reais } from "@/lib/admin/formato";
 import { telefone } from "@/lib/formato";
 import { NOME_ACAO, NOME_PAPEL, NOME_TABELA, type DadosCompliance } from "@/lib/tipos-equipe";
+import { Alert } from "@/components/ui/alert";
 
 // Dados de uma conta para o Compliance (tela e relatório impresso). Só mostra: quem lê e grava o
 // acesso é o banco (compliance_conta / compliance_relatorio).
@@ -71,11 +72,11 @@ const Nada = ({ children }: { children: React.ReactNode }) => <p className="text
  */
 function AvisoIp() {
   return (
-    <p className="mt-3 rounded-card border border-aviso bg-aviso-fundo p-3 text-sm text-beringela">
+    <Alert variant="warning" role="note" className="mt-3">
       <span className="font-semibold">* Sobre os IPs e o navegador:</span> quase todo cadastro e mudança passa pelo servidor do site do
       Mercado da Região antes de chegar ao banco. Por isso o IP e o navegador gravados costumam ser os do servidor do Mercado da Região, e não os da pessoa.
       Não use estes dados para dizer de onde a pessoa acessou.
-    </p>
+    </Alert>
   );
 }
 

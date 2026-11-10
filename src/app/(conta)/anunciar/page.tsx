@@ -45,7 +45,7 @@ export default async function PaginaAnunciar() {
   if (!conta.podePublicar) {
     const avulso = await avulsoParaMim(conta.vitrine);
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
         <LimiteAtingido
           conta={conta}
           avulsoPreco={avulso?.preco ?? null}
@@ -67,7 +67,7 @@ export default async function PaginaAnunciar() {
 
   if (rascunhos.length === 0) {
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-titulo font-semibold text-beringela text-beringela">O que você quer vender?</h1>
           <p className="text-base text-texto-suave">Coloque as fotos, conte sobre o produto e escolha o preço e a cidade. Você confere tudo antes de publicar.</p>
@@ -83,7 +83,7 @@ export default async function PaginaAnunciar() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6">
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold">Continuar de onde parou?</h1>
         <p className="text-base text-texto-suave">Você tem anúncio pela metade. Tudo o que preencheu ficou guardado.</p>

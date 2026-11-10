@@ -8,6 +8,7 @@ import { inteiro, quando } from "@/lib/admin/formato";
 import { preco } from "@/lib/formato";
 import { LINK_ADMIN_ANUNCIOS, LINK_ADMIN_ATENDIMENTOS, linkAdminAnuncio } from "@/lib/rotas";
 import type { MeuAnuncio } from "@/lib/tipos";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Anúncios" };
 
@@ -97,9 +98,9 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                       <span className="font-semibold tabular-nums">{preco(anuncio.preco_centavos)}</span>
-                      <span className={`rounded-full px-2.5 py-1 text-legenda font-semibold ${situacao.cor}`}>
+                      <Badge variant={situacao.cor}>
                         {situacao.texto}
-                      </span>
+                      </Badge>
                       <Link href={linkAdminAnuncio(anuncio.id)} prefetch={false} className={estiloBotaoSec} aria-label={`Gerenciar ${titulo}`}>
                         Gerenciar
                       </Link>

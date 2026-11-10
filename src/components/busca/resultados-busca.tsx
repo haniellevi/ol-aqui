@@ -8,6 +8,7 @@ import { FolhaFiltros } from "@/components/busca/folha-filtros";
 import { ID_FOLHA, ID_RESULTADOS, ORDENS, POR_PAGINA, comParametros, paramCampo, textoPreco, type EstadoBusca, type ParametrosUrl } from "@/components/busca/parametros";
 import { inteiro } from "@/lib/formato";
 import type { AnuncioCard, CampoCategoria, CategoriaComFilhas, Cidade, FacetasBusca } from "@/lib/tipos";
+import { Alert } from "@/components/ui/alert";
 
 // Corpo comum da busca (T5) e das listas de categoria (T4):
 // chips de filtro, "N anúncios em ...", grade, paginação e a folha de filtros.
@@ -140,11 +141,11 @@ export function ResultadosBusca({
         </p>
 
         {erros.length > 0 ? (
-          <div role="alert" className="flex flex-col items-start gap-3 rounded-card border border-perigo bg-perigo-fundo p-4">
+          <Alert variant="destructive" role="alert" className="flex flex-col items-start gap-3">
             <h2 className="text-lg font-semibold">Não foi possível aplicar os filtros</h2>
             <ul className="list-inside list-disc text-base">{erros.map((erro) => <li key={erro}>{erro}</li>)}</ul>
             <a href={`#${ID_FOLHA}`} className={classesBotao("secundario")}>Corrigir filtros</a>
-          </div>
+          </Alert>
         ) : anuncios.length === 0 && estado.pagina > 1 && total === 0 ? (
           <div className="flex flex-col items-start gap-2">
             <p className="text-base">Esta página não tem mais anúncios.</p>

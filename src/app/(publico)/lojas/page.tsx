@@ -45,7 +45,7 @@ export default async function CatalogoLojas({ searchParams }: {
   }
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-6">
+    <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6">
       <header>
         <Link href="/" className="text-sm font-semibold text-laranja-escuro underline underline-offset-4">Voltar à vitrine</Link>
         <h1 className="mt-2 text-titulo font-semibold text-beringela">Lojas de {lugarDaRegiao(regiao)}</h1>

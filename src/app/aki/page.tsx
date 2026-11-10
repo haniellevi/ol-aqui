@@ -32,7 +32,7 @@ export default async function PaginaAki({ searchParams }: {
   const { userId } = await auth();
   const conversa = userId ? await atendimentoCadastro(await createClient(), { dono: userId }) : null;
   if (atendimento === "1" && (conversa?.data || conversa?.error)) {
-    return <main className="mx-auto min-h-dvh w-full max-w-2xl space-y-4 bg-fundo p-4">
+    return <main className="mx-auto min-h-dvh w-full max-w-xl flex flex-col gap-5 bg-fundo p-4">
       <Botao href={chat} variante="texto">Voltar ao Aki</Botao>
       <h1 className="text-xl font-semibold">Atendimento com a equipe</h1>
       {conversa.data ? <>

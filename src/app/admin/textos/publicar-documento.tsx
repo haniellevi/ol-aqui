@@ -8,6 +8,7 @@ import { contarMudancas, diffLinhas, type LinhaDiff } from "@/lib/diff-linhas";
 import { NOME_DOCUMENTO, type DocumentoLegal, type TipoDocumento } from "@/lib/tipos-paginas";
 import { marcarRevisado, publicarDocumento } from "./actions";
 import { enviarSemLimpar } from "./enviar-sem-limpar";
+import { Alert } from "@/components/ui/alert";
 
 // Publicar uma versão nova dos termos ou da privacidade: edita o texto, confere a diferença com a
 // versão no ar (linha a linha) e a prévia, e confirma. A versão anterior continua guardada e pública.
@@ -153,7 +154,7 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
           Publicar versão {proxima}
         </button>
       ) : (
-        <div className="space-y-3 rounded-card bg-aviso-fundo p-4">
+        <Alert variant="warning" role="note" className="flex flex-col gap-3">
           <p className="text-base text-aviso">
             A versão {proxima} entra no ar agora e a {atual?.versao ?? "anterior"} deixa de valer. Todo mundo que entrar vai ver o aviso para aceitar de novo.
             Confira as diferenças acima.
@@ -167,7 +168,7 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
               Voltar
             </button>
           </div>
-        </div>
+        </Alert>
       )}
       {estado?.ok && <Aviso tipo="ok">{estado.ok}</Aviso>}
       {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}

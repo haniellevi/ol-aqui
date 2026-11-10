@@ -12,6 +12,7 @@ import { preco } from "@/lib/formato";
 import { linkMeuPlano } from "@/lib/rotas";
 import { pedirPlano } from "@/app/(conta)/pagar/actions";
 import type { MeuPagamento, MinhaAssinatura, OpcaoAssinatura } from "@/lib/tipos-cobranca";
+import { Badge } from "@/components/ui/badge";
 
 // "Meu plano" · escolher plano e período → ver como o pagamento entra (antes de pagar) → Pix/cartão.
 // Planos, preços, períodos e descontos vêm do banco (opcoes_assinatura). Nada fixo aqui.
@@ -190,10 +191,10 @@ function CartaoPlano({
           <span className="flex flex-wrap items-center gap-2 text-lg font-semibold leading-6">
             {o.nome}
             {o.recomendado && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-beringela px-2 py-0.5 text-legenda font-bold text-white">
+              <Badge variant="solid">
                 <Star className="size-3.5" aria-hidden />
                 Recomendado
-              </span>
+              </Badge>
             )}
           </span>
           <span className="text-lg font-bold leading-6 tabular-nums">

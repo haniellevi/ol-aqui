@@ -11,6 +11,7 @@ import { RegistrarVisita } from "./registrar-visita";
 import { Denunciar } from "./denunciar";
 import { CompartilharAnuncio } from "./compartilhar";
 import { DescricaoAnuncio } from "./descricao";
+import { Alert } from "@/components/ui/alert";
 
 const STATUS_PREVIA: Partial<Record<StatusAnuncio, string>> = {
   rascunho: "Rascunho: ainda não foi publicado.",
@@ -97,7 +98,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
       )}
 
       {!publico(a) && (
-        <div role="status" className="mx-4 mb-3 mt-3 flex flex-col gap-2 rounded-card bg-aviso-fundo p-4 text-aviso md:mx-0 md:mt-0">
+        <Alert variant="warning" role="status" className="mx-4 mb-3 mt-3 md:mx-0 md:mt-0 flex flex-col gap-2">
           <p className="text-base font-semibold">Prévia: só você vê esta página.</p>
           <p className="text-base">{STATUS_PREVIA[a.status] ?? "Fora do ar."}</p>
           {a.e_dono && (
@@ -105,7 +106,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
               Ir para Meus anúncios
             </Link>
           )}
-        </div>
+        </Alert>
       )}
 
       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] md:gap-6">
@@ -203,13 +204,13 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
             </section>
           )}
 
-          <aside aria-label="Dica de segurança" className="flex gap-3 rounded-card bg-aviso-fundo p-4 text-base leading-6 text-beringela">
+          <Alert variant="warning" role="note" aria-label="Dica de segurança" className="flex gap-3">
             <ShieldAlert className="mt-0.5 size-6 shrink-0 text-aviso" aria-hidden />
             <p>
               <strong className="font-semibold">Nunca pague nada antes de ver o produto.</strong> Desconfie de preço muito abaixo do normal e
               combine a entrega em lugar movimentado.
             </p>
-          </aside>
+          </Alert>
 
           {parecidos.length > 0 && (
             <section id="parecidos" aria-labelledby="titulo-parecidos" className="flex scroll-mt-20 flex-col gap-3">

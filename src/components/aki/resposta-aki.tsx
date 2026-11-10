@@ -8,6 +8,7 @@ import { abrirAtendimentoCadastro, avaliarResposta, confirmarPedidoRadar } from 
 import { preco } from "@/lib/formato";
 import type { AcaoAki, MensagemAki } from "@/lib/aki/tipos";
 import { MascoteAki } from "./mascote";
+import { Alert } from "@/components/ui/alert";
 
 type Resposta = Extract<MensagemAki, { papel: "assistente" }>;
 
@@ -35,10 +36,10 @@ function BotaoRadar({
   );
   if (resultado?.ok) {
     return (
-      <p role="status" className="flex items-start gap-2 rounded-card bg-sucesso-fundo px-3 py-2 text-sm text-verde-escuro">
+      <Alert variant="success" role="status" className="flex items-start gap-2">
         <CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
         {resultado.texto}
-      </p>
+      </Alert>
     );
   }
   return (
@@ -67,14 +68,14 @@ function BotaoRadar({
         {acao.rotulo}
       </Botao>
       {resultado && !resultado.ok && (
-        <div role="alert" className="space-y-2 rounded-card bg-perigo-fundo px-3 py-2 text-sm text-perigo">
+        <Alert variant="destructive" role="alert" className="flex flex-col gap-2">
           <p>{resultado.texto}</p>
           {resultado.link && (
             <Botao href={resultado.link.href} variante="secundario" larguraTotal>
               {resultado.link.rotulo}
             </Botao>
           )}
-        </div>
+        </Alert>
       )}
     </div>
   );

@@ -57,7 +57,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6">
       <header className="flex flex-col gap-2">
         <h1 className="text-titulo font-semibold text-beringela">Planos do Mercado da Região</h1>
         <p className="text-base text-texto-suave">

@@ -10,14 +10,16 @@ import { Botao } from "@/components/ui/botao";
 import { CirculoCategoria, IconeCategoria } from "@/components/ui/icone-categoria";
 import { Vazio } from "@/components/ui/vazio";
 import { BotoesOrdem, FormNovaCategoria } from "./formularios";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata = { title: "Categorias e campos" };
 
 function Etiquetas({ c, maeEscondida }: { c: CategoriaAdmin; maeEscondida?: boolean }) {
   return (
     <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-legenda text-texto-suave">
-      {!c.ativa && <span className="rounded-full bg-borda px-2 font-semibold text-texto-suave">Escondida</span>}
-      {c.ativa && maeEscondida && <span className="rounded-full bg-borda px-2 font-semibold text-texto-suave">Escondida pela principal</span>}
+      {!c.ativa && <Badge variant="secondary">Escondida</Badge>}
+      {c.ativa && maeEscondida && <Badge variant="secondary">Escondida pela principal</Badge>}
       <span>
         {inteiro(c.anuncios_ativos)} {c.anuncios_ativos === 1 ? "anúncio no ar" : "anúncios no ar"}
       </span>
@@ -81,9 +83,9 @@ export default async function CategoriasPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-3 rounded-card bg-aviso-fundo px-4 py-3 text-sm text-aviso">
+                <Alert variant="warning" role="note" className="mt-3">
                   Sem subcategorias: esta categoria não aparece no cadastro de anúncio. Crie uma subcategoria logo abaixo.
-                </p>
+                </Alert>
               )}
             </Cartao>
           ))

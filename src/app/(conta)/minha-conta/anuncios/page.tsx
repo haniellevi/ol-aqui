@@ -23,6 +23,8 @@ import { textoDisponivelEm } from "@/components/vitrine/regras";
 import { ABAS_ANUNCIOS as ABAS, ROTULO_ANUNCIO as ROTULO, RESULTADOS_ANUNCIO, abaDoStatus } from "@/components/conta/situacao-anuncios";
 import { FiltroMeusAnuncios } from "@/components/conta/filtro-meus-anuncios";
 import { FotoMeuAnuncio } from "@/components/conta/foto-meu-anuncio";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata: Metadata = { title: "Meus anúncios" };
 
@@ -182,10 +184,10 @@ function LinhaAnuncio({
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className={`rounded-full px-2 py-0.5 text-legenda font-bold ${rotulo.cor}`}>{rotulo.texto}</span>
-            {destaque && <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-legenda font-bold text-beringela">Destaque</span>}
-            {pago && <span className="rounded-full bg-fundo px-2 py-0.5 text-legenda font-bold text-laranja-escuro">Avulso pago</span>}
-            {fixado && <span className="rounded-full bg-selecao px-2 py-0.5 text-legenda font-bold text-beringela">No topo da loja</span>}
+            <Badge variant={rotulo.cor}>{rotulo.texto}</Badge>
+            {destaque && <Badge variant="featured">Destaque</Badge>}
+            {pago && <Badge variant="secondary">Avulso pago</Badge>}
+            {fixado && <Badge variant="default">No topo da loja</Badge>}
           </div>
           <h2 className="line-clamp-2 break-words text-base font-semibold leading-5">
             {publico ? (
@@ -206,10 +208,10 @@ function LinhaAnuncio({
       {(a.status === "pausado" || a.status === "expirado") && <p className="text-sm text-texto-suave">Fora da busca. Revise os dados antes de reativar.</p>}
       {a.status === "vendido" && <p className="text-sm text-texto-suave">Venda concluída. O contato para este anúncio está encerrado.</p>}
       {(a.status === "em_analise" || (a.status === "pausado" && a.motivo_analise?.startsWith("Recusado:"))) && a.motivo_analise && (
-        <p className="rounded-card bg-aviso-fundo p-2 text-sm font-semibold text-aviso">Motivo: {a.motivo_analise}</p>
+        <Alert variant="warning" role="note">Motivo: {a.motivo_analise}</Alert>
       )}
       {a.status === "congelado" && (
-        <p className="rounded-card bg-perigo-fundo p-2 text-sm font-semibold text-perigo">Este anúncio foi bloqueado pela equipe. Fale com o suporte.</p>
+        <Alert variant="destructive" role="note">Este anúncio foi bloqueado pela equipe. Fale com o suporte.</Alert>
       )}
 
       {a.status !== "rascunho" && (
@@ -230,7 +232,7 @@ function LinhaAnuncio({
       )}
 
       {p && a.status === "ativo" && (
-        <div className="flex flex-col gap-2 rounded-card bg-aviso-fundo p-3">
+        <Alert variant="warning" role="note" className="flex flex-col gap-2">
           <p className="flex items-start gap-2 text-sm font-semibold text-aviso">
             <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
             Pagamento pendente: {p.tipo_nome} ({preco(p.preco_centavos)})
@@ -238,7 +240,7 @@ function LinhaAnuncio({
           <Botao href={linkDestacar(a.id, p.id)} variante="secundario" tamanho="pequeno" className="w-fit">
             Continuar o pagamento
           </Botao>
-        </div>
+        </Alert>
       )}
 
       <AcoesAnuncio

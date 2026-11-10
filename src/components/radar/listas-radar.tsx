@@ -6,6 +6,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { Botao } from "@/components/ui/botao";
 import type { MeuPedidoRadar, MinhaPropostaRadar } from "@/lib/tipos-radar";
 import { CLASSE_TOM, dataHoraCurta, resumoPropostas, rotuloSituacao } from "./util";
+import { Badge } from "@/components/ui/badge";
 
 const CARTAO =
   "flex min-h-10 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 hover:bg-fundo " +
@@ -36,7 +37,7 @@ export function ListaMeusPedidos({ pedidos, linkPedir, arquivados = false }: {
           <li key={p.id}>
             <Link href={linkMeuPedidoRadar(p.id)} className={CARTAO}>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className={`w-fit rounded-full px-2 py-0.5 text-legenda font-semibold ${CLASSE_TOM[s.tom]}`}>{s.texto}</span>
+                <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
                 <span className="break-words text-base font-semibold leading-snug">{p.titulo}</span>
                 <span className="text-base font-semibold text-laranja-escuro">{resumoPropostas(p.total_propostas, p.menor_preco_centavos)}</span>
                 <span className="flex flex-wrap items-center gap-x-2 text-legenda text-texto-suave">
@@ -83,19 +84,19 @@ export function ListaMinhasPropostas({ propostas }: { propostas: MinhaPropostaRa
           <Link href={linkPedidoRadarLoja(p.pedido_id)} className={CARTAO}>
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               {p.status === "oculta" ? (
-                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-perigo-fundo px-2 py-0.5 text-legenda font-semibold text-perigo">
+                <Badge variant="destructive">
                   <ShieldAlert className="size-3.5" aria-hidden />
                   Tirada pela equipe{p.moderado_motivo ? `: ${p.moderado_motivo}` : ""}
-                </span>
+                </Badge>
               ) : p.escolhida ? (
-                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-sucesso-fundo px-2 py-0.5 text-legenda font-semibold text-verde-escuro">
+                <Badge variant="success">
                   <Star className="size-3.5" aria-hidden />
                   O comprador escolheu sua proposta
-                </span>
+                </Badge>
               ) : (
-                <span className={`w-fit rounded-full px-2 py-0.5 text-legenda font-semibold ${CLASSE_TOM[p.situacao === "aberto" ? "ok" : "neutro"]}`}>
+                <Badge variant={CLASSE_TOM[p.situacao === "aberto" ? "ok" : "neutro"]}>
                   {p.situacao === "aberto" ? "Pedido no ar" : p.situacao === "prazo_acabou" ? "Prazo acabou" : "Pedido encerrado"}
-                </span>
+                </Badge>
               )}
               <span className="break-words text-base font-semibold leading-snug">{p.pedido_titulo}</span>
               <span className="text-base font-semibold text-laranja-escuro">Sua oferta: {preco(p.preco_centavos)}</span>

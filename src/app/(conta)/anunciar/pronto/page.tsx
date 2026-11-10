@@ -7,6 +7,7 @@ import { Botao } from "@/components/ui/botao";
 import { BotaoNovoRascunho } from "@/components/anunciar/botao-novo-rascunho";
 import { urlPasso } from "@/components/anunciar/passos";
 import { linkDestacar } from "@/lib/rotas";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata: Metadata = { title: "Situação do anúncio" };
 
@@ -36,9 +37,9 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
           A equipe precisa conferir este anúncio antes de ele aparecer. Você pode acompanhar a situação em Meus anúncios.
         </p>
         {anuncio.motivo_analise && (
-          <p className="w-full max-w-sm rounded-card bg-aviso-fundo p-3 text-base text-aviso">
+          <Alert variant="warning" role="note" className="w-full max-w-sm">
             <strong>Motivo:</strong> {anuncio.motivo_analise}
-          </p>
+          </Alert>
         )}
         <div className="flex w-full max-w-sm flex-col gap-3">
           <Botao href="/minha-conta/anuncios" larguraTotal>

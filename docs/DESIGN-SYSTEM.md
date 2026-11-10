@@ -294,3 +294,16 @@ O projeto agora tem o shadcn/ui configurado (`components.json`, estilo `base-nov
 - Componentes novos: `npx shadcn@latest add <nome>`. Depois de adicionar, conferir alturas (40/36), texto 14px e cores da marca antes de usar numa tela.
 - Os componentes antigos (`botao.tsx`, `campo.tsx`, `chip.tsx`) continuam valendo. Trocar uma tela para shadcn só quando ela for mexida de propósito.
 - O Claude Code do projeto já vem com o servidor MCP do shadcn (`.mcp.json`) e a skill `shadcn` (`.claude/skills/`).
+
+### Peças em uso (fase 1 do redesenho, 10/11/2026)
+
+Página para conferir tudo num lugar só: `/admin/pecas`.
+
+- **Selo** (`Badge`): um tom por sentido, escolhido por `variant`: `default` (lilás), `secondary` (cinza), `success`, `warning`, `destructive`, `featured` (patrocinado), `solid` (beringela), `outline`. Nada de `<span className="rounded-full bg-...">` à mão. Mapas de situação guardam o tom (`TomSelo`), não classes de cor.
+- **Aviso** (`Alert`): `variant` `default`, `info`, `success`, `warning`, `destructive`. Texto normal, sem negrito. Quando o aviso não é um erro nem uma resposta a uma ação, usar `role="note"`.
+- **Tela vazia** (`Vazio`, montado com `Empty`): ícone, título, uma frase e a saída em `children`.
+- **Tela de espera** (`Skeleton` e as molduras de `carregando.tsx`): cada área tem seu `loading.tsx` (público, anúncio, conta, Radar, painel).
+- **Linha divisória**: `Separator`, não `<hr>` nem `border-t` solto.
+- Outras peças já instaladas e prontas para as próximas fases: `card`, `tabs`, `dropdown-menu`, `dialog`, `drawer`, `sheet`, `field`, `input`, `select`, `textarea`, `label`, `toggle-group`, `table`, `tooltip`, `switch`, `checkbox`, `radio-group`. Ao usar uma delas pela primeira vez, conferir altura (40/36), letra e escrever `border-border` onde houver `border` (o projeto não define cor de borda padrão).
+- Larguras de página: só três. `max-w-md` (entrar e telas de uma ação), `max-w-xl` (formulários e leitura) e `max-w-6xl` (vitrines e listas). Espaço entre blocos da página: `gap-5`.
+- Na nuvem o endereço `ui.shadcn.com` é bloqueado. As peças foram trazidas do código-fonte oficial no GitHub (`apps/v4/registry/bases/base/ui` + `styles/style-nova.css`).

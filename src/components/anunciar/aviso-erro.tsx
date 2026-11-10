@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 
 // Caixa de erro do passo (lida pelo leitor de tela assim que aparece).
 export function AvisoErro({ mensagem, link }: { mensagem?: string | null; link?: { href: string; texto: string } | null }) {
   return (
     <div aria-live="assertive" aria-atomic="true">
       {mensagem && (
-        <div role="alert" tabIndex={-1} className="flex gap-3 rounded-card border-2 border-perigo bg-perigo-fundo p-3 text-base text-perigo">
+        <Alert variant="destructive" role="alert" tabIndex={-1} className="flex gap-3">
           <AlertCircle className="mt-0.5 size-5 shrink-0" aria-hidden />
           <div className="flex flex-col gap-1">
             <p className="font-semibold">{mensagem}</p>
@@ -16,7 +17,7 @@ export function AvisoErro({ mensagem, link }: { mensagem?: string | null; link?:
               </Link>
             )}
           </div>
-        </div>
+        </Alert>
       )}
     </div>
   );

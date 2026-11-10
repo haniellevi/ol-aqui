@@ -9,6 +9,7 @@ import type { CategoriaComFilhas } from "@/lib/tipos";
 import { AtualizarRadar } from "./atualizar-radar";
 import { faixaPreco, dataHoraCurta } from "./util";
 import { LINK_PLANOS, linkMeuPedidoRadar, linkPedidoRadarLoja } from "@/lib/rotas";
+import { Badge } from "@/components/ui/badge";
 
 export type PedidoRadar = {
   id: string;
@@ -171,24 +172,24 @@ function CartaoPedido({
     <article className="overflow-hidden rounded-card border border-borda bg-cartao">
       <div className="p-3">
         <div className="flex flex-wrap items-center gap-2 text-legenda">
-          {p.categoriaNome && <span className="rounded-full bg-fundo px-2 py-0.5 text-texto-suave">{p.categoriaNome}</span>}
+          {p.categoriaNome && <Badge variant="secondary">{p.categoriaNome}</Badge>}
           {p.urgencia !== "normal" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-aviso-fundo px-2 py-0.5 font-semibold text-aviso">
+            <Badge variant="warning">
               <Flame className="size-3.5" aria-hidden />
               {p.urgencia === "hoje" ? "Precisa hoje" : "Esta semana"}
-            </span>
+            </Badge>
           )}
           {modoPrazo && p.propostasAte && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-aviso-fundo px-2 py-0.5 font-semibold text-aviso">
+            <Badge variant="warning">
               <Hourglass className="size-3.5" aria-hidden />
               Propostas até {dataHoraCurta(p.propostasAte)}
-            </span>
+            </Badge>
           )}
           {p.compradorCertificado && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-verde-escuro px-2 py-0.5 font-semibold text-white">
+            <Badge variant="success">
               <BadgeCheck className="size-3.5" aria-hidden />
               Negociador Certificado
-            </span>
+            </Badge>
           )}
           <span className="ml-auto inline-flex items-center gap-1 text-texto-suave">
             <Clock className="size-3.5" aria-hidden />

@@ -56,7 +56,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
 
   return (
     <div className={estilos.fundo}>
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-4">
       <section aria-labelledby="titulo-inicio" className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <h1 id="titulo-inicio" className="text-balance text-titulo font-semibold text-beringela">

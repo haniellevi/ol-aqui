@@ -1,4 +1,5 @@
 import type { StatusAnuncio } from "@/lib/tipos";
+import type { TomSelo } from "@/components/ui/badge";
 
 export const ABAS_ANUNCIOS = [
   { chave: "todos", nome: "Todos", status: ["ativo", "em_analise", "congelado", "rascunho", "pausado", "expirado", "vendido"] },
@@ -14,15 +15,15 @@ export function abaDoStatus(status: StatusAnuncio) {
   return ABAS_ANUNCIOS.slice(1).find((a) => (a.status as readonly string[]).includes(status))?.chave ?? "todos";
 }
 
-export const ROTULO_ANUNCIO: Record<StatusAnuncio, { texto: string; cor: string }> = {
-  ativo: { texto: "No ar", cor: "bg-sucesso-fundo text-verde-escuro" },
-  em_analise: { texto: "Em análise", cor: "bg-aviso-fundo text-aviso" },
-  congelado: { texto: "Bloqueado", cor: "bg-perigo-fundo text-perigo" },
-  rascunho: { texto: "Rascunho", cor: "bg-fundo text-texto-suave" },
-  pausado: { texto: "Pausado", cor: "bg-fundo text-texto-suave" },
-  expirado: { texto: "Vencido", cor: "bg-fundo text-texto-suave" },
-  vendido: { texto: "Vendido", cor: "bg-beringela text-white" },
-  excluido: { texto: "Na lixeira", cor: "bg-fundo text-texto-suave" },
+export const ROTULO_ANUNCIO: Record<StatusAnuncio, { texto: string; cor: TomSelo }> = {
+  ativo: { texto: "No ar", cor: "success" },
+  em_analise: { texto: "Em análise", cor: "warning" },
+  congelado: { texto: "Bloqueado", cor: "destructive" },
+  rascunho: { texto: "Rascunho", cor: "secondary" },
+  pausado: { texto: "Pausado", cor: "secondary" },
+  expirado: { texto: "Vencido", cor: "secondary" },
+  vendido: { texto: "Vendido", cor: "solid" },
+  excluido: { texto: "Na lixeira", cor: "secondary" },
 };
 
 export const RESULTADOS_ANUNCIO = {

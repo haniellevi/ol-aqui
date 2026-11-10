@@ -30,7 +30,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   const destino = voltarPara((await searchParams).redirect_url);
   const depoisDeCriar = destino === "/" ? LINK_ENTRAR_PERFIL : `${LINK_ENTRAR_PERFIL}?redirect_url=${encodeURIComponent(destino)}`;
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center gap-6 px-4 py-10">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-5 px-4 py-10">
       <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região, aqui a sua cidade aparece" width={200} height={96} priority />
       <SignIn path="/entrar" routing="path" withSignUp forceRedirectUrl={depoisDeCriar} signUpForceRedirectUrl={depoisDeCriar} />
       <p className="text-center text-sm text-texto-suave">

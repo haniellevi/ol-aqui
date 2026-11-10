@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ImageOff, ShieldCheck } from "lucide-react";
 import { linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
 import type { AnuncioCard } from "@/lib/tipos";
+import { Badge } from "@/components/ui/badge";
 
 export type CardAnuncioProps = {
   anuncio: Pick<
@@ -64,9 +65,9 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
             )}
           </span>
           {a.vendedor_pago && a.vitrine_tipo === "pf" && a.vendedor_pf_verificado && (
-            <span className="flex w-fit items-center gap-1 rounded-full bg-sucesso-fundo px-2 py-0.5 text-legenda font-semibold text-verde-escuro">
+            <Badge variant="success">
               <ShieldCheck className="size-3.5" aria-hidden /> Vendedor individual verificado
-            </span>
+            </Badge>
           )}
           {a.vitrine_tipo === "loja" && (
             <span className="flex items-center gap-1 truncate text-legenda leading-[18px] text-texto-suave">

@@ -5,6 +5,8 @@ import { Cartao, Numero, Titulo } from "@/components/admin/ui";
 import { chavesConfiguradas } from "@/lib/aki/provedores";
 import type { ModeloIA, PainelAki, ProvedorIA } from "@/lib/aki/tipos";
 import { FormLigarGeral, FormLimites, FormModelo, FormModeloEscolhido, FormRegiao, FormResolverBusca, FormTextos } from "./forms";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata = { title: "Robô Aki" };
 
@@ -79,9 +81,9 @@ export default async function RoboPage() {
       </Titulo>
 
       {painelR.error && (
-        <p role="alert" className="mb-4 rounded-card bg-perigo-fundo px-4 py-3 text-sm text-perigo">
+        <Alert variant="destructive" role="alert" className="mb-4">
           Não deu para carregar os números: {painelR.error.message}
-        </p>
+        </Alert>
       )}
       {(estourou || perto) && (
         <p
@@ -307,10 +309,10 @@ export default async function RoboPage() {
             <Cartao key={m.id}>
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold text-beringela">{m.nome}</h3>
-                <span className="rounded-full bg-fundo px-2 py-0.5 font-mono text-legenda text-texto-suave">
+                <Badge variant="secondary" className="font-mono">
                   {NOME_PROVEDOR[m.provedor]} · {m.modelo}
-                </span>
-                {!m.ativo && <span className="rounded-full bg-borda px-2 py-0.5 text-legenda font-semibold text-texto-suave">inativo</span>}
+                </Badge>
+                {!m.ativo && <Badge variant="secondary">inativo</Badge>}
               </div>
               <FormModelo modelo={m} />
             </Cartao>

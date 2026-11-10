@@ -17,6 +17,7 @@ import {
 import { Aviso, Cartao, Numero, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { CopiarLink } from "./copiar-link";
 import type { PagamentoAdmin, ResumoPagamentos, StatusPagamento } from "@/lib/tipos-cobranca";
+import { Badge, type TomSelo } from "@/components/ui/badge";
 
 export const metadata = { title: "Pagamentos" };
 
@@ -25,12 +26,12 @@ export const metadata = { title: "Pagamentos" };
 
 const LIMITE = 200;
 
-const COR_STATUS: Record<StatusPagamento, string> = {
-  pendente: "bg-aviso-fundo text-aviso",
-  pago: "bg-sucesso-fundo text-verde-escuro",
-  vencido: "bg-perigo-fundo text-perigo",
-  estornado: "bg-fundo text-texto-suave",
-  cancelado: "bg-fundo text-texto-suave",
+const COR_STATUS: Record<StatusPagamento, TomSelo> = {
+  pendente: "warning",
+  pago: "success",
+  vencido: "destructive",
+  estornado: "secondary",
+  cancelado: "secondary",
 };
 
 type Params = Promise<Record<string, string | string[] | undefined>>;
@@ -255,7 +256,7 @@ function LinhaPagamento({ p, nomePlano, nomeRegiao }: { p: PagamentoAdmin; nomeP
         </div>
         <div className="text-right">
           <p className="text-lg font-bold tabular-nums text-beringela">{reais(p.valor_centavos)}</p>
-          <span className={`rounded-full px-2 py-0.5 text-legenda font-bold ${COR_STATUS[p.status]}`}>{NOME_STATUS[p.status]}</span>
+          <Badge variant={COR_STATUS[p.status]}>{NOME_STATUS[p.status]}</Badge>
         </div>
       </div>
       <p className="mt-2 text-legenda text-texto-suave">

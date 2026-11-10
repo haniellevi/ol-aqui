@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Botao } from "@/components/ui/botao";
 import { aceitarTermos } from "@/app/(publico)/termos/actions";
+import { Alert } from "@/components/ui/alert";
 
 // "Aceitar e continuar" (um botão laranja na tela) + "Agora não" (a faixa lembra depois).
 export function BotaoAceitarTermos({ ids, destino }: { ids: string[]; destino: string }) {
@@ -28,9 +29,9 @@ export function BotaoAceitarTermos({ ids, destino }: { ids: string[]; destino: s
   return (
     <div className="flex flex-col gap-2">
       {erro && (
-        <p role="alert" className="rounded-card bg-perigo-fundo px-3 py-2 text-sm font-semibold text-perigo">
+        <Alert variant="destructive" role="alert">
           {erro}
-        </p>
+        </Alert>
       )}
       <Botao larguraTotal carregando={enviando} textoCarregando="Entrando…" onClick={() => void aceitar()}>
         Aceitar e continuar
