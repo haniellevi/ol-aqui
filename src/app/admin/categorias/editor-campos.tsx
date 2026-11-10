@@ -8,6 +8,7 @@ import { Chip } from "@/components/ui/chip";
 import { TIPOS_CAMPO } from "@/lib/admin/regras-cadastros";
 import type { TipoCampo } from "@/lib/tipos";
 import type { CampoEditado } from "@/lib/tipos-cadastros";
+import { useConfirmar } from "@/components/ui/confirmar";
 
 // Editor dos campos que a subcategoria pede no anúncio (tela 9). Vai para o servidor como JSON no
 // campo escondido "campos"; o servidor e o banco conferem tudo de novo antes de gravar.
@@ -31,6 +32,7 @@ const vazio = (): CampoEditado => ({
 
 export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]; temAnuncios: boolean }) {
   const proximo = useRef(inicial.length);
+  const confirmar = useConfirmar();
   const [itens, setItens] = useState<Item[]>(() => inicial.map((c, i) => ({ ...c, _id: i })));
 
   const mudar = (id: number, parte: Partial<CampoEditado>) => setItens((l) => l.map((c) => (c._id === id ? { ...c, ...parte } : c)));
@@ -42,8 +44,8 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
       [n[i], n[j]] = [n[j], n[i]];
       return n;
     });
-  const tirar = (c: Item) => {
-    if (c.chave && temAnuncios && !window.confirm(`Tirar o campo "${c.rotulo}"? Os anúncios guardam o valor, mas ele deixa de aparecer.`)) return;
+  const tirar = async (c: Item) => {
+    if (c.chave && temAnuncios && !(await confirmar({ titulo: `Tirar o campo "${c.rotulo}"?`, texto: "Os anúncios guardam o valor, mas ele deixa de aparecer.", acao: "Tirar campo", perigo: true }))) return;
     setItens((l) => l.filter((x) => x._id !== c._id));
   };
   const adicionar = () => setItens((l) => [...l, { ...vazio(), _id: proximo.current++ }]);

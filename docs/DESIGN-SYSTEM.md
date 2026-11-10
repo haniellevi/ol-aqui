@@ -305,6 +305,7 @@ Página para conferir tudo num lugar só: `/admin/pecas`.
 - **Tela de espera** (`Skeleton` e as molduras de `carregando.tsx`): cada área tem seu `loading.tsx` (público, anúncio, conta, Radar, painel).
 - **Linha divisória**: `Separator`, não `<hr>` nem `border-t` solto.
 - **Janela** (`Dialog`): para uma tarefa curta que não merece tela própria (ex.: denunciar anúncio). Sempre com `DialogTitle`.
+- **Confirmação** (`useConfirmar` e `confirmarAntes`, em `confirmar.tsx`, com `AlertDialog`): no lugar do `window.confirm`. Título em forma de pergunta, uma frase e o botão dizendo a ação ("Apagar categoria"). Ação sem volta usa `perigo`. Precisa do `ProvedorConfirmar` (já está no layout do painel).
 - **Menu "Mais"** (`DropdownMenu`): ações secundárias de um card. Item que apaga usa `variant="destructive"`. O menu desvia do cabeçalho e da barra de baixo.
 - Outras peças já instaladas e prontas para as próximas fases: `card`, `tabs`, `dropdown-menu`, `dialog`, `drawer`, `sheet`, `field`, `input`, `select`, `textarea`, `label`, `toggle-group`, `table`, `tooltip`, `switch`, `checkbox`, `radio-group`. Ao usar uma delas pela primeira vez, conferir altura (40/36), letra e escrever `border-border` onde houver `border` (o projeto não define cor de borda padrão).
 - Larguras de página: só três. `max-w-md` (entrar e telas de uma ação), `max-w-xl` (formulários e leitura) e `max-w-6xl` (vitrines e listas). Espaço entre blocos da página: `gap-5`.

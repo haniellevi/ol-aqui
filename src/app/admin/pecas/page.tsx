@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Vazio } from "@/components/ui/vazio";
 import { Botao } from "@/components/ui/botao";
+import { ExemploConfirmar } from "./exemplo-confirmar";
 
 // Página de peças: o que o app usa para montar as telas. Serve para conferir a régua num lugar só.
 export const metadata = { title: "Peças do design", robots: { index: false } };
@@ -54,6 +55,12 @@ export default function PaginaPecas() {
         <Vazio titulo="Nenhum anúncio ainda" texto="Quando você publicar, ele aparece aqui." icone={<PackageSearch />}>
           <Botao tamanho="pequeno">Anunciar</Botao>
         </Vazio>
+      </section>
+      <Separator />
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xl font-semibold">Confirmação</h2>
+        <ExemploConfirmar />
       </section>
       <Separator />
 

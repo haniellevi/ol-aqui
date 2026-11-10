@@ -9,6 +9,7 @@ import { NOME_DOCUMENTO, type DocumentoLegal, type TipoDocumento } from "@/lib/t
 import { marcarRevisado, publicarDocumento } from "./actions";
 import { enviarSemLimpar } from "./enviar-sem-limpar";
 import { Alert } from "@/components/ui/alert";
+import { confirmarAntes, useConfirmar } from "@/components/ui/confirmar";
 
 // Publicar uma versão nova dos termos ou da privacidade: edita o texto, confere a diferença com a
 // versão no ar (linha a linha) e a prévia, e confirma. A versão anterior continua guardada e pública.
@@ -179,12 +180,11 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
 /** Liga/desliga o selo "revisado por advogado" da versão no ar. */
 export function MarcarRevisado({ id, revisado }: { id: string; revisado: boolean }) {
   const [estado, acao, pendente] = useActionState(marcarRevisado, null);
+  const confirmar = useConfirmar();
   return (
     <form
       action={acao}
-      onSubmit={(e) => {
-        if (!revisado && !window.confirm("Confirma que um advogado revisou ESTA versão do texto?")) e.preventDefault();
-      }}
+      onSubmit={confirmarAntes(confirmar, () => (revisado ? null : { titulo: "Um advogado revisou esta versão?", texto: "Confirme só se a revisão foi feita neste texto, do jeito que está agora.", acao: "Sim, foi revisado" }))}
       className="space-y-2"
     >
       <input type="hidden" name="id" value={id} />

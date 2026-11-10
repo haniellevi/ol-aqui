@@ -9,6 +9,7 @@ import { UFS } from "@/lib/admin/regras-cadastros";
 import type { CidadeAdmin, RegiaoAdmin } from "@/lib/tipos-cadastros";
 import { enviarSemLimpar } from "../textos/enviar-sem-limpar";
 import { adicionarCidade, apagarRegiao, criarRegiao, removerCidade, salvarRegiao, trocarCidadeAtiva } from "./actions";
+import { confirmarAntes, useConfirmar } from "@/components/ui/confirmar";
 
 // Formulários da tela 7 (Regiões e cidades). Cada botão mostra a bolinha girando, troca o texto e
 // não deixa enviar duas vezes. Se der erro, o que foi digitado continua no lugar.
@@ -153,6 +154,7 @@ export function FormAdicionarCidade({ regiaoId, ufPadrao }: { regiaoId: string; 
 export function AcoesCidade({ cidade, regiaoId, uso }: { cidade: CidadeAdmin; regiaoId: string; uso: string }) {
   const [estadoAtiva, acaoAtiva, trocando] = useActionState(trocarCidadeAtiva, null);
   const [estadoRemover, acaoRemover, removendo] = useActionState(removerCidade, null);
+  const confirmar = useConfirmar();
   const ocupado = trocando || removendo;
   const podeRemover = !uso && !cidade.e_sede;
   return (
@@ -177,7 +179,7 @@ export function AcoesCidade({ cidade, regiaoId, uso }: { cidade: CidadeAdmin; re
         )}
         {podeRemover && (
           <form
-            onSubmit={enviarSemLimpar(acaoRemover, () => window.confirm(`Remover ${cidade.nome}-${cidade.uf} de vez?`))}
+            onSubmit={confirmarAntes(confirmar, { titulo: `Remover ${cidade.nome}-${cidade.uf} de vez?`, acao: "Remover", perigo: true }, enviarSemLimpar(acaoRemover))}
           >
             <input type="hidden" name="id" value={cidade.id} />
             <input type="hidden" name="regiao_id" value={regiaoId} />
@@ -199,8 +201,9 @@ export function AcoesCidade({ cidade, regiaoId, uso }: { cidade: CidadeAdmin; re
 
 export function BotaoApagarRegiao({ regiao }: { regiao: RegiaoAdmin }) {
   const [estado, acao, pendente] = useActionState(apagarRegiao, null);
+  const confirmar = useConfirmar();
   return (
-    <form onSubmit={enviarSemLimpar(acao, () => window.confirm(`Apagar a região "${regiao.nome}" e as cidades dela? Não dá para desfazer.`))} className="space-y-2">
+    <form onSubmit={confirmarAntes(confirmar, { titulo: `Apagar a região "${regiao.nome}"?`, texto: "As cidades dela também são apagadas. Não dá para desfazer.", acao: "Apagar região", perigo: true }, enviarSemLimpar(acao))} className="space-y-2">
       <input type="hidden" name="id" value={regiao.id} />
       <Botao type="submit" variante="perigo" carregando={pendente} textoCarregando="Apagando..." icone={<Trash2 />}>
         Apagar região
