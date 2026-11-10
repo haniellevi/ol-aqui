@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { carregar } = require('./carregar.cjs');
-const filtros = { status: null, tipo: null, regiao: null, de: null, ate: null };
+const filtros = { ambiente: 'producao', loja: null, status: null, tipo: null, regiao: null, de: null, ate: null };
 const linha = (dono) => ({ id: dono, vitrine_id: `v-${dono}`, vitrines_lojas: { dono_id: dono, nome: dono, slug: dono }, anuncios: null });
 
 function ambiente({ linhas = [], comerciais = {}, papel = 'financeiro', erroPapel = null, erroLista = null, erroContato = null } = {}) {
@@ -45,12 +45,14 @@ test('pagamentos: falhas preservam lista sem revelar contato, mas erro financeir
   const a = ambiente({ linhas: [linha('pf')], erroContato: { message: 'offline' } });
   assert.equal((await a.run())[0].vitrine_whatsapp, null);
   const b = ambiente({ erroLista: { message: 'offline' } });
-  await assert.rejects(b.run(), /Não deu para ler/); assert.equal(b.privilegiadas(), 0);
+  await assert.rejects(b.run(), /Não deu para ler/);
+  await assert.rejects(b.devolucoesAFazer(b.db, filtros), /Não deu para ler as devoluções/);
+  assert.equal(b.privilegiadas(), 0);
 });
 
 test('pagamentos: lotes de contatos são limitados e devoluções usam o mesmo escopo', async () => {
   const a = ambiente({ linhas: Array.from({ length: 205 }, (_, i) => linha(`p${i}`)) });
-  assert.equal((await a.devolucoesAFazer(a.db)).length, 205);
+  assert.equal((await a.devolucoesAFazer(a.db, filtros)).length, 205);
   for (const tabela of ['vitrines_lojas', 'perfis']) {
     assert.deepEqual(a.consultas.filter(c => c.t === tabela).map(c => c.ids.length), [100, 100, 5]);
   }

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { ehPapel, podeVerTela } from "@/lib/tipos-equipe";
-import { NOME_STATUS, NOME_TIPO, lerFiltros, listarTodosPagamentos } from "@/lib/admin/pagamentos";
+import { NOME_AMBIENTE, NOME_STATUS, NOME_TIPO, lerFiltros, listarTodosPagamentos } from "@/lib/admin/pagamentos";
 
 // Tela 6 · Exportar CSV dos pagamentos com os mesmos filtros da tela. Só administrador e financeiro:
 // confere o papel com o token da pessoa (e a RLS de pagamentos também barra). Os outros recebem 404.
@@ -50,6 +50,7 @@ export async function GET(req: Request) {
     "Pedido em",
     "Pago em",
     "Vencimento",
+    "Ambiente",
     "Tipo",
     "Situação",
     "Valor (R$)",
@@ -69,6 +70,7 @@ export async function GET(req: Request) {
       quando(p.criado_em),
       quando(p.pago_em),
       p.vencimento ? p.vencimento.split("-").reverse().join("/") : "",
+      NOME_AMBIENTE[p.ambiente],
       NOME_TIPO[p.tipo] ?? p.tipo,
       NOME_STATUS[p.status] ?? p.status,
       valor(p.valor_centavos),

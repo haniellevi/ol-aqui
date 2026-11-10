@@ -4,11 +4,12 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Bot, CalendarCheck, Handshake, FileText, FolderTree, LayoutDashboard, MapPinned, Megaphone, MessageSquareText, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
+import { SignOutButton } from "@clerk/nextjs";
+import { Activity, BarChart3, Bot, CalendarCheck, FileText, FolderTree, Handshake, LayoutDashboard, LogOut, MapPinned, Megaphone, MessageSquareText, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
 import { podeVerLink, type Papel } from "@/lib/tipos-equipe";
 import { LINK_ADMIN_ANUNCIOS } from "@/lib/rotas";
 import {
-  Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
+  Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
 } from "@/components/ui/sidebar";
 
 const ITENS = [
@@ -86,12 +87,25 @@ export function NavAdmin({ pendencias, papel, inicio, aberta = true }: { pendenc
             </SidebarMenu>
           </nav>
         </SidebarContent>
+        <SidebarFooter className="px-3 pb-3 group-data-[collapsible=icon]:px-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SignOutButton redirectUrl="/">
+                <SidebarMenuButton type="button" tooltip="Sair" className="admin-menu-item h-9 gap-2.5 px-3 text-base text-beringela">
+                  <LogOut aria-hidden />
+                  <span>Sair</span>
+                </SidebarMenuButton>
+              </SignOutButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
       </Sidebar>
     </SidebarProvider>
+    <div className="fixed inset-x-0 bottom-0 z-20 flex border-t border-borda bg-cartao shadow-2 md:hidden">
     <nav
       ref={barra}
       aria-label="Painel administrativo"
-      className="fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto overscroll-x-contain border-t border-borda bg-cartao shadow-2 [scrollbar-width:none] md:hidden"
+      className="flex min-w-0 flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none]"
     >
       {itens.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
         const ativo = ehAtivo(href);
@@ -125,6 +139,13 @@ export function NavAdmin({ pendencias, papel, inicio, aberta = true }: { pendenc
         );
       })}
     </nav>
+    <SignOutButton redirectUrl="/">
+      <button type="button" className="flex min-h-14 w-16 shrink-0 flex-col items-center justify-center gap-1 border-l border-borda text-legenda font-semibold leading-4 text-beringela hover:bg-fundo focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-laranja-escuro">
+        <LogOut className="size-5" aria-hidden />
+        Sair
+      </button>
+    </SignOutButton>
+    </div>
     </>
   );
 }

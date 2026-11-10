@@ -2,20 +2,18 @@ import Image from "next/image";
 import { SinoAvisos } from "@/components/conta/sino-avisos";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { ChevronDown, MapPin, Plus, Radar, Search, UserRound } from "lucide-react";
-import { regiaoAtual } from "@/lib/dados/regiao";
+import { Plus, Radar, Search, UserRound } from "lucide-react";
+import { listarCidadesAtivas, regiaoAtual } from "@/lib/dados/regiao";
 import { classesBotao } from "@/components/ui/botao";
+import { MenuCidades } from "./menu-cidades";
 
 // Cabeçalho das páginas públicas e da conta: logo, cidade ("Corrente ▾") e Entrar/Conta.
 // No computador mostra também Buscar, Radar e Anunciar (a barra de baixo some).
 
-/** Para onde vai o toque na cidade (a tela T1 "Escolher cidade" vem depois). */
-export const HREF_ESCOLHER_CIDADE = "/cidades";
-
 const LINK = "inline-flex h-10 items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
 export async function CabecalhoPublico() {
-  const regiao = await regiaoAtual();
+  const [regiao, cidades] = await Promise.all([regiaoAtual(), listarCidadesAtivas().catch(() => [])]);
   const cidade = regiao?.cidade ?? regiao?.cidadeSede ?? regiao?.nome ?? null;
 
   return (
@@ -28,17 +26,7 @@ export async function CabecalhoPublico() {
           <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={98} height={36} priority className="h-7 w-auto sm:h-8" />
         </Link>
 
-        {cidade && (
-          <Link
-            href={HREF_ESCOLHER_CIDADE}
-            className="ml-1 inline-flex h-9 min-w-0 items-center gap-1 rounded-full border border-borda bg-cartao px-2.5 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
-            aria-label={`Cidade: ${cidade}. Trocar cidade`}
-          >
-            <MapPin className="size-4 shrink-0" aria-hidden />
-            <span className="truncate">{cidade}</span>
-            <ChevronDown className="size-4 shrink-0" aria-hidden />
-          </Link>
-        )}
+        <MenuCidades cidade={cidade} regiao={regiao?.id} cidades={cidades} />
 
         <nav aria-label="Principal" className="ml-auto hidden items-center gap-1 md:flex">
           <Link href="/busca" className={LINK}>

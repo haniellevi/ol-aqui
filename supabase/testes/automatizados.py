@@ -26,6 +26,8 @@ try:
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
     checked(sql((root/'supabase/testes/420_gerentes_loja.sql').read_text()))
     print('PASS: convites e edição de gerentes isolados por loja, com expiração e revogação', flush=True)
+    checked(sql((root/'supabase/testes/430_admin_arquivo_lojas.sql').read_text()))
+    print('PASS: arquivamento e restauração de lojas, permissões, histórico e pagamentos por ambiente', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
