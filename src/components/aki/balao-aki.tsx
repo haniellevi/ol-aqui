@@ -11,6 +11,7 @@ import { apagarFoto, criarUrlEnvioFoto } from "@/lib/dados/fotos";
 import { adicionarFotoRascunho, apagarMinhasConversas } from "@/lib/aki/acoes";
 import { DESCANSANDO, mensagemBloqueio } from "@/lib/aki/textos";
 import type { EstadoAki, EventoAki, MensagemAki, PedidoAki } from "@/lib/aki/tipos";
+import { LINK_ATENDIMENTO } from "@/lib/rotas";
 import { MascoteAki } from "./mascote";
 import {
   EVENTO_ABRIR_AKI,
@@ -389,6 +390,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
 
   // telas com barra fixa embaixo (passos do anúncio, página do anúncio): o balão sobe para não cobrir
   const elevado = caminho.startsWith("/anunciar/") || caminho.startsWith("/anuncio/");
+  const semAtalhoMovel = caminho.startsWith(`${LINK_ATENDIMENTO}/`) ? "max-md:hidden" : "";
   const posicao = elevado
     ? "bottom-[calc(10rem+env(safe-area-inset-bottom))] md:bottom-28"
     : "bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6";
@@ -416,7 +418,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
       {!aberto && dica && (
         <div
           role="status"
-          className={`fixed right-4 z-30 flex max-w-[calc(100vw-2rem)] items-center rounded-card bg-cartao shadow-2 md:right-6 ${posicaoDica}`}
+          className={`fixed right-4 z-30 flex max-w-[calc(100vw-2rem)] items-center rounded-card bg-cartao shadow-2 md:right-6 ${posicaoDica} ${semAtalhoMovel}`}
         >
           <button
             type="button"
@@ -435,7 +437,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
         <button
           type="button"
           onClick={() => abrir()}
-          className={`fixed right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-cartao pl-2 pr-4 text-base font-semibold text-beringela shadow-2 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:right-6 ${posicao}`}
+          className={`fixed right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-cartao pl-2 pr-4 text-base font-semibold text-beringela shadow-2 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:right-6 ${posicao} ${semAtalhoMovel}`}
           aria-haspopup="dialog"
         >
           <MascoteAki tamanho={40} />
