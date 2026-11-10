@@ -37,6 +37,7 @@ export function FotoPerfil({ foto }: { foto: string | null }) {
     if (!r?.ok) throw new Error("Sua foto foi alterada na conta, mas falta atualizar o OL-AKI. Toque em Atualizar foto no site.");
     setFaltaSincronizar(false);
     setOk(true);
+    if (r.whatsappVinculado) router.push("/confirmar-celular?aviso=numero_vinculado");
     router.refresh();
   }
   async function salvar(remover = false) {

@@ -71,6 +71,14 @@ test('validação usa conta da sessão e somente confirmação atômica permite 
  const {a,calls}=acoes();assert.deepEqual(await a.confirmarCodigo(id,'123456'),{confirmado:true});assert.equal(calls[0][2].p_usuario,'user_a');assert.equal(calls[0][2].p_id,id);
  for(const [d,c] of [[id,'123'],['invalido','123456'],[id,null],[id,'abcdef']])assert.ok((await a.confirmarCodigo(d,c)).erro);
 });
+test('WhatsApp vinculado a outra conta encerra o desafio sem confirmar o novo contato', async () => {
+  const { a, calls } = acoes({ confirmacao: 'numero_vinculado' });
+  const resposta = await a.confirmarCodigo(id, '123456');
+  assert.match(resposta.erro, /vinculado a outra conta/);
+  assert.equal(resposta.encerrado, true);
+  assert.equal(resposta.confirmado, undefined);
+  assert.equal(calls.some(c => c[0] === 'cache'), false);
+});
 test('sincronização Clerk preserva número confirmado pela Evolution e protege concorrência',async()=>{
  let updates=[],filters=[];let externo=true;
  const db={from(){let write=false;const q={select(){return q;},eq(k,v){filters.push([k,v]);return q;},update(v){write=true;updates.push(v);return q;},maybeSingle:async()=>({data:write?{id:'user_a'}:{id:'user_a',avatar_url:'foto',whatsapp:'5589999990001',whatsapp_verificado_em:'2026-01-01',whatsapp_origem:externo?'evolution':'clerk'},error:null}),then(resolve){return Promise.resolve({data:null,error:null}).then(resolve);}};return q;}};

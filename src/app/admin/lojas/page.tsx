@@ -3,16 +3,17 @@ import { redirect } from "next/navigation";
 import { exigirTela } from "@/lib/admin/equipe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { inteiro, quando } from "@/lib/admin/formato";
-import { ehUuid } from "@/lib/formato";
+import { ehUuid, linkLoja, telefone } from "@/lib/formato";
 import { LINK_ADMIN_LOJAS } from "@/lib/rotas";
 import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
-import { FormAcaoLoja, FormVerificacao } from "./formularios";
+import { linkInstagram } from "@/components/vitrine/regras";
+import { FormAcaoLoja, FormRevisaoLoja, FormVerificacao } from "./formularios";
 import type { AcaoLoja, LojaAdmin, SituacaoConta } from "@/lib/tipos-cobranca";
 
 export const metadata = { title: "Lojas" };
 
 // Tela 5 · Lojistas e vitrines: plano, vencimento, anúncios no ar, propostas do Radar no mês e situação.
-// Ações com motivo (cortesia, trocar plano, suspender/reativar, selo), gravadas no histórico.
+// Ações operacionais e revisão dos dados comerciais, gravadas no histórico.
 // Verificações pendentes (documento, selfie, CNPJ) com aprovar/recusar.
 
 const POR_PAGINA = 30;
@@ -38,6 +39,38 @@ type Verificacao = {
   perfil_id: string;
   arquivo_path: string | null;
   perfis: { nome: string | null } | null;
+};
+
+const ESTADO_REVISAO = {
+  pendente: { rotulo: "Verificação pendente", cor: "bg-aviso-fundo text-aviso" },
+  aprovada: { rotulo: "Loja verificada", cor: "bg-sucesso-fundo text-verde-escuro" },
+  correcao: { rotulo: "Correção solicitada", cor: "bg-aviso-fundo text-aviso" },
+  recusada: { rotulo: "Verificação recusada", cor: "bg-perigo-fundo text-perigo" },
+};
+
+const MOTIVOS_REVISAO = [
+  { valor: "dados_inconsistentes", rotulo: "Dados comerciais inconsistentes" },
+  { valor: "link_invalido", rotulo: "Link inválido ou incompatível com a loja" },
+  { valor: "contato_nao_confirmado", rotulo: "Controle do WhatsApp não confirmado" },
+  { valor: "titularidade", rotulo: "Titularidade não comprovada" },
+  { valor: "outro", rotulo: "Outro motivo" },
+];
+
+type RevisaoLoja = {
+  id: string;
+  estado: keyof typeof ESTADO_REVISAO;
+  revisao: number | null;
+  motivo: string | null;
+  cnpj: string | null;
+  instagram: string | null;
+  whatsapp_comercial: string | null;
+  whatsapp_conta: string | null;
+  responsavel: string | null;
+  nome: string | null;
+  slug: string | null;
+  cidade: string | null;
+  bairro: string | null;
+  endereco: string | null;
 };
 
 const BUCKET_VERIFICACOES = "verificacoes";
@@ -109,7 +142,6 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
   const nomeRegiao = new Map(regioes.map((r) => [r.id, r.nome]));
   const planos = (planosR.data ?? []) as { codigo: string; nome: string }[];
   const verificacoes = (verifR.data ?? []) as unknown as Verificacao[];
-  const links = await linksDosArquivos(verificacoes);
   const filtrando = !!(busca || situacao || regiao || tipo);
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
   const linkPagina = (n: number) => {
@@ -123,6 +155,14 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
     return s ? `${LINK_ADMIN_LOJAS}?${s}` : LINK_ADMIN_LOJAS;
   };
   if (paginaVazia) redirect(linkPagina(1));
+  const idsLojas = lojas.filter((loja) => loja.tipo === "loja").map((loja) => loja.id);
+  const [links, revisoesR] = await Promise.all([
+    linksDosArquivos(verificacoes),
+    idsLojas.length
+      ? supabase.rpc("admin_verificacoes_lojas", { p_ids: idsLojas })
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  const revisoes = new Map(((revisoesR.data ?? []) as RevisaoLoja[]).map((revisao) => [revisao.id, revisao]));
 
   return (
     <>
@@ -140,7 +180,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
         <form method="get" className="grid grid-cols-2 gap-3 md:grid-cols-5">
           <label className="col-span-2 text-sm font-semibold">
             Buscar
-            <input name="q" defaultValue={busca} placeholder="Nome, endereço, dono, WhatsApp ou CNPJ" className={estiloCampo} />
+            <input name="q" defaultValue={busca} placeholder={franqueado ? "Nome da loja ou do responsável" : "Nome, responsável, WhatsApp ou CNPJ"} className={estiloCampo} />
           </label>
           <label className="text-sm font-semibold">
             Situação
@@ -226,6 +266,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
         <h2 id="lista-lojas" className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">
           {inteiro(total)} {total === 1 ? "vendedor" : "vendedores"}
         </h2>
+        {revisoesR.error && <Aviso tipo="erro">Não deu para carregar a verificação das lojas. Atualize a página.</Aviso>}
         {lojasR.error ? (
           <Aviso tipo="erro">Não deu para ler as lojas agora. Atualize a página.</Aviso>
         ) : lojas.length === 0 ? (
@@ -241,20 +282,25 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
           <ul className="flex flex-col gap-3">
             {lojas.map((l) => {
               const sit = SITUACAO.get(l.situacao);
+              const revisao = revisoes.get(l.id);
+              const estadoRevisao = revisao && ESTADO_REVISAO[revisao.estado];
+              const urlVitrine = linkLoja(encodeURIComponent(l.slug));
               const vence = l.situacao === "teste" || l.situacao === "teste_vencido" ? l.teste_expira_em : l.plano_expira_em;
               return (
                 <li key={l.id} className="rounded-card border border-borda bg-cartao p-4 shadow-1">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-base font-semibold text-beringela">
-                        <Link href={`/loja/${l.slug}`} className="underline-offset-2 hover:underline">
+                        <Link href={urlVitrine} className="underline-offset-2 hover:underline">
                           {l.nome}
                         </Link>
-                        {l.selo_loja_verificada && <span className="ml-2 text-[13px] font-bold text-verde-escuro">Selo verificada</span>}
+                        {estadoRevisao && (
+                          <span className={`ml-2 rounded-full px-2 py-0.5 text-[13px] font-bold ${estadoRevisao.cor}`}>{estadoRevisao.rotulo}</span>
+                        )}
                       </p>
                       <p className="text-sm text-texto-suave">
                         {l.tipo === "loja" ? "Loja" : "Pessoa física"} · {l.dono_nome ?? "Dono"}
-                        {l.whatsapp ? ` · ${l.whatsapp}` : ""} · {l.cidade ?? nomeRegiao.get(l.microrregiao_id) ?? ""}
+                        {!franqueado && l.whatsapp ? ` · ${telefone(l.whatsapp)}` : ""} · {l.cidade ?? nomeRegiao.get(l.microrregiao_id) ?? ""}
                       </p>
                     </div>
                     {sit && <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${sit.cor}`}>{sit.nome}</span>}
@@ -290,6 +336,11 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                     <p className="mt-2 text-sm text-texto-suave">
                       Troca marcada: {l.plano_proximo_nome ?? l.plano_proximo} até {quando(l.plano_proximo_ate)} (já paga).
                     </p>
+                  )}
+                  {l.tipo === "loja" && !revisoesR.error && (
+                    revisao && estadoRevisao ? (
+                      !franqueado && <PainelRevisaoLoja revisao={revisao} />
+                    ) : <p className="mt-3 text-sm font-semibold text-aviso">Estado da verificação indisponível. Atualize a página.</p>
                   )}
                   {(acoesDoPapel === null || acoesDoPapel.length > 0) && (
                     <details className="mt-3 border-t border-borda pt-3">
@@ -327,5 +378,70 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
         )}
       </section>
     </>
+  );
+}
+
+function PainelRevisaoLoja({ revisao }: { revisao: RevisaoLoja }) {
+  const urlVitrine = revisao.slug && /^[a-z0-9-]{3,60}$/.test(revisao.slug) ? linkLoja(revisao.slug) : null;
+  const urlInstagram = linkInstagram(revisao.instagram);
+  const motivo = MOTIVOS_REVISAO.find((opcao) => opcao.valor === revisao.motivo);
+  const estiloLink = "inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4";
+
+  return (
+    <details className="mt-3 border-t border-borda pt-3">
+      <summary className="flex min-h-12 cursor-pointer items-center font-semibold text-laranja-escuro">Revisar dados da loja</summary>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-4">
+        <div className="min-w-0">
+          <dt className="text-texto-suave">Nome comercial</dt>
+          <dd className="break-words font-semibold">{revisao.nome || "Não informado"}</dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-texto-suave">Endereço cadastrado</dt>
+          <dd className="break-words font-semibold">
+            {[revisao.endereco, revisao.bairro, revisao.cidade].filter(Boolean).join(", ") || "Não informado"}
+          </dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-texto-suave">Responsável</dt>
+          <dd className="break-words font-semibold">{revisao.responsavel || "Não informado"}</dd>
+        </div>
+        <div>
+          <dt className="text-texto-suave">CNPJ cadastrado</dt>
+          <dd className="break-words font-semibold">{revisao.cnpj || "Não informado"}</dd>
+        </div>
+        <div>
+          <dt className="text-texto-suave">WhatsApp comercial</dt>
+          <dd className="font-semibold">{revisao.whatsapp_comercial ? telefone(revisao.whatsapp_comercial) : "Não informado"}</dd>
+        </div>
+        <div>
+          <dt className="text-texto-suave">WhatsApp confirmado da conta</dt>
+          <dd className="font-semibold">{revisao.whatsapp_conta ? telefone(revisao.whatsapp_conta) : "Aguardando confirmação"}</dd>
+        </div>
+      </dl>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 text-sm">
+        {urlVitrine && (
+          <Link href={urlVitrine} target="_blank" rel="noopener noreferrer" className={estiloLink}>Abrir vitrine</Link>
+        )}
+        {urlInstagram ? (
+          <a href={urlInstagram} target="_blank" rel="noopener noreferrer" className={estiloLink}>Abrir Instagram (@{revisao.instagram})</a>
+        ) : (
+          <span className="break-all text-texto-suave">{revisao.instagram ? `Instagram inválido (${revisao.instagram})` : "Instagram não informado"}</span>
+        )}
+      </div>
+      {motivo && <p className="mt-1 text-sm text-texto-suave">Último motivo registrado. {motivo.rotulo}.</p>}
+      {urlVitrine && revisao.revisao !== null && Number.isInteger(revisao.revisao) ? (
+        <FormRevisaoLoja
+          key={`${revisao.id}-${revisao.revisao}`}
+          loja={revisao.id}
+          revisao={revisao.revisao}
+          motivos={MOTIVOS_REVISAO}
+          whatsappConfirmado={Boolean(revisao.whatsapp_conta)}
+          instagramValido={!revisao.instagram || Boolean(urlInstagram)}
+          aprovada={revisao.estado === "aprovada"}
+        />
+      ) : (
+        <Aviso tipo="erro">A revisão está indisponível. Atualize a página.</Aviso>
+      )}
+    </details>
   );
 }

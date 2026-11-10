@@ -36,6 +36,18 @@ test('Minha loja: zero linhas, outra linha, banco e rede não confirmam sucesso 
   assert.equal(chamadas.some(x=>['cache','delete'].includes(x[0])),false);
  }
 });
+test('Minha loja: duplicidades indicam o campo sem repetir dados da restrição', async () => {
+  for (const [erro, campo, mensagem] of [
+    [{ code: '23505', message: 'duplicate key value violates unique constraint "vitrines_nome_loja_unico"', details: 'nome privado' }, 'nome', /loja com esse nome/],
+    [{ code: '23505', details: 'campo:whatsapp' }, 'whatsapp', /vinculado a outra conta/],
+  ]) {
+    const { a, chamadas } = ambiente({ erro });
+    const resposta = await a.salvarLoja(null, form());
+    assert.match(resposta.campos[campo], mensagem);
+    assert.equal(JSON.stringify(resposta).includes('nome privado'), false);
+    assert.equal(chamadas.some(c => c[0] === 'cache' || c[0] === 'delete'), false);
+  }
+});
 test('Minha loja: salva somente campos permitidos, confirma linha e atualiza contato público',async()=>{
  const {a,chamadas}=ambiente();assert.ok((await a.salvarLoja(null,form({nome:'  Loja   Local ',dono_id:'outro',status:'suspensa',plano_id:'gratis'}))).ok);
  assert.deepEqual(chamadas.find(x=>x[0]==='update')[1],{nome:'Loja Local',whatsapp:'5589999990001',cidade:'Corrente',bairro:'Centro',logo_url:null});
@@ -76,7 +88,7 @@ test('Informações: recusa sobreposição, horário invertido, dia desconhecido
 });
 test('Minha loja: leitura estrita distingue ausência, erro de serviço e loja alheia',async()=>{
  for(const o of [{data:null,error:null},{data:null,error:{message:'falhou'}},{data:{id,dono_id:'outro'},error:null},{data:{id,dono_id:uid,formas_pagamento:[]},error:null}]){
-  const q={select(){return this;},eq(){return this;},maybeSingle:async()=>o};const {minhaVitrineCompleta}=carregar('src/lib/dados/vitrine-completa.ts',{'@clerk/nextjs/server':{auth:async()=>({userId:uid})},'@/lib/supabase/server':{createClient:async()=>({from:()=>q})}});
+  const q={select(){return this;},eq(){return this;},maybeSingle:async()=>o};const {minhaVitrineCompleta}=carregar('src/lib/dados/vitrine-completa.ts',{'@clerk/nextjs/server':{auth:async()=>({userId:uid})},'@/lib/supabase/server':{createClient:async()=>({from:()=>q,rpc:()=>({maybeSingle:async()=>({data:null,error:null})})})}});
   if(o.error||o.data?.dono_id==='outro')await assert.rejects(minhaVitrineCompleta(true));else assert.equal((await minhaVitrineCompleta(true))?.id??null,o.data?.id??null);
  }
 });

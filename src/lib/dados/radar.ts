@@ -72,11 +72,20 @@ export const acessoRadar = cache(async (): Promise<{ temAcesso: boolean; restant
   return { temAcesso: acesso.data === true, restantes: acesso.data === true ? (restantes.data as number | null) : 0 };
 });
 
-export async function meusPedidos(): Promise<MeuPedidoRadar[]> {
+export async function meusPedidos(arquivados = false): Promise<MeuPedidoRadar[]> {
   const db = await createClient();
-  const { data, error } = await db.rpc("meus_pedidos_radar");
+  const { data, error } = await db.rpc("meus_pedidos_radar", { p_arquivados: arquivados });
   if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar seus pedidos.");
   return (data ?? []) as MeuPedidoRadar[];
+}
+
+/** Estado do arquivo pessoal. Só o comprador do pedido pode consultá-lo. */
+export async function pedidoArquivado(id: string): Promise<boolean> {
+  if (!ehUuid(id)) return false;
+  const db = await createClient();
+  const { data, error } = await db.rpc("radar_pedido_esta_arquivado", { p_pedido: id });
+  if (error || typeof data !== "boolean") throw new Error("Não foi possível carregar o arquivo deste pedido.");
+  return data;
 }
 
 export async function minhasPropostas(): Promise<MinhaPropostaRadar[]> {
@@ -175,7 +184,7 @@ export const avisosNaoLidos = cache(async (): Promise<number> => {
 // Nome e explicação de cada aviso na tela. A lista de quais a pessoa pode escolher vem do painel
 // (radar.avisos_escolha); aviso novo sem nome aqui aparece com um nome simples.
 const NOMES_AVISO: Record<string, { nome: string; explicacao: string }> = {
-  pedido_novo: { nome: "Pedido novo na região", explicacao: "Para lojas: alguém procura o que você vende." },
+  pedido_novo: { nome: "Pedido novo no seu nicho", explicacao: "Para quem vende com plano pago e tem anúncios ativos na área do pedido." },
   proposta_nova: { nome: "Chegou proposta", explicacao: "Uma loja mandou oferta para o seu pedido." },
   prazo_acabou: { nome: "Prazo do pedido acabou", explicacao: "Resumo das ofertas para você escolher." },
   proposta_escolhida: { nome: "Escolheram minha proposta", explicacao: "Para lojas: o comprador quer falar com você." },

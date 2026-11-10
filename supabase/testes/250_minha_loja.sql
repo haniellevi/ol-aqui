@@ -29,6 +29,7 @@ update vitrines_lojas set nome='Loja atualizada',whatsapp='5589999990250',bairro
 where id='95000000-0000-4000-a000-000000000001';
 do $$ begin
  assert pode_enviar_foto('user_loja250/loja/nova.webp') and pode_enviar_foto('user_loja250/vitrine/nova.webp'), 'Upload próprio permitido';
+ assert (select whatsapp='5589999990250' and instagram='loja.teste' from meus_contatos_vitrine()), 'Titular lê os contatos em revisão';
  assert (select horarios->'seg'->1->>'fecha'='24:00' from vitrines_lojas where dono_id='user_loja250'), 'Meia-noite preservada';
 end $$;
 select pg_temp.recusa($q$update vitrines_lojas set logo_url='https://abc.supabase.co/storage/v1/object/public/anuncios/user_comprador/loja/logo.webp' where dono_id='user_loja250'$q$);
@@ -42,7 +43,7 @@ set local request.jwt.claim.role='anon';
 set local request.jwt.claim.sub='';
 do $$ declare v jsonb; begin
  v:=vitrine_publica('loja-250');
- assert v->>'nome'='Loja atualizada' and v->>'whatsapp'='5589999990250', 'Nome e contato atualizados na vitrine';
+ assert v->>'nome'='Loja atualizada' and v->>'whatsapp' is null and v->>'instagram' is null, 'Edição pública preserva dados e resguarda contatos em revisão';
  assert v->'horarios'->'seg'->1->>'fecha'='24:00', 'Meia-noite pública';
  assert v->>'logo_url' like '%/user_loja250/loja/logo.webp' and v->>'banner_url' like '%/user_loja250/vitrine/banner.webp', 'Fotos públicas salvas';
 end $$;

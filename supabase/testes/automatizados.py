@@ -75,6 +75,16 @@ try:
         print('SKIP: agendamentos310 exigem pg_cron; ramo sem extensão passou', flush=True)
     else:
         print('PASS: agendamentos310 conferidos no catálogo real do pg_cron', flush=True)
+    checked(sql((root/'supabase/testes/320_verificacao_lojas.sql').read_text()))
+    print('PASS: revisão de loja, links e telefone, isolamento, edição e histórico', flush=True)
+    checked(sql((root/'supabase/testes/330_radar_feed_nichos.sql').read_text()))
+    print('PASS: nicho filtra antes de paginar e protege dados e região', flush=True)
+    checked(sql((root/'supabase/testes/340_radar_avisos_nicho.sql').read_text()))
+    print('PASS: avisos do Radar respeitam nicho, plano e preferências', flush=True)
+    checked(sql((root/'supabase/testes/350_radar_arquivo.sql').read_text()))
+    print('PASS: arquivamento do Radar protege histórico, autoria e estado', flush=True)
+    checked(sql((root/'supabase/testes/360_admin_estatisticas.sql').read_text()))
+    print('PASS: estatísticas separam receitas e propostas, preservam recortes e restringem papéis', flush=True)
     def solicitar_otp(i):
         return sql("select reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990088',repeat('a',64));")
     with ThreadPoolExecutor(max_workers=4) as pool:

@@ -106,3 +106,33 @@ test('sincronização: mantém WhatsApp digitado sem código e atualiza foto',as
 test('sincronização: novo principal confirmado troca telefone e confirmação',async()=>{
   const a=syncAmbiente({user:{phoneNumbers:[{id:'phone1',phoneNumber:'+5589999990002',verification:{status:'verified'}}]}});await a.run();assert.equal(a.updates[0].whatsapp,'5589999990002');assert.ok(Date.parse(a.updates[0].whatsapp_verificado_em));
 });
+test('Clerk: perfil criado sem telefone somente em conflito de titularidade identificado', async () => {
+  const whatsapp = '5589999990001';
+  const usuario = { id, firstName: 'Teste', lastName: null, imageUrl: '', primaryPhoneNumberId: 'p',
+    phoneNumbers: [{ id: 'p', phoneNumber: '+' + whatsapp, verification: { status: 'verified' } }] };
+  for (const erro of [{ code: '23505', details: 'campo:whatsapp' }, { code: '23505', message: 'Outra restrição' }]) {
+    const insercoes = [];
+    const q = {
+      select() { return q; },
+      eq() { return q; },
+      async maybeSingle() { return { data: null, error: null }; },
+      async single() { return { data: { id: 'regiao' }, error: null }; },
+      async insert(perfil) {
+        insercoes.push(perfil);
+        return { error: insercoes.length === 1 ? erro : null };
+      },
+    };
+    const { sincronizarPerfil } = carregar('src/lib/perfil.ts', {
+      '@clerk/nextjs/server': {}, '@/lib/supabase/admin': { supabaseAdmin: () => ({ from: () => q }) },
+    });
+    if (erro.details) {
+      assert.deepEqual(await sincronizarPerfil(usuario), { whatsappVinculado: true });
+      assert.equal(insercoes[0].whatsapp, whatsapp);
+      assert.equal(insercoes[1].whatsapp, null);
+      assert.equal(insercoes[1].whatsapp_verificado_em, null);
+    } else {
+      await assert.rejects(sincronizarPerfil(usuario), /criar o perfil/);
+      assert.equal(insercoes.length, 1);
+    }
+  }
+});

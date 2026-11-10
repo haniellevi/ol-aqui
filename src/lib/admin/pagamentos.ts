@@ -60,42 +60,50 @@ const diaSeguinte = (d: string) => {
 };
 
 const COLUNAS =
-  "id, tipo, status, valor_centavos, forma, plano_codigo, meses, regra, vencimento, pago_em, criado_em, link_pagamento, asaas_cobranca_id, devolver_motivo, observacao, microrregiao_id, vitrine_id, vitrines_lojas(nome, slug, whatsapp, dono_id), anuncios(titulo)";
+  "id, tipo, status, valor_centavos, forma, plano_codigo, meses, regra, vencimento, pago_em, criado_em, link_pagamento, asaas_cobranca_id, devolver_motivo, observacao, microrregiao_id, vitrine_id, vitrines_lojas(nome, slug, dono_id), anuncios(titulo)";
 
 type Linha = Omit<PagamentoAdmin, "vitrine_nome" | "vitrine_slug" | "vitrine_whatsapp" | "anuncio_titulo"> & {
-  vitrines_lojas: { nome: string; slug: string; whatsapp: string | null; dono_id: string } | null;
+  vitrines_lojas: { nome: string; slug: string; dono_id: string } | null;
   anuncios: { titulo: string | null } | null;
 };
 
-const paraAdmin = ({ vitrines_lojas, anuncios, ...l }: Linha, contatos: Map<string, string>): PagamentoAdmin => ({
+const paraAdmin = ({ vitrines_lojas, anuncios, ...l }: Linha, whatsapp: string | null = null): PagamentoAdmin => ({
   ...l,
   vitrine_nome: vitrines_lojas?.nome ?? null,
   vitrine_slug: vitrines_lojas?.slug ?? null,
-  vitrine_whatsapp: vitrines_lojas?.whatsapp ?? contatos.get(vitrines_lojas?.dono_id ?? "") ?? null,
+  vitrine_whatsapp: whatsapp,
   anuncio_titulo: anuncios?.titulo ?? null,
 });
 
-/** Perfis privados não podem entrar no join autenticado. Complementa apenas os contatos dos
- * pagamentos já autorizados pela RLS, após conferir o papel no banco; nunca amplia grants. */
-async function comContatos(supabase: SupabaseClient, linhas: Linha[]): Promise<PagamentoAdmin[]> {
+async function lerContatos(admin: SupabaseClient, tabela: "vitrines_lojas" | "perfis", ids: string[]): Promise<Map<string, string>> {
   const contatos = new Map<string, string>();
-  const donos = [...new Set(linhas.flatMap((l) => l.vitrines_lojas && !l.vitrines_lojas.whatsapp ? [l.vitrines_lojas.dono_id] : []))];
-  if (donos.length > 0) {
-    const { data: papel, error } = await supabase.rpc("meu_papel");
-    if (!error && ehPapel(papel) && podeVerTela(papel, "pagamentos")) {
-      try {
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data, error } = await admin.from(tabela).select("id, whatsapp").in("id", ids.slice(i, i + 100));
+    if (error) continue;
+    for (const p of data ?? []) if (p.whatsapp) contatos.set(p.id, p.whatsapp);
+  }
+  return contatos;
+}
+
+/** Os contatos de vitrines e perfis são privados. A busca se limita às linhas autorizadas pela RLS
+ * e requer confirmação do papel no banco. */
+async function comContatos(supabase: SupabaseClient, linhas: Linha[]): Promise<PagamentoAdmin[]> {
+  const vitrines = [...new Set(linhas.flatMap((l) => l.vitrines_lojas ? [l.vitrine_id] : []))];
+  if (vitrines.length > 0) {
+    try {
+      const { data: papel, error } = await supabase.rpc("meu_papel");
+      if (!error && ehPapel(papel) && podeVerTela(papel, "pagamentos")) {
         const admin = supabaseAdmin();
-        for (let i = 0; i < donos.length; i += 100) {
-          const { data, error } = await admin.from("perfis").select("id, whatsapp").in("id", donos.slice(i, i + 100));
-          if (error) continue; // A lista e a cópia da fatura continuam disponíveis sem o contato.
-          for (const p of data ?? []) if (p.whatsapp) contatos.set(p.id, p.whatsapp);
-        }
-      } catch {
-        // Sem acesso ao contato privado: não revela número e preserva a consulta financeira.
+        const comerciais = await lerContatos(admin, "vitrines_lojas", vitrines);
+        const donos = [...new Set(linhas.flatMap((l) => l.vitrines_lojas && !comerciais.has(l.vitrine_id) ? [l.vitrines_lojas.dono_id] : []))];
+        const perfis = await lerContatos(admin, "perfis", donos);
+        return linhas.map((l) => paraAdmin(l, comerciais.get(l.vitrine_id) ?? perfis.get(l.vitrines_lojas?.dono_id ?? "") ?? null));
       }
+    } catch {
+      // Sem acesso ao contato privado: não revela número e preserva a consulta financeira.
     }
   }
-  return linhas.map((l) => paraAdmin(l, contatos));
+  return linhas.map((l) => paraAdmin(l));
 }
 
 /** Tamanho de cada leitura: a API do Supabase devolve no máximo 1000 linhas por pedido. */
@@ -148,7 +156,7 @@ async function lerFaixa(supabase: SupabaseClient, f: FiltrosPagamentos, de: numb
   const { data, error } = await q;
   if (error) throw new Error("Não deu para ler os pagamentos agora.");
   const linhas = (data ?? []) as unknown as Linha[];
-  return incluirContatos ? comContatos(supabase, linhas) : linhas.map((l) => paraAdmin(l, new Map()));
+  return incluirContatos ? comContatos(supabase, linhas) : linhas.map((l) => paraAdmin(l));
 }
 
 /** Pagamentos que chegaram mas não puderam ser aplicados: a equipe devolve (todos os tipos). */

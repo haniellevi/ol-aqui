@@ -27,7 +27,7 @@ set local role anon;
 set local request.jwt.claim.role='anon';
 do $$ declare v jsonb; ids uuid[]; begin
  v:=vitrine_publica('loja-240');
- assert v->>'whatsapp'='5589999990240' and (v->>'total_anuncios')::int=3, 'Contato e contagem pública';
+ assert v->>'whatsapp' is null and (v->>'total_anuncios')::int=3, 'Sem contato confirmado, com contagem pública';
  assert not (v ?| array['dono_id','cnpj','plano','plano_expira_em','whatsapp_verificado_em']), 'Dados internos omitidos';
  assert jsonb_array_length(v->'secoes')=1, 'Seções preservadas';
  select array_agg(id) into ids from anuncios_vitrine('86000000-0000-4000-a000-000000000001','menor_preco',1) where na_pagina;

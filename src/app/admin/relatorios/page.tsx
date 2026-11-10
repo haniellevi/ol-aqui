@@ -263,7 +263,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
         </Bloco>
 
         {/* 4. Receita */}
-        <Bloco id="receita" filtros={filtros} titulo="Receita por tipo" sub="Pagamentos confirmados, pela data do pagamento. Devolvidos não entram.">
+        <Bloco id="receita" filtros={filtros} titulo="Recebimentos da empresa por tipo" sub="Soma os pagamentos confirmados com origem em produção, pela data do pagamento. Estornos, testes e pagamentos sem origem identificada ficam fora da soma.">
           {!rel.receita ? (
             <Falhou />
           ) : receita.length === 0 ? (
@@ -279,7 +279,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
               <Cartao>
                 <h3 className="mb-3 text-base font-semibold text-beringela">Total por mês</h3>
                 <Barras
-                  rotulo="Receita por mês"
+                  rotulo="Recebimentos por mês"
                   cor="verde"
                   itens={receita.map((m) => ({
                     rotulo: nomeMes(m.mes),

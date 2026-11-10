@@ -122,7 +122,7 @@ test('troca confirmada sincroniza novo telefone',async()=>{
 });
 test('erro ao revogar telefone propaga falha para repetir webhook',async()=>{
   const p=perfil({id:usuario.id,whatsapp:'5589999990000',whatsapp_verificado_em:'2026-01-01'},null,{message:'offline'});
-  await assert.rejects(p.sincronizarPerfil(usuario),/atualizar a foto e o telefone/);
+  await assert.rejects(p.sincronizarPerfil(usuario),/atualizar o telefone da conta/);
 });
 test('erro de leitura não tenta criar ou atualizar perfil',async()=>{
   const p=perfil(null,{message:'offline'});

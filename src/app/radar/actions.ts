@@ -165,3 +165,19 @@ export async function fecharPedido(pedidoId: string, motivo: "resolvido" | "canc
   revalidatePath("/radar");
   return { ok: true, mensagem: motivo === "resolvido" ? "Que bom! Pedido marcado como resolvido." : "Pedido cancelado." };
 }
+
+export async function mudarArquivoPedido(pedidoId: string, arquivar: boolean): Promise<RespostaSimples> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, erro: SEM_LOGIN };
+  if (!ehUuid(pedidoId) || typeof arquivar !== "boolean") return { ok: false, erro: "Pedido não encontrado." };
+
+  const db = await createClient();
+  const { data, error } = await db.rpc("arquivar_pedido_radar", { p_pedido: pedidoId, p_arquivar: arquivar });
+  if (error) return { ok: false, erro: mensagemDe(error).erro };
+  if (data !== arquivar) return { ok: false, erro: "Não foi possível confirmar a mudança. Atualize o pedido e tente novamente." };
+
+  revalidatePath(`/radar/pedido/${pedidoId}`);
+  revalidatePath(`/radar/${pedidoId}`);
+  revalidatePath("/radar");
+  return { ok: true, mensagem: arquivar ? "Pedido arquivado." : "Pedido retirado do arquivo." };
+}

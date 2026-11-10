@@ -24,7 +24,7 @@ const lerVitrine = cache(async (id: string): Promise<Vitrine | null> => {
   return seguro(async () => {
     const db = await createClient();
     const { data, error } = await db.from("vitrines_lojas").select(COLUNAS_VITRINE).eq("id", id.toLowerCase()).maybeSingle<Vitrine>();
-    return error ? null : data;
+    return error || !data ? null : { ...data, whatsapp: null };
   }, null);
 });
 

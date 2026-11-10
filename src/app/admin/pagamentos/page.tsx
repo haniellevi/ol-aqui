@@ -68,7 +68,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
 
   return (
     <>
-      <Titulo sub="Cobranças de planos, anúncios avulsos e destaques. Valores do Asaas; nada é cobrado por aqui.">Pagamentos</Titulo>
+      <Titulo sub="Acompanhe as cobranças de planos, anúncios avulsos e destaques. Os totais desta tela incluem todos os ambientes cadastrados.">Pagamentos</Titulo>
 
       {/* Filtros */}
       <Cartao className="mb-6">
@@ -136,7 +136,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
 
       {/* Totais */}
       <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <Numero rotulo="Recebido" valor={reais(somar("pago"))} detalhe={`${inteiro(contar("pago"))} pagamentos`} />
+        <Numero rotulo="Marcados como pagos" valor={reais(somar("pago"))} detalhe={`${inteiro(contar("pago"))} pagamentos`} />
         <Numero rotulo="Aguardando" valor={reais(somar("pendente"))} detalhe={`${inteiro(contar("pendente"))} cobranças`} />
         <Numero rotulo="Devolvido" valor={reais(somar("estornado"))} detalhe={`${inteiro(contar("estornado"))} pagamentos`} />
         <Numero

@@ -98,7 +98,7 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
           placeholder="(89) 99999-0000"
           value={fone}
           onChange={(e) => setFone(mascaraFone(e.target.value))}
-          dica="Número público para receber clientes. Se deixar vazio, a vitrine usa o WhatsApp confirmado da sua conta, quando houver."
+          dica="Se deixar vazio, a vitrine usa o WhatsApp confirmado da sua conta. Um número comercial diferente só aparece após conferência da equipe. Até lá, a vitrine usa o número confirmado."
           erro={campos.whatsapp}
         />
         {cidades.length > 0 ? (

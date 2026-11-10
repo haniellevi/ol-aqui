@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { garantirPerfil } from "@/lib/perfil";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ehUuid } from "@/lib/formato";
+import { WHATSAPP_JA_VINCULADO, whatsappJaVinculado } from "@/lib/erros";
 import { configuracaoWhatsapp, enviarCodigo, novoCodigo, numeroWhatsapp, resumoCodigo, validarTurnstile } from "@/lib/whatsapp/servico";
 
 export type EstadoCodigo = { erro?: string; aviso?: string; desafio?: string; confirmado?: boolean; encerrado?: boolean; aguardar?: number };
@@ -39,6 +40,9 @@ export async function confirmarCodigo(desafio: unknown, codigo: unknown): Promis
     const segredo = process.env.WHATSAPP_OTP_SECRET;
     if (!segredo || segredo.length < 32) return { erro: "A confirmação está indisponível. Tente mais tarde." };
     const { data, error } = await supabaseAdmin().rpc("confirmar_codigo_whatsapp", { p_usuario: userId, p_id: desafio, p_resumo: resumoCodigo(userId, desafio, codigo, segredo) });
+    if (data === "numero_vinculado" || whatsappJaVinculado(error)) {
+      return { encerrado: true, erro: `${WHATSAPP_JA_VINCULADO} Use outro número ou procure o suporte.` };
+    }
     if (error) return { erro: "Não conseguimos conferir o código. Tente novamente." };
     if (data !== "confirmado") return { encerrado: data !== "incorreto", erro: data === "bloqueado" ? "Você atingiu três erros. Solicite um novo código." : data === "expirado" ? "Este código expirou. Solicite um novo código." : data === "incorreto" ? "Código incorreto. Confira a mensagem recebida." : "Este código não pode ser usado. Solicite um novo código." };
     revalidatePath("/minha-conta", "layout"); revalidatePath("/radar", "layout");

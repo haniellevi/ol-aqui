@@ -15,8 +15,17 @@ import { DestaquesAtivos } from "@/components/destaques/destaques-ativos";
 import { resultadosDestaques } from "@/lib/dados/destaques";
 import { BannerLoja } from "@/components/vitrine/banner-loja";
 import { textoDisponivelEm } from "@/components/vitrine/regras";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Minha loja" };
+
+const ORIENTACOES_VERIFICACAO: Record<string, string> = {
+  dados_inconsistentes: "Confira e corrija o nome, a cidade e o endereço da loja.",
+  link_invalido: "Revise o Instagram em Horários e informações. Para corrigir o link da vitrine, fale com a equipe.",
+  contato_nao_confirmado: "Confira o WhatsApp da loja e informe um número cujo acesso você possa comprovar.",
+  titularidade: "Fale com a equipe para comprovar que você representa esta loja.",
+  outro: "Fale com a equipe para saber o que precisa ser corrigido.",
+};
 
 // T38 · Minha loja (só para lojas): dados e logo aqui; banner, informações, seções próprias e
 // produtos no topo em telas próprias (vitrine completa). O que o plano libera vem do banco.
@@ -37,12 +46,16 @@ export default async function PaginaMinhaLoja() {
       </PaginaConta>
     );
   }
-  const [cidades, recursos, planos, destaques] = await Promise.all([
+  const [cidades, recursos, planos, destaques, verificacaoR] = await Promise.all([
     listarCidades(v.microrregiao_id),
     meusRecursosVitrine(true),
     planosPublicos(),
     resultadosDestaques(),
+    createClient().then((db) => db.rpc("minha_verificacao_loja")),
   ]);
+  const verificacao = !verificacaoR.error && Array.isArray(verificacaoR.data)
+    ? verificacaoR.data[0] as { estado: string; motivo: string | null } | undefined
+    : undefined;
   const completa = v;
   const destaquesLoja = destaques.filter((d) => d.tipo === "loja");
   const lojaPendente = destaquesLoja.find((d) => d.status === "aguardando_pagamento" && d.pagamento_status === "pendente");
@@ -81,6 +94,19 @@ export default async function PaginaMinhaLoja() {
             ? "Sua loja está suspensa e não aparece no site. Fale com o suporte."
             : "Sua loja está com pagamento atrasado. Veja em Meu plano."}
         </Aviso>
+      )}
+      {verificacao?.estado === "aprovada" ? (
+        <Aviso tipo="ok">Loja verificada.</Aviso>
+      ) : verificacao?.estado === "pendente" ? (
+        <Aviso tipo="info">Verificação pendente. A equipe vai conferir os dados, os links e o contato da loja.</Aviso>
+      ) : verificacao?.estado === "correcao" || verificacao?.estado === "recusada" ? (
+        <Aviso tipo="atencao">
+          {verificacao.estado === "correcao" ? "A loja precisa de correções." : "A verificação da loja foi recusada."}
+          <p className="font-normal">{ORIENTACOES_VERIFICACAO[verificacao.motivo ?? ""] ?? ORIENTACOES_VERIFICACAO.outro}</p>
+          <Link href="/ajuda" className="w-fit underline">Ajuda e segurança</Link>
+        </Aviso>
+      ) : (
+        <Aviso tipo="atencao">A situação da verificação está indisponível agora. Atualize a página para consultar novamente.</Aviso>
       )}
       {recursos.banner_moderado_motivo && (
         <Aviso tipo="atencao">

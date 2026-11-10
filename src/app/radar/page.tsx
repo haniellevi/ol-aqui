@@ -11,7 +11,8 @@ import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { acessoRadar, meusPedidos, minhasPropostas, planosComRadar } from "@/lib/dados/radar";
 import { linkPedirRadar } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
-import { RadarDeNegocios, type PedidoRadar, type CategoriaRadar } from "@/components/radar/radar-de-negocios";
+import { Chip } from "@/components/ui/chip";
+import { RadarDeNegocios, type PedidoRadar } from "@/components/radar/radar-de-negocios";
 import { AbasRadar, type AbaRadar } from "@/components/radar/abas-radar";
 import { ExplicacaoRadar } from "@/components/radar/explicacao-radar";
 import { AtualizarRadar } from "@/components/radar/atualizar-radar";
@@ -22,10 +23,11 @@ export const metadata = {
   description: "Peça o que você procura e as lojas da região mandam ofertas.",
 };
 
+const POR_PAGINA = 40;
+const PAGINA_MAXIMA = 25001;
+
 type LinhaFeed = {
   id: string;
-  categoria: CategoriaRadar;
-  categoria_id: string | null;
   titulo: string;
   detalhes: string | null;
   preco_min_centavos: number | null;
@@ -44,12 +46,15 @@ type LinhaFeed = {
   sou_comprador: boolean;
 };
 
-export default async function RadarPage({ searchParams }: { searchParams: Promise<{ aba?: string; q?: string }> }) {
-  const { aba, q } = await searchParams;
+type ParametrosRadar = Promise<{ aba?: string; q?: string; nicho?: string; pagina?: string; arquivo?: string }>;
+
+export default async function RadarPage({ searchParams }: { searchParams: ParametrosRadar }) {
+  const { aba, q, nicho, pagina, arquivo } = await searchParams;
+  const textoBusca = typeof q === "string" ? q : null;
   const { userId } = await auth();
 
   // Visitante: explica o Radar em 3 passos (pedir exige entrar com o celular).
-  if (!userId) return <ExplicacaoRadar textoBusca={q ?? null} />;
+  if (!userId) return <ExplicacaoRadar textoBusca={textoBusca} />;
 
   await garantirPerfil();
   const conta = await meuPerfilEVitrine();
@@ -59,19 +64,24 @@ export default async function RadarPage({ searchParams }: { searchParams: Promis
   // Quem vende vê os pedidos da região e as propostas que mandou; todos veem os próprios pedidos.
   const abas: AbaRadar[] = vende ? ["regiao", "meus", "propostas"] : ["meus", "regiao"];
   const atual: AbaRadar = abas.includes(aba as AbaRadar) ? (aba as AbaRadar) : vende ? "regiao" : "meus";
-  const linkPedir = linkPedirRadar(q ?? null);
+  const linkPedir = linkPedirRadar(textoBusca);
   const navAbas = <AbasRadar atual={atual} abas={abas} />;
 
   if (atual === "meus") {
-    const pedidos = await meusPedidos();
+    const arquivados = arquivo === "1";
+    const pedidos = await meusPedidos(arquivados);
     return (
-      <Moldura titulo="Meus pedidos" abas={navAbas}>
-        {pedidos.length > 0 && (
+      <Moldura titulo={arquivados ? "Pedidos arquivados" : "Meus pedidos"} abas={navAbas}>
+        <nav aria-label="Histórico de pedidos" className="flex flex-wrap gap-2">
+          <Chip href="/radar?aba=meus" ativo={!arquivados}>Pedidos</Chip>
+          <Chip href="/radar?aba=meus&arquivo=1" ativo={arquivados}>Arquivados</Chip>
+        </nav>
+        {!arquivados && pedidos.length > 0 && (
           <Botao href={linkPedir} larguraTotal>
             Pedir outra coisa
           </Botao>
         )}
-        <ListaMeusPedidos pedidos={pedidos} linkPedir={linkPedir} />
+        <ListaMeusPedidos pedidos={pedidos} linkPedir={linkPedir} arquivados={arquivados} />
       </Moldura>
     );
   }
@@ -88,22 +98,25 @@ export default async function RadarPage({ searchParams }: { searchParams: Promis
   // Aba "Pedidos na região".
   const supabase = await createClient();
   const [{ temAcesso, restantes }, planos, categorias] = await Promise.all([acessoRadar(), planosComRadar(), listarCategorias()]);
-  const grupoCategoria = new Map(categorias.flatMap((c) => [c, ...c.filhas].map((f) => [f.id, c.id])));
-  const { data, error } = await supabase
-    .rpc("radar_feed")
-    .eq("microrregiao_id", conta?.perfil.microrregiao_id ?? "")
-    .select(
-      "id, categoria, categoria_id, titulo, detalhes, preco_min_centavos, preco_max_centavos, categoria_nome, cidade, urgencia, total_propostas, max_propostas, modo_contato, propostas_ate, criado_em, comprador_certificado, comprador_primeiro_nome, ja_propus, sou_comprador",
-    )
-    .order("criado_em", { ascending: false })
-    .limit(40);
+  const categoria = categorias.flatMap((c) => [c, ...c.filhas]).find((c) => c.id === nicho);
+  let filtro = "todas";
+  if (categoria) filtro = "categoria";
+  else if (nicho === "sem_categoria" || (nicho === "meu_nicho" && vende)) filtro = nicho;
+  const nichoAtivo = categoria?.id ?? filtro;
+  const numeroPagina = typeof pagina === "string" ? Number(pagina) : 1;
+  const atualPagina = Number.isSafeInteger(numeroPagina) && numeroPagina >= 1 && numeroPagina <= PAGINA_MAXIMA ? numeroPagina : 1;
 
+  const { data, error } = await supabase.rpc("radar_feed_regional", {
+    p_filtro: filtro,
+    p_categoria_id: categoria?.id ?? null,
+    p_limite: POR_PAGINA + 1,
+    p_deslocamento: (atualPagina - 1) * POR_PAGINA,
+  });
   if (error) throw new Error("Não foi possível carregar os pedidos da região.");
 
-  const pedidos: PedidoRadar[] = ((data ?? []) as unknown as LinhaFeed[]).map((p) => ({
+  const linhas = (data ?? []) as LinhaFeed[];
+  const pedidos: PedidoRadar[] = linhas.slice(0, POR_PAGINA).map((p) => ({
     id: p.id,
-    categoria: p.categoria,
-    categoriaFiltro: (p.categoria_id && grupoCategoria.get(p.categoria_id)) || "sem_categoria",
     titulo: p.titulo,
     cidade: p.cidade,
     urgencia: p.urgencia,
@@ -123,12 +136,26 @@ export default async function RadarPage({ searchParams }: { searchParams: Promis
     compradorNome: temAcesso ? p.comprador_primeiro_nome : null,
   }));
 
+  function linkPagina(n: number) {
+    const parametros = new URLSearchParams({ aba: "regiao", nicho: nichoAtivo });
+    if (textoBusca) parametros.set("q", textoBusca);
+    if (n > 1) parametros.set("pagina", String(n));
+    return `/radar?${parametros}`;
+  }
+
   return (
     <RadarDeNegocios
       pedidos={pedidos}
-      categorias={[{ valor: "todas", rotulo: "Tudo" }, ...categorias.map((c) => ({ valor: c.id, rotulo: c.nome })), { valor: "sem_categoria", rotulo: "Sem categoria" }]}
+      categorias={categorias}
+      nicho={nichoAtivo}
+      vende={vende}
+      textoBusca={textoBusca}
+      pagina={atualPagina}
+      anterior={atualPagina > 1 ? linkPagina(atualPagina - 1) : undefined}
+      proxima={linhas.length > POR_PAGINA && atualPagina < PAGINA_MAXIMA ? linkPagina(atualPagina + 1) : undefined}
       temAcesso={temAcesso}
       propostasRestantes={temAcesso ? restantes : 0}
+      emTeste={conta.plano?.e_teste === true}
       planos={planos.map((p) => ({ codigo: p.codigo, nome: p.nome, preco_centavos: p.preco_centavos, periodo_dias: p.periodo_dias }))}
       abas={navAbas}
     />

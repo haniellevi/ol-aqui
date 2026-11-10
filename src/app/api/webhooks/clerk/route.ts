@@ -97,42 +97,42 @@ async function apagarConta(id: string) {
     // Gatilhos do banco também recusam congelamento ocorrido depois da consulta inicial.
     ok(await db.from("anuncios").delete().in("vitrine_id", ids));
     ok(await db.from("radar_propostas").delete().in("vitrine_id", ids));
-    ok(
-      await db
-        .from("vitrines_lojas")
-        .update({
-          status: "suspensa",
-          nome: "Loja encerrada",
-          cidade: "Conta excluída",
-          bairro: null,
-          criado_ip: null,
-          selo_loja_verificada: false,
-          descricao: null,
-          whatsapp: null,
-          cnpj: null,
-          logo_url: null,
-          capa_url: null,
-          // dados da vitrine completa (endereço exato, localização, redes, textos, horários, banner)
-          sobre: null,
-          endereco: null,
-          lat: null,
-          lng: null,
-          instagram: null,
-          entrega_obs: null,
-          horarios: null,
-          formas_pagamento: [],
-          faz_entrega: null,
-          banner_tipo: "modelo",
-          banner_url: null,
-          banner_moderado_url: null,
-          banner_moderado_motivo: null,
-          banner_moderado_em: null,
-        })
-        .in("id", ids),
-    );
-    // A URL antiga pode conter o nome da pessoa. Cada UUID gera uma URL única sem esse nome.
+    // Nome e endereço de anonimização precisam entrar juntos. A URL antiga pode conter dados pessoais.
     for (const vitrineId of ids) {
-      ok(await db.from("vitrines_lojas").update({ slug: `encerrada-${vitrineId}` }).eq("id", vitrineId));
+      ok(
+        await db
+          .from("vitrines_lojas")
+          .update({
+            status: "suspensa",
+            nome: "Loja encerrada",
+            slug: `encerrada-${vitrineId}`,
+            cidade: "Conta excluída",
+            bairro: null,
+            criado_ip: null,
+            selo_loja_verificada: false,
+            descricao: null,
+            whatsapp: null,
+            cnpj: null,
+            logo_url: null,
+            capa_url: null,
+            // dados da vitrine completa (endereço exato, localização, redes, textos, horários, banner)
+            sobre: null,
+            endereco: null,
+            lat: null,
+            lng: null,
+            instagram: null,
+            entrega_obs: null,
+            horarios: null,
+            formas_pagamento: [],
+            faz_entrega: null,
+            banner_tipo: "modelo",
+            banner_url: null,
+            banner_moderado_url: null,
+            banner_moderado_motivo: null,
+            banner_moderado_em: null,
+          })
+          .eq("id", vitrineId),
+      );
     }
     // seções próprias (os produtos delas saem junto, em cascata)
     ok(await db.from("loja_secoes").delete().in("vitrine_id", ids));

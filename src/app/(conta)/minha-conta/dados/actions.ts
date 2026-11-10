@@ -8,7 +8,7 @@ import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { sincronizarPerfil } from "@/lib/perfil";
 import { whatsappDigitado } from "@/lib/formato";
 
-export type EstadoDados = { ok?: boolean; erro?: string; campos?: Record<string, string> } | null;
+export type EstadoDados = { ok?: boolean; erro?: string; campos?: Record<string, string>; whatsappVinculado?: boolean } | null;
 const SEM_LOGIN = "Entre na sua conta para continuar.";
 const FALHOU = "Não conseguimos salvar agora. Seu preenchimento foi mantido; tente novamente.";
 const texto = (form: FormData, campo: string) => {
@@ -56,9 +56,9 @@ export async function atualizarPerfilClerk(): Promise<EstadoDados> {
     if (!userId) return { erro: SEM_LOGIN };
     const usuario = await currentUser();
     if (!usuario || usuario.id !== userId) return { erro: SEM_LOGIN };
-    await sincronizarPerfil(usuario);
+    const sincronizacao = await sincronizarPerfil(usuario);
     atualizarTelas();
-    return { ok: true };
+    return sincronizacao?.whatsappVinculado ? { ok: true, whatsappVinculado: true } : { ok: true };
   } catch { return { erro: "Não conseguimos atualizar a foto e a confirmação no OL-AKI. Tente novamente." }; }
 }
 

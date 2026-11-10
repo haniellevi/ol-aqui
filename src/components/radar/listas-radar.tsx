@@ -12,17 +12,19 @@ const CARTAO =
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 // Aba "Meus pedidos": cada pedido com a situação, as propostas e o prazo.
-export function ListaMeusPedidos({ pedidos, linkPedir }: { pedidos: MeuPedidoRadar[]; linkPedir: string }) {
+export function ListaMeusPedidos({ pedidos, linkPedir, arquivados = false }: {
+  pedidos: MeuPedidoRadar[];
+  linkPedir: string;
+  arquivados?: boolean;
+}) {
   if (pedidos.length === 0) {
     return (
       <Vazio
         icone={<Radar />}
-        titulo="Você ainda não pediu nada"
-        texto="Diga o que você procura e as lojas da região mandam ofertas para você."
+        titulo={arquivados ? "Nenhum pedido arquivado" : "Nenhum pedido nesta lista"}
+        texto={arquivados ? "Os pedidos que você arquivar aparecem aqui com as ofertas recebidas." : "Diga o que você procura e as lojas da região mandam ofertas para você."}
       >
-        <Botao href={linkPedir} larguraTotal>
-          Pedir no Radar
-        </Botao>
+        {!arquivados && <Botao href={linkPedir} larguraTotal>Pedir no Radar</Botao>}
       </Vazio>
     );
   }
@@ -43,7 +45,7 @@ export function ListaMeusPedidos({ pedidos, linkPedir }: { pedidos: MeuPedidoRad
                       <Hourglass className="size-3.5" aria-hidden />
                       Propostas até {dataHoraCurta(p.propostas_ate)}
                     </span>
-                  ) : p.modo_contato === "whatsapp_direto" ? (
+                  ) : p.modo_contato === "whatsapp_direto" && p.situacao === "aberto" ? (
                     <span className="inline-flex items-center gap-1">
                       <MessageCircle className="size-3.5" aria-hidden />
                       Lojas chamam no WhatsApp
