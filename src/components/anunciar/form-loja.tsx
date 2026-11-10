@@ -9,6 +9,7 @@ import { criarLoja, verificarSlug, type EstadoLoja } from "@/app/(conta)/quero-v
 import { linkLoja, slugDoTitulo, urlAbsoluta } from "@/lib/formato";
 import { AvisoErro } from "./aviso-erro";
 import { aoEnviar } from "./enviar";
+import { classesCampo } from "@/components/ui/input";
 
 // T15 · Dados da loja: nome, link (com conferência na hora se está livre), WhatsApp e cidade.
 // Depois mostra "Sua vitrine: mercadodaregiao.com.br/loja/..." com Compartilhar e "Criar primeiro anúncio".
@@ -203,7 +204,7 @@ export function FormLoja({
               onChange={(e) => setCidade(e.target.value)}
               aria-invalid={erroDe("cidade") ? true : undefined}
               aria-describedby={erroDe("cidade") ? "campo-cidade-erro" : undefined}
-              className={`h-10 w-full appearance-none rounded-campo border-2 bg-cartao pl-3 pr-10 text-base focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 ${erroDe("cidade") ? "border-perigo" : "border-borda"}`}
+              className={`${classesCampo} h-10 appearance-none pr-10`}
             >
               <option value="">Escolha a cidade</option>
               {cidades.map((c) => (

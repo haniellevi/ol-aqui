@@ -1,12 +1,9 @@
 import type { ComponentProps, ReactNode } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 // Campo de formulário: rótulo sempre visível, letra 16px (evita zoom do iPhone),
 // erro escrito embaixo (não só borda vermelha) e dica opcional.
-
-const ESTILO_CAIXA =
-  "olaki-campo w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto placeholder:text-texto-suave " +
-  "focus:outline-hidden focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 " +
-  "disabled:bg-fundo disabled:opacity-70";
 
 type Comum = {
   /** Texto do rótulo (obrigatório: todo campo tem nome). */
@@ -35,7 +32,6 @@ export function Campo(props: CampoProps) {
   const idDica = dica ? `${id}-dica` : undefined;
   const idErro = erro ? `${id}-erro` : undefined;
   const descritoPor = [idErro, idDica].filter(Boolean).join(" ") || undefined;
-  const borda = erro ? "border-perigo" : "border-borda-campo";
   const aria = { "aria-invalid": erro ? true : undefined, "aria-describedby": descritoPor };
 
   return (
@@ -51,21 +47,9 @@ export function Campo(props: CampoProps) {
           </span>
         )}
         {multilinha ? (
-          <textarea
-            {...(resto as ComponentProps<"textarea">)}
-            {...aria}
-            id={id}
-            name={name}
-            className={`${ESTILO_CAIXA} ${borda} min-h-24 resize-y py-2 leading-6`}
-          />
+          <Textarea {...(resto as ComponentProps<"textarea">)} {...aria} id={id} name={name} />
         ) : (
-          <input
-            {...(resto as ComponentProps<"input">)}
-            {...aria}
-            id={id}
-            name={name}
-            className={`${ESTILO_CAIXA} ${borda} h-10 ${prefixo ? "pl-11" : ""}`}
-          />
+          <Input {...(resto as ComponentProps<"input">)} {...aria} id={id} name={name} className={prefixo ? "pl-11" : undefined} />
         )}
       </div>
       {erro && (

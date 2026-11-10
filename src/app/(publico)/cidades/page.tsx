@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { escolherCidade } from "./actions";
 import { Botao } from "@/components/ui/botao";
+import { NativeSelect } from "@/components/ui/native-select";
 export const metadata = { title: "Escolher cidade" };
 export default async function Cidades({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   const db = await createClient();
@@ -12,10 +13,10 @@ export default async function Cidades({ searchParams }: { searchParams: Promise<
     {(await searchParams).erro && <p role="alert" className="text-perigo">Escolha uma cidade disponível.</p>}
     <form action={escolherCidade} className="flex flex-col gap-4">
       <label htmlFor="cidade" className="font-semibold">Cidade</label>
-      <select id="cidade" name="cidade" required defaultValue="" className="min-h-10 rounded-campo border-2 border-borda bg-cartao px-3">
+      <NativeSelect id="cidade" name="cidade" required defaultValue="">
         <option value="">Escolha a cidade</option>
         {(data ?? []).map(c => <option key={c.id} value={c.id}>{c.nome} ({c.uf})</option>)}
-      </select>
+      </NativeSelect>
       <Botao type="submit">Usar esta cidade</Botao>
     </form>
   </main>;

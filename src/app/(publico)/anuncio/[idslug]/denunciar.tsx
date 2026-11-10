@@ -7,6 +7,7 @@ import { Botao, classesBotao } from "@/components/ui/botao";
 import { Alert } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { denunciarAnuncio, type EstadoDenuncia } from "./actions";
+import { Textarea } from "@/components/ui/textarea";
 
 // F9 · Denunciar: motivos prontos em botões. Com várias denúncias o anúncio sai do ar
 // até a revisão (regra do banco). Precisa estar logado (guardamos quem denunciou).
@@ -70,12 +71,11 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
               <label htmlFor="denuncia-detalhes" className="text-base font-semibold">
                 Conte mais <span className="font-normal text-texto-suave">(opcional; obrigatório em “Outro”)</span>
               </label>
-              <textarea
+              <Textarea
                 id="denuncia-detalhes"
                 name="detalhes"
                 maxLength={900}
                 rows={3}
-                className="w-full rounded-campo border-2 border-borda bg-cartao px-3 py-3 text-base leading-6 focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30"
               />
             </div>
             {estado && !estado.ok && (

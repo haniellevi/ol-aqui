@@ -10,6 +10,7 @@ import { AtualizarRadar } from "./atualizar-radar";
 import { faixaPreco, dataHoraCurta } from "./util";
 import { LINK_PLANOS, linkMeuPedidoRadar, linkPedidoRadarLoja } from "@/lib/rotas";
 import { Badge } from "@/components/ui/badge";
+import { NativeSelect } from "@/components/ui/native-select";
 
 export type PedidoRadar = {
   id: string;
@@ -94,13 +95,7 @@ export function RadarDeNegocios({
           {textoBusca && <input type="hidden" name="q" value={textoBusca} />}
           <div className="min-w-0 flex-[1_1_14rem]">
             <label htmlFor="radar-nicho" className="mb-1 block text-sm font-semibold text-beringela">Filtrar por categoria</label>
-            <select
-              id="radar-nicho"
-              name="nicho"
-              defaultValue={nicho}
-              key={nicho}
-              className="h-10 w-full rounded-campo border border-borda-campo bg-cartao px-3 text-base text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
-            >
+            <NativeSelect id="radar-nicho" name="nicho" defaultValue={nicho} key={nicho}>
               <option value="todas">Todas as categorias</option>
               {vende && <option value="meu_nicho">Das minhas categorias</option>}
               <option value="sem_categoria">Sem categoria</option>
@@ -112,7 +107,7 @@ export function RadarDeNegocios({
               ) : (
                 <option key={c.id} value={c.id}>{c.nome}</option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
           <Botao type="submit" variante="secundario">Filtrar</Botao>
         </form>

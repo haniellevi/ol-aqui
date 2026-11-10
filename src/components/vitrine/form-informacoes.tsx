@@ -10,6 +10,7 @@ import { Aviso } from "@/components/conta/aviso";
 import { DIAS_EM_ORDEM, NOME_DIA, limparInstagram } from "@/components/vitrine/regras";
 import { salvarInformacoes, type EstadoVitrine } from "@/app/(conta)/minha-conta/loja/vitrine-actions";
 import type { DiaSemana, FaixaHorario, Horarios } from "@/lib/tipos-vitrine";
+import { Input } from "@/components/ui/input";
 
 // Informações da loja (todas opcionais): endereço + localização, horários por dia, Instagram,
 // "Sobre nós", formas de pagamento (lista do painel) e entrega.
@@ -212,25 +213,25 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                       <div key={i} className="flex flex-wrap items-end gap-2">
                         <label className="flex flex-col gap-1 text-sm font-semibold">
                           Abre
-                          <input
+                          <Input
                             type="time"
                             aria-label={`Abre: ${NOME_DIA[d]}, horário ${i + 1}`}
                             value={f.abre}
                             required
                             onChange={(e) => mudarDia(d, (x) => ({ ...x, faixas: x.faixas.map((y, j) => (j === i ? { ...y, abre: e.target.value } : y)) }))}
-                            className="h-10 rounded-campo border-2 border-borda bg-cartao px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
+                            className="w-auto"
                           />
                         </label>
                         <label className="flex flex-col gap-1 text-sm font-semibold">
                           Fecha
-                          <input
+                          <Input
                             type="time"
                             aria-label={`Fecha: ${NOME_DIA[d]}, horário ${i + 1}`}
                             value={f.fecha === "24:00" ? "00:00" : f.fecha}
                             disabled={f.fecha === "24:00"}
                             required
                             onChange={(e) => mudarDia(d, (x) => ({ ...x, faixas: x.faixas.map((y, j) => (j === i ? { ...y, fecha: e.target.value } : y)) }))}
-                            className="h-10 rounded-campo border-2 border-borda bg-cartao px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
+                            className="w-auto"
                           />
                         </label>
                         <label className="flex min-h-10 items-center gap-2 text-sm font-semibold">
