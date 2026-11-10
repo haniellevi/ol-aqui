@@ -60,4 +60,3 @@ drop trigger anuncios_moderacao_publicar on public.anuncios;
 create trigger anuncios_moderacao_publicar before update of status on public.anuncios
   for each row when (old.status in ('rascunho', 'pausado', 'expirado', 'vendido') and new.status = 'ativo')
   execute function public.filtro_moderacao();
-
