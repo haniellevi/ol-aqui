@@ -6,6 +6,7 @@ const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul' }, anuncios = [], total = anuncios.length, destaques = [], blocos, erro = false } = {}) {
   return carregar('src/app/(publico)/page.tsx', {
+    './inicio.module.css': { default: { fundo: 'inicio-fundo', categoria: 'inicio-categoria', vazio: 'inicio-vazio' } },
     '@/lib/dados/regiao': { regiaoAtual: async () => regiao },
     '@/lib/dados/categorias': { listarCategorias: async () => [
       { id: 'c1', slug: 'veiculos', nome: 'Veículos', icone: 'car' },

@@ -18,6 +18,7 @@ import { linkCategoria } from "@/lib/formato";
 import { blocosHome } from "@/lib/dados/paginas";
 import { LINK_AJUDA, LINK_PRIVACIDADE, LINK_TERMOS, linkPedirRadar } from "@/lib/rotas";
 import type { BlocoHome } from "@/lib/tipos-paginas";
+import estilos from "./inicio.module.css";
 
 // T2 · Início: busca grande, categorias, "Destaques perto de você" (tipo home, pago),
 // "Lojas em destaque" (tipo loja, pago), faixa do Radar, lojas da região e os mais recentes.
@@ -55,6 +56,7 @@ export default async function Inicio() {
   const normais = recentes.anuncios;
 
   return (
+    <div className={estilos.fundo}>
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4">
       <section aria-labelledby="titulo-inicio" className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -77,7 +79,7 @@ export default async function Inicio() {
                   href={linkCategoria(c.slug)}
                   className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-[13px] font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                 >
-                  <CirculoCategoria nome={c.icone} />
+                  <CirculoCategoria nome={c.icone} className={estilos.categoria} />
                   <span className="max-w-full hyphens-auto break-words">{c.nome}</span>
                 </Link>
               </li>
@@ -129,18 +131,18 @@ export default async function Inicio() {
                 <section
                   key={bloco.chave}
                   aria-labelledby="titulo-radar"
-                  className="flex flex-col gap-4 rounded-card border border-laranja/20 bg-laranja-claro p-4 sm:flex-row sm:items-center sm:p-5"
+                  className="flex flex-col gap-4 rounded-card bg-beringela p-5 text-white sm:flex-row sm:items-center sm:p-6"
                 >
                   <div className="flex flex-1 gap-3">
-                    <Radar className="mt-0.5 size-7 shrink-0 text-laranja-escuro" aria-hidden />
+                    <Radar className="mt-0.5 size-7 shrink-0 text-laranja" aria-hidden />
                     <div className="flex flex-col gap-1">
                       <h2 id="titulo-radar" className="text-lg font-semibold">
                         {textoDe(bloco.titulo, "Não achou o que queria?", lugar)}
                       </h2>
-                      <p className="text-pretty text-base">{textoDe(bloco.texto, "Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.", lugar)}</p>
+                      <p className="text-pretty text-base text-white/85">{textoDe(bloco.texto, "Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.", lugar)}</p>
                     </div>
                   </div>
-                  <Botao href={linkPedirRadar()} variante="secundario" className="sm:w-auto sm:shrink-0" larguraTotal>
+                  <Botao href={linkPedirRadar()} className="focus-visible:outline-white sm:w-auto sm:shrink-0" larguraTotal>
                     {textoDe(bloco.botao, "Pedir no Radar", lugar)}
                   </Botao>
                 </section>
@@ -162,6 +164,7 @@ export default async function Inicio() {
                     prioridade={destaques.length ? 0 : 2}
                     vazio={
                       <Vazio
+                        className={estilos.vazio}
                         titulo="Seu anúncio pode ser o primeiro"
                         texto={textoDe(bloco.texto, "Seja o primeiro: anunciar é rápido e você recebe as conversas no WhatsApp.", lugar)}
                       >
@@ -196,5 +199,6 @@ export default async function Inicio() {
         </Link>
       </nav>
     </main>
+    </div>
   );
 }
