@@ -63,12 +63,11 @@ export default async function PaginaMinhaConta() {
           detalhe: conta.rascunhos > 0 ? `${conta.rascunhos} ${conta.rascunhos === 1 ? "rascunho" : "rascunhos"}` : undefined,
         },
         { href: "/minha-conta/plano", nome: "Meu plano", icone: <CreditCard /> },
-        ...(ehLoja
-          ? [{ href: "/minha-conta/loja", nome: "Minha loja", icone: <Store /> }]
-          : [{ href: "/minha-conta/verificacao", nome: "Verificação de vendedor", icone: <ShieldCheck /> }]),
+        ...(!ehLoja ? [{ href: "/minha-conta/verificacao", nome: "Verificação de vendedor", icone: <ShieldCheck /> }] : []),
       ]
     : [];
   const paraTodos: Item[] = [
+    { href: "/minha-conta/lojas", nome: "Minhas lojas", icone: <Store /> },
     { href: LINK_ATENDIMENTO, nome: "Atendimento", icone: <MessagesSquare /> },
     { href: "/radar", nome: "Radar", icone: <Radar /> },
     { href: "/minha-conta/favoritos", nome: "Favoritos", icone: <Heart /> },

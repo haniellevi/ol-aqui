@@ -51,12 +51,16 @@ export type DadosInformacoes = {
   entrega_obs: string | null;
 };
 
-export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInformacoes; formasDoPainel: string[] }) {
+export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
+  dados: DadosInformacoes;
+  formasDoPainel: string[];
+  salvarComoGerente?: (anterior: EstadoVitrine, form: FormData) => Promise<EstadoVitrine>;
+}) {
   const [mostrarSucesso, setMostrarSucesso] = useState(false);
   const [estado, acao, salvando] = useActionState<EstadoVitrine, FormData>(async (anterior, form) => {
     setMostrarSucesso(true);
     try {
-      return await salvarInformacoes(anterior, form);
+      return await (salvarComoGerente ?? salvarInformacoes)(anterior, form);
     } catch {
       return { erro: "Confira a conexão e tente salvar de novo. Seus dados continuam preenchidos." };
     }
@@ -284,26 +288,28 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
         <h2 id="titulo-sobre" className="text-lg font-bold">
           Sobre a loja
         </h2>
-        <Campo
-          rotulo="Instagram da loja"
-          name="instagram"
-          opcional
-          prefixo="@"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          value={instagram}
-          onChange={(e) => setInstagram(limparInstagram(e.target.value))}
-          maxLength={30}
-          placeholder="minhaloja"
-          dica="Só o nome, sem o @."
-          erro={campos.instagram}
-        />
-        <Campo rotulo="Site da loja" name="site_url" type="url" opcional maxLength={300}
-          defaultValue={dados.site_url ?? ""} placeholder="https://minhaloja.com.br" erro={campos.site_url} />
-        <Campo rotulo="Telefone comercial" name="telefone_publico" opcional {...telefone.campo}
-          erro={telefone.erro ?? campos.telefone_publico} />
-        <p className="text-sm text-texto-suave">Site e telefone ficam públicos após a conferência da loja.</p>
+        {!salvarComoGerente && (<>
+          <Campo
+            rotulo="Instagram da loja"
+            name="instagram"
+            opcional
+            prefixo="@"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            value={instagram}
+            onChange={(e) => setInstagram(limparInstagram(e.target.value))}
+            maxLength={30}
+            placeholder="minhaloja"
+            dica="Só o nome, sem o @."
+            erro={campos.instagram}
+          />
+          <Campo rotulo="Site da loja" name="site_url" type="url" opcional maxLength={300}
+            defaultValue={dados.site_url ?? ""} placeholder="https://minhaloja.com.br" erro={campos.site_url} />
+          <Campo rotulo="Telefone comercial" name="telefone_publico" opcional {...telefone.campo}
+            erro={telefone.erro ?? campos.telefone_publico} />
+          <p className="text-sm text-texto-suave">Site e telefone ficam públicos após a conferência da loja.</p>
+        </>)}
         <Campo
           rotulo="Sobre nós"
           name="sobre"
@@ -320,9 +326,9 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
       {/* Pagamento e entrega */}
       <section aria-labelledby="titulo-pagamento" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
         <h2 id="titulo-pagamento" className="text-lg font-bold">
-          Pagamento e entrega
+          {salvarComoGerente ? "Entrega" : "Pagamento e entrega"}
         </h2>
-        {opcoesPagamento.length > 0 && (
+        {!salvarComoGerente && opcoesPagamento.length > 0 && (
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-base font-semibold">
               Formas de pagamento <span className="font-normal text-texto-suave">(toque para marcar)</span>
