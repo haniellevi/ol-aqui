@@ -127,6 +127,8 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 
 **3ª passada (10/11/2026):** botões só de ícone (fechar, sino, setas da galeria, coração) têm 40px; ícone de status 40px; linhas de lista 48 a 56px; foto da loja 72px no topo da vitrine. Barras fixas ficam a 3,5rem do fim (altura da barra de baixo). O painel admin usa a mesma escala de letra do app, com campos e botões de 36px no mouse.
 
+**4ª passada (10/11/2026), "telas poluídas":** a escala desceu mais um degrau e vale no lugar das anteriores: legenda 11px, apoio/botões/rótulos 12, texto 13, título de card 14, seção 15, título da tela 16 (18 no computador). Campos 13px (16 só no iPhone). Regras de limpeza: um selo por card no máximo, "Patrocinado" uma vez por seção quando a seção inteira é paga, números do anúncio em uma linha só, sem frase de apoio embaixo do título da tela quando o título já explica.
+
 ## 4. Ícones e imagens
 
 - Ícones: **lucide-react** (já está no projeto), traço 2px, sempre **com texto embaixo ou ao lado** nos menus. Ícone sozinho só em coisas universais (fechar, voltar, coração de favorito, lupa).

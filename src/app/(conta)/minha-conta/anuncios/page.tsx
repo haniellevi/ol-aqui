@@ -108,12 +108,12 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
       </nav>
 
       {loja && !podeFixar && (aba.chave === "ativos" || aba.chave === "todos") && lista.some((a) => a.status === "ativo") && (
-        <p className="flex flex-wrap items-center gap-x-2 text-base text-texto-suave">
-          <Pin className="size-4 shrink-0 text-laranja-escuro" aria-hidden />
+        <p className="flex flex-wrap items-center gap-x-1.5 text-legenda text-texto-suave">
+          <Pin className="size-3.5 shrink-0 text-laranja-escuro" aria-hidden />
           <span>Fixar produtos no topo da loja: {disponivelFixar ?? "não faz parte do seu plano agora"}.</span>
           <Link
             href={`${LINK_PLANOS}?origem=vitrine`}
-            className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+            className="inline-flex min-h-8 items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
           >
             Ver os planos
           </Link>
@@ -213,9 +213,9 @@ function LinhaAnuncio({
       )}
 
       {a.status !== "rascunho" && (
-        <dl className="grid grid-cols-3 gap-2 rounded-card bg-fundo p-2 text-center">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1">
           <Numero icone={<Eye />} rotulo="visualizações" valor={a.visualizacoes} />
-          <Numero icone={<MessageCircle />} rotulo="cliques no WhatsApp" valor={a.cliques_whatsapp} />
+          <Numero icone={<MessageCircle />} rotulo="no WhatsApp" valor={a.cliques_whatsapp} />
           <Numero icone={<Heart />} rotulo="favoritos" valor={a.total_favoritos} />
         </dl>
       )}
@@ -254,10 +254,10 @@ function LinhaAnuncio({
 
 function Numero({ icone, rotulo, valor }: { icone: React.ReactNode; rotulo: string; valor: number }) {
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <dt className="order-2 text-legenda leading-4 text-texto-suave">{rotulo}</dt>
-      <dd className="order-1 flex items-center gap-1 text-base font-bold">
-        <span className="inline-flex text-laranja-escuro [&>svg]:size-4" aria-hidden>
+    <div className="flex items-center gap-1 text-legenda text-texto-suave">
+      <dt className="order-2">{rotulo}</dt>
+      <dd className="order-1 flex items-center gap-1 font-semibold text-texto">
+        <span className="inline-flex text-laranja-escuro [&>svg]:size-3.5" aria-hidden>
           {icone}
         </span>
         {inteiro(valor)}

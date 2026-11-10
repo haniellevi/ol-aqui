@@ -44,13 +44,13 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
             </span>
           )}
           {a.destaque && (
-            <span className="absolute left-2 top-2 rounded-full bg-patrocinado-fundo px-2 py-0.5 text-legenda font-bold text-beringela">
+            <span className="absolute left-2 top-2 rounded-full bg-patrocinado-fundo px-1.5 py-px text-xs font-semibold text-beringela">
               Patrocinado
             </span>
           )}
         </div>
         <div className="flex flex-1 flex-col gap-0.5 p-2.5">
-          <span className="text-lg font-bold leading-5 tabular-nums">{preco(a.preco_centavos)}</span>
+          <span className="text-lg font-semibold leading-5 tabular-nums">{preco(a.preco_centavos)}</span>
           <h3 className="line-clamp-2 text-sm leading-5">{a.titulo}</h3>
           <span className="mt-auto pt-1 text-legenda leading-[18px] text-texto-suave">
             {a.cidade}
@@ -63,9 +63,6 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
               </>
             )}
           </span>
-          {a.vendedor_pago && a.vitrine_tipo === "loja" && (
-            <span className="w-fit rounded-full bg-fundo px-2 py-0.5 text-legenda font-semibold text-beringela">Loja</span>
-          )}
           {a.vendedor_pago && a.vitrine_tipo === "pf" && a.vendedor_pf_verificado && (
             <span className="flex w-fit items-center gap-1 rounded-full bg-sucesso-fundo px-2 py-0.5 text-legenda font-semibold text-verde-escuro">
               <ShieldCheck className="size-3.5" aria-hidden /> Vendedor individual verificado
@@ -76,7 +73,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
               {a.vitrine_selo && <ShieldCheck className="size-4 shrink-0 text-verde-escuro" aria-hidden />}
               <span className="truncate">
                 {a.vitrine_nome}
-                {a.vitrine_selo && <span className="font-semibold text-verde-escuro"> · Loja verificada</span>}
+                {a.vitrine_selo && <span className="sr-only"> · Loja verificada</span>}
               </span>
             </span>
           )}

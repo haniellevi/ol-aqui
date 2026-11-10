@@ -23,27 +23,27 @@
   --color-sucesso-fundo: #ecf8f1; /* verde-escuro sobre ele: 5,0:1 */
 
   --font-sans: var(--font-poppins), system-ui, sans-serif;
-  /* Escala de letras (plano de design, 2ª passada de 10/11/2026): um degrau abaixo da anterior.
-     12 legenda · 13 apoio, botões e rótulos · 14 texto · 15 título de card · 16 seção · 18/20 título da tela. */
+  /* Escala de letras (plano de design, 4ª passada de 10/11/2026): mais um degrau abaixo.
+     11 legenda · 12 apoio, botões e rótulos · 13 texto · 14 título de card · 15 seção · 16/18 título da tela. */
   --text-xs: 0.6875rem;
   --text-xs--line-height: 1.4;
-  --text-sm: 0.8125rem;
+  --text-sm: 0.75rem;
   --text-sm--line-height: 1.45;
-  --text-base: 0.875rem;
+  --text-base: 0.8125rem;
   --text-base--line-height: 1.5;
-  --text-lg: 0.9375rem;
+  --text-lg: 0.875rem;
   --text-lg--line-height: 1.45;
-  --text-xl: 1rem;
+  --text-xl: 0.9375rem;
   --text-xl--line-height: 1.4;
-  --text-2xl: 1.25rem;
+  --text-2xl: 1.125rem;
   --text-2xl--line-height: 1.3;
-  --text-3xl: 1.5rem;
+  --text-3xl: 1.25rem;
   --text-3xl--line-height: 1.25;
-  --text-titulo: 1.125rem;
+  --text-titulo: 1rem;
   --text-titulo--line-height: 1.3;
-  --text-rotulo: 0.8125rem;
+  --text-rotulo: 0.75rem;
   --text-rotulo--line-height: 1.45;
-  --text-legenda: 0.75rem;
+  --text-legenda: 0.6875rem;
   --text-legenda--line-height: 1.4;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
@@ -76,19 +76,19 @@ body {
 
 input, textarea { caret-color: var(--color-laranja-escuro); }
 
-/* Campos acompanham o texto (14px). Só o iPhone/iPad recebe 16px, porque o Safari do iOS
+/* Campos acompanham o texto (13px). Só o iPhone/iPad recebe 16px, porque o Safari do iOS
    dá zoom sozinho em campo com letra menor; Android e computador não têm esse problema. */
 @layer base {
-  input, select, textarea { font-size: 0.875rem; }
+  input, select, textarea { font-size: 0.8125rem; }
   @supports (-webkit-touch-callout: none) {
     input, select, textarea { font-size: 1rem; }
   }
 }
 
 @layer utilities {
-  /* Título da tela: 18px no celular, 20px do tablet para cima. */
+  /* Título da tela: 16px no celular, 18px do tablet para cima. */
   @media (min-width: 48rem) {
-    .text-titulo { font-size: 1.25rem; line-height: 1.3; }
+    .text-titulo { font-size: 1.125rem; line-height: 1.3; }
   }
   @supports (-webkit-touch-callout: none) {
     :is(.text-base, .text-sm):where(input, select, textarea) { font-size: 1rem; }
