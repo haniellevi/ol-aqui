@@ -47,6 +47,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
   ]);
   const pagina = typeof params.pagina === "string" && /^\d{1,4}$/.test(params.pagina) ? Math.max(1, Number(params.pagina)) : 1;
   const lugar = lugarDaRegiao(regiao);
+  const blocosAtivos = blocos.filter((bloco) => bloco.ativo);
+  const exibeLojasDaRegiao = regiao && blocosAtivos.some((bloco) => bloco.chave === "lojas_regiao");
   const [normais, destaques] = regiao ? await Promise.all([
     anunciosCatalogo(regiao, "feed", POR_VEZ, null, (pagina - 1) * POR_VEZ),
     anunciosCatalogo(regiao, "patrocinados", 12),
@@ -62,9 +64,9 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           </h1>
         </div>
         <CampoBusca id="busca-inicio" />
-        <Link href="/lojas" className="inline-flex min-h-8 w-fit items-center gap-1 self-end rounded-campo text-sm font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro">
-          <span>Ver lojas de {lugar}</span>
-        </Link>
+        {!exibeLojasDaRegiao && (
+          <Botao href="/lojas" variante="secundario" className="self-start">Ver todas as lojas</Botao>
+        )}
       </section>
 
       {categorias.length > 0 && (
@@ -96,8 +98,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
         </nav>
       )}
 
-      {blocos
-        .filter((b) => b.ativo)
+      {blocosAtivos
         .map((bloco) => {
           switch (bloco.chave) {
             case "destaques":

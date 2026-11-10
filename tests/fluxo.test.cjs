@@ -1,10 +1,11 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const { PassThrough } = require('node:stream');
 const { carregar } = require('./carregar.cjs');
 const { centavosDoTexto } = carregar('src/lib/formato.ts');
 const React = require('react');
-const { renderToStaticMarkup } = require('react-dom/server');
-function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul' }, anuncios = [], total = anuncios.length, destaques = [], blocos, erro = false } = {}) {
+const { renderToPipeableStream, renderToStaticMarkup } = require('react-dom/server');
+function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul' }, anuncios = [], total = anuncios.length, destaques = [], blocos, lojas = [], erro = false } = {}) {
   return carregar('src/app/(publico)/page.tsx', {
     './inicio.module.css': { default: { fundo: 'inicio-fundo', categoria: 'inicio-categoria', vazio: 'inicio-vazio' } },
     '@/lib/dados/regiao': { regiaoAtual: async () => regiao },
@@ -12,17 +13,19 @@ function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul
       { id: 'c1', slug: 'veiculos', nome: 'Veículos', icone: 'car' },
       { id: 'c2', slug: 'casa-e-moveis', nome: 'Casa e móveis', icone: 'sofa' },
     ] },
-    '@/lib/dados/catalogo': { anunciosCatalogo: async (r, modo, limite) => {
-      assert.equal(r, regiao);
-      if (modo === 'patrocinados') return destaques;
-      assert.equal(modo, 'feed');
-      assert.equal(limite, 24);
-      if (erro) throw new Error('Não foi possível consultar os anúncios.');
-      return anuncios.map(a => ({ ...a, total }));
-    } },
+    '@/lib/dados/catalogo': {
+      lojasCatalogo: async () => lojas,
+      anunciosCatalogo: async (r, modo, limite) => {
+        assert.equal(r, regiao);
+        if (modo === 'patrocinados') return destaques;
+        assert.equal(modo, 'feed');
+        assert.equal(limite, 24);
+        if (erro) throw new Error('Não foi possível consultar os anúncios.');
+        return anuncios.map(a => ({ ...a, total }));
+      },
+    },
     '@/lib/dados/paginas': { blocosHome: async () => blocos ?? ['destaques', 'radar', 'recentes'].map(chave => ({ chave, ativo: true })) },
     '@/components/anuncio/card-anuncio': { CardAnuncio: ({ anuncio }) => React.createElement('article', null, anuncio.titulo) },
-    '@/components/vitrine/lojas-da-regiao': { LojasDaRegiao: () => null },
     '@/components/destaques/lojas-em-destaque': { LojasEmDestaque: () => null },
   });
 }
@@ -36,11 +39,30 @@ test('início apresenta região, busca GET acessível e destinos das categorias'
   for (const atributo of ['id="busca-inicio"', 'type="search"', 'name="q"']) assert.ok(campo.includes(atributo));
   for (const href of ['/c/veiculos', '/c/casa-e-moveis', '/categorias']) assert.ok(html.includes(`href="${href}"`));
 });
-test('início usa a cidade escolhida em vez da sede e dá acesso ao catálogo', async () => {
-  const pagina = inicio({ regiao: { id: 'r', cidade: 'Bom Jesus', cidadeSede: 'Corrente', nome: 'Extremo Sul' } });
+test('início usa a cidade escolhida e mantém um acesso ao catálogo com o bloco de lojas desligado', async () => {
+  const pagina = inicio({
+    regiao: { id: 'r', cidade: 'Bom Jesus', cidadeSede: 'Corrente', nome: 'Extremo Sul' },
+    blocos: [{ chave: 'lojas_regiao', ativo: false }],
+  });
   const html = renderToStaticMarkup(await pagina.default({ searchParams: Promise.resolve({}) }));
   assert.match(html, /<h1[^>]*>Compre e venda em Bom Jesus e região<\/h1>/);
-  assert.match(html, /href="\/lojas"/);
+  assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /id="titulo-lojas"/);
+});
+test('início mostra um único acesso ao catálogo junto ao título da seção, mesmo sem lojas', async () => {
+  const blocos = [{ chave: 'lojas_regiao', ativo: true }];
+  for (const lojas of [[], [{ id: 'l1', slug: 'multi', nome: 'Multi' }]]) {
+    const pagina = await inicio({ blocos, lojas }).default({ searchParams: Promise.resolve({}) });
+    const destino = new PassThrough();
+    const { pipe } = renderToPipeableStream(pagina, {
+      onAllReady: () => pipe(destino),
+      onError: (erro) => destino.destroy(erro),
+    });
+    const html = Buffer.concat(await destino.toArray()).toString();
+    assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
+    assert.match(html, /id="titulo-lojas"[^>]*>Lojas de Corrente e região<\/h2><a\b[^>]*href="\/lojas"[^>]*><span[^>]*>Ver todas as lojas/);
+    assert.equal(html.includes('href="/loja/multi"'), lojas.length > 0);
+  }
 });
 test('início vazio oferece anúncio e apenas um acesso ao pedido no Radar', async () => {
   const html = renderToStaticMarkup(await inicio().default({ searchParams: Promise.resolve({}) }));
@@ -79,6 +101,7 @@ test('início sem região mantém busca e não inventa localização', async () 
   const html = renderToStaticMarkup(await pagina.default({ searchParams: Promise.resolve({}) }));
   assert.match(html, /Compre e venda em sua região/);
   assert.match(html, /action="\/busca"/);
+  assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
   const metadata = await pagina.generateMetadata();
   assert.equal(metadata.alternates.canonical, '/');
   assert.equal(metadata.title.absolute, 'OLAKI · Compre e venda em sua região');
