@@ -12,7 +12,7 @@ import { validarProposta } from "./validacao";
 import { preco } from "@/lib/formato";
 import type { AnuncioParaProposta, MinhaPropostaNoPedido } from "@/lib/tipos-radar";
 import { Alert } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Folha, FolhaContent, FolhaHeader, FolhaTitle } from "@/components/ui/folha";
 
 type Props = {
   pedidoId: string;
@@ -195,11 +195,11 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
         </div>
       )}
 
-      <Dialog open={aberta} onOpenChange={(abrir) => { if (!abrir && (trava.current || fotoEmCurso.current)) return; setAberta(abrir); }}>
-        <DialogContent className="sm:max-w-xl" showCloseButton={!ocupado}>
-            <DialogHeader>
-              <DialogTitle>{minha ? "Mudar minha proposta" : "Sua proposta"}</DialogTitle>
-            </DialogHeader>
+      <Folha open={aberta} onOpenChange={(abrir) => { if (!abrir && (trava.current || fotoEmCurso.current)) return; setAberta(abrir); }}>
+        <FolhaContent className="sm:max-w-xl" showCloseButton={!ocupado}>
+            <FolhaHeader>
+              <FolhaTitle>{minha ? "Mudar minha proposta" : "Sua proposta"}</FolhaTitle>
+            </FolhaHeader>
 
             <form ref={formulario} action={enviar} noValidate className="min-w-0">
               <fieldset disabled={ocupado} className="flex min-w-0 flex-col gap-5">
@@ -308,8 +308,8 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
               </Botao>
               </fieldset>
             </form>
-        </DialogContent>
-      </Dialog>
+        </FolhaContent>
+      </Folha>
     </>
   );
 }
