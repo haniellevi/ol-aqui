@@ -83,6 +83,8 @@ try:
     print('PASS: avisos do Radar respeitam nicho, plano e preferências', flush=True)
     checked(sql((root/'supabase/testes/350_radar_arquivo.sql').read_text()))
     print('PASS: arquivamento do Radar protege histórico, autoria e estado', flush=True)
+    checked(sql((root/'supabase/testes/360_admin_estatisticas.sql').read_text()))
+    print('PASS: estatísticas separam receitas e propostas, preservam recortes e restringem papéis', flush=True)
     def solicitar_otp(i):
         return sql("select reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990088',repeat('a',64));")
     with ThreadPoolExecutor(max_workers=4) as pool:
