@@ -209,13 +209,8 @@ export function FormBloco({ bloco }: { bloco: BlocoHome }) {
       <input type="hidden" name="chave" value={bloco.chave} />
       {/* bloco que não desliga: o campo vai marcado (o navegador não envia checkbox desativado) */}
       {!bloco.pode_desligar && <input type="hidden" name="ativo" value="on" />}
-      <Marcar
-        nome="ativo"
-        rotuloTexto="Aparece na página inicial"
-        marcado={bloco.ativo}
-        desligado={!bloco.pode_desligar}
-        dica={!bloco.pode_desligar ? "Este não desliga: tem anúncios pagos ou é a lista principal. Só muda de lugar." : undefined}
-      />
+      {bloco.pode_desligar ? <Marcar nome="ativo" rotuloTexto="Aparece na página inicial" marcado={bloco.ativo} />
+        : <p className="text-sm text-texto-suave">Bloco obrigatório na página inicial.</p>}
       {bloco.campos.map((c) => (
         <div key={c}>
           <label htmlFor={`${bloco.chave}-${c}`} className={rotulo}>

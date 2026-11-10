@@ -334,6 +334,8 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                     </div>
                     {sit && <Badge variant={sit.cor}>{sit.nome}</Badge>}
                   </div>
+                  <details className="mt-3">
+                    <summary className="min-h-10 cursor-pointer text-sm font-semibold text-beringela">Plano e utilização</summary>
                   <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-4">
                     <div>
                       <dt className="text-texto-suave">Plano</dt>
@@ -361,6 +363,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                       </dd>
                     </div>
                   </dl>
+                  </details>
                   <Link href={`${LINK_ADMIN_LOJAS}/${l.id}`} prefetch={false} className={`${estiloBotaoSec} mt-3`} aria-label={`Abrir ficha de ${l.nome}`}>Abrir ficha</Link>
                   {l.plano_proximo && (
                     <p className="mt-2 text-sm text-texto-suave">

@@ -6,7 +6,6 @@ import { Aviso, estiloCampo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
 import { IconeCategoria, NOMES_ICONES } from "@/components/ui/icone-categoria";
 import type { EstadoForm } from "@/lib/admin/estado";
-import { paraReaisInput } from "@/lib/admin/formato";
 import { paraEditor } from "@/lib/admin/regras-cadastros";
 import type { CategoriaAdmin } from "@/lib/tipos-cadastros";
 import { enviarSemLimpar } from "../textos/enviar-sem-limpar";
@@ -191,30 +190,11 @@ export function FormCategoria({
 
       {sub ? (
         <>
-          <fieldset className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <legend className="mb-1 text-base font-semibold text-beringela">Preço que a moderação aceita</legend>
-            <div>
-              <label htmlFor="cat-preco-min" className={rotulo}>
-                Mínimo (R$)
-              </label>
-              <input id="cat-preco-min" name="preco_min" inputMode="decimal" placeholder="sem mínimo" defaultValue={paraReaisInput(categoria.preco_min_centavos)} className={estiloCampo} />
-            </div>
-            <div>
-              <label htmlFor="cat-preco-max" className={rotulo}>
-                Máximo (R$)
-              </label>
-              <input id="cat-preco-max" name="preco_max" inputMode="decimal" placeholder="sem máximo" defaultValue={paraReaisInput(categoria.preco_max_centavos)} className={estiloCampo} />
-            </div>
-            <p className="text-legenda text-texto-suave md:col-span-2">
-              Anúncio com preço fora dessa faixa vai para &quot;Em análise&quot; antes de aparecer. Vazio = usa a regra geral de Configurações.
-            </p>
-          </fieldset>
-
           <EditorCampos inicial={categoria.campos.map(paraEditor)} temAnuncios={categoria.anuncios_total > 0} />
         </>
       ) : (
         <p className="rounded-card bg-fundo px-4 py-3 text-sm text-texto-suave">
-          Esta é uma categoria principal: ela só agrupa. Os campos do anúncio e o preço da moderação ficam em cada subcategoria.
+          Esta é uma categoria principal: ela só agrupa. Os campos do anúncio ficam em cada subcategoria.
         </p>
       )}
 

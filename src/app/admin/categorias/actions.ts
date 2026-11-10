@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirAdmin } from "@/lib/admin/auth";
 import type { EstadoForm } from "@/lib/admin/estado";
-import { centavosDe } from "@/lib/admin/formato";
 import { conferirCampos, limpo, slugDe } from "@/lib/admin/regras-cadastros";
 import { NOMES_ICONES } from "@/components/ui/icone-categoria";
 import { traduzirErro } from "@/lib/erros";
@@ -86,7 +85,7 @@ export async function salvarCategoria(_: EstadoForm, form: FormData): Promise<Es
 
     const dados: Record<string, unknown> = { nome, icone: icone || null, ativa: form.get("ativa") === "on" };
 
-    // subcategoria: pode mudar de mãe e tem campos e preços
+    // Subcategoria: pode mudar de mãe e editar os campos.
     if (atual.pai_id) {
       const paiId = String(form.get("pai_id") ?? "");
       if (!ehUuid(paiId)) return { erro: "Escolha em qual categoria principal ela fica." };
@@ -95,18 +94,6 @@ export async function salvarCategoria(_: EstadoForm, form: FormData): Promise<Es
         dados.pai_id = paiId;
         dados.ordem = (irmas ?? []).reduce((m, c) => Math.max(m, c.ordem as number), 0) + 10; // vai para o fim da nova mãe
       }
-      let precoMin: number | null;
-      let precoMax: number | null;
-      try {
-        precoMin = centavosDe(form.get("preco_min"));
-        precoMax = centavosDe(form.get("preco_max"));
-      } catch {
-        return { erro: "Preço inválido. Use só números, ex.: 1500 ou 1.500,00." };
-      }
-      if (precoMin != null && precoMax != null && precoMin > precoMax) return { erro: "O preço mínimo precisa ser menor que o máximo." };
-      dados.preco_min_centavos = precoMin;
-      dados.preco_max_centavos = precoMax;
-
       let editados: unknown;
       try {
         editados = JSON.parse(String(form.get("campos") ?? "[]"));

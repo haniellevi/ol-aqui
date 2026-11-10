@@ -12,7 +12,7 @@ export function BotaoFeito({ tipo, alvo }: { tipo: string; alvo: string }) {
       <input type="hidden" name="tipo" value={tipo} />
       <input type="hidden" name="alvo" value={alvo} />
       <Botao type="submit" variante="texto" tamanho="pequeno" carregando={pendente} icone={<Check className="size-4" aria-hidden />}>
-        Feito
+        Adiar até amanhã
       </Botao>
       {estado?.erro && <p role="alert" className="mt-1 text-legenda text-perigo">{estado.erro}</p>}
     </form>

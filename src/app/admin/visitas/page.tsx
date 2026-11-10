@@ -163,12 +163,15 @@ export default async function VisitasPage({ searchParams }: { searchParams: Prom
       )}
 
       <div className="mt-6 space-y-4">
-        <GeradorLink site={SITE} origens={paraLink} destinos={DESTINOS} lojas={lojas} />
-        <Cartao>
-          <h2 className="text-xl font-semibold text-beringela">Origens</h2>
+        <details className="rounded-card border border-borda bg-cartao p-4">
+          <summary className="cursor-pointer font-semibold text-beringela">Criar link de divulgação</summary>
+          <div className="mt-3"><GeradorLink site={SITE} origens={paraLink} destinos={DESTINOS} lojas={lojas} /></div>
+        </details>
+        <details className="rounded-card border border-borda bg-cartao p-4">
+          <summary className="cursor-pointer font-semibold text-beringela">Configurar origens</summary>
           <p className="mt-1 text-sm text-texto-suave">Quem chega por um site da lista conta para aquela origem, mesmo sem link marcado.</p>
           <Origens origens={origens} />
-        </Cartao>
+        </details>
       </div>
     </>
   );

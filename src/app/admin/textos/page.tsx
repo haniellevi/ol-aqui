@@ -242,7 +242,7 @@ async function AbaInicio({ supabase }: { supabase: Db }) {
         <Cartao key={b.chave} className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold text-beringela">
-              {i + 1}. {b.nome}
+              {i + 1}. {b.nome.replace(/\s*\(pago\)\s*$/i, "")}
               {b.pago && <Badge variant="featured" className="ml-2">pago</Badge>}
               {!b.ativo && <Badge variant="warning" className="ml-2">desligado</Badge>}
             </h2>

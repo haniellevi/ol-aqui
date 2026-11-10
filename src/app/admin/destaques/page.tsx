@@ -156,8 +156,8 @@ export default async function DestaquesAdminPage() {
         <section id="tipos" className="scroll-mt-6 space-y-4">
           <h2 className="text-xl font-bold text-beringela">Tipos de destaque</h2>
           {tipos.map((t) => (
-            <Cartao key={t.slug}>
-              <div className="mb-3 flex flex-wrap items-center gap-2">
+            <details key={t.slug} className="rounded-card border border-borda bg-cartao p-4">
+              <summary className="min-h-10 cursor-pointer font-semibold text-beringela">
                 <h3 className="text-lg font-semibold text-beringela">{t.nome}</h3>
                 <span className="text-legenda text-texto-suave">{t.alvo === "loja" ? "para lojas" : "para anúncios"}</span>
                 {!t.ativo && <Badge variant="secondary">desligado</Badge>}
@@ -166,14 +166,14 @@ export default async function DestaquesAdminPage() {
                   {t.dias ? ` / ${t.dias} dias` : ""}
                   {t.vagas_por_regiao ? ` · ${t.vagas_por_regiao} vagas por região` : ""}
                 </span>
-              </div>
+              </summary>
               <FormTipoDestaque tipo={t} />
-            </Cartao>
+            </details>
           ))}
         </section>
 
-        <section id="regioes" className="scroll-mt-6"><Cartao>
-          <h2 className="mb-1 text-lg font-semibold text-beringela">Preço e dias por região</h2>
+        <details id="regioes" className="scroll-mt-6 rounded-card border border-borda bg-cartao p-4">
+          <summary className="cursor-pointer text-lg font-semibold text-beringela">Preço e dias por região</summary>
           <p className="mb-3 text-sm text-texto-suave">
             Exceção para uma região (ex.: preço de lançamento). Campo vazio = usa o preço ou os dias do tipo. As vagas valem para todas as regiões.
           </p>
@@ -195,17 +195,17 @@ export default async function DestaquesAdminPage() {
             </ul>
           )}
           <FormPrecoRegiao tipos={tipos.map((t) => ({ slug: t.slug, nome: t.nome }))} regioes={regioes} />
-        </Cartao></section>
+        </details>
 
-        <section id="creditos" className="scroll-mt-6"><Cartao>
-          <h2 className="mb-1 text-lg font-semibold text-beringela">Créditos grátis por mês em cada plano</h2>
+        <details id="creditos" className="scroll-mt-6 rounded-card border border-borda bg-cartao p-4">
+          <summary className="cursor-pointer text-lg font-semibold text-beringela">Créditos grátis por mês em cada plano</summary>
           <p className="mb-3 text-sm text-texto-suave">Ex.: Full ganha 4 &quot;Subir&quot; por mês. Os créditos voltam todo dia 1º. 0 = nenhum.</p>
           <FormCreditos
             planos={(planosRes.data ?? []) as { codigo: string; nome: string }[]}
             tipos={tipos.map((t) => ({ slug: t.slug, nome: t.nome }))}
             creditos={creditos}
           />
-        </Cartao></section>
+        </details>
 
         <section id="cortesias" className="scroll-mt-6"><Cartao>
           <h2 className="mb-3 text-lg font-semibold text-beringela">Dar destaque de cortesia</h2>

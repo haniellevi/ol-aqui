@@ -1,6 +1,6 @@
 import { exigirAdmin } from "@/lib/admin/auth";
 import { reais } from "@/lib/admin/formato";
-import { Cartao, Titulo } from "@/components/admin/ui";
+import { Titulo } from "@/components/admin/ui";
 import { FormPlano, type Plano } from "./form-plano";
 import { Badge } from "@/components/ui/badge";
 
@@ -18,24 +18,23 @@ export default async function PlanosPage() {
       </Titulo>
       <div className="space-y-4">
         {planos.map((p) => (
-          <Cartao key={p.codigo}>
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold text-beringela">{p.nome}</h2>
-              <Badge variant="secondary">{p.codigo}</Badge>
+          <details key={p.codigo} className="rounded-card border border-borda bg-cartao p-4">
+            <summary className="min-h-10 cursor-pointer font-semibold text-beringela">
+              <span className="mr-3">{p.nome}</span>
               {p.e_teste && <Badge variant="warning">teste grátis</Badge>}
               {!p.ativo && <Badge variant="secondary">inativo</Badge>}
               {p.recomendado && <Badge variant="default">recomendado</Badge>}
-              <span className="ml-auto text-sm font-semibold text-beringela">
+              <span className="ml-3 text-sm font-semibold text-beringela">
                 {p.preco_centavos ? `${reais(p.preco_centavos)} / ${p.periodo_dias} dias` : "Grátis"}
               </span>
-            </div>
-            <FormPlano plano={p} />
-          </Cartao>
+            </summary>
+            <div className="mt-4"><FormPlano plano={p} /></div>
+          </details>
         ))}
-        <Cartao className="border-dashed">
-          <h2 className="mb-3 text-lg font-semibold text-beringela">Novo plano</h2>
-          <FormPlano />
-        </Cartao>
+        <details className="rounded-card border border-dashed border-borda bg-cartao p-4">
+          <summary className="cursor-pointer font-semibold text-beringela">Criar plano</summary>
+          <div className="mt-4"><FormPlano /></div>
+        </details>
       </div>
     </>
   );

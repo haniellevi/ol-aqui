@@ -1,9 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import Link from "next/link";
-import { Aviso, Cartao, Numero, estiloBotaoSec } from "@/components/admin/ui";
+import { Aviso, Cartao, Numero } from "@/components/admin/ui";
 import { hojeFortaleza } from "@/lib/admin/relatorios";
 import { ehUuid } from "@/lib/formato";
-import { LINK_ADMIN_RELATORIOS } from "@/lib/rotas";
 import { FiltrosEstatisticas, type PeriodoEstatisticas } from "./filtros-estatisticas";
 
 export type ParametrosEstatisticas = Record<string, string | string[] | undefined>;
@@ -101,13 +99,17 @@ export async function Estatisticas({ supabase, params }: { supabase: SupabaseCli
   const dataReferencia = `${String(ano).padStart(4, "0")}-${String(periodo === "ano" ? 1 : mes).padStart(2, "0")}-01`;
   const regiaoUrl = um("regiao");
   const regiao = ehUuid(regiaoUrl) ? regiaoUrl.toLowerCase() : null;
-  const [regioesR, dadosR] = await Promise.all([
+  let lojas = supabase.from("vitrines_lojas").select("id, anuncios!inner(id)", { count: "exact", head: true })
+    .eq("tipo", "loja").eq("status", "ativa").eq("anuncios.status", "ativo");
+  if (regiao) lojas = lojas.eq("microrregiao_id", regiao);
+  const [regioesR, dadosR, lojasR] = await Promise.all([
     supabase.from("microrregioes").select("id, nome").order("nome"),
     !regiaoUrl || regiao ? supabase.rpc("admin_estatisticas", {
       p_periodo: periodo,
       p_referencia: periodo === "historico" ? null : dataReferencia,
       p_regiao: regiao,
     }) : Promise.resolve(null),
+    lojas,
   ]);
   const regioes = (regioesR.data ?? []) as { id: string; nome: string }[];
   const nomeRegiao = regiao ? regioes.find((r) => r.id === regiao)?.nome : "Todas as regiões";
@@ -116,10 +118,7 @@ export async function Estatisticas({ supabase, params }: { supabase: SupabaseCli
 
   return (
     <section className="mb-8" aria-labelledby="estatisticas-titulo">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 id="estatisticas-titulo" className="text-lg font-semibold text-beringela">Estatísticas</h2>
-        <Link href={LINK_ADMIN_RELATORIOS} className={estiloBotaoSec}>Ver relatórios detalhados</Link>
-      </div>
+      <h2 id="estatisticas-titulo" className="sr-only">Indicadores do período</h2>
       {!regioesR.error && (
         <FiltrosEstatisticas key={`${periodo}/${ano}/${mes}/${regiao ?? ""}`} periodoInicial={periodo} anoInicial={ano} mesInicial={mes}
           anoAtual={anoAtual} mesAtual={mesAtual} primeiroAno={Math.min(ano, indicadores?.primeiro_ano ?? anoAtual)}
@@ -134,7 +133,16 @@ export async function Estatisticas({ supabase, params }: { supabase: SupabaseCli
       ) : (
         <>
           <p className="mb-4 text-sm text-texto-suave">{nomeRegiao} · {rotuloPeriodo} · Datas no horário de Fortaleza</p>
-          <IndicadoresDoPeriodo n={indicadores} />
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <Numero rotulo="Lojas com anúncios no ar" valor={lojasR.error ? "Indisponível" : (lojasR.count ?? 0).toLocaleString("pt-BR")} detalhe="Situação atual" />
+            <Numero rotulo="Anúncios no ar" valor={contagem(indicadores.anuncios_no_ar)} detalhe="Situação atual" />
+            <Numero rotulo="Contatos solicitados no Radar" valor={contagem(indicadores.contatos_solicitados)} detalhe="No período" />
+            <Numero rotulo="Total recebido" valor={moeda(indicadores.receita_centavos)} detalhe="Produção, no período" />
+          </div>
+          <details className="mt-6 rounded-card border border-borda bg-cartao p-4">
+            <summary className="cursor-pointer font-semibold text-beringela">Mais indicadores</summary>
+            <div className="mt-4"><IndicadoresDoPeriodo n={indicadores} /></div>
+          </details>
         </>
       )}
     </section>

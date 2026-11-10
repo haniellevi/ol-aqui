@@ -94,15 +94,6 @@ export function FormRegiao({ regiao, cidades }: { regiao: RegiaoAdmin; cidades: 
         <p className="mt-1 text-legenda text-texto-suave">Só cidades ativas desta região.</p>
       </div>
       <div className="md:col-span-2">
-        <label htmlFor="regiao-repasse" className={rotulo}>
-          Repasse do franqueado (%)
-        </label>
-        <input id="regiao-repasse" disabled readOnly value="" placeholder="a definir" className={`${estiloCampo} bg-fundo`} aria-describedby="regiao-repasse-dica" />
-        <p id="regiao-repasse-dica" className="mt-1 text-legenda text-texto-suave">
-          A definir: fica vazio até o modelo de franquia ser decidido. Nada é repassado enquanto isso.
-        </p>
-      </div>
-      <div className="md:col-span-2">
         <Botao type="submit" carregando={pendente} textoCarregando="Salvando..." className="w-full md:w-auto">
           Salvar região
         </Botao>

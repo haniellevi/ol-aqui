@@ -15,15 +15,15 @@ const dataLonga = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "nume
 export default async function HojePage() {
   const { supabase } = await exigirTela("hoje");
   const agora = new Date();
-  const { tarefas, total, feitas, erro, max } = await tarefasDeHoje(supabase, agora);
+  const { tarefas, total, feitas, erro, falhas, max } = await tarefasDeHoje(supabase, agora);
   const dia = hojeLocal(agora);
 
   return (
     <>
       <Titulo sub={<span className="first-letter:uppercase">{dataLonga.format(agora)}</span>}>Hoje</Titulo>
-      {erro && <div className="mb-3"><Aviso tipo="erro">Parte das tarefas não carregou. Atualize a página.</Aviso></div>}
+      {erro && <div className="mb-3"><Aviso tipo="erro">Não foi possível conferir: {falhas.join(", ")}.{tarefas.length > 0 && " As tarefas carregadas continuam abaixo."} <a href="/admin/hoje" className="font-semibold underline">Tentar novamente</a></Aviso></div>}
 
-      {tarefas.length === 0 ? (
+      {tarefas.length === 0 && !erro ? (
         <Vazio
           icone={<CalendarCheck />}
           titulo={feitas > 0 ? "Tudo feito por hoje" : "Nada pendente agora"}
@@ -31,7 +31,7 @@ export default async function HojePage() {
         >
           <Botao href="/admin/funil/novo" variante="secundario" tamanho="pequeno">Anotar loja no funil</Botao>
         </Vazio>
-      ) : (
+      ) : tarefas.length > 0 ? (
         <ol className="divide-y divide-borda overflow-hidden rounded-card border border-borda bg-cartao">
           {tarefas.map((t) => (
             <li key={`${t.tipo}:${t.alvo}`} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:gap-4">
@@ -57,16 +57,16 @@ export default async function HojePage() {
                     {t.apoio.rotulo}
                   </Botao>
                 )}
-                <BotaoFeito tipo={t.tipo} alvo={t.alvo} />
+                {t.adiavel !== false && <BotaoFeito tipo={t.tipo} alvo={t.alvo} />}
               </div>
             </li>
           ))}
         </ol>
-      )}
+      ) : null}
 
       <p className="mt-3 text-legenda text-texto-suave">
-        {total > tarefas.length && <>Mostrando {tarefas.length} de {total} tarefas (limite de {max} em Configurações, grupo hoje). </>}
-        {feitas > 0 && <>{feitas} {feitas === 1 ? "tarefa marcada" : "tarefas marcadas"} como feita hoje. <BotaoDesfazer dia={dia} /></>}
+        {total > tarefas.length && <>Mostrando {tarefas.length} de {total} tarefas, limite de {max}. </>}
+        {feitas > 0 && <>{feitas} {feitas === 1 ? "tarefa adiada" : "tarefas adiadas"} até amanhã. <BotaoDesfazer dia={dia} /></>}
       </p>
     </>
   );
