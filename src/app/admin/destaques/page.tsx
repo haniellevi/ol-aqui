@@ -123,7 +123,7 @@ export default async function DestaquesAdminPage() {
 
       <nav aria-label="Seções de destaques" className="mb-6 flex flex-wrap gap-x-5 gap-y-1 border-b border-borda pb-2 text-sm">
         {[["tipos", "Tipos"], ["regioes", "Regiões"], ["creditos", "Créditos"], ["cortesias", "Cortesias"], ["ativos", "Ativos"], ["cobranca", "Cobrança"]].map(([id, nome]) => (
-          <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center text-texto-suave underline-offset-4 hover:text-laranja-escuro hover:underline focus-visible:outline-2 focus-visible:outline-laranja-escuro">{nome}</a>
+          <a key={id} href={`#${id}`} className="inline-flex min-h-10 items-center text-texto-suave underline-offset-4 hover:text-laranja-escuro hover:underline focus-visible:outline-2 focus-visible:outline-laranja-escuro">{nome}</a>
         ))}
       </nav>
 
@@ -144,7 +144,7 @@ export default async function DestaquesAdminPage() {
             </li>
           </ul>
           <details className="mt-2 text-legenda text-texto-suave">
-            <summary className="flex min-h-11 cursor-pointer items-center font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro">Detalhes da integração</summary>
+            <summary className="flex min-h-10 cursor-pointer items-center font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro">Detalhes da integração</summary>
             <p className="max-w-[70ch] pb-2">Chaves na Vercel: ASAAS_API_KEY e ASAAS_WEBHOOK_TOKEN. Ambiente: <strong>{String(ambiente ?? "sandbox")}</strong>. Mude em &quot;asaas.ambiente&quot; abaixo: sandbox para testes, producao para valer.</p>
           </details>
           {!temAsaas && (
@@ -272,7 +272,7 @@ export default async function DestaquesAdminPage() {
                         {!p.asaas_cobranca_id ? " · sem cobrança no Asaas" : ""}
                       </span>
                       {p.link_pagamento && (
-                        <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline">
+                        <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline">
                           Ver no Asaas
                         </a>
                       )}
@@ -306,7 +306,7 @@ export default async function DestaquesAdminPage() {
                       {p.pago_em ? ` · pago em ${quando(p.pago_em)}` : ""}
                     </span>
                     {p.link_pagamento && (
-                      <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline">
+                      <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline">
                         Ver no Asaas
                       </a>
                     )}
@@ -318,7 +318,7 @@ export default async function DestaquesAdminPage() {
         )}
 
         <details className="rounded-card border border-borda bg-cartao p-4">
-          <summary className="min-h-11 cursor-pointer text-lg font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">Prazos dos destaques e da cobrança</summary>
+          <summary className="min-h-10 cursor-pointer text-lg font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">Prazos dos destaques e da cobrança</summary>
           <div className="space-y-4 pt-3">
           {configs.map((c) => (
             <section key={c.id} className="border-t border-borda pt-4">

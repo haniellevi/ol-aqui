@@ -3,8 +3,8 @@ import { Loader2 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
 // Botão do OLAKI (docs/DESIGN-SYSTEM.md, "Régua de tamanhos"):
-// normal = 44px no toque e 40px com mouse; pequeno = 36px no toque e 32px com mouse
-// (ações dentro de cards, listas e tabelas). Texto 14px (13px no pequeno).
+// normal = 40px no toque e 36px com mouse; pequeno = 32px no toque e 28px com mouse
+// (ações dentro de cards, listas e tabelas). Texto 13px (12px no pequeno).
 // Largura total só no celular: do tablet para cima o botão para em 320px.
 // Principal = laranja com texto beringela (nunca branco no laranja).
 
@@ -12,8 +12,8 @@ export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | 
 export type TamanhoBotao = "normal" | "pequeno";
 
 const TAMANHOS: Record<TamanhoBotao, string> = {
-  normal: "olaki-controle min-h-11 px-3.5 text-sm leading-5",
-  pequeno: "olaki-controle-pequeno min-h-9 px-2.5 text-legenda leading-4",
+  normal: "olaki-controle min-h-10 px-3.5 text-sm leading-5",
+  pequeno: "olaki-controle-pequeno min-h-8 px-2.5 text-legenda leading-4",
 };
 
 const BASE =

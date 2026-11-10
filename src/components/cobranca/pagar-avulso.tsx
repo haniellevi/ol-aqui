@@ -44,7 +44,7 @@ export function PagarAvulso({
       aoErrar={(e) => {
         const passo = passoDoCampo(e.campo);
         return passo ? (
-          <Link href={urlPasso(passo, anuncioId, editar)} className="inline-flex min-h-11 items-center underline underline-offset-4">
+          <Link href={urlPasso(passo, anuncioId, editar)} className="inline-flex min-h-10 items-center underline underline-offset-4">
             Corrigir agora
           </Link>
         ) : null;

@@ -161,11 +161,11 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
               )}
 
               <div className="mt-2 flex flex-wrap items-center gap-x-6">
-                <label className="flex min-h-11 items-center gap-2 text-base text-beringela">
+                <label className="flex min-h-10 items-center gap-2 text-base text-beringela">
                   <input type="checkbox" checked={c.obrigatorio} onChange={(e) => mudar(c._id, { obrigatorio: e.target.checked })} className="size-5 accent-laranja-escuro" />
                   Obrigatório
                 </label>
-                <label className="flex min-h-11 items-center gap-2 text-base text-beringela">
+                <label className="flex min-h-10 items-center gap-2 text-base text-beringela">
                   <input type="checkbox" checked={c.filtro} onChange={(e) => mudar(c._id, { filtro: e.target.checked })} className="size-5 accent-laranja-escuro" />
                   Vira filtro na busca
                 </label>

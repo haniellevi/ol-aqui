@@ -177,7 +177,7 @@ export function FormCategoria({
 
       <EscolhaIcone id="cat-icone" inicial={categoria.icone} />
 
-      <label className="flex min-h-11 items-start gap-3 text-base text-beringela">
+      <label className="flex min-h-10 items-start gap-3 text-base text-beringela">
         <input type="checkbox" name="ativa" defaultChecked={categoria.ativa} className="mt-1 size-5 shrink-0 accent-laranja-escuro" />
         <span>
           Aparece no cadastro de anúncio e na lista de categorias

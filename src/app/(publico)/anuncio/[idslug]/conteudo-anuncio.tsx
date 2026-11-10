@@ -67,7 +67,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
         <nav aria-label="Você está em" className="px-4 text-base text-texto-suave md:px-0">
           <ol className="flex flex-wrap items-center gap-1">
             <li>
-              <Link href={linkCategoria(a.categoria_pai_slug)} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+              <Link href={linkCategoria(a.categoria_pai_slug)} className="inline-flex min-h-10 items-center underline-offset-4 hover:underline">
                 {a.categoria_pai_nome}
               </Link>
             </li>
@@ -75,7 +75,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
               <ChevronRight className="size-4" aria-hidden />
               <Link
                 href={linkCategoria(a.categoria_pai_slug, a.categoria_slug)}
-                className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
+                className="inline-flex min-h-10 items-center underline-offset-4 hover:underline"
               >
                 {a.categoria_nome}
               </Link>
@@ -101,7 +101,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
           <p className="text-base font-semibold">Prévia: só você vê esta página.</p>
           <p className="text-base">{STATUS_PREVIA[a.status] ?? "Fora do ar."}</p>
           {a.e_dono && (
-            <Link href="/minha-conta/anuncios" className="inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4">
+            <Link href="/minha-conta/anuncios" className="inline-flex min-h-10 items-center self-start font-semibold underline underline-offset-4">
               Ir para Meus anúncios
             </Link>
           )}
@@ -220,7 +220,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
               {a.categoria_pai_slug && a.categoria_slug && (
                 <Link
                   href={linkCategoria(a.categoria_pai_slug, a.categoria_slug)}
-                  className="inline-flex min-h-11 items-center self-start font-semibold text-laranja-escuro underline-offset-4 hover:underline"
+                  className="inline-flex min-h-10 items-center self-start font-semibold text-laranja-escuro underline-offset-4 hover:underline"
                 >
                   Ver todos em {a.categoria_nome}
                 </Link>

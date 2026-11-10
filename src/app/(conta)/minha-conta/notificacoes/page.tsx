@@ -62,7 +62,7 @@ export default async function PaginaNotificacoes({ searchParams }: { searchParam
           <>
             <ul className="overflow-hidden rounded-card border border-borda bg-cartao">{preferencias.value.map((p) => <li key={p.tipo} className="border-b border-borda last:border-b-0"><PreferenciaAvisoBotao preferencia={p} /></li>)}</ul>
             <details className="group text-legenda text-texto-suave">
-              <summary className="olaki-controle flex min-h-11 cursor-pointer items-center gap-1.5 rounded-campo font-semibold underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro"><ChevronDown className="size-3.5 group-open:rotate-180" aria-hidden />Sobre estes avisos</summary>
+              <summary className="olaki-controle flex min-h-10 cursor-pointer items-center gap-1.5 rounded-campo font-semibold underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro"><ChevronDown className="size-3.5 group-open:rotate-180" aria-hidden />Sobre estes avisos</summary>
               <p className="mb-3">Desligar uma opção não apaga os avisos anteriores.</p>
               <dl className="space-y-3">{preferencias.value.filter((p) => p.explicacao).map((p) => <div key={p.tipo}>
                 <dt className="font-semibold text-texto">{p.nome}</dt>

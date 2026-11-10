@@ -59,7 +59,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
         <div role="status" className="flex flex-col gap-2 rounded-card bg-aviso-fundo p-4 text-aviso">
           <p className="text-base font-semibold">Esta é uma versão antiga e não vale mais.</p>
           {atual && (
-            <Link href={linkDocumentoLegal(tipo)} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">
+            <Link href={linkDocumentoLegal(tipo)} className="inline-flex min-h-10 items-center font-semibold underline underline-offset-4">
               Ver a versão que vale hoje (versão {atual.versao})
             </Link>
           )}
@@ -68,11 +68,11 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
 
       {indice.length > 2 && (
         <details className="rounded-card bg-cartao px-4 shadow-1">
-          <summary className="min-h-11 cursor-pointer py-3 text-base font-semibold">Nesta página</summary>
+          <summary className="min-h-10 cursor-pointer py-3 text-base font-semibold">Nesta página</summary>
           <ol className="flex flex-col pb-3">
             {indice.map((t) => (
               <li key={t.id}>
-                <a href={`#${t.id}`} className="flex min-h-11 items-center text-base text-laranja-escuro underline-offset-4 hover:underline">
+                <a href={`#${t.id}`} className="flex min-h-10 items-center text-base text-laranja-escuro underline-offset-4 hover:underline">
                   {t.texto}
                 </a>
               </li>
@@ -105,7 +105,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
                 <Link
                   href={linkDocumentoLegal(tipo, v.ativo ? null : v.versao)}
                   aria-current={v.id === doc.id ? "page" : undefined}
-                  className="flex min-h-11 flex-col justify-center px-4 py-2 hover:bg-fundo"
+                  className="flex min-h-10 flex-col justify-center px-4 py-2 hover:bg-fundo"
                 >
                   <span className="text-base font-semibold">
                     Versão {v.versao}

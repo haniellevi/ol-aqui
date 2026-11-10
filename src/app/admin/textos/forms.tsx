@@ -19,7 +19,7 @@ function Girando() {
 
 function Marcar({ nome, rotuloTexto, marcado, desligado, dica }: { nome: string; rotuloTexto: string; marcado: boolean; desligado?: boolean; dica?: string }) {
   return (
-    <label className={`flex min-h-11 items-center gap-3 text-base text-beringela ${desligado ? "opacity-70" : ""}`}>
+    <label className={`flex min-h-10 items-center gap-3 text-base text-beringela ${desligado ? "opacity-70" : ""}`}>
       <input type="checkbox" name={nome} defaultChecked={marcado} disabled={desligado} className="size-5 accent-laranja-escuro" />
       <span>
         {rotuloTexto}
@@ -251,7 +251,7 @@ export function MoverBloco({ chave, primeiro, ultimo }: { chave: string; primeir
         name="direcao"
         value="subir"
         disabled={pendente || primeiro}
-        className="flex h-11 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-sm font-semibold text-beringela disabled:opacity-40"
+        className="flex h-10 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-sm font-semibold text-beringela disabled:opacity-40"
       >
         <ArrowUp className="size-4" aria-hidden /> Subir
       </button>
@@ -259,7 +259,7 @@ export function MoverBloco({ chave, primeiro, ultimo }: { chave: string; primeir
         name="direcao"
         value="descer"
         disabled={pendente || ultimo}
-        className="flex h-11 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-sm font-semibold text-beringela disabled:opacity-40"
+        className="flex h-10 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-sm font-semibold text-beringela disabled:opacity-40"
       >
         <ArrowDown className="size-4" aria-hidden /> Descer
       </button>

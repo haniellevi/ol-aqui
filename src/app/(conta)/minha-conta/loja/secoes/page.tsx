@@ -54,7 +54,7 @@ export default async function PaginaSecoesLoja() {
       {noPlano && !podeCriar && (
         <Aviso tipo="info">
           <span>Você chegou ao limite de seções do seu plano. Apague uma para criar outra.</span>
-          <a href={`${LINK_PLANOS}?origem=vitrine`} className="inline-flex min-h-11 items-center text-laranja-escuro underline underline-offset-4">
+          <a href={`${LINK_PLANOS}?origem=vitrine`} className="inline-flex min-h-10 items-center text-laranja-escuro underline underline-offset-4">
             Ver planos com mais seções
           </a>
         </Aviso>

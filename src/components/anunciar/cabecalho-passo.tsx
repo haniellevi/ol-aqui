@@ -7,7 +7,7 @@ import { DESTINO_SAIR, PASSOS, TOTAL_PASSOS, numeroPasso, passoAnterior, urlPass
 // Sem formulário (revisão, que não tem campos editáveis), vira um link.
 
 const LINK_TOPO =
-  "inline-flex min-h-11 items-center gap-1 rounded-card px-2 text-base font-semibold text-laranja-escuro " +
+  "inline-flex min-h-10 items-center gap-1 rounded-card px-2 text-base font-semibold text-laranja-escuro " +
   "hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 export function CabecalhoPasso({

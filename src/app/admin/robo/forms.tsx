@@ -373,20 +373,20 @@ export function FormModelo({ modelo }: { modelo?: ModeloIA }) {
         <input name="preco_cache_escrita_usd" inputMode="decimal" placeholder="igual à entrada" defaultValue={usd(base?.preco_cache_escrita_usd ?? null)} className={estiloCampo} />
       </label>
       <div key={`caps-${chaveCampos}`} className="col-span-2 flex flex-wrap gap-x-4 @3xl/painel:col-span-4">
-        <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+        <label className="flex min-h-10 items-center gap-2 text-sm font-semibold">
           <input type="checkbox" name="le_imagem" defaultChecked={base?.le_imagem ?? false} className="size-5 accent-laranja-escuro" />
           Lê imagem
         </label>
-        <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+        <label className="flex min-h-10 items-center gap-2 text-sm font-semibold">
           <input type="checkbox" name="usa_ferramentas" defaultChecked={base?.usa_ferramentas ?? false} className="size-5 accent-laranja-escuro" />
           Usa ferramentas
         </label>
-        <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+        <label className="flex min-h-10 items-center gap-2 text-sm font-semibold">
           <input type="checkbox" name="ativo" defaultChecked={modelo?.ativo ?? !!pre} className="size-5 accent-laranja-escuro" />
           Ativo (aparece na escolha)
         </label>
         {(modelo?.provedor ?? provedor) === "anthropic" && (
-          <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+          <label className="flex min-h-10 items-center gap-2 text-sm font-semibold">
             <input type="checkbox" name="fallback_servidor" defaultChecked={modelo?.fallback_servidor ?? false} className="size-5 accent-laranja-escuro" />
             Outro modelo responde se este recusar
           </label>

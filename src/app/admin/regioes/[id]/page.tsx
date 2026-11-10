@@ -43,7 +43,7 @@ export default async function RegiaoPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <Link href={LINK_ADMIN_REGIOES} className="mb-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-laranja-escuro">
+      <Link href={LINK_ADMIN_REGIOES} className="mb-3 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-laranja-escuro">
         <ArrowLeft className="size-5" aria-hidden />
         Todas as regiões
       </Link>

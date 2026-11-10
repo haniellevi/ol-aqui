@@ -65,7 +65,7 @@ async function Operacao({ supabase, agora }: { supabase: SupabaseClient; agora: 
 
       {fila === null && <Aviso tipo="erro">Não foi possível consultar a fila de moderação.</Aviso>}
       {fila !== null && fila > 0 && (
-        <Link href="/admin/moderacao" className="mb-6 flex min-h-11 items-center justify-between gap-3 rounded-card bg-perigo-fundo px-4 py-3 text-sm font-semibold text-perigo active:brightness-90">
+        <Link href="/admin/moderacao" className="mb-6 flex min-h-10 items-center justify-between gap-3 rounded-card bg-perigo-fundo px-4 py-3 text-sm font-semibold text-perigo active:brightness-90">
           <span>
             {fila} {fila === 1 ? "item espera" : "itens esperam"} revisão. {emAnalise} anúncios, {pedidosAnalise} pedidos e {denuncias} denúncias.
           </span>

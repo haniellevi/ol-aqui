@@ -11,7 +11,7 @@ export function AvisoErro({ mensagem, link }: { mensagem?: string | null; link?:
           <div className="flex flex-col gap-1">
             <p className="font-semibold">{mensagem}</p>
             {link && (
-              <Link href={link.href} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">
+              <Link href={link.href} className="inline-flex min-h-10 items-center font-semibold underline underline-offset-4">
                 {link.texto}
               </Link>
             )}

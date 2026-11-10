@@ -98,7 +98,7 @@ export function RadarDeNegocios({
               name="nicho"
               defaultValue={nicho}
               key={nicho}
-              className="h-11 w-full rounded-campo border border-borda-campo bg-cartao px-3 text-base text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+              className="h-10 w-full rounded-campo border border-borda-campo bg-cartao px-3 text-base text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
             >
               <option value="todas">Todas as categorias</option>
               {vende && <option value="meu_nicho">Das minhas categorias</option>}
@@ -299,7 +299,7 @@ function FaixaUpgrade({ planos, titulo }: { planos: PlanoResumo[]; titulo: strin
       </p>
       <Link
         href={`${LINK_PLANOS}?origem=radar`}
-        className="mt-3 inline-flex h-11 items-center rounded-card bg-laranja px-5 text-sm font-semibold text-beringela active:brightness-90"
+        className="mt-3 inline-flex h-10 items-center rounded-card bg-laranja px-5 text-sm font-semibold text-beringela active:brightness-90"
       >
         Ver planos
       </Link>

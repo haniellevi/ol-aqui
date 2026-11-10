@@ -26,7 +26,7 @@ export function Seletor({
         name={name}
         aria-invalid={erro ? true : undefined}
         aria-describedby={[idErro, idDica].filter(Boolean).join(" ") || undefined}
-        className={`olaki-campo h-11 min-w-0 w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto focus:outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:bg-fundo disabled:opacity-70 ${
+        className={`olaki-campo h-10 min-w-0 w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto focus:outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:bg-fundo disabled:opacity-70 ${
           erro ? "border-perigo" : "border-borda-campo"
         }`}
       >

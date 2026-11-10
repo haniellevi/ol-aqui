@@ -23,8 +23,8 @@ export async function CabecalhoPublico() {
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-card focus:bg-laranja focus:px-4 focus:py-3 focus:font-bold focus:text-beringela">
         Pular para o conteúdo
       </a>
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 md:h-15">
-        <Link href="/" className="flex h-11 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="OLAKI, página inicial">
+      <div className="mx-auto flex h-13 max-w-6xl items-center gap-2 px-4 md:h-14">
+        <Link href="/" className="flex h-10 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="OLAKI, página inicial">
           <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={88} height={36} priority className="h-7 w-auto sm:h-8" />
         </Link>
 

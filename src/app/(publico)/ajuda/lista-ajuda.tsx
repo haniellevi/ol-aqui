@@ -44,7 +44,7 @@ export function ListaAjuda({
         <label htmlFor="busca-ajuda" className="sr-only">
           Buscar na ajuda
         </label>
-        <div className="flex h-12 items-center gap-2 rounded-card border-2 border-beringela bg-cartao px-3 md:h-11 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro">
+        <div className="flex h-11 items-center gap-2 rounded-card border-2 border-beringela bg-cartao px-3 md:h-10 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro">
           <Search className="size-6 shrink-0 text-beringela" aria-hidden />
           <input
             id="busca-ajuda"
@@ -104,7 +104,7 @@ export function ListaAjuda({
                 {itens.map((p) => (
                   <li key={p.id} className="border-b border-borda last:border-0">
                     <details className="group" open={!!termo && filtradas.length <= 3}>
-                      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-4 py-3 text-base font-semibold [&::-webkit-details-marker]:hidden">
+                      <summary className="flex min-h-10 cursor-pointer list-none items-center gap-3 px-4 py-3 text-base font-semibold [&::-webkit-details-marker]:hidden">
                         <span className="flex-1">{p.pergunta}</span>
                         <ChevronDown className="size-5 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden />
                       </summary>

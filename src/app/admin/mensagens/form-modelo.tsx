@@ -125,7 +125,7 @@ export function FormModelo({ modelo }: { modelo: ModeloMensagem }) {
                   key={v}
                   type="button"
                   onClick={() => inserir(v)}
-                  className="inline-flex min-h-11 flex-col items-start justify-center rounded-campo border border-borda bg-cartao px-3 text-left active:brightness-90"
+                  className="inline-flex min-h-10 flex-col items-start justify-center rounded-campo border border-borda bg-cartao px-3 text-left active:brightness-90"
                 >
                   <span className="text-base font-semibold text-beringela">{`{${v}}`}</span>
                   <span className="text-legenda text-texto-suave">{EXEMPLOS_VARIAVEIS[v]?.explica ?? v}</span>
@@ -135,7 +135,7 @@ export function FormModelo({ modelo }: { modelo: ModeloMensagem }) {
           </div>
         )}
 
-        <label className="flex min-h-11 items-center gap-3 text-base text-beringela">
+        <label className="flex min-h-10 items-center gap-3 text-base text-beringela">
           <input type="checkbox" name="ativo" defaultChecked={modelo.ativo} key={`${modelo.atualizado_em}`} className="size-5 accent-laranja-escuro" />
           <span>
             {enviaHoje ? "Ligada (a mensagem é mandada)" : "Ligada (vai ser mandada quando o envio começar)"}

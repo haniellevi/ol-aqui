@@ -138,7 +138,7 @@ export function GerenciarSecoes({
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   <Link
                     href={`${LINK_LOJA_SECOES}/${s.id}`}
-                    className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-card border border-beringela bg-cartao px-4 text-base font-semibold hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                    className="col-span-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-card border border-beringela bg-cartao px-4 text-base font-semibold hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                   >
                     <ListChecks className="size-5" aria-hidden /> Escolher produtos
                   </Link>

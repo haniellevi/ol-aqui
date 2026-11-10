@@ -56,7 +56,7 @@ export function FormTipoDestaque({ tipo }: { tipo: TipoDestaque }) {
         <textarea name="descricao" rows={2} maxLength={200} defaultValue={tipo.descricao ?? ""} className={`${estiloCampo} h-auto min-h-20 py-2 leading-relaxed`} />
       </label>
       <div className="col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-borda pt-2 @3xl/painel:col-span-4">
-        <label className="flex h-11 items-center gap-2 text-sm">
+        <label className="flex h-10 items-center gap-2 text-sm">
           <input type="checkbox" name="ativo" defaultChecked={tipo.ativo} className="size-5 accent-laranja-escuro" />
           Ativo (aparece para vender)
         </label>
@@ -163,7 +163,7 @@ export function FormCortesia({ tipos }: { tipos: { slug: SlugDestaque; nome: str
         Motivo (fica no histórico)
         <input name="motivo" required minLength={3} maxLength={300} placeholder="ex.: lançamento da loja" className={estiloCampo} />
       </label>
-      <label className="flex h-11 items-center gap-2 text-sm md:col-span-2">
+      <label className="flex h-10 items-center gap-2 text-sm md:col-span-2">
         <input type="checkbox" name="ignorar_vagas" className="size-5 accent-laranja-escuro" />
         Passar das vagas da região, se estiverem cheias
       </label>

@@ -65,7 +65,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
           </p>
         </div>
         <CampoBusca id="busca-inicio" />
-        <Link href="/lojas" className="flex min-h-11 items-center justify-between gap-3 rounded-card border border-borda bg-cartao px-3 py-2 text-sm font-semibold text-beringela hover:border-laranja-escuro">
+        <Link href="/lojas" className="flex min-h-10 items-center justify-between gap-3 rounded-card border border-borda bg-cartao px-3 py-2 text-sm font-semibold text-beringela hover:border-laranja-escuro">
           <span>Conheça as lojas de {lugar}</span>
           <span className="shrink-0 text-sm text-laranja-escuro">Ver lojas</span>
         </Link>
@@ -190,13 +190,13 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
         })}
 
       <nav aria-label="Ajuda e textos" className="flex flex-wrap justify-center gap-x-4 border-t border-borda pt-2 text-base">
-        <Link href={LINK_AJUDA} className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline-offset-4 hover:underline">
+        <Link href={LINK_AJUDA} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline-offset-4 hover:underline">
           Ajuda e segurança
         </Link>
-        <Link href={LINK_TERMOS} className="inline-flex min-h-11 items-center text-texto-suave underline-offset-4 hover:underline">
+        <Link href={LINK_TERMOS} className="inline-flex min-h-10 items-center text-texto-suave underline-offset-4 hover:underline">
           Termos de uso
         </Link>
-        <Link href={LINK_PRIVACIDADE} className="inline-flex min-h-11 items-center text-texto-suave underline-offset-4 hover:underline">
+        <Link href={LINK_PRIVACIDADE} className="inline-flex min-h-10 items-center text-texto-suave underline-offset-4 hover:underline">
           Privacidade
         </Link>
       </nav>

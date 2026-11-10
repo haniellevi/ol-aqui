@@ -22,7 +22,7 @@ export function TopoConta({
       {voltar && (
         <Link
           href={voltar}
-          className="olaki-controle -ml-2 inline-flex min-h-11 w-fit items-center gap-1 rounded-campo px-2 text-rotulo font-semibold text-texto-suave hover:text-texto focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+          className="olaki-controle -ml-2 inline-flex min-h-10 w-fit items-center gap-1 rounded-campo px-2 text-rotulo font-semibold text-texto-suave hover:text-texto focus-visible:outline-3 focus-visible:outline-laranja-escuro"
         >
           <ChevronLeft className="size-5" aria-hidden />
           {textoVoltar}

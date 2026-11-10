@@ -64,7 +64,7 @@ export function Campo(props: CampoProps) {
             {...aria}
             id={id}
             name={name}
-            className={`${ESTILO_CAIXA} ${borda} h-11 ${prefixo ? "pl-11" : ""}`}
+            className={`${ESTILO_CAIXA} ${borda} h-10 ${prefixo ? "pl-11" : ""}`}
           />
         )}
       </div>

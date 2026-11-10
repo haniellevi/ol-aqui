@@ -20,7 +20,7 @@ const MOTIVOS = [
 ];
 
 const OPCAO =
-  "flex min-h-11 cursor-pointer items-center gap-3 rounded-campo border-2 border-borda bg-cartao px-4 text-base " +
+  "flex min-h-10 cursor-pointer items-center gap-3 rounded-campo border-2 border-borda bg-cartao px-4 text-base " +
   "has-checked:border-beringela has-checked:bg-selecao has-checked:font-semibold " +
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 
@@ -32,7 +32,7 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
 
   return (
     <details id="denunciar" className="group scroll-mt-20 rounded-card">
-      <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-card px-2 text-base font-semibold text-perigo underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro [&::-webkit-details-marker]:hidden">
+      <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-card px-2 text-base font-semibold text-perigo underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro [&::-webkit-details-marker]:hidden">
         <Flag className="size-4" aria-hidden /> Denunciar este anúncio
       </summary>
 

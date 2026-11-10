@@ -35,7 +35,7 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
       <>
         <Titulo>Relatório do Compliance</Titulo>
         <Aviso tipo="erro">{r && !r.ok ? r.erro : "Relatório não encontrado."}</Aviso>
-        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="mt-4 inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="mt-4 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
           Voltar ao Compliance
         </Link>
       </>
@@ -52,7 +52,7 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
       <style>{ESTILO_IMPRESSAO}</style>
       <div className="nao-imprimir mb-6 flex flex-wrap items-center gap-3">
         <BotaoImprimir />
-        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
           Voltar ao Compliance
         </Link>
       </div>

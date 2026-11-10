@@ -89,7 +89,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
       <Cartao className="mb-6">
         <p className="text-sm text-texto-suave">Consulta aberta · vale até {quando(consulta.vence_em)}</p>
         <p className="mt-1 break-words text-base font-semibold text-beringela">Motivo: {consulta.motivo}</p>
-        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="mt-2 inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="mt-2 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
           Começar outra consulta (outro motivo)
         </Link>
       </Cartao>
@@ -128,7 +128,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
                   <Link
                     href={linkConta(r.usuario_id)}
                     prefetch={false}
-                    className="mt-2 inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                    className="mt-2 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4"
                   >
                     {r.tipo === "conta" || r.tipo === "conta_apagada" ? "Ver dados da conta" : "Ver dados de quem anunciou"}
                   </Link>
