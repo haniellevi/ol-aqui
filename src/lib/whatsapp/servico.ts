@@ -4,6 +4,8 @@ import { whatsappDigitado } from "@/lib/formato";
 
 export function numeroWhatsapp(entrada: unknown): string | null {
   if (typeof entrada !== "string" || entrada.length > 30 || !/^[\d+().\s-]+$/.test(entrada)) return null;
+  if (entrada.includes("+") && (!/^\s*\+55[\d().\s-]*$/.test(entrada) || entrada.replace(/\D/g, "").length !== 13)) return null;
+  if (entrada.trimStart().startsWith("(") && entrada.replace(/\D/g, "").length !== 11) return null;
   return whatsappDigitado(entrada);
 }
 

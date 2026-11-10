@@ -125,6 +125,17 @@ export function whatsappDigitado(texto: string | null | undefined): string | nul
   return /^55[1-9][0-9]9[0-9]{8}$/.test(d) ? d : null;
 }
 
+/** Máscara de celular com DDD; aceita +55 colado e preserva excessos para a validação. */
+export function mascaraCelular(texto: string): string {
+  const internacional = texto.trimStart().startsWith("+");
+  if (internacional && !texto.trimStart().startsWith("+55")) return texto;
+  let digitos = texto.replace(/\D/g, "");
+  if (internacional || (!texto.trimStart().startsWith("(") && digitos.length > 11 && digitos.startsWith("55"))) digitos = digitos.slice(2);
+  if (digitos.length <= 2) return digitos ? `(${digitos}` : "";
+  const local = digitos.slice(2);
+  return `(${digitos.slice(0, 2)}) ${local.slice(0, 5)}${local.length > 5 ? `-${local.slice(5)}` : ""}`;
+}
+
 /** Valor de um campo extra para mostrar: 45000 + km → "45.000 km"; true → "Sim". */
 export function valorDoCampo(campo: Pick<CampoCategoria, "tipo" | "unidade">, valor: unknown): string {
   if (valor == null || valor === "") return "";
