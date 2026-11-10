@@ -80,7 +80,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Params
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <Titulo sub="Lojas que você está conquistando, do primeiro contato até pagar.">Funil de lojistas</Titulo>
+        <Titulo>Funil de lojistas</Titulo>
         <Botao href="/admin/funil/novo" icone={<Plus className="size-4" aria-hidden />}>Novo contato</Botao>
       </div>
 

@@ -62,7 +62,7 @@ export default async function VisitasPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <Titulo sub="De onde vem quem visita o site: Instagram, rádio, QR da loja e o resto.">Visitas e origem</Titulo>
+      <Titulo>Visitas e origem</Titulo>
 
       <nav aria-label="Período" className="mb-4 flex gap-2">
         {PERIODOS.map((p) => (
