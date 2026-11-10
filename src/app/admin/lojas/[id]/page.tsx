@@ -8,6 +8,10 @@ import { ehUuid, linkLoja, telefone } from "@/lib/formato";
 import { LINK_ADMIN_ANUNCIOS, LINK_ADMIN_LOJAS, LINK_ADMIN_PAGAMENTOS } from "@/lib/rotas";
 import type { LojaAdmin } from "@/lib/tipos-cobranca";
 import { FormAcaoLoja } from "../formularios";
+import { localidadesGestao } from "@/lib/admin/gestao-dados";
+import type { LojaGestao } from "@/lib/admin/gestao";
+import { HistoricoGestao } from "@/components/admin/historico-gestao";
+import { FormExcluirLoja, FormGestaoLoja } from "../gestao-formularios";
 import { FormArquivoLoja } from "./arquivo";
 
 export const metadata = { title: "Ficha da loja" };
@@ -44,11 +48,13 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
   if (!ehUuid(id)) notFound();
   const admin = papel === "administrador";
   const podeOperar = admin || papel === "suporte";
-  const [lojas, fichaR, planos, regiao] = await Promise.all([
+  const [lojas, fichaR, planos, regiao, gestaoR, locais] = await Promise.all([
     supabase.rpc("admin_lojas", { p_busca: id, p_limite: 1 }),
     supabase.rpc("admin_ficha_loja", { p_loja: id }),
     admin ? supabase.from("planos").select("codigo, nome").order("ordem") : Promise.resolve({ data: [], error: null }),
     supabase.from("microrregioes").select("id, nome"),
+    admin ? supabase.rpc("admin_loja_detalhe", { p_id: id }) : Promise.resolve({data:null,error:null}),
+    admin ? localidadesGestao(supabase) : Promise.resolve(null),
   ]);
 
   const voltar = <Link href={LINK_ADMIN_LOJAS} className={`${estiloBotaoSec} mb-4`}>Voltar para Lojas</Link>;
@@ -58,6 +64,7 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
   const loja = (lojas.data as LojaAdmin[] | null)?.[0];
   const ficha = fichaR.data as Ficha | null;
   if (!loja || loja.id !== id.toLowerCase() || !ficha) notFound();
+  const gestao = gestaoR.data as LojaGestao | null;
   const arquivada = loja.situacao === "arquivada";
   const local = [loja.cidade, regiao.data?.find((r) => r.id === loja.microrregiao_id)?.nome].filter(Boolean).join(" · ");
   const vencimento = loja.situacao === "teste" || loja.situacao === "teste_vencido" ? loja.teste_expira_em : loja.plano_expira_em;
@@ -90,11 +97,16 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
         </dl>
         {admin && (
           <div className="mt-3 flex flex-wrap gap-2">
+            <Link href={`/admin/usuarios/${loja.dono_id}`} className={estiloBotaoSec}>Gerenciar titular</Link>
             <Link href={`${LINK_ADMIN_ANUNCIOS}?loja=${loja.id}`} prefetch={false} className={estiloBotaoSec}>Ver anúncios</Link>
             <Link href={`${LINK_ADMIN_PAGAMENTOS}?loja=${loja.id}&ambiente=todos`} prefetch={false} className={estiloBotaoSec}>Ver pagamentos</Link>
           </div>
         )}
       </Cartao>
+      {admin && !arquivada && (gestao && locais && !gestaoR.error ? <details className="rounded-card border border-borda bg-cartao p-3" open>
+        <summary className="cursor-pointer text-sm font-semibold text-beringela">Editar cadastro da loja</summary>
+        <div className="mt-4"><FormGestaoLoja loja={gestao} locais={locais} /></div>
+      </details> : <Aviso tipo="erro">Não foi possível carregar a edição da loja. Atualize a página.</Aviso>)}
       {podeOperar && !arquivada && (
         <Cartao>
           <h2 className="mb-3 text-sm font-semibold text-beringela">Operação</h2>
@@ -114,6 +126,8 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
             pendentes={ficha.cobrancas_pendentes} destaques={ficha.destaques_pagos} congelados={ficha.congelados} />
         </Cartao>
       )}
+      {admin && <HistoricoGestao db={supabase} tipo="loja" id={id} />}
+      {admin && gestao && <FormExcluirLoja loja={gestao} />}
       {ficha.historico && (
         <Cartao>
           <h2 className="text-sm font-semibold text-beringela">Histórico administrativo</h2>

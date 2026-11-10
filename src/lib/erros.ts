@@ -26,7 +26,7 @@ export function traduzirErro(e: ErroBanco): ErroTela {
   if (codigo === "23505" && campo === "slug") return { mensagem: "Esse endereço já está em uso. Escolha outro.", campo, codigo };
   if (codigo === "28000") return { mensagem: "Entre na sua conta para continuar.", codigo };
   if (codigo && MENSAGEM_DO_BANCO.has(codigo) && e.message && !/violates|permission denied|row-level/i.test(e.message)) {
-    return { mensagem: e.message, campo, codigo };
+    return { mensagem: e.message.replace(/OLAKI|OLAQUI|OL-AQUI|OL-AKI/gi, "Mercado da Região"), campo, codigo };
   }
   if (codigo === "23505") return { mensagem: "Isso já existe. Escolha outro.", campo, codigo };
   if (codigo === "42501") return { mensagem: "Você não tem permissão para isso.", codigo };

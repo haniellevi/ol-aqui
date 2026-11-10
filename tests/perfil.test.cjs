@@ -84,7 +84,7 @@ function syncAmbiente(op={}) {
   const user={id,firstName:'Nome do login',lastName:null,imageUrl:'https://img/nova',hasImage:true,primaryPhoneNumberId:'phone1',phoneNumbers:[{id:'phone1',phoneNumber:'+5589999990001',verification:{status:'verified'}}],...op.user};
   const db={from(){let alterou=false;const q={select(){return q;},eq(){return q;},update(v){alterou=true;updates.push(v);return q;},async maybeSingle(){return {data:alterou ? (op.semLinha?null:{id}):existente,error:op.erro?{message:'falhou'}:null};}};return q;}};
   const a=carregar('src/lib/perfil.ts',{'@clerk/nextjs/server':{},'@/lib/supabase/admin':{supabaseAdmin:()=>db}});
-  return {run:()=>a.sincronizarPerfil(user),updates};
+  return {run:(atualizarFoto=false)=>a.sincronizarPerfil(user,atualizarFoto),updates};
 }
 test('foto: sincroniza mudança sem exigir troca do telefone e preserva nome e confirmação',async()=>{
   const a=syncAmbiente();await a.run();assert.deepEqual(a.updates,[{avatar_url:'https://img/nova'}]);
@@ -94,7 +94,7 @@ test('foto: remoção apaga avatar salvo mesmo que Clerk forneça imagem padrão
 });
 test('sincronização: não regrava quando não há mudanças e propaga falha do banco',async()=>{
   const a=syncAmbiente({user:{imageUrl:'https://img/antiga'}});await a.run();assert.equal(a.updates.length,0);
-  await assert.rejects(syncAmbiente({semLinha:true}).run());await assert.rejects(syncAmbiente({erro:true}).run());
+  await syncAmbiente({semLinha:true}).run();await assert.rejects(syncAmbiente({semLinha:true}).run(true));await assert.rejects(syncAmbiente({erro:true}).run());
 });
 test('sincronização: número principal não confirmado não usa um secundário antigo',async()=>{
   const a=syncAmbiente({user:{primaryPhoneNumberId:'phone2',phoneNumbers:[{id:'phone1',phoneNumber:'+5589999990001',verification:{status:'verified'}},{id:'phone2',phoneNumber:'+5589999990002',verification:{status:'unverified'}}]}});
@@ -135,4 +135,9 @@ test('Clerk: perfil criado sem telefone somente em conflito de titularidade iden
       assert.equal(insercoes.length, 1);
     }
   }
+});
+
+test('foto administrativa prevalece sobre sincronização passiva e titular pode atualizá-la explicitamente',async()=>{
+ const a=syncAmbiente({existente:{avatar_personalizado:true}});await a.run();assert.deepEqual(a.updates,[]);
+ await a.run(true);assert.deepEqual(a.updates,[{avatar_url:'https://img/nova',avatar_personalizado:false}]);
 });

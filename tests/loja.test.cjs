@@ -23,7 +23,7 @@ test('loja: paginação usa configuração regional e não disfarça falha',asyn
 });
 test('loja: contato tem destino e texto corretos, copiar link e atalhos acessíveis',async()=>{
  const h=await html();const url=new URL(h.match(/href="(https:\/\/wa.me\/[^\"]+)"/)[1].replaceAll('&amp;','&'));
- assert.equal(url.pathname,'/5589999990002');assert.match(url.searchParams.get('text'),/https:\/\/ol-aqui.vercel.app\/loja\/loja-teste/);
+ assert.equal(url.pathname,'/5589999990002');assert.match(url.searchParams.get('text'),/https:\/\/mercadodaregiao.com.br\/loja\/loja-teste/);
  for(const t of ['Copiar link da loja','Informações da loja','Ver anúncios','Formas de pagamento','Como chegar','Instagram','Sobre nós','Faz entrega']) assert.ok(h.includes(t),t);
  assert.doesNotMatch(h,/Editar minha vitrine/);
 });

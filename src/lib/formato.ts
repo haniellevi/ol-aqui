@@ -15,7 +15,8 @@ export function numeroDoTexto(t: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://ol-aqui.vercel.app").replace(/\/$/, "");
+const siteConfigurado = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+export const SITE = !siteConfigurado || /^https?:\/\/(?:www\.)?(?:ol-aqui\.vercel\.app|olaki\.com\.br)$/i.test(siteConfigurado) ? "https://mercadodaregiao.com.br" : siteConfigurado;
 
 const moedaInteira = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const moedaCentavos = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
