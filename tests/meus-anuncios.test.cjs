@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { carregar } = require('./carregar.cjs');
+const { renderToStaticMarkup: render } = require('react-dom/server');
 const id = '70000000-0000-4000-a000-000000000001';
 function ambiente(opts = {}) {
   const chamadas = [];
@@ -28,9 +29,10 @@ test('reativação não transforma retorno nulo ou inesperado em sucesso', async
   for (const retorno of [null, undefined, '', 'vendido', {}]) assert.equal((await ambiente({retorno}).actions.reativarAnuncio(id)).ok,false);
   for (const retorno of ['ativo','em_analise']) assert.deepEqual(await ambiente({retorno}).actions.reativarAnuncio(id),{ok:true,dados:retorno});
 });
-test('falha de conexão e erro de banco permitem nova tentativa sem falso sucesso', async () => {
+test('retorno incerto pede atualização e erro de banco não vira sucesso', async () => {
   const falha=await ambiente({falha:true}).actions.moverParaLixeira(id);
-  assert.equal(falha.ok,false); assert.match(falha.erro.mensagem,/Tente novamente/);
+  assert.equal(falha.ok,false); assert.equal(falha.erro.codigo,'alteracao_incerta');
+  assert.match(falha.erro.mensagem,/Atualize a página/);
   const {actions,chamadas}=ambiente({resposta:{data:null,error:{code:'42501',message:'Bloqueado'}}});
   assert.equal((await actions.restaurarAnuncio(id)).ok,false);
   assert.equal(chamadas.some(([a])=>a==='cache'),false);
@@ -55,6 +57,27 @@ test('lixeira chama RPC reversível e atualiza conta, busca, anúncio e loja', a
 test('restauração aceita estados preservados e não anuncia reativação automática', async () => {
   for(const retorno of ['rascunho','pausado','vendido','em_analise','congelado']) assert.equal((await ambiente({retorno}).actions.restaurarAnuncio(id)).ok,true);
   for(const retorno of [null,'ativo','excluido']) assert.equal((await ambiente({retorno}).actions.restaurarAnuncio(id)).ok,false);
+});
+
+test('restaurar mantém a aba Lixeira e só encaminha ao destino depois do último anúncio', async () => {
+  const restaurado = { id, status: 'pausado' };
+  const outro = { id: '70000000-0000-4000-a000-000000000002', status: 'excluido', titulo: 'Ainda na lixeira', fotos: [] };
+  const pagina = anuncios => carregar('src/app/(conta)/minha-conta/anuncios/page.tsx', {
+    'next/navigation': { redirect: destino => { throw Error(`redirect:${destino}`); } },
+    '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ vitrine: { tipo: 'pf' }, podePublicar: true }) },
+    '@/lib/dados/anuncios': { meusAnuncios: async () => anuncios },
+    '@/lib/dados/destaques': { resultadosDestaques: async () => [] },
+    '@/lib/dados/vitrine-completa': {},
+    '@/components/conta/resumo-plano': { resumoPlano: () => null },
+    '@/components/conta/acoes-anuncio': { AcoesAnuncio: () => 'Restaurar anúncio' },
+    '@/components/conta/filtro-meus-anuncios': { FiltroMeusAnuncios: () => null },
+    '@/components/conta/foto-meu-anuncio': { FotoMeuAnuncio: () => null },
+    '@/components/vitrine/botao-fixar': { BotaoFixar: () => null },
+  }).default({ searchParams: Promise.resolve({ aba: 'lixeira', resultado: 'restaurado', anuncio: id }) });
+  const html = render(await pagina([restaurado, outro]));
+  assert.match(html, /Anúncio restaurado/);
+  assert.match(html, /Ainda na lixeira/);
+  await assert.rejects(pagina([restaurado]), new RegExp(`redirect:/minha-conta/anuncios\\?aba=pausados&resultado=restaurado&anuncio=${id}`));
 });
 test('todos exclui lixeira e cada estado possui destino e rótulo', () => {
   const {ABAS_ANUNCIOS,abaDoStatus,ROTULO_ANUNCIO}=carregar('src/components/conta/situacao-anuncios.ts');

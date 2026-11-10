@@ -21,24 +21,22 @@ export function CartaoVendedor({ v }: { v: Dados }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-card bg-cartao p-3 shadow-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+      className="flex min-h-11 items-center gap-2 rounded-card border border-borda bg-cartao px-2.5 py-2 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
     >
-      <AvatarVitrine nome={nome} logo={loja ? v.vitrine_logo_url : null} />
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="text-legenda text-texto-suave">{loja ? "Loja" : "Vendedor"}</span>
-        <strong className="truncate text-sm font-semibold">{nome}</strong>
-        {(v.vitrine_selo || v.vendedor_certificado) && (
-          <span className="flex flex-wrap gap-1">
+      <AvatarVitrine nome={nome} logo={loja ? v.vitrine_logo_url : null} tamanho="sm" />
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="sr-only">{loja ? "Loja" : "Vendedor"}</span>
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <strong className="min-w-0 text-sm font-semibold [overflow-wrap:anywhere]">{nome}</strong>
+          {(v.vitrine_selo || v.vendedor_certificado) && <span className="flex flex-wrap gap-1">
             {loja && v.vitrine_selo && <SeloLoja />}
             {v.vendedor_certificado && <SeloNegociador />}
-          </span>
-        )}
+          </span>}
+        </span>
         {desdeTexto && <span className="text-legenda text-texto-suave">{desdeTexto}</span>}
       </span>
-      <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-laranja-escuro">
-        {loja ? "Ver loja" : "Ver anúncios"}
-        <ChevronRight className="size-5" aria-hidden />
-      </span>
+      <span className="sr-only">{loja ? "Ver loja" : "Ver anúncios"}</span>
+      <ChevronRight className="size-4 shrink-0 text-laranja-escuro" aria-hidden />
     </Link>
   );
 }
