@@ -17,7 +17,7 @@ const ENTRADA = `${SELECT} placeholder:text-texto-suave`;
 // Chip de escolha (igual ao <Chip>): selecionado = borda laranja-escuro, fundo laranja-claro, texto beringela e ✓.
 const OPCAO =
   "group inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-campo border border-borda bg-cartao px-4 text-[15px] font-semibold text-beringela " +
-  "has-checked:border-laranja-escuro has-checked:bg-laranja-claro " +
+  "has-checked:border-laranja-escuro has-checked:bg-selecao " +
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 const LEGENDA = "mb-2 text-base font-semibold";
 

@@ -2,8 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Check, ChevronRight, MessageCircle, Star } from "lucide-react";
-import { Botao } from "@/components/ui/botao";
+import { Bell, Check, ChevronRight, Loader2, MessageCircle, Star } from "lucide-react";
 import { abrirAviso, marcarTodasLidas, salvarPreferenciaAviso } from "@/app/(conta)/minha-conta/notificacoes/actions";
 import { tempoRelativo } from "@/lib/formato";
 import { dataHoraCurta } from "@/components/radar/util";
@@ -38,10 +37,15 @@ function useAcaoAviso() {
 
 export function MarcarAvisos({ desabilitado }: { desabilitado: boolean }) {
   const { executar, pendente, erro, mensagem } = useAcaoAviso();
-  return <div className="flex flex-col gap-2">
-    <Botao variante="texto" disabled={desabilitado} carregando={pendente} textoCarregando="Marcando..." onClick={() => executar(marcarTodasLidas)}>Marcar todas como lidas</Botao>
-    {erro && <p role="alert" className="text-sm font-semibold text-perigo">{erro}</p>}
-    {mensagem && <p role="status" className="text-sm text-verde-escuro">{mensagem}</p>}
+  return <div className="flex flex-col">
+    <button type="button" disabled={desabilitado || pendente} aria-busy={pendente}
+      onClick={() => executar(marcarTodasLidas)}
+      className="olaki-controle min-h-11 rounded-campo px-2 text-legenda font-semibold text-texto-suave underline-offset-4 hover:text-beringela hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:cursor-not-allowed disabled:opacity-50">
+      {pendente ? "Marcando..." : "Marcar lidas"}
+      <span className="sr-only">: todas as notificações</span>
+    </button>
+    {erro && <p role="alert" className="max-w-56 text-legenda font-semibold text-perigo">{erro}</p>}
+    {mensagem && <p role="status" className="sr-only">{mensagem}</p>}
   </div>;
 }
 
@@ -51,39 +55,40 @@ export function LinhaAviso({ aviso: a }: { aviso: Notificacao }) {
   const Icone = a.tipo === "proposta_nova" ? MessageCircle : a.tipo === "proposta_escolhida" ? Star : Bell;
   return <>
     <button type="button" disabled={pendente} aria-busy={pendente} onClick={() => executar(() => abrirAviso(a.id))}
-      className={`flex min-h-14 w-full items-start gap-3 px-4 py-4 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-wait ${lido ? "" : "bg-laranja-claro/60"}`}>
-      <span className="mt-1 grid size-9 shrink-0 place-items-center rounded-full bg-fundo text-beringela"><Icone className="size-5" aria-hidden /></span>
+      className={`flex min-h-18 w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-wait ${lido ? "" : "bg-selecao/40"}`}>
+      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-fundo text-beringela"><Icone className="size-4" aria-hidden /></span>
       <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className={`break-words text-base ${lido ? "font-semibold" : "font-bold"}`}>{a.titulo}</span>
-        <span className="break-words text-base leading-6 text-texto-suave">{a.texto}</span>
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-legenda text-texto-suave">
-          <span className={lido ? "" : "font-semibold text-laranja-escuro"}>{lido ? "Lido" : "Não lido"}</span>
-          <time dateTime={a.criado_em} title={dataHoraCurta(a.criado_em)}>{tempoRelativo(a.criado_em)}</time>
+        <span className="flex items-start justify-between gap-3">
+          <span className={`min-w-0 break-words text-rotulo ${lido ? "font-normal" : "font-semibold text-beringela"}`}>{a.titulo}</span>
+          <time className="shrink-0 text-legenda text-texto-suave" dateTime={a.criado_em} title={dataHoraCurta(a.criado_em)}>{tempoRelativo(a.criado_em)}</time>
         </span>
-        <span className="mt-1 text-sm font-semibold text-laranja-escuro">{pendente ? "Abrindo..." : a.link ? "Abrir aviso" : lido ? "Já lido" : "Marcar como lido"}</span>
+        <span className={`text-legenda text-texto-suave ${a.link ? "line-clamp-1" : "break-words"}`}>{a.texto}</span>
+        <span className="sr-only">{lido ? "Lido." : "Não lido."} {pendente ? "Abrindo..." : a.link ? "Abrir aviso." : lido ? "" : "Marcar como lido."}</span>
       </span>
-      {a.link && <ChevronRight className="mt-1 size-5 shrink-0 text-texto-suave" aria-hidden />}
+      <span className="flex w-4 shrink-0 flex-col items-center gap-2" aria-hidden>
+        {pendente ? <Loader2 className="size-4 animate-spin motion-reduce:animate-none text-texto-suave" /> : <>
+          {!lido && <span className="size-1.5 rounded-full bg-beringela" />}
+          {a.link && <ChevronRight className="size-4 text-texto-suave" />}
+        </>}
+      </span>
     </button>
     {erro && <p role="alert" className="px-4 pb-3 text-sm font-semibold text-perigo">{erro}</p>}
-    {mensagem && !a.link && <p role="status" className="px-4 pb-3 text-sm text-verde-escuro">{mensagem}</p>}
+    {mensagem && !a.link && <p role="status" className="sr-only">{mensagem}</p>}
   </>;
 }
 
 export function PreferenciaAvisoBotao({ preferencia: p }: { preferencia: PreferenciaAviso }) {
   const { executar, pendente, erro, mensagem } = useAcaoAviso();
-  return <div className="flex flex-col gap-2">
+  return <div className="flex flex-col">
     <button type="button" disabled={pendente} aria-pressed={p.ligado} aria-busy={pendente}
       onClick={() => executar(() => salvarPreferenciaAviso(p.tipo, !p.ligado))}
-      className={`flex min-h-14 w-full flex-wrap items-center gap-3 rounded-campo border px-4 py-3 text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:cursor-wait ${p.ligado ? "border-laranja-escuro bg-laranja-claro" : "border-borda bg-cartao hover:bg-fundo"}`}>
-      <span className="flex min-w-40 flex-1 flex-col gap-0.5">
-        <span className="break-words text-base font-semibold text-beringela">{p.nome}</span>
-        {p.explicacao && <span className="text-legenda text-texto-suave">{p.explicacao}</span>}
-      </span>
-      <span className="inline-flex shrink-0 items-center gap-1 text-legenda font-semibold text-beringela">
-        {pendente ? "Salvando..." : p.ligado ? <><Check className="size-4" aria-hidden />Ligado</> : "Desligado"}
+      className="flex min-h-12 w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-wait">
+      <span className="min-w-0 flex-1 break-words text-rotulo font-normal text-texto">{p.nome}</span>
+      <span className={`inline-flex shrink-0 items-center gap-1 text-legenda ${p.ligado ? "font-semibold text-beringela" : "text-texto-suave"}`}>
+        {pendente ? "Salvando..." : p.ligado ? <><Check className="size-3.5" aria-hidden />Ligado</> : "Desligado"}
       </span>
     </button>
-    {erro && <p role="alert" className="text-sm font-semibold text-perigo">{erro}</p>}
-    {mensagem && <p role="status" className="text-sm text-verde-escuro">{mensagem}</p>}
+    {erro && <p role="alert" className="px-3 pb-3 text-legenda font-semibold text-perigo">{erro}</p>}
+    {mensagem && <p role="status" className="sr-only">{mensagem}</p>}
   </div>;
 }

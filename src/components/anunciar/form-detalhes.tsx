@@ -17,7 +17,7 @@ import { nomeAtributo } from "./atributos";
 
 const OPCAO =
   "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-card border-2 border-borda bg-cartao px-3 py-2 text-center " +
-  "text-base font-semibold text-beringela hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-laranja-claro " +
+  "text-base font-semibold text-beringela hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao " +
   "has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
 const NAO_INFORMAR = "";

@@ -6,18 +6,18 @@
   --ol-beringela: #4b1248;
   --ol-laranja: #ff6a13;
   --ol-laranja-escuro: #c2410c;
-  --ol-laranja-claro: #fff4ec;
+  --ol-selecao: #f0eaf5;
   --ol-verde: #12a150;
   --ol-verde-escuro: #0e7a3d;
-  --ol-fundo: #f6f4f7;
+  --ol-fundo: #f7f8fa;
   --ol-cartao: #ffffff;
   --ol-texto-suave: #5e5266;
   --ol-borda: #e6e0e9;
 
   --ss-accent: var(--ol-laranja);
   --ss-accent-2: #ff8a47;
-  --ss-accent-soft: var(--ol-laranja-claro);
-  --ss-accent-text: var(--ol-laranja-escuro);
+  --ss-accent-soft: var(--ol-selecao);
+  --ss-accent-text: var(--ol-beringela);
   --ss-canvas: var(--ol-fundo);
   --ss-surface: var(--ol-cartao);
   --ss-line: var(--ol-borda);
@@ -43,16 +43,14 @@
   & .ss-stage {
     overflow: hidden;
     border-radius: 14px;
-    /* A faixa do Radar da home: laranja-claro, com uma luz quente no alto */
-    background: var(--ol-laranja-claro);
+    /* A demonstração acompanha o fundo neutro do aplicativo. */
+    background: var(--ol-fundo);
   }
 
   .ol-wash {
     position: absolute;
     inset: 0;
-    background:
-      radial-gradient(70% 55% at 80% 0%, rgba(255, 106, 19, 0.18), transparent 70%),
-      radial-gradient(60% 50% at 10% 100%, rgba(75, 18, 72, 0.08), transparent 70%);
+    background: var(--ol-fundo);
   }
 
   /* Fixo em cima, centrado, corre para fora do pé do palco */
@@ -133,7 +131,7 @@
 
   .ol-chip[data-on] {
     border-color: var(--ol-laranja);
-    background: var(--ol-laranja-claro);
+    background: var(--ol-selecao);
     font-weight: 600;
   }
 
@@ -176,11 +174,11 @@
     height: 24px;
     padding: 0 8px 0 7px;
     border-radius: 999px;
-    background: var(--ol-laranja-claro);
+    background: var(--ol-selecao);
     font-size: 13px;
     font-weight: 600;
     line-height: 18px;
-    color: var(--ol-laranja-escuro);
+    color: var(--ol-beringela);
   }
 
   .ol-when {
@@ -414,7 +412,7 @@
 
   .ol-item[data-selected] {
     border-color: var(--ol-laranja);
-    background: var(--ol-laranja-claro);
+    background: var(--ol-selecao);
   }
 
   .ol-item .ss-row__title {

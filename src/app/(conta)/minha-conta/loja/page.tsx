@@ -195,7 +195,7 @@ function ItemMenu({ href, icone, titulo, detalhe }: { href: string; icone: React
         href={href}
         className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
       >
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-laranja-claro text-beringela [&>svg]:size-5" aria-hidden>
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-selecao text-beringela [&>svg]:size-5" aria-hidden>
           {icone}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">

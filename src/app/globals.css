@@ -6,7 +6,6 @@
   --color-beringela: #4b1248;
   --color-laranja: #ff6a13;
   --color-laranja-escuro: #c2410c;
-  --color-laranja-claro: #fff4ec;
   --color-verde: #12a150;
   --color-verde-escuro: #0e7a3d;
   --color-fundo: #f7f8fa;
@@ -24,7 +23,15 @@
   --color-sucesso-fundo: #ecf8f1; /* verde-escuro sobre ele: 5,0:1 */
 
   --font-sans: var(--font-poppins), system-ui, sans-serif;
-  --text-titulo: 1.375rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.4;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.3;
+  --text-titulo: 1.25rem;
   --text-titulo--line-height: 1.3;
   --text-rotulo: 0.875rem;
   --text-rotulo--line-height: 1.45;
@@ -33,18 +40,20 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   --radius-campo: 0.5rem;
-  --radius-card: 0.75rem;
+  --radius-card: 0.625rem;
   --radius-folha: 1.25rem;
 
   --shadow-1: 0 1px 2px rgb(75 18 72 / 0.08);
   --shadow-2: 0 -2px 12px rgb(75 18 72 / 0.12);
 
-  --spacing-toque: 3rem; /* 48px, área mínima de toque */
+  --spacing-toque: 2.75rem; /* 44px, área mínima de toque */
 }
 
 body {
   background: var(--color-fundo);
   color: var(--color-texto);
+  font-size: var(--text-base);
+  line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -54,6 +63,23 @@ body {
 }
 
 input, textarea { caret-color: var(--color-laranja-escuro); }
+
+/* Campos preservam 16px no toque; utilitários específicos, como preço, continuam válidos. */
+@layer base {
+  input, select, textarea { font-size: 1rem; }
+}
+
+@layer utilities {
+  .text-base:where(input, select, textarea) { font-size: 1rem; }
+  @media (min-width: 48rem) and (pointer: fine) {
+    .text-base:where(input, select, textarea) { font-size: 0.875rem; }
+  }
+}
+
+@media (min-width: 48rem) and (pointer: fine) {
+  .olaki-controle { min-height: 2.5rem; }
+  :is(input, select).olaki-campo { height: 2.5rem; }
+}
 
 /* Feedback de pressão, sem animar navegação, leitura ou entrada de páginas. */
 .olaki-acao {

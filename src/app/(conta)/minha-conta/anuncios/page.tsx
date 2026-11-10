@@ -180,8 +180,8 @@ function LinhaAnuncio({
           <div className="flex flex-wrap items-center gap-1.5">
             <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${rotulo.cor}`}>{rotulo.texto}</span>
             {destaque && <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-[13px] font-bold text-beringela">Destaque</span>}
-            {pago && <span className="rounded-full bg-laranja-claro px-2 py-0.5 text-[13px] font-bold text-laranja-escuro">Avulso pago</span>}
-            {fixado && <span className="rounded-full bg-laranja-claro px-2 py-0.5 text-[13px] font-bold text-beringela">No topo da loja</span>}
+            {pago && <span className="rounded-full bg-fundo px-2 py-0.5 text-[13px] font-bold text-laranja-escuro">Avulso pago</span>}
+            {fixado && <span className="rounded-full bg-selecao px-2 py-0.5 text-[13px] font-bold text-beringela">No topo da loja</span>}
           </div>
           <h2 className="line-clamp-2 break-words text-base font-semibold leading-5">
             {publico ? (
@@ -217,7 +217,7 @@ function LinhaAnuncio({
       )}
 
       {d && (
-        <p className="flex items-start gap-2 rounded-card bg-laranja-claro p-2 text-sm">
+        <p className="flex items-start gap-2 rounded-card bg-fundo p-2 text-sm">
           <BarChart3 className="mt-0.5 size-4 shrink-0 text-laranja-escuro" aria-hidden />
           <span>
             {d.status === "ativo" ? `${d.tipo_nome}: seu destaque` : `Seu último destaque (${d.tipo_nome})`} teve {fraseResultado(d)}.

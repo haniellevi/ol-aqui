@@ -18,18 +18,18 @@ export function TopoConta({
   children?: ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-2">
+    <header className="flex flex-col gap-1">
       {voltar && (
         <Link
           href={voltar}
-          className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 rounded-campo px-2 text-rotulo font-semibold text-texto-suave hover:text-texto focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+          className="olaki-controle -ml-2 inline-flex min-h-11 w-fit items-center gap-1 rounded-campo px-2 text-rotulo font-semibold text-texto-suave hover:text-texto focus-visible:outline-3 focus-visible:outline-laranja-escuro"
         >
           <ChevronLeft className="size-5" aria-hidden />
           {textoVoltar}
         </Link>
       )}
-      <h1 className="text-titulo font-semibold text-beringela [overflow-wrap:anywhere]">{titulo}</h1>
-      {texto && <p className="max-w-[65ch] text-base leading-6 text-texto-suave">{texto}</p>}
+      <h1 className="text-balance text-titulo font-semibold text-beringela [overflow-wrap:anywhere]">{titulo}</h1>
+      {texto && <p className="max-w-[65ch] text-pretty text-sm text-texto-suave">{texto}</p>}
       {children}
     </header>
   );
@@ -38,6 +38,6 @@ export function TopoConta({
 /** Contêiner padrão das telas da conta (celular primeiro, 16px de margem). */
 export function PaginaConta({ children, larga = false }: { children: ReactNode; larga?: boolean }) {
   return (
-    <main className={`mx-auto flex w-full ${larga ? "max-w-5xl" : "max-w-xl"} flex-col gap-5 px-4 py-6`}>{children}</main>
+    <main className={`mx-auto flex w-full ${larga ? "max-w-5xl" : "max-w-xl"} flex-col gap-4 px-4 py-4 md:py-5`}>{children}</main>
   );
 }

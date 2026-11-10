@@ -241,7 +241,7 @@ export function FormLoja({
         <Campo rotulo="Cidade da loja" name="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} maxLength={80} erro={erroDe("cidade")} />
       )}
 
-      {avisoTeste && <p className="rounded-card bg-laranja-claro p-3 text-base">{avisoTeste}</p>}
+      {avisoTeste && <p className="rounded-card bg-fundo p-3 text-base">{avisoTeste}</p>}
 
       <Botao type="submit" larguraTotal carregando={enviando} textoCarregando="Criando sua loja..." disabled={situacao === "ocupado"}>
         Criar minha loja

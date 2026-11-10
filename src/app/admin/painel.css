@@ -27,9 +27,9 @@
     font-size: 0.875rem;
     line-height: 1.4;
   }
-  .painel-admin .admin-campo:not(textarea) { height: 2.75rem; }
-  .painel-admin .olaki-acao { min-height: 2.75rem; }
-  .painel-admin .admin-menu-item { min-height: 2.75rem; }
+  .painel-admin .admin-campo:not(textarea) { height: 2.5rem; }
+  .painel-admin .olaki-acao { min-height: 2.5rem; }
+  .painel-admin .admin-menu-item { min-height: 2.5rem; }
 }
 
 /* Categorias de configuração: rolagem perceptível no toque, todas à vista no desktop. */

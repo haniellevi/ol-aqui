@@ -2,14 +2,13 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
-// Botão do OLAKI (docs/DESIGN-SYSTEM.md, "Botões"). Altura mínima 48px (52px no principal de
-// largura cheia e no WhatsApp), texto 15px peso 600. Painel com mouse: 14px / 44px.
+// Botão do OLAKI: texto 14px, altura 44px no toque e 40px com mouse.
 // Principal = laranja com texto beringela (nunca branco no laranja).
 
 export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | "texto";
 
 const BASE =
-  "olaki-acao inline-flex select-none items-center justify-center gap-2 rounded-campo px-4 text-[0.9375rem] font-semibold leading-5 " +
+  "olaki-acao olaki-controle inline-flex select-none items-center justify-center gap-1.5 rounded-campo px-3 text-sm font-semibold leading-5 " +
   "transition-colors active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro " +
   "disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:pointer-events-none aria-disabled:opacity-60";
 
@@ -41,9 +40,7 @@ type ComoLink = Comum & Omit<ComponentProps<typeof Link>, keyof Comum> & { href:
 export type BotaoProps = ComoBotao | ComoLink;
 
 export function classesBotao(variante: VarianteBotao = "primario", larguraTotal = false, extra = "") {
-  // 52px (h-13) no WhatsApp e no principal de largura cheia (a ação principal da tela); 48px nos outros.
-  const altura = variante === "whatsapp" || (variante === "primario" && larguraTotal) ? "min-h-13" : "min-h-12";
-  return `${BASE} ${altura} ${VARIANTES[variante]} ${larguraTotal ? "w-full" : ""} ${extra}`.trim();
+  return `${BASE} min-h-11 ${VARIANTES[variante]} ${larguraTotal ? "w-full" : ""} ${extra}`.trim();
 }
 
 /** Com `href` vira link (next/link); sem `href` é <button> (type="button" por padrão). */
@@ -53,9 +50,9 @@ export function Botao(props: BotaoProps) {
   const conteudo = (
     <>
       {carregando ? (
-        <Loader2 className="size-5 animate-spin motion-reduce:animate-none" aria-hidden />
+        <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />
       ) : (
-        icone && <span className="inline-flex shrink-0 [&>svg]:size-5" aria-hidden>{icone}</span>
+        icone && <span className="inline-flex shrink-0 [&>svg]:size-4" aria-hidden>{icone}</span>
       )}
       <span className="inline-flex items-center justify-center gap-2">{carregando && textoCarregando ? textoCarregando : children}</span>
     </>

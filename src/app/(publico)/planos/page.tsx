@@ -64,12 +64,12 @@ export default async function PaginaPlanos({ searchParams }: Props) {
           Escolha como quer vender na sua região. Você pode mudar de plano quando quiser.
         </p>
         {origem === "vitrine" && (
-          <p className="rounded-card bg-laranja-claro p-3 text-base font-semibold">
+          <p className="rounded-card bg-fundo p-3 text-base font-semibold">
             Foto da fachada, seções próprias e produtos no topo da vitrine estão nos planos marcados abaixo.
           </p>
         )}
         {origem === "radar" && (
-          <p className="rounded-card bg-laranja-claro p-3 text-base font-semibold">
+          <p className="rounded-card bg-fundo p-3 text-base font-semibold">
             Para ver os pedidos do Radar e mandar propostas, escolha um plano com Radar.
           </p>
         )}
@@ -96,7 +96,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
                 }`}
               >
                 {destaque && (
-                  <span className="inline-flex w-fit items-center gap-1 rounded-full bg-laranja-claro px-3 py-1 text-[13px] font-bold text-beringela">
+                  <span className="inline-flex w-fit items-center gap-1 rounded-full bg-selecao px-3 py-1 text-[13px] font-bold text-beringela">
                     <Star className="size-4 text-laranja-escuro" aria-hidden /> Mais escolhido
                   </span>
                 )}

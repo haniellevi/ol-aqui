@@ -70,7 +70,7 @@ export function FaixaTermos({ aviso }: { aviso: AvisoTermos }) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pt-3">
-      <section aria-labelledby="faixa-termos-titulo" className="relative flex flex-col gap-3 rounded-card border-2 border-laranja-escuro bg-laranja-claro p-4 pr-14">
+      <section aria-labelledby="faixa-termos-titulo" className="relative flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4 pr-14">
         <button
           type="button"
           onClick={agoraNao}

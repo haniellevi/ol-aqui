@@ -105,7 +105,7 @@ export default async function MeuPedidoPage({
       )}
 
       {pedido.situacao === "prazo_acabou" && (
-        <section className="flex flex-col gap-1 rounded-card bg-laranja-claro p-4 text-beringela">
+        <section className="flex flex-col gap-1 rounded-card bg-fundo p-4 text-beringela">
           <p className="text-lg font-bold">O prazo acabou</p>
           <p className="text-base">
             {propostas.length > 0 ? `${resumoPropostas(propostas.length, menor)}. Escolha uma e chame no WhatsApp.` : "Nenhuma loja mandou proposta desta vez."}

@@ -497,7 +497,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
             </header>
 
             {estado.avisoIa && (
-              <p className="flex items-start gap-2 bg-laranja-claro px-4 py-2 text-[13px] leading-[18px] text-beringela">
+              <p className="flex items-start gap-2 bg-selecao px-4 py-2 text-[13px] leading-[18px] text-beringela">
                 <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
                 {estado.avisoIa}
               </p>
@@ -560,7 +560,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
               {mensagens.map((m, i) =>
                 m.papel === "usuario" ? (
                   <div key={`u${m.id ?? i}`} className="flex justify-end">
-                    <p className="max-w-[85%] whitespace-pre-wrap rounded-card rounded-br-none bg-laranja-claro px-3 py-2 text-base leading-6">
+                    <p className="max-w-[85%] whitespace-pre-wrap rounded-card rounded-br-none bg-selecao px-3 py-2 text-base leading-6">
                       {m.conteudo.foto && (
                         <span className="mb-1 flex items-center gap-1 text-[13px] text-texto-suave">
                           <Camera className="size-4" aria-hidden /> Foto enviada

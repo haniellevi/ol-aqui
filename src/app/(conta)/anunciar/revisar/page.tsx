@@ -125,14 +125,14 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
       )}
 
       {!jaPublicado && pagoAte && (
-        <div className="flex gap-3 rounded-card bg-laranja-claro p-3 text-base">
+        <div className="flex gap-3 rounded-card bg-fundo p-3 text-base">
           <Info className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
           <p>Anúncio avulso pago. Toque em Publicar para pôr no ar.</p>
         </div>
       )}
 
       {!jaPublicado && !pagoAte && !conta.podePublicar && (
-        <div className="flex gap-3 rounded-card bg-laranja-claro p-3 text-base">
+        <div className="flex gap-3 rounded-card bg-fundo p-3 text-base">
           <Info className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
           <p>
             Você chegou ao limite de anúncios do seu plano. O anúncio fica guardado como rascunho.{" "}

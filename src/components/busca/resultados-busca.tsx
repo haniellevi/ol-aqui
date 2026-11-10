@@ -115,7 +115,7 @@ export function ResultadosBusca({
                 <Link
                   href={comParametros(caminho, sp, Object.fromEntries(a.parametros.map((p) => [p, null])))}
                   aria-label={`Remover filtro: ${a.rotulo}`}
-                  className="inline-flex min-h-12 max-w-full items-center gap-2 rounded-campo border border-laranja-escuro bg-laranja-claro px-3 py-2 text-sm text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                  className="inline-flex min-h-12 max-w-full items-center gap-2 rounded-campo border border-laranja-escuro bg-selecao px-3 py-2 text-sm text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                 >
                   <span className="min-w-0 break-words">{a.rotulo}</span><X className="size-4 shrink-0" aria-hidden />
                 </Link>

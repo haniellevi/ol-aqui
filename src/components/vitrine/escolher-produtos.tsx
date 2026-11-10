@@ -73,7 +73,7 @@ export function EscolherProdutos({
             <li key={a.id}>
               <label
                 className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-card border-2 bg-cartao p-2 shadow-1 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro ${
-                  marcado ? "border-laranja-escuro bg-laranja-claro" : "border-transparent"
+                  marcado ? "border-laranja-escuro bg-selecao" : "border-transparent"
                 } ${bloqueado ? "cursor-not-allowed opacity-60" : ""}`}
               >
                 <input type="checkbox" checked={marcado} disabled={bloqueado || pendente} onChange={() => alternar(a.id)} className="sr-only" />

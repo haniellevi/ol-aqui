@@ -26,7 +26,7 @@ export function CartaoVendedor({ v }: { v: Dados }) {
       <AvatarVitrine nome={nome} logo={loja ? v.vitrine_logo_url : null} />
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="text-[13px] text-texto-suave">{loja ? "Loja" : "Vendedor"}</span>
-        <strong className="truncate text-base font-semibold">{nome}</strong>
+        <strong className="truncate text-sm font-semibold">{nome}</strong>
         {(v.vitrine_selo || v.vendedor_certificado) && (
           <span className="flex flex-wrap gap-1">
             {loja && v.vitrine_selo && <SeloLoja />}
@@ -35,7 +35,7 @@ export function CartaoVendedor({ v }: { v: Dados }) {
         )}
         {desdeTexto && <span className="text-[13px] text-texto-suave">{desdeTexto}</span>}
       </span>
-      <span className="flex shrink-0 items-center gap-1 text-[15px] font-semibold text-laranja-escuro">
+      <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-laranja-escuro">
         {loja ? "Ver loja" : "Ver anúncios"}
         <ChevronRight className="size-5" aria-hidden />
       </span>

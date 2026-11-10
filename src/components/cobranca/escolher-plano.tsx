@@ -175,7 +175,7 @@ function CartaoPlano({
   return (
     <label
       className={`relative flex min-h-12 cursor-pointer gap-3 rounded-card border-2 p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
-        ativo ? "border-laranja-escuro bg-laranja-claro" : "border-borda bg-cartao"
+        ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
       } ${bloqueado ? "cursor-not-allowed opacity-70" : ""}`}
     >
       <input type="radio" name="plano" value={o.codigo} checked={ativo} disabled={bloqueado} onChange={onEscolher} className="sr-only" />

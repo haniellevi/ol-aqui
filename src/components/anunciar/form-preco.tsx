@@ -14,7 +14,7 @@ import { BarraContinuar } from "./barra-continuar";
 
 const CAIXA =
   "flex min-h-12 cursor-pointer items-center gap-3 rounded-card border-2 border-borda bg-cartao px-3 py-2 text-base font-semibold " +
-  "text-beringela hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-laranja-claro has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
+  "text-beringela hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
 function paraTexto(centavos: number | null): string {
   return centavos == null ? "" : (centavos / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -68,7 +68,7 @@ export function FormPreco({
       />
 
       {dicaFaixa && (
-        <p className="flex gap-2 rounded-card bg-laranja-claro p-3 text-base">
+        <p className="flex gap-2 rounded-card bg-fundo p-3 text-base">
           <Lightbulb className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
           <span>
             Parecidos na região: <strong>{dicaFaixa}</strong>

@@ -16,12 +16,12 @@ export function Vazio({
   className?: string;
 }) {
   return (
-    <section className={`flex flex-col items-center gap-3 rounded-card bg-cartao p-6 text-center shadow-1 ${className}`}>
-      <span className="grid size-14 place-items-center rounded-full bg-selecao text-beringela [&>svg]:size-6" aria-hidden>
+    <section className={`flex flex-col items-center gap-2 rounded-card border border-borda bg-cartao p-4 text-center ${className}`}>
+      <span className="grid size-10 place-items-center rounded-full bg-selecao text-beringela [&>svg]:size-5" aria-hidden>
         {icone ?? <SearchX />}
       </span>
-      <h2 className="text-base font-semibold text-beringela">{titulo}</h2>
-      {texto && <p className="max-w-sm text-base text-texto-suave">{texto}</p>}
+      <h2 className="text-balance text-base font-semibold text-beringela">{titulo}</h2>
+      {texto && <p className="max-w-sm text-pretty text-sm text-texto-suave">{texto}</p>}
       {children && <div className="mt-1 flex w-full max-w-sm flex-col gap-2">{children}</div>}
     </section>
   );

@@ -33,7 +33,7 @@ export function LimiteAtingido({
   return (
     <section aria-labelledby="titulo-limite" className="flex flex-col gap-4">
       <div className="flex flex-col items-center gap-3 rounded-card bg-cartao p-5 text-center shadow-1">
-        <span className="grid size-16 place-items-center rounded-full bg-laranja-claro text-beringela" aria-hidden>
+        <span className="grid size-16 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
           <Gauge className="size-8" />
         </span>
         <h1 id="titulo-limite" className="text-xl font-semibold">{titulo}</h1>

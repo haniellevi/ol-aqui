@@ -43,7 +43,7 @@ function EscolhaIcone({ id, inicial }: { id: string; inicial: string | null }) {
               id={escolhido ? `${id}-escolhido` : undefined}
               onClick={() => setAtual(nome)}
               className={`relative grid size-12 place-items-center rounded-campo border text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
-                escolhido ? "border-laranja-escuro bg-laranja-claro" : "border-borda bg-cartao hover:bg-fundo"
+                escolhido ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao hover:bg-fundo"
               }`}
             >
               <IconeCategoria nome={nome} className="size-6" />

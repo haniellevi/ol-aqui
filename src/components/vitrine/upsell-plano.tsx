@@ -6,7 +6,7 @@ import { LINK_PLANOS } from "@/lib/rotas";
 // e leva à página de planos. Nunca esconde o recurso sem explicar.
 export function UpsellPlano({ titulo, texto, disponivel }: { titulo: string; texto?: string; disponivel: string | null }) {
   return (
-    <div className="flex flex-col gap-2 rounded-card border-2 border-laranja-escuro bg-laranja-claro p-4">
+    <div className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-4">
       <p className="flex items-center gap-2 text-base font-semibold">
         <Sparkles className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
         {titulo}

@@ -21,7 +21,7 @@ export const metadata = { title: "Lojas" };
 const POR_PAGINA = 30;
 
 const SITUACOES: { valor: SituacaoConta; nome: string; cor: string }[] = [
-  { valor: "teste", nome: "Em teste", cor: "bg-laranja-claro text-beringela" },
+  { valor: "teste", nome: "Em teste", cor: "bg-selecao text-beringela" },
   { valor: "teste_vencido", nome: "Teste vencido", cor: "bg-aviso-fundo text-aviso" },
   { valor: "ativa", nome: "Plano em dia", cor: "bg-sucesso-fundo text-verde-escuro" },
   { valor: "vencida", nome: "Plano vencido", cor: "bg-aviso-fundo text-aviso" },

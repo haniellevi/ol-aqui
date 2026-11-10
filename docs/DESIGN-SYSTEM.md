@@ -18,7 +18,6 @@ Objetivo: o app parecer **simples, confiável e da região**, legível no sol, n
 | `beringela` | `#4B1248` | Títulos, marca, ícones, fundo escuro |
 | `laranja` | `#FF6A13` | Botão principal, preço em destaque sobre fundo escuro, pin, etiquetas |
 | `laranja-escuro` | `#C2410C` | Links e textos laranja sobre fundo branco |
-| `laranja-claro` | `#FFF4EC` | Apoio pontual em avisos e conteúdo promocional |
 | `verde` | `#12A150` | Só ícones e selos |
 | `verde-escuro` | `#0E7A3D` | Botão "Chamar no WhatsApp", mensagens de sucesso |
 
@@ -54,7 +53,12 @@ Objetivo: o app parecer **simples, confiável e da região**, legível no sol, n
 
 **Decisão de design:** o botão principal é **laranja com texto beringela em negrito**. Fica com a cara do logo, passa no contraste e destaca no sol. Onde precisar de texto branco (ex.: botão em fundo escuro), usa o `laranja-escuro`.
 
+Superfícies usam `fundo` ou `cartao`. Seleções, navegação ativa e ícones de apoio usam `selecao`, com texto beringela. O bege foi retirado da interface; não usar `laranja-claro`. Manter as cores semânticas de aviso, erro, sucesso e patrocínio, além das cores escolhidas para as capas das lojas.
+
+Texto laranja-escuro sobre `selecao` não atinge o contraste de 4,5:1 para texto pequeno; nessa combinação, usar beringela.
+
 ### Modo escuro
+
 Fase 2. Os tokens já nascem com nome de função (`fundo`, `cartao`, `texto`) para que o modo escuro seja só trocar valores. Base: fundo `#1E1020`, cartão `#2E1530`, laranja como está (6,4 : 1 sobre o fundo escuro).
 
 ---
@@ -67,17 +71,21 @@ Fase 2. Os tokens já nascem com nome de função (`fundo`, `cartao`, `texto`) p
 
 | Nome | Tamanho / altura da linha | Peso | Uso |
 |---|---|---|---|
-| `preco` | 24 / 30 | 700 | Preço na página do anúncio |
-| `titulo-1` | 22 / 28 | 600 | Título da tela |
-| `titulo-2` | 18 / 24 | 600 | Seções ("Perto de você") |
-| `corpo` | **16 / 24** | 400 | Texto normal. Campos públicos e de toque com **16** (evita o zoom automático do iPhone) |
-| `card-preco` | 18 / 24 | 700 | Preço no card |
-| `card-titulo` | 15 / 20 | 400 | Título no card (até 2 linhas) |
-| `legenda` | 13 / 18 | 400 | Cidade, data. Mínimo absoluto do app |
-| `botao` | 15 / 20 | 600 | Botões públicos e de toque |
+| `preco` | 24 / 30 | 700 | Preço na página do anúncio; exceção à escala compacta |
+| `titulo-1` | 20 / 26 | 600 | Título da tela (`text-titulo`) |
+| `titulo-2` | 18 / 25 | 600 | Seções (`text-xl`) |
+| `titulo-3` | 16 / 24 | 600 | Títulos de cards e grupos (`text-lg`) |
+| `corpo` | 15 / 22,5 | 400 | Texto normal (`text-base`) |
+| `card-preco` | 16 / 20 | 700 | Preço no card de anúncio |
+| `card-titulo` | 14 / 20 | 400 | Título no card de anúncio, até 2 linhas |
+| `legenda` | 13 / 18 | 400 | Cidade, data e metadados |
+| `botao` | 14 / 20 | 600 | Botões públicos e administrativos |
 | `rotulo` | 14 / 20 | 600 | Rótulos de campos |
+| `campo` | 16 / 24 | 400 | Campos no celular e com toque |
+| `campo-mouse` | 14 / 21 | 400 | Campos com mouse e largura mínima de 768 px |
 | `painel-corpo` | 14 / 21 | 400 | Corpo do painel administrativo |
-| `painel-campo` | 14 / 20 | 400 | Valor do campo no painel, somente com mouse e largura mínima de 768 px |
+
+Campos mantêm 16 px no celular e no toque para evitar o zoom automático do iPhone. A redução para 14 px depende de largura mínima de 768 px e `pointer: fine`. Campos com tamanho específico, como preço, podem preservar sua escala.
 
 Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca travar zoom). Muita gente da região usa letra grande.
 
@@ -86,9 +94,9 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 ## 3. Espaços, cantos e sombras
 
 - **Espaçamento em múltiplos de 4:** 4, 8, 12, 16, 24, 32, 48. Margem lateral das telas: **16**.
-- **Cantos arredondados:** 8 (campos, chips, botões), 12 (cards), 20 (folhas que sobem de baixo), cheio (selos e avatar). Combina com o ícone do app.
-- **Sombras:** só duas. `sombra-1` em cards públicos (bem leve); painel usa borda sem sombra e `sombra-2` em barra de baixo e folhas. Sombra pesada pesa no celular fraco.
-- **Área de toque:** **mínimo 48 × 48 px** em tudo que se toca (o padrão é 44; usamos 48 porque o público tem mais dedo grosso, celular com tela trincada e uso em pé, na rua). No painel com mouse e largura mínima de 768 px, controles e itens do menu podem usar 44 px; com toque, permanecem em 48 px.
+- **Cantos arredondados:** 8 (campos, chips, botões), 10 (cards), 20 (folhas que sobem de baixo), cheio (selos e avatar). Combina com o ícone do app.
+- **Cards:** preenchimento usual de 12 px e espaço de 8 a 12 px entre elementos. Preferir borda discreta; `sombra-1` fica nos cards públicos que precisam de separação e `sombra-2` nas folhas e barras fixas.
+- **Controles:** altura mínima de 44 px no celular e no toque. Com mouse e largura mínima de 768 px, os controles compartilhados usam 40 px. Ações só com ícone mantêm área de toque de pelo menos 44 × 44 px. Linhas de listas podem ser maiores conforme o conteúdo; não cortar texto para cumprir uma altura fixa.
 
 ---
 
@@ -106,10 +114,11 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 Base técnica: Tailwind + lucide-react com os tokens abaixo (é o que o app já usa). O shadcn/ui pode entrar depois para folhas, diálogos e menus, sem pagar licença. Cada componente tem estado normal, apertado, desativado, carregando e erro.
 
 ### Botões
+
 | Tipo | Visual | Quando |
 |---|---|---|
-| **Principal** | Laranja, texto beringela negrito, altura 52, largura cheia no celular | Uma vez por tela: "Publicar", "Continuar", "Entrar" |
-| **WhatsApp** | Verde-escuro, texto branco, ícone de conversa, altura 52 | Só para chamar o vendedor ou o comprador |
+| **Principal** | Laranja, texto beringela, 44 px no toque e 40 px com mouse | Uma vez por tela: "Publicar", "Continuar", "Entrar" |
+| **WhatsApp** | Verde-escuro, texto branco, ícone de conversa, mesma altura dos demais botões | Só para chamar o vendedor ou o comprador |
 | **Secundário** | Borda beringela, fundo branco | "Salvar rascunho", "Compartilhar" |
 | **Texto** | Só o texto em laranja-escuro | "Pular", "Ver todos" |
 | **Perigo** | Texto vermelho, confirmação antes | "Excluir anúncio", "Denunciar" |
@@ -117,20 +126,29 @@ Base técnica: Tailwind + lucide-react com os tokens abaixo (é o que o app já 
 Carregando: o botão mostra uma bolinha girando **e** o texto muda ("Publicando..."), e não deixa tocar duas vezes (evita anúncio duplicado com internet lenta).
 
 ### Card de anúncio
-Foto 4:3 · preço grande · título em até 2 linhas · cidade e "há 2 dias" · coração de favorito no canto da foto · selo da loja se tiver · etiqueta **"Patrocinado"** quando for destaque pago.
+
+Foto 4:3, preço de 16 px, título de 14 px em até 2 linhas e metadados de 13 px. Preenchimento de 10 px. Coração de favorito no canto da foto, selo da loja quando existir e etiqueta **"Patrocinado"** para destaque pago.
 Duas colunas no celular, 4 a 5 no computador. Card inteiro é tocável.
 
+### Notificações e atendimento
+
+Notificações ficam em uma lista de linhas compactas, com título de 14 px, texto de apoio e horário de 13 px. A linha inteira abre o aviso; não repetir uma chamada visível “Abrir aviso”. Avisos não lidos usam seleção lavanda suave e indicação de estado acessível. Erros aparecem junto à ação.
+
+Preferências usam uma lista branca com nome e estado Ligado/Desligado. Explicações ficam recolhidas em “Sobre estes avisos”, com `details` e `summary` nativos. No atendimento, manter o campo e as ações próximos; informações complementares ficam recolhidas. O envio precisa mostrar andamento, confirmação ou erro.
+
 ### Barra de baixo (navegação principal, sempre visível no celular)
+
 **Início · Buscar · [+ Anunciar] · Radar · Conta.** O "+ Anunciar" é um botão laranja maior no meio. Cinco itens com ícone **e** nome.
 
 ### Outros componentes
-- **Campo de busca** grande no topo ("O que você procura?"), com microfone (busca por voz do próprio celular) e botão do Aki.
+
+- **Campo de busca** no topo ("O que você procura?"), com microfone (busca por voz do próprio celular) e botão do Aki.
 - **Chips de filtro** roláveis (cidade, preço, categoria), com contador "Filtros (3)". Chip selecionado: fundo `selecao`, borda `laranja-escuro` e um ✓ (a borda laranja comum tem só 2,9 : 1 sobre branco e o estado não pode depender só da cor). Foco de campo: borda `laranja-escuro`.
 - **Folha que sobe de baixo** (bottom sheet) para filtros, escolher cidade e confirmar ações. Mais fácil com uma mão que janela no meio da tela.
 - **Seletor de cidade** com as cidades da região e "Perto de mim".
 - **Campo de código** (6 caixinhas, preenche sozinho com o código que chega no celular).
 - **Campo de preço** com teclado numérico, já formatado "R$ 8.500".
-- **Escolha por botões grandes** (segmentado) no lugar de lista suspensa: estado do produto, câmbio, ano.
+- **Escolha por botões segmentados**, com a mesma escala dos demais controles, no lugar de lista suspensa: estado do produto, câmbio, ano.
 - **Barra de passos** do cadastro de anúncio: "Passo 2 de 6" com barrinha.
 - **Selos:** Loja Verificada (verde, ícone de escudo), Destaque, Novo. Selo sempre com texto, nunca só cor.
 - **Aviso na tela** (toast) embaixo, some em 4s, com "Desfazer" quando der.
@@ -143,34 +161,41 @@ Duas colunas no celular, 4 a 5 no computador. Card inteiro é tocável.
 
 ## 6. Tokens para o desenvolvedor (Tailwind v4)
 
-Fica em `src/app/globals.css` (a base do app tinha `--color-marinho`; trocar o nome para `--color-beringela` e as classes `*-marinho` para `*-beringela`). Os nomes viram classes como `bg-laranja`, `text-beringela`, `rounded-card`.
+A fonte dos tokens é `src/app/globals.css`. Os nomes geram classes como `bg-laranja`, `text-beringela` e `rounded-card`. Atualizar essa base e os componentes compartilhados antes de criar exceções por tela.
 
 ```css
 @import "tailwindcss";
 
 @theme {
-  --color-beringela: #4B1248;
-  --color-laranja: #FF6A13;
-  --color-laranja-escuro: #C2410C;
-  --color-laranja-claro: #FFF4EC;
-  --color-verde: #12A150;
-  --color-verde-escuro: #0E7A3D;
-  --color-fundo: #F7F8FA;
-  --color-cartao: #FFFFFF;
-  --color-texto: #342B3B;
-  --color-texto-suave: #5E5266;
-  --color-borda: #E6E0E9;
-  --color-borda-campo: #968B9E;
-  --color-selecao: #F0EAF5;
-  --color-perigo: #B91C1C;
-  --color-aviso: #B45309;
-  --color-aviso-fundo: #FFFBEB;
-  --color-patrocinado-fundo: #FFE4D1;
-  --color-perigo-fundo: #FEF2F2;
-  --color-sucesso-fundo: #ECF8F1;
+  --color-beringela: #4b1248;
+  --color-laranja: #ff6a13;
+  --color-laranja-escuro: #c2410c;
+  --color-verde: #12a150;
+  --color-verde-escuro: #0e7a3d;
+  --color-fundo: #f7f8fa;
+  --color-cartao: #ffffff;
+  --color-texto: #342b3b;
+  --color-texto-suave: #5e5266;
+  --color-borda: #e6e0e9;
+  --color-borda-campo: #968b9e;
+  --color-selecao: #f0eaf5;
+  --color-perigo: #b91c1c;
+  --color-aviso: #b45309;
+  --color-aviso-fundo: #fffbeb;
+  --color-patrocinado-fundo: #ffe4d1;
+  --color-perigo-fundo: #fef2f2; /* perigo sobre ele: 5,9:1 */
+  --color-sucesso-fundo: #ecf8f1; /* verde-escuro sobre ele: 5,0:1 */
 
   --font-sans: var(--font-poppins), system-ui, sans-serif;
-  --text-titulo: 1.375rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.4;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.3;
+  --text-titulo: 1.25rem;
   --text-titulo--line-height: 1.3;
   --text-rotulo: 0.875rem;
   --text-rotulo--line-height: 1.45;
@@ -179,17 +204,17 @@ Fica em `src/app/globals.css` (a base do app tinha `--color-marinho`; trocar o n
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   --radius-campo: 0.5rem;
-  --radius-card: 0.75rem;
+  --radius-card: 0.625rem;
   --radius-folha: 1.25rem;
 
   --shadow-1: 0 1px 2px rgb(75 18 72 / 0.08);
   --shadow-2: 0 -2px 12px rgb(75 18 72 / 0.12);
 
-  --spacing-toque: 3rem; /* 48px, área mínima de toque */
+  --spacing-toque: 2.75rem; /* 44px, área mínima de toque */
 }
 ```
 
-Se o shadcn/ui entrar, apontar as variáveis dele para estes tokens: `--primary` = laranja, `--primary-foreground` = beringela, `--destructive` = perigo, `--ring` = laranja-escuro, `--radius` = 0.75rem.
+Se o shadcn/ui entrar, apontar as variáveis dele para estes tokens: `--primary` = laranja, `--primary-foreground` = beringela, `--destructive` = perigo, `--ring` = laranja-escuro, `--radius` = 0.625rem.
 
 ---
 
@@ -199,7 +224,7 @@ Se o shadcn/ui entrar, apontar as variáveis dele para estes tokens: `--primary`
 |---|---|
 | Um botão principal por tela | Dois botões laranja brigando |
 | Ícone + palavra | Ícone sozinho para coisa importante |
-| Preço sempre visível e grande | Esconder preço atrás de "consulte" sem opção "a combinar" clara |
+| Preço sempre visível e com hierarquia | Esconder preço atrás de "consulte" sem opção "a combinar" clara |
 | "Patrocinado" sempre escrito | Destaque pago disfarçado de normal |
 | Texto branco só em fundo escuro | Texto branco sobre o laranja do logo |
 | Fotos reais do produto | Imagens de banco de imagens na home |
@@ -207,9 +232,9 @@ Se o shadcn/ui entrar, apontar as variáveis dele para estes tokens: `--primary`
 
 ## 8. Refinamento do sistema, 10/11/2026
 
-Direção: preservar a marca OL-AKI e melhorar a operação. Dials: DESIGN_VARIANCE 3, MOTION_INTENSITY 2, VISUAL_DENSITY 6. Poppins continua a família única; a hierarquia vem do tamanho, peso e espaço, sem usar negrito em todo valor de formulário.
+Direção: preservar a marca OL-AKI com telas mais compactas e menos informação simultânea. Poppins continua a família única; a hierarquia vem do tamanho, peso e espaço. Usar peso normal nos valores dos formulários.
 
-O painel tem título de 22 px, seções de 18 px, títulos de cartão de 16 px, corpo de 14 px e metadados de 13 px. Esses tamanhos são definidos em rem. A escala fica em `src/app/admin/painel.css`, sem reduzir a base de leitura pública. O menu lateral tem rolagem própria e permite que nomes longos quebrem linha.
+O painel acompanha os títulos de 20, 18 e 16 px, com corpo de 14 px e metadados de 13 px. A base pública usa 15 px. Os tamanhos são definidos em rem nos tokens globais e em `src/app/admin/painel.css`. O menu lateral tem rolagem própria e permite que nomes longos quebrem linha.
 
 Em Destaques, Planos, ações de Lojas e modelos do Aki, a grade responde à largura interna do cartão: quatro colunas somente a partir de 48 rem disponíveis; abaixo disso usa duas, com nome e descrição ocupando a largura inteira. Descrições de tipos e planos usam textarea para mostrar o conteúdo sem cortar. A tabela de créditos mantém rolagem horizontal dentro da própria região, incluindo os rótulos para leitores de tela. Atalhos levam às seis seções principais. Informações técnicas da integração e prazos avançados usam detalhes expansíveis nativos, preservando os controles e o acesso por teclado.
 
@@ -222,6 +247,6 @@ As ações, permissões, campos enviados, preços, regras de pagamento e configu
 
 A página Minha conta usa duas colunas a partir de 768 px, com identificação e início de venda à esquerda e navegação à direita. No celular conserva a sequência completa em uma coluna. Nomes de pessoas e lojas podem quebrar linha; não truncar a identificação principal.
 
-`TopoConta` e `CabecalhoPasso` usam o mesmo título de 22 px em rem. Corpo de pedidos, propostas e notificações fica em 16 px; datas, selos e metadados usam `text-legenda`. `Seletor` acompanha os rótulos, bordas e foco do Campo, mantendo 48 px e valor de 16 px. Filtros do Radar reutilizam Chip com marca de seleção e foco; ações de card crescem se o texto precisar de mais linhas.
+`TopoConta` e `CabecalhoPasso` usam título de 20 px em rem. Pedidos e propostas usam corpo de 15 px, com descrições compactas de 14 px quando necessário. Datas, selos e metadados usam 13 px. `Seletor` acompanha Campo: altura de 44 px e texto de 16 px no toque, com 40 px e 14 px para mouse em telas a partir de 768 px. Filtros do Radar reutilizam Chip com seleção lavanda, marca de seleção e foco. Ações de card crescem quando o texto precisa de mais linhas.
 
 No painel, datas e filtros começam em uma coluna quando o cartão é estreito. Indicadores só passam a quatro colunas em telas de 1280 px. Tabelas roláveis têm região nomeada, foco por teclado e rolagem local. Abas administrativas mostram a possibilidade de rolar no celular e quebram linha no desktop. Campos de configuração têm nome acessível e ajuda associada; descrições longas e prévias admitem quebra. O editor de campos adapta os controles numéricos e de ordenação à largura do próprio cartão.
