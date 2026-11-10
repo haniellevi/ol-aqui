@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 // erro escrito embaixo (não só borda vermelha) e dica opcional.
 
 const ESTILO_CAIXA =
-  "w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto placeholder:text-texto-suave " +
+  "olaki-campo w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto placeholder:text-texto-suave " +
   "focus:outline-hidden focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 " +
   "disabled:bg-fundo disabled:opacity-70";
 
@@ -39,7 +39,7 @@ export function Campo(props: CampoProps) {
   const aria = { "aria-invalid": erro ? true : undefined, "aria-describedby": descritoPor };
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
+    <div className={`flex flex-col gap-1 ${className}`}>
       <label htmlFor={id} className="text-rotulo font-semibold text-texto">
         {rotulo}
         {opcional && <span className="ml-1 font-normal text-texto-suave">(opcional)</span>}
@@ -56,7 +56,7 @@ export function Campo(props: CampoProps) {
             {...aria}
             id={id}
             name={name}
-            className={`${ESTILO_CAIXA} ${borda} min-h-32 py-3 leading-6`}
+            className={`${ESTILO_CAIXA} ${borda} min-h-24 resize-y py-2 leading-6`}
           />
         ) : (
           <input
@@ -64,7 +64,7 @@ export function Campo(props: CampoProps) {
             {...aria}
             id={id}
             name={name}
-            className={`${ESTILO_CAIXA} ${borda} h-12 ${prefixo ? "pl-11" : ""}`}
+            className={`${ESTILO_CAIXA} ${borda} h-11 ${prefixo ? "pl-11" : ""}`}
           />
         )}
       </div>

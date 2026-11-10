@@ -13,7 +13,7 @@ export default function NaoEncontrado() {
       <CabecalhoPublico />
       <main id="conteudo" className="mx-auto flex w-full max-w-md flex-col gap-5 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8 md:pb-10">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="grid size-16 place-items-center rounded-full bg-laranja-claro text-beringela" aria-hidden>
+          <span className="grid size-16 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
             <Compass className="size-8" />
           </span>
           <h1 className="text-[22px] font-semibold leading-7">Não achamos esta página</h1>

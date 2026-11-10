@@ -11,25 +11,25 @@ const PASSOS = [
 // T26 para quem ainda não entrou: o Radar em 3 desenhos e o botão para pedir.
 export function ExplicacaoRadar({ textoBusca }: { textoBusca?: string | null }) {
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-4">
       <header className="flex flex-col gap-1">
-        <h1 className="flex items-center gap-2 text-2xl font-bold leading-8">
-          <Radar className="size-7 text-laranja-escuro" aria-hidden />
+        <h1 className="flex items-center gap-2 text-titulo font-semibold">
+          <Radar className="size-5 text-laranja-escuro" aria-hidden />
           Radar de Negócios
         </h1>
         <p className="text-base text-texto-suave">Não achou o que queria? Peça aqui e as lojas da região te procuram.</p>
       </header>
       <ol className="flex flex-col gap-3">
         {PASSOS.map((p, i) => (
-          <li key={p.titulo} className="flex items-center gap-3 rounded-card bg-cartao p-4 shadow-1">
-            <span className="grid size-14 shrink-0 place-items-center rounded-full bg-laranja-claro text-beringela [&>svg]:size-7" aria-hidden>
+          <li key={p.titulo} className="flex items-center gap-3 rounded-card border border-borda bg-cartao p-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-selecao text-beringela [&>svg]:size-5" aria-hidden>
               {p.icone}
             </span>
             <div className="flex flex-col">
-              <span className="text-lg font-semibold">
+              <span className="text-base font-semibold">
                 {i + 1}. {p.titulo}
               </span>
-              <span className="text-base text-texto-suave">{p.texto}</span>
+              <span className="text-sm text-texto-suave">{p.texto}</span>
             </div>
           </li>
         ))}

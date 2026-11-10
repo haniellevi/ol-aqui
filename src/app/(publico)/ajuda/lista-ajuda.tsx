@@ -88,7 +88,7 @@ export function ListaAjuda({
             key={c.slug}
             id={`ajuda-${c.slug}`}
             aria-labelledby={`titulo-ajuda-${c.slug}`}
-            className={`flex scroll-mt-20 flex-col gap-3 ${seguranca ? "rounded-card border-2 border-laranja-escuro bg-laranja-claro p-4" : ""}`}
+            className={`flex scroll-mt-20 flex-col gap-3 ${seguranca ? "rounded-card border border-borda bg-cartao p-4" : ""}`}
           >
             <div className="flex items-start gap-2">
               {seguranca && <ShieldAlert className="mt-0.5 size-6 shrink-0 text-laranja-escuro" aria-hidden />}

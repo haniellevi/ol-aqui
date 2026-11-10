@@ -85,7 +85,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
       )}
 
       {vendido && (
-        <div role="status" className="mx-4 mb-3 mt-3 flex flex-col gap-2 rounded-card border-2 border-beringela bg-laranja-claro p-4 md:mx-0 md:mt-0">
+        <div role="status" className="mx-4 mb-3 mt-3 flex flex-col gap-2 rounded-card border-2 border-beringela bg-fundo p-4 md:mx-0 md:mt-0">
           <p className="text-lg font-bold">Vendido</p>
           <p className="text-base">Este anúncio já foi vendido. Veja abaixo outros parecidos na região.</p>
           {parecidos.length > 0 && (

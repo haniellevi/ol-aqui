@@ -290,7 +290,7 @@ function CartaoModo({
       onClick={onClick}
       aria-pressed={ativo}
       className={`flex min-h-12 items-start gap-3 rounded-card border-2 p-4 text-left transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
-        ativo ? "border-laranja-escuro bg-laranja-claro" : "border-borda bg-cartao hover:bg-fundo"
+        ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao hover:bg-fundo"
       }`}
     >
       <span className="grid size-10 shrink-0 place-items-center rounded-full bg-cartao text-beringela [&>svg]:size-5" aria-hidden>

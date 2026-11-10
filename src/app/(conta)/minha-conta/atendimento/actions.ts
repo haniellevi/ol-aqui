@@ -7,7 +7,9 @@ import { ehUuid } from "@/lib/formato";
 import { createClient } from "@/lib/supabase/server";
 import type { Resultado } from "@/lib/tipos";
 
-export async function enviarMensagemAtendimento(conversa: string, chave: string, texto: string, aoAki: boolean): Promise<Resultado> {
+type EnvioAtendimento = { destino: "aki" | "equipe"; mensagem: string };
+
+export async function enviarMensagemAtendimento(conversa: string, chave: string, texto: string, aoAki: boolean): Promise<Resultado<EnvioAtendimento>> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: { mensagem: "Entre na sua conta para enviar." } };
   if (!ehUuid(conversa) || !ehUuid(chave) || typeof texto !== "string" || !texto.trim() || texto.length > 2000) {
@@ -20,8 +22,19 @@ export async function enviarMensagemAtendimento(conversa: string, chave: string,
     });
     if (error) return { ok: false, erro: traduzirErro(error) };
     if (!Number.isSafeInteger(data) || data <= 0) return { ok: false, erro: { mensagem: "Não foi possível confirmar o envio. Tente novamente." } };
-    if (aoAki === true) await responderAtendimento(db, userId, data);
-    return { ok: true, dados: undefined };
+    if (aoAki !== true) return { ok: true, dados: { destino: "equipe", mensagem: "Mensagem enviada." } };
+    // O envio já foi confirmado. Uma falha da IA não deve pedir que a pessoa envie de novo.
+    let resposta;
+    try {
+      resposta = await responderAtendimento(db, userId, data);
+    } catch {
+      resposta = "indisponivel";
+    }
+    return { ok: true, dados: resposta === "respondido"
+      ? { destino: "aki", mensagem: "O Aki respondeu na conversa." }
+      : { destino: "equipe", mensagem: resposta === "equipe"
+        ? "Sua mensagem foi encaminhada à equipe."
+        : "O Aki não conseguiu responder agora. Sua mensagem ficou para a equipe." } };
   } catch {
     return { ok: false, erro: { mensagem: "Não foi possível confirmar o envio. Tente novamente." } };
   }

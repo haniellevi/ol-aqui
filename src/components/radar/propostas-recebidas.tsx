@@ -115,7 +115,7 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
           // eslint-disable-next-line @next/next/no-img-element -- logo da loja no Storage
           <img src={p.loja_logo} alt="" width={40} height={40} className="size-10 shrink-0 rounded-full bg-borda object-cover" />
         ) : (
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-laranja-claro text-beringela" aria-hidden>
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
             <Store className="size-5" />
           </span>
         )}

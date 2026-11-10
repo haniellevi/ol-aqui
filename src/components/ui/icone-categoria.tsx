@@ -27,11 +27,11 @@ export function IconeCategoria({ nome, ...props }: { nome: string | null | undef
   return <Icone aria-hidden {...props} />;
 }
 
-/** Ícone no círculo laranja-claro (padrão das categorias no Início). Tamanho 48px. */
+/** Ícone no círculo lavanda (padrão das categorias no Início). */
 export function CirculoCategoria({ nome, className = "" }: { nome: string | null | undefined; className?: string }) {
   return (
-    <span className={`grid size-12 shrink-0 place-items-center rounded-full bg-laranja-claro text-beringela ${className}`}>
-      <IconeCategoria nome={nome} className="size-6" strokeWidth={2} />
+    <span className={`grid size-10 shrink-0 place-items-center rounded-full bg-selecao text-beringela ${className}`}>
+      <IconeCategoria nome={nome} className="size-5" strokeWidth={2} />
     </span>
   );
 }

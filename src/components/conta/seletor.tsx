@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
 
-// Lista de escolha (select) com rótulo visível, 48px e letra 16px, no mesmo jeito do <Campo>.
+// Lista de escolha com rótulo visível e a mesma escala do <Campo>.
 export function Seletor({
   rotulo,
   name,
@@ -16,7 +16,7 @@ export function Seletor({
   const idErro = erro ? `${id}-erro` : undefined;
   const idDica = dica ? `${id}-dica` : undefined;
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-rotulo font-semibold text-texto">
         {rotulo}
       </label>
@@ -26,7 +26,7 @@ export function Seletor({
         name={name}
         aria-invalid={erro ? true : undefined}
         aria-describedby={[idErro, idDica].filter(Boolean).join(" ") || undefined}
-        className={`h-12 min-w-0 w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto focus:outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:bg-fundo disabled:opacity-70 ${
+        className={`olaki-campo h-11 min-w-0 w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto focus:outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:bg-fundo disabled:opacity-70 ${
           erro ? "border-perigo" : "border-borda-campo"
         }`}
       >

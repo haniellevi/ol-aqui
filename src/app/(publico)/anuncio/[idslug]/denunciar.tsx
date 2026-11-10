@@ -21,7 +21,7 @@ const MOTIVOS = [
 
 const OPCAO =
   "flex min-h-12 cursor-pointer items-center gap-3 rounded-campo border-2 border-borda bg-cartao px-4 text-base " +
-  "has-checked:border-beringela has-checked:bg-laranja-claro has-checked:font-semibold " +
+  "has-checked:border-beringela has-checked:bg-selecao has-checked:font-semibold " +
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 
 export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string; logado: boolean; entrarHref: string }) {

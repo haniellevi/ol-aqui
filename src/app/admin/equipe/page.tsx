@@ -12,7 +12,7 @@ export const metadata = { title: "Equipe e permissões" };
 // O banco recusa o que o papel não pode (tem_papel); aqui é só a tela. Tudo fica no histórico.
 
 const COR_PAPEL: Record<string, string> = {
-  administrador: "bg-laranja-claro text-beringela",
+  administrador: "bg-selecao text-beringela",
   moderador: "bg-fundo text-beringela",
   financeiro: "bg-sucesso-fundo text-verde-escuro",
   suporte: "bg-fundo text-beringela",

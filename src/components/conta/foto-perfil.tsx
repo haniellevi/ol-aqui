@@ -66,7 +66,7 @@ export function FotoPerfil({ foto }: { foto: string | null }) {
         {previa || atual ? (
           // eslint-disable-next-line @next/next/no-img-element -- prévia local ou foto do Clerk
           <img src={previa || atual!} alt={previa ? "Prévia da nova foto" : "Sua foto de perfil"} width={80} height={80} className="size-20 shrink-0 rounded-full bg-fundo object-cover" />
-        ) : <span className="grid size-20 shrink-0 place-items-center rounded-full bg-laranja-claro text-beringela"><UserRound className="size-8" aria-hidden /><span className="sr-only">Sem foto de perfil</span></span>}
+        ) : <span className="grid size-20 shrink-0 place-items-center rounded-full bg-selecao text-beringela"><UserRound className="size-8" aria-hidden /><span className="sr-only">Sem foto de perfil</span></span>}
         <p className="text-sm text-texto-suave">{pendente ? "Confira a prévia e salve para trocar sua foto." : "Uma foto ajuda as pessoas a reconhecer você."}</p>
       </div>
       <input ref={arquivo} type="file" aria-label="Escolher foto de perfil" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif" className="sr-only" disabled={!isLoaded || !user || ocupada}

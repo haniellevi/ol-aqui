@@ -3,15 +3,15 @@ import { classesBotao } from "@/components/ui/botao";
 // Peças visuais simples do painel (sem dependências extras).
 export function Titulo({ children, sub }: { children: React.ReactNode; sub?: React.ReactNode }) {
   return (
-    <header className="mb-6">
+    <header className="mb-4">
       <h1 className="text-titulo font-semibold tracking-tight text-beringela">{children}</h1>
-      {sub && <p className="mt-2 max-w-[70ch] text-sm leading-relaxed text-texto-suave">{sub}</p>}
+      {sub && <p className="mt-1 max-w-[70ch] text-pretty text-sm text-texto-suave">{sub}</p>}
     </header>
   );
 }
 
 export function Cartao({ children, className = "", ...props }: React.ComponentProps<"section">) {
-  return <section {...props} className={`@container/painel relative min-w-0 rounded-card border border-borda bg-cartao p-4 ${className}`}>{children}</section>;
+  return <section {...props} className={`@container/painel relative min-w-0 rounded-card border border-borda bg-cartao p-3 ${className}`}>{children}</section>;
 }
 
 export function Numero({ rotulo, valor, detalhe, alerta }: { rotulo: string; valor: React.ReactNode; detalhe?: React.ReactNode; alerta?: boolean }) {

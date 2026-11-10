@@ -121,7 +121,7 @@ export function RadarDeNegocios({
       {!temAcesso && <FaixaUpgrade planos={planos} titulo="Esses clientes já querem comprar." />}
       {temAcesso && restantes !== null && (
         restantes > 0 ? (
-          <p className="mx-4 mt-4 rounded-card bg-laranja-claro px-4 py-3 text-sm text-beringela">
+          <p className="mx-4 mt-4 rounded-card bg-fundo px-4 py-3 text-sm text-beringela">
             Você ainda pode enviar <strong>{restantes}</strong> {restantes === 1 ? "oferta" : "ofertas"} {emTeste ? "durante o teste" : "neste mês"}.
           </p>
         ) : (
@@ -168,12 +168,12 @@ function CartaoPedido({
   const linkPedido = linkPedidoRadarLoja(p.id);
 
   return (
-    <article className="overflow-hidden rounded-card border border-borda bg-cartao shadow-1">
-      <div className="p-4">
+    <article className="overflow-hidden rounded-card border border-borda bg-cartao">
+      <div className="p-3">
         <div className="flex flex-wrap items-center gap-2 text-legenda">
           {p.categoriaNome && <span className="rounded-full bg-fundo px-2 py-0.5 text-texto-suave">{p.categoriaNome}</span>}
           {p.urgencia !== "normal" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-laranja-claro px-2 py-0.5 font-semibold text-laranja-escuro">
+            <span className="inline-flex items-center gap-1 rounded-full bg-aviso-fundo px-2 py-0.5 font-semibold text-aviso">
               <Flame className="size-3.5" aria-hidden />
               {p.urgencia === "hoje" ? "Precisa hoje" : "Esta semana"}
             </span>
@@ -204,7 +204,7 @@ function CartaoPedido({
         </h2>
 
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-          <span className="text-lg font-bold text-beringela">
+          <span className="text-base font-bold tabular-nums text-beringela">
             {faixaPreco(p.precoMinCentavos, p.precoMaxCentavos)}
           </span>
           <span className="inline-flex items-center gap-1 text-sm text-texto-suave">
@@ -215,7 +215,7 @@ function CartaoPedido({
 
         <div className="relative mt-3">
           {temAcesso ? (
-            <div className="rounded-card bg-fundo p-3 text-base leading-6 text-texto">
+            <div className="rounded-card bg-fundo p-3 text-sm leading-5 text-texto">
               {p.detalhes ? <p className="whitespace-pre-line break-words">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
               <p className="mt-2 text-legenda text-texto-suave">
                 Comprador: {p.compradorNome}

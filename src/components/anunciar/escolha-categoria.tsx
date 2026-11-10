@@ -17,7 +17,7 @@ const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLo
 
 const OPCAO =
   "flex min-h-14 cursor-pointer items-center gap-3 rounded-card border-2 border-borda bg-cartao p-2.5 pr-3 text-base font-semibold " +
-  "hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-laranja-claro has-[:focus-visible]:outline-3 " +
+  "hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 " +
   "has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
 export function EscolhaCategoria({
@@ -88,7 +88,7 @@ export function EscolhaCategoria({
       <AvisoErro mensagem={estado?.erro?.mensagem} />
 
       {escolhida && (
-        <p className="rounded-card bg-laranja-claro p-3 text-base" aria-live="polite">
+        <p className="rounded-card bg-selecao p-3 text-base" aria-live="polite">
           Escolhida: <strong>{escolhida.p.nome} › {escolhida.f.nome}</strong>
           {selecionadaId && selecionadaId !== filhaId && (
             <span className="mt-1 block text-sm">A troca mantém os dados compatíveis. Os demais detalhes precisarão ser preenchidos na nova categoria.</span>
