@@ -201,7 +201,7 @@ function LinhaAnuncio({
       {a.status === "excluido" && <p className="rounded-card bg-fundo p-3 text-sm text-texto-suave">Na lixeira{a.excluido_em ? ` ${tempoRelativo(a.excluido_em)}` : ""}. Antes: {a.status_antes_exclusao ? ROTULO[a.status_antes_exclusao].texto.toLowerCase() : "anúncio"}.</p>}
       {(a.status === "pausado" || a.status === "expirado") && <p className="text-sm text-texto-suave">Fora da busca. Revise os dados antes de reativar.</p>}
       {a.status === "vendido" && <p className="text-sm text-texto-suave">Venda concluída. O contato para este anúncio está encerrado.</p>}
-      {a.status === "em_analise" && a.motivo_analise && (
+      {(a.status === "em_analise" || (a.status === "pausado" && a.motivo_analise?.startsWith("Recusado:"))) && a.motivo_analise && (
         <p className="rounded-card bg-aviso-fundo p-2 text-sm font-semibold text-aviso">Motivo: {a.motivo_analise}</p>
       )}
       {a.status === "congelado" && (

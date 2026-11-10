@@ -93,6 +93,18 @@ test('exportação: conta sem vitrine continua exportando dados do comprador', a
   assert.equal(dados.vitrine, null); assert.deepEqual(dados.pagamentos, []);
   assert.deepEqual(dados.propostas_radar_recebidas.map(p => p.id), ['recebida']);
 });
+test('exportação: inclui o atendimento da própria conta e omite IDs internos dos autores', async () => {
+  const a = exportacao({ tabelas: {
+    atendimentos_anuncio: [{ id: 'c1', anunciante_id: usuario }, { id: 'c2', anunciante_id: 'outro' }],
+    atendimento_mensagens: [
+      { id: 1, conversa_id: 'c1', autor: 'equipe', autor_id: 'user_admin', texto: 'Oi', criado_em: 'hoje', atendimentos_anuncio: { anunciante_id: usuario } },
+      { id: 2, conversa_id: 'c2', autor: 'anunciante', texto: 'privado', atendimentos_anuncio: { anunciante_id: 'outro' } },
+    ],
+  } });
+  const dados = await (await a.get()).json();
+  assert.deepEqual(dados.conversas_de_atendimento.map(c => c.id), ['c1']);
+  assert.deepEqual(dados.conversas_de_atendimento[0].mensagens, [{ id: 1, autor: 'equipe', texto: 'Oi', criado_em: 'hoje' }]);
+});
 
 const erroFinanceiro = { code: '23503', message: 'update or delete violates foreign key constraint "pagamentos_vitrine_id_fkey" on table "pagamentos"' };
 function webhook(op = {}) {
