@@ -111,7 +111,7 @@ function agrupar(anuncios: AnuncioVitrine[]) {
 export default async function PaginaLoja({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const v = await vitrinePublica(slug).catch(() => undefined);
-  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-8"><h1 className="text-balance text-2xl font-semibold">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} larguraTotal>Tentar novamente</Botao></main>;
+  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-8"><h1 className="text-balance text-titulo font-semibold">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} larguraTotal>Tentar novamente</Botao></main>;
   if (!v) notFound();
   const ordem = lerOrdem(sp.ordem);
   const pagina = lerPagina(sp.pagina);
@@ -160,14 +160,14 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
             </span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[13px] text-texto-suave">Loja</span>
-            <h1 className="break-words text-balance text-[22px] font-semibold leading-7">{v.nome}</h1>
+            <span className="text-legenda text-texto-suave">Loja</span>
+            <h1 className="break-words text-balance text-titulo font-semibold">{v.nome}</h1>
             {v.selo && (
               <span>
                 <SeloLoja />
               </span>
             )}
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-texto-suave">
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base text-texto-suave">
               <span className="inline-flex items-center gap-1">
                 <MapPin className="size-4" aria-hidden />
                 {[v.bairro, v.cidade].filter(Boolean).join(", ")}
@@ -175,7 +175,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
               {desdeTexto && <span>{desdeTexto}</span>}
             </p>
             {situacao && (
-              <p className={`inline-flex items-center gap-1 text-[15px] font-semibold ${situacao.aberto ? "text-verde-escuro" : "text-perigo"}`} suppressHydrationWarning>
+              <p className={`inline-flex items-center gap-1 text-base font-semibold ${situacao.aberto ? "text-verde-escuro" : "text-perigo"}`} suppressHydrationWarning>
                 <Clock className="size-4" aria-hidden />
                 {situacao.texto}
               </p>
@@ -188,7 +188,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                 Chamar no WhatsApp
               </a>
             )}
-            {!whatsapp && <p className="flex min-h-12 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
+            {!whatsapp && <p className="flex min-h-11 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
             {v.status === "ativa" && <CopiarLinkLoja url={urlAbsoluta(linkLoja(v.slug))} />}
             {v.e_dono && (
               <Botao href={LINK_MINHA_LOJA} variante="secundario" icone={<Pencil />} larguraTotal className="sm:w-auto">

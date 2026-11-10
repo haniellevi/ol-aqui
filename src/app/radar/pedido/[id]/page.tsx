@@ -33,7 +33,7 @@ export default async function MeuPedidoPage({
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
-      <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 px-2 text-base font-semibold text-laranja-escuro">
+      <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className="-ml-2 inline-flex min-h-11 w-fit items-center gap-1 px-2 text-base font-semibold text-laranja-escuro">
         <ChevronLeft className="size-5" aria-hidden />
         {arquivado ? "Arquivados" : "Meus pedidos"}
       </Link>
@@ -63,25 +63,25 @@ export default async function MeuPedidoPage({
 
       <section className="flex flex-col gap-2 rounded-card bg-cartao p-4 shadow-1">
         <div className="flex flex-wrap gap-2">
-          <span className={`w-fit rounded-full px-2 py-0.5 text-[13px] font-semibold ${CLASSE_TOM[s.tom]}`}>{s.texto}</span>
-          {arquivado && <span className="w-fit rounded-full bg-fundo px-2 py-0.5 text-[13px] font-semibold text-texto-suave">Arquivado</span>}
+          <span className={`w-fit rounded-full px-2 py-0.5 text-legenda font-semibold ${CLASSE_TOM[s.tom]}`}>{s.texto}</span>
+          {arquivado && <span className="w-fit rounded-full bg-fundo px-2 py-0.5 text-legenda font-semibold text-texto-suave">Arquivado</span>}
         </div>
         <h1 className="break-words text-xl font-bold leading-7">{pedido.titulo}</h1>
         {pedido.detalhes && <p className="whitespace-pre-line break-words text-base text-texto-suave">{pedido.detalhes}</p>}
-        <p className="text-[15px] font-semibold">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
+        <p className="text-base font-semibold">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
         <p className="flex flex-wrap items-center gap-x-2 text-sm text-texto-suave">
           {pedido.categoria_nome && <span>{pedido.categoria_nome} ·</span>}
           <span>{pedido.cidade} ·</span>
           <span>pedido {tempoRelativo(pedido.criado_em)}</span>
         </p>
         {modoPrazo && pedido.propostas_ate && pedido.situacao === "aberto" && (
-          <p className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-laranja-escuro">
+          <p className="inline-flex items-center gap-1.5 text-base font-semibold text-laranja-escuro">
             <Hourglass className="size-4" aria-hidden />
             Propostas até {dataHoraCurta(pedido.propostas_ate)}
           </p>
         )}
         {!modoPrazo && !fechado && (
-          <p className="inline-flex items-center gap-1.5 text-[15px] text-texto-suave">
+          <p className="inline-flex items-center gap-1.5 text-base text-texto-suave">
             <MessageCircle className="size-4" aria-hidden />
             As lojas chamam você no WhatsApp.
           </p>

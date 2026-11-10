@@ -19,15 +19,15 @@ function Situacao({ modelo }: { modelo: ModeloMensagem }) {
   const enviaHoje = CANAIS_ATIVOS.includes(modelo.canal);
   if (!enviaHoje) {
     return (
-      <span className="rounded-full bg-fundo px-2 text-[13px] font-semibold text-texto-suave">
+      <span className="rounded-full bg-fundo px-2 text-legenda font-semibold text-texto-suave">
         Envio em breve{modelo.ativo ? "" : " · desligada"}
       </span>
     );
   }
   return modelo.ativo ? (
-    <span className="rounded-full bg-sucesso-fundo px-2 text-[13px] font-semibold text-verde-escuro">Ligada</span>
+    <span className="rounded-full bg-sucesso-fundo px-2 text-legenda font-semibold text-verde-escuro">Ligada</span>
   ) : (
-    <span className="rounded-full bg-aviso-fundo px-2 text-[13px] font-semibold text-aviso">Desligada</span>
+    <span className="rounded-full bg-aviso-fundo px-2 text-legenda font-semibold text-aviso">Desligada</span>
   );
 }
 
@@ -78,13 +78,13 @@ export default async function MensagensPage() {
               <Cartao className="p-0">
                 {g.itens.map((m) => (
                   <details key={m.id} className="border-b border-borda px-4 last:border-0">
-                    <summary className="min-h-12 cursor-pointer py-3 text-sm font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">
+                    <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">
                       <span className="ml-1 inline-flex flex-wrap items-center gap-2">{NOME_CANAL[m.canal]}
                       <Situacao modelo={m} /></span>
                     </summary>
                     <div className="pb-4">
                       <FormModelo modelo={m} />
-                      <p className="mt-3 text-[13px] text-texto-suave">Última mudança: {quando(m.atualizado_em)}</p>
+                      <p className="mt-3 text-legenda text-texto-suave">Última mudança: {quando(m.atualizado_em)}</p>
                     </div>
                   </details>
                 ))}

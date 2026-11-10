@@ -12,7 +12,7 @@ import { classesBotao } from "@/components/ui/botao";
 /** Para onde vai o toque na cidade (a tela T1 "Escolher cidade" vem depois). */
 export const HREF_ESCOLHER_CIDADE = "/cidades";
 
-const LINK = "inline-flex h-12 items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
+const LINK = "inline-flex h-10 items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
 export async function CabecalhoPublico() {
   const regiao = await regiaoAtual();
@@ -23,15 +23,15 @@ export async function CabecalhoPublico() {
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-card focus:bg-laranja focus:px-4 focus:py-3 focus:font-bold focus:text-beringela">
         Pular para o conteúdo
       </a>
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4">
-        <Link href="/" className="flex h-12 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="OLAKI, página inicial">
-          <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={88} height={36} priority className="h-8 w-auto sm:h-9" />
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 md:h-15">
+        <Link href="/" className="flex h-11 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="OLAKI, página inicial">
+          <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={88} height={36} priority className="h-7 w-auto sm:h-8" />
         </Link>
 
         {cidade && (
           <Link
             href={HREF_ESCOLHER_CIDADE}
-            className="ml-1 inline-flex h-12 min-w-0 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+            className="ml-1 inline-flex h-9 min-w-0 items-center gap-1 rounded-full border border-borda bg-cartao px-2.5 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
             aria-label={`Cidade: ${cidade}. Trocar cidade`}
           >
             <MapPin className="size-4 shrink-0" aria-hidden />

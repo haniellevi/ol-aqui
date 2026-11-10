@@ -70,7 +70,7 @@ export function BannerLoja({
       <span className="hidden shrink-0 sm:block">
         <AvatarVitrine nome={nome} logo={logo} tamanho="lg" />
       </span>
-      <span className="line-clamp-2 text-center text-[22px] font-bold leading-7 sm:text-3xl sm:leading-9">{nome}</span>
+      <span className="line-clamp-2 text-center text-2xl font-bold leading-7 sm:text-3xl sm:leading-9">{nome}</span>
     </div>
   );
 }

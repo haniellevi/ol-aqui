@@ -231,7 +231,7 @@ export function FormBanner({
                   value={Math.round(posicao * 100)}
                   onChange={(e) => setPosicao(Number(e.target.value) / 100)}
                   disabled={enviando}
-                  className="h-12 w-full accent-laranja-escuro"
+                  className="h-11 w-full accent-laranja-escuro"
                 />
               </label>
               <div className="flex flex-wrap gap-2">

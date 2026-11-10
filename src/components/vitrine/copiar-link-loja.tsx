@@ -16,6 +16,6 @@ export function CopiarLinkLoja({ url }: { url: string }) {
     <p role="status" className={estado === "copiado" || estado === "manual" ? "text-sm text-texto-suave" : "sr-only"}>
       {estado === "copiado" ? "Link copiado. Cole onde quiser compartilhar." : estado === "manual" ? "Não foi possível copiar automaticamente. Selecione o link abaixo." : ""}
     </p>
-    {estado === "manual" && <label className="flex flex-col gap-1 text-sm">Link da loja<input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="h-12 min-w-0 rounded-campo border border-borda bg-cartao px-3 text-base focus-visible:outline-3 focus-visible:outline-laranja-escuro" /></label>}
+    {estado === "manual" && <label className="flex flex-col gap-1 text-sm">Link da loja<input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="h-11 min-w-0 rounded-campo border border-borda bg-cartao px-3 text-base focus-visible:outline-3 focus-visible:outline-laranja-escuro" /></label>}
   </div>;
 }

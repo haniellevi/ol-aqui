@@ -83,7 +83,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
       {!conta.podePublicar && (
         <Aviso tipo="atencao">
           <span>Você está no limite do seu plano. Para pôr mais anúncios no ar, pause um ou troque de plano.</span>
-          <Link href="/minha-conta/plano" className="inline-flex min-h-12 items-center underline underline-offset-4">
+          <Link href="/minha-conta/plano" className="inline-flex min-h-11 items-center underline underline-offset-4">
             Ver planos
           </Link>
         </Aviso>
@@ -109,7 +109,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
           <span>Fixar produtos no topo da loja: {disponivelFixar ?? "não faz parte do seu plano agora"}.</span>
           <Link
             href={`${LINK_PLANOS}?origem=vitrine`}
-            className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+            className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
           >
             Ver os planos
           </Link>
@@ -178,10 +178,10 @@ function LinhaAnuncio({
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${rotulo.cor}`}>{rotulo.texto}</span>
-            {destaque && <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-[13px] font-bold text-beringela">Destaque</span>}
-            {pago && <span className="rounded-full bg-fundo px-2 py-0.5 text-[13px] font-bold text-laranja-escuro">Avulso pago</span>}
-            {fixado && <span className="rounded-full bg-selecao px-2 py-0.5 text-[13px] font-bold text-beringela">No topo da loja</span>}
+            <span className={`rounded-full px-2 py-0.5 text-legenda font-bold ${rotulo.cor}`}>{rotulo.texto}</span>
+            {destaque && <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-legenda font-bold text-beringela">Destaque</span>}
+            {pago && <span className="rounded-full bg-fundo px-2 py-0.5 text-legenda font-bold text-laranja-escuro">Avulso pago</span>}
+            {fixado && <span className="rounded-full bg-selecao px-2 py-0.5 text-legenda font-bold text-beringela">No topo da loja</span>}
           </div>
           <h2 className="line-clamp-2 break-words text-base font-semibold leading-5">
             {publico ? (
@@ -194,7 +194,7 @@ function LinhaAnuncio({
           </h2>
           <p className="text-lg font-bold leading-6">{preco(a.preco_centavos)}</p>
           {a.cidade && <p className="break-words text-sm text-texto-suave">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</p>}
-          {quando && <p className="text-[13px] text-texto-suave">{a.status === "rascunho" ? `Salvo ${quando}` : quando}</p>}
+          {quando && <p className="text-legenda text-texto-suave">{a.status === "rascunho" ? `Salvo ${quando}` : quando}</p>}
         </div>
       </div>
 
@@ -231,14 +231,19 @@ function LinhaAnuncio({
             <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
             Pagamento pendente: {p.tipo_nome} ({preco(p.preco_centavos)})
           </p>
-          <Botao href={linkDestacar(a.id, p.id)} variante="secundario" larguraTotal className="sm:w-fit">
+          <Botao href={linkDestacar(a.id, p.id)} variante="secundario" tamanho="pequeno" className="w-fit">
             Continuar o pagamento
           </Botao>
         </div>
       )}
 
-      <AcoesAnuncio id={a.id} status={a.status} titulo={titulo} temPagamento={pago || destaque || !!p} />
-      {a.status !== "excluido" && mostrarFixar && (a.status === "ativo" || fixado) && <BotaoFixar anuncioId={a.id} fixado={fixado} />}
+      <AcoesAnuncio
+        id={a.id}
+        status={a.status}
+        titulo={titulo}
+        temPagamento={pago || destaque || !!p}
+        maisAcoes={a.status !== "excluido" && mostrarFixar && (a.status === "ativo" || fixado) ? <BotaoFixar anuncioId={a.id} fixado={fixado} comoItemDeMenu /> : undefined}
+      />
     </article>
   );
 }
@@ -246,7 +251,7 @@ function LinhaAnuncio({
 function Numero({ icone, rotulo, valor }: { icone: React.ReactNode; rotulo: string; valor: number }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <dt className="order-2 text-[13px] leading-4 text-texto-suave">{rotulo}</dt>
+      <dt className="order-2 text-legenda leading-4 text-texto-suave">{rotulo}</dt>
       <dd className="order-1 flex items-center gap-1 text-base font-bold">
         <span className="inline-flex text-laranja-escuro [&>svg]:size-4" aria-hidden>
           {icone}

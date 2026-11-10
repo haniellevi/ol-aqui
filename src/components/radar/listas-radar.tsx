@@ -8,7 +8,7 @@ import type { MeuPedidoRadar, MinhaPropostaRadar } from "@/lib/tipos-radar";
 import { CLASSE_TOM, dataHoraCurta, resumoPropostas, rotuloSituacao } from "./util";
 
 const CARTAO =
-  "flex min-h-12 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 hover:bg-fundo " +
+  "flex min-h-11 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 hover:bg-fundo " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 // Aba "Meus pedidos": cada pedido com a situação, as propostas e o prazo.
@@ -38,7 +38,7 @@ export function ListaMeusPedidos({ pedidos, linkPedir, arquivados = false }: {
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className={`w-fit rounded-full px-2 py-0.5 text-legenda font-semibold ${CLASSE_TOM[s.tom]}`}>{s.texto}</span>
                 <span className="break-words text-base font-semibold leading-snug">{p.titulo}</span>
-                <span className="text-[15px] font-semibold text-laranja-escuro">{resumoPropostas(p.total_propostas, p.menor_preco_centavos)}</span>
+                <span className="text-base font-semibold text-laranja-escuro">{resumoPropostas(p.total_propostas, p.menor_preco_centavos)}</span>
                 <span className="flex flex-wrap items-center gap-x-2 text-legenda text-texto-suave">
                   {p.modo_contato === "propostas_prazo" && p.propostas_ate && p.situacao === "aberto" ? (
                     <span className="inline-flex items-center gap-1">
@@ -98,7 +98,7 @@ export function ListaMinhasPropostas({ propostas }: { propostas: MinhaPropostaRa
                 </span>
               )}
               <span className="break-words text-base font-semibold leading-snug">{p.pedido_titulo}</span>
-              <span className="text-[15px] font-semibold text-laranja-escuro">Sua oferta: {preco(p.preco_centavos)}</span>
+              <span className="text-base font-semibold text-laranja-escuro">Sua oferta: {preco(p.preco_centavos)}</span>
               <span className="text-legenda text-texto-suave">
                 {p.pedido_cidade} · enviada {tempoRelativo(p.criado_em)}
               </span>

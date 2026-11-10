@@ -13,7 +13,7 @@ import { BarraContinuar } from "./barra-continuar";
 // A dica "Parecidos na região" só aparece quando o banco tem anúncios suficientes.
 
 const CAIXA =
-  "flex min-h-12 cursor-pointer items-center gap-3 rounded-card border-2 border-borda bg-cartao px-3 py-2 text-base font-semibold " +
+  "flex min-h-11 cursor-pointer items-center gap-3 rounded-card border-2 border-borda bg-cartao px-3 py-2 text-base font-semibold " +
   "text-beringela hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
 function paraTexto(centavos: number | null): string {

@@ -122,7 +122,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           ))}
         </div>
         <FiltrosRelatorio de={filtros.de} ate={filtros.ate} regiao={filtros.regiao} regioes={regioes} />
-        <p className="text-[13px] text-texto-suave">
+        <p className="text-legenda text-texto-suave">
           Mostrando de {dataBr(filtros.de)} até {dataBr(filtros.ate)} · {nomeRegiao}. Datas no horário de Fortaleza.
         </p>
         {aviso && (
@@ -324,7 +324,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           )}
         </Bloco>
 
-        <p className="flex items-center gap-2 text-[13px] text-texto-suave">
+        <p className="flex items-center gap-2 text-legenda text-texto-suave">
           <BarChart3 className="size-4" aria-hidden />
           Os relatórios mostram só totais. Nenhum nome ou telefone aparece aqui.
         </p>

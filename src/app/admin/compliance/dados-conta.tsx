@@ -184,7 +184,7 @@ export function DadosConta({ d, relatorio = false, emails }: { d: DadosComplianc
               <Linha rotulo="Apagada em">
                 {quando(l.apagado_em)} · por {l.apagado_por ?? "sistema (conta apagada)"}
               </Linha>
-              <p className="font-mono text-[13px] text-texto-suave">{l.id}</p>
+              <p className="font-mono text-legenda text-texto-suave">{l.id}</p>
             </dl>
           ))}
         </Secao>
@@ -205,7 +205,7 @@ export function DadosConta({ d, relatorio = false, emails }: { d: DadosComplianc
                   Criado {quando(a.criado_em)} · IP gravado* {a.criado_ip ?? "—"} · mudou {quando(a.atualizado_em)}
                 </p>
                 {a.congelado_motivo && <p className="text-sm font-semibold text-perigo">Congelado: {a.congelado_motivo}</p>}
-                <p className="font-mono text-[13px] text-texto-suave">{a.id}</p>
+                <p className="font-mono text-legenda text-texto-suave">{a.id}</p>
               </li>
             ))}
           </ul>
@@ -221,7 +221,7 @@ export function DadosConta({ d, relatorio = false, emails }: { d: DadosComplianc
                 <p className="text-sm text-texto-suave">
                   Apagado {quando(a.apagado_em)} · por {a.apagado_por ?? "sistema"} · IP gravado* {a.ip ?? "—"}
                 </p>
-                <p className="font-mono text-[13px] text-texto-suave">{a.id}</p>
+                <p className="font-mono text-legenda text-texto-suave">{a.id}</p>
               </li>
             ))}
           </ul>
@@ -247,14 +247,14 @@ export function DadosConta({ d, relatorio = false, emails }: { d: DadosComplianc
                 <p className="text-sm text-texto-suave">
                   IP gravado* {h.ip ?? "—"} · quem fez: {h.quem ? (h.quem === d.usuario_id ? "a própria pessoa" : h.quem) : "sistema"}
                 </p>
-                {h.user_agent && <p className="break-words text-[13px] text-texto-suave">Navegador gravado*: {h.user_agent}</p>}
-                <p className="font-mono text-[13px] text-texto-suave">Registro {h.registro_id}</p>
+                {h.user_agent && <p className="break-words text-legenda text-texto-suave">Navegador gravado*: {h.user_agent}</p>}
+                <p className="font-mono text-legenda text-texto-suave">Registro {h.registro_id}</p>
                 {h.campos && Object.keys(h.campos).length > 0 && (
                   relatorio ? (
                     <Campos campos={h.campos} />
                   ) : (
                     <details className="mt-1" open={h.acao !== "INSERT"}>
-                      <summary className="flex min-h-12 cursor-pointer items-center text-sm font-semibold text-laranja-escuro">
+                      <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-laranja-escuro">
                         Ver campos ({Object.keys(h.campos).length})
                       </summary>
                       <Campos campos={h.campos} />

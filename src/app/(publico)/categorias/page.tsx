@@ -36,7 +36,7 @@ export default async function PaginaCategorias() {
                   <h2 id={`cat-${p.slug}`} className="flex-1 text-lg font-semibold">
                     {p.nome}
                   </h2>
-                  <span className="text-[15px] font-semibold text-laranja-escuro">Ver tudo</span>
+                  <span className="text-base font-semibold text-laranja-escuro">Ver tudo</span>
                   <ChevronRight className="size-5 text-laranja-escuro" aria-hidden />
                 </Link>
                 {p.filhas.length > 0 && (
@@ -45,7 +45,7 @@ export default async function PaginaCategorias() {
                       <li key={f.id}>
                         <Link
                           href={linkCategoria(p.slug, f.slug)}
-                          className="flex min-h-12 items-center gap-3 rounded-campo px-3 text-base hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                          className="flex min-h-11 items-center gap-3 rounded-campo px-3 text-base hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                         >
                           <span className="flex-1">{f.nome}</span>
                           <ChevronRight className="size-4 text-texto-suave" aria-hidden />

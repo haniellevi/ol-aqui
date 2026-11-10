@@ -109,7 +109,7 @@ export function FormDesativar({ usuarioId, nome }: { usuarioId: string; nome: st
     <form action={acao} className="flex flex-col gap-3">
       <input type="hidden" name="usuario" value={usuarioId} />
       <Campo rotulo="Motivo" opcional name="observacao" maxLength={300} placeholder="Ex.: saiu da empresa" />
-      <label className="flex min-h-12 cursor-pointer items-center gap-3 text-base text-texto">
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base text-texto">
         <input type="checkbox" name="confirmar" value="sim" required className="size-5 accent-laranja-escuro" />
         Sim, tirar {nome} da equipe
       </label>

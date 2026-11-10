@@ -84,7 +84,7 @@ export function FormNovaCategoria({ principais }: { principais: Pick<CategoriaAd
             ))}
             <option value="">Nenhuma: é uma categoria principal</option>
           </select>
-          <p className="mt-1 text-[13px] text-texto-suave">O anúncio entra numa subcategoria. A principal só agrupa.</p>
+          <p className="mt-1 text-legenda text-texto-suave">O anúncio entra numa subcategoria. A principal só agrupa.</p>
         </div>
       </div>
       <EscolhaIcone id="nova-cat-icone" inicial={null} />
@@ -131,7 +131,7 @@ export function BotoesOrdem({ id, nome, primeiro, ultimo }: { id: string; nome: 
           <ArrowDown className={`size-5 ${pendente && direcao === "descer" ? "animate-pulse" : ""}`} aria-hidden />
         </button>
       </form>
-      {pendente && <span className="text-[13px] text-texto-suave" role="status">Mudando a ordem...</span>}
+      {pendente && <span className="text-legenda text-texto-suave" role="status">Mudando a ordem...</span>}
       {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
     </div>
   );
@@ -155,7 +155,7 @@ export function FormCategoria({
             Nome
           </label>
           <input id="cat-nome" name="nome" required minLength={2} maxLength={60} defaultValue={categoria.nome} className={estiloCampo} />
-          <p className="mt-1 text-[13px] text-texto-suave">O endereço não muda: /c/…/{categoria.slug}</p>
+          <p className="mt-1 text-legenda text-texto-suave">O endereço não muda: /c/…/{categoria.slug}</p>
         </div>
         {sub && (
           <div>
@@ -170,18 +170,18 @@ export function FormCategoria({
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-[13px] text-texto-suave">Mudar aqui leva a subcategoria (e os anúncios dela) para outra categoria.</p>
+            <p className="mt-1 text-legenda text-texto-suave">Mudar aqui leva a subcategoria (e os anúncios dela) para outra categoria.</p>
           </div>
         )}
       </div>
 
       <EscolhaIcone id="cat-icone" inicial={categoria.icone} />
 
-      <label className="flex min-h-12 items-start gap-3 text-base text-beringela">
+      <label className="flex min-h-11 items-start gap-3 text-base text-beringela">
         <input type="checkbox" name="ativa" defaultChecked={categoria.ativa} className="mt-1 size-5 shrink-0 accent-laranja-escuro" />
         <span>
           Aparece no cadastro de anúncio e na lista de categorias
-          <span className="block text-[13px] text-texto-suave">
+          <span className="block text-legenda text-texto-suave">
             Desmarcado = escondida. Os anúncios que já estão nela continuam no ar e aparecem na busca.
             {!sub && " Esconder a principal esconde todas as subcategorias dela."}
           </span>
@@ -204,7 +204,7 @@ export function FormCategoria({
               </label>
               <input id="cat-preco-max" name="preco_max" inputMode="decimal" placeholder="sem máximo" defaultValue={paraReaisInput(categoria.preco_max_centavos)} className={estiloCampo} />
             </div>
-            <p className="text-[13px] text-texto-suave md:col-span-2">
+            <p className="text-legenda text-texto-suave md:col-span-2">
               Anúncio com preço fora dessa faixa vai para &quot;Em análise&quot; antes de aparecer. Vazio = usa a regra geral de Configurações.
             </p>
           </fieldset>

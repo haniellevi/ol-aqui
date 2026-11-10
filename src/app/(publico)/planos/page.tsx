@@ -96,7 +96,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
                 }`}
               >
                 {destaque && (
-                  <span className="inline-flex w-fit items-center gap-1 rounded-full bg-selecao px-3 py-1 text-[13px] font-bold text-beringela">
+                  <span className="inline-flex w-fit items-center gap-1 rounded-full bg-selecao px-3 py-1 text-legenda font-bold text-beringela">
                     <Star className="size-4 text-laranja-escuro" aria-hidden /> Mais escolhido
                   </span>
                 )}
@@ -108,7 +108,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
                   </p>
                   {p.descricao && <p className="text-base text-texto-suave">{p.descricao}</p>}
                   {p.publico !== "todos" && (
-                    <p className="text-[13px] font-semibold text-texto-suave">{p.publico === "pf" ? "Para pessoa física" : "Para lojas e empresas"}</p>
+                    <p className="text-legenda font-semibold text-texto-suave">{p.publico === "pf" ? "Para pessoa física" : "Para lojas e empresas"}</p>
                   )}
                 </div>
 
@@ -137,7 +137,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
 
                 <div className="mt-auto pt-1">
                   {eAtual ? (
-                    <p className="inline-flex min-h-12 items-center font-semibold text-verde-escuro">Seu plano atual</p>
+                    <p className="inline-flex min-h-11 items-center font-semibold text-verde-escuro">Seu plano atual</p>
                   ) : cta ? (
                     <Botao href={cta.href} variante={destaque ? "primario" : "secundario"} larguraTotal>
                       {cta.texto}
@@ -153,7 +153,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
       {loja && (
         <p className="text-base text-texto-suave">
           Quer ver o seu uso e os pagamentos?{" "}
-          <Link href="/minha-conta/plano" className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+          <Link href="/minha-conta/plano" className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
             Abrir Meu plano
           </Link>
         </p>

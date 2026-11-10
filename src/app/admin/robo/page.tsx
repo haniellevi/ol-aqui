@@ -134,13 +134,13 @@ export default async function RoboPage() {
             {(Object.keys(NOME_PROVEDOR) as ProvedorIA[]).map((p) => (
               <li
                 key={p}
-                className={`rounded-full px-3 py-1 text-[13px] font-semibold ${chaves[p] ? "bg-sucesso-fundo text-verde-escuro" : "bg-fundo text-texto-suave"}`}
+                className={`rounded-full px-3 py-1 text-legenda font-semibold ${chaves[p] ? "bg-sucesso-fundo text-verde-escuro" : "bg-fundo text-texto-suave"}`}
               >
                 {NOME_PROVEDOR[p]}: {chaves[p] ? "configurada" : `falta ${NOME_CHAVE[p]}`}
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[13px] text-texto-suave">Escolha o provedor e a lista de modelos vem dele na hora. Digite parte do nome para filtrar. Ao salvar, o modelo entra no catálogo com o preço do provedor.</p>
+          <p className="mt-2 text-legenda text-texto-suave">Escolha o provedor e a lista de modelos vem dele na hora. Digite parte do nome para filtrar. Ao salvar, o modelo entra no catálogo com o preço do provedor.</p>
         </Cartao>
         <div className="grid gap-3 md:grid-cols-2">
           <Cartao>
@@ -173,7 +173,7 @@ export default async function RoboPage() {
             temas={lista(geral.get("robo.temas_proibidos"))}
           />
         </Cartao>
-        <p className="mt-2 text-[13px] text-texto-suave">
+        <p className="mt-2 text-legenda text-texto-suave">
           Outros ajustes (tamanho das respostas, histórico, foto, esforço) ficam em{" "}
           <Link href="/admin/configuracoes?grupo=robo" className="font-semibold text-laranja-escuro underline">
             Configurações › Robô Aki
@@ -195,7 +195,7 @@ export default async function RoboPage() {
               </ul>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead className="text-[13px] text-texto-suave">
+                  <thead className="text-legenda text-texto-suave">
                     <tr>
                       <th className="py-2 pr-3 font-semibold">Modelo</th>
                       <th className="py-2 pr-3 font-semibold">Respostas</th>
@@ -207,7 +207,7 @@ export default async function RoboPage() {
                   <tbody>
                     {(painel?.por_provedor ?? []).map((l) => (
                       <tr key={`${l.provedor}|${l.modelo}`} className="border-t border-borda">
-                        <td className="py-2 pr-3 font-mono text-[13px]">
+                        <td className="py-2 pr-3 font-mono text-legenda">
                           {NOME_PROVEDOR[l.provedor as ProvedorIA] ?? l.provedor} · {l.modelo}
                         </td>
                         <td className="py-2 pr-3 tabular-nums">{inteiro(l.respostas)}</td>
@@ -231,7 +231,7 @@ export default async function RoboPage() {
           <ol className="flex h-40 items-end gap-1" aria-label="Conversas por dia">
             {dias.map((d) => (
               <li key={d.dia} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                <span className="text-[13px] tabular-nums text-texto-suave">{d.conversas || ""}</span>
+                <span className="text-legenda tabular-nums text-texto-suave">{d.conversas || ""}</span>
                 <span
                   className="w-full rounded-t-[4px] bg-laranja"
                   style={{ height: `${Math.max(2, (d.conversas / maxConversas) * 100)}%` }}
@@ -240,7 +240,7 @@ export default async function RoboPage() {
               </li>
             ))}
           </ol>
-          <div className="mt-1 flex justify-between text-[13px] text-texto-suave">
+          <div className="mt-1 flex justify-between text-legenda text-texto-suave">
             <span>{dias[0]?.dia.split("-").reverse().slice(0, 2).join("/")}</span>
             <span>hoje</span>
           </div>
@@ -253,7 +253,7 @@ export default async function RoboPage() {
             <ul className="divide-y divide-borda">
               {painel.piores.map((p) => (
                 <li key={p.mensagem_id} className="space-y-1 py-3 text-sm">
-                  <p className="text-[13px] text-texto-suave">
+                  <p className="text-legenda text-texto-suave">
                     {quando(p.quando)} {p.modelo && <span className="font-mono">· {p.modelo}</span>}
                   </p>
                   {p.pergunta && (
@@ -284,7 +284,7 @@ export default async function RoboPage() {
                     <p className="font-semibold">
                       {b.termo || "(sem palavra)"} {b.categoria_slug && <span className="font-normal text-texto-suave">em {b.categoria_slug}</span>}
                     </p>
-                    <p className="text-[13px] text-texto-suave">
+                    <p className="text-legenda text-texto-suave">
                       {inteiro(b.vezes)} {b.vezes === 1 ? "vez" : "vezes"} · {b.regiao ?? "sem região"} · última {quando(b.ultima_em)}
                     </p>
                   </div>
@@ -299,7 +299,7 @@ export default async function RoboPage() {
       </Secao>
 
       <Secao titulo="Catálogo de modelos">
-        <p className="mb-3 text-[13px] text-texto-suave">
+        <p className="mb-3 text-legenda text-texto-suave">
           Preços em dólar por milhão de tokens, copiados da página do provedor. O custo de cada mensagem é calculado com eles e com a cotação do dólar.
         </p>
         <div className="space-y-3">
@@ -307,10 +307,10 @@ export default async function RoboPage() {
             <Cartao key={m.id}>
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold text-beringela">{m.nome}</h3>
-                <span className="rounded-full bg-fundo px-2 py-0.5 font-mono text-[13px] text-texto-suave">
+                <span className="rounded-full bg-fundo px-2 py-0.5 font-mono text-legenda text-texto-suave">
                   {NOME_PROVEDOR[m.provedor]} · {m.modelo}
                 </span>
-                {!m.ativo && <span className="rounded-full bg-borda px-2 py-0.5 text-[13px] font-semibold text-texto-suave">inativo</span>}
+                {!m.ativo && <span className="rounded-full bg-borda px-2 py-0.5 text-legenda font-semibold text-texto-suave">inativo</span>}
               </div>
               <FormModelo modelo={m} />
             </Cartao>

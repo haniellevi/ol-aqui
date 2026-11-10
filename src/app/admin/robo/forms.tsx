@@ -186,14 +186,14 @@ export function FormModeloEscolhido({
             }}
           />
           {!carregando && !erro && (
-            <p className="mt-1 text-[13px] font-normal text-texto-suave">
+            <p className="mt-1 text-legenda font-normal text-texto-suave">
               {servem.length} modelos que leem foto e usam as funções do site, do mais novo para o mais antigo. A lista vem do {NOMES_PROVEDOR[provedor]} na hora.
             </p>
           )}
         </div>
         {erro && <Aviso tipo="erro">{erro}</Aviso>}
         {!atualServe && (
-          <p className="text-[13px] text-aviso">
+          <p className="text-legenda text-aviso">
             O modelo salvo ({atual.replace("|", " · ") || "nenhum"}) não está pronto para uso. O Aki fica descansando até escolher outro e salvar.
           </p>
         )}
@@ -260,7 +260,7 @@ export function FormLimites(p: { limite: number; orcamentoReais: string; alerta:
         Tokens de entrada reservados por volta (enquanto a resposta não termina)
         <input name="reserva_tokens_entrada" type="number" min={0} max={1000000} defaultValue={p.reservaTokens} className={estiloCampo} />
       </label>
-      <p className="text-[13px] text-texto-suave sm:col-span-2">
+      <p className="text-legenda text-texto-suave sm:col-span-2">
         Antes de cada resposta o Aki separa do orçamento o máximo que ela pode custar; no fim entra o valor certo. Assim muita gente ao
         mesmo tempo não passa do orçamento. Quando o gasto do mês chega no orçamento, o Aki descansa até o mês seguinte e o resto do site funciona normal.
       </p>
@@ -373,20 +373,20 @@ export function FormModelo({ modelo }: { modelo?: ModeloIA }) {
         <input name="preco_cache_escrita_usd" inputMode="decimal" placeholder="igual à entrada" defaultValue={usd(base?.preco_cache_escrita_usd ?? null)} className={estiloCampo} />
       </label>
       <div key={`caps-${chaveCampos}`} className="col-span-2 flex flex-wrap gap-x-4 @3xl/painel:col-span-4">
-        <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
+        <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
           <input type="checkbox" name="le_imagem" defaultChecked={base?.le_imagem ?? false} className="size-5 accent-laranja-escuro" />
           Lê imagem
         </label>
-        <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
+        <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
           <input type="checkbox" name="usa_ferramentas" defaultChecked={base?.usa_ferramentas ?? false} className="size-5 accent-laranja-escuro" />
           Usa ferramentas
         </label>
-        <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
+        <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
           <input type="checkbox" name="ativo" defaultChecked={modelo?.ativo ?? !!pre} className="size-5 accent-laranja-escuro" />
           Ativo (aparece na escolha)
         </label>
         {(modelo?.provedor ?? provedor) === "anthropic" && (
-          <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
+          <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
             <input type="checkbox" name="fallback_servidor" defaultChecked={modelo?.fallback_servidor ?? false} className="size-5 accent-laranja-escuro" />
             Outro modelo responde se este recusar
           </label>

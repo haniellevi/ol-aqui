@@ -109,7 +109,7 @@ export function EscolhaCategoria({
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Ex.: moto, geladeira, casa"
             autoComplete="off"
-            className="h-12 w-full rounded-campo border-2 border-borda bg-cartao pl-10 pr-3 text-base focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30"
+            className="h-11 w-full rounded-campo border-2 border-borda bg-cartao pl-10 pr-3 text-base focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30"
           />
         </div>
       </div>

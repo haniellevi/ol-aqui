@@ -109,7 +109,7 @@ export function FormExcecao({
   const [estado, acao, pendente] = useActionState(criarExcecao, null);
   return (
     <details className="rounded-card bg-fundo px-3">
-      <summary className="min-h-12 cursor-pointer py-3.5 text-sm font-semibold text-beringela">Criar exceção para uma região</summary>
+      <summary className="min-h-11 cursor-pointer py-3.5 text-sm font-semibold text-beringela">Criar exceção para uma região</summary>
       <form action={acao} className="space-y-2 pb-3">
         <input type="hidden" name="chave" value={chave} />
         <input type="hidden" name="tipo" value={tipo} />

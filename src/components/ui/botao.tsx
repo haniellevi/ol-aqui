@@ -2,13 +2,22 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
-// Botão do OLAKI: texto 14px, altura 44px no toque e 40px com mouse.
+// Botão do OLAKI (docs/DESIGN-SYSTEM.md, "Régua de tamanhos"):
+// normal = 44px no toque e 40px com mouse; pequeno = 36px no toque e 32px com mouse
+// (ações dentro de cards, listas e tabelas). Texto 14px (13px no pequeno).
+// Largura total só no celular: do tablet para cima o botão para em 320px.
 // Principal = laranja com texto beringela (nunca branco no laranja).
 
 export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | "texto";
+export type TamanhoBotao = "normal" | "pequeno";
+
+const TAMANHOS: Record<TamanhoBotao, string> = {
+  normal: "olaki-controle min-h-11 px-3.5 text-sm leading-5",
+  pequeno: "olaki-controle-pequeno min-h-9 px-2.5 text-legenda leading-4",
+};
 
 const BASE =
-  "olaki-acao olaki-controle inline-flex select-none items-center justify-center gap-1.5 rounded-campo px-3 text-sm font-semibold leading-5 " +
+  "olaki-acao inline-flex select-none items-center justify-center gap-1.5 rounded-campo font-semibold " +
   "transition-colors active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro " +
   "disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:pointer-events-none aria-disabled:opacity-60";
 
@@ -17,13 +26,15 @@ const VARIANTES: Record<VarianteBotao, string> = {
   secundario: "border border-beringela bg-cartao text-beringela hover:bg-fundo",
   perigo: "border border-perigo bg-cartao text-perigo hover:bg-perigo-fundo",
   whatsapp: "bg-verde-escuro text-white hover:brightness-95",
-  texto: "px-3 text-laranja-escuro underline-offset-4 hover:underline",
+  texto: "text-laranja-escuro underline-offset-4 hover:underline",
 };
 
 type Comum = {
   variante?: VarianteBotao;
-  /** Largura cheia (padrão no celular para o botão principal). */
+  /** Largura cheia no celular; do tablet para cima, no máximo 320px. */
   larguraTotal?: boolean;
+  /** "pequeno" para ações dentro de cards, listas e tabelas. */
+  tamanho?: TamanhoBotao;
   /** Mostra a bolinha girando, troca o texto e trava o botão (evita toque duplo). */
   carregando?: boolean;
   /** Texto enquanto carrega, ex.: "Publicando...". */
@@ -39,14 +50,14 @@ type ComoLink = Comum & Omit<ComponentProps<typeof Link>, keyof Comum> & { href:
 
 export type BotaoProps = ComoBotao | ComoLink;
 
-export function classesBotao(variante: VarianteBotao = "primario", larguraTotal = false, extra = "") {
-  return `${BASE} min-h-11 ${VARIANTES[variante]} ${larguraTotal ? "w-full" : ""} ${extra}`.trim();
+export function classesBotao(variante: VarianteBotao = "primario", larguraTotal = false, extra = "", tamanho: TamanhoBotao = "normal") {
+  return `${BASE} ${TAMANHOS[tamanho]} ${VARIANTES[variante]} ${larguraTotal ? "w-full sm:max-w-xs" : ""} ${extra}`.trim();
 }
 
 /** Com `href` vira link (next/link); sem `href` é <button> (type="button" por padrão). */
 export function Botao(props: BotaoProps) {
-  const { variante = "primario", larguraTotal, carregando, textoCarregando, icone, className = "", children, ...resto } = props;
-  const classes = classesBotao(variante, larguraTotal, className);
+  const { variante = "primario", larguraTotal, tamanho = "normal", carregando, textoCarregando, icone, className = "", children, ...resto } = props;
+  const classes = classesBotao(variante, larguraTotal, className, tamanho);
   const conteudo = (
     <>
       {carregando ? (

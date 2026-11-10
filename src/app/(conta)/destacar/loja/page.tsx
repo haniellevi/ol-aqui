@@ -48,7 +48,7 @@ export default async function PaginaDestacarLoja({ searchParams }: { searchParam
         <AvatarVitrine nome={v.nome} logo={v.logo_url} />
         <div className="min-w-0">
           <p className="truncate text-base font-semibold">{v.nome}</p>
-          <p className="text-[13px] text-texto-suave">{v.cidade}</p>
+          <p className="text-legenda text-texto-suave">{v.cidade}</p>
         </div>
       </div>
       <p className="text-base text-texto-suave">Sua loja aparece na página inicial para quem é da sua região.</p>

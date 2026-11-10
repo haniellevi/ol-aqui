@@ -46,14 +46,14 @@ export function CabecalhoVitrine({
           </span>
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-[13px] text-texto-suave">{rotulo}</span>
-          <h1 className="text-[22px] font-semibold leading-7">{nome}</h1>
+          <span className="text-legenda text-texto-suave">{rotulo}</span>
+          <h1 className="text-titulo font-semibold">{nome}</h1>
           {selo && (
             <span>
               <SeloLoja />
             </span>
           )}
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-texto-suave">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base text-texto-suave">
             {cidade && (
               <span className="inline-flex items-center gap-1">
                 <MapPin className="size-4" aria-hidden />

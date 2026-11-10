@@ -174,7 +174,7 @@ function CartaoPlano({
   const porPeriodo = `por ${o.dias} dias`;
   return (
     <label
-      className={`relative flex min-h-12 cursor-pointer gap-3 rounded-card border-2 p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
+      className={`relative flex min-h-11 cursor-pointer gap-3 rounded-card border-2 p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
         ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
       } ${bloqueado ? "cursor-not-allowed opacity-70" : ""}`}
     >
@@ -190,7 +190,7 @@ function CartaoPlano({
           <span className="flex flex-wrap items-center gap-2 text-lg font-semibold leading-6">
             {o.nome}
             {o.recomendado && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-beringela px-2 py-0.5 text-[13px] font-bold text-white">
+              <span className="inline-flex items-center gap-1 rounded-full bg-beringela px-2 py-0.5 text-legenda font-bold text-white">
                 <Star className="size-3.5" aria-hidden />
                 Recomendado
               </span>

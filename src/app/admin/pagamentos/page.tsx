@@ -128,7 +128,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
               Exportar CSV
             </a>
           </div>
-          <p className="col-span-full text-[13px] text-texto-suave ">
+          <p className="col-span-full text-legenda text-texto-suave ">
             O período usa a data em que foi pago (ou, se não foi pago, a data do pedido), no horário de Fortaleza.
           </p>
         </form>
@@ -200,7 +200,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
           <Cartao>
             <p className="text-base text-texto-suave">Nenhum pagamento com estes filtros.</p>
             {filtrando && (
-              <Link href={LINK_ADMIN_PAGAMENTOS} className="mt-2 inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+              <Link href={LINK_ADMIN_PAGAMENTOS} className="mt-2 inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
                 Ver todos
               </Link>
             )}
@@ -255,10 +255,10 @@ function LinhaPagamento({ p, nomePlano, nomeRegiao }: { p: PagamentoAdmin; nomeP
         </div>
         <div className="text-right">
           <p className="text-lg font-bold tabular-nums text-beringela">{reais(p.valor_centavos)}</p>
-          <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${COR_STATUS[p.status]}`}>{NOME_STATUS[p.status]}</span>
+          <span className={`rounded-full px-2 py-0.5 text-legenda font-bold ${COR_STATUS[p.status]}`}>{NOME_STATUS[p.status]}</span>
         </div>
       </div>
-      <p className="mt-2 text-[13px] text-texto-suave">
+      <p className="mt-2 text-legenda text-texto-suave">
         Pedido {quando(p.criado_em)}
         {p.pago_em ? ` · Pago ${quando(p.pago_em)}` : p.vencimento ? ` · Vence ${p.vencimento.split("-").reverse().join("/")}` : ""}
         {p.forma ? ` · ${p.forma === "pix" ? "Pix" : p.forma === "cartao" ? "Cartão" : "Boleto"}` : ""}
@@ -268,14 +268,14 @@ function LinhaPagamento({ p, nomePlano, nomeRegiao }: { p: PagamentoAdmin; nomeP
       {p.observacao && <p className="mt-1 text-sm text-texto-suave">Nota: {p.observacao}</p>}
       {link && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center gap-1 px-3 font-semibold text-laranja-escuro underline-offset-4 hover:underline">
+          <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1 px-3 font-semibold text-laranja-escuro underline-offset-4 hover:underline">
             <ExternalLink className="size-4" aria-hidden />
             Abrir fatura
           </a>
           {p.status === "pendente" && (() => {
             const wa = reenviarNoWhatsApp(p.vitrine_whatsapp, link, oQue);
             return wa ? (
-              <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center gap-1 px-3 font-semibold text-laranja-escuro underline-offset-4 hover:underline">
+              <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1 px-3 font-semibold text-laranja-escuro underline-offset-4 hover:underline">
                 <MessageCircle className="size-4" aria-hidden />
                 Reenviar no WhatsApp
               </a>

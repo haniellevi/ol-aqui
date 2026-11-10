@@ -375,7 +375,7 @@ export function CaixaResultado({ icone, titulo, children }: { icone: "ok" | "err
       >
         {icone === "ok" ? <CheckCircle2 className="size-12" /> : <XCircle className="size-12" />}
       </span>
-      <h2 className="text-2xl font-semibold">{titulo}</h2>
+      <h2 className="text-xl font-semibold">{titulo}</h2>
       {children}
     </section>
   );

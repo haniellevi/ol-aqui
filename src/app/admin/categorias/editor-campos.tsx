@@ -53,7 +53,7 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
   return (
     <fieldset className="space-y-3">
       <legend className="text-base font-semibold text-beringela">Campos do anúncio</legend>
-      <p className="text-[13px] text-texto-suave">
+      <p className="text-legenda text-texto-suave">
         O que o vendedor preenche no passo &quot;Detalhes&quot;. &quot;Vira filtro&quot; faz o campo aparecer nos filtros da busca.
       </p>
       <input type="hidden" name="campos" value={json} />
@@ -115,9 +115,9 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
                     </Chip>
                   ))}
                 </div>
-                <p className="mt-1 text-[13px] text-texto-suave">{TIPOS_CAMPO.find((t) => t.valor === c.tipo)?.dica}</p>
+                <p className="mt-1 text-legenda text-texto-suave">{TIPOS_CAMPO.find((t) => t.valor === c.tipo)?.dica}</p>
                 {c.chave && temAnuncios && (
-                  <p className="mt-1 text-[13px] text-aviso">Este campo já pode ter valores nos anúncios: mudar o tipo pode deixar valores antigos fora dos filtros.</p>
+                  <p className="mt-1 text-legenda text-aviso">Este campo já pode ter valores nos anúncios: mudar o tipo pode deixar valores antigos fora dos filtros.</p>
                 )}
               </div>
 
@@ -161,11 +161,11 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
               )}
 
               <div className="mt-2 flex flex-wrap items-center gap-x-6">
-                <label className="flex min-h-12 items-center gap-2 text-base text-beringela">
+                <label className="flex min-h-11 items-center gap-2 text-base text-beringela">
                   <input type="checkbox" checked={c.obrigatorio} onChange={(e) => mudar(c._id, { obrigatorio: e.target.checked })} className="size-5 accent-laranja-escuro" />
                   Obrigatório
                 </label>
-                <label className="flex min-h-12 items-center gap-2 text-base text-beringela">
+                <label className="flex min-h-11 items-center gap-2 text-base text-beringela">
                   <input type="checkbox" checked={c.filtro} onChange={(e) => mudar(c._id, { filtro: e.target.checked })} className="size-5 accent-laranja-escuro" />
                   Vira filtro na busca
                 </label>

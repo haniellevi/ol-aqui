@@ -205,7 +205,7 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
         <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
           <CheckCircle2 className="size-12" />
         </span>
-        <h2 className="text-2xl font-semibold">{comecaDepois ? "Pronto! Seu destaque está garantido." : "Pronto! Seu destaque está ativo."}</h2>
+        <h2 className="text-xl font-semibold">{comecaDepois ? "Pronto! Seu destaque está garantido." : "Pronto! Seu destaque está ativo."}</h2>
         <p className="max-w-sm text-base text-texto-suave">
           {subir
             ? "Seu anúncio voltou para o topo dos mais recentes."
@@ -439,7 +439,7 @@ function CartaoOpcao({
   const motivo = !o.disponivel ? o.motivo : semPagamento ? "Pagamento em breve." : null;
   return (
     <label
-      className={`relative flex min-h-12 cursor-pointer gap-3 rounded-card border-2 p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
+      className={`relative flex min-h-11 cursor-pointer gap-3 rounded-card border-2 p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
         ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
       } ${bloqueado ? "cursor-not-allowed opacity-70" : ""}`}
     >
@@ -534,7 +534,7 @@ export function PagarPix({ cobranca }: { cobranca: Extract<Cobranca, { forma: "p
             readOnly
             value={cobranca.copiaECola}
             rows={3}
-            className="w-full resize-none break-all rounded-campo border-2 border-borda bg-fundo p-3 font-mono text-[13px] leading-5"
+            className="w-full resize-none break-all rounded-campo border-2 border-borda bg-fundo p-3 font-mono text-legenda leading-5"
             onFocus={(e) => e.currentTarget.select()}
           />
           <Botao larguraTotal icone={copiado ? <CheckCircle2 /> : <Copy />} onClick={copiar}>

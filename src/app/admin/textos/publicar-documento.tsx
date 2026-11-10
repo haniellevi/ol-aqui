@@ -36,7 +36,7 @@ function Diferencas({ linhas }: { linhas: LinhaDiff[] }) {
       </li>,
     );
   });
-  return <ol className="max-h-[28rem] overflow-y-auto rounded-card border border-borda bg-cartao py-2 font-mono text-[13px] leading-5">{saida}</ol>;
+  return <ol className="max-h-[28rem] overflow-y-auto rounded-card border border-borda bg-cartao py-2 font-mono text-legenda leading-5">{saida}</ol>;
 }
 
 export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual: DocumentoLegal | null }) {
@@ -95,9 +95,9 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
           rows={18}
           maxLength={100000}
           required
-          className={`${estiloCampo} h-auto py-2 font-mono text-[15px] leading-6`}
+          className={`${estiloCampo} h-auto py-2 font-mono text-base leading-6`}
         />
-        <p className="mt-1 text-[13px] text-texto-suave">
+        <p className="mt-1 text-legenda text-texto-suave">
           ## para título de seção, &quot;- &quot; para lista, **negrito**, [texto](/endereco) para link. HTML não funciona.
         </p>
       </div>
@@ -112,11 +112,11 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
           onChange={(e) => setResumo(e.target.value)}
           maxLength={500} placeholder="Ex.: Explicamos melhor como apagar a conta." className={estiloCampo} />
       </div>
-      <label className="flex min-h-12 items-center gap-3 text-base text-beringela">
+      <label className="flex min-h-11 items-center gap-3 text-base text-beringela">
         <input type="checkbox" name="revisado" checked={revisado} onChange={(e) => setRevisado(e.target.checked)} className="size-5 accent-laranja-escuro" />
         <span>
           Um advogado revisou este texto
-          <span className="block text-[13px] text-texto-suave">Deixe desmarcado se ninguém revisou: a versão fica marcada como RASCUNHO no painel.</span>
+          <span className="block text-legenda text-texto-suave">Deixe desmarcado se ninguém revisou: a versão fica marcada como RASCUNHO no painel.</span>
         </span>
       </label>
 
@@ -140,8 +140,8 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
       )}
       {ver === "previa" && (
         <div className="rounded-card border border-borda bg-fundo p-4">
-          <p className="mb-2 text-[13px] font-semibold uppercase text-texto-suave">Prévia</p>
-          <h3 className="mb-2 text-[22px] font-semibold leading-7">{titulo}</h3>
+          <p className="mb-2 text-legenda font-semibold uppercase text-texto-suave">Prévia</p>
+          <h3 className="mb-2 text-2xl font-semibold leading-7">{titulo}</h3>
           <Markdown texto={conteudo || "(vazio)"} />
         </div>
       )}

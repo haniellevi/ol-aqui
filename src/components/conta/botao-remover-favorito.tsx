@@ -39,7 +39,7 @@ export function BotaoRemoverFavorito({ anuncioId, titulo, comTexto = false, onRe
         aria-busy={pendente || undefined}
         className={
           comTexto
-            ? "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-campo px-3 text-base font-semibold text-perigo hover:bg-perigo-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
+            ? "inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-campo px-3 text-base font-semibold text-perigo hover:bg-perigo-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
             : "grid size-12 place-items-center rounded-full focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
         }
       >

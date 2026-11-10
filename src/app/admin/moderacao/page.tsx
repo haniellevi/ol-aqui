@@ -116,7 +116,7 @@ export default async function ModeracaoPage({
                   <p className="text-sm text-texto-suave">
                     {a.preco_centavos != null ? reais(a.preco_centavos) : "A combinar"} · {a.cidade} · {loja?.nome ?? "—"}
                   </p>
-                  <p className="mt-1 inline-block rounded-full bg-aviso-fundo px-2 py-0.5 text-[13px] font-semibold text-aviso">{a.motivo_analise}</p>
+                  <p className="mt-1 inline-block rounded-full bg-aviso-fundo px-2 py-0.5 text-legenda font-semibold text-aviso">{a.motivo_analise}</p>
                 </div>
               </div>
               {a.descricao && <p className="mt-3 line-clamp-3 text-sm text-texto-suave">{a.descricao}</p>}
@@ -125,7 +125,7 @@ export default async function ModeracaoPage({
                 {analise.motivo ?? "Aguardando conclusão. Você pode revisar manualmente a qualquer momento."}
               </p>}
               {dens.length > 0 && (
-                <ul className="mt-3 space-y-1 text-[13px] text-texto-suave">
+                <ul className="mt-3 space-y-1 text-legenda text-texto-suave">
                   {dens.map((d) => (
                     <li key={d.id}>
                       Denúncia · <strong>{MOTIVOS[d.motivo] ?? d.motivo}</strong> {d.detalhes && `· ${d.detalhes}`} · {quando(d.criado_em)}
@@ -155,7 +155,7 @@ export default async function ModeracaoPage({
           <Cartao key={p.id}>
             <p className="font-semibold text-beringela">{p.titulo}</p>
             <p className="text-sm text-texto-suave">{p.cidade} · {quando(p.criado_em)}</p>
-            <p className="mt-1 inline-block rounded-full bg-aviso-fundo px-2 py-0.5 text-[13px] font-semibold text-aviso">{p.motivo_analise}</p>
+            <p className="mt-1 inline-block rounded-full bg-aviso-fundo px-2 py-0.5 text-legenda font-semibold text-aviso">{p.motivo_analise}</p>
             {p.detalhes && <p className="mt-2 text-sm text-texto-suave">{p.detalhes}</p>}
             <form action={decidirPedido.bind(null, "")} className="mt-4 space-y-2">
               <input type="hidden" name="id" value={p.id} />
@@ -204,10 +204,10 @@ export default async function ModeracaoPage({
           <Cartao key={d.id} className="flex flex-wrap items-center gap-3">
             <div className="min-w-0 flex-1 text-sm text-beringela">
               <p>
-                <strong>{MOTIVOS[d.motivo] ?? d.motivo}</strong> · {d.alvo_tipo} <span className="font-mono text-[13px] text-texto-suave">{d.alvo_id.slice(0, 8)}</span>
+                <strong>{MOTIVOS[d.motivo] ?? d.motivo}</strong> · {d.alvo_tipo} <span className="font-mono text-legenda text-texto-suave">{d.alvo_id.slice(0, 8)}</span>
               </p>
               {d.detalhes && <p className="text-texto-suave">{d.detalhes}</p>}
-              <p className="text-[13px] text-texto-suave">{quando(d.criado_em)}</p>
+              <p className="text-legenda text-texto-suave">{quando(d.criado_em)}</p>
             </div>
             <form action={resolverDenuncia.bind(null, "")} className="flex gap-2">
               <input type="hidden" name="id" value={d.id} />

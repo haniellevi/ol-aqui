@@ -126,7 +126,7 @@ export function GerenciarSecoes({
                       </p>
                     </div>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${
+                      className={`rounded-full px-2 py-0.5 text-legenda font-bold ${
                         aparece ? "bg-sucesso-fundo text-verde-escuro" : "bg-fundo text-texto-suave"
                       }`}
                     >
@@ -138,7 +138,7 @@ export function GerenciarSecoes({
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   <Link
                     href={`${LINK_LOJA_SECOES}/${s.id}`}
-                    className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-card border border-beringela bg-cartao px-4 text-base font-semibold hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                    className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-card border border-beringela bg-cartao px-4 text-base font-semibold hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                   >
                     <ListChecks className="size-5" aria-hidden /> Escolher produtos
                   </Link>
@@ -211,7 +211,7 @@ export function GerenciarSecoes({
         aria-labelledby="titulo-apagar-secao"
         className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-folha bg-cartao p-5 text-texto shadow-2 backdrop:bg-beringela/50"
       >
-        <h2 id="titulo-apagar-secao" className="text-xl font-bold">
+        <h2 id="titulo-apagar-secao" className="text-xl font-semibold">
           Apagar a seção {apagar ? `"${apagar.nome}"` : ""}?
         </h2>
         <p className="mt-1 text-base text-texto-suave">Os produtos continuam na loja. Só a seção some. Para só tirar da vitrine por um tempo, use &quot;Esconder&quot;.</p>

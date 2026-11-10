@@ -22,7 +22,7 @@ export function Vazio({
       </span>
       <h2 className="text-balance text-base font-semibold text-beringela">{titulo}</h2>
       {texto && <p className="max-w-sm text-pretty text-sm text-texto-suave">{texto}</p>}
-      {children && <div className="mt-1 flex w-full max-w-sm flex-col gap-2">{children}</div>}
+      {children && <div className="mt-1 flex w-full max-w-sm flex-col items-center gap-2">{children}</div>}
     </section>
   );
 }

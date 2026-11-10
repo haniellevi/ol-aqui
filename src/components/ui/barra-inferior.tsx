@@ -35,7 +35,7 @@ export function BarraInferior() {
               <Link
                 href={href}
                 aria-current={atual ? "page" : undefined}
-                className={`flex w-full flex-col items-center justify-center gap-0.5 text-[13px] font-semibold leading-4 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${
+                className={`flex w-full flex-col items-center justify-center gap-0.5 text-legenda font-semibold leading-4 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${
                   atual || anunciar ? "text-beringela" : "text-texto-suave"
                 }`}
               >

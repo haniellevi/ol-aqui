@@ -89,7 +89,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
       <Cartao className="mb-6">
         <p className="text-sm text-texto-suave">Consulta aberta · vale até {quando(consulta.vence_em)}</p>
         <p className="mt-1 break-words text-base font-semibold text-beringela">Motivo: {consulta.motivo}</p>
-        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="mt-2 inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="mt-2 inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
           Começar outra consulta (outro motivo)
         </Link>
       </Cartao>
@@ -120,15 +120,15 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
           <ul className="flex flex-col gap-3">
             {resultados.dados.map((r) => (
               <li key={`${r.tipo}-${r.id}`} className="rounded-card border border-borda bg-cartao p-4 shadow-1">
-                <p className="text-[13px] font-bold uppercase tracking-wide text-texto-suave">{NOME_TIPO[r.tipo]}</p>
+                <p className="text-legenda font-bold uppercase tracking-wide text-texto-suave">{NOME_TIPO[r.tipo]}</p>
                 <p className="break-words text-base font-semibold text-beringela">{r.titulo ?? "Sem nome"}</p>
                 {r.detalhe && <p className="text-sm text-texto-suave">{r.detalhe}</p>}
-                <p className="font-mono text-[13px] text-texto-suave">{r.id}</p>
+                <p className="font-mono text-legenda text-texto-suave">{r.id}</p>
                 {r.usuario_id ? (
                   <Link
                     href={linkConta(r.usuario_id)}
                     prefetch={false}
-                    className="mt-2 inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                    className="mt-2 inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4"
                   >
                     {r.tipo === "conta" || r.tipo === "conta_apagada" ? "Ver dados da conta" : "Ver dados de quem anunciou"}
                   </Link>
@@ -149,7 +149,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
       {dados?.ok && conta && (
         <Cartao className="mb-6">
           <h2 className="text-xl font-semibold text-beringela">Dados da conta</h2>
-          <p className="font-mono text-[13px] text-texto-suave">{conta}</p>
+          <p className="font-mono text-legenda text-texto-suave">{conta}</p>
           <DadosConta d={dados.dados} emails={emails} />
           <div className="mt-8 border-t border-borda pt-4">
             <h3 className="mb-3 text-lg font-semibold text-beringela">Relatório para imprimir</h3>

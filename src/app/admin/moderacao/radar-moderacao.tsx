@@ -72,7 +72,7 @@ export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string 
               <p className="text-sm text-texto-suave">
                 {p.cidade} · {quando(p.criado_em)} · {p.total_propostas} propostas · {tirado ? "tirado pela equipe" : p.status}
               </p>
-              {p.moderado_motivo && <p className="mt-1 text-[13px] font-semibold text-aviso">Motivo: {p.moderado_motivo}</p>}
+              {p.moderado_motivo && <p className="mt-1 text-legenda font-semibold text-aviso">Motivo: {p.moderado_motivo}</p>}
               {p.detalhes && <p className="mt-2 line-clamp-3 text-sm text-texto-suave">{p.detalhes}</p>}
               <FormModerar tipo="pedido" id={p.id} oculto={tirado} />
             </Cartao>
@@ -98,7 +98,7 @@ export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string 
                 <p className="text-sm text-texto-suave">
                   Para “{um(r.radar_pedidos)?.titulo ?? "—"}” · {quando(r.criado_em)} · {r.status === "oculta" ? "oculta" : "no ar"}
                 </p>
-                {r.moderado_motivo && <p className="mt-1 text-[13px] font-semibold text-aviso">Motivo: {r.moderado_motivo}</p>}
+                {r.moderado_motivo && <p className="mt-1 text-legenda font-semibold text-aviso">Motivo: {r.moderado_motivo}</p>}
                 {r.mensagem && <p className="mt-1 text-sm text-texto-suave">{r.mensagem}</p>}
               </div>
             </div>
@@ -117,7 +117,7 @@ function FormModerar({ tipo, id, oculto }: { tipo: "pedido" | "proposta"; id: st
         <input type="hidden" name="tipo" value={tipo} />
         <input type="hidden" name="id" value={id} />
         <input name="motivo" maxLength={300} placeholder="Motivo (o dono vê e fica no histórico)" className={estiloCampo} aria-label="Motivo" />
-        <label className="flex min-h-12 items-center gap-3 text-sm text-texto">
+        <label className="flex min-h-11 items-center gap-3 text-sm text-texto">
           <input type="checkbox" name="confirmar_remover" value="sim" className="size-5 accent-laranja-escuro" />
           Sim, remover de vez{tipo === "pedido" ? " (apaga também as propostas)" : ""}. Não dá para desfazer.
         </label>

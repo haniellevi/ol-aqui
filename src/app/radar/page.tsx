@@ -165,10 +165,10 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
 function Moldura({ titulo, abas, children }: { titulo: string; abas: React.ReactNode; children: React.ReactNode }) {
   return (
     <main className="mx-auto min-h-dvh max-w-xl bg-fundo pb-28">
-      <header className="sticky top-16 z-10 border-b border-borda bg-cartao/95 px-4 pb-3 pt-4 backdrop-blur">
+      <header className="sticky top-14 z-10 border-b md:top-15 border-borda bg-cartao/95 px-4 pb-3 pt-4 backdrop-blur">
         <div className="flex items-center gap-2">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
-          <h1 className="text-xl font-bold tracking-tight text-beringela">Radar de Negócios</h1>
+          <h1 className="text-titulo font-semibold text-beringela">Radar de Negócios</h1>
         </div>
         <p className="mt-0.5 text-sm text-texto-suave">{titulo}</p>
         {abas}
