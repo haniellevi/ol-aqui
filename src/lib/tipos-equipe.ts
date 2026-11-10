@@ -35,7 +35,10 @@ export type TelaAdmin =
   | "robo"
   | "textos"
   | "equipe"
-  | "compliance";
+  | "compliance"
+  | "hoje"
+  | "funil"
+  | "visitas";
 
 /** Telas de cada papel (fora o administrador, que vê todas). Na dúvida, só o administrador. */
 const TELAS_DO_PAPEL: Record<Exclude<Papel, "administrador">, readonly TelaAdmin[]> = {
@@ -66,7 +69,7 @@ export function podeVerLink(papel: Papel | null, href: string): boolean {
 
 /** Primeira tela de quem não é administrador (o Resumo é só do administrador). */
 export function primeiraTela(papel: Papel): string {
-  if (papel === "administrador") return "/admin";
+  if (papel === "administrador") return "/admin/hoje";
   const tela = TELAS_DO_PAPEL[papel][0];
   return Object.keys(TELA_DO_LINK).find((href) => TELA_DO_LINK[href] === tela) ?? "/admin";
 }
