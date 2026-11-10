@@ -65,6 +65,8 @@ try:
     print('PASS: OTP privado, três erros, prazo, consumo único, cotas, troca segura e contadores públicos', flush=True)
     checked(sql((root/'supabase/testes/280_moderacao_aluguel.sql').read_text()))
     print('PASS: aluguel não herda piso de venda, preserva limites e conteúdo e reavalia mudança de finalidade', flush=True)
+    checked(sql((root/'supabase/testes/290_moderacao_ia.sql').read_text()))
+    print('PASS: IA protege revisão, orçamento, fotos, denúncias, contato, congelamento, concorrência e repetição', flush=True)
     def solicitar_otp(i):
         return sql("select reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990088',repeat('a',64));")
     with ThreadPoolExecutor(max_workers=4) as pool:
@@ -121,5 +123,23 @@ try:
     for result in results: checked(result)
     checked(sql("do $$ begin assert (select count(*)=1 from radar_pedidos where chave_envio='10000000-0000-4000-a000-000000000002'), 'pedido duplicado'; end $$;"))
     print('PASS: quatro envios simultâneos criam um único pedido', flush=True)
+    checked(sql("""
+      update configuracoes set valor='true' where chave='moderacao.ia_ativa';
+      update configuracoes set valor=to_jsonb(275+(select coalesce(sum(custo_centavos),0) from robo_uso where criado_em>=robo_inicio('mes')))
+        where chave='robo.orcamento_mensal_centavos';
+      insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,atributos,fotos,status)
+      select ('99000000-0000-4000-a000-00000000000'||n)::uuid,v.id,c.id,'Casa de avaliação concorrente','Corrente',100000,'{"finalidade":"Venda"}',
+        array['https://abc.supabase.co/storage/v1/object/public/anuncios/user_loja/99000000-0000-4000-a000-00000000000'||n||'/1.webp'],'rascunho'::status_anuncio
+      from generate_series(1,2) n cross join vitrines_lojas v cross join categorias c where v.dono_id='user_loja' and c.slug='casas';
+      update anuncios set status='em_analise',motivo_analise='Preço fora do normal para a categoria' where id::text like '99000000%';
+    """))
+    def reservar_ia(i):
+        return sql("begin; select moderacao_ia_reservar(); select pg_sleep(0.1); commit;")
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results=list(pool.map(reservar_ia,range(4)))
+    for result in results: checked(result)
+    assert sum('"reserva"' in r.stdout for r in results)==1, [r.stdout for r in results]
+    checked(sql("do $$ begin assert (select count(*)=1 from robo_uso where tipo='moderacao'), 'Reserva duplicada ou orçamento excedido'; end $$;"))
+    print('PASS: quatro workers de IA reservam apenas uma chamada quando o orçamento permite uma', flush=True)
 finally:
     run('docker','stop',container)

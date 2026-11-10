@@ -35,7 +35,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
         </span>
         <h1 className="text-2xl font-semibold">Seu anúncio está em análise</h1>
         <p className="max-w-sm text-base text-texto-suave">
-          Nossa equipe vai dar uma olhada antes de ele aparecer.{" "}
+          Vamos conferir o anúncio antes de ele aparecer. A análise pode ser automática ou, quando necessário, feita pela equipe.{" "}
           {horas ? `Avisamos em até ${horas} ${horas === 1 ? "hora" : "horas"}.` : "Avisamos assim que ele for liberado."}
         </p>
         {anuncio.motivo_analise && (

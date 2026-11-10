@@ -30,7 +30,7 @@ export default async function ModeracaoPage({
   // Administrador e moderador. Congelar é só do administrador (o banco também recusa).
   const { supabase, papel } = await exigirTela("moderacao");
   const podeCongelar = papel === "administrador";
-  const [anunciosR, pedidosR, denunciasR, bannersR] = await Promise.all([
+  const [anunciosR, pedidosR, denunciasR, bannersR, iaR, iaAtivaR] = await Promise.all([
     supabase
       .from("anuncios")
       .select("id, titulo, descricao, preco_centavos, categoria, cidade, fotos, motivo_analise, criado_em, vitrines_lojas(nome, slug)")
@@ -45,6 +45,8 @@ export default async function ModeracaoPage({
       .not("banner_url", "is", null)
       .order("atualizado_em", { ascending: false })
       .limit(BANNERS_NA_TELA),
+    supabase.from("moderacao_ia").select("anuncio_id, estado, motivo, concluido_em, criado_em").order("criado_em", { ascending: false }).limit(100),
+    supabase.rpc("config", { p_chave: "moderacao.ia_ativa", p_microrregiao: null, p_padrao: false }),
   ]);
   const banners = bannersR.data ?? [];
   const anuncios = anunciosR.data ?? [];
@@ -53,14 +55,30 @@ export default async function ModeracaoPage({
   const idsEmAnalise = new Set([...anuncios.map((a) => a.id), ...pedidos.map((p) => p.id)]);
   const denunciasSoltas = denuncias.filter((d) => !idsEmAnalise.has(d.alvo_id)); // alvo ainda no ar
   const denunciasDe = (id: string) => denuncias.filter((d) => d.alvo_id === id);
+  const analisesIA = iaR.data ?? [];
 
   const vazio = anuncios.length + pedidos.length + denunciasSoltas.length === 0;
 
   return (
     <>
-      <Titulo sub="Itens segurados pelo filtro automático ou por denúncias. Aprovar devolve ao ar; recusar tira do ar e avisa o motivo ao dono; congelar é para casos de Compliance Jurídico.">
+      <Titulo sub="A IA analisa anúncios retidos pelo filtro e libera os casos claros. Denúncias, dúvidas e restrições ficam para a equipe. Aprovar devolve ao ar; recusar tira do ar; congelar é para Compliance Jurídico.">
         Moderação
       </Titulo>
+
+      <Cartao className="mb-4 space-y-2 text-sm">
+        <h2 className="font-semibold">Análise automática {iaAtivaR.data === true ? "ligada" : "desligada"}</h2>
+        <p>Texto e todas as fotos passam pela IA. Uma resposta incompleta, falha ou mudança no anúncio mantém a revisão manual. O orçamento é compartilhado com o Aki e pode ser ajustado em Configurações.</p>
+        {(iaR.error || iaAtivaR.error) && <p className="text-perigo">Não foi possível consultar a análise automática agora.</p>}
+        {analisesIA.length > 0 && <details>
+          <summary className="cursor-pointer font-semibold">Últimas análises</summary>
+          <ul className="mt-2 space-y-2">
+            {analisesIA.slice(0, 20).map((a, i) => <li key={`${a.anuncio_id}-${i}`}>
+              <strong>{a.estado === "aprovado" ? "Aprovado pela IA" : a.estado === "manual" ? "Revisão manual" : a.estado === "obsoleto" ? "Anúncio alterado" : "Aguardando análise"}</strong>
+              {" · "}{quando(a.concluido_em ?? a.criado_em)}{a.motivo && ` · ${a.motivo}`}
+            </li>)}
+          </ul>
+        </details>}
+      </Cartao>
 
       {(falha || aviso) && (
         <div className="mb-4">
@@ -75,6 +93,7 @@ export default async function ModeracaoPage({
         {anuncios.map((a) => {
           const loja = Array.isArray(a.vitrines_lojas) ? a.vitrines_lojas[0] : a.vitrines_lojas;
           const dens = denunciasDe(a.id);
+          const analise = analisesIA.find(ia => ia.anuncio_id === a.id);
           return (
             <Cartao key={a.id}>
               <div className="flex gap-3">
@@ -93,6 +112,10 @@ export default async function ModeracaoPage({
                 </div>
               </div>
               {a.descricao && <p className="mt-3 line-clamp-3 text-sm text-texto-suave">{a.descricao}</p>}
+              {analise && <p className="mt-2 rounded-card bg-fundo p-3 text-sm">
+                <strong>{analise.estado === "manual" ? "Exceção para a equipe:" : "Análise automática:"}</strong>{" "}
+                {analise.motivo ?? "Aguardando conclusão. Você pode revisar manualmente a qualquer momento."}
+              </p>}
               {dens.length > 0 && (
                 <ul className="mt-3 space-y-1 text-[13px] text-texto-suave">
                   {dens.map((d) => (
