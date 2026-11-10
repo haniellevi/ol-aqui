@@ -40,8 +40,8 @@ export function CabecalhoVitrine({
         )}
       </div>
       <div className="flex flex-col gap-3 px-4 pb-4">
-        <div className="-mt-12 flex items-end gap-3">
-          <span className="rounded-full border-4 border-cartao bg-cartao">
+        <div className="relative z-10 -mt-9 flex items-end gap-3">
+          <span className="rounded-full border-3 border-cartao bg-cartao">
             <AvatarVitrine nome={nome} logo={logo} tamanho="xl" />
           </span>
         </div>

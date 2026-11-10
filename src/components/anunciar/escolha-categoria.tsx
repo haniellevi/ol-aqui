@@ -16,7 +16,7 @@ import { BarraContinuar } from "./barra-continuar";
 const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
 const OPCAO =
-  "flex min-h-14 cursor-pointer items-center gap-3 rounded-card border-2 border-borda bg-cartao p-2.5 pr-3 text-base font-semibold " +
+  "flex min-h-12 cursor-pointer items-center gap-3 rounded-card border-2 border-borda bg-cartao p-2.5 pr-3 text-base font-semibold " +
   "hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 " +
   "has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
@@ -154,7 +154,7 @@ export function EscolhaCategoria({
                 <button
                   type="button"
                   onClick={() => setPaiId(p.id)}
-                  className="flex min-h-16 w-full items-center gap-3 rounded-card border-2 border-borda bg-cartao p-2.5 text-left text-base font-semibold hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                  className="flex min-h-14 w-full items-center gap-3 rounded-card border-2 border-borda bg-cartao p-2.5 text-left text-base font-semibold hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                 >
                   <CirculoCategoria nome={p.icone} />
                   <span className="flex-1">{p.nome}</span>

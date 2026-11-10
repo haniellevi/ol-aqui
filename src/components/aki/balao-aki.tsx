@@ -392,12 +392,12 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
   const elevado = caminho.startsWith("/anunciar/") || caminho.startsWith("/anuncio/");
   const semAtalhoMovel = caminho.startsWith(`${LINK_ATENDIMENTO}/`) ? "max-md:hidden" : "";
   const posicao = elevado
-    ? "bottom-[calc(10rem+env(safe-area-inset-bottom))] md:bottom-28"
-    : "bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6";
+    ? "bottom-[calc(8rem+env(safe-area-inset-bottom))] md:bottom-28"
+    : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6";
   // o convite fica logo acima do balão (balão de 44px + folga)
   const posicaoDica = elevado
-    ? "bottom-[calc(14rem+env(safe-area-inset-bottom))] md:bottom-44"
-    : "bottom-[calc(9.5rem+env(safe-area-inset-bottom))] md:bottom-24";
+    ? "bottom-[calc(12rem+env(safe-area-inset-bottom))] md:bottom-44"
+    : "bottom-[calc(8.5rem+env(safe-area-inset-bottom))] md:bottom-24";
 
   const podeEscrever = estado.logado && estado.pode;
   const motivoTexto = estado.logado && !estado.pode ? mensagemBloqueio(estado.motivo) : null;
@@ -427,7 +427,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           >
             {dica.texto}
           </button>
-          <button type="button" onClick={fecharDica} aria-label="Fechar o convite do Aki" className="grid size-12 shrink-0 place-items-center text-texto-suave">
+          <button type="button" onClick={fecharDica} aria-label="Fechar o convite do Aki" className="grid size-10 shrink-0 place-items-center text-texto-suave">
             <X className="size-5" aria-hidden />
           </button>
         </div>
@@ -462,7 +462,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           >
             <header className={`flex items-center gap-2 border-b border-borda py-1 pr-1 ${pagina ? "pl-1" : "pl-4"}`}>
               {pagina && (
-                <Link href={voltarDaAjuda ?? "/"} aria-label={voltarDaAjuda ? "Voltar à confirmação" : "Voltar ao início"} className="grid size-12 shrink-0 place-items-center text-beringela">
+                <Link href={voltarDaAjuda ?? "/"} aria-label={voltarDaAjuda ? "Voltar à confirmação" : "Voltar ao início"} className="grid size-10 shrink-0 place-items-center text-beringela">
                   <ArrowLeft className="size-6" aria-hidden />
                 </Link>
               )}
@@ -492,7 +492,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                 </button>
               )}
               {!pagina && (
-                <button type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-12 place-items-center text-beringela">
+                <button type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-10 place-items-center text-beringela">
                   <X className="size-6" aria-hidden />
                 </button>
               )}
@@ -611,7 +611,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                       ? "A foto vai para o Aki e fica no seu anúncio."
                       : "A foto vai junto com a mensagem e não fica guardada."}
                   </span>
-                  <button type="button" onClick={tirarFoto} aria-label="Tirar a foto" className="grid size-12 place-items-center text-perigo">
+                  <button type="button" onClick={tirarFoto} aria-label="Tirar a foto" className="grid size-10 place-items-center text-perigo">
                     <X className="size-5" aria-hidden />
                   </button>
                 </div>

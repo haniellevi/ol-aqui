@@ -147,7 +147,7 @@ function Avaliacao({ mensagem, aoAvaliar, atendimentoHref }: {
   }
 
   const estiloIcone = (ativo: boolean) =>
-    `grid size-12 place-items-center rounded-campo border ${ativo ? "border-laranja-escuro bg-selecao" : "border-transparent"} text-beringela disabled:opacity-50`;
+    `grid size-10 place-items-center rounded-campo border ${ativo ? "border-laranja-escuro bg-selecao" : "border-transparent"} text-beringela disabled:opacity-50`;
 
   return (
     <div className="space-y-2">

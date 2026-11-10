@@ -90,7 +90,7 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
                     onClick={() => mover(i, -1)}
                     disabled={i === 0}
                     aria-label={`Subir o campo ${c.rotulo || i + 1}`}
-                    className="inline-flex size-12 items-center justify-center rounded-card border border-borda text-beringela hover:bg-fundo disabled:opacity-40"
+                    className="inline-flex size-10 items-center justify-center rounded-card border border-borda text-beringela hover:bg-fundo disabled:opacity-40"
                   >
                     <ArrowUp className="size-5" aria-hidden />
                   </button>
@@ -99,7 +99,7 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
                     onClick={() => mover(i, 1)}
                     disabled={i === itens.length - 1}
                     aria-label={`Descer o campo ${c.rotulo || i + 1}`}
-                    className="inline-flex size-12 items-center justify-center rounded-card border border-borda text-beringela hover:bg-fundo disabled:opacity-40"
+                    className="inline-flex size-10 items-center justify-center rounded-card border border-borda text-beringela hover:bg-fundo disabled:opacity-40"
                   >
                     <ArrowDown className="size-5" aria-hidden />
                   </button>

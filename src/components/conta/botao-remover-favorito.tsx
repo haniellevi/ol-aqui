@@ -40,7 +40,7 @@ export function BotaoRemoverFavorito({ anuncioId, titulo, comTexto = false, onRe
         className={
           comTexto
             ? "inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-campo px-3 text-base font-semibold text-perigo hover:bg-perigo-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
-            : "grid size-12 place-items-center rounded-full focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
+            : "grid size-10 place-items-center rounded-full focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
         }
       >
         <span className={comTexto ? "inline-flex" : "grid size-10 place-items-center rounded-full bg-cartao/95 shadow-1"}>

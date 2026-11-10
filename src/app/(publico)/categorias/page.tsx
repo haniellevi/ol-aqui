@@ -30,7 +30,7 @@ export default async function PaginaCategorias() {
               <section aria-labelledby={`cat-${p.slug}`}>
                 <Link
                   href={linkCategoria(p.slug)}
-                  className="flex min-h-14 items-center gap-3 rounded-campo px-2 py-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                  className="flex min-h-12 items-center gap-3 rounded-campo px-2 py-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                 >
                   <CirculoCategoria nome={p.icone} />
                   <h2 id={`cat-${p.slug}`} className="flex-1 text-lg font-semibold">

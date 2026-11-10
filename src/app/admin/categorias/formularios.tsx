@@ -42,7 +42,7 @@ function EscolhaIcone({ id, inicial }: { id: string; inicial: string | null }) {
               aria-label={`Ícone ${nome}`}
               id={escolhido ? `${id}-escolhido` : undefined}
               onClick={() => setAtual(nome)}
-              className={`relative grid size-12 place-items-center rounded-campo border text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
+              className={`relative grid size-10 place-items-center rounded-campo border text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
                 escolhido ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao hover:bg-fundo"
               }`}
             >
@@ -116,7 +116,7 @@ export function BotoesOrdem({ id, nome, primeiro, ultimo }: { id: string; nome: 
           value="subir"
           disabled={primeiro || pendente}
           aria-label={`Subir ${nome}`}
-          className="inline-flex size-12 items-center justify-center rounded-card border border-borda bg-cartao text-beringela hover:bg-fundo disabled:opacity-40"
+          className="inline-flex size-10 items-center justify-center rounded-card border border-borda bg-cartao text-beringela hover:bg-fundo disabled:opacity-40"
         >
           <ArrowUp className={`size-5 ${pendente && direcao === "subir" ? "animate-pulse" : ""}`} aria-hidden />
         </button>
@@ -126,7 +126,7 @@ export function BotoesOrdem({ id, nome, primeiro, ultimo }: { id: string; nome: 
           value="descer"
           disabled={ultimo || pendente}
           aria-label={`Descer ${nome}`}
-          className="inline-flex size-12 items-center justify-center rounded-card border border-borda bg-cartao text-beringela hover:bg-fundo disabled:opacity-40"
+          className="inline-flex size-10 items-center justify-center rounded-card border border-borda bg-cartao text-beringela hover:bg-fundo disabled:opacity-40"
         >
           <ArrowDown className={`size-5 ${pendente && direcao === "descer" ? "animate-pulse" : ""}`} aria-hidden />
         </button>

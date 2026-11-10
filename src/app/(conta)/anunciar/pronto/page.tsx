@@ -60,7 +60,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-4 py-8 text-center">
       <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
-        <CheckCircle2 className="size-12" />
+        <CheckCircle2 className="size-10" />
       </span>
       <h1 className="text-titulo font-semibold text-beringela">Seu anúncio está no ar!</h1>
       <p className="max-w-sm text-base text-texto-suave">

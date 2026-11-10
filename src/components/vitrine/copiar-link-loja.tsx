@@ -12,7 +12,7 @@ export function CopiarLinkLoja({ url }: { url: string }) {
     catch { setEstado("manual"); }
   }
   return <div className="flex min-w-0 flex-col gap-2">
-    <Botao variante="secundario" icone={<Copy />} onClick={() => void copiar()} carregando={estado === "copiando"}>Copiar link da loja</Botao>
+    <Botao variante="secundario" icone={<Copy />} aria-label="Copiar link da loja" onClick={() => void copiar()} carregando={estado === "copiando"}>Copiar link</Botao>
     <p role="status" className={estado === "copiado" || estado === "manual" ? "text-sm text-texto-suave" : "sr-only"}>
       {estado === "copiado" ? "Link copiado. Cole onde quiser compartilhar." : estado === "manual" ? "Não foi possível copiar automaticamente. Selecione o link abaixo." : ""}
     </p>
