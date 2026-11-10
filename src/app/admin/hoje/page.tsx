@@ -26,7 +26,7 @@ export default async function HojePage() {
       {tarefas.length === 0 && !erro ? (
         <Vazio
           icone={<CalendarCheck />}
-          titulo={feitas > 0 ? "Tudo feito por hoje" : "Nada pendente agora"}
+          titulo={feitas > 0 ? "Sem outras pendências por agora" : "Nada pendente agora"}
           texto="Que tal visitar uma loja nova e anotar no funil?"
         >
           <Botao href="/admin/funil/novo" variante="secundario" tamanho="pequeno">Anotar loja no funil</Botao>

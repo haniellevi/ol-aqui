@@ -6,19 +6,19 @@ import type { EstadoForm } from "@/lib/admin/estado";
 
 const TIPOS = new Set(["cobranca_vencida", "teste_acabando", "funil", "radar_sem_proposta", "loja_sem_anuncio"]);
 
-/** "Feito": a tarefa some da tela Hoje até amanhã (volta sozinha se o problema continuar). */
+/** Adia o acompanhamento até amanhã, quando volta se o problema continuar. */
 export async function marcarFeito(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   const { supabase } = await exigirTela("hoje");
   const tipo = String(form.get("tipo") ?? "");
   const alvo = String(form.get("alvo") ?? "").slice(0, 60);
   if (!TIPOS.has(tipo) || !alvo) return { erro: "Tarefa inválida." };
   const { error } = await supabase.from("hoje_feitas").upsert({ tipo, alvo_id: alvo }, { onConflict: "tipo,alvo_id,dia", ignoreDuplicates: true });
-  if (error) return { erro: "Não consegui marcar agora. Tente de novo." };
+  if (error) return { erro: "Não consegui adiar agora. Tente de novo." };
   revalidatePath("/admin/hoje");
-  return { ok: "Feito." };
+  return { ok: "Adiado até amanhã." };
 }
 
-/** Desfaz os "Feito" de hoje (todas as tarefas voltam). */
+/** Desfaz os adiamentos de hoje (todos os acompanhamentos voltam). */
 export async function desfazerFeitas(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   const { supabase } = await exigirTela("hoje");
   const dia = String(form.get("dia") ?? "");
