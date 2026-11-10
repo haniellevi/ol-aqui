@@ -38,7 +38,7 @@ export async function Listagem({
   const slugCategoria = categoria?.categoria.slug ?? null;
 
   const temErro = Object.keys(estado.erros).length > 0;
-  const { anuncios, total } = temErro ? { anuncios: [], total: 0 } : await buscarAnuncios({
+  const { anuncios, total, facetas } = temErro ? { anuncios: [], total: 0, facetas: null } : await buscarAnuncios({
     q: estado.q,
     categoria: slugCategoria,
     cidade: estado.cidade,
@@ -46,6 +46,9 @@ export async function Listagem({
     precoMax: estado.precoMax,
     filtros: estado.filtros,
     ordem: estado.ordem,
+    ...(regiao?.slug && (slugCategoria === "carros" || slugCategoria === "casas")
+      ? { facetas: true, regiao: regiao.slug }
+      : {}),
     limite: POR_PAGINA,
     deslocamento: (estado.pagina - 1) * POR_PAGINA,
   });
@@ -86,6 +89,7 @@ export async function Listagem({
         sp={sp}
         estado={estado}
         campos={campos}
+        facetas={facetas}
         cidades={cidades}
         categorias={categorias ?? undefined}
         nomeCategoria={categoria?.categoria.nome ?? null}

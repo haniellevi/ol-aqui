@@ -48,8 +48,21 @@ export function lerAtributos(campos: CampoCategoria[], form: FormData, exigir: b
   return { atributos, erros };
 }
 
-/** Mantém só os atributos que existem nos campos (ao trocar de categoria). */
-export function filtrarAtributos(atributos: Atributos, campos: CampoCategoria[]): Atributos {
-  const chaves = new Set(campos.map((c) => c.chave));
+/** Na troca de categoria, conserva apenas valores compatíveis com o campo de destino. */
+export function filtrarAtributos(atributos: Atributos, campos: CampoCategoria[], origem?: CampoCategoria[]): Atributos {
+  const chaves = new Set(campos.filter((campo) => {
+    if (!origem) return true;
+    const anterior = origem.find((c) => c.chave === campo.chave);
+    if (!anterior || anterior.tipo !== campo.tipo || anterior.unidade !== campo.unidade) return false;
+    const valor = atributos[campo.chave];
+    if (campo.tipo === "numero") {
+      return typeof valor === "number" && Number.isFinite(valor)
+        && (campo.min == null || valor >= campo.min) && (campo.max == null || valor <= campo.max);
+    }
+    if (campo.tipo === "sim_nao") return typeof valor === "boolean";
+    if (typeof valor !== "string") return false;
+    if (campo.tipo === "lista") return campo.opcoes?.some((opcao) => semAcento(opcao) === semAcento(valor));
+    return !!valor.trim() && valor.length <= 120;
+  }).map((c) => c.chave));
   return Object.fromEntries(Object.entries(atributos).filter(([k]) => chaves.has(k)));
 }

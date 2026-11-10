@@ -32,6 +32,7 @@ function paraTexto(c: CampoCategoria, v: Atributos[string] | undefined): string 
 
 export function FormDetalhes({
   id,
+  categoriaId,
   editar,
   formId,
   tituloInicial,
@@ -40,6 +41,7 @@ export function FormDetalhes({
   atributos,
 }: {
   id: string;
+  categoriaId: string | null;
   editar: boolean;
   formId: string;
   tituloInicial: string;
@@ -59,6 +61,7 @@ export function FormDetalhes({
   return (
     <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-6" noValidate>
       <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="categoria_id" value={categoriaId ?? ""} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
 
       <AvisoErro mensagem={estado?.erro?.mensagem} />

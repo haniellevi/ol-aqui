@@ -15,7 +15,7 @@ function fronteiras(op = {}) {
     '@/lib/supabase/server': { createClient: async () => db },
     '@/lib/dados/anuncios': { meuAnuncio: async () => op.semAnuncio ? null : { ...anuncio, ...op.anuncio }, meusAnuncios: async () => [] },
     '@/lib/dados/conta': { meuPerfilEVitrine: async () => conta },
-    '@/lib/dados/categorias': { categoriaPorId: async () => null, categoriaDoAnuncio: async () => null },
+    '@/lib/dados/categorias': { categoriaPorId: async (id) => op.categorias?.[id] ?? null, categoriaDoAnuncio: async (id) => op.categorias?.[id] ?? null },
     '@/lib/dados/regiao': { listarCidades: async () => op.cidades ?? [{ nome: 'Corrente', uf: 'PI' }] },
     '@/lib/dados/config': { lerConfigNumero: async (chave, regiao) => { assert.equal(regiao, 'regiao'); return chave.endsWith('maximo') ? 2 : 1; } },
     '@/lib/dados/cobranca': { avulsoParaMim: async () => null }, '@/lib/asaas': { asaasConfigurado: () => false },
@@ -116,6 +116,56 @@ test('formulários renderizam ação segura, preço legível e localização sem
   const { FormLocal } = carregar('src/components/anunciar/form-local.tsx', mocks);
   const local = render(React.createElement(FormLocal, { id, editar: false, formId: 'local', cidades: [], cidadeInicial: '', bairroInicial: '' }));
   assert.match(local, /Não há cidades disponíveis/); assert.match(local, /type="hidden" name="cidade"/); assert.match(local, /disabled/);
+});
+
+test('Carros e Casas mostram e validam seus próprios detalhes', async () => {
+  const carro = '60000000-0000-4000-a000-000000000011';
+  const casa = '60000000-0000-4000-a000-000000000012';
+  const categorias = {
+    [carro]: { categoria: { campos: [
+      { chave: 'marca', rotulo: 'Marca', tipo: 'texto', obrigatorio: true },
+      { chave: 'km', rotulo: 'Quilometragem', tipo: 'numero', unidade: 'km' },
+    ] } },
+    [casa]: { categoria: { campos: [
+      { chave: 'finalidade', rotulo: 'Venda ou aluguel', tipo: 'lista', obrigatorio: true, opcoes: ['Venda', 'Aluguel'] },
+      { chave: 'area', rotulo: 'Área', tipo: 'numero', unidade: 'm²' },
+    ] } },
+  };
+  for (const [categoriaId, obrigatorio, valores, atributo, outro] of [
+    [carro, 'attr_marca', { attr_marca: 'Fiat', attr_km: '62.000' }, { marca: 'Fiat', km: 62000 }, 'attr_area'],
+    [casa, 'attr_finalidade', { attr_finalidade: 'Venda', attr_area: '95,5' }, { finalidade: 'Venda', area: 95.5 }, 'attr_km'],
+  ]) {
+    const anuncio = { categoria_id: categoriaId, atributos: { campo_antigo: 'preservado' }, atualizado_em: '2026-11-10T10:00:00Z' };
+    const { a, mocks, gravacoes, filtros } = fronteiras({ categorias, anuncio });
+    const { FormDetalhes } = carregar('src/components/anunciar/form-detalhes.tsx', { ...mocks, '@/app/(conta)/anunciar/actions': a });
+    const html = render(React.createElement(FormDetalhes, {
+      id, categoriaId, editar: false, formId: 'detalhes', tituloInicial: '', descricaoInicial: '',
+      campos: categorias[categoriaId].categoria.campos, atributos: {},
+    }));
+    assert.ok(html.includes(`name="${obrigatorio}"`));
+    assert.ok(!html.includes(`name="${outro}"`));
+    const base = { categoria_id: categoriaId, titulo: 'Anúncio fictício' };
+    assert.ok((await a.salvarDetalhes(null, form(base))).campos[obrigatorio]);
+    assert.match((await a.salvarDetalhes(null, form({ ...base, categoria_id: 'anterior', ...valores }))).erro.mensagem, /categoria mudou/);
+    assert.equal(gravacoes.length, 0);
+    await assert.rejects(a.salvarDetalhes(null, form({ ...base, ...valores })), /redirect:\/anunciar\/preco/);
+    assert.deepEqual(gravacoes[0].atributos, { ...atributo, campo_antigo: 'preservado' });
+    assert.ok(filtros.some(([chave, valor]) => chave === 'atualizado_em' && valor === anuncio.atualizado_em));
+  }
+});
+
+test('troca de Casas para Fazendas mantém finalidade e pede área na unidade nova', async () => {
+  const casa = '60000000-0000-4000-a000-000000000012';
+  const fazenda = '60000000-0000-4000-a000-000000000013';
+  const finalidade = { chave: 'finalidade', tipo: 'lista', opcoes: ['Venda', 'Aluguel'] };
+  const area = { chave: 'area', tipo: 'numero' };
+  const categorias = {
+    [casa]: { pai: {}, categoria: { campos: [finalidade, { ...area, unidade: 'm²' }] } },
+    [fazenda]: { pai: {}, categoria: { campos: [finalidade, { ...area, unidade: 'ha' }] } },
+  };
+  const { a, gravacoes } = fronteiras({ categorias, anuncio: { categoria_id: casa, atributos: { finalidade: 'Venda', area: 95 } } });
+  await assert.rejects(a.salvarCategoria(null, form({ categoria_id: fazenda })), /redirect:\/anunciar\/detalhes/);
+  assert.deepEqual(gravacoes[0], { categoria_id: fazenda, atributos: { finalidade: 'Venda' } });
 });
 
 test('foto ainda referenciada ou consulta indisponível nunca é apagada do Storage', async () => {

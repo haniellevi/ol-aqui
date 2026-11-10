@@ -7,7 +7,7 @@ import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { FolhaFiltros } from "@/components/busca/folha-filtros";
 import { ID_FOLHA, ID_RESULTADOS, ORDENS, POR_PAGINA, comParametros, paramCampo, textoPreco, type EstadoBusca, type ParametrosUrl } from "@/components/busca/parametros";
 import { inteiro } from "@/lib/formato";
-import type { AnuncioCard, CampoCategoria, CategoriaComFilhas, Cidade } from "@/lib/tipos";
+import type { AnuncioCard, CampoCategoria, CategoriaComFilhas, Cidade, FacetasBusca } from "@/lib/tipos";
 
 // Corpo comum da busca (T5) e das listas de categoria (T4):
 // chips de filtro, "N anúncios em ...", grade, paginação e a folha de filtros.
@@ -17,6 +17,7 @@ export function ResultadosBusca({
   sp,
   estado,
   campos,
+  facetas,
   cidades,
   categorias,
   nomeCategoria,
@@ -29,6 +30,7 @@ export function ResultadosBusca({
   sp: ParametrosUrl;
   estado: EstadoBusca;
   campos: CampoCategoria[];
+  facetas?: FacetasBusca | null;
   cidades: Cidade[];
   /** Na tela de busca: permite escolher a categoria na folha. */
   categorias?: CategoriaComFilhas[];
@@ -157,7 +159,7 @@ export function ResultadosBusca({
         {paginas > 1 && <Paginacao caminho={caminho} sp={sp} pagina={estado.pagina} paginas={paginas} />}
       </section>
 
-      <FolhaFiltros key={comParametros(caminho, sp)} caminho={caminho} estado={estado} campos={campos} cidades={cidades} categorias={categorias} />
+      <FolhaFiltros key={comParametros(caminho, sp)} caminho={caminho} estado={estado} campos={campos} facetas={facetas} cidades={cidades} categorias={categorias} />
     </>
   );
 }

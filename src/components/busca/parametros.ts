@@ -102,11 +102,14 @@ export function lerEstadoBusca(sp: ParametrosUrl, campos: CampoCategoria[] = [],
       }
       if (minT || maxT) quantosCampos++;
     } else if (c.tipo === "lista") {
+      const nome = paramCampo(c.chave);
       const opcoes = new Set(c.opcoes ?? []);
-      const escolhidos = [...new Set(varios(sp[paramCampo(c.chave)]).filter((v) => opcoes.has(v)))];
-      if (escolhidos.length) {
-        valores[paramCampo(c.chave)] = escolhidos;
-        filtros[c.chave] = escolhidos;
+      const informados = [...new Set(varios(sp[nome]))];
+      const escolhidos = informados.filter((v) => opcoes.has(v));
+      if (informados.length !== escolhidos.length) erros[nome] = `O filtro "${c.rotulo}" tem opções indisponíveis no catálogo. Escolha novamente.`;
+      if (escolhidos.length) filtros[c.chave] = escolhidos;
+      if (informados.length) {
+        valores[nome] = informados;
         quantosCampos++;
       }
     } else if (c.tipo === "sim_nao") {
