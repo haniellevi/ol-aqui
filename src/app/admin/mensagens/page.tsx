@@ -64,7 +64,7 @@ export default async function MensagensPage() {
         </Vazio>
       ) : (
         <div className="space-y-6">
-          <Cartao className="bg-laranja-claro">
+          <Cartao className="bg-selecao">
             <p className="text-base text-beringela">
               Use as palavras entre chaves, como <strong>{"{nome}"}</strong>, para o sistema trocar pelo valor certo. Palavra que não está na
               lista da mensagem não é aceita.

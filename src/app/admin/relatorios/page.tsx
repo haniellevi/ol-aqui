@@ -114,7 +114,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
       <Titulo sub="Números somados do OLAKI. Escolha o período (até 12 meses) e a região. Cada bloco pode ser baixado em planilha (CSV).">Relatórios</Titulo>
 
       <Cartao className="mb-6 space-y-4">
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
+        <div className="flex flex-wrap gap-2">
           {atalhos.map((a) => (
             <Chip key={a.id} href={linkAtalho(a.de, a.ate)} ativo={a.de === filtros.de && a.ate === filtros.ate}>
               {a.nome}
