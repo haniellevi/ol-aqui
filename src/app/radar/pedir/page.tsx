@@ -101,7 +101,7 @@ async function Formulario({
       {cidadeFora && <p role="status" className="rounded-card bg-aviso-fundo p-4 text-aviso">A cidade da busca fica fora da região do seu cadastro. Escolha abaixo uma cidade dessa região para publicar seu pedido.</p>}
       <FormPedido
         textoInicial={texto.slice(0, 120)}
-        categorias={[...categorias, ...(categoriaInicial?.pai_id ? [categoriaInicial] : [])].map((c) => ({ id: c.id, nome: c.nome }))}
+        categorias={categorias.map((c) => ({ id: c.id, nome: c.nome, filhas: c.filhas.map(({ id, nome }) => ({ id, nome })) }))}
         categoriaInicial={categoriaInicial?.id ?? null}
         precoMinInicial={precoMin}
         precoMaxInicial={precoMax}

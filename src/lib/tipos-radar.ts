@@ -6,7 +6,7 @@ export type ModoContato = "whatsapp_direto" | "propostas_prazo";
 /** Situação calculada pelo banco: aberto, prazo das propostas acabou, fechado ou em análise. */
 export type SituacaoPedido = "aberto" | "prazo_acabou" | "fechado" | "em_analise";
 
-export type MotivoFechamento = "resolvido" | "cancelado" | "prazo" | "moderacao" | null;
+export type MotivoFechamento = "resolvido" | "cancelado" | "prazo" | "moderacao" | "arquivado" | null;
 
 /** Linha de meus_pedidos_radar() (aba "Meus pedidos"). */
 export type MeuPedidoRadar = {

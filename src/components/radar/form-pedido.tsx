@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Hourglass, Megaphone, MessageCircle } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
+import { Seletor } from "@/components/conta/seletor";
 import { Chip } from "@/components/ui/chip";
 import { Botao } from "@/components/ui/botao";
 import { criarPedido } from "@/app/radar/actions";
@@ -19,7 +20,7 @@ type Props = {
   categoriaInicial?: string | null;
   precoMinInicial?: string;
   precoMaxInicial?: string;
-  categorias: { id: string; nome: string }[];
+  categorias: { id: string; nome: string; filhas: { id: string; nome: string }[] }[];
   cidades: string[];
   cidadeInicial: string | null;
   regras: RegrasRadar;
@@ -126,20 +127,23 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         erro={erroDe("detalhes")}
       />
 
-      {erroDe("categoria") && <p role="alert" tabIndex={-1} className="text-sm font-semibold text-perigo">{erroDe("categoria")}</p>}
       {categorias.length > 0 && (
-        <fieldset className="flex flex-col gap-2">
-          <legend className={`${ROTULO_GRUPO} mb-2`}>
-            Tipo de produto <span className="font-normal text-texto-suave">(opcional)</span>
-          </legend>
-          <div className="flex flex-wrap gap-2">
-            {categorias.map((c) => (
-              <Chip key={c.id} ativo={categoriaId === c.id} onClick={() => setCategoriaId(categoriaId === c.id ? null : c.id)}>
-                {c.nome}
-              </Chip>
-            ))}
-          </div>
-        </fieldset>
+        <Seletor
+          rotulo="Categoria ou nicho (opcional)"
+          name="categoria"
+          value={categoriaId ?? ""}
+          onChange={(e) => setCategoriaId(e.target.value || null)}
+          erro={erroDe("categoria")}
+          dica="Escolha a opção mais específica para ajudar vendedores da área a encontrar seu pedido."
+        >
+          <option value="">Sem categoria</option>
+          {categorias.map((c) => (
+            <optgroup key={c.id} label={c.nome}>
+              <option value={c.id}>{c.nome}{c.filhas.length ? " (geral)" : ""}</option>
+              {c.filhas.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
+            </optgroup>
+          ))}
+        </Seletor>
       )}
 
       <fieldset className="flex flex-col gap-2">

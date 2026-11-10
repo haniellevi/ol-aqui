@@ -1,23 +1,17 @@
 // components/radar/radar-de-negocios.tsx
 // Radar de Negócios: a "lista quente" invertida do OLAKI.
-// Mobile-first, sem bibliotecas pesadas: Tailwind + lucide-react (já vem com shadcn/ui).
 // "Propor" abre a tela do pedido (/radar/[id]) com a folha de proposta: anúncio ou foto, preço e mensagem.
-"use client";
-
-import { useMemo, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, MessageCircle, Radar, Send, Users } from "lucide-react";
-import { Chip } from "@/components/ui/chip";
+import { Botao } from "@/components/ui/botao";
+import type { CategoriaComFilhas } from "@/lib/tipos";
 import { AtualizarRadar } from "./atualizar-radar";
 import { faixaPreco, dataHoraCurta } from "./util";
 import { LINK_PLANOS, linkMeuPedidoRadar, linkPedidoRadarLoja } from "@/lib/rotas";
 
-export type CategoriaRadar = "imovel" | "veiculo" | "movel" | "geral";
-
 export type PedidoRadar = {
   id: string;
-  categoria: CategoriaRadar;
-  categoriaFiltro?: string;
   titulo: string;
   detalhes: string | null; // null quando o usuário não tem acesso
   cidade: string;
@@ -38,14 +32,6 @@ export type PedidoRadar = {
 
 export type PlanoResumo = { codigo: string; nome: string; preco_centavos: number; periodo_dias?: number };
 
-const CATEGORIAS: { valor: CategoriaRadar | "todas"; rotulo: string }[] = [
-  { valor: "todas", rotulo: "Tudo" },
-  { valor: "veiculo", rotulo: "Veículos" },
-  { valor: "imovel", rotulo: "Imóveis" },
-  { valor: "movel", rotulo: "Móveis" },
-  { valor: "geral", rotulo: "Outros" },
-];
-
 const reaisCentavos = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 function tempoAtras(iso: string) {
@@ -61,24 +47,33 @@ export function RadarDeNegocios({
   pedidos,
   temAcesso,
   propostasRestantes,
+  emTeste,
   planos,
   abas,
-  categorias = CATEGORIAS,
+  categorias,
+  nicho,
+  vende,
+  textoBusca,
+  pagina,
+  anterior,
+  proxima,
 }: {
   pedidos: PedidoRadar[];
-  categorias?: { valor: string; rotulo: string }[];
+  categorias: CategoriaComFilhas[];
+  nicho: string;
+  vende: boolean;
+  textoBusca: string | null;
+  pagina: number;
+  anterior?: string;
+  proxima?: string;
   temAcesso: boolean;
   propostasRestantes: number | null; // null = ilimitado
+  emTeste: boolean;
   planos: PlanoResumo[];
   /** Abas da tela /radar (Meus pedidos, Pedidos na região, Minhas propostas). */
   abas?: ReactNode;
 }) {
-  const [filtro, setFiltro] = useState("todas");
   const restantes = propostasRestantes;
-  const visiveis = useMemo(
-    () => (filtro === "todas" ? pedidos : pedidos.filter((p) => (p.categoriaFiltro ?? p.categoria) === filtro)),
-    [pedidos, filtro],
-  );
   const podePropor = temAcesso && (restantes === null || restantes > 0);
 
   return (
@@ -89,42 +84,70 @@ export function RadarDeNegocios({
           <h1 className="text-titulo font-semibold text-beringela">Radar de Negócios</h1>
         </div>
         <p className="mt-0.5 text-sm text-texto-suave">
-          {pedidos.length} {pedidos.length === 1 ? "comprador procurando" : "compradores procurando"} na sua região
+          {pedidos.length} {pedidos.length === 1 ? "pedido aberto nesta página" : "pedidos abertos nesta página"}
         </p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-3">{abas}<AtualizarRadar /></div>
 
-        <nav className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:thin]" aria-label="Filtrar por categoria">
-          {categorias.map((c) => (
-            <Chip key={c.valor} ativo={filtro === c.valor} onClick={() => setFiltro(c.valor)}>
-              {c.rotulo}
-            </Chip>
-          ))}
-        </nav>
+        <form action="/radar" method="get" className="mt-4 flex flex-wrap items-end gap-3">
+          <input type="hidden" name="aba" value="regiao" />
+          {textoBusca && <input type="hidden" name="q" value={textoBusca} />}
+          <div className="min-w-0 flex-[1_1_14rem]">
+            <label htmlFor="radar-nicho" className="mb-1 block text-sm font-semibold text-beringela">Filtrar por nicho</label>
+            <select
+              id="radar-nicho"
+              name="nicho"
+              defaultValue={nicho}
+              key={nicho}
+              className="h-12 w-full rounded-campo border border-borda-campo bg-cartao px-3 text-base text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+            >
+              <option value="todas">Todos os nichos</option>
+              {vende && <option value="meu_nicho">Do meu nicho</option>}
+              <option value="sem_categoria">Sem categoria</option>
+              {categorias.map((c) => c.filhas.length > 0 ? (
+                <optgroup key={c.id} label={c.nome}>
+                  <option value={c.id}>Todos em {c.nome}</option>
+                  {c.filhas.map((filha) => <option key={filha.id} value={filha.id}>{filha.nome}</option>)}
+                </optgroup>
+              ) : (
+                <option key={c.id} value={c.id}>{c.nome}</option>
+              ))}
+            </select>
+          </div>
+          <Botao type="submit" variante="secundario">Filtrar</Botao>
+        </form>
+        {nicho === "meu_nicho" && <p className="mt-2 text-sm text-texto-suave">Pedidos nas categorias dos seus anúncios no ar.</p>}
       </header>
 
       {!temAcesso && <FaixaUpgrade planos={planos} titulo="Esses clientes já querem comprar." />}
       {temAcesso && restantes !== null && (
         restantes > 0 ? (
           <p className="mx-4 mt-4 rounded-card bg-laranja-claro px-4 py-3 text-sm text-beringela">
-            Você tem <strong>{restantes}</strong> {restantes === 1 ? "proposta disponível" : "propostas disponíveis"} no seu plano.
+            Você ainda pode enviar <strong>{restantes}</strong> {restantes === 1 ? "oferta" : "ofertas"} {emTeste ? "durante o teste" : "neste mês"}.
           </p>
         ) : (
-          <FaixaUpgrade planos={planos} titulo="Suas propostas disponíveis acabaram." />
+          <FaixaUpgrade planos={planos} titulo="Você atingiu o limite de novas ofertas do plano." />
         )
       )}
 
       <ul className="grid grid-cols-1 items-start gap-4 px-4 pt-4 md:grid-cols-2">
-        {visiveis.map((p) => (
+        {pedidos.map((p) => (
           <li key={p.id}>
             <CartaoPedido pedido={p} temAcesso={temAcesso} podePropor={podePropor} />
           </li>
         ))}
-        {visiveis.length === 0 && (
+        {pedidos.length === 0 && (
           <li className="rounded-card border border-dashed border-borda bg-cartao p-8 text-center text-sm text-texto-suave">
-            Nenhum pedido aberto nesta categoria agora. Use Atualizar para conferir novos pedidos.
+            Nenhum pedido aberto para este filtro nesta página.
           </li>
         )}
       </ul>
+      {(anterior || proxima) && (
+        <nav aria-label="Páginas dos pedidos" className="mt-4 flex flex-wrap items-center justify-center gap-3 px-4">
+          {anterior && <Botao href={anterior} variante="secundario">Anterior</Botao>}
+          <span className="text-sm text-texto-suave">Página {pagina}</span>
+          {proxima && <Botao href={proxima} variante="secundario">Próxima</Botao>}
+        </nav>
+      )}
     </main>
   );
 }
@@ -148,6 +171,7 @@ function CartaoPedido({
     <article className="overflow-hidden rounded-card border border-borda bg-cartao shadow-1">
       <div className="p-4">
         <div className="flex flex-wrap items-center gap-2 text-legenda">
+          {p.categoriaNome && <span className="rounded-full bg-fundo px-2 py-0.5 text-texto-suave">{p.categoriaNome}</span>}
           {p.urgencia !== "normal" && (
             <span className="inline-flex items-center gap-1 rounded-full bg-laranja-claro px-2 py-0.5 font-semibold text-laranja-escuro">
               <Flame className="size-3.5" aria-hidden />

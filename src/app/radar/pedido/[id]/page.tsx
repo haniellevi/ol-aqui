@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, ChevronLeft, Hourglass, MessageCircle, ShieldAlert } from "lucide-react";
-import { pedidoRadar, propostasDoPedido } from "@/lib/dados/radar";
+import { pedidoArquivado, pedidoRadar, propostasDoPedido } from "@/lib/dados/radar";
 import { LINK_RADAR, linkPedidoRadarLoja, linkPedirRadar } from "@/lib/rotas";
 import { tempoRelativo } from "@/lib/formato";
 import { CLASSE_TOM, dataHoraCurta, faixaPreco, resumoPropostas, rotuloSituacao } from "@/components/radar/util";
@@ -25,7 +25,7 @@ export default async function MeuPedidoPage({
   if (!pedido) notFound();
   if (!pedido.sou_comprador) redirect(linkPedidoRadarLoja(id));
 
-  const propostas = await propostasDoPedido(id);
+  const [propostas, arquivado] = await Promise.all([propostasDoPedido(id), pedidoArquivado(id)]);
   const s = rotuloSituacao(pedido.situacao, pedido.fechado_motivo);
   const fechado = pedido.situacao === "fechado";
   const menor = propostas.reduce<number | null>((m, p) => (p.preco_centavos != null && (m == null || p.preco_centavos < m) ? p.preco_centavos : m), null);
@@ -33,9 +33,9 @@ export default async function MeuPedidoPage({
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
-      <Link href={`${LINK_RADAR}?aba=meus`} className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 px-2 text-base font-semibold text-laranja-escuro">
+      <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 px-2 text-base font-semibold text-laranja-escuro">
         <ChevronLeft className="size-5" aria-hidden />
-        Meus pedidos
+        {arquivado ? "Arquivados" : "Meus pedidos"}
       </Link>
 
       {novo === "1" && ["aberto", "em_analise"].includes(pedido.situacao) &&
@@ -62,7 +62,10 @@ export default async function MeuPedidoPage({
         ))}
 
       <section className="flex flex-col gap-2 rounded-card bg-cartao p-4 shadow-1">
-        <span className={`w-fit rounded-full px-2 py-0.5 text-[13px] font-semibold ${CLASSE_TOM[s.tom]}`}>{s.texto}</span>
+        <div className="flex flex-wrap gap-2">
+          <span className={`w-fit rounded-full px-2 py-0.5 text-[13px] font-semibold ${CLASSE_TOM[s.tom]}`}>{s.texto}</span>
+          {arquivado && <span className="w-fit rounded-full bg-fundo px-2 py-0.5 text-[13px] font-semibold text-texto-suave">Arquivado</span>}
+        </div>
         <h1 className="break-words text-xl font-bold leading-7">{pedido.titulo}</h1>
         {pedido.detalhes && <p className="whitespace-pre-line break-words text-base text-texto-suave">{pedido.detalhes}</p>}
         <p className="text-[15px] font-semibold">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
@@ -113,7 +116,14 @@ export default async function MeuPedidoPage({
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-bold">Ofertas recebidas</h2><AtualizarRadar /></div>
       <PropostasRecebidas propostas={propostas} podeEscolher={!["em_analise", "congelado"].includes(pedido.status) && !["cancelado", "moderacao"].includes(pedido.fechado_motivo ?? "")} modoPrazo={modoPrazo} />
 
-      {!fechado && <AcoesPedido pedidoId={pedido.id} podeResolver={pedido.status === "aberto"} />}
+      <AcoesPedido
+        pedidoId={pedido.id}
+        podeResolver={!fechado && pedido.status === "aberto"}
+        podeCancelar={!fechado}
+        podeArquivar={!["em_analise", "congelado"].includes(pedido.status)}
+        arquivado={arquivado}
+        aberto={pedido.situacao === "aberto"}
+      />
     </main>
   );
 }
