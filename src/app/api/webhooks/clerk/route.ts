@@ -55,25 +55,58 @@ async function apagarConta(id: string) {
     if (r.error) throw new Error(r.error.message);
   };
 
-  // Fotos dos anúncios, rascunhos, logo e capa saem do Storage (pasta <id>/ do bucket público).
-  await apagarArquivos(db, id);
+  // A conta já não existe no Clerk. Revoga também JWT emitido antes da exclusão,
+  // sem depender de manter o perfil e sem renovar a data quando o evento se repete.
+  ok(await db.from("contas_revogadas").upsert({ usuario_id: id }, { onConflict: "usuario_id", ignoreDuplicates: true }));
+
+  // Congelamento exige revisão humana antes de remover evidências ou arquivos.
+  // Vale também sem cobrança: a cascata do perfil apagaria o conteúdo congelado.
+  const retencoes = await Promise.all([
+    db.from("anuncios").select("id, vitrines_lojas!inner(dono_id)")
+      .eq("vitrines_lojas.dono_id", id)
+      .or("status.eq.congelado,status_antes_exclusao.eq.congelado,congelado_motivo.not.is.null").limit(1),
+    db.from("radar_pedidos").select("id")
+      .eq("comprador_id", id).eq("status", "congelado").limit(1),
+    db.from("radar_propostas").select("id, vitrines_lojas!inner(dono_id), radar_pedidos!inner(status)")
+      .eq("vitrines_lojas.dono_id", id).eq("radar_pedidos.status", "congelado").limit(1),
+  ]);
+  for (const retencao of retencoes) {
+    ok(retencao);
+    if (!retencao.data) throw new Error("Não foi possível conferir a retenção da conta.");
+    if (retencao.data.length) throw new Error("Exclusão pendente: conteúdo congelado exige revisão humana de Compliance.");
+  }
 
   const apagou = await db.from("perfis").delete().eq("id", id);
-  if (!apagou.error) return;
+  if (!apagou.error) {
+    // O banco já confirmou a cascata. Se o Storage falhar, o mesmo evento pode tentar de novo.
+    await apagarArquivos(db, id);
+    return;
+  }
 
-  // Não deu para apagar (pagamentos ligados à vitrine): tira tudo do ar e anonimiza.
+  // Só a retenção financeira conhecida permite manter o perfil. Indisponibilidade,
+  // falha de permissão ou uma nova FK precisam de nova tentativa e investigação.
+  if (apagou.error.code !== "23503" || !apagou.error.message.includes('"pagamentos_vitrine_id_fkey"')) {
+    throw new Error(apagou.error.message);
+  }
+
+  // Pagamentos ligados à vitrine: retém as referências financeiras e remove conteúdo operacional.
   const vitrines = await db.from("vitrines_lojas").select("id").eq("dono_id", id);
   ok(vitrines);
   const ids = (vitrines.data ?? []).map((v) => v.id);
   if (ids.length) {
-    ok(await db.from("anuncios").update({ status: "pausado" }).in("vitrine_id", ids).neq("status", "congelado"));
-    ok(await db.from("anuncios").update({ fotos: [] }).in("vitrine_id", ids));
+    // Gatilhos do banco também recusam congelamento ocorrido depois da consulta inicial.
+    ok(await db.from("anuncios").delete().in("vitrine_id", ids));
+    ok(await db.from("radar_propostas").delete().in("vitrine_id", ids));
     ok(
       await db
         .from("vitrines_lojas")
         .update({
           status: "suspensa",
           nome: "Loja encerrada",
+          cidade: "Conta excluída",
+          bairro: null,
+          criado_ip: null,
+          selo_loja_verificada: false,
           descricao: null,
           whatsapp: null,
           cnpj: null,
@@ -97,10 +130,20 @@ async function apagarConta(id: string) {
         })
         .in("id", ids),
     );
+    // A URL antiga pode conter o nome da pessoa. Cada UUID gera uma URL única sem esse nome.
+    for (const vitrineId of ids) {
+      ok(await db.from("vitrines_lojas").update({ slug: `encerrada-${vitrineId}` }).eq("id", vitrineId));
+    }
     // seções próprias (os produtos delas saem junto, em cascata)
     ok(await db.from("loja_secoes").delete().in("vitrine_id", ids));
   }
-  ok(await db.from("radar_pedidos").update({ status: "encerrado" }).eq("comprador_id", id).in("status", ["aberto", "em_analise"]));
+  ok(await db.from("radar_pedidos").delete().eq("comprador_id", id));
+  ok(await db.from("robo_conversas").delete().eq("usuario_id", id));
+  ok(await db.from("robo_avaliacoes").delete().eq("usuario_id", id));
+  // Livro-caixa sem o vínculo da conta, como ocorreria no ON DELETE SET NULL do perfil.
+  ok(await db.from("robo_uso").update({ usuario_id: null }).eq("usuario_id", id));
+  ok(await db.from("preferencias_avisos").delete().eq("usuario_id", id));
+  ok(await db.from("equipe").delete().eq("usuario_id", id));
   ok(await db.from("perfis_verificacoes").delete().eq("perfil_id", id));
   ok(await db.from("whatsapp_desafios").delete().eq("usuario_id", id));
   ok(await db.from("favoritos").delete().eq("usuario_id", id));
@@ -108,9 +151,10 @@ async function apagarConta(id: string) {
   ok(
     await db
       .from("perfis")
-      .update({ nome: "Conta excluída", whatsapp: null, whatsapp_verificado_em: null, whatsapp_origem: "clerk", avatar_url: null, cidade: null, bairro: null })
+      .update({ nome: "Conta excluída", whatsapp: null, whatsapp_verificado_em: null, whatsapp_origem: "clerk", avatar_url: null, cidade: null, bairro: null, criado_ip: null, selo_negociador_certificado: false, e_admin: false })
       .eq("id", id),
   );
+  await apagarArquivos(db, id);
 }
 
 /** Apaga todos os arquivos da pasta <id>/ do bucket "anuncios" (subpastas incluídas). */
