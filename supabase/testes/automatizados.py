@@ -24,6 +24,10 @@ try:
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+    migracao_marca = (root/'supabase/migrations/20261110190000_marca_mercado_da_regiao.sql').read_text()
+    teste_marca = (root/'supabase/testes/430_marca_mercado_da_regiao.sql').read_text()
+    checked(sql(teste_marca.replace('-- APLICAR_MIGRACAO_MARCA', migracao_marca)))
+    print('PASS: marca atualizada duas vezes, com personalizações, documentos, aceites e convites preservados', flush=True)
     checked(sql((root/'supabase/testes/420_gerentes_loja.sql').read_text()))
     print('PASS: convites e edição de gerentes isolados por loja, com expiração e revogação', flush=True)
     checked(sql((root/'supabase/testes/430_admin_arquivo_lojas.sql').read_text()))
