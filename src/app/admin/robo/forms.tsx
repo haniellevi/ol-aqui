@@ -56,7 +56,7 @@ function useModelosAoVivo(provedor: ProvedorIA | "") {
 
 function SeletorProvedor({ valor, onMudar, chaves, nome }: { valor: string; onMudar: (p: ProvedorIA) => void; chaves?: Record<string, boolean>; nome?: string }) {
   return (
-    <label className="block text-sm font-semibold">
+    <label className="block text-sm font-medium">
       Provedor
       <select name={nome} value={valor} onChange={(e) => onMudar(e.target.value as ProvedorIA)} className={estiloCampo}>
         {!valor && (
@@ -105,7 +105,7 @@ export function FormRegiao({ id, nome, situacao }: { id: string; nome: string; s
   return (
     <form action={acao} className="flex flex-wrap items-end gap-2">
       <input type="hidden" name="microrregiao_id" value={id} />
-      <label className="min-w-48 flex-1 text-sm font-semibold">
+      <label className="min-w-48 flex-1 text-sm font-medium">
         {nome}
         <select name="modo" value={modo} onChange={(e) => setModo(e.target.value)} className={estiloCampo}>
           <option value="geral">Seguir o geral</option>
@@ -241,23 +241,23 @@ export function FormLimites(p: { limite: number; orcamentoReais: string; alerta:
   const [estado, acao, pendente] = useActionState(salvarLimites, null);
   return (
     <form action={acao} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Mensagens por pessoa por dia
         <input name="limite_diario" type="number" min={0} max={1000} defaultValue={p.limite} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Orçamento do mês (R$)
         <input name="orcamento_reais" inputMode="decimal" defaultValue={p.orcamentoReais} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Avisar quando passar de (% do orçamento)
         <input name="alerta_percentual" type="number" min={1} max={100} defaultValue={p.alerta} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Cotação do dólar (R$)
         <input name="cotacao_dolar" inputMode="decimal" defaultValue={String(p.cotacao).replace(".", ",")} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold sm:col-span-2">
+      <label className="text-sm font-medium sm:col-span-2">
         Tokens de entrada reservados por volta (enquanto a resposta não termina)
         <input name="reserva_tokens_entrada" type="number" min={0} max={1000000} defaultValue={p.reservaTokens} className={estiloCampo} />
       </label>
@@ -283,19 +283,19 @@ export function FormTextos(p: { boasVindas: string; avisoIa: string; sugestoes: 
   const [estado, acao, pendente] = useActionState(salvarTextos, null);
   return (
     <form action={acao} className="space-y-3">
-      <label className="block text-sm font-semibold">
+      <label className="block text-sm font-medium">
         Mensagem de boas-vindas
         <textarea name="boas_vindas" rows={3} maxLength={600} defaultValue={p.boasVindas} className={`${estiloCampo} h-auto py-2`} />
       </label>
-      <label className="block text-sm font-semibold">
+      <label className="block text-sm font-medium">
         Aviso de que é uma IA (aparece sempre no topo da conversa)
         <textarea name="aviso_ia" rows={2} maxLength={300} defaultValue={p.avisoIa} className={`${estiloCampo} h-auto py-2`} />
       </label>
-      <label className="block text-sm font-semibold">
+      <label className="block text-sm font-medium">
         Sugestões de perguntas (uma por linha, até 6)
         <textarea name="sugestoes" rows={4} defaultValue={p.sugestoes.join("\n")} className={`${estiloCampo} h-auto py-2`} />
       </label>
-      <label className="block text-sm font-semibold">
+      <label className="block text-sm font-medium">
         Temas proibidos (um por linha): o Aki explica que não pode ajudar
         <textarea name="temas_proibidos" rows={4} defaultValue={p.temas.join("\n")} className={`${estiloCampo} h-auto py-2`} />
       </label>
@@ -353,47 +353,47 @@ export function FormModelo({ modelo }: { modelo?: ModeloIA }) {
       ) : (
         <input type="hidden" name="id" value={modelo.id} />
       )}
-      <label key={`nome-${chaveCampos}`} className="col-span-2 text-sm font-semibold">
+      <label key={`nome-${chaveCampos}`} className="col-span-2 text-sm font-medium">
         Nome no painel
         <input name="nome" required defaultValue={base?.nome} className={estiloCampo} />
       </label>
-      <label key={`e-${chaveCampos}`} className="text-sm font-semibold">
+      <label key={`e-${chaveCampos}`} className="text-sm font-medium">
         Entrada (US$/milhão)
         <input name="preco_entrada_usd" inputMode="decimal" defaultValue={usd(base?.preco_entrada_usd ?? null)} className={estiloCampo} />
       </label>
-      <label key={`s-${chaveCampos}`} className="text-sm font-semibold">
+      <label key={`s-${chaveCampos}`} className="text-sm font-medium">
         Saída (US$/milhão)
         <input name="preco_saida_usd" inputMode="decimal" defaultValue={usd(base?.preco_saida_usd ?? null)} className={estiloCampo} />
       </label>
-      <label key={`cl-${chaveCampos}`} className="text-sm font-semibold">
+      <label key={`cl-${chaveCampos}`} className="text-sm font-medium">
         Leitura de cache (US$/milhão)
         <input name="preco_cache_leitura_usd" inputMode="decimal" placeholder="igual à entrada" defaultValue={usd(base?.preco_cache_leitura_usd ?? null)} className={estiloCampo} />
       </label>
-      <label key={`ce-${chaveCampos}`} className="text-sm font-semibold">
+      <label key={`ce-${chaveCampos}`} className="text-sm font-medium">
         Escrita de cache (US$/milhão)
         <input name="preco_cache_escrita_usd" inputMode="decimal" placeholder="igual à entrada" defaultValue={usd(base?.preco_cache_escrita_usd ?? null)} className={estiloCampo} />
       </label>
       <div key={`caps-${chaveCampos}`} className="col-span-2 flex flex-wrap gap-x-4 @3xl/painel:col-span-4">
-        <label className="flex min-h-10 items-center gap-2 text-sm font-semibold">
+        <label className="flex min-h-10 items-center gap-2 text-sm font-medium">
           <input type="checkbox" name="le_imagem" defaultChecked={base?.le_imagem ?? false} className="size-5 accent-laranja-escuro" />
           Lê imagem
         </label>
-        <label className="flex min-h-10 items-center gap-2 text-sm font-semibold">
+        <label className="flex min-h-10 items-center gap-2 text-sm font-medium">
           <input type="checkbox" name="usa_ferramentas" defaultChecked={base?.usa_ferramentas ?? false} className="size-5 accent-laranja-escuro" />
           Usa ferramentas
         </label>
-        <label className="flex min-h-10 items-center gap-2 text-sm font-semibold">
+        <label className="flex min-h-10 items-center gap-2 text-sm font-medium">
           <input type="checkbox" name="ativo" defaultChecked={modelo?.ativo ?? !!pre} className="size-5 accent-laranja-escuro" />
           Ativo (aparece na escolha)
         </label>
         {(modelo?.provedor ?? provedor) === "anthropic" && (
-          <label className="flex min-h-10 items-center gap-2 text-sm font-semibold">
+          <label className="flex min-h-10 items-center gap-2 text-sm font-medium">
             <input type="checkbox" name="fallback_servidor" defaultChecked={modelo?.fallback_servidor ?? false} className="size-5 accent-laranja-escuro" />
             Outro modelo responde se este recusar
           </label>
         )}
       </div>
-      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-4">
+      <label className="col-span-2 text-sm font-medium @3xl/painel:col-span-4">
         Observação
         <input name="observacao" maxLength={300} defaultValue={modelo?.observacao ?? ""} className={estiloCampo} />
       </label>

@@ -47,7 +47,7 @@ export function FormAcaoLoja({
   return (
     <form action={acao} className="grid grid-cols-2 items-end gap-3 @3xl/painel:grid-cols-4">
       <input type="hidden" name="vitrine" value={loja.id} />
-      <label className="col-span-2 text-sm font-semibold">
+      <label className="col-span-2 text-sm font-medium">
         O que fazer
         <select name="acao" value={escolha} onChange={(e) => setEscolha(e.target.value as AcaoOperacional)} className={estiloCampo}>
           {opcoes.map((a) => (
@@ -58,7 +58,7 @@ export function FormAcaoLoja({
         </select>
       </label>
       {escolha === "trocar_plano" && (
-        <label className="text-sm font-semibold">
+        <label className="text-sm font-medium">
           Plano
           <select name="plano" required className={estiloCampo} defaultValue="">
             <option value="" disabled>
@@ -73,12 +73,12 @@ export function FormAcaoLoja({
         </label>
       )}
       {(escolha === "cortesia" || escolha === "trocar_plano") && (
-        <label className="text-sm font-semibold">
+        <label className="text-sm font-medium">
           {escolha === "cortesia" ? "Quantos dias" : "Vale por (dias)"}
           <input name="dias" type="number" min={1} max={365} required={escolha === "cortesia"} placeholder={escolha === "trocar_plano" ? "grátis: vazio" : ""} className={estiloCampo} />
         </label>
       )}
-      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-4">
+      <label className="col-span-2 text-sm font-medium @3xl/painel:col-span-4">
         Motivo (fica no histórico)
         <input name="motivo" required minLength={3} maxLength={300} placeholder="Ex.: compensação pela queda do site" className={estiloCampo} />
       </label>
@@ -149,7 +149,7 @@ export function FormRevisaoLoja({
           {!whatsappConfirmado && <p className="text-sm font-semibold text-aviso">A aprovação exige que o responsável confirme o WhatsApp da conta.</p>}
         </fieldset>
       )}
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Motivo para pedir correção ou {aprovada ? "revogar" : "recusar"}
         <select name="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} className={estiloCampo}>
           <option value="">Selecione o motivo</option>
@@ -187,7 +187,7 @@ export function FormVerificacao({ id, podeAprovar = true }: { id: string; podeAp
   return (
     <form action={acao} className="flex flex-col gap-2">
       <input type="hidden" name="id" value={id} />
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Motivo (obrigatório para recusar)
         <input name="motivo" maxLength={300} className={estiloCampo} />
       </label>
@@ -244,7 +244,7 @@ export function FormDecidirVerificacaoPf({ id, dadosAtuais }: { id: string; dado
           ))}
         </fieldset>
       ) : <p className="text-sm font-semibold text-aviso">Os dados do perfil mudaram. Peça um novo envio.</p>}
-      <label className="block text-sm font-semibold">
+      <label className="block text-sm font-medium">
         Motivo para pedir novo envio
         <select name="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} className={estiloCampo}>
           <option value="">Selecione o motivo</option>

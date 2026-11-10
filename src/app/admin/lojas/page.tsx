@@ -184,11 +184,11 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
 
       <Cartao className="mb-6">
         <form method="get" className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          <label className="col-span-2 text-sm font-semibold">
+          <label className="col-span-2 text-sm font-medium">
             Buscar
             <input name="q" defaultValue={busca} placeholder={franqueado ? "Nome da loja ou do responsável" : "Nome, responsável, WhatsApp ou CNPJ"} className={estiloCampo} />
           </label>
-          <label className="text-sm font-semibold">
+          <label className="text-sm font-medium">
             Situação
             <select name="situacao" defaultValue={situacao} className={estiloCampo}>
               <option value="">Todas</option>
@@ -199,7 +199,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
               ))}
             </select>
           </label>
-          <label className="text-sm font-semibold">
+          <label className="text-sm font-medium">
             Tipo
             <select name="tipo" defaultValue={tipo} className={estiloCampo}>
               <option value="">Todos</option>
@@ -208,7 +208,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
             </select>
           </label>
           {!franqueado && (
-            <label className="col-span-2 text-sm font-semibold md:col-span-1">
+            <label className="col-span-2 text-sm font-medium md:col-span-1">
               Região
               <select name="regiao" defaultValue={regiao} className={estiloCampo}>
                 <option value="">Todas</option>

@@ -75,7 +75,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
       {/* Filtros */}
       <Cartao className="mb-6">
         <form method="get" className="grid grid-cols-1 items-end gap-3 @sm/painel:grid-cols-2 @3xl/painel:grid-cols-4">
-          <label className="text-sm font-semibold">
+          <label className="text-sm font-medium">
             Situação
             <select name="status" defaultValue={filtros.status ?? ""} className={estiloCampo}>
               <option value="">Todas</option>
@@ -86,7 +86,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
               ))}
             </select>
           </label>
-          <label className="text-sm font-semibold">
+          <label className="text-sm font-medium">
             Tipo
             <select name="tipo" defaultValue={filtros.tipo ?? ""} className={estiloCampo}>
               <option value="">Todos</option>
@@ -97,7 +97,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
               ))}
             </select>
           </label>
-          <label className="col-span-full text-sm font-semibold @3xl/painel:col-span-2">
+          <label className="col-span-full text-sm font-medium @3xl/painel:col-span-2">
             Região
             <select name="regiao" defaultValue={filtros.regiao ?? ""} className={estiloCampo}>
               <option value="">Todas</option>
@@ -108,11 +108,11 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
               ))}
             </select>
           </label>
-          <label className="text-sm font-semibold">
+          <label className="text-sm font-medium">
             De
             <input type="date" name="de" defaultValue={filtros.de ?? ""} className={estiloCampo} />
           </label>
-          <label className="text-sm font-semibold">
+          <label className="text-sm font-medium">
             Até
             <input type="date" name="ate" defaultValue={filtros.ate ?? ""} className={estiloCampo} />
           </label>
