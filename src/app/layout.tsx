@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ptBR } from "@clerk/localizations";
 import { SITE } from "@/lib/formato";
 import { AvisoSemInternet } from "@/components/paginas/aviso-sem-internet";
+import { RastreioVisitas } from "@/components/paginas/rastreio-visitas";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body className="font-sans antialiased">
           {children}
           <AvisoSemInternet />
+          <RastreioVisitas />
         </body>
       </html>
     </ClerkProvider>

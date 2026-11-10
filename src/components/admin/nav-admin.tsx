@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@clerk/nextjs";
-import { BarChart3, Bot, FileText, FolderTree, LayoutDashboard, LogOut, MapPinned, Megaphone, MessageSquareText, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
+import { Activity, BarChart3, Bot, CalendarCheck, FileText, FolderTree, Handshake, LayoutDashboard, LogOut, MapPinned, Megaphone, MessageSquareText, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
 import { podeVerLink, type Papel } from "@/lib/tipos-equipe";
 import { LINK_ADMIN_ANUNCIOS } from "@/lib/rotas";
 import {
@@ -13,7 +13,10 @@ import {
 } from "@/components/ui/sidebar";
 
 const ITENS = [
+  { href: "/admin/hoje", rotulo: "Hoje", icone: CalendarCheck },
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
+  { href: "/admin/funil", rotulo: "Funil de lojistas", curto: "Funil", icone: Handshake },
+  { href: "/admin/visitas", rotulo: "Visitas e origem", curto: "Visitas", icone: Activity },
   { href: LINK_ADMIN_ANUNCIOS, rotulo: "Anúncios", icone: Megaphone },
   { href: "/admin/planos", rotulo: "Planos", icone: Tags },
   { href: "/admin/configuracoes", rotulo: "Configurações", curto: "Config.", icone: SlidersHorizontal },
