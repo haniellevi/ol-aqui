@@ -20,6 +20,7 @@ export default async function ConversaConta({ params, searchParams }: {
   const { data, error } = await meuAtendimento(await createClient(), id, userId);
   if (error) return <PaginaConta><p role="alert" className="text-perigo">Não foi possível carregar a conversa. Atualize a página.</p></PaginaConta>;
   if (!data) notFound();
+  if (!data.anuncio_id) redirect("/aki?ajuda=whatsapp&atendimento=1");
   return <PaginaConta>
     <TopoConta titulo={data.anuncios?.titulo?.trim() || "Anúncio sem título"}
       texto={data.aguarda_equipe ? "Aguardando resposta da equipe do OL-AKI." : "Atendimento do OL-AKI"}

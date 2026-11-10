@@ -3,6 +3,7 @@
 import type { MotivoBloqueio } from "@/lib/aki/tipos";
 
 export const DESCANSANDO = "O Aki está descansando agora. O resto do site funciona normal.";
+export const CODIGO_NAO_CHEGOU = "Confira o DDD e se o número recebe mensagens no WhatsApp. Aguarde 1 minuto após o último pedido e solicite outro código. Use apenas o código mais recente na tela de confirmação. Se ainda precisar de ajuda, toque em Não ajudou para falar com a equipe por aqui.";
 
 export function mensagemBloqueio(motivo: MotivoBloqueio | null): string {
   switch (motivo) {

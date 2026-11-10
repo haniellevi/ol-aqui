@@ -11,6 +11,7 @@ import { criarFiltroStream, criarModerador } from "@/lib/aki/moderacao";
 import { sistemaFixo, sistemaVariavel } from "@/lib/aki/sistema";
 import { ehId } from "@/lib/aki/validar";
 import {
+  CODIGO_NAO_CHEGOU,
   ERROS_PROVEDOR,
   RESPOSTA_BLOQUEADA,
   RESPOSTA_RECUSA,
@@ -179,7 +180,7 @@ function historicoParaIA(mensagens: MensagemAki[]): MensagemIA[] {
 
 export type EntradaResposta = {
   userId: string;
-  pedido: { texto: string; conversaId: string | null; foto: PedidoAki["foto"]; rascunhoId: string | null };
+  pedido: { texto: string; conversaId: string | null; foto: PedidoAki["foto"]; rascunhoId: string | null; ajudaWhatsapp?: boolean };
   ajustes: Ajustes;
   emitir: (e: EventoAki) => void;
   sinal: AbortSignal;
@@ -290,6 +291,9 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
   let erro: string | null = null;
   let erroTela: string | null = null;
   const inicio = Date.now();
+  const codigoNaoChegou = pedido.ajudaWhatsapp && !pedido.foto
+    && /\bc[oó]digo\b/i.test(pedido.texto)
+    && /\bn[aã]o\s+(?:chegou|recebi)\b/i.test(pedido.texto);
 
   try {
     if (!prov || !prov.temChave()) throw new ErroProvedor("sem_chave", "provedor sem chave");
@@ -302,9 +306,11 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
       vende: !!conta?.vitrine,
       foto: !!pedido.foto,
       rascunhoId: rascunhoAberto,
+      ajudaWhatsapp: pedido.ajudaWhatsapp,
     });
 
-    for (let volta = 0; ; volta++) {
+    if (codigoNaoChegou) adicionarTexto(CODIGO_NAO_CHEGOU);
+    for (let volta = 0; !codigoNaoChegou; volta++) {
       if (controle.signal.aborted) break; // a pessoa fechou ou o tempo acabou entre uma volta e outra
       if (filtro.texto && !/\s$/.test(filtro.texto)) adicionarTexto("\n\n");
       const resp = await prov.conversar(

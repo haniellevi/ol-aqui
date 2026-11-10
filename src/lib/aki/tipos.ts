@@ -106,6 +106,7 @@ export type EventoAki =
 
 /** Corpo do POST /api/aki. */
 export type PedidoAki = {
+  ajudaWhatsapp?: boolean;
   conversaId?: string | null;
   texto: string;
   foto?: { base64: string; tipo: "image/webp" | "image/jpeg" | "image/png" } | null;

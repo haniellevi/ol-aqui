@@ -4,7 +4,7 @@ import { useState } from "react";
 import { BadgeCheck, CircleCheck, ClipboardCheck, ImageOff, Loader2, Phone, Radar, Sparkles, Store, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { CardAnuncio } from "@/components/anuncio/card-anuncio";
-import { avaliarResposta, confirmarPedidoRadar } from "@/lib/aki/acoes";
+import { abrirAtendimentoCadastro, avaliarResposta, confirmarPedidoRadar } from "@/lib/aki/acoes";
 import { preco } from "@/lib/formato";
 import type { AcaoAki, MensagemAki } from "@/lib/aki/tipos";
 import { MascoteAki } from "./mascote";
@@ -111,11 +111,14 @@ function CardRascunho({ acao }: { acao: Extract<AcaoAki, { tipo: "rascunho" }> }
   );
 }
 
-function Avaliacao({ mensagem, aoAvaliar }: { mensagem: Resposta; aoAvaliar: (nota: -1 | 1 | null) => void }) {
+function Avaliacao({ mensagem, aoAvaliar, atendimentoHref }: {
+  mensagem: Resposta; aoAvaliar: (nota: -1 | 1 | null) => void; atendimentoHref?: string;
+}) {
   const [salvando, setSalvando] = useState(false);
   const [comentando, setComentando] = useState(false);
   const [comentario, setComentario] = useState("");
   const [agradecido, setAgradecido] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const id = mensagem.id;
   if (!id) return null;
 
@@ -130,6 +133,19 @@ function Avaliacao({ mensagem, aoAvaliar }: { mensagem: Resposta; aoAvaliar: (no
     }
   }
 
+  async function pedirEquipe() {
+    if (!id || !atendimentoHref || salvando) return;
+    setErro(null);
+    setSalvando(true);
+    const resultado = await abrirAtendimentoCadastro(id).catch(() => null);
+    if (resultado?.ok) {
+      window.location.assign(atendimentoHref);
+      return;
+    }
+    setSalvando(false);
+    setErro(resultado?.erro ?? "Não foi possível abrir o atendimento. Tente novamente.");
+  }
+
   const estiloIcone = (ativo: boolean) =>
     `grid size-12 place-items-center rounded-campo border ${ativo ? "border-laranja-escuro bg-laranja-claro" : "border-transparent"} text-beringela disabled:opacity-50`;
 
@@ -140,11 +156,13 @@ function Avaliacao({ mensagem, aoAvaliar }: { mensagem: Resposta; aoAvaliar: (no
         <button type="button" aria-label="Ajudou" aria-pressed={mensagem.nota === 1} disabled={salvando} onClick={() => void marcar(1)} className={estiloIcone(mensagem.nota === 1)}>
           <ThumbsUp className="size-5" aria-hidden />
         </button>
-        <button type="button" aria-label="Não ajudou" aria-pressed={mensagem.nota === -1} disabled={salvando} onClick={() => void marcar(-1)} className={estiloIcone(mensagem.nota === -1)}>
+        <button type="button" aria-label="Não ajudou" aria-pressed={atendimentoHref ? undefined : mensagem.nota === -1} disabled={salvando}
+          onClick={() => void (atendimentoHref ? pedirEquipe() : marcar(-1))} className={estiloIcone(mensagem.nota === -1)}>
           <ThumbsDown className="size-5" aria-hidden />
         </button>
         {salvando && <Loader2 className="size-4 animate-spin text-texto-suave motion-reduce:animate-none" aria-hidden />}
       </div>
+      {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
       {comentando && !agradecido && (
         <form
           className="flex gap-2"
@@ -183,11 +201,13 @@ export function RespostaAki({
   escrevendo,
   pensando,
   aoAvaliar,
+  atendimentoHref,
 }: {
   mensagem: Resposta;
   escrevendo: boolean;
   pensando: string | null;
   aoAvaliar: (nota: -1 | 1 | null) => void;
+  atendimentoHref?: string;
 }) {
   const c = mensagem.conteudo;
   return (
@@ -227,7 +247,7 @@ export function RespostaAki({
             )}
           </div>
         )}
-        {!escrevendo && <Avaliacao mensagem={mensagem} aoAvaliar={aoAvaliar} />}
+        {!escrevendo && <Avaliacao mensagem={mensagem} aoAvaliar={aoAvaliar} atendimentoHref={atendimentoHref} />}
       </div>
     </div>
   );

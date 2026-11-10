@@ -58,7 +58,7 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
         Anúncios
       </Titulo>
       <Link href={LINK_ADMIN_ATENDIMENTOS} prefetch={false} className={`${estiloBotaoSec} mb-4`}>
-        Conversas com anunciantes
+        Conversas de atendimento
       </Link>
       <nav aria-label="Filtrar anúncios por situação" className="mb-6 flex flex-wrap gap-2">
         {FILTROS.map(({ status, nome }) => (

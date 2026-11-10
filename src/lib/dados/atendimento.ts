@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export const CONVERSAS_POR_PAGINA = 30;
 export type Atendimento = {
   id: string;
-  anuncio_id: string;
+  anuncio_id: string | null;
   aki_ativo: boolean;
   aguarda_equipe: boolean;
   atualizado_em: string;
@@ -34,6 +34,11 @@ export function paginaAtendimento(valor?: string) {
 
 export function meuAtendimento(db: SupabaseClient, id: string, anunciante: string) {
   return db.from("atendimentos_anuncio").select(COLUNAS).eq("id", id).eq("anunciante_id", anunciante).maybeSingle<Atendimento>();
+}
+
+export function atendimentoCadastro(db: SupabaseClient, filtro: { id: string } | { dono: string }) {
+  const consulta = db.from("atendimentos_anuncio").select(COLUNAS).is("anuncio_id", null);
+  return ("id" in filtro ? consulta.eq("id", filtro.id) : consulta.eq("anunciante_id", filtro.dono)).maybeSingle<Atendimento>();
 }
 
 export async function lerMensagensAtendimento(db: SupabaseClient, conversa: string, antes?: string) {
