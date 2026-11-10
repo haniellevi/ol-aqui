@@ -59,8 +59,8 @@ export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitri
 });
 
 const COLUNAS_MINHA =
-  "id, dono_id, whatsapp, cidade, bairro, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_modelo, banner_cor, " +
-  "endereco, lat, lng, horarios, instagram, sobre, formas_pagamento, faz_entrega, entrega_obs";
+  "id, dono_id, cidade, bairro, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_modelo, banner_cor, " +
+  "endereco, lat, lng, horarios, sobre, formas_pagamento, faz_entrega, entrega_obs";
 
 /** Vitrine do usuário logado com os campos da vitrine completa. Sem login ou sem vitrine → null. */
 export const minhaVitrineCompleta = cache(async (exigirLeitura = false): Promise<MinhaVitrineCompleta | null> => {
@@ -68,10 +68,17 @@ export const minhaVitrineCompleta = cache(async (exigirLeitura = false): Promise
     const { userId } = await auth();
     if (!userId) return null;
     const db = await createClient();
-    const { data, error } = await db.from("vitrines_lojas").select(COLUNAS_MINHA).eq("dono_id", userId).maybeSingle();
-    if (error) throw new Error("Não foi possível carregar sua loja. Tente novamente.");
+    const [{ data, error }, contatos] = await Promise.all([
+      db.from("vitrines_lojas").select(COLUNAS_MINHA).eq("dono_id", userId).maybeSingle(),
+      db.rpc("meus_contatos_vitrine").maybeSingle<{ whatsapp: string | null; instagram: string | null }>(),
+    ]);
+    if (error || contatos.error) throw new Error("Não foi possível carregar sua loja. Tente novamente.");
     if (!data) return null;
-    const v = data as unknown as MinhaVitrineCompleta;
+    const v = {
+      ...(data as unknown as Omit<MinhaVitrineCompleta, "whatsapp" | "instagram">),
+      whatsapp: contatos.data?.whatsapp ?? null,
+      instagram: contatos.data?.instagram ?? null,
+    };
     if (exigirLeitura && (v.dono_id !== userId || !ehUuid(v.id))) throw new Error("Não foi possível confirmar sua loja.");
     return {
       ...v,

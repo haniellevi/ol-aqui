@@ -101,11 +101,12 @@ export function FormLoja({
           <CheckCircle2 className="size-12" />
         </span>
         <h1 id="titulo-pronta" className="text-titulo font-semibold text-beringela">
-          Sua loja está pronta!
+          Sua loja foi criada!
         </h1>
         <p className="text-base">
           Sua vitrine: <strong className="break-all">{enderecoCurto}</strong>
         </p>
+        <p className="text-base text-texto-suave">Acompanhe a conferência dos dados, links e contato em Minha loja.</p>
         {feito.teste_expira_em && new Date(feito.teste_expira_em).getTime() > Date.now() && (
           <p className="text-base text-texto-suave">Teste grátis até {dataCurta.format(new Date(feito.teste_expira_em))}.</p>
         )}
@@ -203,7 +204,7 @@ export function FormLoja({
         onChange={(e) => setFone(mascaraFone(e.target.value))}
         placeholder="(89) 99999-0000"
         erro={erroDe("whatsapp")}
-        dica="É nele que os clientes vão chamar. Com DDD."
+        dica="Use o DDD. Se for diferente do WhatsApp confirmado da sua conta, a equipe confere o número comercial antes de divulgá-lo. Até lá, os clientes usam seu número confirmado."
       />
 
       {cidades.length ? (

@@ -10,19 +10,20 @@ import { traduzirErro } from "@/lib/erros";
 import type { AcaoLoja } from "@/lib/tipos-cobranca";
 
 // Tela 5 · Lojistas e vitrines. Tudo pelo token do admin; quem confere admin, motivo, dias e plano
-// é o banco (admin_acao_loja, admin_analisar_verificacao), que grava o motivo em vitrines_acoes_admin
+// é o banco, que grava o motivo em vitrines_acoes_admin
 // e cada mudança em logs_atividade. Suporte: só suspender/reativar e verificações; franqueado: nada (o banco recusa).
 
-const ACOES: readonly AcaoLoja[] = ["cortesia", "trocar_plano", "suspender", "reativar", "dar_selo", "tirar_selo"];
+type AcaoOperacional = Exclude<AcaoLoja, "dar_selo" | "tirar_selo">;
+const ACOES: readonly AcaoOperacional[] = ["cortesia", "trocar_plano", "suspender", "reativar"];
 
-const OK: Record<AcaoLoja, string> = {
+const OK: Record<AcaoOperacional, string> = {
   cortesia: "Cortesia dada.",
   trocar_plano: "Plano trocado.",
   suspender: "Loja suspensa.",
   reativar: "Loja reativada.",
-  dar_selo: "Selo Loja Verificada dado.",
-  tirar_selo: "Selo Loja Verificada tirado.",
 };
+
+const MOTIVOS_REVISAO = new Set(["dados_inconsistentes", "link_invalido", "contato_nao_confirmado", "titularidade", "outro"]);
 
 function atualizar() {
   revalidatePath("/admin/lojas");
@@ -33,7 +34,7 @@ export async function acaoLoja(_: EstadoForm, form: FormData): Promise<EstadoFor
   try {
     const { supabase } = await exigirTela("lojas");
     const vitrine = String(form.get("vitrine") ?? "");
-    const acao = String(form.get("acao") ?? "") as AcaoLoja;
+    const acao = String(form.get("acao") ?? "") as AcaoOperacional;
     if (!ehUuid(vitrine)) return { erro: "Loja não encontrada." };
     if (!ACOES.includes(acao)) return { erro: "Escolha o que fazer." };
     const motivo = String(form.get("motivo") ?? "").trim();
@@ -55,6 +56,41 @@ export async function acaoLoja(_: EstadoForm, form: FormData): Promise<EstadoFor
   } catch (e) {
     unstable_rethrow(e); // sessão vencida (redirect) ou quem saiu da equipe (404) não viram texto de erro
     return { erro: e instanceof Error ? e.message : "Não deu para salvar." };
+  }
+}
+
+export async function revisarLoja(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  try {
+    const { supabase, papel } = await exigirTela("lojas");
+    if (papel !== "administrador" && papel !== "suporte") return { erro: "Seu papel não pode revisar lojas." };
+    const loja = String(form.get("loja") ?? "");
+    const revisao = inteiroOuNulo(form.get("revisao"));
+    if (!ehUuid(loja) || revisao == null || revisao < 0) return { erro: "Revisão não encontrada. Atualize a página." };
+    const decisao = form.get("decisao");
+    if (decisao !== "aprovar" && decisao !== "correcao" && decisao !== "recusar") return { erro: "Escolha uma decisão." };
+
+    const motivo = String(form.get("motivo") ?? "");
+    const dados = form.get("dados") === "on";
+    const link = form.get("link") === "on";
+    const whatsapp = form.get("whatsapp") === "on";
+    if (decisao === "aprovar" && !(dados && link && whatsapp)) return { erro: "Confirme os três itens antes de aprovar." };
+    if (decisao !== "aprovar" && !MOTIVOS_REVISAO.has(motivo)) return { erro: "Selecione o motivo da decisão." };
+
+    const { error } = await supabase.rpc("admin_revisar_loja", {
+      p_loja: loja,
+      p_revisao: revisao,
+      p_decisao: decisao,
+      p_motivo: decisao === "aprovar" ? null : motivo,
+      p_dados: dados,
+      p_link: link,
+      p_whatsapp: whatsapp,
+    });
+    if (error) return { erro: traduzirErro(error).mensagem };
+    atualizar();
+    return { ok: decisao === "aprovar" ? "Loja aprovada." : decisao === "correcao" ? "Correção solicitada." : "Verificação recusada." };
+  } catch (e) {
+    unstable_rethrow(e);
+    return { erro: e instanceof Error ? e.message : "Não deu para salvar a revisão." };
   }
 }
 

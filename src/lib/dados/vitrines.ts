@@ -5,7 +5,7 @@ import { seguro } from "@/lib/dados/seguro";
 import type { Vitrine } from "@/lib/tipos";
 
 export const COLUNAS_VITRINE =
-  "id, slug, nome, descricao, logo_url, capa_url, whatsapp, cidade, bairro, tipo, selo_loja_verificada, microrregiao_id, status, criado_em";
+  "id, slug, nome, descricao, logo_url, capa_url, cidade, bairro, tipo, selo_loja_verificada, microrregiao_id, status, criado_em";
 
 /**
  * Vitrine de LOJA pelo endereço olaki.com.br/loja/<slug>. Pessoa física não tem página → null.
@@ -22,7 +22,7 @@ export const vitrinePorSlug = cache(async (slug: string): Promise<Vitrine | null
       .eq("slug", s)
       .eq("tipo", "loja")
       .maybeSingle<Vitrine>();
-    return error ? null : data;
+    return error || !data ? null : { ...data, whatsapp: null };
   }, null);
 });
 

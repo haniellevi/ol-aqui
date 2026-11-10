@@ -75,6 +75,8 @@ try:
         print('SKIP: agendamentos310 exigem pg_cron; ramo sem extensão passou', flush=True)
     else:
         print('PASS: agendamentos310 conferidos no catálogo real do pg_cron', flush=True)
+    checked(sql((root/'supabase/testes/320_verificacao_lojas.sql').read_text()))
+    print('PASS: revisão de loja, links e telefone, isolamento, edição e histórico', flush=True)
     def solicitar_otp(i):
         return sql("select reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990088',repeat('a',64));")
     with ThreadPoolExecutor(max_workers=4) as pool:

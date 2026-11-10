@@ -52,11 +52,12 @@ rollback to savepoint revogacao;
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_loja';
-select id, tipo, slug, nome, descricao, logo_url, capa_url, whatsapp, cidade, bairro,
+select id, tipo, slug, nome, descricao, logo_url, capa_url, cidade, bairro,
        plano, status, teste_expira_em, plano_expira_em, selo_loja_verificada, criado_em,
        banner_tipo, banner_url, banner_modelo, banner_cor, endereco, lat, lng, horarios,
-       instagram, sobre, formas_pagamento, faz_entrega, entrega_obs
+       sobre, formas_pagamento, faz_entrega, entrega_obs
   from vitrines_lojas where dono_id=public.usuario_id() order by id limit 500;
+select whatsapp, instagram from meus_contatos_vitrine();
 select id, tipo, status, analisado_em, motivo_recusa, criado_em
   from perfis_verificacoes where perfil_id=public.usuario_id() order by id limit 500;
 select id, titulo, criado_em, atualizado_em from robo_conversas where usuario_id=public.usuario_id() order by id limit 500;
@@ -133,6 +134,8 @@ do $$ declare nome_fk text; begin
     assert nome_fk='pagamentos_vitrine_id_fkey', 'FK financeira mudou: revisar webhook';
   end;
 end $$;
+-- O webhook grava a revogação antes da anonimização financeira.
+insert into contas_revogadas(usuario_id) values ('user_loja') on conflict do nothing;
 -- Operações que poderiam falhar por FK, gatilho ou validação de campo.
 delete from anuncios where vitrine_id in (select id from vitrines_lojas where dono_id='user_loja');
 delete from radar_propostas where vitrine_id in (select id from vitrines_lojas where dono_id='user_loja');

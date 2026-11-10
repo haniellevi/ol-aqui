@@ -52,7 +52,8 @@ export async function criarLoja(_antes: EstadoLoja, form: FormData): Promise<Est
   });
   if (error) {
     const erro = traduzirErro(error);
-    return { erro, campos: erro.campo ? { [erro.campo]: erro.mensagem } : undefined };
+    if (erro.campo) return { erro: { mensagem: "Confira o campo marcado." }, campos: { [erro.campo]: erro.mensagem } };
+    return { erro };
   }
   const feito = (Array.isArray(data) ? data[0] : data) as ResultadoQueroVender | null;
   if (!feito?.slug) return { erro: traduzirErro(null) };
