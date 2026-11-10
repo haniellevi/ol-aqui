@@ -88,7 +88,7 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
   if (opcoes.length === 0) {
     return (
       <Aviso tipo="info">
-        <span>Nenhum plano à venda para você agora. Fale com a equipe OLAKI se precisar.</span>
+        <span>Nenhum plano à venda para você agora. Fale com a equipe Mercado da Região se precisar.</span>
       </Aviso>
     );
   }
@@ -131,7 +131,7 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
 
       {!pagamentoLigado ? (
         <Aviso tipo="info">
-          <span>Pagamento em breve: logo dá para pagar por Pix ou cartão aqui mesmo. Se precisar agora, fale com a equipe OLAKI.</span>
+          <span>Pagamento em breve: logo dá para pagar por Pix ou cartão aqui mesmo. Se precisar agora, fale com a equipe Mercado da Região.</span>
         </Aviso>
       ) : opcao && opcao.disponivel ? (
         <FluxoCobranca

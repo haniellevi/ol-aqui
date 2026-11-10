@@ -37,7 +37,7 @@ export default async function PaginaBannerLoja() {
       />
       {recursos.banner_moderado_motivo && (
         <Aviso tipo="atencao">
-          <span>A equipe do OLAKI tirou a foto do seu banner.</span>
+          <span>A equipe do Mercado da Região tirou a foto do seu banner.</span>
           <span className="font-normal">Motivo: {recursos.banner_moderado_motivo}</span>
         </Aviso>
       )}

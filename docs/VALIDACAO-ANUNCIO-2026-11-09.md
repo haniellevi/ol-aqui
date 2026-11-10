@@ -2,7 +2,7 @@
 
 ## Alterações
 
-- Identidade OL-AKI mantida: logo, cores, Poppins, cartões e botão verde de WhatsApp.
+- Identidade Mercado da Região mantida: logo, cores, Poppins, cartões e botão verde de WhatsApp.
 - Vendedor junto das informações principais em celular e desktop, caminho da categoria visível no celular e texto longo sem transbordamento.
 - Galeria com setas também no celular, navegação por setas/Home/End, respeito a movimento reduzido, foto ampliada, bloqueio de rolagem do fundo e retorno do foco à foto selecionada. Foto indisponível recebe alternativa legível.
 - Compartilhamento nativo quando disponível, cópia do link canônico e endereço selecionável quando o navegador não permite copiar. Cancelamento não registra compartilhamento.

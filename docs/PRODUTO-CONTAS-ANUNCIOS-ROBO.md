@@ -1,4 +1,4 @@
-# OLAKI · Cadastro, anúncios, vitrine, destaques, contas e robô (07/11/2026)
+# Mercado da Região · Cadastro, anúncios, vitrine, destaques, contas e robô (07/11/2026)
 
 Este documento continua o [LEIA-ME.md](LEIA-ME.md) e o [PAINEL-ADMIN.md](PAINEL-ADMIN.md). Nada aqui muda o que já foi decidido.
 Regra de ouro continua valendo: **nenhum preço, limite, categoria ou texto fica no código.** Tudo vem de tabelas editáveis no painel, com registro de quem mudou.
@@ -24,7 +24,7 @@ Existe **uma conta só por pessoa**, ligada ao número de celular. O que muda é
 2. **Completar perfil (1 tela):** nome e cidade (lista das cidades da região). Aceite dos termos e da política de privacidade (já existe o campo `versao_termos`).
 3. **"Quero vender"** aparece no menu e no botão "+ Anunciar":
    - **Vender minhas coisas:** não pede mais nada. Já pode anunciar.
-   - **Tenho uma loja:** nome da loja, endereço do link (`olaki.com.br/loja/nome`), WhatsApp da loja, logo (opcional), CNPJ (opcional; se informar e conferir, ganha o **Selo Loja Verificada**). Começa o teste grátis na hora.
+   - **Tenho uma loja:** nome da loja, endereço do link (`mercadodaregiao.com.br/loja/nome`), WhatsApp da loja, logo (opcional), CNPJ (opcional; se informar e conferir, ganha o **Selo Loja Verificada**). Começa o teste grátis na hora.
 4. Pessoa pode virar loja depois, sem perder os anúncios.
 
 Entrar com Google pode ser um extra, mas o celular confirmado continua obrigatório (é ele que segura golpista e que o Radar usa).
@@ -54,7 +54,7 @@ Uma tela só, com abas que aparecem conforme o tipo.
 - **Minha loja:** capa, logo, descrição, horário, endereço
 - **Selos:** pedir verificação, ver status
 
-Quando marca "vendido", o sistema pergunta "vendeu pelo OLAKI?" (métrica de ouro para vender planos depois).
+Quando marca "vendido", o sistema pergunta "vendeu pelo Mercado da Região?" (métrica de ouro para vender planos depois).
 
 ---
 
@@ -120,9 +120,9 @@ Depois de publicar: tela "Seu anúncio está no ar" com botões **Compartilhar n
 
 **Busca e lista:** busca tolerante a erro e acento (já existe no banco). Filtros: categoria, cidade, faixa de preço, e os campos da categoria (ano, km, quartos...). Ordem padrão: destaques pagos no topo (em rodízio justo entre quem pagou), depois os mais relevantes e recentes. Quando a busca não acha nada: oferece o Radar já preenchido e o robô.
 
-**Página do anúncio:** galeria, preço, campos, descrição, mapa aproximado (bairro, nunca endereço exato de pessoa física), cartão do vendedor (selo, tempo no OLAKI), botão **Chamar no WhatsApp** (com mensagem pronta "Olá, vi seu anúncio X no OLAKI"), favoritar, compartilhar, denunciar e "parecidos".
+**Página do anúncio:** galeria, preço, campos, descrição, mapa aproximado (bairro, nunca endereço exato de pessoa física), cartão do vendedor (selo, tempo no Mercado da Região), botão **Chamar no WhatsApp** (com mensagem pronta "Olá, vi seu anúncio X no Mercado da Região"), favoritar, compartilhar, denunciar e "parecidos".
 
-**Vitrine da loja:** `olaki.com.br/loja/nome`, com capa, logo, selo, todos os anúncios e o botão do WhatsApp. Serve como "site grátis" que a loja divulga no Instagram.
+**Vitrine da loja:** `mercadodaregiao.com.br/loja/nome`, com capa, logo, selo, todos os anúncios e o botão do WhatsApp. Serve como "site grátis" que a loja divulga no Instagram.
 
 ---
 
@@ -149,7 +149,7 @@ Hoje o banco tem um destaque simples (`destaque_ate`). Proposta: **tipos de dest
 
 Nome sugerido: **Aki**, de "olAKI" ("Pergunta pro Aki!"). Fica num balão em todas as telas, aparece sozinho quando a busca não acha nada e dentro do cadastro de anúncio.
 
-Ele usa a **IA Claude (Anthropic)**, que entende português do jeito que o povo escreve, lê fotos, e consegue usar as funções do próprio OLAKI (buscar, criar rascunho, criar pedido no Radar).
+Ele usa a **IA Claude (Anthropic)**, que entende português do jeito que o povo escreve, lê fotos, e consegue usar as funções do próprio Mercado da Região (buscar, criar rascunho, criar pedido no Radar).
 
 ### O que ele faz
 

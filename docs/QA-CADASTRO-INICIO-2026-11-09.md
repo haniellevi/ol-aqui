@@ -27,7 +27,7 @@ Identificadores dos registros fictícios para rastreabilidade interna:
 
 ## Interface
 
-- Página inicial com fundo lilás claro, categorias lilás, Radar em roxo e chamada laranja, preservando a identidade OL-AKI e as funcionalidades existentes.
+- Página inicial com fundo lilás claro, categorias lilás, Radar em roxo e chamada laranja, preservando a identidade Mercado da Região e as funcionalidades existentes.
 - Entrada identificada como “Entre ou crie sua conta”, adequada ao fluxo combinado do Clerk.
 - Texto e ícone do botão “Criar minha loja” alinhados na mesma linha no componente compartilhado. A geometria foi verificada em renderização local do componente real, com dados fictícios.
 - Resultado de anúncio retido mostra seu motivo ao proprietário e oferece acesso à revisão. O título da página passa a indicar a situação, sem afirmar publicação quando há retenção.

@@ -14,7 +14,7 @@ import { ehUuid, inteiro, linkLoja } from "@/lib/formato";
 import type { Vitrine } from "@/lib/tipos";
 
 // T11 · Perfil público de quem vende como pessoa física: só o primeiro nome, a cidade,
-// desde quando está no OLAKI e os anúncios no ar. Nenhum dado pessoal (nem WhatsApp aqui:
+// desde quando está no Mercado da Região e os anúncios no ar. Nenhum dado pessoal (nem WhatsApp aqui:
 // o contato é pelo botão de cada anúncio). O endereço usa o id da vitrine, não o da conta.
 
 type Props = { params: Promise<{ id: string }> };
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!v || v.tipo !== "pf") return { title: "Vendedor não encontrado", robots: { index: false } };
   return {
     title: `Anúncios de ${primeiroNome(v.nome)} · ${v.cidade}`,
-    description: `Veja o que ${primeiroNome(v.nome)} está vendendo em ${v.cidade} no OLAKI.`,
+    description: `Veja o que ${primeiroNome(v.nome)} está vendendo em ${v.cidade} no Mercado da Região.`,
     robots: { index: false, follow: true }, // pessoa física: não aparece no Google pelo nome
   };
 }

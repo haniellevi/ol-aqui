@@ -105,9 +105,9 @@ export const linkCategoria = (paiSlug: string, subSlug?: string | null) => (subS
 /** Caminho → endereço completo (para compartilhar e WhatsApp). */
 export const urlAbsoluta = (caminho: string) => `${SITE}${caminho.startsWith("/") ? caminho : `/${caminho}`}`;
 
-/** Link do WhatsApp com a mensagem pronta: "Olá! Vi seu anúncio *TÍTULO* no OLAKI: URL". */
+/** Link do WhatsApp com a mensagem pronta: "Olá! Vi seu anúncio *TÍTULO* no Mercado da Região: URL". */
 export function linkWhatsApp(numero: string, titulo: string, url: string): string {
-  const texto = `Olá! Vi seu anúncio *${titulo}* no OLAKI: ${url}`;
+  const texto = `Olá! Vi seu anúncio *${titulo}* no Mercado da Região: ${url}`;
   return `https://wa.me/${numero.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
 }
 

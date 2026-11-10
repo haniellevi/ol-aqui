@@ -104,7 +104,7 @@ test('início sem região mantém busca e não inventa localização', async () 
   assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
   const metadata = await pagina.generateMetadata();
   assert.equal(metadata.alternates.canonical, '/');
-  assert.equal(metadata.title.absolute, 'OLAKI · Compre e venda em sua região');
+  assert.equal(metadata.title.absolute, 'Mercado da Região · Compre e venda em sua região');
 });
 test('falha ao consultar anúncios não vira página inicial falsamente vazia', async () => {
   await assert.rejects(inicio({ erro: true }).default({ searchParams: Promise.resolve({}) }), /Não foi possível consultar os anúncios/);

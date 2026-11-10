@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
-// Botão do OLAKI (docs/DESIGN-SYSTEM.md, "Régua de tamanhos"):
+// Botão do Mercado da Região (docs/DESIGN-SYSTEM.md, "Régua de tamanhos"):
 // normal = 40px no toque e 36px com mouse; pequeno = 32px no toque e 28px com mouse
 // (ações dentro de cards, listas e tabelas). Texto 13px (12px no pequeno).
 // Largura total só no celular: do tablet para cima o botão para em 320px.

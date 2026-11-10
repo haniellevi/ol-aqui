@@ -24,8 +24,8 @@ export async function CabecalhoPublico() {
         Pular para o conteúdo
       </a>
       <div className="mx-auto flex h-13 max-w-6xl items-center gap-2 px-4 md:h-14">
-        <Link href="/" className="flex h-10 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="OLAKI, página inicial">
-          <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={88} height={36} priority className="h-7 w-auto sm:h-8" />
+        <Link href="/" className="flex h-10 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="Mercado da Região, página inicial">
+          <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={98} height={36} priority className="h-7 w-auto sm:h-8" />
         </Link>
 
         {cidade && (

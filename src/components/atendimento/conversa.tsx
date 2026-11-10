@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { FormMensagemAtendimento } from "./form-mensagem";
 import { AtualizarConversa } from "./atualizar";
 
-const AUTOR: Record<MensagemAtendimento["autor"], string> = { equipe: "Equipe OL-AKI", anunciante: "Anunciante", aki: "Aki · IA" };
+const AUTOR: Record<MensagemAtendimento["autor"], string> = { equipe: "Equipe Mercado da Região", anunciante: "Anunciante", aki: "Aki · IA" };
 
 export async function ConversaAtendimento({ id, caminho, antes, equipe, aki, cadastro = false }: {
   id: string; caminho: string; antes?: string; equipe?: boolean; aki: boolean; cadastro?: boolean;

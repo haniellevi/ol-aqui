@@ -8,7 +8,7 @@ export const COLUNAS_VITRINE =
   "id, slug, nome, descricao, logo_url, capa_url, cidade, bairro, tipo, selo_loja_verificada, microrregiao_id, status, criado_em";
 
 /**
- * Vitrine de LOJA pelo endereço olaki.com.br/loja/<slug>. Pessoa física não tem página → null.
+ * Vitrine de LOJA pelo endereço mercadodaregiao.com.br/loja/<slug>. Pessoa física não tem página → null.
  * Loja suspensa/inadimplente só aparece para o dono (RLS); para os outros → null.
  */
 export const vitrinePorSlug = cache(async (slug: string): Promise<Vitrine | null> => {

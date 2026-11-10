@@ -58,7 +58,7 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
       </div>
 
       <header className="rounded-card border border-borda bg-cartao p-4 print:border-beringela">
-        <p className="text-sm font-semibold uppercase tracking-wide text-texto-suave">OLAKI · Compliance jurídico</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-texto-suave">Mercado da Região · Compliance jurídico</p>
         <h1 className="mt-1 text-2xl font-bold">Relatório de registros de conta</h1>
         <p className="text-sm text-texto-suave">Marco Civil da Internet (Lei 12.965/2014), art. 15 · registros de acesso a aplicações</p>
         <dl className="mt-4 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-[12rem_1fr]">
@@ -93,7 +93,7 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
           </dd>
           <dt className="text-sm text-texto-suave">IP de quem gerou</dt>
           <dd className="text-sm">
-            {c.ip_navegador ?? "—"} (informado pelo painel do OLAKI) · {c.ip_banco ?? "—"} (gravado pelo banco)
+            {c.ip_navegador ?? "—"} (informado pelo painel do Mercado da Região) · {c.ip_banco ?? "—"} (gravado pelo banco)
           </dd>
         </dl>
       </header>
@@ -102,8 +102,8 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
 
       <footer className="mt-8 border-t border-borda pt-3 text-sm text-texto-suave">
         <p>
-          Datas e horários são os gravados pelo sistema do OLAKI no momento de cada ação. Os IPs marcados com * são os que chegaram ao
-          banco: costumam ser do servidor do site do OLAKI, e não da pessoa (veja o aviso no começo). A porta lógica de origem não é
+          Datas e horários são os gravados pelo sistema do Mercado da Região no momento de cada ação. Os IPs marcados com * são os que chegaram ao
+          banco: costumam ser do servidor do site do Mercado da Região, e não da pessoa (veja o aviso no começo). A porta lógica de origem não é
           gravada. Este relatório foi gerado a pedido e o próprio pedido ficou registrado (quem, quando e motivo).
         </p>
         <p className="mt-2">Relatório nº {c.relatorio_id}</p>

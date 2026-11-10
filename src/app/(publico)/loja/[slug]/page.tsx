@@ -18,7 +18,7 @@ import { inteiro, linkLoja, urlAbsoluta } from "@/lib/formato";
 import { LINK_MINHA_LOJA } from "@/lib/rotas";
 import type { AnuncioVitrine, OrdemVitrine, VitrinePublica } from "@/lib/tipos-vitrine";
 
-// T10 · Vitrine da loja: olaki.com.br/loja/<slug>. "Site grátis" que a loja divulga no Instagram.
+// T10 · Vitrine da loja: mercadodaregiao.com.br/loja/<slug>. "Site grátis" que a loja divulga no Instagram.
 // Ordem da página: topo (banner, logo, nome, selo, WhatsApp) → destaques da loja (produtos fixados
 // no topo) → seções próprias (se o plano deixar) → grupos automáticos pelas categorias do site
 // (os mais novos; ou "Menor preço" pelo endereço ?ordem=menor_preco, funciona sem JavaScript)
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (v.status !== "ativa") return { title: "Prévia da vitrine", robots: { index: false, follow: false } };
   const descricao =
     (v.sobre ?? "").replace(/\s+/g, " ").trim().slice(0, 155) ||
-    `Conheça ${v.nome} em ${v.cidade} e veja os anúncios da loja no OLAKI.`;
+    `Conheça ${v.nome} em ${v.cidade} e veja os anúncios da loja no Mercado da Região.`;
   // Foto da fachada: 1500x500 (cortar-banner.ts). Banner modelo: imagem gerada 1200x630, com a cor
   // no endereço para a mudança de cor chegar logo no WhatsApp/Facebook (a imagem fica em cache).
   const foto = v.banner_tipo === "foto" && v.banner_url ? v.banner_url : null;
@@ -71,9 +71,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: v.nome,
       description: descricao,
       url: linkLoja(v.slug),
-      siteName: "OLAKI",
+      siteName: "Mercado da Região",
       locale: "pt_BR",
-      images: [{ url: imagem, ...tamanho, alt: `Vitrine de ${v.nome} no OLAKI` }],
+      images: [{ url: imagem, ...tamanho, alt: `Vitrine de ${v.nome} no Mercado da Região` }],
     },
     twitter: { card: "summary_large_image", title: v.nome, description: descricao, images: [imagem] },
   };
@@ -123,7 +123,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const situacao = situacaoAgora(v.horarios, agora);
   const numero = (v.whatsapp ?? "").replace(/\D/g, "");
   const whatsapp = v.status === "ativa" && /^55[1-9][0-9]9?[0-9]{8}$/.test(numero)
-    ? `https://wa.me/${numero}?text=${encodeURIComponent(`Olá! Vi sua loja no OLAKI: ${urlAbsoluta(linkLoja(v.slug))}`)}`
+    ? `https://wa.me/${numero}?text=${encodeURIComponent(`Olá! Vi sua loja no Mercado da Região: ${urlAbsoluta(linkLoja(v.slug))}`)}`
     : null;
 
   const porId = new Map(todos.map((a) => [a.id, a]));
@@ -146,7 +146,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 pb-8 md:px-4 md:py-4">
       {v.status !== "ativa" && (
         <p role="status" className="mx-4 mt-3 rounded-card bg-aviso-fundo p-4 text-base font-semibold text-aviso md:mx-0 md:mt-0">
-          Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : "plano vencido"}). Visível apenas para o responsável e a equipe OL-AKI.
+          Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : "plano vencido"}). Visível apenas para o responsável e a equipe Mercado da Região.
         </p>
       )}
 

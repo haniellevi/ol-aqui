@@ -18,7 +18,7 @@ export default async function ResumoPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <Titulo sub="Acompanhe a atividade do OLAKI, os recebimentos da empresa e a operação do painel.">Resumo</Titulo>
+      <Titulo sub="Acompanhe a atividade do Mercado da Região, os recebimentos da empresa e a operação do painel.">Resumo</Titulo>
       <Estatisticas supabase={supabase} params={await searchParams} />
       <Operacao supabase={supabase} agora={agora} />
     </>

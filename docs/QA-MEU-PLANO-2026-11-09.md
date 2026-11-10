@@ -1,6 +1,6 @@
 # Meu plano: assinatura e pagamentos
 
-Escopo: plano atual, limites, períodos, renovação, troca, Pix, cartão, retomada e histórico, preservando a identidade OL-AKI. O ambiente financeiro configurado permanece sandbox. Nenhuma cobrança real foi criada.
+Escopo: plano atual, limites, períodos, renovação, troca, Pix, cartão, retomada e histórico, preservando a identidade Mercado da Região. O ambiente financeiro configurado permanece sandbox. Nenhuma cobrança real foi criada.
 
 ## Correções
 

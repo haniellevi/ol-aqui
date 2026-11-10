@@ -176,5 +176,5 @@ export const openai = criarAdaptador("openai", "https://api.openai.com/v1/chat/c
 export const openrouter = criarAdaptador("openrouter", "https://openrouter.ai/api/v1/chat/completions", "OPENROUTER_API_KEY", () => ({
   // identificação opcional do site no OpenRouter
   "HTTP-Referer": SITE,
-  "X-Title": "OLAKI",
+  "X-Title": "Mercado da Regiao",
 }));

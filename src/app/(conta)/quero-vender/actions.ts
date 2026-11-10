@@ -21,7 +21,7 @@ export async function queroVenderPf(): Promise<EstadoForm> {
   redirect("/anunciar");
 }
 
-/** O endereço olaki.com.br/loja/<slug> está livre? null = formato inválido. */
+/** O endereço mercadodaregiao.com.br/loja/<slug> está livre? null = formato inválido. */
 export async function verificarSlug(slug: string): Promise<boolean | null> {
   const s = String(slug ?? "").trim().toLowerCase();
   if (!SLUG.test(s)) return null;

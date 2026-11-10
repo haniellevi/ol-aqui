@@ -111,7 +111,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
 
   return (
     <>
-      <Titulo sub="Números somados do OLAKI. Escolha o período (até 12 meses) e a região. Cada bloco pode ser baixado em planilha (CSV).">Relatórios</Titulo>
+      <Titulo sub="Números somados do Mercado da Região. Escolha o período (até 12 meses) e a região. Cada bloco pode ser baixado em planilha (CSV).">Relatórios</Titulo>
 
       <Cartao className="mb-6 space-y-4">
         <div className="flex flex-wrap gap-2">
@@ -138,7 +138,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           id="funil"
           filtros={filtros}
           titulo="Funil"
-          sub="Quem viu um anúncio, quem chamou no WhatsApp e quem disse que vendeu pelo OLAKI. Buscas ainda não são contadas."
+          sub="Quem viu um anúncio, quem chamou no WhatsApp e quem disse que vendeu pelo Mercado da Região. Buscas ainda não são contadas."
         >
           {!f ? (
             <Falhou />
@@ -160,10 +160,10 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
                     rotulo: "Anúncios marcados como vendidos",
                     valor: f.vendidos,
                     texto: inteiro(f.vendidos),
-                    detalhe: `${inteiro(f.vendidos_fora)} venderam fora do OLAKI · ${inteiro(f.vendidos_sem_resposta)} não responderam`,
+                    detalhe: `${inteiro(f.vendidos_fora)} venderam fora do Mercado da Região · ${inteiro(f.vendidos_sem_resposta)} não responderam`,
                   },
                   {
-                    rotulo: "“Vendi pelo OLAKI”",
+                    rotulo: "“Vendi pelo Mercado da Região”",
                     valor: f.vendidos_pelo_olaki,
                     texto: inteiro(f.vendidos_pelo_olaki),
                     detalhe: `${pct(f.vendidos_pelo_olaki, f.vendidos)} dos vendidos`,

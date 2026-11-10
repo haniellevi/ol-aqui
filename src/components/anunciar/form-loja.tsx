@@ -11,7 +11,7 @@ import { AvisoErro } from "./aviso-erro";
 import { aoEnviar } from "./enviar";
 
 // T15 · Dados da loja: nome, link (com conferência na hora se está livre), WhatsApp e cidade.
-// Depois mostra "Sua vitrine: olaki.com.br/loja/..." com Compartilhar e "Criar primeiro anúncio".
+// Depois mostra "Sua vitrine: mercadodaregiao.com.br/loja/..." com Compartilhar e "Criar primeiro anúncio".
 
 type Situacao = "vazio" | "conferindo" | "livre" | "ocupado" | "invalido" | "falhou";
 
@@ -82,7 +82,7 @@ export function FormLoja({
   if (feito) {
     const url = urlAbsoluta(linkLoja(feito.slug));
     const enderecoCurto = url.replace(/^https?:\/\//, "");
-    const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Conheça minha loja no OLAKI: *${feito.nome}* ${url}`)}`;
+    const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Conheça minha loja no Mercado da Região: *${feito.nome}* ${url}`)}`;
     return (
       <section aria-labelledby="titulo-pronta" className="flex flex-col items-center gap-4 text-center" aria-live="polite">
         <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>

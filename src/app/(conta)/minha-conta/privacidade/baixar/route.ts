@@ -69,7 +69,7 @@ export async function GET() {
 
     const dados = {
       gerado_em: new Date().toISOString(),
-      site: `OLAKI (${SITE})`,
+      site: `Mercado da Região (${SITE})`,
       aviso: "Este arquivo reúne os dados disponíveis na sua conta. Guarde com cuidado: ele contém informações pessoais. Registros internos de segurança e cobrança não estão incluídos.",
       perfil: linhaPerfil,
       vitrine: vitrine.data ? { ...vitrine.data, ...contatos.data } : null,
@@ -104,7 +104,7 @@ export async function GET() {
       headers: {
         ...CABECALHOS,
         "Content-Type": "application/json; charset=utf-8",
-        "Content-Disposition": `attachment; filename="olaki-meus-dados-${dia}.json"`,
+        "Content-Disposition": `attachment; filename="mercado-da-regiao-meus-dados-${dia}.json"`,
       },
     });
   } catch {

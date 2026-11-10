@@ -5,7 +5,7 @@ Data: 09/11/2026. Base: `866128d5812bc4db51d07ac978d6db8060963d6c`.
 ## Resultado
 
 - Lista privada com contagem, ordenação estável por data e ID e páginas de 24 itens, substituindo o corte silencioso de 200.
-- Cards OL-AKI com abertura do anúncio, data em que foi salvo e remoção separada do link. Estados disponível, vendido e fora do ar.
+- Cards Mercado da Região com abertura do anúncio, data em que foi salvo e remoção separada do link. Estados disponível, vendido e fora do ar.
 - Anúncios indisponíveis permanecem removíveis sem expor título, foto ou vendedor privados. Vendidos continuam abrindo com a indicação de venda e sem contato para compra.
 - Salvar e remover usam identidade da sessão, validam os parâmetros, impedem cliques repetidos, confirmam o estado no banco e invalidam lista e detalhe. O coração acompanha o estado atualizado ao voltar ao anúncio.
 - Falha de leitura não aparece como lista vazia. Erros de alteração preservam o estado anterior e permitem tentar novamente. Estado desconhecido no detalhe bloqueia a alteração e oferece nova consulta.
@@ -44,7 +44,7 @@ Capturas: `favoritos-desktop-teste.png` e `favoritos-celular-teste.png` na pasta
 
 ## Banco de produção
 
-Migração `20261109205931_favoritos_visiveis.sql` aplicada ao projeto OLAKI (`ncrbqqdgweuqpsppxwti`). A política de INSERT exige anúncio ativo e loja ativa, além do proprietário autenticado. As políticas de SELECT e DELETE continuam restritas ao próprio usuário.
+Migração `20261109205931_favoritos_visiveis.sql` aplicada ao projeto Mercado da Região (`ncrbqqdgweuqpsppxwti`). A política de INSERT exige anúncio ativo e loja ativa, além do proprietário autenticado. As políticas de SELECT e DELETE continuam restritas ao próprio usuário.
 
 O teste de loja suspensa falhava antes da correção e passou com a migração. A aplicação remota foi confirmada por `pg_policies` e pelo histórico de migrações. Contagem de favoritos antes/depois: 0/0. A migração não altera registros.
 

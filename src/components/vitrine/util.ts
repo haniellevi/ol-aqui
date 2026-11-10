@@ -13,11 +13,11 @@ export function iniciais(nome: string | null | undefined): string {
 
 const mesAno = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "America/Fortaleza" });
 
-/** "no OLAKI desde novembro de 2026". */
+/** "no Mercado da Região desde novembro de 2026". */
 export function desde(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "" : `No OLAKI desde ${mesAno.format(d)}`;
+  return Number.isNaN(d.getTime()) ? "" : `No Mercado da Região desde ${mesAno.format(d)}`;
 }
 
 /** Caminho do perfil público da pessoa física (pelo id da vitrine, nunca o id da conta). */

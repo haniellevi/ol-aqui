@@ -1,8 +1,10 @@
-# OLAKI · olha aqui o que você procura
+# Mercado da Região · aqui a sua cidade aparece
+
+> O projeto nasceu como OLAKI e mudou de nome em 10/11/2026. Guia da marca: [docs/MARCA.md](docs/MARCA.md). Nomes internos (repositório `ol-aqui`, banco, jobs `olaki-*`) continuam iguais de propósito.
 
 Shopping digital e classificados regionais, com o Radar de Negócios: o comprador descreve uma necessidade e as lojas enviam propostas.
 
-O endereço publicado observado na análise foi `ol-aqui.vercel.app`. O domínio definitivo do piloto ainda precisa ser confirmado; `olaki.com.br` e seu eventual redirecionamento não devem ser tratados como configurados apenas porque aparecem em documentos anteriores.
+O endereço publicado observado na análise foi `ol-aqui.vercel.app`. O domínio definitivo do piloto ainda precisa ser confirmado; `mercadodaregiao.com.br` e seu eventual redirecionamento não devem ser tratados como configurados apenas porque aparecem em documentos anteriores.
 
 O ponto de entrada para a abertura acompanhada é [Liberação do piloto](docs/preparacao-piloto/liberacao.md). O documento distingue verificações locais, inspeção do ambiente publicado e ensaios com contas autorizadas. Os arquivos `QA-*` e `VALIDACAO-*` são registros históricos das respectivas versões.
 

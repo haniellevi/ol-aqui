@@ -37,7 +37,7 @@ export default async function PaginaMinhaLoja() {
         <TopoConta titulo="Minha loja" />
         <Vazio
           titulo="Você ainda não tem uma loja"
-          texto="Com uma loja você ganha uma vitrine com seu nome e seu link no OLAKI."
+          texto="Com uma loja você ganha uma vitrine com seu nome e seu link no Mercado da Região."
         >
           <Botao href="/quero-vender/loja" larguraTotal>
             Abrir minha loja
@@ -110,7 +110,7 @@ export default async function PaginaMinhaLoja() {
       )}
       {recursos.banner_moderado_motivo && (
         <Aviso tipo="atencao">
-          <span>A equipe do OLAKI tirou a foto do seu banner.</span>
+          <span>A equipe do Mercado da Região tirou a foto do seu banner.</span>
           <span className="font-normal">Motivo: {recursos.banner_moderado_motivo}</span>
         </Aviso>
       )}

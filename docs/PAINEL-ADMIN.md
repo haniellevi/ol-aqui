@@ -1,6 +1,6 @@
-# OLAKI · Plano do Painel Administrativo
+# Mercado da Região · Plano do Painel Administrativo
 
-Endereço: `olaki.com.br/admin` (mesmo app Next.js, rotas protegidas).
+Endereço: `mercadodaregiao.com.br/admin` (mesmo app Next.js, rotas protegidas).
 Regra de ouro: **nenhum preço, limite ou regra fica no código.** Tudo sai das tabelas `planos`, `configuracoes`, `microrregioes` e `cidades`, e cada mudança fica gravada em `logs_atividade` com quem mudou, IP e data.
 
 ## Quem entra
@@ -103,7 +103,7 @@ Modelos das mensagens de WhatsApp, e-mail e notificação (código de acesso, pl
 Troca o "é admin sim/não" por papéis: **Administrador** (tudo), **Moderador** (tela 4), **Financeiro** (tela 6), **Suporte** (tela 5 sem mexer em plano), **Franqueado** (só a região dele). Tudo continua com registro de quem fez o quê.
 
 ### 15. Relatórios
-Funil (visitas → buscas → cliques no WhatsApp → "vendi pelo OLAKI"), anúncios por categoria e cidade, conversão do teste grátis para plano pago, receita por tipo (plano, avulso, destaque), exportar CSV.
+Funil (visitas → buscas → cliques no WhatsApp → "vendi pelo Mercado da Região"), anúncios por categoria e cidade, conversão do teste grátis para plano pago, receita por tipo (plano, avulso, destaque), exportar CSV.
 
 ### Desfazer
 Como toda mudança de configuração fica no log com o valor antigo, cada linha do histórico tem o botão **Voltar para este valor**.

@@ -59,7 +59,7 @@ export async function reativarAnuncio(id: string): Promise<Resultado<StatusAnunc
 }
 
 export async function marcarVendido(id: string, peloOlaki: boolean): Promise<Resultado<StatusAnuncio>> {
-  if (typeof peloOlaki !== "boolean") return { ok: false, erro: { mensagem: "Informe se a venda aconteceu pelo OLAKI." } };
+  if (typeof peloOlaki !== "boolean") return { ok: false, erro: { mensagem: "Informe se a venda aconteceu pelo Mercado da Região." } };
   return alterar(id, (db, a) => a.status === "vendido"
     ? Promise.resolve({ ok: true, dados: "vendido" })
     : chamar(db, "marcar_vendido", { anuncio_id: id, pelo_olaki: peloOlaki }, ["vendido"]));

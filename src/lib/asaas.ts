@@ -93,10 +93,10 @@ export async function criarCliente(ambiente: AmbienteAsaas, dados: { nome: strin
   const c = await chamar<{ id: string }>(ambiente, "/customers", {
     method: "POST",
     body: JSON.stringify({
-      name: dados.nome.slice(0, 100) || "Cliente OLAKI",
+      name: dados.nome.slice(0, 100) || "Cliente Mercado da Região",
       cpfCnpj: soDigitos(dados.documento),
       externalReference: dados.referencia,
-      notificationDisabled: true, // o OLAKI avisa a pessoa; o Asaas não manda e-mail/SMS
+      notificationDisabled: true, // o Mercado da Região avisa a pessoa; o Asaas não manda e-mail/SMS
     }),
   });
   return c.id;

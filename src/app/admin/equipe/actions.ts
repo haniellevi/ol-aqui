@@ -27,7 +27,7 @@ export async function buscarConta(_: EstadoBusca, form: FormData): Promise<Estad
     if (r.erro) return { erro: r.erro, termo };
     if (r.emailIndisponivel) return { erro: "A busca por e-mail não está funcionando agora. Tente pelo celular.", termo };
     if (r.contas.length === 0) {
-      return { contas: [], aviso: "Nenhuma conta encontrada. A pessoa precisa entrar no OLAKI uma vez antes.", termo };
+      return { contas: [], aviso: "Nenhuma conta encontrada. A pessoa precisa entrar no Mercado da Região uma vez antes.", termo };
     }
     return { contas: r.contas, termo };
   } catch (e) {

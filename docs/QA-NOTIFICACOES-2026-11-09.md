@@ -24,6 +24,6 @@ As páginas, componentes e ações reais foram exercitados com fronteiras tempor
 
 ## Banco remoto e publicação
 
-Migração `20261109195657_notificacoes_confiaveis` aplicada no projeto OLAKI `ncrbqqdgweuqpsppxwti`. A pós-verificação confirmou RLS ligado, trigger protetor ativo, execução negada a anon e permitida a authenticated, leitura restrita ao canal app e o texto padrão corrigido. A quantidade de avisos existentes permaneceu em dois.
+Migração `20261109195657_notificacoes_confiaveis` aplicada no projeto Mercado da Região `ncrbqqdgweuqpsppxwti`. A pós-verificação confirmou RLS ligado, trigger protetor ativo, execução negada a anon e permitida a authenticated, leitura restrita ao canal app e o texto padrão corrigido. A quantidade de avisos existentes permaneceu em dois.
 
 Prévia e produção são verificadas na Vercel após o envio desta versão. A página privada exige sessão Clerk; os testes completos com alterações ocorreram no ambiente isolado descrito acima.

@@ -44,7 +44,7 @@ export async function cobrarPedido(pedidoId: string, forma: FormaPagamento, docu
     userId,
     forma,
     documento,
-    descricao: `OLAKI · ${pedido.tipo_nome}`,
+    descricao: `Mercado da Região · ${pedido.tipo_nome}`,
     naoEncontrado: "Pedido não encontrado.",
   });
   if (r === "precisa_documento") return { etapa: "precisa_documento", pedidoId: pedido.id };

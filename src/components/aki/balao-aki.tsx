@@ -375,7 +375,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                 </Botao>
               ) : (
                 <Botao href={voltarDaAjuda ? "/ajuda" : "/busca"} larguraTotal>
-                  {voltarDaAjuda ? "Abrir a Central de ajuda" : "Buscar no OLAKI"}
+                  {voltarDaAjuda ? "Abrir a Central de ajuda" : "Buscar no Mercado da Região"}
                 </Botao>
               )}
               <Botao href={voltarDaAjuda ?? "/"} variante="secundario" larguraTotal>
@@ -477,7 +477,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     Aki
                   </h2>
                 )}
-                <p className="text-legenda leading-[18px] text-texto-suave">Ajudante do OLAKI</p>
+                <p className="text-legenda leading-[18px] text-texto-suave">Ajudante do Mercado da Região</p>
               </div>
               {estado.logado && mensagens.length > 0 && (
                 <button

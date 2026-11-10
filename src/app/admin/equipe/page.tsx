@@ -107,7 +107,7 @@ export default async function EquipePage() {
           </ul>
         )}
         <p className="mt-3 text-sm text-texto-suave">
-          Você não muda o seu próprio papel, e o OLAKI nunca fica sem pelo menos um administrador.
+          Você não muda o seu próprio papel, e o Mercado da Região nunca fica sem pelo menos um administrador.
         </p>
       </section>
 

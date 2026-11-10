@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
 
-// Ícone do app (PWA) com o logo oficial: opção 1, pin no "i", em beringela.
+// Ícone do app (PWA): M branco com o pin laranja no quadrado beringela (docs/MARCA.md).
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "OLAKI",
-    short_name: "OLAKI",
-    description: "Olha aqui o que você procura",
+    name: "Mercado da Região",
+    short_name: "Mercado da Região",
+    description: "Aqui a sua cidade aparece",
     start_url: "/",
     display: "standalone",
     background_color: "#F6F4F7",

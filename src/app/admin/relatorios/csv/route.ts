@@ -54,8 +54,8 @@ export async function GET(req: Request) {
       ["Cliques no WhatsApp", f.cliques_whatsapp],
       ["Compartilhamentos", f.compartilhamentos],
       ["Anúncios marcados como vendidos", f.vendidos],
-      ["Vendi pelo OLAKI", f.vendidos_pelo_olaki],
-      ["Vendi fora do OLAKI", f.vendidos_fora],
+      ["Vendi pelo Mercado da Região", f.vendidos_pelo_olaki],
+      ["Vendi fora do Mercado da Região", f.vendidos_fora],
       ["Vendido sem resposta", f.vendidos_sem_resposta],
     ];
   } else if (r === "anuncios") {
@@ -84,7 +84,7 @@ export async function GET(req: Request) {
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="olaki-relatorio-${r}-${filtros.de}-a-${filtros.ate}.csv"`,
+      "Content-Disposition": `attachment; filename="mercado-da-regiao-relatorio-${r}-${filtros.de}-a-${filtros.ate}.csv"`,
       "Cache-Control": "no-store",
     },
   });

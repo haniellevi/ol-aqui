@@ -71,8 +71,8 @@ export default async function PaginaPrivacidade() {
           {conversasAki === 0
             ? "Você não tem conversas guardadas com o Aki."
             : conversasAki === 1
-              ? "Você tem 1 conversa guardada com o Aki (o robô do OLAKI)."
-              : `Você tem ${conversasAki} conversas guardadas com o Aki (o robô do OLAKI).`}
+              ? "Você tem 1 conversa guardada com o Aki (o robô do Mercado da Região)."
+              : `Você tem ${conversasAki} conversas guardadas com o Aki (o robô do Mercado da Região).`}
         </p>
         {conversasAki > 0 && <ApagarConversasAki />}
       </section>

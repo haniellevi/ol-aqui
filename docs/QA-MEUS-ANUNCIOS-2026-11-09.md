@@ -24,6 +24,6 @@ Os testes de interface usam páginas, componentes e ações reais, com fronteira
 
 ## Banco remoto e publicação
 
-Migrações aplicadas ao projeto OLAKI `ncrbqqdgweuqpsppxwti`: `20261109190451_status_lixeira` e `20261109190459_lixeira_anuncios`. Pós-verificação confirmou as duas colunas, ausência de DELETE para authenticated, ausência de EXECUTE da restauração para anon e presença para authenticated. Não havia anúncios no banco na inspeção anterior à migração.
+Migrações aplicadas ao projeto Mercado da Região `ncrbqqdgweuqpsppxwti`: `20261109190451_status_lixeira` e `20261109190459_lixeira_anuncios`. Pós-verificação confirmou as duas colunas, ausência de DELETE para authenticated, ausência de EXECUTE da restauração para anon e presença para authenticated. Não havia anúncios no banco na inspeção anterior à migração.
 
 A validação de disponibilidade da prévia e da produção na Vercel é feita após o envio desta versão. O acesso à página privada em produção exige sessão Clerk; os fluxos com alterações foram exercitados no ambiente isolado descrito acima.

@@ -1,4 +1,4 @@
-# OLAKI · Mapa de telas e caminhos do usuário · 07/11/2026
+# Mercado da Região · Mapa de telas e caminhos do usuário · 07/11/2026
 
 Este é o mapa do **app público** (o que comprador, vendedor e loja veem). O painel administrativo está em PAINEL-ADMIN.md. As regras de cadastro, anúncio, destaques e Aki estão em PRODUTO-CONTAS-ANUNCIOS-ROBO.md; aqui só organizo as telas e o caminho entre elas. Visual em DESIGN-SYSTEM.md, regras de uso em USABILIDADE.md, ideias de outros apps em PESQUISA-MERCADO.md.
 
@@ -96,7 +96,7 @@ Textos e ordem dos blocos vêm do painel (tela 12).
 4. **Detalhes** em lista de 2 colunas (ano, km, horas, raça...)
 5. Descrição (corta em 5 linhas, "ver mais")
 6. **Caixa de segurança**: "Nunca pague nada antes de ver o produto. Desconfie de preço muito baixo." + link Dicas
-7. Cartão do vendedor (foto, nome, selo, "no OLAKI desde", tempo de resposta) → vitrine ou perfil
+7. Cartão do vendedor (foto, nome, selo, "no Mercado da Região desde", tempo de resposta) → vitrine ou perfil
 8. Parecidos na região
 9. Denunciar (texto pequeno, no fim)
 10. **Barra fixa embaixo:** botão verde **Chamar no WhatsApp** (largura grande) + coração
@@ -124,15 +124,15 @@ Lista simples (não abas escondidas) com ícone + nome: Meus anúncios, Meu plan
 ## 4. Caminhos (fluxos) principais
 
 ### F1 · Visitante encontra e chama no WhatsApp (o mais importante)
-Abre o link (veio do WhatsApp ou Google) → escolhe a cidade (só na 1ª vez) → busca ou toca na categoria → toca no card → vê fotos e preço → **Chamar no WhatsApp** → o WhatsApp abre com "Olá! Vi seu anúncio *Moto Titan 2015* no OLAKI: olaki.com.br/anuncio/..."
+Abre o link (veio do WhatsApp ou Google) → escolhe a cidade (só na 1ª vez) → busca ou toca na categoria → toca no card → vê fotos e preço → **Chamar no WhatsApp** → o WhatsApp abre com "Olá! Vi seu anúncio *Moto Titan 2015* no Mercado da Região: mercadodaregiao.com.br/anuncio/..."
 **Sem pedir conta em nenhum momento.** Meta: 3 toques do Início até o WhatsApp.
 
 ### F2 · Pessoa vende uma coisa pela primeira vez
 Toca **+ Anunciar** → Entrar (celular → código) → nome e cidade → "Quero vender: Vender minhas coisas" → Passo 1 Fotos → ... → Passo 6 Publicar → "Está no ar!" com **Compartilhar no WhatsApp** (status e grupos) e **Destacar**.
 Se o filtro segurar o anúncio: "Seu anúncio está em análise, avisamos em até X horas" (prazo do painel).
 
-### F3 · Loja entra no OLAKI
-**+ Anunciar** ou página **Planos** → Entrar → "Tenho uma loja" → nome, link, WhatsApp da loja, logo (opcional) → teste grátis começa → "Sua vitrine: olaki.com.br/loja/nome" com Compartilhar → primeiro anúncio → aviso do Radar ("Há 5 pedidos na região agora").
+### F3 · Loja entra no Mercado da Região
+**+ Anunciar** ou página **Planos** → Entrar → "Tenho uma loja" → nome, link, WhatsApp da loja, logo (opcional) → teste grátis começa → "Sua vitrine: mercadodaregiao.com.br/loja/nome" com Compartilhar → primeiro anúncio → aviso do Radar ("Há 5 pedidos na região agora").
 
 ### F4 · Comprador pede no Radar
 Busca sem resultado (ou aba Radar) → **Pedir no Radar** (texto já vem da busca) → o que quer, faixa de preço, cidade, prazo → escolhe **"Podem me chamar no WhatsApp"** ou **"Quero receber propostas aqui até [data]"** → confirma o celular com código → "Pedido no ar! Avisamos quando chegar proposta."
@@ -147,7 +147,7 @@ Aviso no WhatsApp/celular "Novo pedido: geladeira até R$ 2 mil em Corrente" →
 Balão → "O que você procura? Pode escrever ou falar." → a pessoa escreve → o Aki mostra cards reais dentro da conversa → se não tiver: oferece o Radar já preenchido → a pessoa toca **Confirmar**. Para vender: manda foto → Aki pergunta só o que falta → mostra o card pronto → pessoa toca **Publicar**.
 
 ### F8 · Marcar como vendido
-Meus anúncios → **Vendi** → "Vendeu pelo OLAKI?" Sim / Não → o anúncio sai da busca e mostra "Vendido" para quem tinha o link (com parecidos embaixo, em vez de página de erro).
+Meus anúncios → **Vendi** → "Vendeu pelo Mercado da Região?" Sim / Não → o anúncio sai da busca e mostra "Vendido" para quem tinha o link (com parecidos embaixo, em vez de página de erro).
 
 ### F9 · Denunciar
 Página do anúncio → Denunciar → motivos prontos em botões ("Pediu pagamento antecipado", "Produto falso", "Preço enganoso", "Ofensivo", "Outro") → enviado. Com 3 denúncias o anúncio sai do ar até revisão (regra já decidida).
