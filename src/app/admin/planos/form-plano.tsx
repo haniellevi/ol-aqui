@@ -31,30 +31,30 @@ export function FormPlano({ plano }: { plano?: Plano }) {
   return (
     <form action={acao} className="grid grid-cols-2 items-end gap-3 @3xl/painel:grid-cols-4">
       {novo ? (
-        <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-1">
+        <label className="col-span-2 text-sm font-medium @3xl/painel:col-span-1">
           Código
           <input name="codigo" required placeholder="ex.: ouro" className={estiloCampo} />
         </label>
       ) : (
         <input type="hidden" name="codigo" value={plano.codigo} />
       )}
-      <label className="col-span-2 text-sm font-semibold">
+      <label className="col-span-2 text-sm font-medium">
         Nome
         <input name="nome" required defaultValue={plano?.nome} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Preço (R$/período)
         <input name="preco" inputMode="decimal" defaultValue={paraReaisInput(plano?.preco_centavos ?? 0)} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Dias do período
         <input name="periodo_dias" type="number" min={1} defaultValue={plano?.periodo_dias ?? 30} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Limite de anúncios
         <input name="limite_anuncios" type="number" min={0} placeholder="ilimitado" defaultValue={plano?.limite_anuncios ?? ""} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Propostas no Radar/mês
         <input
           name="propostas_radar_mes"
@@ -65,7 +65,7 @@ export function FormPlano({ plano }: { plano?: Plano }) {
           className={estiloCampo}
         />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Para quem
         <select name="publico" defaultValue={plano?.publico ?? "todos"} className={estiloCampo}>
           <option value="todos">Todos</option>
@@ -73,13 +73,13 @@ export function FormPlano({ plano }: { plano?: Plano }) {
           <option value="pj">Loja / empresa</option>
         </select>
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Ordem na tela
         <input name="ordem" type="number" defaultValue={plano?.ordem ?? 10} className={estiloCampo} />
       </label>
       <fieldset className="col-span-2 grid grid-cols-2 items-end gap-3 rounded-card border border-borda p-3 @3xl/painel:col-span-4 @3xl/painel:grid-cols-4">
         <legend className="px-1 text-sm font-semibold">Vitrine da loja</legend>
-        <label className="text-sm font-semibold">
+        <label className="text-sm font-medium">
           Seções próprias
           <input
             name="vitrine_secoes_max"
@@ -90,7 +90,7 @@ export function FormPlano({ plano }: { plano?: Plano }) {
             className={estiloCampo}
           />
         </label>
-        <label className="text-sm font-semibold">
+        <label className="text-sm font-medium">
           Produtos fixados no topo
           <input
             name="vitrine_fixados_max"
@@ -109,7 +109,7 @@ export function FormPlano({ plano }: { plano?: Plano }) {
           0 = não tem o recurso; vazio = sem limite. Plano menor não apaga nada: o que passa do limite fica escondido na vitrine.
         </p>
       </fieldset>
-      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-4">
+      <label className="col-span-2 text-sm font-medium @3xl/painel:col-span-4">
         Descrição (aparece para o cliente)
         <textarea name="descricao" rows={2} defaultValue={plano?.descricao ?? ""} className={`${estiloCampo} h-auto min-h-20 py-2 leading-relaxed`} />
       </label>

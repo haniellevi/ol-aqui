@@ -28,15 +28,15 @@ export function FiltrosRelatorio({
   }, []);
   return (
     <form method="get" action={LINK_ADMIN_RELATORIOS} onSubmit={() => setCarregando(true)} className="grid grid-cols-1 items-end gap-3 @sm/painel:grid-cols-2 @3xl/painel:grid-cols-4">
-      <label className="text-sm font-semibold text-beringela">
+      <label className="text-sm font-medium text-beringela">
         De
         <input type="date" name="de" defaultValue={de} required className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold text-beringela">
+      <label className="text-sm font-medium text-beringela">
         Até
         <input type="date" name="ate" defaultValue={ate} required className={estiloCampo} />
       </label>
-      <label className="col-span-full @3xl/painel:col-span-2 text-sm font-semibold text-beringela">
+      <label className="col-span-full @3xl/painel:col-span-2 text-sm font-medium text-beringela">
         Região
         <select name="regiao" defaultValue={regiao ?? ""} className={estiloCampo}>
           <option value="">Todas as regiões</option>

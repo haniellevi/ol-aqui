@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Check, ImagePlus, MessageCircle, Pencil, Send, X } from "lucide-react";
+import { Camera, Check, ImagePlus, MessageCircle, Pencil, Send } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { criarUrlFotoProposta, enviarProposta } from "@/app/radar/actions";
@@ -12,6 +12,7 @@ import { validarProposta } from "./validacao";
 import { preco } from "@/lib/formato";
 import type { AnuncioParaProposta, MinhaPropostaNoPedido } from "@/lib/tipos-radar";
 import { Alert } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Props = {
   pedidoId: string;
@@ -43,18 +44,9 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
   const [erroChamar, setErroChamar] = useState<string | null>(null);
   const trava = useRef(false);
   const fotoEmCurso = useRef(false);
-  const dialogo = useRef<HTMLDialogElement>(null);
   const formulario = useRef<HTMLFormElement>(null);
   const [linkContato, setLinkContato] = useState<string | null>(null);
   const arquivo = useRef<HTMLInputElement>(null);
-  const fechar = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (aberta) {
-      dialogo.current?.showModal();
-      fechar.current?.focus();
-    } else dialogo.current?.close();
-  }, [aberta]);
 
   useEffect(() => {
     if (!erro) return;
@@ -203,26 +195,13 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
         </div>
       )}
 
-      <dialog ref={dialogo} aria-labelledby="titulo-propor"
-        onCancel={(e) => { if (trava.current || fotoEmCurso.current) e.preventDefault(); }}
-        onClose={() => setAberta(false)}
-        className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%_-_2rem)] max-w-xl overflow-y-auto rounded-card bg-cartao p-4 text-texto shadow-2 backdrop:bg-beringela/50">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 id="titulo-propor" className="text-lg font-bold">
-                {minha ? "Mudar minha proposta" : "Sua proposta"}
-              </h2>
-              <button
-                ref={fechar}
-                type="button"
-                disabled={ocupado} onClick={() => setAberta(false)}
-                className="grid size-10 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
-                aria-label="Fechar"
-              >
-                <X className="size-6" aria-hidden />
-              </button>
-            </div>
+      <Dialog open={aberta} onOpenChange={(abrir) => { if (!abrir && (trava.current || fotoEmCurso.current)) return; setAberta(abrir); }}>
+        <DialogContent className="sm:max-w-xl" showCloseButton={!ocupado}>
+            <DialogHeader>
+              <DialogTitle>{minha ? "Mudar minha proposta" : "Sua proposta"}</DialogTitle>
+            </DialogHeader>
 
-            <form ref={formulario} action={enviar} noValidate>
+            <form ref={formulario} action={enviar} noValidate className="min-w-0">
               <fieldset disabled={ocupado} className="flex min-w-0 flex-col gap-5">
               <fieldset className="flex min-w-0 flex-col gap-2">
                 <legend className="mb-2 max-w-full text-base font-semibold">
@@ -329,7 +308,8 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
               </Botao>
               </fieldset>
             </form>
-      </dialog>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

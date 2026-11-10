@@ -71,7 +71,7 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
         <Botao type="submit">Aprovar e colocar no ar</Botao>
       </form>}
       <form action={administrarAnuncio.bind(null, id, a.status, a.atualizado_em, emAnalise ? "recusar" : "revisar")} className="space-y-2">
-        <label htmlFor="motivo-administracao" className="block text-rotulo font-semibold">Motivo da decisão</label>
+        <label htmlFor="motivo-administracao" className="block text-rotulo font-medium">Motivo da decisão</label>
         <textarea id="motivo-administracao" name="motivo" rows={2} required minLength={3} maxLength={280}
           className={`${estiloCampo} h-auto min-h-20 py-2`} aria-describedby="ajuda-motivo-administracao" />
         <p id="ajuda-motivo-administracao" className="text-sm text-texto-suave">O anunciante pode ler o motivo em Meus anúncios.</p>

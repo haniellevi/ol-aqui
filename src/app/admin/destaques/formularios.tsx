@@ -28,15 +28,15 @@ export function FormTipoDestaque({ tipo }: { tipo: TipoDestaque }) {
   return (
     <form action={acao} className="grid grid-cols-2 items-start gap-3 @3xl/painel:grid-cols-4">
       <input type="hidden" name="slug" value={tipo.slug} />
-      <label className="col-span-2 text-sm font-semibold">
+      <label className="col-span-2 text-sm font-medium">
         Nome (aparece para o vendedor)
         <input name="nome" required maxLength={60} defaultValue={tipo.nome} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Preço (R$)
         <input name="preco" inputMode="decimal" required defaultValue={paraReaisInput(tipo.preco_centavos)} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         {subir ? "Dias" : "Dias no ar"}
         {subir ? (
           <input disabled value="Uma vez" className={estiloCampo} readOnly />
@@ -44,15 +44,15 @@ export function FormTipoDestaque({ tipo }: { tipo: TipoDestaque }) {
           <input name="dias" type="number" min={1} max={365} required defaultValue={tipo.dias ?? 7} className={estiloCampo} />
         )}
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Vagas por região
         <input name="vagas" type="number" min={1} max={1000} placeholder="sem limite" defaultValue={tipo.vagas_por_regiao ?? ""} className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Ordem na tela
         <input name="ordem" type="number" defaultValue={tipo.ordem} className={estiloCampo} />
       </label>
-      <label className="col-span-2 text-sm font-semibold">
+      <label className="col-span-2 text-sm font-medium">
         O que faz (texto curto)
         <textarea name="descricao" rows={2} maxLength={200} defaultValue={tipo.descricao ?? ""} className={`${estiloCampo} h-auto min-h-20 py-2 leading-relaxed`} />
       </label>
@@ -133,7 +133,7 @@ export function FormCortesia({ tipos }: { tipos: { slug: SlugDestaque; nome: str
   const atual = tipos.find((t) => t.slug === tipo);
   return (
     <form action={acao} className="grid grid-cols-1 gap-3 md:grid-cols-2">
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Tipo
         <select name="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as SlugDestaque)} className={estiloCampo}>
           {tipos.map((t) => (
@@ -143,7 +143,7 @@ export function FormCortesia({ tipos }: { tipos: { slug: SlugDestaque; nome: str
           ))}
         </select>
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         {tipo === "loja" ? "Endereço da loja" : "Link do anúncio"}
         <input
           name="alvo"
@@ -153,12 +153,12 @@ export function FormCortesia({ tipos }: { tipos: { slug: SlugDestaque; nome: str
         />
       </label>
       {tipo !== "subir" && (
-        <label className="text-sm font-semibold">
+        <label className="text-sm font-medium">
           Dias
           <input name="dias" type="number" min={1} max={365} placeholder={atual?.dias ? `${atual.dias} (padrão)` : ""} className={estiloCampo} />
         </label>
       )}
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Motivo (fica no histórico)
         <input name="motivo" required minLength={3} maxLength={300} placeholder="ex.: lançamento da loja" className={estiloCampo} />
       </label>
@@ -189,7 +189,7 @@ export function FormPrecoRegiao({
   const [tipo, setTipo] = useState<SlugDestaque>(tipos[0]?.slug ?? "busca");
   return (
     <form action={acao} className="grid grid-cols-2 gap-3 @3xl/painel:grid-cols-4">
-      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-1">
+      <label className="col-span-2 text-sm font-medium @3xl/painel:col-span-1">
         Tipo
         <select name="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as SlugDestaque)} className={estiloCampo}>
           {tipos.map((t) => (
@@ -199,7 +199,7 @@ export function FormPrecoRegiao({
           ))}
         </select>
       </label>
-      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-1">
+      <label className="col-span-2 text-sm font-medium @3xl/painel:col-span-1">
         Região
         <select name="microrregiao_id" required defaultValue="" className={estiloCampo}>
           <option value="" disabled>
@@ -212,11 +212,11 @@ export function FormPrecoRegiao({
           ))}
         </select>
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Preço (R$)
         <input name="preco" inputMode="decimal" placeholder="igual ao do tipo" className={estiloCampo} />
       </label>
-      <label className="text-sm font-semibold">
+      <label className="text-sm font-medium">
         Dias
         {tipo === "subir" ? (
           <input disabled value="Uma vez" className={estiloCampo} readOnly />
@@ -262,7 +262,7 @@ export function BotaoCancelarDestaque({ id, texto = "Cancelar destaque" }: { id:
   return (
     <form action={acao} className="flex flex-col gap-2 rounded-card bg-perigo-fundo p-3">
       <input type="hidden" name="id" value={id} />
-      <label className="text-sm font-semibold text-perigo">
+      <label className="text-sm font-medium text-perigo">
         Motivo do cancelamento
         <input name="motivo" maxLength={300} placeholder="ex.: pedido do vendedor" className={estiloCampo} />
       </label>

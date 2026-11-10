@@ -69,7 +69,7 @@ export function FormPapel({
       </fieldset>
 
       {papel === "franqueado" && (
-        <label className="text-base font-semibold text-texto">
+        <label className="text-base font-medium text-texto">
           Região do franqueado
           <select name="regiao" required defaultValue={regiaoAtual ?? ""} className={estiloCampo}>
             <option value="" disabled>
