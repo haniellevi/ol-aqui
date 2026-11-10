@@ -5,6 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Vazio } from "@/components/ui/vazio";
 import { Botao } from "@/components/ui/botao";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableRowHead } from "@/components/ui/table";
+import { Aviso, Cartao, estiloCampo } from "@/components/admin/ui";
 import { ExemploConfirmar } from "./exemplo-confirmar";
 
 // Página de peças: o que o app usa para montar as telas. Serve para conferir a régua num lugar só.
@@ -61,6 +63,40 @@ export default function PaginaPecas() {
       <section className="flex flex-col gap-3">
         <h2 className="text-xl font-semibold">Confirmação</h2>
         <ExemploConfirmar />
+      </section>
+      <Separator />
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xl font-semibold">Tabela e campo</h2>
+        <Cartao className="p-0">
+          <Table rotulo="Exemplo de tabela">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead scope="col">Mês</TableHead>
+                <TableHead scope="col" className="text-right">Lojas</TableHead>
+                <TableHead scope="col" className="text-right">Recebido</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableRowHead>Outubro</TableRowHead>
+                <TableCell className="text-right">12</TableCell>
+                <TableCell className="text-right">R$ 588,00</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableRowHead>Novembro</TableRowHead>
+                <TableCell className="text-right">19</TableCell>
+                <TableCell className="text-right">R$ 931,00</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Cartao>
+        <label className="text-sm font-medium">
+          Campo do painel
+          <input className={estiloCampo} placeholder="Ex.: Corrente" />
+        </label>
+        <Aviso tipo="ok">Salvo.</Aviso>
+        <Aviso tipo="erro">Não deu para salvar. Tente de novo.</Aviso>
       </section>
       <Separator />
 

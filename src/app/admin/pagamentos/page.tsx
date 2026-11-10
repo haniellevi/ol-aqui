@@ -18,6 +18,7 @@ import { Aviso, Cartao, Numero, Titulo, estiloBotao, estiloBotaoSec, estiloCampo
 import { CopiarLink } from "./copiar-link";
 import type { PagamentoAdmin, ResumoPagamentos, StatusPagamento } from "@/lib/tipos-cobranca";
 import { Badge, type TomSelo } from "@/components/ui/badge";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const metadata = { title: "Pagamentos" };
 
@@ -147,29 +148,29 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
         />
       </div>
       {resumo.length > 0 && (
-        <Cartao className="mb-6 overflow-x-auto focus-visible:outline-2 focus-visible:outline-laranja-escuro" role="region" aria-label="Resumo de pagamentos por tipo" tabIndex={0}>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-texto-suave">Por tipo</h2>
-          <table className="w-full min-w-[420px] text-left text-sm">
-            <caption className="sr-only">Totais de pagamentos por tipo e situação</caption>
-            <thead className="text-texto-suave">
-              <tr>
-                <th scope="col" className="py-2 pr-3 font-semibold">Tipo</th>
-                <th scope="col" className="py-2 pr-3 font-semibold">Situação</th>
-                <th scope="col" className="py-2 pr-3 text-right font-semibold">Quantos</th>
-                <th scope="col" className="py-2 text-right font-semibold">Total</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-borda">
+        <Cartao className="mb-6 px-0 pb-0">
+          <h2 className="mb-1 px-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Por tipo</h2>
+          <Table rotulo="Resumo de pagamentos por tipo" className="min-w-[420px]">
+            <TableCaption className="sr-only">Totais de pagamentos por tipo e situação</TableCaption>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead scope="col">Tipo</TableHead>
+                <TableHead scope="col">Situação</TableHead>
+                <TableHead scope="col" className="text-right">Quantos</TableHead>
+                <TableHead scope="col" className="text-right">Total</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {resumo.map((r) => (
-                <tr key={`${r.tipo}:${r.status}`}>
-                  <td className="py-2 pr-3">{NOME_TIPO[r.tipo] ?? r.tipo}</td>
-                  <td className="py-2 pr-3">{NOME_STATUS[r.status] ?? r.status}</td>
-                  <td className="py-2 pr-3 text-right tabular-nums">{inteiro(r.quantidade)}</td>
-                  <td className="py-2 text-right tabular-nums">{reais(r.total_centavos)}</td>
-                </tr>
+                <TableRow key={`${r.tipo}:${r.status}`}>
+                  <TableCell>{NOME_TIPO[r.tipo] ?? r.tipo}</TableCell>
+                  <TableCell>{NOME_STATUS[r.status] ?? r.status}</TableCell>
+                  <TableCell className="text-right">{inteiro(r.quantidade)}</TableCell>
+                  <TableCell className="text-right">{reais(r.total_centavos)}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </Cartao>
       )}
 
