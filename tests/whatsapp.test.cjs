@@ -21,6 +21,11 @@ test('WhatsApp normaliza celular brasileiro e rejeita telefone fixo ou entrada a
  const s=servico();for(const [v,r] of [['(89) 99999-0001','5589999990001'],['+55 (55) 99999-0001','5555999990001'],['55999990001','5555999990001']])assert.equal(s.numeroWhatsapp(v),r);
  for(const v of [null,{},'telefone 89999990001','8933334444','+12125551234','9'.repeat(31)])assert.equal(s.numeroWhatsapp(v),null);
 });
+test('prefixo internacional explícito não pode virar outro celular brasileiro',()=>{
+ const s=servico();
+ for(const entrada of ['+1 2999999999','++55 (89) 99999-0001','+5 58999990001','55+89 99999-0001','+55 99999-0001','(55) 99999-00012','(55) 99999-000123'])assert.equal(s.numeroWhatsapp(entrada),null,entrada);
+ for(const [entrada,esperado] of [['+55 (89) 99999-0001','5589999990001'],['+55 (55) 99999-0001','5555999990001'],['55999990001','5555999990001']])assert.equal(s.numeroWhatsapp(entrada),esperado,entrada);
+});
 test('segredo HMAC vincula código à conta e ao desafio, sem armazenar código puro',()=>{
  const s=servico(),n=s.novoCodigo('user_a',env.WHATSAPP_OTP_SECRET);
  assert.match(n.codigo,/^\d{6}$/);assert.match(n.resumo,/^[a-f0-9]{64}$/);assert.notEqual(n.resumo,n.codigo);
