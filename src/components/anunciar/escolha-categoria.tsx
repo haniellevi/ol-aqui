@@ -9,6 +9,7 @@ import type { Categoria, CategoriaComFilhas } from "@/lib/tipos";
 import { AvisoErro } from "./aviso-erro";
 import { useEnvioAnuncio } from "./enviar";
 import { BarraContinuar } from "./barra-continuar";
+import { classesCampo } from "@/components/ui/input";
 
 // Passo 2 · Categoria: primeiro a categoria grande (com ícone), depois o tipo (subcategoria).
 // A busca filtra direto as subcategorias ("geladeira", "moto"...), sem ligar para acento.
@@ -111,7 +112,7 @@ export function EscolhaCategoria({
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Ex.: moto, geladeira, casa"
             autoComplete="off"
-            className="h-10 w-full rounded-campo border-2 border-borda bg-cartao pl-10 pr-3 text-base focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30"
+            className={`${classesCampo} h-10 pl-10`}
           />
         </div>
       </div>

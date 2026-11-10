@@ -2,15 +2,19 @@ import * as React from "react"
 import { Input as InputPrimitive } from "@base-ui/react/input"
 import { cn } from "@/lib/utils"
 
+// Caixa de campo do Mercado da Região: uma só para input, textarea e select.
+// `olaki-campo` baixa a altura para 36px no computador (globals.css). Erro vem de aria-invalid.
+export const classesCampo =
+  "olaki-campo w-full min-w-0 rounded-campo border border-input bg-card px-3 text-base font-normal text-foreground outline-none transition-colors " +
+  "placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 " +
+  "aria-invalid:border-destructive disabled:cursor-not-allowed disabled:bg-fundo disabled:opacity-70"
+
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <InputPrimitive
       type={type}
       data-slot="input"
-      className={cn(
-        "dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 disabled:bg-input/50 dark:disabled:bg-input/80 h-8 rounded-lg border bg-transparent px-2.5 py-1 text-base transition-colors file:h-6 file:text-sm file:font-medium focus-visible:ring-3 aria-invalid:ring-3 md:text-sm w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
+      className={cn(classesCampo, "h-10", className)}
       {...props}
     />
   )

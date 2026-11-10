@@ -8,6 +8,7 @@ import { salvarLocal } from "@/app/(conta)/anunciar/actions";
 import { AvisoErro } from "./aviso-erro";
 import { useEnvioAnuncio } from "./enviar";
 import { BarraContinuar } from "./barra-continuar";
+import { classesCampo } from "@/components/ui/input";
 
 // Passo 5 · Local: cidade (lista da região) e bairro, já preenchidos do perfil.
 // Nunca pede endereço exato: só o bairro aparece no anúncio.
@@ -52,7 +53,7 @@ export function FormLocal({
               onChange={(e) => setCidade(e.target.value)}
               aria-invalid={erroCidade ? true : undefined}
               aria-describedby={erroCidade ? "campo-cidade-erro" : undefined}
-              className={`h-10 w-full appearance-none rounded-campo border-2 bg-cartao pl-3 pr-10 text-base focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 ${erroCidade ? "border-perigo" : "border-borda"}`}
+              className={`${classesCampo} h-10 appearance-none pr-10`}
             >
               <option value="">Escolha a cidade</option>
               {cidades.map((c) => (

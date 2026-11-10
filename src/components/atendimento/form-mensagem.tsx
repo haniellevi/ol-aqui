@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Botao } from "@/components/ui/botao";
 import { enviarMensagemAtendimento } from "@/app/(conta)/minha-conta/atendimento/actions";
+import { classesCampo } from "@/components/ui/input";
 
 export function FormMensagemAtendimento({ id, ofereceAki }: { id: string; ofereceAki: boolean }) {
   const [texto, setTexto] = useState("");
@@ -43,7 +44,7 @@ export function FormMensagemAtendimento({ id, ofereceAki }: { id: string; oferec
     <textarea id="mensagem-atendimento" rows={2} maxLength={2000} required value={texto} disabled={pendente}
       placeholder="Escreva sua mensagem..." aria-describedby={ofereceAki ? "aviso-ia-atendimento" : undefined}
       onChange={(e) => { chave.current = null; setAviso(null); setTexto(e.target.value); }}
-      className="w-full rounded-campo border border-borda-campo bg-cartao px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro" />
+      className={`${classesCampo} min-h-16 resize-y py-2 leading-6`} />
     {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
     <p role="status" className="text-legenda text-texto-suave empty:hidden">{pendente ? destino === "aki" ? "O Aki está respondendo..." : "Enviando mensagem..." : aviso}</p>
     <div className="flex flex-wrap items-center justify-between gap-2">

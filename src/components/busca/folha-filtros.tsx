@@ -6,14 +6,13 @@ import { classesBotao } from "@/components/ui/botao";
 import { ID_FOLHA, ID_RESULTADOS, ORDENS, lerEstadoBusca, paramCampo, type EstadoBusca } from "@/components/busca/parametros";
 import { inteiro, valorDoCampo } from "@/lib/formato";
 import type { CampoCategoria, CategoriaComFilhas, Cidade, FacetaBusca, FacetasBusca } from "@/lib/tipos";
+import { classesCampo } from "@/components/ui/input";
 
 // GET e :target preservam a busca sem JavaScript. Com JS, o diálogo nativo cuida
 // do foco, do fundo inativo e do Escape; os valores são validados também no servidor.
 
-const SELECT =
-  "h-10 w-full rounded-campo border-2 border-borda bg-cartao px-3 text-base text-texto " +
-  "focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30";
-const ENTRADA = `${SELECT} placeholder:text-texto-suave`;
+const SELECT = `${classesCampo} h-10`;
+const ENTRADA = SELECT;
 // Chip de escolha (igual ao <Chip>): selecionado = borda laranja-escuro, fundo laranja-claro, texto beringela e ✓.
 const OPCAO =
   "group inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-campo border border-borda bg-cartao px-4 text-base font-semibold text-beringela " +
