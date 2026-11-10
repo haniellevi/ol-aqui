@@ -56,8 +56,8 @@ export default async function ModeracaoPage({
   const denunciasSoltas = denuncias.filter((d) => !idsEmAnalise.has(d.alvo_id)); // alvo ainda no ar
   const denunciasDe = (id: string) => denuncias.filter((d) => d.alvo_id === id);
   const analisesIA = iaR.data ?? [];
-
-  const vazio = anuncios.length + pedidos.length + denunciasSoltas.length === 0;
+  const erroFila = anunciosR.error || pedidosR.error || denunciasR.error;
+  const vazio = !erroFila && anuncios.length + pedidos.length + denunciasSoltas.length === 0;
 
   return (
     <>
@@ -71,9 +71,10 @@ export default async function ModeracaoPage({
         {(iaR.error || iaAtivaR.error) && <p className="text-perigo">Não foi possível consultar a análise automática agora.</p>}
         {analisesIA.length > 0 && <details>
           <summary className="cursor-pointer font-semibold">Últimas análises</summary>
+          <p className="mt-2 text-texto-suave">Este é o histórico de análises, incluindo anúncios já revisados pela equipe. Um anúncio pode aparecer mais de uma vez se foi alterado. As pendências atuais ficam abaixo.</p>
           <ul className="mt-2 space-y-2">
             {analisesIA.slice(0, 20).map((a, i) => <li key={`${a.anuncio_id}-${i}`}>
-              <strong>{a.estado === "aprovado" ? "Aprovado pela IA" : a.estado === "manual" ? "Revisão manual" : a.estado === "obsoleto" ? "Anúncio alterado" : "Aguardando análise"}</strong>
+              <strong>{a.estado === "aprovado" ? "Aprovado pela IA" : a.estado === "manual" ? "Encaminhado para revisão manual" : a.estado === "obsoleto" ? "Anúncio alterado" : "Aguardando análise"}</strong>
               {" · "}{quando(a.concluido_em ?? a.criado_em)}{a.motivo && ` · ${a.motivo}`}
             </li>)}
           </ul>
@@ -86,6 +87,7 @@ export default async function ModeracaoPage({
         </div>
       )}
 
+      {erroFila && <Aviso tipo="erro">Não foi possível carregar toda a fila. Recarregue a página para conferir as pendências.</Aviso>}
       {vazio && <Cartao className="text-sm text-texto-suave">Nada esperando revisão. Tudo em dia.</Cartao>}
 
       {anuncios.length > 0 && <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Anúncios em análise</h2>}
@@ -125,14 +127,14 @@ export default async function ModeracaoPage({
                   ))}
                 </ul>
               )}
-              <form action={decidirAnuncio} className="mt-4 space-y-2">
+              <form action={decidirAnuncio.bind(null, "")} className="mt-4 space-y-2">
                 <input type="hidden" name="id" value={a.id} />
-                <input name="motivo" placeholder={podeCongelar ? "Motivo (para recusar ou congelar)" : "Motivo (para recusar)"} className={estiloCampo} />
+                <input name="motivo" aria-label="Motivo da decisão sobre o anúncio" maxLength={300} placeholder={podeCongelar ? "Motivo (para recusar ou congelar)" : "Motivo (para recusar)"} className={estiloCampo} />
                 <div className="flex flex-wrap gap-2">
-                  <BotaoDecisao name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
-                  <BotaoDecisao name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</BotaoDecisao>
+                  <BotaoDecisao action={decidirAnuncio.bind(null, "aprovar")} className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
+                  <BotaoDecisao action={decidirAnuncio.bind(null, "recusar")} className={estiloBotaoSec}>Recusar</BotaoDecisao>
                   {podeCongelar && (
-                    <BotaoDecisao name="decisao" value="congelar" className={estiloBotaoPerigo}>Congelar (Compliance)</BotaoDecisao>
+                    <BotaoDecisao action={decidirAnuncio.bind(null, "congelar")} className={estiloBotaoPerigo}>Congelar (Compliance)</BotaoDecisao>
                   )}
                 </div>
               </form>
@@ -149,12 +151,12 @@ export default async function ModeracaoPage({
             <p className="text-sm text-texto-suave">{p.cidade} · {quando(p.criado_em)}</p>
             <p className="mt-1 inline-block rounded-full bg-aviso-fundo px-2 py-0.5 text-[13px] font-semibold text-aviso">{p.motivo_analise}</p>
             {p.detalhes && <p className="mt-2 text-sm text-texto-suave">{p.detalhes}</p>}
-            <form action={decidirPedido} className="mt-4 space-y-2">
+            <form action={decidirPedido.bind(null, "")} className="mt-4 space-y-2">
               <input type="hidden" name="id" value={p.id} />
-              <input name="motivo" placeholder="Motivo (para recusar)" className={estiloCampo} />
+              <input name="motivo" aria-label="Motivo da decisão sobre o pedido" maxLength={300} placeholder="Motivo (para recusar)" className={estiloCampo} />
               <div className="flex gap-2">
-                <BotaoDecisao name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
-                <BotaoDecisao name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</BotaoDecisao>
+                <BotaoDecisao action={decidirPedido.bind(null, "aprovar")} className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
+                <BotaoDecisao action={decidirPedido.bind(null, "recusar")} className={estiloBotaoSec}>Recusar</BotaoDecisao>
               </div>
             </form>
           </Cartao>
@@ -201,10 +203,10 @@ export default async function ModeracaoPage({
               {d.detalhes && <p className="text-texto-suave">{d.detalhes}</p>}
               <p className="text-[13px] text-texto-suave">{quando(d.criado_em)}</p>
             </div>
-            <form action={resolverDenuncia} className="flex gap-2">
+            <form action={resolverDenuncia.bind(null, "")} className="flex gap-2">
               <input type="hidden" name="id" value={d.id} />
-              <BotaoDecisao name="procedente" value="sim" className={estiloBotaoPerigo}>Procede</BotaoDecisao>
-              <BotaoDecisao name="procedente" value="nao" className={estiloBotaoSec}>Não procede</BotaoDecisao>
+              <BotaoDecisao action={resolverDenuncia.bind(null, "sim")} className={estiloBotaoPerigo}>Procede</BotaoDecisao>
+              <BotaoDecisao action={resolverDenuncia.bind(null, "nao")} className={estiloBotaoSec}>Não procede</BotaoDecisao>
             </form>
           </Cartao>
         ))}

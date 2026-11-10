@@ -3,17 +3,14 @@
 import { Loader2 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 
-// Botões de decisão da Moderação (Aprovar, Recusar, Procede...). Enquanto o servidor trabalha, todos os
-// botões do formulário travam e o tocado gira com "Salvando...": sem toque duplo (o segundo daria erro
-// "não está mais em análise" mesmo com a decisão já feita).
-export function BotaoDecisao({ name, value, className, children }: { name: string; value: string; className: string; children: React.ReactNode }) {
-  const { pending, data } = useFormStatus();
-  const este = pending && data?.get(name) === value;
+// A decisão vai vinculada à ação, sem depender do name/value do botão no FormData.
+export function BotaoDecisao({ action, className, children }: { action: (form: FormData) => Promise<void>; className: string; children: React.ReactNode }) {
+  const { pending, action: acaoPendente } = useFormStatus();
+  const este = pending && acaoPendente === action;
   return (
     <button
       type="submit"
-      name={name}
-      value={value}
+      formAction={action}
       disabled={pending}
       aria-busy={este || undefined}
       className={`${className} disabled:cursor-not-allowed disabled:opacity-60`}

@@ -7,8 +7,6 @@ import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
-type Decisao = "aprovar" | "recusar" | "congelar";
-
 // Tela 4 · Moderação. Quem pode é o banco: moderar_anuncio, moderar_pedido, resolver_denuncia,
 // moderar_banner_vitrine e moderar_radar aceitam administrador e moderador; congelar_anuncio, só o
 // administrador (Compliance). Cada mudança fica em logs_atividade com quem fez.
@@ -20,10 +18,10 @@ function voltar(falha: string | null, aviso?: string): never {
   redirect(`/admin/moderacao?${q}`);
 }
 
-export async function decidirAnuncio(form: FormData): Promise<void> {
+export async function decidirAnuncio(decisao: string, form: FormData): Promise<void> {
   const { supabase, userId } = await exigirTela("moderacao");
+  if (!["aprovar", "recusar", "congelar"].includes(decisao)) voltar("Escolha uma decisão válida para o anúncio.");
   const id = String(form.get("id") ?? "");
-  const decisao = String(form.get("decisao")) as Decisao;
   const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
   if (!ehUuid(id)) voltar("Anúncio não encontrado.");
 
@@ -44,10 +42,11 @@ export async function decidirAnuncio(form: FormData): Promise<void> {
   voltar(null, decisao === "aprovar" ? "Anúncio aprovado." : decisao === "recusar" ? "Anúncio recusado." : "Anúncio congelado.");
 }
 
-export async function decidirPedido(form: FormData): Promise<void> {
+export async function decidirPedido(decisao: string, form: FormData): Promise<void> {
   const { supabase } = await exigirTela("moderacao");
+  if (decisao !== "aprovar" && decisao !== "recusar") voltar("Escolha uma decisão válida para o pedido.");
   const id = String(form.get("id") ?? "");
-  const aprovar = form.get("decisao") === "aprovar";
+  const aprovar = decisao === "aprovar";
   const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
   if (!ehUuid(id)) voltar("Pedido não encontrado.");
   const { error } = await supabase.rpc("moderar_pedido", { p_id: id, p_decisao: aprovar ? "aprovar" : "recusar", p_motivo: motivo || null });
@@ -56,11 +55,12 @@ export async function decidirPedido(form: FormData): Promise<void> {
   voltar(null, aprovar ? "Pedido aprovado." : "Pedido recusado.");
 }
 
-export async function resolverDenuncia(form: FormData): Promise<void> {
+export async function resolverDenuncia(decisao: string, form: FormData): Promise<void> {
   const { supabase } = await exigirTela("moderacao");
+  if (decisao !== "sim" && decisao !== "nao") voltar("Escolha uma decisão válida para a denúncia.");
   const id = String(form.get("id") ?? "");
   if (!ehUuid(id)) voltar("Denúncia não encontrada.");
-  const procede = form.get("procedente") === "sim";
+  const procede = decisao === "sim";
   const { error } = await supabase.rpc("resolver_denuncia", { p_id: id, p_procedente: procede });
   if (error) voltar(traduzirErro(error).mensagem);
   voltar(null, procede ? "Denúncia marcada como procedente." : "Denúncia marcada como não procedente.");
@@ -103,12 +103,15 @@ function caminhoNoBucket(url: string | null): string | null {
  * Radar: ocultar, devolver ou remover um pedido ou uma proposta (moderar_radar no banco).
  * O motivo é obrigatório para ocultar/remover; tudo fica no histórico (logs_atividade).
  */
-export async function moderarRadar(form: FormData): Promise<void> {
+export async function moderarRadar(acao: string, form: FormData): Promise<void> {
   const { supabase } = await exigirTela("moderacao");
-  const tipo = form.get("tipo") === "proposta" ? "proposta" : "pedido";
-  const acao = String(form.get("acao") ?? "");
+  const tipo = form.get("tipo");
   const id = String(form.get("id") ?? "");
   const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
+  if (tipo !== "pedido" && tipo !== "proposta") voltar("Tipo de conteúdo inválido.");
+  if (!ehUuid(id)) voltar("Conteúdo não encontrado.");
+  if (!["ocultar", "devolver", "remover"].includes(acao)) voltar("Escolha uma ação válida para o Radar.");
+  if (acao !== "devolver" && motivo.length < 3) voltar("Escreva o motivo (o dono vê e fica no histórico).");
   // Remover apaga de vez (o pedido leva junto as propostas): só com a caixa de confirmação marcada
   if (acao === "remover" && form.get("confirmar_remover") !== "sim") {
     redirect(`/admin/moderacao?erro=${encodeURIComponent('Para remover de vez, marque "Sim, remover de vez" e toque em Remover de novo.')}#radar`);
@@ -116,6 +119,6 @@ export async function moderarRadar(form: FormData): Promise<void> {
   const { error } = await supabase.rpc("moderar_radar", { p_tipo: tipo, p_id: id, p_acao: acao, p_motivo: motivo || null });
   revalidatePath("/admin", "layout");
   revalidatePath("/radar", "layout");
-  if (error) redirect(`/admin/moderacao?erro=${encodeURIComponent(error.message.slice(0, 200))}#radar`);
+  if (error) redirect(`/admin/moderacao?erro=${encodeURIComponent(traduzirErro(error).mensagem)}#radar`);
   redirect(`/admin/moderacao?ok=${encodeURIComponent(acao === "devolver" ? "Devolvido ao ar." : acao === "remover" ? "Removido." : "Tirado do ar.")}#radar`);
 }
