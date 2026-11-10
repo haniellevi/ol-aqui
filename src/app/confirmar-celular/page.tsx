@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { SignOutButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { garantirPerfil } from "@/lib/perfil";
@@ -27,10 +28,16 @@ export default async function ConfirmarCelular({ searchParams }: { searchParams:
   try { siteKey = configuracaoWhatsapp().siteKey; } catch { /* Indisponível: nunca aceitar um telefone sem confirmação. */ }
   return <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col gap-6 px-4 py-8 sm:py-12">
     <Image src="/logo/olaki-marca.svg" alt="OL-AKI" width={110} height={45} priority className="self-center" />
-    <header><h1 className="text-titulo font-semibold text-beringela">Confirme seu WhatsApp</h1><p className="mt-2 text-texto-suave">Para concluir seu cadastro e negociar, precisamos confirmar que você tem acesso a este número.</p></header>
+    <header><h1 className="text-titulo font-semibold text-beringela">Confirme seu WhatsApp</h1><p className="mt-2 text-texto-suave">Para concluir seu cadastro e negociar, precisamos confirmar que você tem acesso a este número. Você pode explorar a vitrine enquanto isso.</p></header>
+    <nav aria-label="Opções de saída" className="flex flex-wrap items-center justify-between gap-2">
+      <Botao href="/" variante="secundario">Explorar a vitrine</Botao>
+      <SignOutButton redirectUrl="/">
+        <Botao type="button" variante="texto">Sair da conta</Botao>
+      </SignOutButton>
+    </nav>
     {parametros.aviso === "numero_vinculado" && <Aviso tipo="atencao">{WHATSAPP_JA_VINCULADO} Use outro número ou procure o suporte.</Aviso>}
     {siteKey ? <ConfirmarWhatsapp siteKey={siteKey} destino={destino} numero={conta?.perfil.whatsapp ?? ""} /> : <div role="status" className="rounded-card bg-cartao p-5 shadow-1"><h2 className="font-bold">Confirmação temporariamente indisponível</h2><p className="mt-2">Não conseguimos enviar códigos agora. Seus dados continuam guardados. Tente novamente mais tarde.</p></div>}
     <ContatoSuporte contato={contato} />
-    <Botao href="/" variante="texto">Voltar ao início</Botao>
+    <Botao href="/ajuda" variante="texto">Abrir a Central de ajuda</Botao>
   </main>;
 }

@@ -1,7 +1,6 @@
 "use client";
 import Script from "next/script";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { CheckCircle2, Smartphone } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
 import { Botao } from "@/components/ui/botao";
@@ -28,7 +27,7 @@ function DesafioSeguranca({ siteKey, onToken }: { siteKey: string; onToken: (tok
 }
 
 export function ConfirmarWhatsapp({ siteKey, destino, numero = "" }: { siteKey: string; destino: string; numero?: string }) {
-  const router = useRouter(), trava = useRef(false), campoCodigo = useRef<HTMLInputElement>(null);
+  const trava = useRef(false), campoCodigo = useRef<HTMLInputElement>(null);
   const [fone, setFone] = useState(numero), [codigo, setCodigo] = useState(""), [desafio, setDesafio] = useState("");
   const [token, setToken] = useState(""), [captcha, setCaptcha] = useState(0), [restante, setRestante] = useState(0);
   const [estado, setEstado] = useState<EstadoCodigo>({}), [pendente, iniciar] = useTransition();
@@ -59,7 +58,7 @@ export function ConfirmarWhatsapp({ siteKey, destino, numero = "" }: { siteKey: 
   if (estado.confirmado) return <section className="flex flex-col gap-5 rounded-card bg-cartao p-5 shadow-1" aria-live="polite">
     <CheckCircle2 className="size-10 text-verde-escuro" aria-hidden />
     <h2 className="text-xl font-bold">WhatsApp confirmado</h2><p>Seu contato foi confirmado. Você já pode continuar no OL-AKI.</p>
-    <Botao larguraTotal onClick={() => { router.replace(destino); router.refresh(); }}>Continuar</Botao>
+    <Botao href={destino} larguraTotal>Continuar</Botao>
   </section>;
   return <section className="flex flex-col gap-5 rounded-card bg-cartao p-5 shadow-1">
     <div className="flex items-center gap-2 font-bold text-laranja-escuro"><Smartphone aria-hidden className="size-5" />Confirmação pelo WhatsApp</div>
