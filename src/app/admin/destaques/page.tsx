@@ -121,34 +121,44 @@ export default async function DestaquesAdminPage() {
         <Numero rotulo="Esperando pagamento" valor={inteiro(pendentes.length)} />
       </div>
 
+      <nav aria-label="Seções de destaques" className="mb-6 flex flex-wrap gap-x-5 gap-y-1 border-b border-borda pb-2 text-sm">
+        {[["tipos", "Tipos"], ["regioes", "Regiões"], ["creditos", "Créditos"], ["cortesias", "Cortesias"], ["ativos", "Ativos"], ["cobranca", "Cobrança"]].map(([id, nome]) => (
+          <a key={id} href={`#${id}`} className="inline-flex min-h-12 items-center text-texto-suave underline-offset-4 hover:text-laranja-escuro hover:underline focus-visible:outline-2 focus-visible:outline-laranja-escuro">{nome}</a>
+        ))}
+      </nav>
+
       <div className="space-y-6">
         <Cartao>
-          <h2 className="mb-2 text-lg font-semibold text-beringela">Pagamento (Asaas)</h2>
-          <ul className="space-y-1 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-beringela">Pagamento (Asaas)</h2>
+            <span className="rounded-campo bg-selecao px-2 py-1 text-legenda font-semibold text-beringela">{ambiente === "producao" ? "Produção" : "Ambiente de teste"}</span>
+          </div>
+          <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-legenda">
             <li>
-              Chave da API (ASAAS_API_KEY):{" "}
+              Chave da API: {" "}
               <strong className={temAsaas ? "text-verde-escuro" : "text-perigo"}>{temAsaas ? "configurada" : "falta na Vercel"}</strong>
             </li>
             <li>
-              Token do aviso (ASAAS_WEBHOOK_TOKEN):{" "}
+              Token do aviso: {" "}
               <strong className={temWebhook ? "text-verde-escuro" : "text-perigo"}>{temWebhook ? "configurado" : "falta na Vercel"}</strong>
             </li>
-            <li>
-              Ambiente: <strong>{String(ambiente ?? "sandbox")}</strong> (mude em &quot;asaas.ambiente&quot; abaixo: sandbox para testes, producao para valer)
-            </li>
           </ul>
+          <details className="mt-2 text-legenda text-texto-suave">
+            <summary className="flex min-h-12 cursor-pointer items-center font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro">Detalhes da integração</summary>
+            <p className="max-w-[70ch] pb-2">Chaves na Vercel: ASAAS_API_KEY e ASAAS_WEBHOOK_TOKEN. Ambiente: <strong>{String(ambiente ?? "sandbox")}</strong>. Mude em &quot;asaas.ambiente&quot; abaixo: sandbox para testes, producao para valer.</p>
+          </details>
           {!temAsaas && (
             <p className="mt-2 text-sm text-texto-suave">Sem a chave, o site mostra &quot;Pagamento em breve&quot;. Créditos do plano e cortesias funcionam.</p>
           )}
         </Cartao>
 
-        <section className="space-y-4">
+        <section id="tipos" className="scroll-mt-6 space-y-4">
           <h2 className="text-xl font-bold text-beringela">Tipos de destaque</h2>
           {tipos.map((t) => (
             <Cartao key={t.slug}>
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold text-beringela">{t.nome}</h3>
-                <span className="rounded-full bg-fundo px-2 py-0.5 text-[13px] text-texto-suave">{t.alvo === "loja" ? "para lojas" : "para anúncios"}</span>
+                <span className="text-legenda text-texto-suave">{t.alvo === "loja" ? "para lojas" : "para anúncios"}</span>
                 {!t.ativo && <span className="rounded-full bg-borda px-2 py-0.5 text-[13px] font-semibold text-texto-suave">desligado</span>}
                 <span className="ml-auto text-sm font-semibold text-beringela">
                   {t.preco_centavos ? reais(t.preco_centavos) : "Grátis"}
@@ -161,7 +171,7 @@ export default async function DestaquesAdminPage() {
           ))}
         </section>
 
-        <Cartao>
+        <section id="regioes" className="scroll-mt-6"><Cartao>
           <h2 className="mb-1 text-lg font-semibold text-beringela">Preço e dias por região</h2>
           <p className="mb-3 text-sm text-texto-suave">
             Exceção para uma região (ex.: preço de lançamento). Campo vazio = usa o preço ou os dias do tipo. As vagas valem para todas as regiões.
@@ -184,9 +194,9 @@ export default async function DestaquesAdminPage() {
             </ul>
           )}
           <FormPrecoRegiao tipos={tipos.map((t) => ({ slug: t.slug, nome: t.nome }))} regioes={regioes} />
-        </Cartao>
+        </Cartao></section>
 
-        <Cartao>
+        <section id="creditos" className="scroll-mt-6"><Cartao>
           <h2 className="mb-1 text-lg font-semibold text-beringela">Créditos grátis por mês em cada plano</h2>
           <p className="mb-3 text-sm text-texto-suave">Ex.: Full ganha 4 &quot;Subir&quot; por mês. Os créditos voltam todo dia 1º. 0 = nenhum.</p>
           <FormCreditos
@@ -194,14 +204,14 @@ export default async function DestaquesAdminPage() {
             tipos={tipos.map((t) => ({ slug: t.slug, nome: t.nome }))}
             creditos={creditos}
           />
-        </Cartao>
+        </Cartao></section>
 
-        <Cartao>
+        <section id="cortesias" className="scroll-mt-6"><Cartao>
           <h2 className="mb-3 text-lg font-semibold text-beringela">Dar destaque de cortesia</h2>
           <FormCortesia tipos={tipos.map((t) => ({ slug: t.slug, nome: t.nome, dias: t.dias }))} />
-        </Cartao>
+        </Cartao></section>
 
-        <section className="space-y-3">
+        <section id="ativos" className="scroll-mt-6 space-y-3">
           <h2 className="text-xl font-bold text-beringela">Destaques ativos</h2>
           {ativos.length === 0 ? (
             <Cartao>
@@ -239,7 +249,7 @@ export default async function DestaquesAdminPage() {
           )}
         </section>
 
-        <section className="space-y-3">
+        <section id="cobranca" className="scroll-mt-6 space-y-3">
           <h2 className="text-xl font-bold text-beringela">Pagamentos esperando</h2>
           {pendentes.length === 0 ? (
             <Cartao>
@@ -307,16 +317,17 @@ export default async function DestaquesAdminPage() {
           </section>
         )}
 
-        <section className="space-y-3">
-          <h2 className="text-xl font-bold text-beringela">Prazos dos destaques e da cobrança</h2>
+        <details className="rounded-card border border-borda bg-cartao p-4">
+          <summary className="min-h-12 cursor-pointer text-lg font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">Prazos dos destaques e da cobrança</summary>
+          <div className="space-y-4 pt-3">
           {configs.map((c) => (
-            <Cartao key={c.id}>
+            <section key={c.id} className="border-t border-borda pt-4">
               <div className="mb-3">
                 <h3 className="font-semibold text-beringela">{c.descricao ?? c.chave}</h3>
                 <p className="text-[13px] text-texto-suave">{c.chave}</p>
               </div>
               <FormConfig id={c.id} chave={c.chave} tipo={tipoDe(c.valor)} valor={c.valor} />
-            </Cartao>
+            </section>
           ))}
           <p className="text-sm text-texto-suave">
             Exceções destes prazos por região ficam em{" "}
@@ -325,7 +336,8 @@ export default async function DestaquesAdminPage() {
             </Link>
             . Preço e dias por região ficam no cartão &quot;Preço e dias por região&quot; acima.
           </p>
-        </section>
+          </div>
+        </details>
 
         {todos.some((r) => r.status !== "ativo") && (
           <section className="space-y-3">

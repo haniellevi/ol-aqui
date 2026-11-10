@@ -1,4 +1,4 @@
-# OLAKI · Sistema visual (design system) · 07/11/2026
+# OLAKI · Sistema visual (design system) · 10/11/2026
 
 Tudo aqui sai do logo oficial, **OLAKI em caixa alta** (opção A, decidida pelo Raniel em 07/11/2026): Poppins Bold, **"OL" em roxo beringela + "AKI" em laranja forte**, com o pin laranja sobre o I. O logo anterior, em minúsculas ("ol" fino + "aki"), saiu porque "ol" se confundia com "oi". Arquivos: `public/logo/olaki-opcao1-pin.svg` (fundo claro, com a tagline "olha aqui o que você procura"), `public/logo/olaki-opcao1-pin-fundo-escuro.svg` (fundo escuro), `public/logo/olaki-icone-app.svg` (ícone: "AKI" branco com o pin beringela num quadrado laranja arredondado; nunca "O" + "I", que se lê "OI") e `src/app/icon.svg` (ícone do site, cópia idêntica). Em tamanho pequeno (cabeçalho do site e do painel, até uns 60 px de altura) usa `public/logo/olaki-marca.svg`, o mesmo logo sem a tagline, porque a tagline fica ilegível nesse tamanho. Alternativas e o gerador ficam em `docs/logo-opcoes/`.
 
@@ -15,10 +15,10 @@ Objetivo: o app parecer **simples, confiável e da região**, legível no sol, n
 
 | Nome | Cor | Onde usa |
 |---|---|---|
-| `beringela` | `#4B1248` | Texto principal, cabeçalho, ícones, fundo escuro |
+| `beringela` | `#4B1248` | Títulos, marca, ícones, fundo escuro |
 | `laranja` | `#FF6A13` | Botão principal, preço em destaque sobre fundo escuro, pin, etiquetas |
 | `laranja-escuro` | `#C2410C` | Links e textos laranja sobre fundo branco |
-| `laranja-claro` | `#FFF4EC` | Fundo de faixas (Radar, dicas do Aki), chip selecionado |
+| `laranja-claro` | `#FFF4EC` | Apoio pontual em avisos e conteúdo promocional |
 | `verde` | `#12A150` | Só ícones e selos |
 | `verde-escuro` | `#0E7A3D` | Botão "Chamar no WhatsApp", mensagens de sucesso |
 
@@ -26,11 +26,13 @@ Objetivo: o app parecer **simples, confiável e da região**, legível no sol, n
 
 | Nome | Cor | Uso |
 |---|---|---|
-| `fundo` | `#F6F4F7` | Fundo das telas (cinza levemente arroxeado, cansa menos que branco puro no sol) |
+| `fundo` | `#F7F8FA` | Fundo neutro e frio das telas |
 | `cartao` | `#FFFFFF` | Cards, folhas, formulários |
-| `texto` | `#4B1248` | Texto (o próprio beringela) |
+| `texto` | `#342B3B` | Corpo de texto; títulos usam beringela |
 | `texto-suave` | `#5E5266` | Cidade, "há 2 dias", legendas |
-| `borda` | `#E6E0E9` | Bordas e divisórias |
+| `borda` | `#E6E0E9` | Bordas de cartões e divisórias |
+| `borda-campo` | `#968B9E` | Campos e controles; contraste mínimo de 3:1 sobre branco |
+| `selecao` | `#F0EAF5` | Navegação ativa, chips e ícones de apoio |
 | `perigo` | `#B91C1C` | Erros, denunciar, apagar |
 | `aviso` | `#B45309` sobre `#FFFBEB` | "Em análise", plano vencendo |
 | `patrocinado` | `#4B1248` sobre `#FFE4D1` | Etiqueta "Patrocinado" |
@@ -68,11 +70,14 @@ Fase 2. Os tokens já nascem com nome de função (`fundo`, `cartao`, `texto`) p
 | `preco` | 24 / 30 | 700 | Preço na página do anúncio |
 | `titulo-1` | 22 / 28 | 600 | Título da tela |
 | `titulo-2` | 18 / 24 | 600 | Seções ("Perto de você") |
-| `corpo` | **16 / 24** | 400 | Texto normal. **Nunca menor que 16** em campo de formulário (evita o zoom automático do iPhone) |
+| `corpo` | **16 / 24** | 400 | Texto normal. Campos públicos e de toque com **16** (evita o zoom automático do iPhone) |
 | `card-preco` | 18 / 24 | 700 | Preço no card |
 | `card-titulo` | 15 / 20 | 400 | Título no card (até 2 linhas) |
 | `legenda` | 13 / 18 | 400 | Cidade, data. Mínimo absoluto do app |
-| `botao` | 16 / 20 | 600 | Todos os botões |
+| `botao` | 15 / 20 | 600 | Botões públicos e de toque |
+| `rotulo` | 14 / 20 | 600 | Rótulos de campos |
+| `painel-corpo` | 14 / 21 | 400 | Corpo do painel administrativo |
+| `painel-campo` | 14 / 20 | 400 | Valor do campo no painel, somente com mouse e largura mínima de 768 px |
 
 Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca travar zoom). Muita gente da região usa letra grande.
 
@@ -81,16 +86,16 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 ## 3. Espaços, cantos e sombras
 
 - **Espaçamento em múltiplos de 4:** 4, 8, 12, 16, 24, 32, 48. Margem lateral das telas: **16**.
-- **Cantos arredondados:** 8 (campos, chips), 12 (cards, botões), 20 (folhas que sobem de baixo), cheio (selos e avatar). Combina com o ícone do app.
-- **Sombras:** só duas. `sombra-1` em cards (bem leve) e `sombra-2` em barra de baixo e folhas. Sombra pesada pesa no celular fraco.
-- **Área de toque:** **mínimo 48 × 48 px** em tudo que se toca (o padrão é 44; usamos 48 porque o público tem mais dedo grosso, celular com tela trincada e uso em pé, na rua).
+- **Cantos arredondados:** 8 (campos, chips, botões), 12 (cards), 20 (folhas que sobem de baixo), cheio (selos e avatar). Combina com o ícone do app.
+- **Sombras:** só duas. `sombra-1` em cards públicos (bem leve); painel usa borda sem sombra e `sombra-2` em barra de baixo e folhas. Sombra pesada pesa no celular fraco.
+- **Área de toque:** **mínimo 48 × 48 px** em tudo que se toca (o padrão é 44; usamos 48 porque o público tem mais dedo grosso, celular com tela trincada e uso em pé, na rua). No painel com mouse e largura mínima de 768 px, controles e itens do menu podem usar 44 px; com toque, permanecem em 48 px.
 
 ---
 
 ## 4. Ícones e imagens
 
 - Ícones: **lucide-react** (já está no projeto), traço 2px, sempre **com texto embaixo ou ao lado** nos menus. Ícone sozinho só em coisas universais (fechar, voltar, coração de favorito, lupa).
-- Ícones das categorias: desenho simples em círculo laranja-claro com ícone beringela (trator, moto, casa, boi...). Arte própria, nunca copiada de outro app.
+- Ícones das categorias: desenho simples em círculo `selecao` com ícone beringela (trator, moto, casa, boi...). Arte própria, nunca copiada de outro app.
 - Fotos dos anúncios: proporção 4:3 no card, cortadas no centro; carregadas em WebP pequeno primeiro (ver ARQUITETURA.md, "Imagens").
 - Mascote/Aki: um balão de conversa laranja com dois olhinhos (é só o robô, não substitui o logo). Simples o bastante para ficar bom em 24px.
 
@@ -120,7 +125,7 @@ Duas colunas no celular, 4 a 5 no computador. Card inteiro é tocável.
 
 ### Outros componentes
 - **Campo de busca** grande no topo ("O que você procura?"), com microfone (busca por voz do próprio celular) e botão do Aki.
-- **Chips de filtro** roláveis (cidade, preço, categoria), com contador "Filtros (3)". Chip selecionado: fundo `laranja-claro`, borda `laranja-escuro` e um ✓ (a borda laranja comum tem só 2,9 : 1 sobre branco e o estado não pode depender só da cor). Foco de campo: borda `laranja-escuro`.
+- **Chips de filtro** roláveis (cidade, preço, categoria), com contador "Filtros (3)". Chip selecionado: fundo `selecao`, borda `laranja-escuro` e um ✓ (a borda laranja comum tem só 2,9 : 1 sobre branco e o estado não pode depender só da cor). Foco de campo: borda `laranja-escuro`.
 - **Folha que sobe de baixo** (bottom sheet) para filtros, escolher cidade e confirmar ações. Mais fácil com uma mão que janela no meio da tela.
 - **Seletor de cidade** com as cidades da região e "Perto de mim".
 - **Campo de código** (6 caixinhas, preenche sozinho com o código que chega no celular).
@@ -150,11 +155,13 @@ Fica em `src/app/globals.css` (a base do app tinha `--color-marinho`; trocar o n
   --color-laranja-claro: #FFF4EC;
   --color-verde: #12A150;
   --color-verde-escuro: #0E7A3D;
-  --color-fundo: #F6F4F7;
+  --color-fundo: #F7F8FA;
   --color-cartao: #FFFFFF;
-  --color-texto: #4B1248;
+  --color-texto: #342B3B;
   --color-texto-suave: #5E5266;
   --color-borda: #E6E0E9;
+  --color-borda-campo: #968B9E;
+  --color-selecao: #F0EAF5;
   --color-perigo: #B91C1C;
   --color-aviso: #B45309;
   --color-aviso-fundo: #FFFBEB;
@@ -163,6 +170,13 @@ Fica em `src/app/globals.css` (a base do app tinha `--color-marinho`; trocar o n
   --color-sucesso-fundo: #ECF8F1;
 
   --font-sans: var(--font-poppins), system-ui, sans-serif;
+  --text-titulo: 1.375rem;
+  --text-titulo--line-height: 1.3;
+  --text-rotulo: 0.875rem;
+  --text-rotulo--line-height: 1.45;
+  --text-legenda: 0.8125rem;
+  --text-legenda--line-height: 1.4;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   --radius-campo: 0.5rem;
   --radius-card: 0.75rem;
@@ -189,3 +203,16 @@ Se o shadcn/ui entrar, apontar as variáveis dele para estes tokens: `--primary`
 | "Patrocinado" sempre escrito | Destaque pago disfarçado de normal |
 | Texto branco só em fundo escuro | Texto branco sobre o laranja do logo |
 | Fotos reais do produto | Imagens de banco de imagens na home |
+
+
+## 8. Refinamento do sistema, 10/11/2026
+
+Direção: preservar a marca OL-AKI e melhorar a operação. Dials: DESIGN_VARIANCE 3, MOTION_INTENSITY 2, VISUAL_DENSITY 6. Poppins continua a família única; a hierarquia vem do tamanho, peso e espaço, sem usar negrito em todo valor de formulário.
+
+O painel tem título de 22 px, seções de 18 px, títulos de cartão de 16 px, corpo de 14 px e metadados de 13 px. Esses tamanhos são definidos em rem. A escala fica em `src/app/admin/painel.css`, sem reduzir a base de leitura pública. O menu lateral tem rolagem própria e permite que nomes longos quebrem linha.
+
+Em Destaques, Planos, ações de Lojas e modelos do Aki, a grade responde à largura interna do cartão: quatro colunas somente a partir de 48 rem disponíveis; abaixo disso usa duas, com nome e descrição ocupando a largura inteira. Descrições de tipos e planos usam textarea para mostrar o conteúdo sem cortar. A tabela de créditos mantém rolagem horizontal dentro da própria região, incluindo os rótulos para leitores de tela. Atalhos levam às seis seções principais. Informações técnicas da integração e prazos avançados usam detalhes expansíveis nativos, preservando os controles e o acesso por teclado.
+
+Movimento tem função de resposta à pressão: `olaki-acao` desloca 1 px em 120 ms, apenas durante o clique. O foco por teclado não se move; `prefers-reduced-motion` elimina esse deslocamento. Cores transitam em 150 ms. Não há animação de entrada nem movimento contínuo novo.
+
+As ações, permissões, campos enviados, preços, regras de pagamento e configurações continuam sob as mesmas funções de servidor. Qualquer revisão futura deve conferir primeiro que cada função antiga continua acessível.

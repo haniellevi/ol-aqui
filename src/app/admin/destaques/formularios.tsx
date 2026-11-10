@@ -25,7 +25,7 @@ export function FormTipoDestaque({ tipo }: { tipo: TipoDestaque }) {
   const [estado, acao, pendente] = useActionState(salvarTipoDestaque, null);
   const subir = tipo.slug === "subir";
   return (
-    <form action={acao} className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <form action={acao} className="grid grid-cols-2 items-start gap-3 @3xl/painel:grid-cols-4">
       <input type="hidden" name="slug" value={tipo.slug} />
       <label className="col-span-2 text-sm font-semibold">
         Nome (aparece para o vendedor)
@@ -38,7 +38,7 @@ export function FormTipoDestaque({ tipo }: { tipo: TipoDestaque }) {
       <label className="text-sm font-semibold">
         {subir ? "Dias" : "Dias no ar"}
         {subir ? (
-          <input disabled value="Sobe uma vez" className={estiloCampo} readOnly />
+          <input disabled value="Uma vez" className={estiloCampo} readOnly />
         ) : (
           <input name="dias" type="number" min={1} max={365} required defaultValue={tipo.dias ?? 7} className={estiloCampo} />
         )}
@@ -53,9 +53,9 @@ export function FormTipoDestaque({ tipo }: { tipo: TipoDestaque }) {
       </label>
       <label className="col-span-2 text-sm font-semibold">
         O que faz (texto curto)
-        <input name="descricao" maxLength={200} defaultValue={tipo.descricao ?? ""} className={estiloCampo} />
+        <textarea name="descricao" rows={2} maxLength={200} defaultValue={tipo.descricao ?? ""} className={`${estiloCampo} h-auto min-h-20 py-2 leading-relaxed`} />
       </label>
-      <div className="col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2 md:col-span-4">
+      <div className="col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-borda pt-2 @3xl/painel:col-span-4">
         <label className="flex h-12 items-center gap-2 text-sm">
           <input type="checkbox" name="ativo" defaultChecked={tipo.ativo} className="size-5 accent-laranja-escuro" />
           Ativo (aparece para vender)
@@ -64,9 +64,7 @@ export function FormTipoDestaque({ tipo }: { tipo: TipoDestaque }) {
           Salvar
         </Botao>
       </div>
-      <div className="col-span-2 md:col-span-4">
-        <Retorno estado={estado} />
-      </div>
+      {estado && <div className="col-span-2 @3xl/painel:col-span-4"><Retorno estado={estado} /></div>}
     </form>
   );
 }
@@ -83,7 +81,7 @@ export function FormCreditos({
   const [estado, acao, pendente] = useActionState(salvarCreditosDestaque, null);
   return (
     <form action={acao} className="space-y-3">
-      <div className="-mx-4 overflow-x-auto px-4">
+      <div className="relative -mx-4 overflow-x-auto px-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro" role="region" aria-label="Créditos por plano e tipo de destaque" tabIndex={0}>
         <table className="w-full min-w-[480px] text-sm">
           <thead>
             <tr className="text-left text-texto-suave">
@@ -191,8 +189,8 @@ export function FormPrecoRegiao({
   const [estado, acao, pendente] = useActionState(salvarPrecoRegiao, null);
   const [tipo, setTipo] = useState<SlugDestaque>(tipos[0]?.slug ?? "busca");
   return (
-    <form action={acao} className="grid grid-cols-2 gap-3 md:grid-cols-4">
-      <label className="text-sm font-semibold">
+    <form action={acao} className="grid grid-cols-2 gap-3 @3xl/painel:grid-cols-4">
+      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-1">
         Tipo
         <select name="tipo" value={tipo} onChange={(e) => setTipo(e.target.value as SlugDestaque)} className={estiloCampo}>
           {tipos.map((t) => (
@@ -202,7 +200,7 @@ export function FormPrecoRegiao({
           ))}
         </select>
       </label>
-      <label className="text-sm font-semibold">
+      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-1">
         Região
         <select name="microrregiao_id" required defaultValue="" className={estiloCampo}>
           <option value="" disabled>
@@ -222,17 +220,17 @@ export function FormPrecoRegiao({
       <label className="text-sm font-semibold">
         Dias
         {tipo === "subir" ? (
-          <input disabled value="Sobe uma vez" className={estiloCampo} readOnly />
+          <input disabled value="Uma vez" className={estiloCampo} readOnly />
         ) : (
           <input name="dias" type="number" min={1} max={365} placeholder="igual ao do tipo" className={estiloCampo} />
         )}
       </label>
-      <div className="col-span-2 md:col-span-4">
+      <div className="col-span-2 @3xl/painel:col-span-4">
         <Botao type="submit" variante="secundario" carregando={pendente} textoCarregando="Salvando...">
           Salvar exceção
         </Botao>
       </div>
-      <div className="col-span-2 md:col-span-4">
+      <div className="col-span-2 @3xl/painel:col-span-4">
         <Retorno estado={estado} />
       </div>
     </form>

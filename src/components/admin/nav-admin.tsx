@@ -37,7 +37,8 @@ export function NavAdmin({ pendencias, papel }: { pendencias: number; papel: Pap
   return (
     <nav
       ref={barra}
-      className="fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto overscroll-x-contain border-t [scrollbar-width:none] border-borda bg-cartao shadow-2 md:static md:flex md:w-56 md:flex-col md:gap-1 md:border-0 md:bg-transparent md:overflow-visible md:p-4 md:shadow-none"
+      aria-label="Painel administrativo"
+      className="fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto overscroll-x-contain border-t [scrollbar-width:none] border-borda bg-cartao shadow-2 md:static md:min-h-0 md:flex-1 md:flex-col md:gap-1 md:overflow-y-auto md:border-0 md:bg-transparent md:px-3 md:pb-4 md:shadow-none"
     >
       {itens.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
         const ativo = href === "/admin" ? atual === href : atual.startsWith(href);
@@ -46,11 +47,11 @@ export function NavAdmin({ pendencias, papel }: { pendencias: number; papel: Pap
             key={href}
             href={href}
             aria-current={ativo ? "page" : undefined}
-            className={`relative flex h-16 w-20 shrink-0 flex-col items-center justify-center gap-1 text-[13px] font-semibold leading-4 md:h-12 md:w-auto md:flex-row md:justify-start md:gap-3 md:rounded-card md:px-3 md:text-sm md:leading-5 ${
-              ativo ? "text-laranja-escuro md:bg-laranja-claro" : "text-texto-suave md:hover:bg-fundo"
+            className={`admin-menu-item relative flex min-h-16 w-20 shrink-0 flex-col items-center justify-center gap-1 text-legenda leading-4 outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-laranja-escuro md:min-h-12 md:w-auto md:flex-row md:justify-start md:gap-2.5 md:rounded-campo md:px-3 md:py-2 md:leading-5 ${
+              ativo ? "bg-selecao font-semibold text-beringela" : "font-normal text-texto-suave hover:bg-fundo"
             }`}
           >
-            <Icone className="size-5" aria-hidden />
+            <Icone className={`size-5 shrink-0 md:size-[1.125rem] ${ativo ? "text-laranja-escuro" : ""}`} aria-hidden />
             {/* no celular (itens de 80px, a barra rola de lado) o nome longo vira curto para caber inteiro */}
             {curto ? (
               <>

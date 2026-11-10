@@ -60,10 +60,10 @@ export default async function Inicio() {
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4">
       <section aria-labelledby="titulo-inicio" className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <h1 id="titulo-inicio" className="text-balance text-2xl font-bold sm:text-3xl">
+          <h1 id="titulo-inicio" className="text-balance text-titulo font-semibold text-beringela sm:text-[1.75rem]">
             Compre e venda em {lugar}
           </h1>
-          <p className="text-pretty text-base text-texto-suave">
+          <p className="max-w-[65ch] text-pretty text-base text-texto-suave">
             Encontre produtos e serviços ou anuncie para quem está perto.
           </p>
         </div>

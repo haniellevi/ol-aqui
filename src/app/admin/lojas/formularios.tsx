@@ -45,7 +45,7 @@ export function FormAcaoLoja({
   const perigo = escolha === "suspender" || escolha === "tirar_selo";
 
   return (
-    <form action={acao} className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <form action={acao} className="grid grid-cols-2 items-end gap-3 @3xl/painel:grid-cols-4">
       <input type="hidden" name="vitrine" value={loja.id} />
       <label className="col-span-2 text-sm font-semibold">
         O que fazer
@@ -78,26 +78,26 @@ export function FormAcaoLoja({
           <input name="dias" type="number" min={1} max={365} required={escolha === "cortesia"} placeholder={escolha === "trocar_plano" ? "grátis: vazio" : ""} className={estiloCampo} />
         </label>
       )}
-      <label className="col-span-2 text-sm font-semibold md:col-span-4">
+      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-4">
         Motivo (fica no histórico)
         <input name="motivo" required minLength={3} maxLength={300} placeholder="Ex.: compensação pela queda do site" className={estiloCampo} />
       </label>
       {escolha === "trocar_plano" && loja.plano_proximo && (
-        <p className="col-span-2 text-[13px] text-aviso md:col-span-4">
+        <p className="col-span-2 text-[13px] text-aviso @3xl/painel:col-span-4">
           Esta loja tem uma troca já paga para {loja.plano_proximo_nome ?? loja.plano_proximo}. Trocar o plano aqui desfaz essa troca marcada.
         </p>
       )}
       {escolha === "trocar_plano" && (
-        <p className="col-span-2 text-[13px] text-texto-suave md:col-span-4">
+        <p className="col-span-2 text-[13px] text-texto-suave @3xl/painel:col-span-4">
           Plano pago ou teste: diga por quantos dias vale. Plano grátis não vence (deixe os dias em branco). Nada é cobrado.
         </p>
       )}
-      <div className="col-span-2 flex justify-end md:col-span-4">
+      <div className="col-span-2 flex justify-end @3xl/painel:col-span-4">
         <Botao type="submit" variante={perigo ? "perigo" : "secundario"} carregando={pendente} textoCarregando="Salvando...">
           {ROTULO[escolha]}
         </Botao>
       </div>
-      <div className="col-span-2 md:col-span-4">
+      <div className="col-span-2 @3xl/painel:col-span-4">
         <Retorno estado={estado} />
       </div>
     </form>

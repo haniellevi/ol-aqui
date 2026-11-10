@@ -29,9 +29,9 @@ export function FormPlano({ plano }: { plano?: Plano }) {
   const [estado, acao, pendente] = useActionState(novo ? criarPlano : salvarPlano, null);
 
   return (
-    <form action={acao} className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <form action={acao} className="grid grid-cols-2 items-end gap-3 @3xl/painel:grid-cols-4">
       {novo ? (
-        <label className="col-span-2 text-sm font-semibold md:col-span-1">
+        <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-1">
           Código
           <input name="codigo" required placeholder="ex.: ouro" className={estiloCampo} />
         </label>
@@ -77,7 +77,7 @@ export function FormPlano({ plano }: { plano?: Plano }) {
         Ordem na tela
         <input name="ordem" type="number" defaultValue={plano?.ordem ?? 10} className={estiloCampo} />
       </label>
-      <fieldset className="col-span-2 grid grid-cols-2 gap-3 rounded-card border border-borda p-3 md:col-span-4 md:grid-cols-4">
+      <fieldset className="col-span-2 grid grid-cols-2 items-end gap-3 rounded-card border border-borda p-3 @3xl/painel:col-span-4 @3xl/painel:grid-cols-4">
         <legend className="px-1 text-sm font-semibold">Vitrine da loja</legend>
         <label className="text-sm font-semibold">
           Seções próprias
@@ -105,15 +105,15 @@ export function FormPlano({ plano }: { plano?: Plano }) {
           <input type="checkbox" name="vitrine_foto_fachada" defaultChecked={plano?.vitrine_foto_fachada ?? false} className="size-5 accent-laranja-escuro" />
           Foto da fachada no banner
         </label>
-        <p className="col-span-2 text-[13px] text-texto-suave md:col-span-4">
+        <p className="col-span-2 text-[13px] text-texto-suave @3xl/painel:col-span-4">
           0 = não tem o recurso; vazio = sem limite. Plano menor não apaga nada: o que passa do limite fica escondido na vitrine.
         </p>
       </fieldset>
-      <label className="col-span-2 text-sm font-semibold md:col-span-4">
+      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-4">
         Descrição (aparece para o cliente)
-        <input name="descricao" defaultValue={plano?.descricao ?? ""} className={estiloCampo} />
+        <textarea name="descricao" rows={2} defaultValue={plano?.descricao ?? ""} className={`${estiloCampo} h-auto min-h-20 py-2 leading-relaxed`} />
       </label>
-      <div className="col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2 md:col-span-4">
+      <div className="col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2 @3xl/painel:col-span-4">
         <label className="flex h-12 items-center gap-2 text-sm">
           <input type="checkbox" name="acesso_radar" defaultChecked={plano?.acesso_radar ?? true} className="size-5 accent-laranja-escuro" />
           Acessa o Radar
@@ -130,8 +130,8 @@ export function FormPlano({ plano }: { plano?: Plano }) {
           {pendente ? "Salvando…" : novo ? "Criar plano" : "Salvar"}
         </button>
       </div>
-      {estado?.ok && <div className="col-span-2 md:col-span-4"><Aviso tipo="ok">{estado.ok}</Aviso></div>}
-      {estado?.erro && <div className="col-span-2 md:col-span-4"><Aviso tipo="erro">{estado.erro}</Aviso></div>}
+      {estado?.ok && <div className="col-span-2 @3xl/painel:col-span-4"><Aviso tipo="ok">{estado.ok}</Aviso></div>}
+      {estado?.erro && <div className="col-span-2 @3xl/painel:col-span-4"><Aviso tipo="erro">{estado.erro}</Aviso></div>}
     </form>
   );
 }

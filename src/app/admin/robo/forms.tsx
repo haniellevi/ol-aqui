@@ -320,7 +320,7 @@ export function FormModelo({ modelo }: { modelo?: ModeloIA }) {
   const base = modelo ?? pre;
   const chaveCampos = novo ? `${provedor}|${pre?.modelo ?? ""}` : modelo.id;
   return (
-    <form action={acao} className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <form action={acao} className="grid grid-cols-2 items-end gap-3 @3xl/painel:grid-cols-4">
       {novo ? (
         <>
           <SeletorProvedor
@@ -331,7 +331,7 @@ export function FormModelo({ modelo }: { modelo?: ModeloIA }) {
               setPre(null);
             }}
           />
-          <div className="col-span-2 text-sm font-semibold md:col-span-3">
+          <div className="col-span-2 text-sm font-semibold @3xl/painel:col-span-3">
             Modelo
             <CampoBusca
               key={`${provedor}|${carregando}`}
@@ -372,7 +372,7 @@ export function FormModelo({ modelo }: { modelo?: ModeloIA }) {
         Escrita de cache (US$/milhão)
         <input name="preco_cache_escrita_usd" inputMode="decimal" placeholder="igual à entrada" defaultValue={usd(base?.preco_cache_escrita_usd ?? null)} className={estiloCampo} />
       </label>
-      <div key={`caps-${chaveCampos}`} className="col-span-2 flex flex-wrap gap-x-4 md:col-span-4">
+      <div key={`caps-${chaveCampos}`} className="col-span-2 flex flex-wrap gap-x-4 @3xl/painel:col-span-4">
         <label className="flex min-h-12 items-center gap-2 text-sm font-semibold">
           <input type="checkbox" name="le_imagem" defaultChecked={base?.le_imagem ?? false} className="size-5 accent-laranja-escuro" />
           Lê imagem
@@ -392,16 +392,16 @@ export function FormModelo({ modelo }: { modelo?: ModeloIA }) {
           </label>
         )}
       </div>
-      <label className="col-span-2 text-sm font-semibold md:col-span-4">
+      <label className="col-span-2 text-sm font-semibold @3xl/painel:col-span-4">
         Observação
         <input name="observacao" maxLength={300} defaultValue={modelo?.observacao ?? ""} className={estiloCampo} />
       </label>
-      <div className="col-span-2 flex items-center gap-3 md:col-span-4">
+      <div className="col-span-2 flex items-center gap-3 @3xl/painel:col-span-4">
         <button disabled={pendente} className={estiloBotaoSec}>
           {pendente ? "Salvando…" : novo ? "Adicionar modelo" : "Salvar modelo"}
         </button>
       </div>
-      <div className="col-span-2 md:col-span-4">
+      <div className="col-span-2 @3xl/painel:col-span-4">
         <Retorno estado={estado} />
       </div>
     </form>

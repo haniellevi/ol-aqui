@@ -3,13 +3,13 @@ import { Loader2 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
 // Botão do OLAKI (docs/DESIGN-SYSTEM.md, "Botões"). Altura mínima 48px (52px no principal de
-// largura cheia e no WhatsApp), texto 16px peso 600. Apertado = brightness-90.
+// largura cheia e no WhatsApp), texto 15px peso 600. Painel com mouse: 14px / 44px.
 // Principal = laranja com texto beringela (nunca branco no laranja).
 
 export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | "texto";
 
 const BASE =
-  "inline-flex select-none items-center justify-center gap-2 rounded-card px-5 text-base font-semibold leading-5 " +
+  "olaki-acao inline-flex select-none items-center justify-center gap-2 rounded-campo px-4 text-[0.9375rem] font-semibold leading-5 " +
   "transition-colors active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro " +
   "disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:pointer-events-none aria-disabled:opacity-60";
 
