@@ -304,6 +304,8 @@ Página para conferir tudo num lugar só: `/admin/pecas`.
 - **Tela vazia** (`Vazio`, montado com `Empty`): ícone, título, uma frase e a saída em `children`.
 - **Tela de espera** (`Skeleton` e as molduras de `carregando.tsx`): cada área tem seu `loading.tsx` (público, anúncio, conta, Radar, painel).
 - **Linha divisória**: `Separator`, não `<hr>` nem `border-t` solto.
+- **Janela** (`Dialog`): para uma tarefa curta que não merece tela própria (ex.: denunciar anúncio). Sempre com `DialogTitle`.
+- **Menu "Mais"** (`DropdownMenu`): ações secundárias de um card. Item que apaga usa `variant="destructive"`. O menu desvia do cabeçalho e da barra de baixo.
 - Outras peças já instaladas e prontas para as próximas fases: `card`, `tabs`, `dropdown-menu`, `dialog`, `drawer`, `sheet`, `field`, `input`, `select`, `textarea`, `label`, `toggle-group`, `table`, `tooltip`, `switch`, `checkbox`, `radio-group`. Ao usar uma delas pela primeira vez, conferir altura (40/36), letra e escrever `border-border` onde houver `border` (o projeto não define cor de borda padrão).
 - Larguras de página: só três. `max-w-md` (entrar e telas de uma ação), `max-w-xl` (formulários e leitura) e `max-w-6xl` (vitrines e listas). Espaço entre blocos da página: `gap-5`.
 - Na nuvem o endereço `ui.shadcn.com` é bloqueado. As peças foram trazidas do código-fonte oficial no GitHub (`apps/v4/registry/bases/base/ui` + `styles/style-nova.css`).
