@@ -38,6 +38,10 @@ export const linkAvulso = (anuncioId: string, pagamentoId?: string | null) =>
 export const LINK_ADMIN_LOJAS = "/admin/lojas";
 export const LINK_ADMIN_PAGAMENTOS = "/admin/pagamentos";
 export const LINK_ADMIN_ANUNCIOS = "/admin/anuncios";
+export const LINK_ADMIN_ATENDIMENTOS = `${LINK_ADMIN_ANUNCIOS}/conversas`;
+export const linkAdminAnuncio = (id: string) => `${LINK_ADMIN_ANUNCIOS}/${id}`;
+export const LINK_ATENDIMENTO = "/minha-conta/atendimento";
+export const linkAtendimento = (id: string) => `${LINK_ATENDIMENTO}/${id}`;
 
 /** Radar: pedir (com o texto já preenchido), pedido do comprador e pedido visto pela loja. */
 export const LINK_RADAR = "/radar";

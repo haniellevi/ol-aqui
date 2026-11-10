@@ -6,7 +6,7 @@ import { Chip } from "@/components/ui/chip";
 import { exigirTela } from "@/lib/admin/equipe";
 import { inteiro, quando } from "@/lib/admin/formato";
 import { preco } from "@/lib/formato";
-import { LINK_ADMIN_ANUNCIOS } from "@/lib/rotas";
+import { LINK_ADMIN_ANUNCIOS, LINK_ADMIN_ATENDIMENTOS, linkAdminAnuncio } from "@/lib/rotas";
 import type { MeuAnuncio } from "@/lib/tipos";
 
 export const metadata = { title: "Anúncios" };
@@ -57,6 +57,9 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
       <Titulo sub="Consulte os anúncios de todos os vendedores e confira a situação de cada um.">
         Anúncios
       </Titulo>
+      <Link href={LINK_ADMIN_ATENDIMENTOS} prefetch={false} className={`${estiloBotaoSec} mb-4`}>
+        Conversas com anunciantes
+      </Link>
       <nav aria-label="Filtrar anúncios por situação" className="mb-6 flex flex-wrap gap-2">
         {FILTROS.map(({ status, nome }) => (
           <Chip key={status} href={endereco(status)} ativo={filtro.status === status} prefetch={false}>
@@ -97,6 +100,9 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
                       <span className={`rounded-full px-2.5 py-1 text-legenda font-semibold ${situacao.cor}`}>
                         {situacao.texto}
                       </span>
+                      <Link href={linkAdminAnuncio(anuncio.id)} prefetch={false} className={estiloBotaoSec} aria-label={`Gerenciar ${titulo}`}>
+                        Gerenciar
+                      </Link>
                     </div>
                   </Cartao>
                 </li>

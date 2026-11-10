@@ -69,6 +69,8 @@ try:
     print('PASS: IA protege revisão, orçamento, fotos, denúncias, contato, congelamento, concorrência e repetição', flush=True)
     checked(sql((root/'supabase/testes/300_privacidade.sql').read_text()))
     print('PASS: exportação lê colunas concedidas e exclusão financeira preserva cobrança sem conteúdo operacional', flush=True)
+    checked(sql((root/'supabase/testes/320_atendimento_anuncios.sql').read_text()))
+    print('PASS: atendimento isola participantes, notifica, evita repetição e permite retomar a delegação', flush=True)
     resultado_cron=sql((root/'supabase/testes/310_rotinas_piloto.sql').read_text())
     checked(resultado_cron)
     if 'Sem pg_cron' in resultado_cron.stderr:

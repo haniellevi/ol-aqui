@@ -8,6 +8,7 @@ import {
   Heart,
   LogOut,
   Megaphone,
+  MessagesSquare,
   Radar,
   ShieldCheck,
   Store,
@@ -17,6 +18,7 @@ import {
   LifeBuoy,
   Pencil,
 } from "lucide-react";
+import { LINK_ATENDIMENTO } from "@/lib/rotas";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { avisosNaoLidos } from "@/lib/dados/radar";
 import { Botao } from "@/components/ui/botao";
@@ -67,6 +69,7 @@ export default async function PaginaMinhaConta() {
       ]
     : [];
   const paraTodos: Item[] = [
+    { href: LINK_ATENDIMENTO, nome: "Atendimento", icone: <MessagesSquare /> },
     { href: "/radar", nome: "Radar", icone: <Radar /> },
     { href: "/minha-conta/favoritos", nome: "Favoritos", icone: <Heart /> },
     {
