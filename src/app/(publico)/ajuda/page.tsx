@@ -72,7 +72,6 @@ export default async function PaginaAjuda() {
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-titulo font-semibold text-beringela">Ajuda</h1>
-        <p className="text-base text-texto-suave">Respostas rápidas e dicas para negociar com segurança.</p>
       </header>
 
       {ajuda.perguntas.length > 0 ? (

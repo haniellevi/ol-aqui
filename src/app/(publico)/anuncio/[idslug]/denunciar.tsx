@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { Flag } from "lucide-react";
 import { Botao, classesBotao } from "@/components/ui/botao";
+import { Alert } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { denunciarAnuncio, type EstadoDenuncia } from "./actions";
 
 // F9 · Denunciar: motivos prontos em botões. Com várias denúncias o anúncio sai do ar
@@ -31,16 +33,20 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
   }, null);
 
   return (
-    <details id="denunciar" className="group scroll-mt-20 rounded-card">
-      <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-card px-2 text-base font-semibold text-perigo underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro [&::-webkit-details-marker]:hidden">
+    <Dialog>
+      <DialogTrigger
+        id="denunciar"
+        className="olaki-toque inline-flex min-h-10 w-fit cursor-pointer items-center gap-2 rounded-campo px-2 text-sm text-perigo underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+      >
         <Flag className="size-4" aria-hidden /> Denunciar este anúncio
-      </summary>
-
-      <div className="mt-2 flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Denunciar este anúncio</DialogTitle>
+          <DialogDescription>A equipe do Mercado da Região revisa cada denúncia.</DialogDescription>
+        </DialogHeader>
         {estado?.ok ? (
-          <p role="status" className="text-base font-semibold text-verde-escuro">
-            {estado.mensagem}
-          </p>
+          <Alert variant="success" role="status">{estado.mensagem}</Alert>
         ) : !logado ? (
           <>
             <p className="text-base">Para denunciar, entre na sua conta. É rápido e depois você volta para cá.</p>
@@ -73,21 +79,21 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
               />
             </div>
             {estado && !estado.ok && (
-              <p role="alert" className="text-base font-semibold text-perigo">
+              <Alert variant="destructive" role="alert" className="block">
                 {estado.mensagem}{" "}
                 {estado.precisaEntrar && (
                   <Link href={entrarHref} className="underline">
                     Entrar
                   </Link>
                 )}
-              </p>
+              </Alert>
             )}
             <Botao type="submit" variante="perigo" larguraTotal carregando={enviando} textoCarregando="Enviando...">
               Enviar denúncia
             </Botao>
           </form>
         )}
-      </div>
-    </details>
+      </DialogContent>
+    </Dialog>
   );
 }
