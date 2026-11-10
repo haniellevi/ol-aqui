@@ -7,7 +7,7 @@ import { exigirTela } from "@/lib/admin/equipe";
 import { inteiro, quando } from "@/lib/admin/formato";
 import { preco } from "@/lib/formato";
 import { LINK_ADMIN_ANUNCIOS } from "@/lib/rotas";
-import type { StatusAnuncio } from "@/lib/tipos";
+import type { MeuAnuncio } from "@/lib/tipos";
 
 export const metadata = { title: "Anúncios" };
 
@@ -21,6 +21,9 @@ const FILTROS = [
 const POR_PAGINA = 30;
 
 type Parametros = { status?: string | string[]; pagina?: string | string[] };
+type LinhaAnuncio = Pick<MeuAnuncio, "id" | "titulo" | "cidade" | "preco_centavos" | "status" | "atualizado_em"> & {
+  vitrines_lojas: { nome: string } | null;
+};
 
 function endereco(status: string, pagina = 1) {
   const q = new URLSearchParams();
@@ -45,15 +48,7 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
   if (pagina > 1 && (error?.code === "PGRST103" || (!error && !data?.length))) {
     redirect(endereco(filtro.status));
   }
-  const anuncios = (data ?? []) as unknown as {
-    id: string;
-    titulo: string;
-    cidade: string;
-    preco_centavos: number | null;
-    status: StatusAnuncio;
-    atualizado_em: string;
-    vitrines_lojas: { nome: string } | null;
-  }[];
+  const anuncios = (data ?? []) as unknown as LinhaAnuncio[];
   const total = count ?? 0;
   const paginas = Math.ceil(total / POR_PAGINA);
 
@@ -86,11 +81,12 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
           <ul className="space-y-3">
             {anuncios.map((anuncio) => {
               const situacao = ROTULO_ANUNCIO[anuncio.status];
+              const titulo = anuncio.titulo?.trim() || "Anúncio sem título";
               return (
                 <li key={anuncio.id}>
                   <Cartao className="grid items-start gap-3 @xl/lista:grid-cols-[minmax(0,1fr)_auto]">
                     <div className="min-w-0 [overflow-wrap:anywhere]">
-                      <h3 className="text-base text-beringela">{anuncio.titulo}</h3>
+                      <h3 className="text-base text-beringela">{titulo}</h3>
                       <p className="mt-1 text-sm text-texto-suave">
                         {[anuncio.vitrines_lojas?.nome, anuncio.cidade].filter(Boolean).join(" · ")}
                       </p>

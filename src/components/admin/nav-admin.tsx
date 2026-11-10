@@ -9,9 +9,9 @@ import { LINK_ADMIN_ANUNCIOS } from "@/lib/rotas";
 
 const ITENS = [
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
+  { href: LINK_ADMIN_ANUNCIOS, rotulo: "Anúncios", icone: Megaphone },
   { href: "/admin/planos", rotulo: "Planos", icone: Tags },
   { href: "/admin/configuracoes", rotulo: "Configurações", curto: "Config.", icone: SlidersHorizontal },
-  { href: LINK_ADMIN_ANUNCIOS, rotulo: "Anúncios", icone: Megaphone },
   { href: "/admin/moderacao", rotulo: "Moderação", icone: ShieldAlert },
   { href: "/admin/lojas", rotulo: "Lojas", icone: Store },
   { href: "/admin/pagamentos", rotulo: "Pagamentos", curto: "Pagtos.", icone: Receipt },

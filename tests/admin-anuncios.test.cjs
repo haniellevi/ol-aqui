@@ -85,3 +85,10 @@ test('falha da consulta é visível e se distingue de uma lista vazia', async ()
   assert.match(html, /role="alert"/);
   assert.doesNotMatch(html, /Nenhum anúncio cadastrado/);
 });
+
+test('rascunho incompleto tem um título legível no catálogo', async () => {
+  const rascunho = { ...anuncios[2], titulo: null, cidade: null, preco_centavos: null };
+  const html = await ambiente({ linhas: [rascunho] })({ status: 'rascunho' });
+  assert.match(html, /Anúncio sem título<\/h3>/);
+  assert.match(html, /Loja de teste<\/p>/);
+});
