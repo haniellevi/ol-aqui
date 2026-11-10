@@ -59,7 +59,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-[22px] font-semibold leading-7">Planos do OLAKI</h1>
+        <h1 className="text-titulo font-semibold text-beringela">Planos do OLAKI</h1>
         <p className="text-base text-texto-suave">
           Escolha como quer vender na sua região. Você pode mudar de plano quando quiser.
         </p>

@@ -27,7 +27,7 @@ export function FiltrosRelatorio({
     return () => window.removeEventListener("pageshow", destravar);
   }, []);
   return (
-    <form method="get" action={LINK_ADMIN_RELATORIOS} onSubmit={() => setCarregando(true)} className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <form method="get" action={LINK_ADMIN_RELATORIOS} onSubmit={() => setCarregando(true)} className="grid grid-cols-1 items-end gap-3 @sm/painel:grid-cols-2 @3xl/painel:grid-cols-4">
       <label className="text-sm font-semibold text-beringela">
         De
         <input type="date" name="de" defaultValue={de} required className={estiloCampo} />
@@ -36,7 +36,7 @@ export function FiltrosRelatorio({
         Até
         <input type="date" name="ate" defaultValue={ate} required className={estiloCampo} />
       </label>
-      <label className="col-span-2 text-sm font-semibold text-beringela">
+      <label className="col-span-full @3xl/painel:col-span-2 text-sm font-semibold text-beringela">
         Região
         <select name="regiao" defaultValue={regiao ?? ""} className={estiloCampo}>
           <option value="">Todas as regiões</option>
@@ -47,7 +47,7 @@ export function FiltrosRelatorio({
           ))}
         </select>
       </label>
-      <div className="col-span-2 md:col-span-4">
+      <div className="col-span-full ">
         <Botao type="submit" carregando={carregando} textoCarregando="Carregando…" className="w-full md:w-auto">
           Ver relatório
         </Botao>

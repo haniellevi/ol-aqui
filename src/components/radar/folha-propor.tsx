@@ -251,7 +251,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                             )}
                             <span className="flex min-w-0 flex-1 flex-col">
                               <span className="truncate text-[15px] font-semibold">{a.titulo}</span>
-                              {a.preco_centavos != null && <span className="text-[13px] text-texto-suave">{preco(a.preco_centavos)}</span>}
+                              {a.preco_centavos != null && <span className="text-legenda text-texto-suave">{preco(a.preco_centavos)}</span>}
                             </span>
                             {ativo && <Check className="size-5 shrink-0 text-laranja-escuro" aria-hidden />}
                           </button>

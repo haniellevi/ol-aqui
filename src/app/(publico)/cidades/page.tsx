@@ -7,7 +7,7 @@ export default async function Cidades({ searchParams }: { searchParams: Promise<
   const { data, error } = await db.from("cidades").select("id,nome,uf,microrregioes!inner(ativa)").eq("ativa", true).eq("microrregioes.ativa", true).order("nome");
   if (error) throw new Error("Não foi possível carregar as cidades.");
   return <main className="mx-auto flex max-w-xl flex-col gap-5 px-4 py-6">
-    <h1 className="text-2xl font-semibold">Onde você procura?</h1>
+    <h1 className="text-titulo font-semibold text-beringela">Onde você procura?</h1>
     <p>Escolha uma cidade para ver anúncios próximos.</p>
     {(await searchParams).erro && <p role="alert" className="text-perigo">Escolha uma cidade disponível.</p>}
     <form action={escolherCidade} className="flex flex-col gap-4">

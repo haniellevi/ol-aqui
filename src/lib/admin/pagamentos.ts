@@ -1,6 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ehUuid } from "@/lib/formato";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { ehPapel, podeVerTela } from "@/lib/tipos-equipe";
 import type { PagamentoAdmin, StatusPagamento, TipoPagamento } from "@/lib/tipos-cobranca";
 
 // Tela 6 · Pagamentos: filtros lidos do endereço (?status=&tipo=&regiao=&de=&ate=), usados pela lista,
@@ -58,20 +60,43 @@ const diaSeguinte = (d: string) => {
 };
 
 const COLUNAS =
-  "id, tipo, status, valor_centavos, forma, plano_codigo, meses, regra, vencimento, pago_em, criado_em, link_pagamento, asaas_cobranca_id, devolver_motivo, observacao, microrregiao_id, vitrine_id, vitrines_lojas(nome, slug, whatsapp, perfis(whatsapp)), anuncios(titulo)";
+  "id, tipo, status, valor_centavos, forma, plano_codigo, meses, regra, vencimento, pago_em, criado_em, link_pagamento, asaas_cobranca_id, devolver_motivo, observacao, microrregiao_id, vitrine_id, vitrines_lojas(nome, slug, whatsapp, dono_id), anuncios(titulo)";
 
 type Linha = Omit<PagamentoAdmin, "vitrine_nome" | "vitrine_slug" | "vitrine_whatsapp" | "anuncio_titulo"> & {
-  vitrines_lojas: { nome: string; slug: string; whatsapp: string | null; perfis: { whatsapp: string | null } | null } | null;
+  vitrines_lojas: { nome: string; slug: string; whatsapp: string | null; dono_id: string } | null;
   anuncios: { titulo: string | null } | null;
 };
 
-const paraAdmin = ({ vitrines_lojas, anuncios, ...l }: Linha): PagamentoAdmin => ({
+const paraAdmin = ({ vitrines_lojas, anuncios, ...l }: Linha, contatos: Map<string, string>): PagamentoAdmin => ({
   ...l,
   vitrine_nome: vitrines_lojas?.nome ?? null,
   vitrine_slug: vitrines_lojas?.slug ?? null,
-  vitrine_whatsapp: vitrines_lojas?.whatsapp ?? vitrines_lojas?.perfis?.whatsapp ?? null,
+  vitrine_whatsapp: vitrines_lojas?.whatsapp ?? contatos.get(vitrines_lojas?.dono_id ?? "") ?? null,
   anuncio_titulo: anuncios?.titulo ?? null,
 });
+
+/** Perfis privados não podem entrar no join autenticado. Complementa apenas os contatos dos
+ * pagamentos já autorizados pela RLS, após conferir o papel no banco; nunca amplia grants. */
+async function comContatos(supabase: SupabaseClient, linhas: Linha[]): Promise<PagamentoAdmin[]> {
+  const contatos = new Map<string, string>();
+  const donos = [...new Set(linhas.flatMap((l) => l.vitrines_lojas && !l.vitrines_lojas.whatsapp ? [l.vitrines_lojas.dono_id] : []))];
+  if (donos.length > 0) {
+    const { data: papel, error } = await supabase.rpc("meu_papel");
+    if (!error && ehPapel(papel) && podeVerTela(papel, "pagamentos")) {
+      try {
+        const admin = supabaseAdmin();
+        for (let i = 0; i < donos.length; i += 100) {
+          const { data, error } = await admin.from("perfis").select("id, whatsapp").in("id", donos.slice(i, i + 100));
+          if (error) continue; // A lista e a cópia da fatura continuam disponíveis sem o contato.
+          for (const p of data ?? []) if (p.whatsapp) contatos.set(p.id, p.whatsapp);
+        }
+      } catch {
+        // Sem acesso ao contato privado: não revela número e preserva a consulta financeira.
+      }
+    }
+  }
+  return linhas.map((l) => paraAdmin(l, contatos));
+}
 
 /** Tamanho de cada leitura: a API do Supabase devolve no máximo 1000 linhas por pedido. */
 const POR_LEITURA = 1000;
@@ -96,7 +121,7 @@ export async function listarTodosPagamentos(
   const linhas: PagamentoAdmin[] = [];
   for (let de = 0; de < maximo + 1; de += POR_LEITURA) {
     const ate = Math.min(de + POR_LEITURA, maximo + 1) - 1; // lê uma linha a mais para saber se cortou
-    const pagina = await lerFaixa(supabase, f, de, ate);
+    const pagina = await lerFaixa(supabase, f, de, ate, false); // O CSV não contém telefone.
     linhas.push(...pagina);
     if (pagina.length < ate - de + 1) break;
   }
@@ -104,7 +129,7 @@ export async function listarTodosPagamentos(
   return { linhas: cortado ? linhas.slice(0, maximo) : linhas, cortado };
 }
 
-async function lerFaixa(supabase: SupabaseClient, f: FiltrosPagamentos, de: number, ate: number): Promise<PagamentoAdmin[]> {
+async function lerFaixa(supabase: SupabaseClient, f: FiltrosPagamentos, de: number, ate: number, incluirContatos = true): Promise<PagamentoAdmin[]> {
   let q = supabase
     .from("pagamentos")
     .select(COLUNAS)
@@ -122,7 +147,8 @@ async function lerFaixa(supabase: SupabaseClient, f: FiltrosPagamentos, de: numb
   }
   const { data, error } = await q;
   if (error) throw new Error("Não deu para ler os pagamentos agora.");
-  return ((data ?? []) as unknown as Linha[]).map(paraAdmin);
+  const linhas = (data ?? []) as unknown as Linha[];
+  return incluirContatos ? comContatos(supabase, linhas) : linhas.map((l) => paraAdmin(l, new Map()));
 }
 
 /** Pagamentos que chegaram mas não puderam ser aplicados: a equipe devolve (todos os tipos). */
@@ -134,7 +160,7 @@ export async function devolucoesAFazer(supabase: SupabaseClient): Promise<Pagame
     .not("devolver_motivo", "is", null)
     .order("pago_em", { ascending: false })
     .limit(100);
-  return ((data ?? []) as unknown as Linha[]).map(paraAdmin);
+  return comContatos(supabase, (data ?? []) as unknown as Linha[]);
 }
 
 /** Link de fatura do Asaas que pode ir para a tela (só https). */

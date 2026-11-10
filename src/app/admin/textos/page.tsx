@@ -37,14 +37,14 @@ export default async function TextosPage({ searchParams }: { searchParams: Promi
         Página inicial e textos
       </Titulo>
 
-      <nav className="-mx-4 mb-6 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
+      <nav aria-label="Seções do painel" className="admin-abas -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
         {ABAS.map((a) => (
           <Link
             key={a.id}
             href={`/admin/textos?aba=${a.id}`}
             aria-current={a.id === aba ? "page" : undefined}
             className={`inline-flex h-12 shrink-0 items-center rounded-campo border px-4 text-sm font-semibold text-beringela active:brightness-90 ${
-              a.id === aba ? "border-laranja-escuro bg-laranja-claro" : "border-borda bg-cartao"
+              a.id === aba ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
             }`}
           >
             {a.nome}
@@ -151,7 +151,7 @@ async function AbaTermos({ supabase, tipo }: { supabase: Db; tipo: TipoDocumento
             href={`/admin/textos?aba=termos&doc=${t}`}
             aria-current={t === tipo ? "page" : undefined}
             className={`inline-flex h-12 items-center rounded-campo border px-4 text-sm font-semibold text-beringela ${
-              t === tipo ? "border-laranja-escuro bg-laranja-claro" : "border-borda bg-cartao"
+              t === tipo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
             }`}
           >
             {NOME_DOCUMENTO[t]}

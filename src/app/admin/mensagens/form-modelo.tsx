@@ -148,16 +148,16 @@ export function FormModelo({ modelo }: { modelo: ModeloMensagem }) {
         <div className="rounded-card border border-borda bg-fundo p-3" aria-live="polite">
           <p className="mb-2 text-[13px] font-semibold uppercase text-texto-suave">Prévia com exemplo</p>
           {modelo.canal === "whatsapp" ? (
-            <p className="max-w-sm whitespace-pre-line rounded-card bg-sucesso-fundo px-3 py-2 text-base text-texto shadow-1">
+            <p className="min-w-0 max-w-sm [overflow-wrap:anywhere] whitespace-pre-line rounded-card bg-sucesso-fundo px-3 py-2 text-base text-texto shadow-1">
               {previa(texto, modelo.variaveis) || "(vazio)"}
             </p>
           ) : (
-            <div className="max-w-sm rounded-card bg-cartao px-3 py-2 shadow-1">
+            <div className="min-w-0 max-w-sm [overflow-wrap:anywhere] rounded-card bg-cartao px-3 py-2 shadow-1">
               <p className="text-base font-semibold text-beringela">
                 {modelo.canal === "email" && <span className="font-normal text-texto-suave">Assunto: </span>}
                 {previa(titulo, modelo.variaveis) || "(sem título)"}
               </p>
-              <p className="mt-1 text-[15px] text-texto">{previa(texto, modelo.variaveis) || "(vazio)"}</p>
+              <p className="mt-1 break-words text-sm text-texto">{previa(texto, modelo.variaveis) || "(vazio)"}</p>
             </div>
           )}
         </div>

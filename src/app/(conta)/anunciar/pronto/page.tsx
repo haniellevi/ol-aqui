@@ -33,7 +33,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
         <span className="grid size-20 place-items-center rounded-full bg-aviso-fundo text-aviso" aria-hidden>
           <Clock className="size-10" />
         </span>
-        <h1 className="text-2xl font-semibold">Seu anúncio está em análise</h1>
+        <h1 className="text-titulo font-semibold text-beringela">Seu anúncio está em análise</h1>
         <p className="max-w-sm text-base text-texto-suave">
           Vamos conferir o anúncio antes de ele aparecer. A análise pode ser automática ou, quando necessário, feita pela equipe.{" "}
           {horas ? `Avisamos em até ${horas} ${horas === 1 ? "hora" : "horas"}.` : "Avisamos assim que ele for liberado."}
@@ -65,7 +65,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
       <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
         <CheckCircle2 className="size-12" />
       </span>
-      <h1 className="text-2xl font-semibold">Seu anúncio está no ar!</h1>
+      <h1 className="text-titulo font-semibold text-beringela">Seu anúncio está no ar!</h1>
       <p className="max-w-sm text-base text-texto-suave">
         Mande para seus contatos e grupos do WhatsApp. Quem vê o anúncio fala com você direto no WhatsApp.
       </p>

@@ -64,7 +64,7 @@ export default async function MensagensPage() {
         </Vazio>
       ) : (
         <div className="space-y-6">
-          <Cartao className="bg-laranja-claro">
+          <Cartao className="bg-selecao">
             <p className="text-base text-beringela">
               Use as palavras entre chaves, como <strong>{"{nome}"}</strong>, para o sistema trocar pelo valor certo. Palavra que não está na
               lista da mensagem não é aceita.
@@ -78,9 +78,9 @@ export default async function MensagensPage() {
               <Cartao className="p-0">
                 {g.itens.map((m) => (
                   <details key={m.id} className="border-b border-borda px-4 last:border-0">
-                    <summary className="flex min-h-12 cursor-pointer flex-wrap items-center gap-2 py-3 text-base font-semibold text-beringela">
-                      {NOME_CANAL[m.canal]}
-                      <Situacao modelo={m} />
+                    <summary className="min-h-12 cursor-pointer py-3 text-sm font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">
+                      <span className="ml-1 inline-flex flex-wrap items-center gap-2">{NOME_CANAL[m.canal]}
+                      <Situacao modelo={m} /></span>
                     </summary>
                     <div className="pb-4">
                       <FormModelo modelo={m} />

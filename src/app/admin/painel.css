@@ -31,3 +31,17 @@
   .painel-admin .olaki-acao { min-height: 2.75rem; }
   .painel-admin .admin-menu-item { min-height: 2.75rem; }
 }
+
+/* Categorias de configuração: rolagem perceptível no toque, todas à vista no desktop. */
+.painel-admin .admin-abas {
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-borda-campo) transparent;
+}
+.painel-admin .admin-abas a:focus-visible {
+  outline: 2px solid var(--color-laranja-escuro);
+  outline-offset: -2px;
+}
+@media (min-width: 64rem) {
+  .painel-admin .admin-abas { flex-wrap: wrap; }
+}

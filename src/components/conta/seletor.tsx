@@ -17,7 +17,7 @@ export function Seletor({
   const idDica = dica ? `${id}-dica` : undefined;
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-base font-semibold text-texto">
+      <label htmlFor={id} className="text-rotulo font-semibold text-texto">
         {rotulo}
       </label>
       <select
@@ -26,8 +26,8 @@ export function Seletor({
         name={name}
         aria-invalid={erro ? true : undefined}
         aria-describedby={[idErro, idDica].filter(Boolean).join(" ") || undefined}
-        className={`h-12 w-full rounded-campo border-2 bg-cartao px-3 text-base text-texto focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 ${
-          erro ? "border-perigo" : "border-borda"
+        className={`h-12 min-w-0 w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto focus:outline-hidden focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:bg-fundo disabled:opacity-70 ${
+          erro ? "border-perigo" : "border-borda-campo"
         }`}
       >
         {children}

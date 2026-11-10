@@ -22,14 +22,14 @@ export function TopoConta({
       {voltar && (
         <Link
           href={voltar}
-          className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 rounded-campo px-2 text-base font-semibold text-texto-suave hover:text-texto focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+          className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 rounded-campo px-2 text-rotulo font-semibold text-texto-suave hover:text-texto focus-visible:outline-3 focus-visible:outline-laranja-escuro"
         >
           <ChevronLeft className="size-5" aria-hidden />
           {textoVoltar}
         </Link>
       )}
-      <h1 className="text-2xl font-bold leading-8">{titulo}</h1>
-      {texto && <p className="text-base text-texto-suave">{texto}</p>}
+      <h1 className="text-titulo font-semibold text-beringela [overflow-wrap:anywhere]">{titulo}</h1>
+      {texto && <p className="max-w-[65ch] text-base leading-6 text-texto-suave">{texto}</p>}
       {children}
     </header>
   );

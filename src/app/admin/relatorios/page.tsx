@@ -114,7 +114,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
       <Titulo sub="Números somados do OLAKI. Escolha o período (até 12 meses) e a região. Cada bloco pode ser baixado em planilha (CSV).">Relatórios</Titulo>
 
       <Cartao className="mb-6 space-y-4">
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
+        <div className="flex flex-wrap gap-2">
           {atalhos.map((a) => (
             <Chip key={a.id} href={linkAtalho(a.de, a.ate)} ativo={a.de === filtros.de && a.ate === filtros.ate}>
               {a.nome}
@@ -225,13 +225,13 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
             <SemDados saida={saida} />
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <Numero rotulo="Começaram o teste" valor={inteiro(convTotal.comecaram)} />
                 <Numero rotulo="Pagaram um plano" valor={inteiro(convTotal.pagaram)} detalhe={`${pct(convTotal.pagaram, convTotal.comecaram)} das lojas`} />
                 <Numero rotulo="Ainda em teste" valor={inteiro(convTotal.em_teste)} />
                 <Numero rotulo="Acabou sem pagar" valor={inteiro(convTotal.nao)} />
               </div>
-              <Cartao className="overflow-x-auto p-0">
+              <Cartao className="overflow-x-auto p-0 focus-visible:outline-2 focus-visible:outline-laranja-escuro" role="region" aria-label="Conversão de teste em plano por mês" tabIndex={0}>
                 <table className="w-full min-w-[520px]">
                   <caption className="sr-only">Teste grátis para plano pago, por mês</caption>
                   <thead className="border-b border-borda">
@@ -270,7 +270,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
             <SemDados saida={saida} />
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <Numero rotulo="Total recebido" valor={reais(receitaTotal)} />
                 {receitaTipo.map((r) => (
                   <Numero key={r.tipo} rotulo={NOME_TIPO_RECEITA[r.tipo]} valor={reais(r.total)} detalhe={pct(r.total, receitaTotal)} />
@@ -301,7 +301,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
             <SemDados saida={saida} />
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <Numero rotulo="Custo no período" valor={reaisFracao(akiTotal)} />
                 <Numero rotulo="Respostas" valor={inteiro(aki.reduce((t, m) => t + m.respostas, 0))} />
                 <Numero rotulo="Conversas" valor={inteiro(aki.reduce((t, m) => t + m.conversas, 0))} detalhe="somando os meses" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { Aviso, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { CampoBusca } from "@/components/admin/campo-busca";
 import { emCentavos, valorParaForm, type Opcao, type TipoValor } from "@/lib/admin/config";
@@ -19,11 +19,12 @@ const AJUDA: Record<TipoValor, string> = {
 };
 
 function CampoValor({ tipo, valor, chave, opcoes }: { tipo: TipoValor; valor: unknown; chave: string; opcoes?: Opcao[] }) {
+  const ajudaId = useId();
   const texto = valorParaForm(tipo, valor);
   const ajuda = [AJUDA[tipo], emCentavos(chave) ? "Valores em centavos (R$ 9,90 = 990)." : ""].filter(Boolean).join(" ");
   if (tipo === "simnao") {
     return (
-      <select name="valor" defaultValue={texto} className={estiloCampo}>
+      <select name="valor" aria-label={`Valor de ${chave}`} defaultValue={texto} className={estiloCampo}>
         <option value="true">Sim</option>
         <option value="false">Não</option>
       </select>
@@ -37,7 +38,7 @@ function CampoValor({ tipo, valor, chave, opcoes }: { tipo: TipoValor; valor: un
   if (opcoes && opcoes.length > 0) {
     const conhecido = opcoes.some((o) => o.valor === texto);
     return (
-      <select name="valor" defaultValue={texto} className={estiloCampo}>
+      <select name="valor" aria-label={`Valor de ${chave}`} defaultValue={texto} className={estiloCampo}>
         {!conhecido && <option value={texto}>{texto || "(vazio)"} (valor atual, fora da lista)</option>}
         {opcoes.map((o) => (
           <option key={o.valor} value={o.valor}>
@@ -50,16 +51,18 @@ function CampoValor({ tipo, valor, chave, opcoes }: { tipo: TipoValor; valor: un
   return (
     <>
       {tipo === "numero" || tipo === "texto" ? (
-        <input name="valor" defaultValue={texto} inputMode={tipo === "numero" ? "decimal" : "text"} className={estiloCampo} />
+        <input name="valor" aria-label={`Valor de ${chave}`} aria-describedby={ajuda ? ajudaId : undefined} defaultValue={texto} inputMode={tipo === "numero" ? "decimal" : "text"} className={estiloCampo} />
       ) : (
         <textarea
           name="valor"
+          aria-label={`Valor de ${chave}`}
+          aria-describedby={ajuda ? ajudaId : undefined}
           defaultValue={texto}
           rows={Math.min(8, Math.max(3, texto.split("\n").length))}
           className={`${estiloCampo} h-auto py-2 font-mono`}
         />
       )}
-      {ajuda && <p className="mt-1 text-[13px] text-texto-suave">{ajuda}</p>}
+      {ajuda && <p id={ajudaId} className="mt-1 text-legenda text-texto-suave">{ajuda}</p>}
     </>
   );
 }
@@ -102,7 +105,7 @@ export function FormExcecao({
       <form action={acao} className="space-y-2 pb-3">
         <input type="hidden" name="chave" value={chave} />
         <input type="hidden" name="tipo" value={tipo} />
-        <select name="microrregiao_id" defaultValue="" className={estiloCampo}>
+        <select name="microrregiao_id" aria-label={`Região da exceção de ${chave}`} defaultValue="" className={estiloCampo}>
           <option value="" disabled>
             Escolha a região
           </option>

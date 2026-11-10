@@ -222,7 +222,11 @@ export function FormBloco({ bloco }: { bloco: BlocoHome }) {
           <label htmlFor={`${bloco.chave}-${c}`} className={rotulo}>
             {NOMES_CAMPO_BLOCO[bloco.chave]?.[c] ?? NOMES_CAMPO[c]}
           </label>
-          <input id={`${bloco.chave}-${c}`} name={c} defaultValue={bloco[c] ?? ""} maxLength={MAX_CAMPO[c]} className={estiloCampo} />
+          {c === "texto" ? (
+            <textarea id={`${bloco.chave}-${c}`} name={c} defaultValue={bloco[c] ?? ""} maxLength={MAX_CAMPO[c]} rows={3} className={`${estiloCampo} h-auto py-2 leading-relaxed`} />
+          ) : (
+            <input id={`${bloco.chave}-${c}`} name={c} defaultValue={bloco[c] ?? ""} maxLength={MAX_CAMPO[c]} className={estiloCampo} />
+          )}
         </div>
       ))}
       {bloco.campos.includes("titulo") && <p className="text-[13px] text-texto-suave">Use {"{lugar}"} para mostrar a cidade ou região da pessoa.</p>}

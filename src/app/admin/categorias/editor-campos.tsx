@@ -68,9 +68,9 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
         {itens.map((c, i) => {
           const base = `campo-${c._id}`;
           return (
-            <li key={c._id} className="rounded-card border border-borda bg-cartao p-3">
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
+            <li key={c._id} className="@container/campo rounded-card border border-borda bg-cartao p-3">
+              <div className="flex flex-wrap items-start gap-2">
+                <div className="min-w-0 flex-1 basis-full @sm/campo:basis-0">
                   <label htmlFor={`${base}-nome`} className={rotulo}>
                     Campo {i + 1}: nome
                   </label>
@@ -84,7 +84,7 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
                     className={estiloCampo}
                   />
                 </div>
-                <div className="flex shrink-0 gap-1 pt-6">
+                <div className="flex shrink-0 gap-1 @sm/campo:pt-6">
                   <button
                     type="button"
                     onClick={() => mover(i, -1)}
@@ -138,7 +138,7 @@ export function EditorCampos({ inicial, temAnuncios }: { inicial: CampoEditado[]
               )}
 
               {c.tipo === "numero" && (
-                <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="mt-3 grid grid-cols-1 gap-3 @sm/campo:grid-cols-3">
                   <div>
                     <label htmlFor={`${base}-unidade`} className={rotulo}>
                       Unidade

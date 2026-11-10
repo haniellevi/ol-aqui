@@ -10,15 +10,15 @@ export function Titulo({ children, sub }: { children: React.ReactNode; sub?: Rea
   );
 }
 
-export function Cartao({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <section className={`@container/painel rounded-card border border-borda bg-cartao p-4 ${className}`}>{children}</section>;
+export function Cartao({ children, className = "", ...props }: React.ComponentProps<"section">) {
+  return <section {...props} className={`@container/painel relative min-w-0 rounded-card border border-borda bg-cartao p-4 ${className}`}>{children}</section>;
 }
 
 export function Numero({ rotulo, valor, detalhe, alerta }: { rotulo: string; valor: React.ReactNode; detalhe?: React.ReactNode; alerta?: boolean }) {
   return (
     <Cartao>
       <p className="text-legenda text-texto-suave">{rotulo}</p>
-      <p className={`mt-2 text-2xl font-semibold tabular-nums ${alerta ? "text-perigo" : "text-beringela"}`}>{valor}</p>
+      <p className={`mt-2 text-2xl font-semibold tabular-nums [overflow-wrap:anywhere] ${alerta ? "text-perigo" : "text-beringela"}`}>{valor}</p>
       {detalhe && <p className="mt-1 text-legenda text-texto-suave">{detalhe}</p>}
     </Cartao>
   );

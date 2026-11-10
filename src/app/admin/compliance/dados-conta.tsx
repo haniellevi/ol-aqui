@@ -34,7 +34,7 @@ function valor(chave: string, v: unknown): string {
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <section className="mt-6 break-inside-avoid-page">
+    <section className="@container/dados mt-6 min-w-0 break-inside-avoid-page">
       <h3 className="mb-2 border-b border-borda pb-1 text-lg font-semibold text-beringela">{titulo}</h3>
       {children}
     </section>
@@ -43,9 +43,9 @@ function Secao({ titulo, children }: { titulo: string; children: React.ReactNode
 
 function Linha({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-1 gap-x-4 py-1 sm:grid-cols-[14rem_1fr]">
+    <div className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-1 py-2 @xl/dados:grid-cols-[12rem_minmax(0,1fr)]">
       <dt className="text-sm text-texto-suave">{rotulo}</dt>
-      <dd className="break-words text-base text-beringela">{children}</dd>
+      <dd className="min-w-0 text-sm text-texto [overflow-wrap:anywhere]">{children}</dd>
     </div>
   );
 }
@@ -54,7 +54,7 @@ function Campos({ campos }: { campos: Record<string, [string | null, string | nu
   return (
     <ul className="mt-1 flex flex-col gap-1 text-sm text-beringela">
       {Object.entries(campos).map(([campo, [antes, depois]]) => (
-        <li key={campo} className="break-words">
+        <li key={campo} className="min-w-0 [overflow-wrap:anywhere]">
           <span className="font-semibold">{campo}</span>: {antes ?? "vazio"} → {depois ?? "vazio"}
         </li>
       ))}

@@ -121,13 +121,13 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
         )}
         <div className="flex min-w-0 flex-1 flex-col">
           {p.loja_slug ? (
-            <Link href={linkLoja(p.loja_slug)} className="truncate text-base font-semibold underline-offset-4 hover:underline">
+            <Link href={linkLoja(p.loja_slug)} className="break-words text-base font-semibold underline-offset-4 hover:underline">
               {p.loja_nome}
             </Link>
           ) : (
-            <span className="truncate text-base font-semibold">{p.loja_nome}</span>
+            <span className="break-words text-base font-semibold">{p.loja_nome}</span>
           )}
-          <span className="flex items-center gap-2 text-[13px] text-texto-suave">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-legenda text-texto-suave">
             {p.loja_selo && (
               <span className="inline-flex items-center gap-0.5 font-semibold text-verde-escuro">
                 <BadgeCheck className="size-4" aria-hidden />
@@ -138,7 +138,7 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
           </span>
         </div>
         {p.escolhida && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-sucesso-fundo px-2 py-0.5 text-[13px] font-semibold text-verde-escuro">
+          <span className="inline-flex items-center gap-1 rounded-full bg-sucesso-fundo px-2 py-0.5 text-legenda font-semibold text-verde-escuro">
             <Star className="size-3.5" aria-hidden />
             Você escolheu
           </span>
@@ -152,9 +152,9 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
         )}
         <div className="flex min-w-40 flex-1 flex-col gap-1">
           <span className="break-words text-xl font-bold text-beringela">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</span>
-          {p.mensagem && <p className="whitespace-pre-line break-words text-[15px] text-texto">{p.mensagem}</p>}
+          {p.mensagem && <p className="whitespace-pre-line break-words text-base leading-6 text-texto">{p.mensagem}</p>}
           {p.anuncio_id && p.anuncio_titulo && (
-            <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo)} className="min-h-12 content-center text-[15px] font-semibold text-laranja-escuro underline underline-offset-4">
+            <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo)} className="min-h-12 content-center text-base leading-6 font-semibold text-laranja-escuro underline underline-offset-4">
               Ver anúncio: {p.anuncio_titulo}
             </Link>
           )}
