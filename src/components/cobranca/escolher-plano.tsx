@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, CheckCircle2, Radar, Star } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
@@ -51,22 +51,39 @@ export function textoRegra(o: Pick<OpcaoAssinatura, "regra" | "nome" | "inicio" 
 export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocumento, planoInicial, pagamentoInicial }: EscolherPlanoProps) {
   const router = useRouter();
   const periodos = useMemo(() => [...new Set(opcoes.map((o) => o.meses))].sort((a, b) => a - b), [opcoes]);
-  // Pagamento retomado (?p=): só vale se o plano e o período dele ainda estão na lista.
+  // A cobrança salva tem preço e status próprios, mesmo quando o catálogo mudou.
   const retomado = pagamentoInicial?.tipo === "assinatura" ? pagamentoInicial : null;
-  const inicial =
-    retomado && opcoes.some((o) => o.codigo === retomado.plano_codigo && o.meses === retomado.meses && o.disponivel) ? retomado : null;
-  const retomadoSaiu = !!retomado && !inicial && retomado.status === "pendente";
+  const inicial = retomado;
+  const [ocupado, setOcupado] = useState(false);
+  const atualizarPlano = useCallback(() => router.refresh(), [router]);
   const [meses, setMeses] = useState<number>(() => (inicial ? inicial.meses : periodos[0] ?? 1));
   const planos = opcoes.filter((o) => o.meses === meses);
   const [codigo, setCodigo] = useState<string | null>(() => {
     if (inicial) return inicial.plano_codigo;
     const daLista = planos.find((o) => o.codigo === planoInicial && o.disponivel);
-    return daLista?.codigo ?? planos.find((o) => o.disponivel && !o.atual)?.codigo ?? planos.find((o) => o.disponivel)?.codigo ?? null;
+    return daLista?.codigo ?? planos.find((o) => o.disponivel && o.atual)?.codigo ?? planos.find((o) => o.disponivel)?.codigo ?? null;
   });
   // Com uma cobrança esperando pagamento, plano e período ficam presos (o Pix é daquele valor).
   const [travado, setTravado] = useState(inicial?.status === "pendente");
   const opcao = planos.find((o) => o.codigo === codigo) ?? null;
   const planoAtual = assinatura.plano_nome && !assinatura.e_teste && assinatura.preco_centavos > 0 ? assinatura.plano_nome : null;
+
+  function resultado(p: MeuPagamento) {
+    return <CaixaResultado icone="ok" titulo="Pagamento confirmado">
+      <p className="max-w-sm text-base text-texto-suave">{p.concedido_de && p.regra === "proximo_periodo"
+        ? `O plano ${p.plano_nome ?? ""} começa em ${dataPorExtenso(p.concedido_de)} e vale até ${dataPorExtenso(p.concedido_ate)}.`
+        : p.concedido_ate ? `Seu plano ${p.plano_nome ?? ""} vale até ${dataPorExtenso(p.concedido_ate)}.` : "Seu pagamento foi recebido. Consulte a situação do plano acima."}</p>
+      <Botao href="/minha-conta" larguraTotal className="max-w-sm">Ir para Minha conta</Botao>
+    </CaixaResultado>;
+  }
+  if (retomado) return <div className="flex flex-col gap-4">
+    <p className="text-base font-semibold">{retomado.plano_nome ?? retomado.plano_codigo ?? "Plano"} · {preco(retomado.valor_centavos)} por {retomado.meses === 1 ? "um período" : `${retomado.meses} períodos`}</p>
+    <FluxoCobranca key={retomado.id} valorCentavos={retomado.valor_centavos} precisaDocumento={precisaDocumento}
+      pagamentoInicial={retomado} pedir={() => Promise.resolve({ok:false,erro:{mensagem:"Escolha um plano para iniciar um novo pedido."}})}
+      aoMudarPagamento={(id) => router.replace(linkMeuPlano({ pagamentoId: id }), { scroll: false })}
+      aoPagar={atualizarPlano} sucesso={resultado} desligado={!pagamentoLigado} />
+    <Botao variante="texto" href={linkMeuPlano()}>Ver planos disponíveis</Botao>
+  </div>;
 
   if (opcoes.length === 0) {
     return (
@@ -86,7 +103,7 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
               const exemplo = opcoes.find((o) => o.meses === m);
               const desconto = exemplo?.desconto_percentual ?? 0;
               return (
-                <Chip key={m} ativo={m === meses} disabled={travado && m !== meses} onClick={() => setMeses(m)}>
+                <Chip key={m} ativo={m === meses} disabled={ocupado || (travado && m !== meses)} onClick={() => { setMeses(m); if (!opcoes.some((o) => o.meses === m && o.codigo === codigo && o.disponivel)) setCodigo(opcoes.find((o) => o.meses === m && o.disponivel)?.codigo ?? null); }}>
                   {nomePeriodo(m, exemplo?.dias ?? null)}
                   {desconto > 0 ? ` · ${desconto.toLocaleString("pt-BR")}% de desconto` : ""}
                 </Chip>
@@ -96,12 +113,6 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
         </div>
       )}
 
-      {retomadoSaiu && (
-        <Aviso tipo="atencao">
-          <span>A cobrança que você começou não vale mais. Escolha o plano de novo abaixo.</span>
-        </Aviso>
-      )}
-
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-3 text-lg font-semibold">Escolha o plano</legend>
         {planos.map((o) => (
@@ -109,7 +120,7 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
             key={o.codigo}
             opcao={o}
             ativo={o.codigo === codigo}
-            travado={travado && o.codigo !== codigo}
+            travado={ocupado || (travado && o.codigo !== codigo)}
             onEscolher={() => setCodigo(o.codigo)}
           />
         ))}
@@ -128,27 +139,15 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
           valorCentavos={opcao.valor_centavos}
           precisaDocumento={precisaDocumento}
           pagamentoInicial={inicial && inicial.plano_codigo === opcao.codigo && inicial.meses === opcao.meses ? inicial : null}
-          pedir={(forma, doc) => pedirPlano(opcao.codigo, opcao.meses, forma, doc)}
+          pedir={(forma, doc) => pedirPlano(opcao.codigo, opcao.meses, forma, doc, opcao.valor_centavos)}
           aoMudarPagamento={(id) => {
             setTravado(id !== null);
             router.replace(linkMeuPlano({ pagamentoId: id }), { scroll: false });
           }}
-          aoPagar={() => router.refresh()}
+          aoOcupar={setOcupado}
+          aoPagar={atualizarPlano}
           nota={<p>{textoRegra(opcao, planoAtual)}</p>}
-          sucesso={(p) => (
-            <CaixaResultado icone="ok" titulo="Pronto! Pagamento confirmado.">
-              <p className="max-w-sm text-base text-texto-suave">
-                {p.regra === "proximo_periodo"
-                  ? `O plano ${p.plano_nome ?? ""} começa em ${dataPorExtenso(p.concedido_de)} e vai até ${dataPorExtenso(p.concedido_ate)}.`
-                  : p.concedido_ate
-                    ? `Seu plano ${p.plano_nome ?? ""} vale até ${dataPorExtenso(p.concedido_ate)}.`
-                    : "Seu plano já está valendo."}
-              </p>
-              <Botao href="/minha-conta" larguraTotal className="max-w-sm">
-                Ir para Minha conta
-              </Botao>
-            </CaixaResultado>
-          )}
+          sucesso={resultado}
         />
       ) : opcao?.motivo ? (
         <Aviso tipo="atencao">
@@ -172,7 +171,7 @@ function CartaoPlano({
   onEscolher: () => void;
 }) {
   const bloqueado = !o.disponivel || travado;
-  const porPeriodo = o.meses === 1 ? `a cada ${o.periodo_dias} dias` : `por ${o.dias} dias`;
+  const porPeriodo = `por ${o.dias} dias`;
   return (
     <label
       className={`relative flex min-h-12 cursor-pointer gap-3 rounded-card border-2 p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
@@ -188,7 +187,7 @@ function CartaoPlano({
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="flex flex-wrap items-baseline justify-between gap-x-3">
-          <span className="flex items-center gap-2 text-lg font-semibold leading-6">
+          <span className="flex flex-wrap items-center gap-2 text-lg font-semibold leading-6">
             {o.nome}
             {o.recomendado && (
               <span className="inline-flex items-center gap-1 rounded-full bg-beringela px-2 py-0.5 text-[13px] font-bold text-white">
@@ -197,7 +196,7 @@ function CartaoPlano({
               </span>
             )}
           </span>
-          <span className="text-lg font-bold leading-6">
+          <span className="text-lg font-bold leading-6 tabular-nums">
             {preco(o.valor_centavos)} <span className="text-sm font-normal text-texto-suave">{porPeriodo}</span>
           </span>
         </span>

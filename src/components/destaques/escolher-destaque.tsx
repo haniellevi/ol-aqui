@@ -476,15 +476,19 @@ function CartaoOpcao({
 
 export function PagarPix({ cobranca }: { cobranca: Extract<Cobranca, { forma: "pix" }> }) {
   const [copiado, setCopiado] = useState(false);
+  const [erroCopia, setErroCopia] = useState(false);
   async function copiar() {
     if (!cobranca.copiaECola) return;
+    setErroCopia(false);
     try {
       await navigator.clipboard.writeText(cobranca.copiaECola);
     } catch {
       // celular antigo: seleciona o texto para a pessoa copiar na mão
       const caixa = document.getElementById("pix-copia-e-cola") as HTMLTextAreaElement | null;
       caixa?.select();
-      document.execCommand?.("copy");
+      try {
+        if (!document.execCommand?.("copy")) { setErroCopia(true); return; }
+      } catch { setErroCopia(true); return; }
     }
     setCopiado(true);
     setTimeout(() => setCopiado(false), 4000);
@@ -536,6 +540,7 @@ export function PagarPix({ cobranca }: { cobranca: Extract<Cobranca, { forma: "p
           <Botao larguraTotal icone={copiado ? <CheckCircle2 /> : <Copy />} onClick={copiar}>
             {copiado ? "Código copiado!" : "Copiar código Pix"}
           </Botao>
+          {erroCopia && <p role="status" className="text-sm text-perigo">Não foi possível copiar automaticamente. Selecione e copie o código acima.</p>}
         </>
       )}
     </div>

@@ -59,6 +59,15 @@ try:
     print('PASS: vitrine preserva contato permitido, seções, fixados, preços e paginação sem expor prévias privadas', flush=True)
     checked(sql((root/'supabase/testes/250_minha_loja.sql').read_text()))
     print('PASS: Minha loja protege edição e uploads, salva contato, fotos e horários até meia-noite', flush=True)
+    checked(sql((root/'supabase/testes/260_meu_plano.sql').read_text()))
+    print('PASS: Meu plano protege preço, histórico, reserva e confirmação repetida', flush=True)
+    def reservar(i):
+        return sql("begin; select reservar_criacao_asaas('60000000-0000-4000-a000-000000000026','sandbox'); select pg_sleep(0.2); commit;")
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        reservas=list(pool.map(reservar,range(4)))
+    for result in reservas: checked(result)
+    assert sum(' t' in r.stdout for r in reservas)==1, [r.stdout for r in reservas]
+    print('PASS: quatro conexões simultâneas reservam uma única criação de cobrança', flush=True)
     migracao_avisos = (root/'supabase/migrations/20261109195657_notificacoes_confiaveis.sql').read_text()
     checked(sql("""begin;
       update modelos_mensagem set texto='Texto personalizado da equipe' where chave='proposta_escolhida' and canal='notificacao';
