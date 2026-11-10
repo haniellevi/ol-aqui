@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp, Pin, PinOff } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { fixarNaLoja, moverFixado } from "@/app/(conta)/minha-conta/loja/vitrine-actions";
 import type { Resultado } from "@/lib/tipos";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 // Fixar/tirar do topo da loja (Meus anúncios e Produtos no topo). O limite do plano é do banco:
 // se passar, a mensagem dele aparece aqui embaixo.
@@ -26,17 +27,11 @@ export function BotaoFixar({ anuncioId, fixado, className = "", comoItemDeMenu =
   if (comoItemDeMenu) {
     return (
       <>
-        <button
-          type="button"
-          onClick={alternar}
-          disabled={pendente}
-          aria-busy={pendente || undefined}
-          className="olaki-acao flex min-h-10 w-full items-center gap-2 rounded-campo px-3 text-left text-sm font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
-        >
-          {fixado ? <PinOff className="size-4 shrink-0" aria-hidden /> : <Pin className="size-4 shrink-0" aria-hidden />}
+        <DropdownMenuItem onClick={alternar} disabled={pendente} closeOnClick={false} aria-busy={pendente || undefined}>
+          {fixado ? <PinOff aria-hidden /> : <Pin aria-hidden />}
           {pendente ? (fixado ? "Tirando..." : "Fixando...") : fixado ? "Tirar do topo da loja" : "Fixar no topo da loja"}
-        </button>
-        {erro && <p role="alert" className="px-3 pb-1 text-legenda font-semibold text-perigo">{erro}</p>}
+        </DropdownMenuItem>
+        {erro && <p role="alert" className="max-w-56 px-3 pb-1 text-legenda text-perigo">{erro}</p>}
       </>
     );
   }

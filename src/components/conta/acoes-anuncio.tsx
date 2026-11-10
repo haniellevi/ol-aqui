@@ -10,16 +10,13 @@ import { marcarVendido, moverParaLixeira, pausarAnuncio, reativarAnuncio, restau
 import { abaDoStatus } from "./situacao-anuncios";
 import type { Resultado, StatusAnuncio } from "@/lib/tipos";
 import { Alert } from "@/components/ui/alert";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type Acao = "pausar" | "reativar" | "vendido-sim" | "vendido-nao" | "excluir" | "restaurar";
 type Confirmacao = "pausar" | "vendido" | "excluir";
 
 // Plano de design: no card ficam à vista só a ação do momento e Editar (botões pequenos).
 // O resto (pausar, destacar, fixar, lixeira) fica no menu "Mais".
-const ITEM_MENU =
-  "olaki-acao flex min-h-10 w-full items-center gap-2 rounded-campo px-3 text-left text-sm font-semibold text-beringela hover:bg-fundo " +
-  "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:opacity-60 [&>svg]:size-4 [&>svg]:shrink-0";
-
 export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAcoes }: {
   id: string; status: StatusAnuncio; titulo: string; temPagamento?: boolean;
   /** Ações extras que entram no menu "Mais" (ex.: fixar no topo da loja). */
@@ -37,10 +34,8 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAco
   const cancelar = useRef<HTMLButtonElement>(null);
   const ocupado = pendente || emCurso !== null;
   const editar = `/anunciar/detalhes?rascunho=${id}&editar=1`;
-  const menu = useRef<HTMLDetailsElement>(null);
 
   function abrir(tipo: Confirmacao) {
-    if (menu.current) menu.current.open = false;
     setErro(null);
     setConfirmacao(tipo);
     dialogo.current?.showModal();
@@ -99,17 +94,17 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAco
             {status === "ativo" && <Botao tamanho="pequeno" icone={<CheckCircle2 />} disabled={ocupado} onClick={() => abrir("vendido")}>Vendi</Botao>}
             {(status === "pausado" || status === "expirado") && <Botao tamanho="pequeno" icone={<Play />} disabled={ocupado} carregando={emCurso === "reativar"} textoCarregando="Reativando..." onClick={() => rodar("reativar", () => reativarAnuncio(id))}>Reativar</Botao>}
             {["ativo", "pausado", "expirado"].includes(status) && <Botao tamanho="pequeno" href={editar} variante="secundario" icone={<Pencil />} carregando={ocupado}>Editar</Botao>}
-            <details ref={menu} className="group relative">
-              <summary className={classesBotao("secundario", false, "list-none cursor-pointer [&::-webkit-details-marker]:hidden", "pequeno")} aria-label={`Mais ações de ${titulo}`}>
+            <DropdownMenu>
+              <DropdownMenuTrigger className={classesBotao("secundario", false, "cursor-pointer", "pequeno")} aria-label={`Mais ações de ${titulo}`}>
                 <Ellipsis className="size-4" aria-hidden /> Mais
-              </summary>
-              <div className="absolute right-0 z-20 mt-1 flex w-56 flex-col gap-0.5 rounded-card border border-borda bg-cartao p-1 shadow-2">
-                {status === "ativo" && <button type="button" className={ITEM_MENU} disabled={ocupado} onClick={() => abrir("pausar")}><Pause aria-hidden />Pausar</button>}
-                {status === "ativo" && <Link href={linkDestacar(id)} className={ITEM_MENU}><Sparkles aria-hidden />Destacar</Link>}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {status === "ativo" && <DropdownMenuItem disabled={ocupado} onClick={() => abrir("pausar")}><Pause aria-hidden />Pausar</DropdownMenuItem>}
+                {status === "ativo" && <DropdownMenuItem render={<Link href={linkDestacar(id)} />}><Sparkles aria-hidden />Destacar</DropdownMenuItem>}
                 {maisAcoes}
-                <button type="button" className={`${ITEM_MENU} text-perigo`} disabled={ocupado} onClick={() => abrir("excluir")}><Trash2 aria-hidden />Mover para lixeira</button>
-              </div>
-            </details>
+                <DropdownMenuItem variant="destructive" disabled={ocupado} onClick={() => abrir("excluir")}><Trash2 aria-hidden />Mover para lixeira</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         )}
       </div>
