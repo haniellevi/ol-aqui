@@ -61,7 +61,8 @@ export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string 
           <Aviso tipo={erro ? "erro" : "ok"}>{erro ?? ok}</Aviso>
         </div>
       )}
-      {pedidos.length === 0 && <Cartao className="text-sm text-texto-suave">Nenhum pedido no Radar ainda.</Cartao>}
+      {pedidosR.error && <Aviso tipo="erro">Não foi possível carregar os pedidos. Recarregue para tentar novamente.</Aviso>}
+      {!pedidosR.error && pedidos.length === 0 && <Cartao className="text-sm text-texto-suave">Nenhum pedido no Radar ainda.</Cartao>}
       <div className="space-y-4">
         {pedidos.map((p) => {
           const tirado = p.fechado_motivo === "moderacao";
@@ -80,7 +81,8 @@ export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string 
       </div>
 
       <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Radar: propostas mais novas</h2>
-      {propostas.length === 0 && <Cartao className="text-sm text-texto-suave">Nenhuma proposta ainda.</Cartao>}
+      {propostasR.error && <Aviso tipo="erro">Não foi possível carregar as propostas. Recarregue para tentar novamente.</Aviso>}
+      {!propostasR.error && propostas.length === 0 && <Cartao className="text-sm text-texto-suave">Nenhuma proposta ainda.</Cartao>}
       <div className="space-y-4">
         {propostas.map((r) => (
           <Cartao key={r.id}>
