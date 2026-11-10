@@ -67,6 +67,14 @@ try:
     print('PASS: aluguel não herda piso de venda, preserva limites e conteúdo e reavalia mudança de finalidade', flush=True)
     checked(sql((root/'supabase/testes/290_moderacao_ia.sql').read_text()))
     print('PASS: IA protege revisão, orçamento, fotos, denúncias, contato, congelamento, concorrência e repetição', flush=True)
+    checked(sql((root/'supabase/testes/300_privacidade.sql').read_text()))
+    print('PASS: exportação lê colunas concedidas e exclusão financeira preserva cobrança sem conteúdo operacional', flush=True)
+    resultado_cron=sql((root/'supabase/testes/310_rotinas_piloto.sql').read_text())
+    checked(resultado_cron)
+    if 'Sem pg_cron' in resultado_cron.stderr:
+        print('SKIP: agendamentos310 exigem pg_cron; ramo sem extensão passou', flush=True)
+    else:
+        print('PASS: agendamentos310 conferidos no catálogo real do pg_cron', flush=True)
     def solicitar_otp(i):
         return sql("select reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990088',repeat('a',64));")
     with ThreadPoolExecutor(max_workers=4) as pool:
@@ -141,5 +149,44 @@ try:
     assert sum('"reserva"' in r.stdout for r in results)==1, [r.stdout for r in results]
     checked(sql("do $$ begin assert (select count(*)=1 from robo_uso where tipo='moderacao'), 'Reserva duplicada ou orçamento excedido'; end $$;"))
     print('PASS: quatro workers de IA reservam apenas uma chamada quando o orçamento permite uma', flush=True)
+    # O congelamento toma o lock primeiro; as exclusões precisam aguardar e recusar.
+    checked(sql("""
+      insert into radar_pedidos(id,comprador_id,microrregiao_id,titulo,cidade)
+       select ('94000000-0000-4000-a000-00000000000'||n)::uuid,'user_comprador',microrregiao_id,'Pedido de retenção concorrente','Corrente'
+       from perfis cross join generate_series(1,2) n where id='user_comprador';
+      insert into radar_propostas(pedido_id,vitrine_id,anuncio_id,mensagem)
+       select ('94000000-0000-4000-a000-00000000000'||n)::uuid,id,
+              case when n=2 then '99000000-0000-4000-a000-000000000001'::uuid end,'Proposta sob teste concorrente'
+       from vitrines_lojas cross join generate_series(1,2) n where dono_id='user_loja';
+    """))
+    def conferir_retencao_concorrente(congelar, apagar):
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futuro=pool.submit(sql,"begin; set application_name='olaki-congelamento-teste'; "+congelar+"; select pg_sleep(1); commit;")
+            for _ in range(40):
+                trava=sql("select exists(select 1 from pg_stat_activity where application_name='olaki-congelamento-teste' and wait_event='PgSleep');")
+                checked(trava)
+                if ' t' in trava.stdout: break
+                time.sleep(.01)
+            else: raise AssertionError('Congelamento não iniciou para o teste concorrente')
+            exclusao=pool.submit(sql,apagar)
+            checked(futuro.result())
+            resultado=exclusao.result()
+        assert resultado.returncode != 0 and ('congelad' in resultado.stderr or 'retenção' in resultado.stderr), resultado.stderr
+    conferir_retencao_concorrente(
+      "update radar_pedidos set status='congelado' where id='94000000-0000-4000-a000-000000000001'",
+      "delete from radar_propostas where pedido_id='94000000-0000-4000-a000-000000000001'")
+    conferir_retencao_concorrente(
+      "update radar_pedidos set status='congelado' where id='94000000-0000-4000-a000-000000000002'",
+      "delete from anuncios where id='99000000-0000-4000-a000-000000000001'")
+    checked(sql("update radar_pedidos set status='aberto' where id::text like '94000000%';"))
+    conferir_retencao_concorrente(
+      "update anuncios set status='congelado' where id='99000000-0000-4000-a000-000000000002'",
+      "delete from perfis where id='user_loja'")
+    checked(sql("""do $$ begin
+      assert (select count(*)=2 from radar_propostas where pedido_id::text like '94000000%'), 'Proposta congelada perdida';
+      assert exists(select 1 from anuncios where id='99000000-0000-4000-a000-000000000001'), 'Referência da oferta congelada perdida';
+      assert exists(select 1 from perfis where id='user_loja'), 'Cascata perdeu a conta com retenção';
+    end $$;"""))
+    print('PASS: congelamento concorrente preserva proposta, anúncio referenciado e cascata da conta', flush=True)
 finally:
     run('docker','stop',container)
