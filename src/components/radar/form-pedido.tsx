@@ -284,7 +284,7 @@ function CartaoModo({
       type="button"
       onClick={onClick}
       aria-pressed={ativo}
-      className={`flex min-h-10 items-start gap-3 rounded-card border-2 p-4 text-left transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
+      className={`flex min-h-10 items-start gap-3 rounded-card border p-3 text-left transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
         ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao hover:bg-fundo"
       }`}
     >

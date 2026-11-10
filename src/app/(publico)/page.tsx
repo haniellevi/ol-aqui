@@ -88,7 +88,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
                 href="/categorias"
                 className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-legenda font-medium leading-4 hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
               >
-                <span className="grid size-10 place-items-center rounded-full border-2 border-borda bg-cartao text-beringela">
+                <span className="grid size-10 place-items-center rounded-full border border-borda bg-cartao text-beringela">
                   <Ellipsis className="size-6" aria-hidden />
                 </span>
                 <span>Todas</span>

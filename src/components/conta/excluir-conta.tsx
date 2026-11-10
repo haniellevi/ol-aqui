@@ -44,7 +44,7 @@ export function ExcluirConta({ temPagamentos }: { temPagamentos: boolean }) {
 
   const confere = texto.trim().toUpperCase() === PALAVRA;
   return (
-    <form action={acao} className="flex flex-col gap-3 rounded-card border-2 border-perigo bg-perigo-fundo p-4">
+    <form action={acao} className="flex flex-col gap-3 rounded-card border border-perigo bg-perigo-fundo p-4">
       <h3 className="text-lg font-bold text-perigo">Tem certeza?</h3>
       <ul className="flex list-disc flex-col gap-1 pl-5 text-base">
         <li>Seus anúncios saem do ar e sua loja fecha.</li>

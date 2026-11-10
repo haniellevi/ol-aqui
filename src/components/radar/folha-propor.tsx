@@ -238,7 +238,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                             type="button"
                             onClick={() => escolherAnuncio(a)}
                             aria-pressed={ativo}
-                            className={`flex min-h-10 w-full items-center gap-3 rounded-campo border-2 p-2 text-left focus-visible:outline-3 focus-visible:outline-laranja-escuro ${
+                            className={`flex min-h-10 w-full items-center gap-3 rounded-campo border p-2 text-left focus-visible:outline-3 focus-visible:outline-laranja-escuro ${
                               ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao hover:bg-fundo"
                             }`}
                           >
