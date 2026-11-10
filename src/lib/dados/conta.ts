@@ -11,9 +11,9 @@ import type { MeuPerfil, MinhaConta, MinhaVitrine, Plano } from "@/lib/tipos";
  * Sem login ou sem perfil → null. Guardado durante a requisição.
  * O limite mostrado é só informação: quem barra de verdade é o banco (trigger do limite).
  */
-export const meuPerfilEVitrine = cache((): Promise<MinhaConta | null> => seguro(lerConta, null));
+export const meuPerfilEVitrine = cache((exigirLeitura = false): Promise<MinhaConta | null> => exigirLeitura ? lerConta(true) : seguro(() => lerConta(), null));
 
-async function lerConta(): Promise<MinhaConta | null> {
+async function lerConta(exigirLeitura = false): Promise<MinhaConta | null> {
   const { userId } = await auth();
   if (!userId) return null;
   const db = await createClient();
@@ -27,10 +27,12 @@ async function lerConta(): Promise<MinhaConta | null> {
       .maybeSingle<MinhaVitrine>(),
   ]);
   const perfilLinha = Array.isArray(perfilRes.data) ? perfilRes.data[0] : perfilRes.data;
-  if (perfilRes.error || !perfilLinha) return null;
+  if (perfilRes.error) throw new Error("Não foi possível carregar sua conta.");
+  if (!perfilLinha) return null;
   const perfil = paraPerfil(perfilLinha);
   if (vitrineRes.error) throw new Error("Não foi possível carregar sua vitrine.");
   const vitrine = vitrineRes.data;
+  if (exigirLeitura && (perfil.id !== userId || (vitrine && vitrine.dono_id !== userId))) throw new Error("Não foi possível confirmar sua conta.");
 
   if (!vitrine) {
     return { perfil, vitrine: null, plano: null, limite: 0, ativos: 0, rascunhos: 0, podePublicar: false };
@@ -38,7 +40,7 @@ async function lerConta(): Promise<MinhaConta | null> {
 
   const agoraIso = new Date().toISOString();
   const [plano, ativosRes, rascunhosRes] = await Promise.all([
-    planoEfetivo(),
+    planoEfetivo(exigirLeitura),
     db
       .from("anuncios")
       .select("id", { count: "exact", head: true })
@@ -51,6 +53,7 @@ async function lerConta(): Promise<MinhaConta | null> {
       .eq("vitrine_id", vitrine.id)
       .eq("status", "rascunho"),
   ]);
+  if (exigirLeitura && (ativosRes.error || rascunhosRes.error || ativosRes.count === null || rascunhosRes.count === null)) throw new Error("Não foi possível carregar o uso do plano.");
   const limite = plano ? plano.limite_anuncios : 0;
   const ativos = ativosRes.count ?? 0;
   return {
@@ -68,10 +71,13 @@ async function lerConta(): Promise<MinhaConta | null> {
  * Plano que vale agora, calculado pelo banco (public.meu_plano → plano_efetivo). Assim a tela
  * enxerga até o plano contratado que saiu de venda (planos.ativo = false), igual ao limite do banco.
  */
-async function planoEfetivo(): Promise<Plano | null> {
+async function planoEfetivo(exigirLeitura = false): Promise<Plano | null> {
   const db = await createClient();
   const { data, error } = await db.rpc("meu_plano");
-  if (error) return null;
+  if (error) {
+    if (exigirLeitura) throw new Error("Não foi possível carregar seu plano.");
+    return null;
+  }
   const linha = (Array.isArray(data) ? data[0] : data) as Plano | null | undefined;
   return linha?.codigo ? linha : null;
 }

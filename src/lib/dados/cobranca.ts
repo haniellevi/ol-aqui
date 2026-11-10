@@ -1,33 +1,33 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { seguro } from "@/lib/dados/seguro";
 import { lerConfig, lerConfigNumero } from "@/lib/dados/config";
 import { ehUuid } from "@/lib/formato";
 import type { MeuPagamento, MinhaAssinatura, OpcaoAssinatura } from "@/lib/tipos-cobranca";
 
 // Leituras de "Meu plano" e do anúncio avulso. Quem garante dono e regras é o banco
-// (minha_assinatura, opcoes_assinatura e a RLS de pagamentos). Em erro devolvem vazio.
+// (minha_assinatura, opcoes_assinatura e a RLS de pagamentos). Falhas não se confundem com ausência.
 
 /** Situação do plano do vendedor logado (null quando não vende). */
 export async function minhaAssinatura(): Promise<MinhaAssinatura | null> {
-  return seguro(async () => {
+  {
     const db = await createClient();
     const { data, error } = await db.rpc("minha_assinatura");
     const linha = Array.isArray(data) ? data[0] : data;
-    if (error || !linha) return null;
+    if (error) throw new Error("Não foi possível carregar a assinatura.");
+    if (!linha) return null;
     const l = linha as MinhaAssinatura;
     return { ...l, aviso_dias: Number(l.aviso_dias ?? 0), preco_centavos: Number(l.preco_centavos ?? 0) };
-  }, null);
+  }
 }
 
 /** Planos à venda para o vendedor logado em cada período, com valor e regra antes de pagar. */
 export async function opcoesAssinatura(): Promise<OpcaoAssinatura[]> {
-  return seguro(async () => {
+  {
     const db = await createClient();
     const { data, error } = await db.rpc("opcoes_assinatura");
-    if (error || !Array.isArray(data)) return [];
+    if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar os planos disponíveis.");
     return (data as OpcaoAssinatura[]).map((o) => ({ ...o, desconto_percentual: Number(o.desconto_percentual ?? 0) }));
-  }, []);
+  }
 }
 
 type LinhaPagamento = Omit<MeuPagamento, "plano_nome" | "tem_cobranca"> & {
@@ -38,7 +38,7 @@ type LinhaPagamento = Omit<MeuPagamento, "plano_nome" | "tem_cobranca"> & {
 /** Um pagamento do vendedor logado (de outra pessoa → null, pela RLS). */
 export async function meuPagamento(id: string): Promise<MeuPagamento | null> {
   if (!ehUuid(id)) return null;
-  return seguro(async () => {
+  {
     const db = await createClient();
     const { data, error } = await db
       .from("pagamentos")
@@ -47,10 +47,12 @@ export async function meuPagamento(id: string): Promise<MeuPagamento | null> {
       )
       .eq("id", id)
       .maybeSingle();
-    if (error || !data) return null;
+    if (error) throw new Error("Não foi possível carregar o pagamento.");
+    if (!data) return null;
     const { asaas_cobranca_id, planos, ...l } = data as unknown as LinhaPagamento;
+    if (l.id !== id || !Number.isSafeInteger(l.valor_centavos) || l.valor_centavos < 0) throw new Error("Pagamento inválido.");
     return { ...l, meses: l.meses ?? 1, plano_nome: planos?.nome ?? null, tem_cobranca: !!asaas_cobranca_id };
-  }, null);
+  }
 }
 
 /**

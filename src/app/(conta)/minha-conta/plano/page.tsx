@@ -4,12 +4,12 @@ import { LINK_PLANOS, linkAvulso, linkMeuPlano } from "@/lib/rotas";
 import { auth } from "@clerk/nextjs/server";
 import { Radar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { seguro } from "@/lib/dados/seguro";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
-import { ehUuid, reais } from "@/lib/formato";
-import { asaasConfigurado } from "@/lib/asaas";
+import { ehUuid, preco } from "@/lib/formato";
+import { ambienteAsaas, asaasConfigurado } from "@/lib/asaas";
 import { precisaDocumento } from "@/lib/cobranca-destaque";
 import { meuPagamento, minhaAssinatura, opcoesAssinatura } from "@/lib/dados/cobranca";
+import { linkPagamentoSeguro } from "@/lib/link-pagamento";
 import type { Plano } from "@/lib/tipos";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
@@ -57,35 +57,40 @@ const STATUS_PAGAMENTO: Record<Pagamento["status"], { texto: string; cor: string
 const FORMA: Record<NonNullable<Pagamento["forma"]>, string> = { pix: "Pix", boleto: "Boleto", cartao: "Cartão" };
 
 async function lerPlanos(): Promise<Plano[]> {
-  return seguro(async () => {
+  {
     const db = await createClient();
     const { data, error } = await db.from("planos").select(COLUNAS_PLANO).order("ordem");
-    return error ? [] : ((data ?? []) as Plano[]);
-  }, []);
+    if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar os planos.");
+    return data as Plano[];
+  }
 }
 
-async function lerPagamentos(vitrineId: string): Promise<Pagamento[]> {
-  return seguro(async () => {
+async function lerPagamentos(vitrineId: string, pagina: number): Promise<{ lista: Pagamento[]; total: number }> {
+  {
     const { userId } = await auth();
-    if (!userId) return [];
+    if (!userId) throw new Error("Entre para ver os pagamentos.");
     const db = await createClient();
-    const { data, error } = await db
+    const { data, error, count } = await db
       .from("pagamentos")
-      .select("id, tipo, plano_codigo, anuncio_id, valor_centavos, forma, status, vencimento, pago_em, link_pagamento, criado_em")
+      .select("id, tipo, plano_codigo, anuncio_id, valor_centavos, forma, status, vencimento, pago_em, link_pagamento, criado_em", { count: "exact" })
       .eq("vitrine_id", vitrineId)
       .order("criado_em", { ascending: false })
-      .limit(12);
-    return error ? [] : ((data ?? []) as Pagamento[]);
-  }, []);
+      .order("id", { ascending: false })
+      .range((pagina - 1) * 12, pagina * 12 - 1);
+    if (error || !Array.isArray(data) || count === null) throw new Error("Não foi possível carregar seus pagamentos.");
+    return { lista: data as Pagamento[], total: count };
+  }
 }
 
-type Params = Promise<{ plano?: string | string[]; p?: string | string[] }>;
+type Params = Promise<{ plano?: string | string[]; p?: string | string[]; pagina?: string | string[] }>;
 
 export default async function PaginaMeuPlano({ searchParams }: { searchParams: Params }) {
   const busca = await searchParams;
   const planoPedido = typeof busca.plano === "string" ? busca.plano.slice(0, 60) : null;
   const pagamentoPedido = typeof busca.p === "string" && ehUuid(busca.p) ? busca.p : null;
-  const conta = await meuPerfilEVitrine();
+  const numeroPagina = Number(busca.pagina);
+  const pagina = Number.isInteger(numeroPagina) && numeroPagina > 0 && numeroPagina <= 1000 ? numeroPagina : 1;
+  const conta = await meuPerfilEVitrine(true);
   if (!conta?.vitrine) {
     return (
       <PaginaConta>
@@ -98,14 +103,17 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
   }
   const vitrine = conta.vitrine;
   const pagamentoLigado = asaasConfigurado();
-  const [planos, pagamentos, assinatura, opcoes, doc, retomado] = await Promise.all([
+  const [planos, historico, assinatura, opcoes, doc, retomado, ambiente] = await Promise.all([
     lerPlanos(),
-    lerPagamentos(vitrine.id),
+    lerPagamentos(vitrine.id, pagina),
     minhaAssinatura(),
     opcoesAssinatura(),
     pagamentoLigado ? precisaDocumento(vitrine.id) : Promise.resolve(false),
     pagamentoPedido ? meuPagamento(pagamentoPedido) : Promise.resolve(null),
+    pagamentoLigado ? ambienteAsaas() : Promise.resolve(null),
   ]);
+  if (!assinatura || assinatura.vitrine_id !== vitrine.id) throw new Error("Não foi possível confirmar sua assinatura.");
+  const pagamentos = historico.lista;
   const resumo = resumoPlano(conta)!;
   const nomes = new Map(planos.map((p) => [p.codigo, p.nome]));
   const planoContratado = planos.find((p) => p.codigo === vitrine.plano);
@@ -117,9 +125,11 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
     <PaginaConta>
       <TopoConta titulo="Meu plano" />
 
+      {pagamentoLigado && ambiente === "sandbox" && <Aviso tipo="atencao">Pagamentos em ambiente de teste. Cobranças geradas aqui não têm valor real.</Aviso>}
+      {busca.p && (!pagamentoPedido || !retomado || retomado.tipo !== "assinatura") && <Aviso tipo="atencao">Esse pagamento não está disponível nesta conta. Confira seu histórico abaixo.</Aviso>}
       {/* Plano atual */}
       <section aria-labelledby="plano-atual" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h2 id="plano-atual" className="text-sm font-semibold uppercase tracking-wide text-texto-suave">
+        <h2 id="plano-atual" className="text-sm font-semibold uppercase text-texto-suave">
           Plano atual
         </h2>
         <p className="text-xl font-bold">{resumo.nome ?? "Sem plano ativo"}</p>
@@ -164,7 +174,8 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
               aria-label="Anúncios usados do plano"
               aria-valuemin={0}
               aria-valuemax={conta.limite ?? 0}
-              aria-valuenow={conta.ativos}
+              aria-valuenow={Math.min(conta.ativos, conta.limite ?? conta.ativos)}
+              aria-valuetext={resumo.uso}
               className="h-3 w-full overflow-hidden rounded-full bg-borda"
             >
               <div className={`h-full rounded-full ${pct >= 100 ? "bg-perigo" : "bg-laranja"}`} style={{ width: `${pct}%` }} />
@@ -213,6 +224,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
             </Link>
           </div>
           <EscolherPlano
+            key={pagamentoPedido ?? "novo"}
             opcoes={opcoes}
             assinatura={assinatura}
             pagamentoLigado={pagamentoLigado}
@@ -221,7 +233,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
             pagamentoInicial={retomado?.tipo === "assinatura" ? retomado : null}
           />
           <p className="text-sm text-texto-suave">
-            Cada pagamento vale por um período. Na hora de renovar, avisamos aqui em Meu plano.
+            Sem renovação automática: cada pagamento vale por um período. Você decide quando renovar em Meu plano.
           </p>
         </section>
       )}
@@ -232,20 +244,21 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
           Pagamentos
         </h2>
         {pagamentos.length === 0 ? (
-          <p className="rounded-card bg-cartao p-4 text-base text-texto-suave shadow-1">Você ainda não tem pagamentos.</p>
+          <p className="rounded-card bg-cartao p-4 text-base text-texto-suave shadow-1">{pagina > 1 ? "Não há pagamentos nesta página." : "Você ainda não tem pagamentos."}</p>
         ) : (
           <ul className="divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
             {pagamentos.map((p) => {
-              const st = STATUS_PAGAMENTO[p.status];
+              const st = STATUS_PAGAMENTO[p.status] ?? { texto: "Em análise", cor: "bg-fundo text-texto-suave" };
+              const linkSeguro = linkPagamentoSeguro(p.link_pagamento);
               const quando = p.pago_em ?? p.vencimento ?? p.criado_em;
               return (
                 <li key={p.id} className="flex flex-col gap-1 p-4">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-base font-semibold">
                       {TIPO_PAGAMENTO[p.tipo]}
                       {p.tipo === "assinatura" && p.plano_codigo ? ` · ${nomes.get(p.plano_codigo) ?? p.plano_codigo}` : ""}
                     </span>
-                    <span className="text-base font-bold">{reais(p.valor_centavos)}</span>
+                    <span className="text-base font-bold tabular-nums">{preco(p.valor_centavos)}</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-sm text-texto-suave">
                     <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${st.cor}`}>{st.texto}</span>
@@ -268,10 +281,9 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
                     </Link>
                   ) : (
                     p.status === "pendente" &&
-                    p.link_pagamento &&
-                    /^https:\/\//.test(p.link_pagamento) && (
+                    linkSeguro && (
                       <a
-                        href={p.link_pagamento}
+                        href={linkSeguro!}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex min-h-12 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
@@ -285,6 +297,12 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
             })}
           </ul>
         )}
+        {historico.total > 12 && <nav aria-label="Páginas de pagamentos" className="flex flex-wrap items-center justify-between gap-3">
+          {pagina > 1 && <Botao variante="secundario" href={`/minha-conta/plano?pagina=${pagina - 1}#pagamentos`}>Mais recentes</Botao>}
+          <span className="text-sm text-texto-suave tabular-nums">Página {pagina} de {Math.max(1, Math.ceil(historico.total / 12))}</span>
+          {pagina * 12 < historico.total && <Botao variante="secundario" href={`/minha-conta/plano?pagina=${pagina + 1}#pagamentos`}>Mais antigos</Botao>}
+        </nav>}
+        {pagina > 1 && historico.total <= 12 && <Botao variante="secundario" href="/minha-conta/plano#pagamentos">Voltar aos pagamentos</Botao>}
       </section>
     </PaginaConta>
   );

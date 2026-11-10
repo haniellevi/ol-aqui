@@ -10,7 +10,7 @@ import { PagarPix } from "@/components/destaques/escolher-destaque";
 import { preco } from "@/lib/formato";
 import { documentoValido, mascaraDocumento } from "@/lib/cpf-cnpj";
 import { pagarCobranca, verificarCobranca } from "@/app/(conta)/pagar/actions";
-import type { Resultado } from "@/lib/tipos";
+import type { ResultadoCobranca } from "@/app/(conta)/pagar/actions";
 import type { Cobranca, FormaPagamento, MeuPagamento, RespostaCobranca } from "@/lib/tipos-cobranca";
 
 // Pagamento de plano ou de anúncio avulso: Pix ou cartão → espera (a tela pergunta sozinha) → pronto.
@@ -30,8 +30,9 @@ export type FluxoCobrancaProps = {
   /** Pagamento em andamento (?p=...). */
   pagamentoInicial?: MeuPagamento | null;
   /** Cria o pedido no banco e a cobrança no Asaas. */
-  pedir: (forma: FormaPagamento, documento: string | null) => Promise<Resultado<RespostaCobranca>>;
+  pedir: (forma: FormaPagamento, documento: string | null) => Promise<ResultadoCobranca>;
   /** Avisa o pagamento em andamento (para pôr ?p= no endereço) ou null ao recomeçar. */
+  aoOcupar?: (ocupado: boolean) => void;
   aoMudarPagamento?: (id: string | null) => void;
   /** Chamado quando o pagamento é confirmado. */
   aoPagar?: (p: MeuPagamento) => void;
@@ -51,6 +52,7 @@ export function FluxoCobranca({
   pagamentoInicial,
   pedir,
   aoMudarPagamento,
+  aoOcupar,
   aoPagar,
   sucesso,
   desligado,
@@ -58,6 +60,12 @@ export function FluxoCobranca({
   aoErrar,
 }: FluxoCobrancaProps) {
   const [pendente, iniciar] = useTransition();
+  const bloqueio = useRef(false);
+  const versao = useRef(0);
+  const callbacks = useRef({ aoPagar, aoMudarPagamento, aoOcupar });
+  callbacks.current = { aoPagar, aoMudarPagamento, aoOcupar };
+  const [idSalvo, setIdSalvo] = useState(pagamentoInicial?.id ?? null);
+  const [consulta, setConsulta] = useState<string | null>(null);
   const [etapa, setEtapa] = useState<Etapa>(() =>
     pagamentoInicial?.status === "pago"
       ? "sucesso"
@@ -75,76 +83,95 @@ export function FluxoCobranca({
   const [pagamento, setPagamento] = useState<MeuPagamento | null>(pagamentoInicial ?? null);
   const [cobranca, setCobranca] = useState<Cobranca | null>(null);
   const [emCurso, setEmCurso] = useState<"pagar" | "trocar" | "conferir" | null>(null);
-  const pagamentoId = pagamento?.status === "pendente" ? pagamento.id : null;
+  const pagamentoId = pagamento?.status === "pendente" ? pagamento.id : idSalvo;
 
   const confirmar = useCallback(
     (p: MeuPagamento) => {
       setPagamento(p);
       setEtapa("sucesso");
-      aoPagar?.(p);
+      setErro(null);
+      callbacks.current.aoPagar?.(p);
     },
-    [aoPagar],
+    [],
   );
 
   function receber(r: RespostaCobranca) {
     if (r.etapa === "precisa_documento") {
+      setIdSalvo(r.pagamentoId);
+      setEtapa("escolher");
       setPedirDoc(true);
       setErroDoc("Para pagar, digite seu CPF ou CNPJ.");
       return;
     }
     if (r.etapa === "pago") return confirmar(r.pagamento);
+    setIdSalvo(r.pagamento.id);
     setPagamento(r.pagamento);
     setCobranca(r.cobranca);
     setEtapa("aguardando");
-    aoMudarPagamento?.(r.pagamento.id);
+    callbacks.current.aoMudarPagamento?.(r.pagamento.id);
   }
 
   function pagar(formaEscolhida: FormaPagamento = forma, acao: "pagar" | "trocar" = "pagar") {
+    if (bloqueio.current || desligado) return;
     setErro(null);
     setErroDoc(null);
     if (pedirDoc && !documentoValido(documento)) {
       setErroDoc("CPF ou CNPJ inválido. Confira os números.");
       return;
     }
+    bloqueio.current = true;
+    callbacks.current.aoOcupar?.(true);
     setEmCurso(acao);
+    const atual = versao.current;
     iniciar(async () => {
-      const doc = pedirDoc ? documento : null;
-      const r = acao === "trocar" && pagamentoId ? await pagarCobranca(pagamentoId, formaEscolhida, doc) : await pedir(formaEscolhida, doc);
-      if (r.ok) {
-        setForma(formaEscolhida);
-        receber(r.dados);
-      } else setErro(r.erro);
-      setEmCurso(null);
+      try {
+        const doc = pedirDoc ? documento : null;
+        const r = pagamentoId ? await pagarCobranca(pagamentoId, formaEscolhida, doc) : await pedir(formaEscolhida, doc);
+        if (atual !== versao.current) return;
+        if (r.ok) { setForma(formaEscolhida); receber(r.dados); }
+        else {
+          if (r.pagamentoId) setIdSalvo(r.pagamentoId);
+          setErro(r.erro);
+        }
+      } catch {
+        setErro({ mensagem: "A conexão falhou. Consulte seu histórico antes de iniciar outro pedido; você pode retomar o pagamento por lá." });
+      } finally {
+        bloqueio.current = false;
+        callbacks.current.aoOcupar?.(false);
+        setEmCurso(null);
+      }
     });
   }
 
-  // Voltou pelo link (?p=...) com cobrança já criada: busca o Pix/link de novo (a mesma cobrança)
-  const buscou = useRef(false);
+  // Retoma a cobrança pelo id salvo. Uma falha oferece recuperação no próprio painel.
   useEffect(() => {
-    if (buscou.current || etapa !== "aguardando" || cobranca || !pagamentoInicial) return;
-    buscou.current = true;
-    const f: FormaPagamento = pagamentoInicial.forma === "cartao" ? "cartao" : "pix";
-    pagarCobranca(pagamentoInicial.id, f, null).then((r) => {
-      if (r.ok) receber(r.dados);
-      else setErro(r.erro);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- só uma vez, ao abrir
-  }, [etapa]);
+    if (etapa !== "aguardando" || cobranca || !pagamentoInicial || desligado) return;
+    let cancelado = false;
+    pagarCobranca(pagamentoInicial.id, pagamentoInicial.forma === "cartao" ? "cartao" : "pix", null)
+      .then((r) => { if (!cancelado) { if (r.ok) receber(r.dados); else setErro(r.erro); } })
+      .catch(() => { if (!cancelado) setErro({ mensagem: "Não foi possível carregar a cobrança. Tente novamente." }); });
+    return () => { cancelado = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- retomada apenas uma vez; as ações seguintes são explícitas
+  }, []);
 
   // Espera: pergunta a cada 5 s, por até 30 min
   const [esgotou, setEsgotou] = useState(false);
   const conferir = useCallback(
-    async (perguntarAoAsaas: boolean) => {
+    async (perguntarAoAsaas: boolean, manual = false) => {
       if (!pagamentoId) return;
-      const r = await verificarCobranca(pagamentoId, perguntarAoAsaas);
-      if (!r.ok) return;
-      if (r.dados.status === "pago") confirmar(r.dados);
-      else if (r.dados.status !== "pendente") {
-        setPagamento(r.dados);
-        setEtapa("cancelado");
+      const atual = versao.current;
+      try {
+        const r = await verificarCobranca(pagamentoId, perguntarAoAsaas);
+        if (atual !== versao.current) return;
+        if (!r.ok) { setErro(r.erro); return; }
+        setErro(null);
+        if (r.dados.status === "pago") confirmar(r.dados);
+        else if (r.dados.status !== "pendente") { setPagamento(r.dados); setEtapa("cancelado"); }
+        else if (manual) setConsulta("O pagamento ainda aguarda confirmação. Você pode consultar novamente em instantes.");
+      } catch {
+        if (atual === versao.current) setErro({ mensagem: "Não foi possível conferir agora. Tente novamente em instantes." });
       }
-    },
-    [pagamentoId, confirmar],
+    }, [pagamentoId, confirmar],
   );
   useEffect(() => {
     if (etapa !== "aguardando" || !pagamentoId || esgotou) return;
@@ -168,20 +195,27 @@ export function FluxoCobranca({
   }, [etapa, pagamentoId, esgotou, conferir]);
 
   function conferirAgora() {
+    if (bloqueio.current) return;
+    bloqueio.current = true;
     setEmCurso("conferir");
     iniciar(async () => {
-      await conferir(true);
-      setEsgotou(false);
-      setEmCurso(null);
+      try { await conferir(true, true); setEsgotou(false); }
+      finally { bloqueio.current = false; setEmCurso(null); }
     });
   }
 
   function recomecar() {
+    if (bloqueio.current) return;
+    versao.current += 1;
     setPagamento(null);
+    setIdSalvo(null);
     setCobranca(null);
     setErro(null);
+    setConsulta(null);
+    setEsgotou(false);
+    setDocumento("");
     setEtapa("escolher");
-    aoMudarPagamento?.(null);
+    callbacks.current.aoMudarPagamento?.(null);
   }
 
   const linkErro = erro && aoErrar ? aoErrar(erro) : null;
@@ -227,10 +261,10 @@ export function FluxoCobranca({
         </div>
 
         {!cobranca ? (
-          <p className="flex items-center gap-2 text-base text-texto-suave">
-            <Loader2 className="size-5 animate-spin motion-reduce:animate-none" aria-hidden />
-            Carregando o pagamento...
-          </p>
+          <div className="flex flex-col gap-2">
+            <p className="text-base text-texto-suave">{erro ? "A cobrança ainda não foi carregada." : "Carregando o pagamento..."}</p>
+            <Botao variante="secundario" disabled={pendente || desligado} carregando={emCurso === "trocar"} onClick={() => pagar(forma, "trocar")}>Recarregar cobrança</Botao>
+          </div>
         ) : cobranca.forma === "pix" ? (
           <PagarPix cobranca={cobranca} />
         ) : (
@@ -242,6 +276,7 @@ export function FluxoCobranca({
           </div>
         )}
 
+        {consulta && <p role="status" className="text-sm text-texto-suave">{consulta}</p>}
         {esgotou && (
           <Aviso tipo="atencao">
             <span>Ainda não recebemos o pagamento. Se você já pagou, espere uns minutos e toque em &quot;Já paguei&quot;.</span>
@@ -264,7 +299,7 @@ export function FluxoCobranca({
               icone={cobranca.forma === "pix" ? <CreditCard /> : <QrCode />}
               carregando={emCurso === "trocar"}
               textoCarregando="Trocando..."
-              disabled={pendente}
+              disabled={pendente || desligado}
               onClick={() => pagar(cobranca.forma === "pix" ? "cartao" : "pix", "trocar")}
             >
               {cobranca.forma === "pix" ? "Prefiro pagar no cartão" : "Prefiro pagar com Pix"}
@@ -285,10 +320,10 @@ export function FluxoCobranca({
         Como você quer pagar?
       </h2>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Forma de pagamento">
-        <Chip ativo={forma === "pix"} icone={<QrCode />} onClick={() => setForma("pix")}>
+        <Chip disabled={pendente} ativo={forma === "pix"} icone={<QrCode />} onClick={() => setForma("pix")}>
           Pix
         </Chip>
-        <Chip ativo={forma === "cartao"} icone={<CreditCard />} onClick={() => setForma("cartao")}>
+        <Chip disabled={pendente} ativo={forma === "cartao"} icone={<CreditCard />} onClick={() => setForma("cartao")}>
           Cartão
         </Chip>
       </div>
@@ -296,6 +331,7 @@ export function FluxoCobranca({
         <Campo
           rotulo="Seu CPF ou CNPJ"
           name="documento"
+          disabled={pendente}
           inputMode="numeric"
           autoComplete="off"
           placeholder="000.000.000-00"
@@ -316,7 +352,7 @@ export function FluxoCobranca({
         disabled={pendente || desligado}
         onClick={() => pagar()}
       >
-        {`Pagar ${preco(valorCentavos)} ${forma === "pix" ? "com Pix" : "no cartão"}`}
+        {`Pagar ${preco(pagamento?.valor_centavos ?? valorCentavos)} ${forma === "pix" ? "com Pix" : "no cartão"}`}
       </Botao>
       {nota && <div className="text-sm text-texto-suave">{nota}</div>}
       {erro && (

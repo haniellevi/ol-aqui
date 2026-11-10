@@ -41,12 +41,11 @@ export function webhookConfigurado(): boolean {
 
 /** Lê "asaas.ambiente" (painel). Qualquer valor diferente de produção vira sandbox (falha segura). */
 export async function ambienteAsaas(): Promise<AmbienteAsaas> {
-  try {
-    const { data } = await supabaseAdmin().rpc("config", { p_chave: "asaas.ambiente", p_microrregiao: null, p_padrao: "sandbox" });
+  {
+    const { data, error } = await supabaseAdmin().rpc("config", { p_chave: "asaas.ambiente", p_microrregiao: null, p_padrao: "sandbox" });
+    if (error) throw new ErroAsaas("Não foi possível confirmar o ambiente de pagamento.");
     const v = String(data ?? "sandbox").toLowerCase();
     return v === "producao" || v === "produção" || v === "production" ? "producao" : "sandbox";
-  } catch {
-    return "sandbox";
   }
 }
 
@@ -121,6 +120,15 @@ export async function criarCobranca(
       externalReference: dados.referencia,
     }),
   });
+}
+
+/** Reconcilia uma resposta perdida sem repetir a criação. externalReference não é chave idempotente do provedor. */
+export async function buscarCobrancaPorReferencia(ambiente: AmbienteAsaas, referencia: string) {
+  const r = await chamar<{ data: (CobrancaAsaas & { customer: string; externalReference: string; deleted?: boolean })[]; hasMore: boolean }>(
+    ambiente, `/payments?externalReference=${encodeURIComponent(referencia)}&limit=2`,
+  );
+  if (!Array.isArray(r.data) || r.hasMore || r.data.length > 1) throw new ErroAsaas("Não foi possível identificar uma única cobrança.");
+  return r.data[0] ?? null;
 }
 
 /** Troca a forma de uma cobrança que ainda não foi paga (Pix ⇄ cartão). */

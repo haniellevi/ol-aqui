@@ -14,10 +14,12 @@ import {
   consultarCobranca,
   criarCliente,
   criarCobranca,
+  buscarCobrancaPorReferencia,
   qrCodePix,
   trocarForma,
   type AmbienteAsaas,
 } from "@/lib/asaas";
+import { linkPagamentoSeguro } from "@/lib/link-pagamento";
 import type { Cobranca, FormaPagamento } from "@/lib/tipos-destaques";
 import type { MeuPagamento, RespostaCobranca } from "@/lib/tipos-cobranca";
 
@@ -43,11 +45,12 @@ const hojeFortaleza = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "America/Fortaleza", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
 export async function lerPagamento(id: string): Promise<LinhaPagamento | null> {
-  const { data } = await supabaseAdmin()
+  const { data, error } = await supabaseAdmin()
     .from("pagamentos")
     .select("id, vitrine_id, valor_centavos, vencimento, status, forma, asaas_cobranca_id, link_pagamento")
     .eq("id", id)
     .maybeSingle<LinhaPagamento>();
+  if (error) throw new ErroCobranca("Não foi possível consultar o pagamento.");
   return data ?? null;
 }
 
@@ -62,23 +65,25 @@ export async function podePerguntarAoAsaas(pagamentoId: string): Promise<boolean
 
 export async function montarCobranca(amb: AmbienteAsaas, pg: LinhaPagamento, forma: FormaPagamento): Promise<Cobranca> {
   const id = pg.asaas_cobranca_id!;
+  const link = linkPagamentoSeguro(pg.link_pagamento);
   if (forma === "cartao") {
-    if (!pg.link_pagamento) throw new ErroCobranca("Não achamos a página de pagamento. Tente de novo.");
-    return { forma: "cartao", link: pg.link_pagamento };
+    if (!link) throw new ErroCobranca("Não achamos a página de pagamento. Tente de novo.");
+    return { forma: "cartao", link: link! };
   }
   try {
     const qr = await qrCodePix(amb, id);
-    return { forma: "pix", qrCodeBase64: qr.encodedImage ?? null, copiaECola: qr.payload ?? null, link: pg.link_pagamento };
+    return { forma: "pix", qrCodeBase64: qr.encodedImage ?? null, copiaECola: qr.payload ?? null, link };
   } catch {
     // sem QR (instabilidade): a página do Asaas também mostra o Pix
-    return { forma: "pix", qrCodeBase64: null, copiaECola: null, link: pg.link_pagamento };
+    if (!link) throw new ErroCobranca("Não foi possível carregar o Pix. Retome este pagamento em instantes.");
+    return { forma: "pix", qrCodeBase64: null, copiaECola: null, link };
   }
 }
 
 /**
  * Garante a cobrança no Asaas de um pagamento pendente do usuário: cria o cliente (com o CPF/CNPJ,
- * que não é guardado), cria a cobrança ou troca Pix/cartão. Dois cliques ao mesmo tempo: fica a
- * primeira cobrança gravada (registrar_cobranca_asaas) e a outra é apagada no Asaas.
+ * que não é guardado), cria a cobrança ou troca Pix/cartão. Uma reserva persistente impede
+ * POSTs concorrentes. Respostas perdidas são reconciliadas pela referência, sem recriar.
  * Sem cliente no Asaas e sem CPF/CNPJ válido → "precisa_documento".
  */
 export async function garantirCobranca(opcoes: {
@@ -99,48 +104,65 @@ export async function garantirCobranca(opcoes: {
     .maybeSingle<{ id: string; nome: string; tipo: string; dono_id: string; gateway_cliente_id: string | null; perfis: { nome: string } | null }>();
   if (!vitrine || vitrine.dono_id !== userId) throw new ErroCobranca(naoEncontrado);
 
+  if (pg.status === "pago") return "ok";
+  if (pg.status !== "pendente") throw new ErroCobranca("Esta cobrança não está mais esperando pagamento.");
+
+  let reservou = false;
+  let enviouCriacao = false;
   try {
     if (!pg.asaas_cobranca_id) {
       let cliente = clienteDoAmbiente(vitrine.gateway_cliente_id, amb);
+      if (!cliente && (!documento || !documentoValido(documento))) return "precisa_documento";
+      const reserva = await db.rpc("reservar_criacao_asaas", { p_pagamento_id: pg.id, p_ambiente: amb });
+      if (reserva.error) throw new ErroCobranca("Não foi possível preparar o pagamento com segurança. Tente novamente.");
+      reservou = reserva.data === true;
+      if (!reservou) {
+        const atual = await lerPagamento(pg.id);
+        if (atual?.asaas_cobranca_id) return garantirCobranca({ ...opcoes, pg: atual });
+      }
+      const encontrada = await buscarCobrancaPorReferencia(amb, pg.id);
+      if (encontrada && (encontrada.deleted || encontrada.externalReference !== pg.id || !cliente || encontrada.customer !== cliente || Math.round(encontrada.value * 100) !== pg.valor_centavos || !["PIX", "CREDIT_CARD"].includes(encontrada.billingType))) {
+        throw new ErroCobranca("A cobrança precisa ser conferida pela equipe. Nenhuma nova cobrança foi criada.");
+      }
+      if (!encontrada && !reservou) throw new ErroCobranca("A tentativa anterior ainda está sendo conferida. Aguarde e tente retomar este pagamento. Se continuar, fale com o suporte.");
       if (!cliente) {
-        if (!documento || !documentoValido(documento)) return "precisa_documento";
         const nome = vitrine.tipo === "loja" ? vitrine.nome : vitrine.perfis?.nome || vitrine.nome;
-        cliente = await criarCliente(amb, { nome, documento, referencia: vitrine.id });
-        await db.from("vitrines_lojas").update({ gateway_cliente_id: `${amb}:${cliente}` }).eq("id", vitrine.id);
+        cliente = await criarCliente(amb, { nome, documento: documento!, referencia: vitrine.id });
+        const salvo = await db.from("vitrines_lojas").update({ gateway_cliente_id: `${amb}:${cliente}` }).eq("id", vitrine.id).select("id").maybeSingle();
+        if (salvo.error || salvo.data?.id !== vitrine.id) throw new ErroCobranca("Não foi possível preparar os dados do pagamento. Tente novamente.");
       }
       const venc = pg.vencimento && pg.vencimento >= hojeFortaleza() ? pg.vencimento : hojeFortaleza();
-      const nova = await criarCobranca(amb, {
-        cliente,
-        forma,
-        centavos: pg.valor_centavos,
-        vencimento: venc,
-        descricao,
-        referencia: pg.id,
-      });
+      enviouCriacao = !encontrada;
+      const nova = encontrada ?? await criarCobranca(amb, { cliente, forma, centavos: pg.valor_centavos, vencimento: venc, descricao, referencia: pg.id });
+      if (!nova.id || Math.round(nova.value * 100) !== pg.valor_centavos || !["PIX", "CREDIT_CARD"].includes(nova.billingType)) throw new ErroCobranca("A resposta do pagamento precisa ser conferida. Retome em instantes.");
+      const formaReal = nova.billingType === "CREDIT_CARD" ? "cartao" : "pix";
       const { data: gravou, error } = await db.rpc("registrar_cobranca_asaas", {
-        p_pagamento_id: pg.id,
-        p_cobranca_id: nova.id,
-        p_link: nova.invoiceUrl,
-        p_forma: forma,
+        p_pagamento_id: pg.id, p_cobranca_id: nova.id, p_link: linkPagamentoSeguro(nova.invoiceUrl), p_forma: formaReal,
       });
-      if (gravou === false) {
-        await apagarCobranca(amb, nova.id); // outro clique já criou uma: fica a primeira
-      } else if (error) {
-        // a resposta se perdeu, mas pode ter gravado: só apaga se a gravada não for esta
+      if (error || gravou !== true) {
         const conferido = await lerPagamento(pg.id);
-        if (conferido && conferido.asaas_cobranca_id !== nova.id) await apagarCobranca(amb, nova.id);
+        if (conferido?.asaas_cobranca_id !== nova.id) throw new ErroCobranca("Não foi possível confirmar a cobrança. Retome este pagamento em instantes.");
+      }
+      if (STATUS_PAGO.has(nova.status)) {
+        const confirmado = await db.rpc("confirmar_pagamento", { p_asaas_cobranca_id: nova.id, p_payload: { event: "RECONCILIACAO_OLAKI", payment: nova } });
+        if (confirmado.error) throw new ErroCobranca("Pagamento localizado. Aguarde a confirmação e consulte novamente.");
       }
     } else if (pg.forma !== forma) {
       if (!(await podePerguntarAoAsaas(pg.id))) throw new ErroCobranca("Espere alguns segundos e tente de novo.");
       const trocada = await trocarForma(amb, pg.asaas_cobranca_id, forma);
-      await db.rpc("registrar_cobranca_asaas", {
+      const registrado = await db.rpc("registrar_cobranca_asaas", {
         p_pagamento_id: pg.id,
         p_cobranca_id: pg.asaas_cobranca_id,
-        p_link: trocada.invoiceUrl ?? pg.link_pagamento,
+        p_link: linkPagamentoSeguro(trocada.invoiceUrl ?? pg.link_pagamento),
         p_forma: forma,
       });
+      if (registrado.error || registrado.data !== true) throw new ErroCobranca("Não foi possível confirmar a forma de pagamento. Consulte novamente.");
     }
   } catch (e) {
+    // Sem POST ou recusa explícita: seguro liberar. Timeout/5xx após POST preservam a reserva.
+    if (reservou && (!enviouCriacao || (e instanceof ErroAsaas && e.status === 400))) {
+      await db.from("asaas_criacoes").delete().eq("pagamento_id", pg.id).eq("ambiente", amb);
+    }
     if (e instanceof ErroAsaas) {
       throw new ErroCobranca(
         e.status === 400 ? `O pagamento não foi aceito: ${e.message}` : "O sistema de pagamento não respondeu. Tente de novo em instantes.",
@@ -164,11 +186,11 @@ export async function conferirNoAsaas(pagamentoId: string): Promise<boolean> {
     const amb = await ambienteAsaas();
     const c = await consultarCobranca(amb, pg.asaas_cobranca_id);
     if (!STATUS_PAGO.has(String(c.status))) return false;
-    await supabaseAdmin().rpc("confirmar_pagamento", {
+    const confirmado = await supabaseAdmin().rpc("confirmar_pagamento", {
       p_asaas_cobranca_id: pg.asaas_cobranca_id,
       p_payload: { event: "CONSULTA_OLAKI", payment: c },
     });
-    return true;
+    return !confirmado.error;
   } catch {
     return false;
   }

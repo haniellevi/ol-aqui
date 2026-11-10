@@ -44,5 +44,8 @@ const dataLonga = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "lon
 
 /** "12 de dezembro de 2026". */
 export function dataPorExtenso(iso: string | null | undefined): string {
-  return iso ? dataLonga.format(new Date(iso)) : "";
+  if (!iso) return "";
+  // Vencimentos DATE são dias civis, não meia-noite UTC (que vira o dia anterior no Brasil).
+  const data = new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T12:00:00-03:00` : iso);
+  return Number.isNaN(data.getTime()) ? "Data indisponível" : dataLonga.format(data);
 }
