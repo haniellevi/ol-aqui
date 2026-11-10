@@ -4,7 +4,7 @@
 
 Shopping digital e classificados regionais, com o Radar de Negócios: o comprador descreve uma necessidade e as lojas enviam propostas.
 
-O endereço publicado observado na análise foi `ol-aqui.vercel.app`. O domínio definitivo do piloto ainda precisa ser confirmado; `mercadodaregiao.com.br` e seu eventual redirecionamento não devem ser tratados como configurados apenas porque aparecem em documentos anteriores.
+O domínio de produção é `mercadodaregiao.com.br`, vinculado e verificado no projeto Vercel `ol-aqui`. O nome exibido é Mercado da Região. Consulte `docs/GESTAO-USUARIOS-LOJAS.md` para a gestão administrativa.
 
 O ponto de entrada para a abertura acompanhada é [Liberação do piloto](docs/preparacao-piloto/liberacao.md). O documento distingue verificações locais, inspeção do ambiente publicado e ensaios com contas autorizadas. Os arquivos `QA-*` e `VALIDACAO-*` são registros históricos das respectivas versões.
 

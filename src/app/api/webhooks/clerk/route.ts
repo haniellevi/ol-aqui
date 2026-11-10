@@ -57,7 +57,7 @@ async function apagarConta(id: string) {
 
   // A conta já não existe no Clerk. Revoga também JWT emitido antes da exclusão,
   // sem depender de manter o perfil e sem renovar a data quando o evento se repete.
-  ok(await db.from("contas_revogadas").upsert({ usuario_id: id }, { onConflict: "usuario_id", ignoreDuplicates: true }));
+  ok(await db.rpc("revogar_conta_definitivamente", { p_id: id }));
 
   // Congelamento exige revisão humana antes de remover evidências ou arquivos.
   // Vale também sem cobrança: a cascata do perfil apagaria o conteúdo congelado.

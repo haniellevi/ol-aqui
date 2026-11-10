@@ -182,6 +182,8 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
       >
         Lojas
       </Titulo>
+      {papel === "administrador" && <Link href="/admin/lojas/nova" className={`${estiloBotao} mb-4`}>Cadastrar loja</Link>}
+      {sp.excluida === "1" && <Aviso tipo="ok">Loja excluída. A conta do titular foi mantida.</Aviso>}
 
       <Cartao className="mb-6">
         <form method="get" className="grid grid-cols-2 gap-3 md:grid-cols-5">
