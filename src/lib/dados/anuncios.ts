@@ -42,9 +42,11 @@ async function lerBusca(p: ParametrosBusca): Promise<ResultadoBusca> {
   for (const k of Object.keys(args)) if (args[k] == null) delete args[k];
 
   const db = await createClient();
-  const { data, error } = await db.rpc("buscar_anuncios", args);
-  if (error || !Array.isArray(data)) throw new Error("Não foi possível consultar os anúncios.");
-  const anuncios = (data as AnuncioCard[]).map((a) => ({ ...a, atributos: a.atributos ?? {}, total: Number(a.total) }));
+  const { data, error } = await db.rpc(p.facetas ? "buscar_anuncios_com_facetas" : "buscar_anuncios", args);
+  const linhas = p.facetas ? data?.anuncios : data;
+  if (error || !Array.isArray(linhas)) throw new Error("Não foi possível consultar os anúncios.");
+  const anuncios = (linhas as AnuncioCard[]).map((a) => ({ ...a, atributos: a.atributos ?? {}, total: Number(a.total) }));
+  if (p.facetas) return { anuncios, total: Number(data.total), facetas: data.facetas };
   return { anuncios, total: anuncios[0]?.total ?? 0 };
 }
 

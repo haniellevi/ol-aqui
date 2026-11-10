@@ -45,6 +45,8 @@ try:
     print('PASS: anúncio público protege contato, rascunho, vendido e pessoa sem confirmação', flush=True)
     checked(sql((root/'supabase/testes/180_criar_publicar_anuncio.sql').read_text()))
     print('PASS: rascunho, fotos concorrentes, preço, localização, publicação idempotente e contato público', flush=True)
+    checked(sql((root/'supabase/testes/185_publicar_buscar_facetas.sql').read_text()))
+    print('PASS: Carros e Casas passam de rascunho a anúncio público com filtros e facetas regionais', flush=True)
     checked(sql((root/'supabase/testes/190_meus_anuncios.sql').read_text()))
     print('PASS: lixeira, restauração, fotos, venda, moderação, idempotência e isolamento entre usuários', flush=True)
     checked(sql((root/'supabase/testes/200_radar_pedido_proposta_contato.sql').read_text()))

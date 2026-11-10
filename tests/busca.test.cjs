@@ -37,7 +37,10 @@ test('faixas invertidas e números fora dos limites são recusados', () => {
   assert.ok(lerEstadoBusca({ preco_min: '200', preco_max: '100' }).erros.preco_max);
   for (const value of ['0x780', '2e3', 'abc', '1899', '2101']) assert.ok(lerEstadoBusca({ c_ano_min: value }, campos).erros.c_ano_min);
   assert.ok(lerEstadoBusca({ c_ano_min: '2020', c_ano_max: '2015' }, campos).erros.c_ano_max);
-  assert.deepEqual(lerEstadoBusca({ c_estado: ['Novo', 'Novo', 'inexistente'] }, campos).filtros.estado, ['Novo']);
+  const removido = lerEstadoBusca({ c_estado: ['Novo', 'Novo', 'inexistente'] }, campos);
+  assert.deepEqual(removido.filtros.estado, ['Novo']);
+  assert.deepEqual(removido.valores.c_estado, ['Novo', 'inexistente']);
+  assert.match(removido.erros.c_estado, /indisponíveis no catálogo/);
 });
 test('trocar termo mantém filtros repetidos e remove página e parâmetros estranhos', () => {
   const manter = manterFiltros({ ...sp, debug: '1' });
@@ -108,6 +111,40 @@ test('listagem envia combinação completa e paginação para a consulta real', 
   await Listagem({ caminho: '/busca', sp, categoria: encontrada, categoriaPeloEndereco: false, topo: null });
   assert.equal(consultas.length, 1);
   assert.deepEqual(consultas[0], { q: 'fiat', categoria: 'carros', cidade: 'Corrente', precoMin: 150050, precoMax: 3000000, filtros: { ano: { min: 2015, max: 2020 }, estado: ['Novo', 'Usado'], troca: false }, ordem: 'menor_preco', limite: 24, deslocamento: 24 });
+});
+test('listagem regional envia facetas e mantém selecionadas as opções com zero', async () => {
+  const consultas = [];
+  const { Listagem } = carregar('src/components/busca/listagem.tsx', {
+    '@/lib/dados/regiao': { regiaoAtual: async () => ({ id: 'r', slug: 'corrente-pi', nome: 'Corrente' }), listarCidades: async () => [] },
+    '@/lib/dados/anuncios': { buscarAnuncios: async p => {
+      consultas.push(p);
+      return { anuncios: [{ id: 'a', titulo: 'Carro teste' }], total: 1, facetas: { estado: { opcoes: { Novo: 2 } }, ano: { min: 2015, max: 2020 } } };
+    } },
+    '@/components/anuncio/card-anuncio': cards,
+    '@/components/busca/vazio-busca': { VazioBusca: () => null },
+  });
+  const html = render(await Listagem({
+    caminho: '/c/veiculos/carros', sp: { c_estado: ['Novo', 'Usado'] }, categoria: encontrada, categoriaPeloEndereco: true, topo: null,
+  }));
+  assert.equal(consultas.length, 1);
+  assert.equal(consultas[0].facetas, true);
+  assert.equal(consultas[0].regiao, 'corrente-pi');
+  assert.deepEqual(consultas[0].filtros, { estado: ['Novo', 'Usado'] });
+  assert.match(html, /Novo \(2\)/);
+  assert.match(html, /Usado \(0\)/);
+  assert.match(html, /aria-label="Remover filtro: Estado: Novo, Usado"/);
+  assert.match(html, /Disponível de 2015 a 2020/);
+  assert.doesNotMatch(html, /id="filtro-troca"/);
+});
+test('painel separa catálogo e disponibilidade e mantém o filtro booleano falso', () => {
+  const { FolhaFiltros } = carregar('src/components/busca/folha-filtros.tsx');
+  const props = { caminho: '/c/veiculos/carros', estado: lerEstadoBusca({ c_troca: 'nao' }, campos), campos, cidades: [] };
+  const html = render(React.createElement(FolhaFiltros, { ...props, facetas: { estado: { opcoes: { Novo: 1 } }, troca: { opcoes: { sim: 3 } } } }));
+  assert.match(html, /Sim \(3\)/);
+  assert.match(html, /Não \(0\)/);
+  assert.match(html, /Novo \(1\)/);
+  assert.doesNotMatch(html, /value="Usado"|id="filtro-ano"/);
+  assert.match(render(React.createElement(FolhaFiltros, { ...props, facetas: null })), /value="Usado"/);
 });
 test('sugestões priorizam a categoria escolhida antes de ampliar para outras', async () => {
   const consultas = [];

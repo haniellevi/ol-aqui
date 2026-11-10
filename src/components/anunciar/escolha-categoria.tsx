@@ -90,6 +90,9 @@ export function EscolhaCategoria({
       {escolhida && (
         <p className="rounded-card bg-laranja-claro p-3 text-base" aria-live="polite">
           Escolhida: <strong>{escolhida.p.nome} › {escolhida.f.nome}</strong>
+          {selecionadaId && selecionadaId !== filhaId && (
+            <span className="mt-1 block text-sm">A troca mantém os dados compatíveis. Os demais detalhes precisarão ser preenchidos na nova categoria.</span>
+          )}
         </p>
       )}
 
