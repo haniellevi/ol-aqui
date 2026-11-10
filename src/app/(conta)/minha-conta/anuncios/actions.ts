@@ -10,7 +10,7 @@ import { ehUuid } from "@/lib/formato";
 import type { MeuAnuncio, Resultado, StatusAnuncio } from "@/lib/tipos";
 
 const NAO_ACHOU = { ok: false as const, erro: { mensagem: "Anúncio não encontrado." } };
-const FALHA = { ok: false as const, erro: { mensagem: "Não foi possível confirmar a alteração. Tente novamente; repetir a ação é seguro." } };
+const FALHA = { ok: false as const, erro: { mensagem: "Não foi possível confirmar a alteração. Atualize a página para conferir a situação do anúncio.", codigo: "alteracao_incerta" } };
 type Banco = Awaited<ReturnType<typeof createClient>>;
 
 async function alterar(id: string, executar: (db: Banco, a: MeuAnuncio) => Promise<Resultado<StatusAnuncio>>): Promise<Resultado<StatusAnuncio>> {

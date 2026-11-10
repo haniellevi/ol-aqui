@@ -113,10 +113,10 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
           <Galeria key={a.id} fotos={a.fotos} titulo={titulo} />
         </div>
 
-        <aside className="flex min-w-0 flex-col gap-4 px-4 md:row-span-2 md:px-0">
-          <div className="flex flex-col gap-2 md:sticky md:top-20">
+        <aside className="min-w-0 px-4 md:row-span-2 md:px-0">
+          <div className="flex flex-col gap-1.5 md:sticky md:top-20">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-2xl font-bold leading-[30px]">{preco(a.preco_centavos)}</p>
+              <p className="text-xl font-bold tabular-nums">{preco(a.preco_centavos)}</p>
               {vendido && <span className="rounded-full bg-beringela px-3 py-0.5 text-[13px] font-bold text-white">Vendido</span>}
               {a.destaque && ativo && (
                 <span className="rounded-full bg-patrocinado-fundo px-3 py-0.5 text-[13px] font-bold text-beringela">Patrocinado</span>
@@ -127,8 +127,8 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
                 <Repeat className="size-5" aria-hidden /> Aceita troca
               </p>
             )}
-            <h1 className="break-words text-[22px] font-semibold leading-7">{titulo}</h1>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-texto-suave">
+            <h1 className="break-words text-xl font-semibold leading-6">{titulo}</h1>
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-legenda text-texto-suave">
               {a.cidade && (
                 <span className="inline-flex min-w-0 max-w-full items-center gap-1">
                   <MapPin className="size-4 shrink-0" aria-hidden />
@@ -154,9 +154,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
 
             {publico(a) && <CompartilharAnuncio anuncioId={a.id} titulo={titulo} url={urlAbsoluta(caminho)} />}
 
-            <div className="mt-2">
-              <CartaoVendedor v={a} />
-            </div>
+            <CartaoVendedor v={a} />
 
             {mostrarBarra && (
               <div className="mt-2">

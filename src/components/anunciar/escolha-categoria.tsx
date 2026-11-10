@@ -52,6 +52,8 @@ export function EscolhaCategoria({
   }, [busca, arvore]);
 
   const escolhida = arvore.flatMap((p) => p.filhas.map((f) => ({ f, p }))).find((x) => x.f.id === filhaId);
+  const outros = arvore.find((p) => p.slug === "outros");
+  const diversos = outros?.filhas.find((f) => f.slug === "diversos");
 
   function opcao(f: Categoria, p: CategoriaComFilhas, mostrarPai: boolean) {
     return (
@@ -117,9 +119,19 @@ export function EscolhaCategoria({
       {busca.trim() ? (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 text-base font-semibold" aria-live="polite">
-            {achadas.length ? `${achadas.length} ${achadas.length === 1 ? "encontrada" : "encontradas"}` : "Nenhuma categoria com esse nome. Tente outra palavra."}
+            {achadas.length ? `${achadas.length} ${achadas.length === 1 ? "encontrada" : "encontradas"}` : "Nenhuma categoria encontrada"}
           </legend>
-          <ul className="flex flex-col gap-2">{achadas.map(({ filha, pai: p }) => opcao(filha, p, true))}</ul>
+          {achadas.length ? (
+            <ul className="flex flex-col gap-2">{achadas.map(({ filha, pai: p }) => opcao(filha, p, true))}</ul>
+          ) : (
+            <>
+              <p className="text-sm text-texto-suave">
+                {diversos ? "Procure a categoria mais próxima. Se nenhuma servir, escolha Outros › Diversos." : "Tente uma palavra mais ampla ou veja a lista de categorias."}
+              </p>
+              <Botao variante="secundario" className="self-start" onClick={() => { setBusca(""); setPaiId(null); }}>Ver todas as categorias</Botao>
+              {outros && diversos && <ul>{opcao(diversos, outros, true)}</ul>}
+            </>
+          )}
         </fieldset>
       ) : pai ? (
         <fieldset className="flex flex-col gap-2">

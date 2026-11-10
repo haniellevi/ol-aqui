@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { BarChart3, Clock, Eye, Heart, MessageCircle, Pin, Plus } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
@@ -49,6 +50,9 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
   const alterado = typeof sp.anuncio === "string" ? anuncios.find((a) => a.id === sp.anuncio) : null;
   const resultado = typeof sp.resultado === "string" && Object.hasOwn(RESULTADOS_ANUNCIO, sp.resultado) ? sp.resultado as keyof typeof RESULTADOS_ANUNCIO : null;
   const aviso = salvo ? RESULTADOS_ANUNCIO.salvo : alterado && resultado && (resultado === alterado.status || (resultado === "restaurado" && alterado.status !== "excluido")) ? RESULTADOS_ANUNCIO[resultado] : null;
+  if (aba.chave === "lixeira" && contagem.lixeira === 0 && resultado === "restaurado" && alterado && alterado.status !== "excluido") {
+    redirect(`/minha-conta/anuncios?aba=${abaDoStatus(alterado.status)}&resultado=restaurado&anuncio=${alterado.id}`);
+  }
   const lista = anuncios.filter((x) => (aba.status as readonly StatusAnuncio[]).includes(x.status));
   const plano = resumoPlano(conta);
   // resultado do destaque mais recente de cada anúncio (ativo ou que já acabou)

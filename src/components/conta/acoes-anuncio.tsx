@@ -18,6 +18,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id:
   const trava = useRef(false);
   const [emCurso, setEmCurso] = useState<Acao | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [recarregar, setRecarregar] = useState(false);
   const [sessaoExpirada, setSessaoExpirada] = useState(false);
   const [confirmacao, setConfirmacao] = useState<Confirmacao | null>(null);
   const dialogo = useRef<HTMLDialogElement>(null);
@@ -37,6 +38,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id:
     trava.current = true;
     setErro(null);
     setSessaoExpirada(false);
+    setRecarregar(false);
     setEmCurso(acao);
     iniciar(async () => {
       try {
@@ -44,14 +46,19 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id:
         if (!r.ok) {
           setErro(r.erro.mensagem);
           setSessaoExpirada(r.erro.codigo === "28000");
+          setRecarregar(r.erro.codigo === "alteracao_incerta");
           return;
         }
         dialogo.current?.close();
-        const resultado = acao === "restaurar" ? "restaurado" : r.dados;
-        router.replace(`/minha-conta/anuncios?aba=${abaDoStatus(r.dados)}&resultado=${resultado}&anuncio=${id}`, { scroll: true });
-        router.refresh();
+        const restaurando = acao === "restaurar";
+        const resultado = restaurando ? "restaurado" : r.dados;
+        const aba = restaurando ? "lixeira" : abaDoStatus(r.dados);
+        router.replace(`/minha-conta/anuncios?aba=${aba}&resultado=${resultado}&anuncio=${id}`, { scroll: !restaurando });
       } catch {
-        setErro("A conexão falhou. Tente novamente; repetir a ação é seguro.");
+        setErro(navigator.onLine
+          ? "Não foi possível confirmar a alteração. Atualize a página para conferir a situação do anúncio."
+          : "Você está sem internet. Reconecte-se e atualize a página para conferir a situação do anúncio.");
+        setRecarregar(true);
       } finally {
         trava.current = false;
         setEmCurso(null);
@@ -63,6 +70,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id:
     <div role="alert" className="rounded-card bg-perigo-fundo p-3 text-sm font-semibold text-perigo">
       <p>{erro}</p>
       {sessaoExpirada && <Botao href="/entrar?redirect_url=%2Fminha-conta%2Fanuncios" variante="texto">Entrar novamente</Botao>}
+      {recarregar && <Botao variante="texto" onClick={() => window.location.reload()}>Atualizar página</Botao>}
     </div>
   );
 
