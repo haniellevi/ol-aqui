@@ -3,11 +3,13 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bot, FileText, FolderTree, LayoutDashboard, MapPinned, MessageSquareText, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
+import { BarChart3, Bot, FileText, FolderTree, LayoutDashboard, MapPinned, Megaphone, MessageSquareText, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
 import { podeVerLink, type Papel } from "@/lib/tipos-equipe";
+import { LINK_ADMIN_ANUNCIOS } from "@/lib/rotas";
 
 const ITENS = [
   { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
+  { href: LINK_ADMIN_ANUNCIOS, rotulo: "Anúncios", icone: Megaphone },
   { href: "/admin/planos", rotulo: "Planos", icone: Tags },
   { href: "/admin/configuracoes", rotulo: "Configurações", curto: "Config.", icone: SlidersHorizontal },
   { href: "/admin/moderacao", rotulo: "Moderação", icone: ShieldAlert },
