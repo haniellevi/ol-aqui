@@ -5,7 +5,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 const ESTILO_CAIXA =
   "w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto placeholder:text-texto-suave " +
-  "focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 " +
+  "focus:outline-hidden focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 " +
   "disabled:bg-fundo disabled:opacity-70";
 
 type Comum = {
