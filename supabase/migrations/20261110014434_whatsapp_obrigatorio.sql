@@ -10,7 +10,15 @@ create function public.exigir_whatsapp_operacao() returns trigger language plpgs
 declare uid text := public.usuario_id();
 begin
   if current_setting('role', true) not in ('authenticated','anon') then return new; end if;
-  if tg_table_name = 'anuncios' and new.status::text <> 'ativo' then return new; end if;
+  if tg_table_name = 'anuncios' then
+    if new.status::text <> 'ativo' then return new; end if;
+    -- Contadores protegidos não exigem cadastro. "busca" é gerada após os gatilhos BEFORE.
+    if tg_op = 'UPDATE' and
+      (to_jsonb(new) - array['visualizacoes','cliques_whatsapp','total_favoritos','atualizado_em','busca']) =
+      (to_jsonb(old) - array['visualizacoes','cliques_whatsapp','total_favoritos','atualizado_em','busca']) then
+      return new;
+    end if;
+  end if;
   if not public.whatsapp_confirmado(uid) then
     raise exception using errcode='42501', message='Confirme seu WhatsApp para continuar.', detail='campo:celular';
   end if;

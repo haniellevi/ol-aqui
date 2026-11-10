@@ -77,4 +77,3 @@ begin
 end $$;
 revoke all on function public.reservar_codigo_whatsapp(text,uuid,text,text), public.confirmar_codigo_whatsapp(text,uuid,text) from public, anon, authenticated;
 grant execute on function public.reservar_codigo_whatsapp(text,uuid,text,text), public.confirmar_codigo_whatsapp(text,uuid,text) to service_role;
-

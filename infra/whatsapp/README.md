@@ -19,7 +19,7 @@ A Evolution exige `Origin` autorizado inclusive para chamadas servidor a servido
 
 ## Publicação e validação
 
-Aplicar primeiro `20261110012622_confirmacao_whatsapp.sql` (aditiva). Publicar a aplicação nova com variáveis configuradas e serviço pareado. Aplicar `20261110012623_whatsapp_obrigatorio.sql` no corte de produção. Confirmar entrega real e uso único pelo formulário com conta de teste autorizada. O formulário usa o usuário autenticado no Clerk; a posse do WhatsApp é confirmada separadamente.
+Aplicar primeiro `20261110012622_confirmacao_whatsapp.sql` (aditiva). Publicar a aplicação nova com variáveis configuradas e serviço pareado. Aplicar `20261110014434_whatsapp_obrigatorio.sql` no corte de produção. Confirmar entrega real e uso único pelo formulário com conta de teste autorizada. O formulário usa o usuário autenticado no Clerk; a posse do WhatsApp é confirmada separadamente.
 
 Código de seis dígitos criptograficamente aleatório, HMAC por conta e desafio, cinco minutos, três erros e consumo transacional. Novo pedido invalida o anterior. Intervalo de 60 segundos por conta/destinatário, cinco solicitações por conta e destinatário em 24 horas, cem solicitações globais em 24 horas. Falhas também consomem cota. Reavaliar estes limites com volume real, sem desabilitar CAPTCHA. O painel antigo não pode liberar negociação com número sem confirmação.
 

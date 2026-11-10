@@ -2,6 +2,35 @@
 begin;
 create function pg_temp.checar(ok boolean, texto text) returns void language plpgsql as $$
 begin if ok is distinct from true then raise exception 'FALHOU: %', texto; end if; end $$;
+-- Visitas e favoritos atualizam contadores por funções protegidas, sem exigir cadastro.
+select id as loja from vitrines_lojas where dono_id='user_loja' \gset
+select id as cat from categorias where slug='moveis' \gset
+insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,status) values
+ ('87000000-0000-4000-a000-000000000001',:'loja',:'cat','Mesa teste confirmação','Corrente',85000,'ativo');
+set local role anon;
+set local request.jwt.claim.role='anon';
+set local request.jwt.claim.sub='';
+select pg_temp.checar(registrar_evento('87000000-0000-4000-a000-000000000001','visualizacao'),'Visitante registra visualização');
+select pg_temp.checar(registrar_evento('87000000-0000-4000-a000-000000000001','clique_whatsapp'),'Visitante registra contato');
+set local role authenticated;
+set local request.jwt.claim.role='authenticated';
+set local request.jwt.claim.sub='user_semcodigo';
+insert into favoritos(usuario_id,anuncio_id) values('user_semcodigo','87000000-0000-4000-a000-000000000001');
+select pg_temp.checar((select total_favoritos=1 and visualizacoes=1 and cliques_whatsapp=1 from anuncios where id='87000000-0000-4000-a000-000000000001'),'Contadores independem da confirmação do visitante');
+delete from favoritos where usuario_id='user_semcodigo' and anuncio_id='87000000-0000-4000-a000-000000000001';
+select pg_temp.checar((select total_favoritos=0 from anuncios where id='87000000-0000-4000-a000-000000000001'),'Remover favorito atualiza contador');
+reset role;
+update perfis set whatsapp_verificado_em=null where id='user_loja';
+set local role authenticated;
+set local request.jwt.claim.sub='user_loja';
+do $$ begin
+ begin
+  update anuncios set titulo='Edição sem confirmação' where id='87000000-0000-4000-a000-000000000001';
+  raise exception 'Edição indevidamente permitida';
+ exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+update perfis set whatsapp_verificado_em=now() where id='user_loja';
 select pg_temp.checar(not has_function_privilege('authenticated','reservar_codigo_whatsapp(text,uuid,text,text)','execute'),'Cliente não pode reservar');
 select pg_temp.checar(not has_function_privilege('anon','confirmar_codigo_whatsapp(text,uuid,text)','execute'),'Visitante não pode confirmar');
 select pg_temp.checar(not has_table_privilege('authenticated','whatsapp_desafios','select'),'Resumo é privado');
