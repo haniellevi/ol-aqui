@@ -245,7 +245,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         <div role="alert" tabIndex={-1} className="flex flex-col gap-2 rounded-card bg-perigo-fundo p-4 text-base font-semibold text-perigo">
           <span>{erroGeral.texto}</span>
           {erroGeral.celular && (
-            <Link href="/confirmar-celular?destino=%2Fradar%2Fpedir" className="min-h-11 content-center underline underline-offset-4">
+            <Link href="/confirmar-celular?destino=%2Fradar%2Fpedir" className="min-h-10 content-center underline underline-offset-4">
               Confirmar meu celular
             </Link>
           )}
@@ -283,7 +283,7 @@ function CartaoModo({
       type="button"
       onClick={onClick}
       aria-pressed={ativo}
-      className={`flex min-h-11 items-start gap-3 rounded-card border-2 p-4 text-left transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
+      className={`flex min-h-10 items-start gap-3 rounded-card border-2 p-4 text-left transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
         ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao hover:bg-fundo"
       }`}
     >

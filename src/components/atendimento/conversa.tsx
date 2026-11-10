@@ -18,7 +18,7 @@ export async function ConversaAtendimento({ id, caminho, antes, equipe, aki, cad
       <AtualizarConversa recentes={!cursor} />
     </div>
     <details className="text-legenda text-texto-suave">
-      <summary className="olaki-controle min-h-11 cursor-pointer content-center rounded-campo focus-visible:outline-2 focus-visible:outline-laranja-escuro">Privacidade da conversa</summary>
+      <summary className="olaki-controle min-h-10 cursor-pointer content-center rounded-campo focus-visible:outline-2 focus-visible:outline-laranja-escuro">Privacidade da conversa</summary>
       <p className="pb-2">Apenas {cadastro ? "a pessoa que pediu ajuda" : "o anunciante"} e a administração têm acesso. Não compartilhe senhas, documentos ou códigos.{!equipe && aki && " Mensagens enviadas ao Aki podem ser processadas pelo provedor de IA."}</p>
     </details>
     {error ? <p role="alert" className="text-sm text-perigo">Não foi possível carregar as mensagens. Use Atualizar para tentar novamente.</p> : <>

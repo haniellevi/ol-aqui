@@ -25,7 +25,7 @@ export default async function PedidoLojaPage({
   const [{ id }, { propor }] = await Promise.all([params, searchParams]);
   const pedido = await pedidoRadar(id);
   const voltar = (
-    <Link href={LINK_RADAR} className="-ml-2 inline-flex min-h-11 w-fit items-center gap-1 px-2 text-base font-semibold text-laranja-escuro">
+    <Link href={LINK_RADAR} className="-ml-2 inline-flex min-h-10 w-fit items-center gap-1 px-2 text-base font-semibold text-laranja-escuro">
       <ChevronLeft className="size-5" aria-hidden />
       Radar
     </Link>

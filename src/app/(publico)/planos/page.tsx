@@ -137,7 +137,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
 
                 <div className="mt-auto pt-1">
                   {eAtual ? (
-                    <p className="inline-flex min-h-11 items-center font-semibold text-verde-escuro">Seu plano atual</p>
+                    <p className="inline-flex min-h-10 items-center font-semibold text-verde-escuro">Seu plano atual</p>
                   ) : cta ? (
                     <Botao href={cta.href} variante={destaque ? "primario" : "secundario"} larguraTotal>
                       {cta.texto}
@@ -153,7 +153,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
       {loja && (
         <p className="text-base text-texto-suave">
           Quer ver o seu uso e os pagamentos?{" "}
-          <Link href="/minha-conta/plano" className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+          <Link href="/minha-conta/plano" className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
             Abrir Meu plano
           </Link>
         </p>

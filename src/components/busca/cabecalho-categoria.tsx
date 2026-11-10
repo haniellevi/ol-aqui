@@ -23,14 +23,14 @@ export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEn
       <nav aria-label="Você está em" className="text-base text-texto-suave">
         <ol className="flex flex-wrap items-center gap-1">
           <li>
-            <Link href="/categorias" className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+            <Link href="/categorias" className="inline-flex min-h-10 items-center underline-offset-4 hover:underline">
               Categorias
             </Link>
           </li>
           {pai && (
             <li className="flex items-center gap-1">
               <ChevronRight className="size-4" aria-hidden />
-              <Link href={linkCategoria(pai.slug)} className="inline-flex min-h-11 items-center underline-offset-4 hover:underline">
+              <Link href={linkCategoria(pai.slug)} className="inline-flex min-h-10 items-center underline-offset-4 hover:underline">
                 {pai.nome}
               </Link>
             </li>

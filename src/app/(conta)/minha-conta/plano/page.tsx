@@ -219,7 +219,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
             <h2 id="planos" className="text-lg font-bold">
               {assinatura.situacao === "ativa" ? "Renovar ou trocar de plano" : "Assinar um plano"}
             </h2>
-            <Link href={LINK_PLANOS} className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+            <Link href={LINK_PLANOS} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
               Comparar todos os planos
             </Link>
           </div>
@@ -268,14 +268,14 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
                   {p.status === "pendente" && p.tipo === "assinatura" ? (
                     <Link
                       href={linkMeuPlano({ pagamentoId: p.id })}
-                      className="inline-flex min-h-11 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                      className="inline-flex min-h-10 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
                     >
                       Pagar agora
                     </Link>
                   ) : p.status === "pendente" && p.tipo === "anuncio_avulso" && p.anuncio_id ? (
                     <Link
                       href={linkAvulso(p.anuncio_id, p.id)}
-                      className="inline-flex min-h-11 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                      className="inline-flex min-h-10 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
                     >
                       Pagar agora
                     </Link>
@@ -286,7 +286,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
                         href={linkSeguro!}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex min-h-11 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                        className="inline-flex min-h-10 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
                       >
                         Pagar agora
                       </a>

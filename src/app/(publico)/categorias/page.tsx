@@ -45,7 +45,7 @@ export default async function PaginaCategorias() {
                       <li key={f.id}>
                         <Link
                           href={linkCategoria(p.slug, f.slug)}
-                          className="flex min-h-11 items-center gap-3 rounded-campo px-3 text-base hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                          className="flex min-h-10 items-center gap-3 rounded-campo px-3 text-base hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                         >
                           <span className="flex-1">{f.nome}</span>
                           <ChevronRight className="size-4 text-texto-suave" aria-hidden />

@@ -101,7 +101,7 @@ export function FormPlano({ plano }: { plano?: Plano }) {
             className={estiloCampo}
           />
         </label>
-        <label className="col-span-2 flex h-11 items-center gap-2 self-end text-sm">
+        <label className="col-span-2 flex h-10 items-center gap-2 self-end text-sm">
           <input type="checkbox" name="vitrine_foto_fachada" defaultChecked={plano?.vitrine_foto_fachada ?? false} className="size-5 accent-laranja-escuro" />
           Foto da fachada no banner
         </label>
@@ -114,15 +114,15 @@ export function FormPlano({ plano }: { plano?: Plano }) {
         <textarea name="descricao" rows={2} defaultValue={plano?.descricao ?? ""} className={`${estiloCampo} h-auto min-h-20 py-2 leading-relaxed`} />
       </label>
       <div className="col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2 @3xl/painel:col-span-4">
-        <label className="flex h-11 items-center gap-2 text-sm">
+        <label className="flex h-10 items-center gap-2 text-sm">
           <input type="checkbox" name="acesso_radar" defaultChecked={plano?.acesso_radar ?? true} className="size-5 accent-laranja-escuro" />
           Acessa o Radar
         </label>
-        <label className="flex h-11 items-center gap-2 text-sm">
+        <label className="flex h-10 items-center gap-2 text-sm">
           <input type="checkbox" name="ativo" defaultChecked={plano?.ativo ?? true} className="size-5 accent-laranja-escuro" />
           Ativo (aparece para venda)
         </label>
-        <label className="flex h-11 items-center gap-2 text-sm">
+        <label className="flex h-10 items-center gap-2 text-sm">
           <input type="checkbox" name="recomendado" defaultChecked={plano?.recomendado ?? false} className="size-5 accent-laranja-escuro" />
           Recomendado na página de planos (só um)
         </label>

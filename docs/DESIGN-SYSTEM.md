@@ -97,16 +97,22 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 
 | Peça | Celular / toque | Computador (mouse, a partir de 768 px) | Como usar no código |
 |---|---|---|---|
-| Texto normal | 15 px | 15 px | `text-base` |
-| Legenda (cidade, data) | 13 px | 13 px | `text-legenda` |
-| Título da tela | 20 px | 22 px | `text-titulo` (muda sozinho no computador) |
-| Título de seção | 16 px | 16 px | `text-lg font-semibold` |
-| Botão normal | 44 px | 40 px | `<Botao>` |
-| Botão pequeno | 36 px | 32 px | `<Botao tamanho="pequeno">`: ações dentro de cards, listas e tabelas |
-| Campo e lista de escolha | 44 px | 40 px | `<Campo>`, `<Seletor>`; `select` solto já recebe a altura pelo CSS base |
-| Barra de busca | 48 px | 44 px | `CampoBusca` |
-| Cabeçalho | 56 px | 60 px | `CabecalhoPublico` |
-| Botão do Aki | 44 px | 44 px | `BalaoAki` |
+| Texto normal | 14 px | 14 px | `text-base` |
+| Texto de apoio, botões e rótulos | 13 px | 13 px | `text-sm`, `text-rotulo` |
+| Legenda (cidade, data) | 12 px | 12 px | `text-legenda` |
+| Título da tela | 18 px | 20 px | `text-titulo` (muda sozinho no computador) |
+| Título de seção | 15 px | 15 px | `text-lg font-semibold` |
+| Preço e destaque | 16 a 20 px | 16 a 20 px | `text-xl`, `text-2xl` |
+| Botão normal | 40 px | 36 px | `<Botao>` |
+| Botão pequeno | 32 px | 28 px | `<Botao tamanho="pequeno">`: ações dentro de cards, listas e tabelas |
+| Campo e lista de escolha | 40 px | 36 px | `<Campo>`, `<Seletor>`; `select` solto já recebe a altura pelo CSS base |
+| Letra dentro de campo | 14 px (16 px só no iPhone) | 14 px | automático no `globals.css` |
+| Barra de busca | 44 px | 40 px | `CampoBusca` |
+| Cabeçalho | 52 px | 56 px | `CabecalhoPublico` |
+| Barra de baixo | 56 px | não aparece | `BarraInferior` |
+| Botão do Aki | 40 px | 40 px | `BalaoAki` |
+
+> **2ª passada (10/11/2026, mesmo dia):** a primeira redução (48 para 44 px) quase não se notava, e o Raniel continuou vendo tudo grande. A escala inteira desceu um degrau (texto 15 para 14, legenda 13 para 12, título 20 para 18, controles 44 para 40) e a letra dos campos, que ficava em 16 px ao lado de texto de 14, passou a 14 px. O 16 px ficou só no iPhone (`@supports (-webkit-touch-callout: none)`), onde evita o zoom automático do Safari. A tabela da seção 2 traz os nomes; os tamanhos que valem são os desta régua.
 
 - **Largura do botão:** `larguraTotal` ocupa a largura toda só no celular; do tablet para cima o botão para em 320 px (`sm:max-w-xs`). Em telas centralizadas, centralize o grupo de botões (`items-center`).
 - **Um botão laranja por tela.** O resto é secundário (borda) ou texto.
@@ -115,7 +121,7 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 - **Largura de página:** formulários até 640 px, conta e listas até 1000 px, busca e início até 1150 px.
 - **Cantos arredondados:** 8 (campos, chips, botões), 10 (cards), 20 (folhas que sobem de baixo), cheio (selos, avatar e o seletor de cidade do cabeçalho).
 - **Sombras:** preferir borda discreta; `sombra-1` nos cards públicos que precisam de separação e `sombra-2` em folhas, menus e barras fixas.
-- **Toque:** nada tocável abaixo de 36 px no celular (botão pequeno). Ações só com ícone mantêm 44 × 44 px. Linhas de listas podem ser maiores conforme o conteúdo; não cortar texto para cumprir uma altura fixa.
+- **Toque:** nada tocável abaixo de 32 px no celular (botão pequeno). Ações só com ícone mantêm pelo menos 40 × 40 px. Linhas de listas podem ser maiores conforme o conteúdo; não cortar texto para cumprir uma altura fixa.
 
 ---
 

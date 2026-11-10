@@ -273,7 +273,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                       href={links.get(v.id)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mb-3 inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                      className="mb-3 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4"
                     >
                       Ver o arquivo enviado (o link vale 2 minutos)
                     </a>
@@ -301,7 +301,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
           <Cartao>
             <p className="text-base text-texto-suave">Nenhuma loja com estes filtros.</p>
             {filtrando && (
-              <Link href={LINK_ADMIN_LOJAS} className="mt-2 inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+              <Link href={LINK_ADMIN_LOJAS} className="mt-2 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
                 Ver todas
               </Link>
             )}
@@ -378,7 +378,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                   )}
                   {(acoesDoPapel === null || acoesDoPapel.length > 0) && (
                     <details className="mt-3 border-t border-borda pt-3">
-                      <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-laranja-escuro">Ações</summary>
+                      <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-laranja-escuro">Ações</summary>
                       <div className="pt-2">
                         <FormAcaoLoja loja={l} planos={planos} permitidas={acoesDoPapel} />
                       </div>
@@ -420,11 +420,11 @@ function PainelRevisaoLoja({ revisao }: { revisao: RevisaoLoja }) {
   const site = linkSiteLoja(revisao.site_url);
   const urlInstagram = linkInstagram(revisao.instagram);
   const motivo = MOTIVOS_REVISAO.find((opcao) => opcao.valor === revisao.motivo);
-  const estiloLink = "inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4";
+  const estiloLink = "inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4";
 
   return (
     <details className="mt-3 border-t border-borda pt-3">
-      <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-laranja-escuro">Revisar dados da loja</summary>
+      <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-laranja-escuro">Revisar dados da loja</summary>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-4">
         <div className="min-w-0">
           <dt className="text-texto-suave">Nome comercial</dt>

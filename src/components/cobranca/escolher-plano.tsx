@@ -174,7 +174,7 @@ function CartaoPlano({
   const porPeriodo = `por ${o.dias} dias`;
   return (
     <label
-      className={`relative flex min-h-11 cursor-pointer gap-3 rounded-card border-2 p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
+      className={`relative flex min-h-10 cursor-pointer gap-3 rounded-card border-2 p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
         ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
       } ${bloqueado ? "cursor-not-allowed opacity-70" : ""}`}
     >

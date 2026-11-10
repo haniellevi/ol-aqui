@@ -35,6 +35,6 @@ export function CompartilharAnuncio({ anuncioId, titulo, url }: { anuncioId: str
       <button type="button" disabled={pendente} onClick={() => void compartilhar(true)} className={classesBotao("texto", false, "text-base")}><Copy className="size-4" aria-hidden />Copiar link</button>
     </div>
     <p role="status" className={aviso ? "text-sm text-texto-suave" : "sr-only"}>{aviso}</p>
-    {manual && <label className="flex flex-col gap-1 text-sm">Link do anúncio<input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="h-11 min-w-0 rounded-campo border border-borda bg-cartao px-3 text-base focus-visible:outline-laranja-escuro" /></label>}
+    {manual && <label className="flex flex-col gap-1 text-sm">Link do anúncio<input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="h-10 min-w-0 rounded-campo border border-borda bg-cartao px-3 text-base focus-visible:outline-laranja-escuro" /></label>}
   </div>;
 }

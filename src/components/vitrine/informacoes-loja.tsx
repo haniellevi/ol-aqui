@@ -24,8 +24,8 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
 
       {(site || telefone) && (
         <div className="flex flex-wrap gap-4">
-          {site && <a href={site} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline">Visitar site da loja</a>}
-          {telefone && <a href={`tel:+${telefone}`} className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline">Ligar para {formatarTelefone(telefone)}</a>}
+          {site && <a href={site} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline">Visitar site da loja</a>}
+          {telefone && <a href={`tel:+${telefone}`} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline">Ligar para {formatarTelefone(telefone)}</a>}
         </div>
       )}
       {(v.endereco || comoChegar) && (
@@ -67,7 +67,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
 
       {insta && (
         <Bloco icone={<Instagram />} titulo="Instagram">
-          <a href={insta} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da loja: @${v.instagram} (abre em nova aba)`} className="inline-flex min-h-11 max-w-full items-center break-all font-semibold text-laranja-escuro underline underline-offset-4">
+          <a href={insta} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da loja: @${v.instagram} (abre em nova aba)`} className="inline-flex min-h-10 max-w-full items-center break-all font-semibold text-laranja-escuro underline underline-offset-4">
             @{v.instagram}
           </a>
         </Bloco>

@@ -78,7 +78,7 @@ export default async function MensagensPage() {
               <Cartao className="p-0">
                 {g.itens.map((m) => (
                   <details key={m.id} className="border-b border-borda px-4 last:border-0">
-                    <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">
+                    <summary className="min-h-10 cursor-pointer py-3 text-sm font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-laranja-escuro">
                       <span className="ml-1 inline-flex flex-wrap items-center gap-2">{NOME_CANAL[m.canal]}
                       <Situacao modelo={m} /></span>
                     </summary>

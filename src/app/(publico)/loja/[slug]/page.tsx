@@ -188,7 +188,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                 Chamar no WhatsApp
               </a>
             )}
-            {!whatsapp && <p className="flex min-h-11 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
+            {!whatsapp && <p className="flex min-h-10 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
             {v.status === "ativa" && <CopiarLinkLoja url={urlAbsoluta(linkLoja(v.slug))} />}
             {v.e_dono && (
               <Botao href={LINK_MINHA_LOJA} variante="secundario" icone={<Pencil />} larguraTotal className="sm:w-auto">

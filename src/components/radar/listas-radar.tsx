@@ -8,7 +8,7 @@ import type { MeuPedidoRadar, MinhaPropostaRadar } from "@/lib/tipos-radar";
 import { CLASSE_TOM, dataHoraCurta, resumoPropostas, rotuloSituacao } from "./util";
 
 const CARTAO =
-  "flex min-h-11 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 hover:bg-fundo " +
+  "flex min-h-10 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 hover:bg-fundo " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 // Aba "Meus pedidos": cada pedido com a situação, as propostas e o prazo.

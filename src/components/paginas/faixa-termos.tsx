@@ -90,7 +90,7 @@ export function FaixaTermos({ aviso }: { aviso: AvisoTermos }) {
             <li key={p.id} className="flex flex-col">
               <Link
                 href={linkDocumentoLegal(p.tipo)}
-                className="inline-flex min-h-11 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4"
+                className="inline-flex min-h-10 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4"
               >
                 <FileText className="size-5 shrink-0" aria-hidden />
                 Ler {NOME_DOCUMENTO[p.tipo].toLowerCase()} (versão {p.versao})

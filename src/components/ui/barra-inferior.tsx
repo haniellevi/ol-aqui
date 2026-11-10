@@ -26,7 +26,7 @@ export function BarraInferior() {
       aria-label="Navegação principal"
       className="fixed inset-x-0 bottom-0 z-30 border-t border-borda bg-cartao pb-[env(safe-area-inset-bottom)] shadow-2 md:hidden"
     >
-      <ul className="mx-auto grid h-16 max-w-lg grid-cols-5">
+      <ul className="mx-auto grid h-14 max-w-lg grid-cols-5">
         {ITENS.map(({ href, rotulo, Icone, ativo }) => {
           const atual = ativo(caminho);
           const anunciar = href === "/anunciar";
@@ -40,11 +40,11 @@ export function BarraInferior() {
                 }`}
               >
                 {anunciar ? (
-                  <span className="-mt-5 grid size-12 place-items-center rounded-card bg-laranja text-beringela shadow-2">
-                    <Icone className="size-6" strokeWidth={2.5} aria-hidden />
+                  <span className="-mt-4 grid size-10 place-items-center rounded-card bg-laranja text-beringela shadow-2">
+                    <Icone className="size-5" strokeWidth={2.5} aria-hidden />
                   </span>
                 ) : (
-                  <Icone className="size-6" strokeWidth={atual ? 2.5 : 2} aria-hidden />
+                  <Icone className="size-5" strokeWidth={atual ? 2.5 : 2} aria-hidden />
                 )}
                 <span className={atual ? "underline decoration-2 underline-offset-4" : undefined}>{rotulo}</span>
               </Link>

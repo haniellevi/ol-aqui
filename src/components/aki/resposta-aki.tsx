@@ -184,7 +184,7 @@ function Avaliacao({ mensagem, aoAvaliar, atendimentoHref }: {
             onChange={(e) => setComentario(e.target.value)}
             maxLength={500}
             placeholder="O que faltou? (opcional)"
-            className="h-11 min-w-0 flex-1 rounded-campo border-2 border-borda px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
+            className="h-10 min-w-0 flex-1 rounded-campo border-2 border-borda px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
           />
           <Botao type="submit" variante="secundario" carregando={salvando} textoCarregando="…">
             Mandar

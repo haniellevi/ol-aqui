@@ -6,7 +6,7 @@ import type { ComponentProps, ReactNode } from "react";
 // Área de toque 44px; com mouse, 40px.
 
 const BASE =
-  "olaki-controle inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-campo border px-3 text-rotulo font-semibold " +
+  "olaki-controle inline-flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-campo border px-3 text-rotulo font-semibold " +
   "transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 export function classesChip(ativo = false, extra = "") {

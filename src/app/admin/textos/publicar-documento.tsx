@@ -112,7 +112,7 @@ export function PublicarDocumento({ tipo, atual }: { tipo: TipoDocumento; atual:
           onChange={(e) => setResumo(e.target.value)}
           maxLength={500} placeholder="Ex.: Explicamos melhor como apagar a conta." className={estiloCampo} />
       </div>
-      <label className="flex min-h-11 items-center gap-3 text-base text-beringela">
+      <label className="flex min-h-10 items-center gap-3 text-base text-beringela">
         <input type="checkbox" name="revisado" checked={revisado} onChange={(e) => setRevisado(e.target.checked)} className="size-5 accent-laranja-escuro" />
         <span>
           Um advogado revisou este texto

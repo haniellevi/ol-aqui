@@ -49,7 +49,7 @@ function Membro({ m, eu, regioes }: { m: MembroEquipe; eu: boolean; regioes: Reg
       {!eu && (
         <div className="mt-3 flex flex-col border-t border-borda">
           <details className="pt-1">
-            <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-laranja-escuro">
+            <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-laranja-escuro">
               {m.ativo ? "Trocar o papel" : "Pôr de volta na equipe"}
             </summary>
             <div className="pb-2 pt-2">
@@ -64,7 +64,7 @@ function Membro({ m, eu, regioes }: { m: MembroEquipe; eu: boolean; regioes: Reg
           </details>
           {m.ativo && (
             <details className="border-t border-borda pt-1">
-              <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-perigo">Tirar da equipe</summary>
+              <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-perigo">Tirar da equipe</summary>
               <div className="pb-2 pt-2">
                 <FormDesativar usuarioId={m.usuario_id} nome={m.nome.split(" ")[0] ?? m.nome} />
               </div>
@@ -113,7 +113,7 @@ export default async function EquipePage() {
 
       {sairam.length > 0 && (
         <details className="mb-6">
-          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold uppercase tracking-wide text-texto-suave">
+          <summary className="flex min-h-10 cursor-pointer items-center text-sm font-semibold uppercase tracking-wide text-texto-suave">
             Saíram da equipe ({sairam.length})
           </summary>
           <ul className="mt-2 flex flex-col gap-3">

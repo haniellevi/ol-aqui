@@ -32,7 +32,7 @@ const BOTAO_FOTO =
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 const BOTAO_MINI =
-  "grid min-h-11 flex-1 place-items-center rounded-campo border border-borda bg-cartao text-beringela hover:bg-fundo active:bg-borda " +
+  "grid min-h-10 flex-1 place-items-center rounded-campo border border-borda bg-cartao text-beringela hover:bg-fundo active:bg-borda " +
   "disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-laranja-escuro";
 
 let contador = 0;
@@ -331,7 +331,7 @@ export function EnvioFotos({
                         type="button"
                         onClick={() => tentarDeNovo(item.chave)}
                         disabled={travado}
-                        className="inline-flex min-h-11 items-center gap-1.5 rounded-card border-2 border-beringela bg-cartao px-3 text-sm font-semibold text-beringela hover:bg-fundo active:bg-borda focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                        className="inline-flex min-h-10 items-center gap-1.5 rounded-card border-2 border-beringela bg-cartao px-3 text-sm font-semibold text-beringela hover:bg-fundo active:bg-borda focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                       >
                         <RotateCw className="size-4" aria-hidden />
                         Tentar de novo

@@ -135,7 +135,7 @@ export function CampoBusca({
                 escolher(o);
               }}
               onMouseEnter={() => setAtivo(i)}
-              className={`min-h-11 cursor-pointer px-3 py-2 text-base text-beringela ${i === ativo ? "bg-selecao" : ""} ${
+              className={`min-h-10 cursor-pointer px-3 py-2 text-base text-beringela ${i === ativo ? "bg-selecao" : ""} ${
                 o.valor === valor ? "font-semibold" : ""
               }`}
             >

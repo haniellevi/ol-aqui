@@ -39,7 +39,7 @@ export function BotaoRemoverFavorito({ anuncioId, titulo, comTexto = false, onRe
         aria-busy={pendente || undefined}
         className={
           comTexto
-            ? "inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-campo px-3 text-base font-semibold text-perigo hover:bg-perigo-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
+            ? "inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-campo px-3 text-base font-semibold text-perigo hover:bg-perigo-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
             : "grid size-12 place-items-center rounded-full focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60"
         }
       >
@@ -56,7 +56,7 @@ export function BotaoRemoverFavorito({ anuncioId, titulo, comTexto = false, onRe
           </>
         )}
       </button>
-      {precisaEntrar && <Link href="/entrar?redirect_url=%2Fminha-conta%2Ffavoritos" className="inline-flex min-h-11 items-center text-sm font-semibold text-laranja-escuro underline">Entrar novamente</Link>}
+      {precisaEntrar && <Link href="/entrar?redirect_url=%2Fminha-conta%2Ffavoritos" className="inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro underline">Entrar novamente</Link>}
       {erro && (
         <p role="alert" className="rounded-card bg-cartao px-2 py-1 text-sm font-semibold text-perigo shadow-1">
           {erro}

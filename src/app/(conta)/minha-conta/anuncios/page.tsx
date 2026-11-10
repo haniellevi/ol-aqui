@@ -87,7 +87,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
       {!conta.podePublicar && (
         <Aviso tipo="atencao">
           <span>Você está no limite do seu plano. Para pôr mais anúncios no ar, pause um ou troque de plano.</span>
-          <Link href="/minha-conta/plano" className="inline-flex min-h-11 items-center underline underline-offset-4">
+          <Link href="/minha-conta/plano" className="inline-flex min-h-10 items-center underline underline-offset-4">
             Ver planos
           </Link>
         </Aviso>
@@ -113,7 +113,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
           <span>Fixar produtos no topo da loja: {disponivelFixar ?? "não faz parte do seu plano agora"}.</span>
           <Link
             href={`${LINK_PLANOS}?origem=vitrine`}
-            className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+            className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
           >
             Ver os planos
           </Link>

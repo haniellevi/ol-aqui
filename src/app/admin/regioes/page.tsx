@@ -37,7 +37,7 @@ export default async function RegioesPage() {
               <li key={r.id}>
                 <Link
                   href={linkAdminRegiao(r.id)}
-                  className="flex min-h-11 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 active:brightness-95 md:hover:bg-fundo"
+                  className="flex min-h-10 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 active:brightness-95 md:hover:bg-fundo"
                 >
                   <span className="grid size-12 shrink-0 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
                     <MapPin className="size-6" />

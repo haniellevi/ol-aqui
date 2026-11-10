@@ -117,7 +117,7 @@ function FormModerar({ tipo, id, oculto }: { tipo: "pedido" | "proposta"; id: st
         <input type="hidden" name="tipo" value={tipo} />
         <input type="hidden" name="id" value={id} />
         <input name="motivo" maxLength={300} placeholder="Motivo (o dono vê e fica no histórico)" className={estiloCampo} aria-label="Motivo" />
-        <label className="flex min-h-11 items-center gap-3 text-sm text-texto">
+        <label className="flex min-h-10 items-center gap-3 text-sm text-texto">
           <input type="checkbox" name="confirmar_remover" value="sim" className="size-5 accent-laranja-escuro" />
           Sim, remover de vez{tipo === "pedido" ? " (apaga também as propostas)" : ""}. Não dá para desfazer.
         </label>

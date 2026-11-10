@@ -57,7 +57,7 @@ export default async function CategoriasPage() {
               <div className="flex items-start gap-3">
                 <CirculoCategoria nome={p.icone} />
                 <div className="min-w-0 flex-1">
-                  <Link href={linkAdminCategoria(p.id)} className="inline-flex min-h-11 items-center text-lg font-semibold text-beringela underline-offset-4 hover:underline">
+                  <Link href={linkAdminCategoria(p.id)} className="inline-flex min-h-10 items-center text-lg font-semibold text-beringela underline-offset-4 hover:underline">
                     {p.nome}
                   </Link>
                   <Etiquetas c={p} />
@@ -71,7 +71,7 @@ export default async function CategoriasPage() {
                     <li key={s.id} className="flex items-center gap-3 py-2 pl-2 md:pl-14">
                       <IconeCategoria nome={s.icone} className="size-5 shrink-0 text-beringela" />
                       <div className="min-w-0 flex-1">
-                        <Link href={linkAdminCategoria(s.id)} className="inline-flex min-h-11 items-center text-base font-semibold text-beringela underline-offset-4 hover:underline">
+                        <Link href={linkAdminCategoria(s.id)} className="inline-flex min-h-10 items-center text-base font-semibold text-beringela underline-offset-4 hover:underline">
                           {s.nome}
                         </Link>
                         <Etiquetas c={s} maeEscondida={!p.ativa} />

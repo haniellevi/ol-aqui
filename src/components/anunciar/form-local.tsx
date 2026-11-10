@@ -52,7 +52,7 @@ export function FormLocal({
               onChange={(e) => setCidade(e.target.value)}
               aria-invalid={erroCidade ? true : undefined}
               aria-describedby={erroCidade ? "campo-cidade-erro" : undefined}
-              className={`h-11 w-full appearance-none rounded-campo border-2 bg-cartao pl-3 pr-10 text-base focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 ${erroCidade ? "border-perigo" : "border-borda"}`}
+              className={`h-10 w-full appearance-none rounded-campo border-2 bg-cartao pl-3 pr-10 text-base focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 ${erroCidade ? "border-perigo" : "border-borda"}`}
             >
               <option value="">Escolha a cidade</option>
               {cidades.map((c) => (
