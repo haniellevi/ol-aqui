@@ -95,7 +95,7 @@ try:
     print('PASS: documentos PF privados, revisão autorizada, reenvio e limpeza', flush=True)
     checked(sql((root/'supabase/testes/390_moderacao_sensivel.sql').read_text()))
     print('PASS: termos sensíveis, publicação imediata, edição, revisão humana e isolamento do Radar', flush=True)
-    migracao_moderacao = (root/'supabase/migrations/20261110170000_moderacao_sensivel_anuncios.sql').read_text()
+    migracao_moderacao = (root/'supabase/migrations/20261110121649_moderacao_sensivel_anuncios.sql').read_text()
     checked(sql((root/'supabase/testes/400_migracao_moderacao_sensivel.sql').read_text().replace(
         '-- REAPLICAR_MIGRACAO_MODERACAO_SENSIVEL', migracao_moderacao + '\n' + migracao_moderacao)))
     print('PASS: migração repetida libera retenções antigas e preserva conteúdo sensível, restrições e ajuda personalizada', flush=True)
