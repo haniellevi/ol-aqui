@@ -49,7 +49,6 @@ export default async function CatalogoLojas({ searchParams }: {
       <header>
         <Link href="/" className="text-sm font-semibold text-laranja-escuro underline underline-offset-4">Voltar à vitrine</Link>
         <h1 className="mt-2 text-titulo font-semibold text-beringela">Lojas de {lugarDaRegiao(regiao)}</h1>
-        <p className="mt-1 text-texto-suave">Encontre lojas próximas e veja os produtos de cada uma.</p>
       </header>
       <form method="get" action="/lojas" className="flex flex-wrap items-end gap-3">
         <div className="w-full max-w-sm">
