@@ -1,6 +1,7 @@
 "use server";
 // Server Actions do "Quero vender" (T14, T15). Quem cria a vitrine e decide plano e teste
 // grátis é a função quero_vender() do banco; aqui só conferimos os dados para mostrar o erro no campo.
+import { telefoneComercialDigitado } from "@/lib/formato";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugDisponivel } from "@/lib/dados/vitrines";
@@ -31,14 +32,14 @@ export async function verificarSlug(slug: string): Promise<boolean | null> {
 export async function criarLoja(_antes: EstadoLoja, form: FormData): Promise<EstadoLoja> {
   const nome = String(form.get("nome_loja") ?? "").replace(/\s+/g, " ").trim();
   const slug = String(form.get("slug") ?? "").trim().toLowerCase();
-  const digitos = String(form.get("whatsapp") ?? "").replace(/\D/g, "");
+  const whatsapp = String(form.get("whatsapp") ?? "").trim();
+  const fone = telefoneComercialDigitado(whatsapp);
   const cidade = String(form.get("cidade") ?? "").trim();
 
   const campos: Record<string, string> = {};
   if (nome.length < 2 || nome.length > 80) campos.nome_loja = "Escreva o nome da loja (de 2 a 80 letras).";
   if (!SLUG.test(slug)) campos.slug = "Use de 3 a 60 letras minúsculas, números ou hífen, sem espaço nem acento.";
-  const fone = digitos.length === 10 || digitos.length === 11 ? `55${digitos}` : digitos;
-  if (digitos && !/^55[1-9][0-9]9?[0-9]{8}$/.test(fone)) campos.whatsapp = "WhatsApp inválido. Use o DDD e o número, ex.: (89) 99999-0000.";
+  if (whatsapp && !fone) campos.whatsapp = "WhatsApp inválido. Use o DDD e o número, ex.: (89) 99999-0000.";
   if (!cidade) campos.cidade = "Escolha a cidade da loja.";
   if (Object.keys(campos).length) return { erro: { mensagem: "Confira os campos marcados." }, campos };
 
@@ -47,7 +48,7 @@ export async function criarLoja(_antes: EstadoLoja, form: FormData): Promise<Est
     tipo: "loja",
     nome_loja: nome,
     slug,
-    whatsapp: digitos ? fone : null,
+    whatsapp: fone,
     cidade,
   });
   if (error) {

@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { apagarFoto } from "@/lib/dados/fotos";
 import { minhaVitrineCompleta, meusRecursosVitrine, minhasSecoes, opcoesVitrine } from "@/lib/dados/vitrine-completa";
 import { traduzirErro } from "@/lib/erros";
-import { ehUuid, linkLoja } from "@/lib/formato";
+import { ehUuid, linkLoja, telefoneComercialDigitado } from "@/lib/formato";
 import { limparInstagram, linkSiteLoja, minutosDoDia } from "@/components/vitrine/regras";
 import { BANNER_MODELOS, DIAS_SEMANA, type FaixaHorario, type Horarios } from "@/lib/tipos-vitrine";
 import type { Resultado } from "@/lib/tipos";
@@ -198,8 +198,7 @@ export async function salvarInformacoes(_antes: EstadoVitrine, form: FormData): 
     const site = form.get("site_url");
     const telefone = form.get("telefone_publico");
     const siteUrl = typeof site === "string" && site.trim() ? linkSiteLoja(site.trim()) : null;
-    const numero = typeof telefone === "string" ? telefone.replace(/\D/g, "") : "";
-    const telefonePublico = numero.length === 10 || numero.length === 11 ? `55${numero}` : numero;
+    const telefonePublico = telefoneComercialDigitado(telefone);
     const sobre = String(form.get("sobre") ?? "").trim();
     const entrega = String(form.get("faz_entrega") ?? "");
     const entregaObs = String(form.get("entrega_obs") ?? "").replace(/\s+/g, " ").trim();
@@ -219,7 +218,7 @@ export async function salvarInformacoes(_antes: EstadoVitrine, form: FormData): 
       campos.instagram = "Instagram inválido. Escreva só o nome, ex.: @minhaloja.";
     }
     if (site !== null && (typeof site !== "string" || (site.trim() && !siteUrl))) campos.site_url = "Informe um site válido, incluindo https://.";
-    if (telefone !== null && (typeof telefone !== "string" || (telefone.trim() && !/^55[1-9][0-9]9?[0-9]{8}$/.test(telefonePublico)))) campos.telefone_publico = "Informe o telefone com DDD.";
+    if (telefone !== null && (typeof telefone !== "string" || (telefone.trim() && !telefonePublico))) campos.telefone_publico = "Informe o telefone com DDD.";
     if (sobre.length > 1500) campos.sobre = "O texto \"Sobre nós\" pode ter até 1500 letras.";
     if (entregaObs.length > 200) campos.entrega_obs = "O recado da entrega pode ter até 200 letras.";
     if (erroHorario) campos.horarios = erroHorario;
@@ -239,7 +238,7 @@ export async function salvarInformacoes(_antes: EstadoVitrine, form: FormData): 
         horarios,
         instagram: instagram || null,
         ...(site !== null ? { site_url: siteUrl } : {}),
-        ...(telefone !== null ? { telefone_publico: telefonePublico || null } : {}),
+        ...(telefone !== null ? { telefone_publico: telefonePublico } : {}),
         sobre: sobre || null,
         // a descrição curta (etapa 2) acompanha o "Sobre nós": o banco copia (só o texto que passou no filtro)
         formas_pagamento: [...new Set(formas)],

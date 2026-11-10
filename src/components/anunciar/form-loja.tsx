@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle2, ChevronDown, Loader2, MessageCircle, Plus, Store, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
+import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import { criarLoja, verificarSlug, type EstadoLoja } from "@/app/(conta)/quero-vender/actions";
 import { linkLoja, slugDoTitulo, urlAbsoluta } from "@/lib/formato";
 import { AvisoErro } from "./aviso-erro";
@@ -28,19 +29,6 @@ function limparSlug(t: string): string {
     .slice(0, 60);
 }
 
-/** "89999990000" → "(89) 99999-0000" enquanto digita. */
-function mascaraFone(t: string): string {
-  let d = t.replace(/\D/g, "");
-  if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
-  d = d.slice(0, 11);
-  if (d.length <= 2) return d ? `(${d}` : "";
-  const ddd = d.slice(0, 2);
-  const resto = d.slice(2);
-  if (resto.length <= 4) return `(${ddd}) ${resto}`;
-  const corte = resto.length === 9 ? 5 : 4;
-  return `(${ddd}) ${resto.slice(0, corte)}-${resto.slice(corte)}`;
-}
-
 const dataCurta = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long" });
 
 export function FormLoja({
@@ -62,7 +50,7 @@ export function FormLoja({
   const [slug, setSlug] = useState(nomeInicial ? limparSlug(slugDoTitulo(nomeInicial)) : "");
   const [slugEditado, setSlugEditado] = useState(false);
   const [situacao, setSituacao] = useState<Situacao>("vazio");
-  const [fone, setFone] = useState(mascaraFone(whatsappInicial));
+  const fone = useCampoTelefone(whatsappInicial, { aceitaFixo: true });
   const [cidade, setCidade] = useState(cidadeInicial);
   const rodada = useRef(0);
 
@@ -197,13 +185,8 @@ export function FormLoja({
       <Campo
         rotulo="WhatsApp da loja"
         name="whatsapp"
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel-national"
-        value={fone}
-        onChange={(e) => setFone(mascaraFone(e.target.value))}
-        placeholder="(89) 99999-0000"
-        erro={erroDe("whatsapp")}
+        {...fone.campo}
+        erro={fone.erro ?? erroDe("whatsapp")}
         dica="Use o DDD. Se for diferente do WhatsApp confirmado da sua conta, a equipe confere o número comercial antes de divulgá-lo. Até lá, os clientes usam seu número confirmado."
       />
 

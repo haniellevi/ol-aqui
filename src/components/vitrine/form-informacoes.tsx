@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Copy, LocateFixed, MapPin, Plus, Save, Trash2, X } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
+import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import { Chip } from "@/components/ui/chip";
 import { Aviso } from "@/components/conta/aviso";
 import { DIAS_EM_ORDEM, NOME_DIA, limparInstagram } from "@/components/vitrine/regras";
@@ -71,6 +72,7 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
 
   const [semana, setSemana] = useState<Semana>(() => semanaInicial(dados.horarios));
   const [instagram, setInstagram] = useState(dados.instagram ?? "");
+  const telefone = useCampoTelefone(dados.telefone_publico ?? "", { aceitaFixo: true });
   const [sobre, setSobre] = useState(dados.sobre ?? "");
   const opcoesPagamento = [...formasDoPainel, ...dados.formas_pagamento.filter((f) => !formasDoPainel.includes(f))];
   const [formas, setFormas] = useState<string[]>(dados.formas_pagamento);
@@ -299,8 +301,8 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
         />
         <Campo rotulo="Site da loja" name="site_url" type="url" opcional maxLength={300}
           defaultValue={dados.site_url ?? ""} placeholder="https://minhaloja.com.br" erro={campos.site_url} />
-        <Campo rotulo="Telefone comercial" name="telefone_publico" type="tel" opcional maxLength={22}
-          defaultValue={dados.telefone_publico ?? ""} erro={campos.telefone_publico} />
+        <Campo rotulo="Telefone comercial" name="telefone_publico" opcional {...telefone.campo}
+          erro={telefone.erro ?? campos.telefone_publico} />
         <p className="text-sm text-texto-suave">Site e telefone ficam públicos após a conferência da loja.</p>
         <Campo
           rotulo="Sobre nós"

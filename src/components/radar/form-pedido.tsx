@@ -10,7 +10,7 @@ import { Chip } from "@/components/ui/chip";
 import { Botao } from "@/components/ui/botao";
 import { criarPedido } from "@/app/radar/actions";
 import { linkMeuPedidoRadar } from "@/lib/rotas";
-import { whatsappDigitado } from "@/lib/formato";
+import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import type { ModoContato, RegrasRadar } from "@/lib/tipos-radar";
 import { validarPedido } from "./validacao";
 import { dataHoraCurta, rotuloPrazo } from "./util";
@@ -42,7 +42,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   const [precoMin, setPrecoMin] = useState(precoMinInicial);
   const [precoMax, setPrecoMax] = useState(precoMaxInicial);
   const [cidade, setCidade] = useState<string | null>(cidadeInicial);
-  const [whatsapp, setWhatsapp] = useState(whatsappInicial);
+  const whatsapp = useCampoTelefone(whatsappInicial, { obrigatorio: pedirWhatsapp });
   const [modo, setModo] = useState<ModoContato>("whatsapp_direto");
   const [prazo, setPrazo] = useState<number | null>(regras.prazosHoras[1] ?? regras.prazosHoras[0] ?? null);
   const [erro, setErro] = useState<{ texto: string; campo?: string; celular?: boolean } | null>(null);
@@ -71,7 +71,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
     if (invalida) return setErro({ texto: invalida.erro, campo: invalida.campo });
     if (!cidades.includes(cidade ?? "")) return setErro({ texto: "Escolha uma cidade da lista.", campo: "cidade" });
     if (modo === "propostas_prazo" && !regras.prazosHoras.includes(prazo ?? 0)) return setErro({ texto: "Escolha um prazo da lista.", campo: "prazo" });
-    if (pedirWhatsapp && !whatsappDigitado(whatsapp)) return setErro({ texto: "Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.", campo: "whatsapp" });
+    if (pedirWhatsapp && !whatsapp.valido) return setErro({ texto: "Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.", campo: "whatsapp" });
     trava.current = true;
     iniciar(async () => {
       try {
@@ -85,7 +85,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           cidade: cidade!,
           modo,
           prazoHoras: prazo,
-          whatsapp: pedirWhatsapp ? whatsapp : undefined,
+          whatsapp: pedirWhatsapp ? whatsapp.campo.value : undefined,
         });
         if (!r.ok) {
           setErro({ texto: r.erro, campo: r.campo, celular: r.precisaCelular });
@@ -235,14 +235,8 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         <Campo
           rotulo="Seu WhatsApp"
           name="whatsapp"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel-national"
-          value={whatsapp}
-          onChange={(e) => setWhatsapp(e.target.value)}
-          placeholder="(89) 99999-0000"
-          maxLength={20}
-          erro={erroDe("whatsapp")}
+          {...whatsapp.campo}
+          erro={whatsapp.erro ?? erroDe("whatsapp")}
           dica={modo === "whatsapp_direto" ? "Com DDD. As lojas que enviarem uma proposta poderão ver este número." : "Com DDD. Seu número fica oculto; você escolhe com qual loja conversar."}
         />
       )}

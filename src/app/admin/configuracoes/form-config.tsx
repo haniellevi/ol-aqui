@@ -2,6 +2,8 @@
 
 import { useActionState, useId } from "react";
 import { Aviso, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
+import { Campo } from "@/components/ui/campo";
+import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import { CampoBusca } from "@/components/admin/campo-busca";
 import { emCentavos, valorParaForm, type Opcao, type TipoValor } from "@/lib/admin/config";
 import { criarExcecao, salvarConfig } from "./actions";
@@ -18,8 +20,14 @@ const AJUDA: Record<TipoValor, string> = {
   simnao: "",
 };
 
+function CampoWhatsappSuporte({ valor }: { valor: string }) {
+  const telefone = useCampoTelefone(valor, { aceitaFixo: true });
+  return <Campo id={useId()} rotulo="WhatsApp do suporte" name="valor" opcional {...telefone.campo} erro={telefone.erro} />;
+}
+
 function CampoValor({ tipo, valor, chave, opcoes }: { tipo: TipoValor; valor: unknown; chave: string; opcoes?: Opcao[] }) {
   const ajudaId = useId();
+  if (chave === "contato.whatsapp_suporte") return <CampoWhatsappSuporte valor={String(valor ?? "")} />;
   const texto = valorParaForm(tipo, valor);
   const ajuda = [AJUDA[tipo], emCentavos(chave) ? "Valores em centavos (R$ 9,90 = 990)." : ""].filter(Boolean).join(" ");
   if (tipo === "simnao") {

@@ -11,7 +11,7 @@ import { minhaVitrineCompleta } from "@/lib/dados/vitrine-completa";
 import { listarCidades } from "@/lib/dados/regiao";
 import { apagarFoto } from "@/lib/dados/fotos";
 import { traduzirErro } from "@/lib/erros";
-import { linkLoja } from "@/lib/formato";
+import { linkLoja, telefoneComercialDigitado } from "@/lib/formato";
 import type { Resultado } from "@/lib/tipos";
 
 const BUCKET = "anuncios";
@@ -60,15 +60,15 @@ export async function salvarLoja(_antes: EstadoLojaConta, form: FormData): Promi
 
     if (["nome", "whatsapp", "cidade", "bairro", "logo_url"].some((k) => typeof form.get(k) !== "string")) return { erro: "Recarregue a página e preencha os dados da loja." };
     const nome = String(form.get("nome") ?? "").replace(/\s+/g, " ").trim();
-    const digitos = String(form.get("whatsapp") ?? "").replace(/\D/g, "");
+    const whatsapp = String(form.get("whatsapp") ?? "").trim();
+    const fone = telefoneComercialDigitado(whatsapp);
     const cidade = String(form.get("cidade") ?? "").trim();
     const bairro = String(form.get("bairro") ?? "").replace(/\s+/g, " ").trim();
     const logo = String(form.get("logo_url") ?? "").trim();
 
     const campos: Record<string, string> = {};
     if (nome.length < 2 || nome.length > 80) campos.nome = "Escreva o nome da loja (de 2 a 80 letras).";
-    const fone = digitos.length === 10 || digitos.length === 11 ? `55${digitos}` : digitos;
-    if (digitos && !/^55[1-9][0-9]9?[0-9]{8}$/.test(fone)) campos.whatsapp = "WhatsApp inválido. Use o DDD e o número, ex.: (89) 99999-0000.";
+    if (whatsapp && !fone) campos.whatsapp = "WhatsApp inválido. Use o DDD e o número, ex.: (89) 99999-0000.";
     const cidades = await listarCidades(v.microrregiao_id);
     if (!cidade) campos.cidade = "Escolha a cidade da loja.";
     else if (cidade !== v.cidade && !cidades.some((c) => c.nome === cidade)) campos.cidade = "Escolha uma cidade da lista.";
@@ -82,7 +82,7 @@ export async function salvarLoja(_antes: EstadoLojaConta, form: FormData): Promi
       .from("vitrines_lojas")
       .update({
         nome,
-        whatsapp: digitos ? fone : null,
+        whatsapp: fone,
         cidade,
         bairro: bairro || null,
         logo_url: logo || null,

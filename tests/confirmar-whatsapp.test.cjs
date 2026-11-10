@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const React = require('react');
 const { carregar } = require('./carregar.cjs');
-const { mascaraCelular } = carregar('src/lib/formato.ts');
+const { mascaraCelular, telefoneComercialDigitado } = carregar('src/lib/formato.ts');
 
 test('máscara acompanha a digitação e aceita colagem nacional ou com +55', () => {
   for (const [entrada, esperado] of [
@@ -21,12 +21,31 @@ test('máscara preserva excesso e código estrangeiro para não criar outro celu
     ['899999900001', '899999900001'], ['8999999000012', '8999999000012'],
     ['+55899999900001', '899999900001'],
     ['(55) 99999-00012', '559999900012'], ['(55) 99999-000123', '5599999000123'],
+    ['55) 99999-000123', '5599999000123'],
   ]) {
     const resultado = mascaraCelular(entrada);
     assert.equal(resultado.replace(/\D/g, ''), digitos, entrada);
     assert.doesNotMatch(resultado, /^\([1-9][0-9]\) 9[0-9]{4}-[0-9]{4}$/, entrada);
   }
   assert.equal(mascaraCelular('+1 89999990000'), '+1 89999990000');
+});
+
+test('contatos comerciais mantêm fixo e celular, sem converter número estrangeiro ou DDD 55 excedente', () => {
+  for (const [entrada, formatado, gravado] of [
+    ['558933330000', '(89) 3333-0000', '558933330000'],
+    ['+55 (55) 3333-0000', '(55) 3333-0000', '555533330000'],
+    ['5533330000', '(55) 3333-0000', '555533330000'],
+    ['+55 (55) 99999-0000', '(55) 99999-0000', '5555999990000'],
+  ]) {
+    const numero = mascaraCelular(entrada, true);
+    assert.equal(numero, formatado);
+    assert.equal(telefoneComercialDigitado(numero), gravado);
+    assert.equal(telefoneComercialDigitado(entrada), gravado);
+  }
+  for (const entrada of ['+1 2999999999', '+55 3333-0000', '+55 99999-0000', '(55) 99999-000123']) {
+    assert.equal(telefoneComercialDigitado(entrada), null, entrada);
+    assert.equal(telefoneComercialDigitado(mascaraCelular(entrada, true)), null, entrada);
+  }
 });
 
 function encontrar(no, predicado) {

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
+import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import { reduzirFoto, enviarFoto } from "@/lib/fotos";
 import { prepararEnvioImagemLoja, salvarLoja, descartarLogo, type EstadoLojaConta } from "@/app/(conta)/minha-conta/loja/actions";
 import { Seletor } from "./seletor";
@@ -11,19 +12,6 @@ import { Aviso } from "./aviso";
 
 // T38 · Minha loja: dados da vitrine + logo (reduzida no aparelho antes de enviar).
 // Banner, "Sobre nós", horários e as outras informações têm telas próprias (vitrine completa).
-
-/** "5589999990000" ou "89999990000" → "(89) 99999-0000" enquanto digita. */
-function mascaraFone(t: string): string {
-  let d = t.replace(/\D/g, "");
-  if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
-  d = d.slice(0, 11);
-  if (d.length <= 2) return d ? `(${d}` : "";
-  const ddd = d.slice(0, 2);
-  const resto = d.slice(2);
-  if (resto.length <= 4) return `(${ddd}) ${resto}`;
-  const corte = resto.length === 9 ? 5 : 4;
-  return `(${ddd}) ${resto.slice(0, corte)}-${resto.slice(corte)}`;
-}
 
 export type DadosLoja = {
   nome: string;
@@ -53,7 +41,7 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
     pendente.current = url || null;
     setLogo(url);
   }
-  const [fone, setFone] = useState(mascaraFone(loja.whatsapp ?? ""));
+  const fone = useCampoTelefone(loja.whatsapp ?? "", { aceitaFixo: true });
   const [logo, setLogo] = useState(loja.logo_url ?? "");
   const [subindo, setSubindo] = useState<"logo" | null>(null);
   const campos = estado?.campos ?? {};
@@ -92,14 +80,9 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
         <Campo
           rotulo="WhatsApp da loja"
           name="whatsapp"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel-national"
-          placeholder="(89) 99999-0000"
-          value={fone}
-          onChange={(e) => setFone(mascaraFone(e.target.value))}
+          {...fone.campo}
           dica="Se deixar vazio, a vitrine usa o WhatsApp confirmado da sua conta. Um número comercial diferente só aparece após conferência da equipe. Até lá, a vitrine usa o número confirmado."
-          erro={campos.whatsapp}
+          erro={fone.erro ?? campos.whatsapp}
         />
         {cidades.length > 0 ? (
           <Seletor rotulo="Cidade" name="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} erro={campos.cidade}>

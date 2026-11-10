@@ -125,15 +125,35 @@ export function whatsappDigitado(texto: string | null | undefined): string | nul
   return /^55[1-9][0-9]9[0-9]{8}$/.test(d) ? d : null;
 }
 
-/** Máscara de celular com DDD; aceita +55 colado e preserva excessos para a validação. */
-export function mascaraCelular(texto: string): string {
-  const internacional = texto.trimStart().startsWith("+");
-  if (internacional && !texto.trimStart().startsWith("+55")) return texto;
-  let digitos = texto.replace(/\D/g, "");
-  if (internacional || (!texto.trimStart().startsWith("(") && digitos.length > 11 && digitos.startsWith("55"))) digitos = digitos.slice(2);
+/** Normaliza um contato comercial para DDI + DDD + número. */
+export function telefoneComercialDigitado(entrada: unknown): string | null {
+  if (typeof entrada !== "string" || !/^[\d+().\s-]+$/.test(entrada)) return null;
+  const texto = entrada.trim();
+  const digitos = texto.replace(/\D/g, "");
+  if (texto.includes("+")) {
+    if (!/^\+55[\d().\s-]*$/.test(texto) || digitos.length < 12) return null;
+    return /^55[1-9][0-9]9?[0-9]{8}$/.test(digitos) ? digitos : null;
+  }
+  if (texto.startsWith("(") && digitos.length > 11) return null;
+  const completo = digitos.length <= 11 ? `55${digitos}` : digitos;
+  return /^55[1-9][0-9]9?[0-9]{8}$/.test(completo) ? completo : null;
+}
+
+/** Máscara com DDD; aceita +55 colado e preserva excessos para a validação. */
+export function mascaraCelular(texto: string, aceitaFixo = false): string {
+  const entrada = texto.trimStart();
+  const internacional = /^\+55[\d().\s-]*$/.test(entrada);
+  if (entrada.includes("+") && !internacional) return texto;
+  let digitos = entrada.replace(/\D/g, "");
+  const ddiSemSinal = digitos.length > 11 && digitos.startsWith("55") &&
+    (!/[()]/.test(entrada) || /^55\s*\(/.test(entrada));
+  if (internacional || ddiSemSinal) digitos = digitos.slice(2);
+  if (!digitos && internacional) return texto;
   if (digitos.length <= 2) return digitos ? `(${digitos}` : "";
   const local = digitos.slice(2);
-  return `(${digitos.slice(0, 2)}) ${local.slice(0, 5)}${local.length > 5 ? `-${local.slice(5)}` : ""}`;
+  const corte = aceitaFixo && local.length <= 8 ? 4 : 5;
+  const final = local.length > corte ? `-${local.slice(corte)}` : "";
+  return `(${digitos.slice(0, 2)}) ${local.slice(0, corte)}${final}`;
 }
 
 /** Valor de um campo extra para mostrar: 45000 + km → "45.000 km"; true → "Sim". */
