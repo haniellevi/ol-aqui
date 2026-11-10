@@ -13,6 +13,16 @@ export type RespostaAcao = { ok: true; mensagem: string } | { ok: false; erro: s
 
 const SEM_LOGIN: RespostaAcao = { ok: false, erro: "Entre na sua conta para continuar.", link: { rotulo: "Entrar", href: "/entrar" } };
 
+export async function abrirAtendimentoCadastro(mensagemId: number): Promise<RespostaAcao> {
+  if (!(await auth()).userId) return SEM_LOGIN;
+  if (!Number.isSafeInteger(mensagemId) || mensagemId <= 0) return { ok: false, erro: "Resposta não encontrada." };
+  const db = await createClient();
+  const { data, error } = await db.rpc("abrir_atendimento_cadastro", { p_mensagem: mensagemId });
+  if (error || typeof data !== "string") return { ok: false, erro: "Não foi possível abrir o atendimento. Tente novamente." };
+  revalidatePath("/aki");
+  return { ok: true, mensagem: "Atendimento encaminhado à equipe." };
+}
+
 /** Joinha (1), não joinha (-1) ou tirar (0) numa resposta do Aki. */
 export async function avaliarResposta(mensagemId: number, nota: -1 | 0 | 1, comentario?: string | null): Promise<RespostaAcao> {
   const { userId } = await auth();

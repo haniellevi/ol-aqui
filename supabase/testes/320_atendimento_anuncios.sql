@@ -124,4 +124,39 @@ select pg_temp.recusa(format('select enviar_mensagem_atendimento(%L,gen_random_u
 reset role;
 delete from anuncios where id=:'anuncio';
 select pg_temp.confere(not exists(select 1 from atendimento_mensagens where conversa_id=:'conversa'),'exclusão do anúncio elimina o atendimento vinculado');
+
+insert into perfis(id,microrregiao_id,nome)
+select 'user_cadastrochat',id,'Cadastro sem WhatsApp' from microrregioes where slug='corrente-pi';
+insert into robo_conversas(usuario_id) values ('user_cadastrochat') returning id as conversa_aki \gset
+insert into robo_mensagens(conversa_id,usuario_id,papel,conteudo)
+values (:'conversa_aki','user_cadastrochat','usuario','{"texto":"Outra dúvida particular."}'),
+       (:'conversa_aki','user_cadastrochat','assistente','{"texto":"Outra resposta."}'),
+       (:'conversa_aki','user_cadastrochat','usuario','{"texto":"O código não chegou."}');
+insert into robo_mensagens(conversa_id,usuario_id,papel,conteudo)
+values (:'conversa_aki','user_cadastrochat','assistente','{"texto":"Aguarde 1 minuto."}') returning id as resposta_aki \gset
+select pg_temp.confere(not has_function_privilege('anon','abrir_atendimento_cadastro(bigint)','execute'),'visitante não abre atendimento');
+
+set local role authenticated;
+set local request.jwt.claim.role='authenticated';
+set local request.jwt.claim.sub='user_comprador';
+select pg_temp.recusa(format('select abrir_atendimento_cadastro(%s)', :'resposta_aki'),'42501');
+set local request.jwt.claim.sub='user_cadastrochat';
+select abrir_atendimento_cadastro(:'resposta_aki') as chamado \gset
+select pg_temp.confere(abrir_atendimento_cadastro(:'resposta_aki')=:'chamado','clique repetido reabre a mesma conversa');
+select pg_temp.confere((select aguarda_equipe and anuncio_id is null and not aki_ativo from atendimentos_anuncio where id=:'chamado'),'cadastro sem telefone confirmado entra na fila humana');
+select pg_temp.confere((select array_agg(texto order by id)=array['O código não chegou.','Aguarde 1 minuto.'] from atendimento_mensagens where conversa_id=:'chamado'),'só o par selecionado é compartilhado uma vez');
+
+set local request.jwt.claim.sub='user_comprador';
+select pg_temp.confere((select count(id)=0 from atendimento_mensagens where conversa_id=:'chamado'),'outra conta não lê o atendimento de cadastro');
+select pg_temp.recusa(format('select enviar_mensagem_atendimento(%L,gen_random_uuid(),%L)', :'chamado','Mensagem alheia'),'42501');
+set local request.jwt.claim.sub='user_adminchat';
+select pg_temp.recusa(format('select delegar_atendimento_aki(%L,true,0)', :'chamado'),'23514');
+select enviar_mensagem_atendimento(:'chamado',gen_random_uuid(),'Resposta humana de teste.') as resposta_equipe \gset
+set local request.jwt.claim.sub='user_cadastrochat';
+select pg_temp.confere(abrir_atendimento_cadastro(:'resposta_aki')=:'chamado','repetição depois da resposta preserva a conversa');
+select pg_temp.confere((select not aguarda_equipe from atendimentos_anuncio where id=:'chamado'),'repetição não recoloca o caso respondido na fila');
+select pg_temp.confere((select texto='Resposta humana de teste.' from atendimento_mensagens where id=:'resposta_equipe'),'resposta humana disponível no próprio chat');
+select pg_temp.confere((select link='/aki?ajuda=whatsapp&atendimento=1' from notificacoes where chave='atendimento:'||:'resposta_equipe'),'notificação volta ao chat sem confirmação');
+select enviar_mensagem_atendimento(:'chamado',gen_random_uuid(),'Ainda preciso de ajuda.');
+select pg_temp.confere((select aguarda_equipe from atendimentos_anuncio where id=:'chamado'),'mensagem adicional volta à fila humana');
 rollback;

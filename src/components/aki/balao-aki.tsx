@@ -58,7 +58,9 @@ function paraBase64(blob: Blob): Promise<string> {
   });
 }
 
-export function BalaoAki({ modo = "balao", voltarDaAjuda }: { modo?: "balao" | "pagina"; voltarDaAjuda?: string } = {}) {
+export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atendimentoAberto }: {
+  modo?: "balao" | "pagina"; voltarDaAjuda?: string; atendimentoHref?: string; atendimentoAberto?: boolean;
+} = {}) {
   const pagina = modo === "pagina";
   const caminho = usePathname() ?? "/";
   const [estado, setEstado] = useState<EstadoAki | null>(null);
@@ -231,7 +233,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda }: { modo?: "balao" | "
     const resposta: MensagemAki = { id: null, papel: "assistente", conteudo: { texto: "" }, criado_em: agora, nota: null };
     setMensagens((m) => [...m, minha, resposta]);
     setTexto("");
-    const corpo: PedidoAki = { texto: t, conversaId, foto: foto ? { base64: foto.base64, tipo: foto.tipo } : null, rascunhoId };
+    const corpo: PedidoAki = { texto: t, conversaId, foto: foto ? { base64: foto.base64, tipo: foto.tipo } : null, rascunhoId, ajudaWhatsapp: !!voltarDaAjuda };
     const fotoAnuncio = foto && usarNoAnuncio && rascunhoId ? foto : null;
     tirarFoto();
 
@@ -357,6 +359,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda }: { modo?: "balao" | "
           <>
             <p className="max-w-sm text-base text-texto-suave">{falhouEstado ? "Algo deu errado. Confira sua internet e tente de novo." : DESCANSANDO}</p>
             <div className="flex w-full max-w-sm flex-col gap-2">
+              {atendimentoAberto && <Botao href={atendimentoHref} variante="secundario">Ver atendimento com a equipe</Botao>}
               {falhouEstado ? (
                 <Botao
                   larguraTotal
@@ -501,9 +504,11 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda }: { modo?: "balao" | "
             )}
 
             {voltarDaAjuda && (
-              <p className="border-b border-borda bg-fundo px-4 py-3 text-sm text-texto-suave">
-                Conte ao Aki o que aconteceu com a confirmação do WhatsApp. Nunca envie o código pelo bate-papo.
-              </p>
+              <div className="border-b border-borda bg-fundo px-4 py-3 text-sm text-texto-suave">
+                <p>Conte ao Aki o que aconteceu com a confirmação do WhatsApp. Nunca envie o código pelo bate-papo.</p>
+                <p>Ao tocar em <strong>Não ajudou</strong>, a equipe recebe sua pergunta e a resposta do Aki.</p>
+                {atendimentoAberto && <Botao href={atendimentoHref} variante="texto">Ver atendimento com a equipe</Botao>}
+              </div>
             )}
 
             {confirmarApagar && (
@@ -570,6 +575,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda }: { modo?: "balao" | "
                     mensagem={m}
                     escrevendo={enviando && i === mensagens.length - 1}
                     pensando={i === mensagens.length - 1 ? pensando : null}
+                    atendimentoHref={atendimentoHref}
                     aoAvaliar={(nota) =>
                       setMensagens((lista) => lista.map((x) => (x === m && x.papel === "assistente" ? { ...x, nota } : x)))
                     }

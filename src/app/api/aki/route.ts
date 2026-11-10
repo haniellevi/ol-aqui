@@ -98,7 +98,7 @@ export async function POST(req: Request) {
           }
         };
         try {
-          await responder({ userId, pedido: { texto, conversaId, foto, rascunhoId }, ajustes, emitir, sinal: req.signal });
+          await responder({ userId, pedido: { texto, conversaId, foto, rascunhoId, ajudaWhatsapp: corpo.ajudaWhatsapp === true }, ajustes, emitir, sinal: req.signal });
         } catch {
           emitir({ tipo: "erro", mensagem: "O Aki não conseguiu responder agora. Tente de novo." });
         } finally {

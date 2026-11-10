@@ -12,7 +12,7 @@ export function ListaAtendimentos({ dados, caminho, link, pagina, total, equipe 
     </p> : <ul className="space-y-3" aria-label="Conversas de atendimento">
       {dados.map(c => <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-borda bg-cartao p-4">
         <div className="min-w-0 [overflow-wrap:anywhere]">
-          <p className="font-semibold text-beringela">{c.anuncios?.titulo?.trim() || "Anúncio sem título"}</p>
+          <p className="font-semibold text-beringela">{c.anuncio_id ? c.anuncios?.titulo?.trim() || "Anúncio sem título" : "Confirmação do WhatsApp"}</p>
           <p className="mt-1 text-legenda text-texto-suave">Atualizado em {quando(c.atualizado_em)}</p>
           <p className="mt-1 text-sm text-texto-suave">{c.aguarda_equipe ? "Aguardando equipe" : c.aki_ativo ? "Atendimento com Aki" : "Atendimento da equipe"}</p>
         </div>
