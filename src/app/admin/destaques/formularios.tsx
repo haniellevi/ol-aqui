@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Aviso, estiloCampo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableRowHead } from "@/components/ui/table";
 import { paraReaisInput } from "@/lib/admin/formato";
 import type { SlugDestaque, TipoDestaque } from "@/lib/tipos-destaques";
 import {
@@ -81,26 +82,24 @@ export function FormCreditos({
   const [estado, acao, pendente] = useActionState(salvarCreditosDestaque, null);
   return (
     <form action={acao} className="space-y-3">
-      <div className="relative -mx-4 overflow-x-auto px-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro" role="region" aria-label="Créditos por plano e tipo de destaque" tabIndex={0}>
-        <table className="w-full min-w-[480px] text-sm">
-          <thead>
-            <tr className="text-left text-texto-suave">
-              <th className="py-2 pr-3 font-semibold">Plano</th>
+      <div className="-mx-3">
+        <Table rotulo="Créditos por plano e tipo de destaque" className="min-w-[480px]">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead scope="col">Plano</TableHead>
               {tipos.map((t) => (
-                <th key={t.slug} className="px-2 py-2 font-semibold">
+                <TableHead key={t.slug} scope="col">
                   {t.nome}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {planos.map((p) => (
-              <tr key={p.codigo} className="border-t border-borda">
-                <th scope="row" className="py-2 pr-3 text-left font-semibold text-beringela">
-                  {p.nome}
-                </th>
+              <TableRow key={p.codigo} className="hover:bg-transparent">
+                <TableRowHead>{p.nome}</TableRowHead>
                 {tipos.map((t) => (
-                  <td key={t.slug} className="px-2 py-1">
+                  <TableCell key={t.slug} className="py-1">
                     <label className="sr-only" htmlFor={`c-${p.codigo}-${t.slug}`}>
                       {`${t.nome} grátis por mês no ${p.nome}`}
                     </label>
@@ -113,12 +112,12 @@ export function FormCreditos({
                       defaultValue={creditos[`${p.codigo}:${t.slug}`] ?? 0}
                       className={`${estiloCampo} mt-0 w-24`}
                     />
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <Botao type="submit" variante="secundario" carregando={pendente} textoCarregando="Salvando...">
         Salvar créditos

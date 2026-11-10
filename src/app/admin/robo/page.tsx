@@ -7,6 +7,7 @@ import type { ModeloIA, PainelAki, ProvedorIA } from "@/lib/aki/tipos";
 import { FormLigarGeral, FormLimites, FormModelo, FormModeloEscolhido, FormRegiao, FormResolverBusca, FormTextos } from "./forms";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const metadata = { title: "Robô Aki" };
 
@@ -195,31 +196,31 @@ export default async function RoboPage() {
                   </li>
                 ))}
               </ul>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="text-legenda text-texto-suave">
-                    <tr>
-                      <th className="py-2 pr-3 font-semibold">Modelo</th>
-                      <th className="py-2 pr-3 font-semibold">Respostas</th>
-                      <th className="py-2 pr-3 font-semibold">Tokens entrada</th>
-                      <th className="py-2 pr-3 font-semibold">Tokens saída</th>
-                      <th className="py-2 font-semibold">Custo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <div className="-mx-3">
+                <Table rotulo="Gasto do mês por modelo" className="min-w-[460px]">
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead scope="col">Modelo</TableHead>
+                      <TableHead scope="col">Respostas</TableHead>
+                      <TableHead scope="col">Tokens entrada</TableHead>
+                      <TableHead scope="col">Tokens saída</TableHead>
+                      <TableHead scope="col">Custo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {(painel?.por_provedor ?? []).map((l) => (
-                      <tr key={`${l.provedor}|${l.modelo}`} className="border-t border-borda">
-                        <td className="py-2 pr-3 font-mono text-legenda">
+                      <TableRow key={`${l.provedor}|${l.modelo}`}>
+                        <TableCell className="font-mono text-legenda">
                           {NOME_PROVEDOR[l.provedor as ProvedorIA] ?? l.provedor} · {l.modelo}
-                        </td>
-                        <td className="py-2 pr-3 tabular-nums">{inteiro(l.respostas)}</td>
-                        <td className="py-2 pr-3 tabular-nums">{inteiro(l.tokens_entrada)}</td>
-                        <td className="py-2 pr-3 tabular-nums">{inteiro(l.tokens_saida)}</td>
-                        <td className="py-2 tabular-nums">{reais(Number(l.custo))}</td>
-                      </tr>
+                        </TableCell>
+                        <TableCell>{inteiro(l.respostas)}</TableCell>
+                        <TableCell>{inteiro(l.tokens_entrada)}</TableCell>
+                        <TableCell>{inteiro(l.tokens_saida)}</TableCell>
+                        <TableCell>{reais(Number(l.custo))}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </div>
           ) : (

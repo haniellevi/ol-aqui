@@ -22,6 +22,7 @@ import type { FiltrosRelatorio as Filtros, RelatorioId } from "@/lib/tipos-relat
 import { Barras } from "./barras";
 import { FiltrosRelatorio } from "./filtros";
 import { Alert } from "@/components/ui/alert";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow, TableRowHead } from "@/components/ui/table";
 
 export const metadata = { title: "Relatórios" };
 
@@ -77,8 +78,6 @@ function Falhou() {
   return <Aviso tipo="erro">Não deu para ler este relatório agora. Recarregue a página.</Aviso>;
 }
 
-const th = "px-3 py-2 text-left text-sm font-semibold text-beringela";
-const td = "px-3 py-2 text-base tabular-nums text-beringela";
 
 export default async function RelatoriosPage({ searchParams }: { searchParams: Params }) {
   const { supabase } = await exigirAdmin();
@@ -232,32 +231,32 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
                 <Numero rotulo="Ainda em teste" valor={inteiro(convTotal.em_teste)} />
                 <Numero rotulo="Acabou sem pagar" valor={inteiro(convTotal.nao)} />
               </div>
-              <Cartao className="overflow-x-auto p-0 focus-visible:outline-2 focus-visible:outline-laranja-escuro" role="region" aria-label="Conversão de teste em plano por mês" tabIndex={0}>
-                <table className="w-full min-w-[520px]">
-                  <caption className="sr-only">Teste grátis para plano pago, por mês</caption>
-                  <thead className="border-b border-borda">
-                    <tr>
-                      <th scope="col" className={th}>Mês</th>
-                      <th scope="col" className={th}>Começaram</th>
-                      <th scope="col" className={th}>Pagaram</th>
-                      <th scope="col" className={th}>Em teste</th>
-                      <th scope="col" className={th}>Sem pagar</th>
-                      <th scope="col" className={th}>Viraram pagantes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <Cartao className="p-0">
+                <Table rotulo="Conversão de teste em plano por mês" className="min-w-[520px]">
+                  <TableCaption className="sr-only">Teste grátis para plano pago, por mês</TableCaption>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead scope="col">Mês</TableHead>
+                      <TableHead scope="col">Começaram</TableHead>
+                      <TableHead scope="col">Pagaram</TableHead>
+                      <TableHead scope="col">Em teste</TableHead>
+                      <TableHead scope="col">Sem pagar</TableHead>
+                      <TableHead scope="col">Viraram pagantes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {conv.map((l) => (
-                      <tr key={l.mes} className="border-b border-borda last:border-0">
-                        <th scope="row" className={th}>{nomeMes(l.mes)}</th>
-                        <td className={td}>{inteiro(l.comecaram)}</td>
-                        <td className={td}>{inteiro(l.pagaram)}</td>
-                        <td className={td}>{inteiro(l.em_teste)}</td>
-                        <td className={td}>{inteiro(l.nao_pagaram)}</td>
-                        <td className={td}>{pct(l.pagaram, l.comecaram)}</td>
-                      </tr>
+                      <TableRow key={l.mes}>
+                        <TableRowHead>{nomeMes(l.mes)}</TableRowHead>
+                        <TableCell>{inteiro(l.comecaram)}</TableCell>
+                        <TableCell>{inteiro(l.pagaram)}</TableCell>
+                        <TableCell>{inteiro(l.em_teste)}</TableCell>
+                        <TableCell>{inteiro(l.nao_pagaram)}</TableCell>
+                        <TableCell>{pct(l.pagaram, l.comecaram)}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </Cartao>
             </>
           )}

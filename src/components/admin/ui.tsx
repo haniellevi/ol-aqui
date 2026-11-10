@@ -1,4 +1,6 @@
+import { Alert } from "@/components/ui/alert";
 import { classesBotao } from "@/components/ui/botao";
+import { classesCampo } from "@/components/ui/input";
 
 // Peças visuais simples do painel (sem dependências extras).
 export function Titulo({ children, sub }: { children: React.ReactNode; sub?: React.ReactNode }) {
@@ -24,9 +26,8 @@ export function Numero({ rotulo, valor, detalhe, alerta }: { rotulo: string; val
   );
 }
 
-export const estiloCampo =
-  "admin-campo mt-1 h-10 w-full rounded-campo border border-borda-campo bg-cartao px-3 text-base font-normal text-texto placeholder:text-texto-suave " +
-  "outline-hidden focus-visible:outline-solid focus:border-laranja-escuro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:bg-fundo disabled:text-texto-suave";
+// Mesma caixa de campo do resto do app (components/ui/input), com a folga do rótulo em cima.
+export const estiloCampo = `${classesCampo} admin-campo mt-1 h-10`;
 // Mesmas classes do <Botao>; painel.css compacta controles somente com mouse.
 export const estiloBotao = classesBotao("primario");
 export const estiloBotaoSec = classesBotao("secundario");
@@ -39,11 +40,8 @@ export const estiloBotaoAprovar =
 
 export function Aviso({ tipo, children }: { tipo: "ok" | "erro"; children: React.ReactNode }) {
   return (
-    <p
-      role={tipo === "erro" ? "alert" : "status"}
-      className={`rounded-card px-4 py-3 text-sm ${tipo === "ok" ? "bg-sucesso-fundo text-verde-escuro" : "bg-perigo-fundo text-perigo"}`}
-    >
+    <Alert role={tipo === "erro" ? "alert" : "status"} variant={tipo === "ok" ? "success" : "destructive"}>
       {children}
-    </p>
+    </Alert>
   );
 }
