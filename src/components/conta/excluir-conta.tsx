@@ -31,7 +31,7 @@ export function ExcluirConta({ temPagamentos }: { temPagamentos: boolean }) {
   }, [aberto]);
 
   if (estado?.ok) {
-    return <Aviso tipo="ok">Sua conta foi excluída. Saindo...</Aviso>;
+    return <Aviso tipo="ok">Seu acesso foi encerrado. A exclusão dos dados será processada. Saindo...</Aviso>;
   }
 
   if (!aberto) {
@@ -48,8 +48,8 @@ export function ExcluirConta({ temPagamentos }: { temPagamentos: boolean }) {
       <h3 className="text-lg font-bold text-perigo">Tem certeza?</h3>
       <ul className="flex list-disc flex-col gap-1 pl-5 text-base">
         <li>Seus anúncios saem do ar e sua loja fecha.</li>
-        <li>Seus favoritos e pedidos no Radar são apagados.</li>
-        {temPagamentos && <li>Os registros de pagamento ficam guardados sem seu nome, como a lei exige.</li>}
+        <li>A exclusão dos dados é processada após o encerramento do acesso.</li>
+        {temPagamentos && <li>Registros financeiros e de segurança podem ser mantidos conforme a política de privacidade.</li>}
         <li>Não dá para desfazer.</li>
       </ul>
       <div ref={campo}>

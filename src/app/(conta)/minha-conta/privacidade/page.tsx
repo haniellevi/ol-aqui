@@ -47,7 +47,7 @@ export default async function PaginaPrivacidade() {
 
   return (
     <PaginaConta>
-      <TopoConta titulo="Privacidade" texto="Seus dados são seus. Aqui você pode baixar tudo ou apagar sua conta." />
+      <TopoConta titulo="Privacidade" texto="Seus dados são seus. Aqui você pode baixar os dados da sua conta ou solicitar a exclusão." />
 
       <section aria-labelledby="baixar" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
         <h2 id="baixar" className="text-lg font-bold">

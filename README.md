@@ -1,88 +1,116 @@
 # OLAKI · olha aqui o que você procura
 
-Shopping digital e classificados regionais, mobile-first, com o **Radar de Negócios** (o comprador pede, as lojas propõem).
-Domínio oficial: **olaki.com.br** (olaqui.com.br redireciona).
+Shopping digital e classificados regionais, com o Radar de Negócios: o comprador descreve uma necessidade e as lojas enviam propostas.
 
-## Stack
+O endereço publicado observado na análise foi `ol-aqui.vercel.app`. O domínio definitivo do piloto ainda precisa ser confirmado; `olaki.com.br` e seu eventual redirecionamento não devem ser tratados como configurados apenas porque aparecem em documentos anteriores.
 
-- Next.js 15 (App Router) + React 19 + Tailwind CSS 4
-- Clerk (login com Google e celular)
-- Supabase (Postgres + Storage + RLS), recebendo o token do Clerk
-- Vercel
-- Cobrança: Asaas (próxima etapa)
+O ponto de entrada para a abertura acompanhada é [Liberação do piloto](docs/preparacao-piloto/liberacao.md). O documento distingue verificações locais, inspeção do ambiente publicado e ensaios com contas autorizadas. Os arquivos `QA-*` e `VALIDACAO-*` são registros históricos das respectivas versões.
 
-## Rodar no computador
+## Aplicação e serviços
+
+| Parte | Implementação |
+| --- | --- |
+| Aplicação | Next.js 15, React 19 e Tailwind CSS 4; versões exatas em `package-lock.json` |
+| Identidade | Clerk; o `sub` do token identifica `perfis.id` e os vínculos da conta |
+| Confirmação de contato | Código pelo WhatsApp via Evolution API, com Turnstile, cotas e consumo único; separada do login Clerk |
+| Dados e arquivos | Supabase Postgres com RLS e Storage; cliente autenticado usa o token Clerk |
+| Publicação | Vercel |
+| Cobrança | Integração Asaas implementada; ambiente, chave, webhook e fluxo real precisam ser validados antes de cobrar |
+| Aki e moderação | Recursos distintos; triagem de anúncios usa a mesma reserva de orçamento do Aki, conforme [operação da moderação](docs/MODERACAO-IA.md) |
+
+## Desenvolvimento local
+
+Copie `.env.example` para `.env.local`, preencha as credenciais do ambiente de desenvolvimento e mantenha esse arquivo fora do Git. Use as versões travadas:
 
 ```bash
-cp .env.example .env.local   # chaves do Clerk e do Supabase
-npm install
-npm run dev                  # http://localhost:3000
+npm ci
+npm run dev
 ```
 
-## Banco de dados
+A aplicação abre em `http://localhost:3000`. O exemplo de ambiente contém chaves fictícias; elas não permitem validar login, build publicado ou serviços reais. A existência de uma integração no Marketplace não comprova que todas as variáveis foram provisionadas.
 
-As migrações ficam em `supabase/migrations` e devem rodar **nesta ordem**:
+| Grupo | Variáveis usadas |
+| --- | --- |
+| Clerk | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SIGNING_SECRET` |
+| Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ou `NEXT_PUBLIC_SUPABASE_ANON_KEY`), `SUPABASE_SECRET_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY`) |
+| WhatsApp e CAPTCHA | `EVOLUTION_URL`, `EVOLUTION_INSTANCE`, `EVOLUTION_API_KEY`, `WHATSAPP_OTP_SECRET`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `TURNSTILE_HOSTNAMES` |
+| Cobrança, quando utilizada | `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKEN` |
+| IA, quando utilizada | Chave do provedor configurado; para a moderação, `OPENROUTER_API_KEY` e `MODERACAO_IA_SECRET` |
 
-1. `20261107000000_olaki_inicial.sql` · tabelas, RLS, logs do Marco Civil, Radar
-2. `20261107010000_novos_status.sql` · status "em análise"
-3. `20261107010100_painel_admin.sql` · planos, configurações, pagamentos, moderação, região-piloto
-4. `20261107020000_categorias_e_anuncios.sql` · categorias em tabela (com os campos de cada uma), rascunhos, "Quero vender" (pessoa física ou loja), busca, página do anúncio, contagem de visitas e o bucket de fotos
+Somente valores públicos usam o prefixo `NEXT_PUBLIC_`. Não colocar segredos, QR de pareamento, códigos de confirmação ou respostas integrais do provedor nos relatórios.
 
-Testes do banco (Postgres local, sem Supabase): `bash supabase/testes/rodar.sh` como usuário `postgres`. Cada bloco `[n]` diz o que deve acontecer.
+## Verificações locais
 
-### Fotos (Supabase Storage)
+```bash
+npm test
+npm run test:db
+npm run typecheck
+npm run lint
+npm run build
+npm audit --omit=dev
+```
 
-A migração 4 cria o bucket público **`anuncios`** (tamanho máximo em `fotos.tamanho_max_bytes`; só WebP, JPEG e PNG). Cada pessoa só envia para a própria pasta: `<user_id>/<id do anúncio>/` ou `<user_id>/loja/` (logo e capa). Ninguém lista as pastas dos outros; a foto abre pelo endereço público.
+`npm run test:db` requer Python 3, Docker em funcionamento e a imagem `postgres:17-alpine`. O executor cria um contêiner exclusivo, sem rede e com dados temporários, aplica todas as migrações em ordem e executa as asserções SQL e concorrentes. Ao terminar, para somente esse contêiner. Não usa as credenciais do Supabase publicado.
 
-**Depois do deploy**, em `/admin/configuracoes`, preencha **`fotos.origem`** com o endereço do projeto (ex.: `https://abcd.supabase.co`). Sem isso o banco recusa fotos, logos e capas (só aceita arquivos do Storage do OLAKI).
+O antigo `supabase/testes/rodar.sh` recria o banco local `olaki`; use o executor isolado acima para validação automatizada. Testes locais não comprovam entrega de WhatsApp, agendamentos, configuração do Clerk nem funcionamento da versão publicada. Um build que falha por credenciais ausentes deve ser registrado como incompleto, sem chaves inventadas para apresentar sucesso.
 
-Ao excluir a conta, o webhook do Clerk apaga também os arquivos da pasta da pessoa.
+Na verificação integrada desta preparação, 209 testes Node e a suíte SQL com concorrência passaram; o build terminou com saída zero, mantendo dez avisos preexistentes. Isso não substitui o ensaio publicado.
 
-Com a [Supabase CLI](https://supabase.com/docs/guides/cli): `supabase link` e depois `supabase db push`.
-Sem a CLI: cole cada arquivo, na ordem, no SQL Editor do painel do Supabase.
+## Banco, integrações e publicação
 
-### Ligar o Clerk ao Supabase
+As migrações versionadas estão em `supabase/migrations`. A ordem é o prefixo numérico crescente de **todos** os arquivos `.sql`; a aplicação atual depende de migrações posteriores às quatro iniciais. O [manifesto do recorte](docs/preparacao-piloto/migracoes.csv) registra hashes locais e situação de aplicação observada: 27 nomes/versões da base conferidos no projeto, mais três migrações aplicadas nesta preparação e conferidas por igualdade de conteúdo via MD5. Para as 27 anteriores, o conteúdo remoto não foi comparado por hash.
 
-1. No Clerk: **Configure > Integrations > Supabase**, ative e copie o domínio do Clerk.
-2. No Supabase: **Authentication > Sign In / Providers > Third-Party Auth > Clerk**, cole o domínio.
-3. No Clerk: em **User & Authentication**, ligue **Google** e **Phone number** (código por SMS).
-4. No Clerk: **Webhooks > Add endpoint** com `https://olaki.com.br/api/webhooks/clerk` e os eventos `user.created`, `user.updated` e `user.deleted`. O segredo vai em `CLERK_WEBHOOK_SIGNING_SECRET`.
+Antes de aplicar alterações em um ambiente existente, compare o histórico efetivamente aplicado com o manifesto da versão escolhida. Interrompa se houver uma versão ausente ou conteúdo divergente. Preserve migrações já aplicadas; faça novas mudanças por migrações adicionais. Nunca execute o simulador de testes contra o projeto publicado.
 
-O banco lê o id do usuário pela função `public.usuario_id()` (claim `sub` do token do Clerk). O perfil é criado no primeiro acesso e mantido pelo webhook. O celular só conta como confirmado quando o Clerk diz que foi verificado.
+As migrações `20261110031133_preservar_conteudo_congelado.sql`, `20261110031135_revogacao_conta_excluida.sql` e `20261110031138_rotinas_piloto.sql` foram aplicadas e conferidas no projeto em 10/11/2026, antes do deploy do aplicativo correspondente. As duas primeiras protegem evidências congeladas e revogam acesso após exclusão; a terceira corrige os agendamentos ausentes. Preservar esses controles ao planejar retorno de versão.
 
-### Virar administrador
+O Clerk emite o token usado pelo cliente Supabase; `public.usuario_id()` lê seu `sub`. A integração de autenticação externa no Supabase deve reconhecer a instância Clerk do ambiente. O endpoint `/api/webhooks/clerk` trata criação, atualização e exclusão de usuários e deve usar o segredo dessa instância. Trocar desenvolvimento por produção exige tratar os IDs existentes e seus vínculos antes de mudar as chaves. A confirmação do WhatsApp continua sendo feita pelo fluxo próprio, sem liberar negociação por uma marcação manual.
 
-1. Entre no site uma vez (`/entrar`). Seu perfil é criado automaticamente.
-2. No Clerk, copie seu **User ID** (começa com `user_`) e rode no SQL Editor do Supabase:
+A instalação, o pareamento e a recuperação do serviço de confirmação estão em [infra/whatsapp/README.md](infra/whatsapp/README.md). O procedimento de liberação deve conferir domínio do Turnstile, origens, webhooks e destinos de jobs na versão publicada.
+
+### Fotos
+
+O bucket público `anuncios` recebe WebP, JPEG e PNG em pastas do titular, como `<user_id>/<id do anúncio>/` e `<user_id>/loja/`. Configure `fotos.origem` em `/admin/configuracoes` com a origem exata do projeto Supabase e confira também o limite real do bucket. Alterar uma configuração da aplicação não demonstra que o limite do Storage foi alterado.
+
+O webhook de exclusão de conta também trata os arquivos do titular. A comprovação do procedimento, inclusive quando há registros financeiros, faz parte do ensaio de privacidade.
+
+### Rotinas e recuperação
+
+| Rotina | Previsão no código | Verificação necessária |
+| --- | --- | --- |
+| `expirar_rotina()` | Migração `20261110031138` agenda `olaki-expirar`, diariamente às 03:15 no fuso do cron | Aplicado e ativo; primeira execução real ainda pendente de observação |
+| `radar_avisar_prazos()` | A mesma migração agenda `olaki-radar-prazos` a cada dez minutos | Aplicado e ativo; primeira execução real ainda pendente de observação |
+| `mensagens_avisar_planos()` | A mesma migração agenda `olaki-mensagens-planos` no minuto 20 de cada hora | Aplicado e ativo; primeira execução real ainda pendente de observação |
+| `moderacao_ia_disparar()` | Job `olaki-moderacao-ia` a cada minuto | Ativo, com sucesso SQL observado em 10/11/2026 às 03:05 UTC; esse resultado isolado não comprova análise ou aprovação de anúncio |
+
+O fuso observado do cron é GMT. A migração corretiva foi executada duas vezes com pg_cron real em contêiner isolado, com execução de jobs desabilitada: IDs e configuração permaneceram iguais, sem modificar a IA. `cron.schedule` preserva `active=false` em jobs previamente pausados; os três jobs necessários foram conferidos ativos em produção, junto com a IA, sob usuário/banco `postgres` e fuso GMT. A primeira execução real dos jobs novos ainda precisa ser observada. Consulte a [evidência do teste](docs/preparacao-piloto/validacao-cron.md).
+
+O destino da moderação é fixado como `https://ol-aqui.vercel.app/api/interno/moderacao` na migração de agendamento. Uma mudança de domínio exige conferir se esse destino continua intencional e acessível. Não registrar tokens dos jobs nas evidências.
+
+O projeto foi acessado e estava saudável em PostgreSQL 17.11, numa organização Free. Backup e restauração ainda não foram comprovados. Backup de banco e backup dos arquivos do Storage são controles separados; restauração precisa ser ensaiada em destino isolado, com jobs e integrações de envio desabilitados nesse destino. O protocolo está no [roteiro de liberação](docs/preparacao-piloto/liberacao.md).
+
+## Administração
+
+O titular precisa entrar uma vez para criar seu perfil. Um administrador autorizado pode conceder o acesso inicial no banco ao **ID verificado da instância correta**:
 
 ```sql
-update public.perfis set e_admin = true where id = 'user_SEU_ID';
+update public.perfis set e_admin = true where id = 'user_SEU_ID_VERIFICADO';
 ```
 
-3. Acesse `/admin`.
+Depois, use `/admin/equipe` para administrar os acessos disponíveis. A concessão inicial é uma mudança privilegiada, não parte do cadastro de convidados. Planos, cotas, configurações e concessões ficam nos painéis existentes; registre prazo e motivo das cortesias. Prorrogar dias não deve ser presumido como reposição de propostas.
 
-## Estrutura
+## Estrutura principal
 
-```
-src/app/entrar          login do Clerk (Google ou celular)
-src/app/api/webhooks    webhook do Clerk (cria, atualiza e apaga perfis e fotos)
-src/app/(publico)       início, /categorias, /c/[categoria]/[sub], /busca, /anuncio/[id-titulo],
-                        /loja/[slug] (vitrine da loja), /vendedor/[id] (pessoa física, só o primeiro nome)
-src/app/(conta)         /quero-vender (pessoa física ou loja), /anunciar (passo a passo: fotos,
-                        categoria, detalhes, preço, local, revisar, pronto) e /minha-conta
-                        (anúncios, favoritos, plano, loja, dados, notificações, privacidade)
-src/app/radar           Radar de Negócios (lojista)
-src/app/admin           painel: resumo, planos, configurações, moderação
-src/lib/supabase        cliente com o token do Clerk e cliente de servidor (chave secreta)
-src/lib/perfil.ts       sincroniza o perfil com os dados do Clerk
-src/lib/admin           helpers do painel (exigirAdmin, formatos, configurações)
-src/lib/dados           leituras do banco para as telas (busca, anúncio, conta, categorias)
-src/components          telas públicas (anuncio, busca, vitrine), anunciar, conta e ui
-supabase/migrations     banco de dados
-docs/                   decisões de produto e plano do painel
-public/logo             logos (OLAKI em caixa alta, pin sobre o I; claro, fundo escuro e ícone do app "AKI")
-```
-
-## Regra de ouro
-
-Nenhum preço, limite ou regra fica no código. Tudo vem das tabelas `planos`, `configuracoes` e `categorias`, editáveis em `/admin`, e toda mudança fica registrada em `logs_atividade`.
+| Caminho | Conteúdo |
+| --- | --- |
+| `src/app/(publico)` | Busca, anúncios, vitrines, ajuda e documentos públicos |
+| `src/app/(conta)` | Anunciar, conta, loja, plano, notificações e privacidade |
+| `src/app/radar` | Pedido, propostas e negociação entre comprador e loja |
+| `src/app/admin` | Configuração, equipe, moderação, planos e relatórios |
+| `src/app/api` | Webhooks e consumidor interno da moderação |
+| `src/lib/supabase` | Clientes autenticado e administrativo |
+| `src/lib/whatsapp` | Confirmação de contato e integração Evolution |
+| `supabase/migrations` | Esquema e regras versionados |
+| `supabase/testes` e `tests` | Asserções de banco e testes Node |
+| `infra/whatsapp` | Serviço exclusivo de confirmação |
+| `docs/preparacao-piloto` | Liberação, ensaio e registro mínimo do piloto |

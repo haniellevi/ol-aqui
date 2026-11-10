@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileText, LifeBuoy, Mail, MessageCircle } from "lucide-react";
+import { FileText, LifeBuoy } from "lucide-react";
 import { regiaoAtual } from "@/lib/dados/regiao";
 import { ajudaCompleta, contatoEquipe, precosDestaqueAjuda } from "@/lib/dados/paginas";
 import { planosPublicos } from "@/lib/dados/vitrine-completa";
 import { lugarDaRegiao } from "@/components/busca/parametros";
 import { preco } from "@/lib/formato";
-import { LINK_AKI, LINK_PLANOS, LINK_PRIVACIDADE, LINK_TERMOS } from "@/lib/rotas";
+import { LINK_PLANOS, LINK_PRIVACIDADE, LINK_TERMOS } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
-import { BotaoAbrirAki } from "@/components/aki/botao-abrir-aki";
+import { ContatoSuporte } from "@/components/paginas/contato-suporte";
 import { ListaAjuda } from "./lista-ajuda";
 
 // T40 · Ajuda e dicas de segurança. Perguntas e categorias vêm do painel (tela 12, aba Ajuda);
@@ -20,8 +20,6 @@ export const metadata: Metadata = {
   description: "Como não cair em golpe, como vender, como funciona o Radar, os destaques e os planos do OLAKI.",
   alternates: { canonical: "/ajuda" },
 };
-
-const MENSAGEM_SUPORTE = "Olá! Preciso de ajuda com o OLAKI.";
 
 function dias(n: number | null) {
   if (!n) return "uma vez";
@@ -70,8 +68,6 @@ export default async function PaginaAjuda() {
       </div>
     ) : null;
 
-  const temContato = !!(contato.whatsapp || contato.email);
-
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6">
       <header className="flex flex-col gap-1">
@@ -89,38 +85,7 @@ export default async function PaginaAjuda() {
         </Vazio>
       )}
 
-      <section aria-labelledby="titulo-contato" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h2 id="titulo-contato" className="text-lg font-semibold">
-          Fale com a equipe
-        </h2>
-        <p className="text-base">
-          {temContato ? (contato.texto ?? "Não achou o que precisava? Fale com a equipe do OLAKI.") : "O contato da equipe vai aparecer aqui em breve. Enquanto isso, o Aki pode ajudar."}
-        </p>
-        <div className="flex flex-col gap-2">
-          {contato.whatsapp && (
-            <Botao
-              variante="whatsapp"
-              larguraTotal
-              icone={<MessageCircle />}
-              href={`https://wa.me/${contato.whatsapp}?text=${encodeURIComponent(MENSAGEM_SUPORTE)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Chamar a equipe no WhatsApp
-            </Botao>
-          )}
-          {contato.email && (
-            <Botao variante="secundario" larguraTotal icone={<Mail />} href={`mailto:${contato.email}`}>
-              Mandar e-mail
-            </Botao>
-          )}
-          <BotaoAbrirAki pedido={{}}>Perguntar ao Aki</BotaoAbrirAki>
-          <Botao href={LINK_AKI} variante="texto">
-            Abrir o Aki em tela cheia
-          </Botao>
-        </div>
-        <p className="text-sm text-texto-suave">A equipe do OLAKI nunca pede o código que chega no seu celular nem manda link de pagamento por mensagem.</p>
-      </section>
+      <ContatoSuporte contato={contato} />
 
       <nav aria-label="Textos do OLAKI" className="flex flex-col gap-1">
         <Link href={LINK_TERMOS} className="inline-flex min-h-12 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4">
