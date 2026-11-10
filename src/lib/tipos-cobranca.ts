@@ -11,6 +11,7 @@ export type RegraAssinatura = "inicio" | "renovacao" | "troca_agora" | "proximo_
 export type SituacaoConta = "teste" | "teste_vencido" | "ativa" | "vencida" | "suspensa" | "inadimplente" | "gratis";
 
 export type StatusPagamento = "pendente" | "pago" | "vencido" | "estornado" | "cancelado";
+export type AmbientePagamento = "producao" | "sandbox" | "sem_origem";
 export type TipoPagamento = "assinatura" | "anuncio_avulso" | "destaque";
 
 /** Linha de minha_assinatura(). */
@@ -107,7 +108,7 @@ export type LojaAdmin = {
   plano_proximo_nome: string | null;
   plano_proximo_ate: string | null;
   status: "ativa" | "inadimplente" | "suspensa";
-  situacao: SituacaoConta;
+  situacao: SituacaoConta | "arquivada";
   selo_loja_verificada: boolean;
   anuncios_ativos: number;
   limite_anuncios: number | null;
@@ -125,6 +126,7 @@ export type ResumoPagamentos = { status: StatusPagamento; tipo: TipoPagamento; q
 /** Linha da lista de pagamentos do painel. */
 export type PagamentoAdmin = {
   id: string;
+  ambiente: AmbientePagamento;
   tipo: TipoPagamento;
   status: StatusPagamento;
   valor_centavos: number;

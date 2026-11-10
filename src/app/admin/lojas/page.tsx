@@ -10,7 +10,7 @@ import { LINK_ADMIN_LOJAS } from "@/lib/rotas";
 import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { linkInstagram } from "@/components/vitrine/regras";
 import { FormAcaoLoja, FormRevisaoLoja, FormVerificacao, FormRevogarVendedorPf, FormDecidirVerificacaoPf } from "./formularios";
-import type { AcaoLoja, LojaAdmin, SituacaoConta } from "@/lib/tipos-cobranca";
+import type { AcaoLoja, LojaAdmin } from "@/lib/tipos-cobranca";
 import { Badge, type TomSelo } from "@/components/ui/badge";
 
 export const metadata = { title: "Lojas" };
@@ -21,13 +21,14 @@ export const metadata = { title: "Lojas" };
 
 const POR_PAGINA = 30;
 
-const SITUACOES: { valor: SituacaoConta; nome: string; cor: TomSelo }[] = [
+const SITUACOES: { valor: LojaAdmin["situacao"]; nome: string; cor: TomSelo }[] = [
   { valor: "teste", nome: "Em teste", cor: "default" },
   { valor: "teste_vencido", nome: "Teste vencido", cor: "warning" },
   { valor: "ativa", nome: "Plano em dia", cor: "success" },
   { valor: "vencida", nome: "Plano vencido", cor: "warning" },
   { valor: "gratis", nome: "Grátis", cor: "secondary" },
   { valor: "inadimplente", nome: "Inadimplente", cor: "destructive" },
+  { valor: "arquivada", nome: "Arquivada", cor: "secondary" },
   { valor: "suspensa", nome: "Suspensa", cor: "destructive" },
 ];
 const SITUACAO = new Map(SITUACOES.map((s) => [s.valor, s]));
@@ -112,7 +113,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
   const acoesDoPapel: AcaoLoja[] | null = papel === "administrador" ? null : papel === "suporte" ? ["suspender", "reativar"] : [];
   const sp = await searchParams;
   const busca = um(sp.q).trim().slice(0, 80);
-  const situacao = SITUACAO.has(um(sp.situacao) as SituacaoConta) ? um(sp.situacao) : "";
+  const situacao = SITUACAO.has(um(sp.situacao) as LojaAdmin["situacao"]) ? um(sp.situacao) : "";
   const regiao = ehUuid(um(sp.regiao)) ? um(sp.regiao) : "";
   const tipo = um(sp.tipo) === "pf" || um(sp.tipo) === "loja" ? um(sp.tipo) : "";
   const pagina = Math.max(1, Math.min(1000, Number.parseInt(um(sp.pagina), 10) || 1));
@@ -313,16 +314,13 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
               const sit = SITUACAO.get(l.situacao);
               const revisao = revisoes.get(l.id);
               const estadoRevisao = revisao && ESTADO_REVISAO[revisao.estado];
-              const urlVitrine = linkLoja(encodeURIComponent(l.slug));
               const vence = l.situacao === "teste" || l.situacao === "teste_vencido" ? l.teste_expira_em : l.plano_expira_em;
               return (
                 <li key={l.id} className="rounded-card border border-borda bg-cartao p-4 shadow-1">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-base font-semibold text-beringela">
-                        <Link href={urlVitrine} className="underline-offset-2 hover:underline">
-                          {l.nome}
-                        </Link>
+                        {l.nome}
                         {estadoRevisao && (
                           <Badge variant={estadoRevisao.cor} className="ml-2">{estadoRevisao.rotulo}</Badge>
                         )}
@@ -361,6 +359,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                       </dd>
                     </div>
                   </dl>
+                  <Link href={`${LINK_ADMIN_LOJAS}/${l.id}`} prefetch={false} className={`${estiloBotaoSec} mt-3`} aria-label={`Abrir ficha de ${l.nome}`}>Abrir ficha</Link>
                   {l.plano_proximo && (
                     <p className="mt-2 text-sm text-texto-suave">
                       Troca marcada: {l.plano_proximo_nome ?? l.plano_proximo} até {quando(l.plano_proximo_ate)} (já paga).
@@ -377,7 +376,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                       <FormRevogarVendedorPf vitrine={l.id} nome={l.dono_nome} />
                     </details>
                   )}
-                  {(acoesDoPapel === null || acoesDoPapel.length > 0) && (
+                  {l.tipo === "pf" && (acoesDoPapel === null || acoesDoPapel.length > 0) && (
                     <details className="mt-3 border-t border-borda pt-3">
                       <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-laranja-escuro">Ações</summary>
                       <div className="pt-2">

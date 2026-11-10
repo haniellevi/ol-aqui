@@ -50,6 +50,9 @@ export async function acaoLoja(_: EstadoForm, form: FormData): Promise<EstadoFor
       p_dias: dias,
       p_plano: plano,
     });
+    if (error?.code === "23514" && error.message.includes("loja_arquivada_suspensa")) {
+      return { erro: "Restaure a loja arquivada antes de reativá-la." };
+    }
     if (error) return { erro: traduzirErro(error).mensagem };
     atualizar();
     return { ok: OK[acao] };
@@ -140,4 +143,27 @@ export async function decidirVerificacaoPf(aprovar: boolean, _: EstadoForm, form
   if (error) return { erro: traduzirErro(error).mensagem };
   atualizar();
   return { ok: aprovar ? "Identidade do vendedor verificada." : "Novo envio solicitado." };
+}
+
+export async function alterarArquivoLoja(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  const { supabase, papel } = await exigirTela("lojas");
+  if (papel !== "administrador") return { erro: "Só um administrador pode arquivar ou restaurar lojas." };
+  const loja = String(form.get("vitrine") ?? "");
+  const acao = form.get("acao");
+  const motivo = String(form.get("motivo") ?? "").trim();
+  const atualizado = String(form.get("atualizado") ?? "");
+  if (!ehUuid(loja) || !Number.isFinite(Date.parse(atualizado))) return { erro: "Atualize a ficha da loja." };
+  if (acao !== "arquivar" && acao !== "restaurar") return { erro: "Escolha uma ação válida." };
+  if (motivo.length < 3 || motivo.length > 300) return { erro: "Informe um motivo de 3 a 300 caracteres." };
+
+  const { error } = await supabase.rpc("admin_arquivar_loja", {
+    p_loja: loja,
+    p_arquivar: acao === "arquivar",
+    p_motivo: motivo,
+    p_atualizado_em: atualizado,
+  });
+  if (error) return { erro: traduzirErro(error).mensagem };
+  atualizar();
+  revalidatePath(`/admin/lojas/${loja}`);
+  return { ok: acao === "arquivar" ? "Loja arquivada." : "Loja restaurada como suspensa." };
 }

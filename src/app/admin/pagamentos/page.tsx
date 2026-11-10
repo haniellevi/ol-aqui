@@ -4,6 +4,7 @@ import { exigirTela } from "@/lib/admin/equipe";
 import { LINK_ADMIN_PAGAMENTOS } from "@/lib/rotas";
 import { inteiro, quando, reais } from "@/lib/admin/formato";
 import {
+  NOME_AMBIENTE,
   NOME_STATUS,
   NOME_TIPO,
   STATUS_PAGAMENTOS,
@@ -38,19 +39,21 @@ const COR_STATUS: Record<StatusPagamento, TomSelo> = {
 type Params = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function PagamentosPage({ searchParams }: { searchParams: Params }) {
-  const { supabase } = await exigirTela("pagamentos"); // administrador e financeiro
+  const { supabase, papel } = await exigirTela("pagamentos"); // administrador e financeiro
   const filtros = lerFiltros(await searchParams);
 
   const [lista, resumoR, devolver, regioesR, planosR] = await Promise.all([
     listarPagamentos(supabase, filtros, LIMITE).catch(() => null),
-    supabase.rpc("admin_resumo_pagamentos", {
+    supabase.rpc("admin_resumo_pagamentos_filtrado", {
       p_status: filtros.status,
       p_tipo: filtros.tipo,
       p_regiao: filtros.regiao,
       p_de: filtros.de,
       p_ate: filtros.ate,
+      p_ambiente: filtros.ambiente === "todos" ? null : filtros.ambiente,
+      p_loja: filtros.loja,
     }),
-    devolucoesAFazer(supabase),
+    devolucoesAFazer(supabase, filtros).catch(() => null),
     supabase.from("microrregioes").select("id, nome").order("nome"),
     supabase.from("planos").select("codigo, nome"),
   ]);
@@ -67,14 +70,22 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
   const nomePlano = new Map(((planosR.data ?? []) as { codigo: string; nome: string }[]).map((p) => [p.codigo, p.nome]));
   const endereco = filtrosNoEndereco(filtros);
   const filtrando = endereco.length > 0;
+  const recarregar = `${LINK_ADMIN_PAGAMENTOS}${endereco ? `?${endereco}` : ""}`;
 
   return (
     <>
-      <Titulo sub="Acompanhe as cobranças de planos, anúncios avulsos e destaques. Os totais desta tela incluem todos os ambientes cadastrados.">Pagamentos</Titulo>
+      <Titulo sub="Acompanhe as cobranças de planos, anúncios avulsos e destaques. Use o filtro de ambiente para separar produção, testes e pagamentos sem origem registrada.">Pagamentos</Titulo>
 
       {/* Filtros */}
       <Cartao className="mb-6">
         <form method="get" className="grid grid-cols-1 items-end gap-3 @sm/painel:grid-cols-2 @3xl/painel:grid-cols-4">
+          {filtros.loja && <input type="hidden" name="loja" value={filtros.loja} />}
+          <label className="text-sm font-medium">
+            Ambiente
+            <select name="ambiente" defaultValue={filtros.ambiente} className={estiloCampo}>
+              {Object.entries(NOME_AMBIENTE).map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}
+            </select>
+          </label>
           <label className="text-sm font-medium">
             Situação
             <select name="status" defaultValue={filtros.status ?? ""} className={estiloCampo}>
@@ -130,6 +141,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
               Exportar CSV
             </a>
           </div>
+          {filtros.loja && <p className="col-span-full text-sm text-texto-suave">Pagamentos da {papel === "administrador" ? <Link href={`/admin/lojas/${filtros.loja}`} className="font-semibold underline">loja selecionada</Link> : "loja selecionada"}.</p>}
           <p className="col-span-full text-legenda text-texto-suave ">
             O período usa a data em que foi pago (ou, se não foi pago, a data do pedido), no horário de Fortaleza.
           </p>
@@ -137,17 +149,21 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
       </Cartao>
 
       {/* Totais */}
-      <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <Numero rotulo="Marcados como pagos" valor={reais(somar("pago"))} detalhe={`${inteiro(contar("pago"))} pagamentos`} />
-        <Numero rotulo="Aguardando" valor={reais(somar("pendente"))} detalhe={`${inteiro(contar("pendente"))} cobranças`} />
-        <Numero rotulo="Devolvido" valor={reais(somar("estornado"))} detalhe={`${inteiro(contar("estornado"))} pagamentos`} />
-        <Numero
-          rotulo="Vencido ou cancelado"
-          valor={reais(somar("vencido") + somar("cancelado"))}
-          detalhe={`${inteiro(contar("vencido") + contar("cancelado"))} cobranças`}
-        />
-      </div>
-      {resumo.length > 0 && (
+      {resumoR.error ? (
+        <div className="mb-6"><Aviso tipo="erro">Resumo indisponível. <a href={recarregar} className="underline">Tentar novamente</a></Aviso></div>
+      ) : (
+        <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <Numero rotulo="Marcados como pagos" valor={reais(somar("pago"))} detalhe={`${inteiro(contar("pago"))} pagamentos`} />
+          <Numero rotulo="Aguardando" valor={reais(somar("pendente"))} detalhe={`${inteiro(contar("pendente"))} cobranças`} />
+          <Numero rotulo="Devolvido" valor={reais(somar("estornado"))} detalhe={`${inteiro(contar("estornado"))} pagamentos`} />
+          <Numero
+            rotulo="Vencido ou cancelado"
+            valor={reais(somar("vencido") + somar("cancelado"))}
+            detalhe={`${inteiro(contar("vencido") + contar("cancelado"))} cobranças`}
+          />
+        </div>
+      )}
+      {!resumoR.error && resumo.length > 0 && (
         <Cartao className="mb-6 px-0 pb-0">
           <h2 className="mb-1 px-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Por tipo</h2>
           <Table rotulo="Resumo de pagamentos por tipo" className="min-w-[420px]">
@@ -175,13 +191,15 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
       )}
 
       {/* Devoluções a fazer */}
-      {devolver.length > 0 && (
+      {devolver === null ? (
+        <div className="mb-6"><Aviso tipo="erro">Fila de devoluções indisponível. <a href={recarregar} className="underline">Tentar novamente</a></Aviso></div>
+      ) : devolver.length > 0 && (
         <section aria-labelledby="devolver" className="mb-6">
           <h2 id="devolver" className="mb-3 text-sm font-semibold uppercase tracking-wide text-perigo">
             Devoluções a fazer ({devolver.length})
           </h2>
           <p className="mb-3 text-sm text-texto-suave">
-            O dinheiro chegou, mas não deu para aplicar. Devolva no Asaas (a pessoa não perde nada até lá) e o aviso do Asaas fecha o caso.
+            Pagamentos recebidos que não puderam ser aplicados. Esta fila usa os filtros de ambiente e loja. Confira o ambiente antes de abrir a cobrança no Asaas.
           </p>
           <ul className="flex flex-col gap-3">
             {devolver.map((p) => (
@@ -197,7 +215,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
           {lista && lista.length >= LIMITE ? `Os ${LIMITE} mais recentes` : "Pagamentos"}
         </h2>
         {lista === null ? (
-          <Aviso tipo="erro">Não deu para ler os pagamentos agora. Atualize a página.</Aviso>
+          <Aviso tipo="erro">Lista de pagamentos indisponível. <a href={recarregar} className="underline">Tentar novamente</a></Aviso>
         ) : lista.length === 0 ? (
           <Cartao>
             <p className="text-base text-texto-suave">Nenhum pagamento com estes filtros.</p>
@@ -242,10 +260,10 @@ function LinhaPagamento({ p, nomePlano, nomeRegiao }: { p: PagamentoAdmin; nomeP
     <li className="rounded-card border border-borda bg-cartao p-4 shadow-1">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-base font-semibold text-beringela">{oQue}</p>
+          <p className="text-base font-semibold text-beringela [overflow-wrap:anywhere]">{oQue}</p>
           <p className="text-sm text-texto-suave">
-            {p.vitrine_slug ? (
-              <Link href={`/loja/${p.vitrine_slug}`} className="underline underline-offset-2">
+            {NOME_AMBIENTE[p.ambiente]} · {p.vitrine_nome ? (
+              <Link href={`${LINK_ADMIN_PAGAMENTOS}?loja=${p.vitrine_id}&ambiente=${p.ambiente}`} className="underline underline-offset-2">
                 {p.vitrine_nome ?? "Loja"}
               </Link>
             ) : (
