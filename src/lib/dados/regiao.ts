@@ -62,6 +62,16 @@ export const listarCidades = cache(async (microrregiaoId: string): Promise<Cidad
   return (data ?? []) as Cidade[];
 });
 
+/** Cidades que podem ser escolhidas no cabeçalho e na página de cidades. */
+export const listarCidadesAtivas = cache(async (): Promise<Cidade[]> => {
+  const db = await createClient();
+  const { data, error } = await db.from("cidades")
+    .select("id, nome, uf, microrregiao_id, microrregioes!inner(ativa)")
+    .eq("ativa", true).eq("microrregioes.ativa", true).order("nome").order("id");
+  if (error) throw new Error("Não foi possível carregar as cidades.");
+  return data ?? [];
+});
+
 function safeDecode(v: string) {
   try {
     return decodeURIComponent(v);

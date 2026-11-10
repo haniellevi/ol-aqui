@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { ehUuid } from "@/lib/formato";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ehPapel, podeVerTela } from "@/lib/tipos-equipe";
-import type { PagamentoAdmin, StatusPagamento, TipoPagamento } from "@/lib/tipos-cobranca";
+import type { AmbientePagamento, PagamentoAdmin, StatusPagamento, TipoPagamento } from "@/lib/tipos-cobranca";
 
 // Tela 6 · Pagamentos: filtros lidos do endereço (?status=&tipo=&regiao=&de=&ate=), usados pela lista,
 // pelos totais (admin_resumo_pagamentos) e pelo CSV. Sempre com o token do admin: a RLS barra os outros.
@@ -20,7 +20,13 @@ export const NOME_STATUS: Record<StatusPagamento, string> = {
 };
 export const NOME_TIPO: Record<TipoPagamento, string> = { assinatura: "Plano", anuncio_avulso: "Anúncio avulso", destaque: "Destaque" };
 
+export const NOME_AMBIENTE: Record<AmbientePagamento | "todos", string> = {
+  producao: "Produção", sandbox: "Testes (sandbox)", sem_origem: "Sem origem registrada", todos: "Todos os ambientes",
+};
+
 export type FiltrosPagamentos = {
+  ambiente: AmbientePagamento | "todos";
+  loja: string | null;
   status: StatusPagamento | null;
   tipo: TipoPagamento | null;
   regiao: string | null;
@@ -37,7 +43,11 @@ export function lerFiltros(sp: Record<string, string | string[] | undefined> | U
   const status = pegar("status");
   const tipo = pegar("tipo");
   const regiao = pegar("regiao");
+  const loja = pegar("loja");
+  const ambiente = pegar("ambiente");
   return {
+    ambiente: ambiente === "sandbox" || ambiente === "sem_origem" || ambiente === "todos" ? ambiente : "producao",
+    loja: ehUuid(loja) ? loja : null,
     status: (STATUS_PAGAMENTOS as readonly string[]).includes(status) ? (status as StatusPagamento) : null,
     tipo: (TIPOS_PAGAMENTOS as readonly string[]).includes(tipo) ? (tipo as TipoPagamento) : null,
     regiao: ehUuid(regiao) ? regiao : null,
@@ -49,7 +59,7 @@ export function lerFiltros(sp: Record<string, string | string[] | undefined> | U
 /** Os mesmos filtros como texto de endereço (para o link do CSV). */
 export function filtrosNoEndereco(f: FiltrosPagamentos): string {
   const q = new URLSearchParams();
-  for (const [k, v] of Object.entries(f)) if (v) q.set(k, v);
+  for (const [k, v] of Object.entries(f)) if (v && !(k === "ambiente" && v === "producao")) q.set(k, v);
   return q.toString();
 }
 
@@ -60,15 +70,17 @@ const diaSeguinte = (d: string) => {
 };
 
 const COLUNAS =
-  "id, tipo, status, valor_centavos, forma, plano_codigo, meses, regra, vencimento, pago_em, criado_em, link_pagamento, asaas_cobranca_id, devolver_motivo, observacao, microrregiao_id, vitrine_id, vitrines_lojas(nome, slug, dono_id), anuncios(titulo)";
+  "id, tipo, status, valor_centavos, forma, plano_codigo, meses, regra, vencimento, pago_em, criado_em, link_pagamento, asaas_cobranca_id, devolver_motivo, observacao, microrregiao_id, vitrine_id, vitrines_lojas(nome, slug, dono_id), anuncios(titulo), asaas_criacoes(ambiente)";
 
-type Linha = Omit<PagamentoAdmin, "vitrine_nome" | "vitrine_slug" | "vitrine_whatsapp" | "anuncio_titulo"> & {
+type Linha = Omit<PagamentoAdmin, "ambiente" | "vitrine_nome" | "vitrine_slug" | "vitrine_whatsapp" | "anuncio_titulo"> & {
   vitrines_lojas: { nome: string; slug: string; dono_id: string } | null;
   anuncios: { titulo: string | null } | null;
+  asaas_criacoes: { ambiente: "producao" | "sandbox" } | null;
 };
 
-const paraAdmin = ({ vitrines_lojas, anuncios, ...l }: Linha, whatsapp: string | null = null): PagamentoAdmin => ({
+const paraAdmin = ({ vitrines_lojas, anuncios, asaas_criacoes, ...l }: Linha, whatsapp: string | null = null): PagamentoAdmin => ({
   ...l,
+  ambiente: asaas_criacoes?.ambiente ?? "sem_origem",
   vitrine_nome: vitrines_lojas?.nome ?? null,
   vitrine_slug: vitrines_lojas?.slug ?? null,
   vitrine_whatsapp: whatsapp,
@@ -138,9 +150,7 @@ export async function listarTodosPagamentos(
 }
 
 async function lerFaixa(supabase: SupabaseClient, f: FiltrosPagamentos, de: number, ate: number, incluirContatos = true): Promise<PagamentoAdmin[]> {
-  let q = supabase
-    .from("pagamentos")
-    .select(COLUNAS)
+  let q = consultaPagamentos(supabase, f)
     .order("criado_em", { ascending: false })
     .order("id", { ascending: true })
     .range(de, ate);
@@ -159,15 +169,24 @@ async function lerFaixa(supabase: SupabaseClient, f: FiltrosPagamentos, de: numb
   return incluirContatos ? comContatos(supabase, linhas) : linhas.map((l) => paraAdmin(l));
 }
 
+function consultaPagamentos(supabase: SupabaseClient, f: Pick<FiltrosPagamentos, "ambiente" | "loja">) {
+  let consulta = supabase.from("pagamentos").select(COLUNAS);
+  if (f.loja) consulta = consulta.eq("vitrine_id", f.loja);
+  if (f.ambiente === "sem_origem") return consulta.is("asaas_criacoes", null);
+  if (f.ambiente !== "todos") {
+    consulta = consulta.eq("asaas_criacoes.ambiente", f.ambiente).not("asaas_criacoes", "is", null);
+  }
+  return consulta;
+}
+
 /** Pagamentos que chegaram mas não puderam ser aplicados: a equipe devolve (todos os tipos). */
-export async function devolucoesAFazer(supabase: SupabaseClient): Promise<PagamentoAdmin[]> {
-  const { data } = await supabase
-    .from("pagamentos")
-    .select(COLUNAS)
+export async function devolucoesAFazer(supabase: SupabaseClient, filtros: FiltrosPagamentos): Promise<PagamentoAdmin[]> {
+  const { data, error } = await consultaPagamentos(supabase, filtros)
     .eq("status", "pago")
     .not("devolver_motivo", "is", null)
     .order("pago_em", { ascending: false })
     .limit(100);
+  if (error) throw new Error("Não deu para ler as devoluções agora.");
   return comContatos(supabase, (data ?? []) as unknown as Linha[]);
 }
 
