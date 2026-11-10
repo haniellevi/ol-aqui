@@ -17,7 +17,7 @@ const ITENS: Item[] = [
   { href: "/minha-conta", rotulo: "Conta", Icone: UserRound, ativo: (p) => p.startsWith("/minha-conta") },
 ];
 
-// A página reserva o espaço embaixo com pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0 (ver os layouts).
+// A página reserva o espaço embaixo com pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0 (ver os layouts).
 
 export function BarraInferior() {
   const caminho = usePathname() ?? "/";

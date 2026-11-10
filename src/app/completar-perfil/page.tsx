@@ -52,7 +52,7 @@ export default async function CompletarPerfil({ searchParams }: { searchParams: 
             <Link
               href={linkDocumentoLegal(p.tipo)}
               target="_blank"
-              className="flex min-h-14 items-center gap-3 rounded-card bg-cartao px-4 py-3 shadow-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+              className="flex min-h-12 items-center gap-3 rounded-card bg-cartao px-4 py-3 shadow-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
             >
               <FileText className="size-6 shrink-0 text-laranja-escuro" aria-hidden />
               <span className="flex flex-col">

@@ -31,7 +31,7 @@ export const metadata: Metadata = { title: "Minha conta" };
 type Item = { href: string; nome: string; icone: React.ReactNode; detalhe?: string };
 
 const CLASSE_ITEM =
-  "flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left text-base font-semibold hover:bg-fundo " +
+  "flex min-h-12 w-full items-center gap-3 px-4 py-2 text-left text-base font-semibold hover:bg-fundo " +
   "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
 
 // T31 · Minha conta: lista simples com ícone + nome. Itens de vendedor só para quem vende.
@@ -93,9 +93,9 @@ export default async function PaginaMinhaConta() {
             <div className="flex items-center gap-3">
               {perfil.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element -- foto do Clerk, host externo
-                <img src={perfil.avatar_url} alt="" width={56} height={56} className="size-14 shrink-0 rounded-full bg-white/20 object-cover" />
+                <img src={perfil.avatar_url} alt="" width={48} height={48} className="size-12 shrink-0 rounded-full bg-white/20 object-cover" />
               ) : (
-                <span className="grid size-14 shrink-0 place-items-center rounded-full bg-laranja text-2xl font-bold text-beringela" aria-hidden>
+                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-laranja text-xl font-bold text-beringela" aria-hidden>
                   {iniciais}
                 </span>
               )}

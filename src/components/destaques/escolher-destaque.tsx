@@ -203,7 +203,7 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
     return (
       <section className="flex flex-col items-center gap-4 rounded-card bg-cartao p-6 text-center shadow-1" aria-live="polite">
         <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
-          <CheckCircle2 className="size-12" />
+          <CheckCircle2 className="size-10" />
         </span>
         <h2 className="text-xl font-semibold">{comecaDepois ? "Pronto! Seu destaque está garantido." : "Pronto! Seu destaque está ativo."}</h2>
         <p className="max-w-sm text-base text-texto-suave">
@@ -234,7 +234,7 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
     return (
       <section className="flex flex-col items-center gap-4 rounded-card bg-cartao p-6 text-center shadow-1" aria-live="polite">
         <span className="grid size-20 place-items-center rounded-full bg-perigo-fundo text-perigo" aria-hidden>
-          <XCircle className="size-12" />
+          <XCircle className="size-10" />
         </span>
         {pagoSemDestaque ? (
           <>

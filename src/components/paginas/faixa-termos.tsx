@@ -75,7 +75,7 @@ export function FaixaTermos({ aviso }: { aviso: AvisoTermos }) {
           type="button"
           onClick={agoraNao}
           aria-label="Fechar o aviso dos termos por agora"
-          className="absolute right-1 top-1 grid size-12 place-items-center text-beringela"
+          className="absolute right-1 top-1 grid size-10 place-items-center text-beringela"
         >
           <X className="size-5" aria-hidden />
         </button>

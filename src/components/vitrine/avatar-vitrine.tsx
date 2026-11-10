@@ -6,7 +6,7 @@ import { iniciais } from "@/components/vitrine/util";
 // Logo redondo da loja, ou as iniciais quando não há logo.
 export function AvatarVitrine({ nome, logo, tamanho = "md" }: { nome: string; logo?: string | null; tamanho?: "sm" | "md" | "lg" | "xl" }) {
   const [falhou, setFalhou] = useState<string | null>(null);
-  const t = { sm: "size-9 text-sm", md: "size-12 text-base", lg: "size-16 text-xl", xl: "size-24 text-2xl" }[tamanho];
+  const t = { sm: "size-8 text-legenda", md: "size-10 text-sm", lg: "size-14 text-lg", xl: "size-18 text-xl" }[tamanho];
   if (logo && falhou !== logo) {
     return (
       // eslint-disable-next-line @next/next/no-img-element -- logo vem do Storage; img simples é leve

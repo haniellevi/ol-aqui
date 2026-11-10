@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, ImageOff, Maximize2, X } from "lucide-react"
 // contador "1/8", setas no computador e tela cheia ao tocar na foto.
 
 const BOTAO_REDONDO =
-  "grid size-12 place-items-center rounded-full bg-cartao/90 text-beringela shadow-1 hover:bg-cartao active:brightness-90 " +
+  "grid size-10 place-items-center rounded-full bg-cartao/90 text-beringela shadow-1 hover:bg-cartao active:brightness-90 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:opacity-60";
 
 export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) {
@@ -125,12 +125,12 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
           </span>
           <div className="pointer-events-none absolute inset-y-0 left-2 flex items-center [&>button]:pointer-events-auto">
             <button type="button" className={BOTAO_REDONDO} onClick={() => irPara(trilho.current, atual - 1)} aria-label="Foto anterior" disabled={atual === 0}>
-              <ChevronLeft className="size-6" aria-hidden />
+              <ChevronLeft className="size-5" aria-hidden />
             </button>
           </div>
           <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center [&>button]:pointer-events-auto">
             <button type="button" className={BOTAO_REDONDO} onClick={() => irPara(trilho.current, atual + 1)} aria-label="Próxima foto" disabled={atual === total - 1}>
-              <ChevronRight className="size-6" aria-hidden />
+              <ChevronRight className="size-5" aria-hidden />
             </button>
           </div>
         </>
@@ -152,7 +152,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
             <button
               type="button"
               onClick={fechar}
-              className="grid size-12 place-items-center rounded-full bg-white/15 hover:bg-white/25 active:bg-white/25 focus-visible:outline-3 focus-visible:outline-laranja"
+              className="grid size-10 place-items-center rounded-full bg-white/15 hover:bg-white/25 active:bg-white/25 focus-visible:outline-3 focus-visible:outline-laranja"
               aria-label="Fechar fotos"
               autoFocus
             >
@@ -173,10 +173,10 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
           {total > 1 && (
             <div className="flex justify-center gap-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
               <button type="button" className={BOTAO_REDONDO} onClick={() => irPara(trilhoCheio.current, atual - 1)} aria-label="Foto anterior" disabled={atual === 0}>
-                <ChevronLeft className="size-6" aria-hidden />
+                <ChevronLeft className="size-5" aria-hidden />
               </button>
               <button type="button" className={BOTAO_REDONDO} onClick={() => irPara(trilhoCheio.current, atual + 1)} aria-label="Próxima foto" disabled={atual === total - 1}>
-                <ChevronRight className="size-6" aria-hidden />
+                <ChevronRight className="size-5" aria-hidden />
               </button>
             </div>
           )}

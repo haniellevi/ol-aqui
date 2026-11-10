@@ -373,7 +373,7 @@ export function CaixaResultado({ icone, titulo, children }: { icone: "ok" | "err
         className={`grid size-20 place-items-center rounded-full ${icone === "ok" ? "bg-sucesso-fundo text-verde-escuro" : "bg-perigo-fundo text-perigo"}`}
         aria-hidden
       >
-        {icone === "ok" ? <CheckCircle2 className="size-12" /> : <XCircle className="size-12" />}
+        {icone === "ok" ? <CheckCircle2 className="size-10" /> : <XCircle className="size-10" />}
       </span>
       <h2 className="text-xl font-semibold">{titulo}</h2>
       {children}

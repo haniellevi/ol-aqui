@@ -244,7 +244,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                           <button
                             type="button"
                             onClick={() => mudarDia(d, (x) => ({ ...x, faixas: x.faixas.filter((_, j) => j !== i) }))}
-                            className="inline-flex size-12 items-center justify-center rounded-campo text-perigo hover:bg-perigo-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                            className="inline-flex size-10 items-center justify-center rounded-campo text-perigo hover:bg-perigo-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                             aria-label={`Tirar o horário ${i + 1} de ${NOME_DIA[d]}`}
                           >
                             <Trash2 className="size-5" aria-hidden />

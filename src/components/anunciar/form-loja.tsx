@@ -86,7 +86,7 @@ export function FormLoja({
     return (
       <section aria-labelledby="titulo-pronta" className="flex flex-col items-center gap-4 text-center" aria-live="polite">
         <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
-          <CheckCircle2 className="size-12" />
+          <CheckCircle2 className="size-10" />
         </span>
         <h1 id="titulo-pronta" className="text-titulo font-semibold text-beringela">
           Sua loja foi criada!

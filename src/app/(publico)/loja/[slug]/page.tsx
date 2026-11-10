@@ -154,8 +154,8 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
       <header className="overflow-hidden bg-cartao shadow-1 md:rounded-card">
         <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={v.nome} logo={v.logo_url} prioridade className="max-h-72" />
         <div className="flex flex-col gap-3 px-4 pb-4">
-          <div className="-mt-10 flex items-end gap-3">
-            <span className="rounded-full border-4 border-cartao bg-cartao">
+          <div className="relative z-10 -mt-9 flex items-end gap-3">
+            <span className="rounded-full border-3 border-cartao bg-cartao">
               <AvatarVitrine nome={v.nome} logo={v.logo_url} tamanho="xl" />
             </span>
           </div>
@@ -181,9 +181,9 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
               </p>
             )}
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <div className="flex flex-wrap items-start gap-2">
             {whatsapp && (
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", true, "sm:w-auto")}>
+              <a href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "flex-1 whitespace-nowrap sm:flex-none")}>
                 <MessageCircle className="size-5" aria-hidden />
                 Chamar no WhatsApp
               </a>
@@ -191,7 +191,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
             {!whatsapp && <p className="flex min-h-10 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
             {v.status === "ativa" && <CopiarLinkLoja url={urlAbsoluta(linkLoja(v.slug))} />}
             {v.e_dono && (
-              <Botao href={LINK_MINHA_LOJA} variante="secundario" icone={<Pencil />} larguraTotal className="sm:w-auto">
+              <Botao href={LINK_MINHA_LOJA} variante="secundario" icone={<Pencil />}>
                 Editar minha vitrine
               </Botao>
             )}

@@ -143,7 +143,7 @@ export function FolhaFiltros({
             <a
               href={`#${ID_RESULTADOS}`}
               aria-label="Fechar filtros"
-              className="grid size-12 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+              className="grid size-10 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
             >
               <X className="size-6" aria-hidden />
             </a>

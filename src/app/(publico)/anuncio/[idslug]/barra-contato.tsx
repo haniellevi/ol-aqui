@@ -12,7 +12,7 @@ import { alternarFavorito, registrarEvento } from "./actions";
 // O WhatsApp é um link comum: funciona sem JavaScript; com JavaScript também conta o clique.
 
 const CORACAO =
-  "grid size-13 shrink-0 place-items-center rounded-card border-2 border-borda bg-cartao text-beringela hover:bg-fundo active:brightness-90 " +
+  "grid size-10 shrink-0 place-items-center rounded-campo border md:size-9 border-borda bg-cartao text-beringela hover:bg-fundo active:brightness-90 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:opacity-60";
 
 export function BarraContato({
@@ -71,7 +71,7 @@ export function BarraContato({
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 border-t border-borda bg-cartao px-4 py-2 shadow-2 md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+    <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 border-t border-borda bg-cartao px-4 py-2 shadow-2 md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none">
       <div className="mx-auto flex max-w-6xl items-center gap-2">
         {whatsappHref ? (
           <a
@@ -86,7 +86,7 @@ export function BarraContato({
             Chamar no WhatsApp
           </a>
         ) : (
-          <p className="flex min-h-13 min-w-0 flex-1 items-center text-base text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
+          <p className="flex min-h-10 min-w-0 flex-1 items-center text-base text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
         )}
 
         {podeFavoritar &&
@@ -100,21 +100,21 @@ export function BarraContato({
               aria-label={favorito === null ? "Favorito indisponível" : favorito ? "Tirar dos favoritos" : "Salvar nos favoritos"}
               className={CORACAO}
             >
-              <Heart className={`size-6 ${favorito ? "fill-laranja-escuro text-laranja-escuro" : ""}`} aria-hidden />
+              <Heart className={`size-5 ${favorito ? "fill-laranja-escuro text-laranja-escuro" : ""}`} aria-hidden />
             </button>
           ) : (
             <Link href={entrarHref} aria-label="Entre para salvar nos favoritos" className={CORACAO}>
-              <Heart className="size-6" aria-hidden />
+              <Heart className="size-5" aria-hidden />
             </Link>
           ))}
       </div>
       {podeFavoritar && logado && <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 text-sm">
         {favorito === null && <><span role="alert" className="text-perigo">Não conseguimos consultar seu favorito.</span><button type="button" onClick={() => router.refresh()} className="min-h-10 rounded-campo font-semibold text-laranja-escuro underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">Tentar novamente</button></>}
-        <Link href="/minha-conta/favoritos" className="inline-flex min-h-10 items-center rounded-campo font-semibold text-laranja-escuro underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">Ver meus favoritos</Link>
+        <Link href="/minha-conta/favoritos" className="hidden min-h-9 items-center rounded-campo font-semibold text-laranja-escuro underline focus-visible:outline-3 focus-visible:outline-laranja-escuro md:inline-flex">Ver meus favoritos</Link>
       </div>}
       <p
         role={aviso?.erro ? "alert" : "status"}
-        className={aviso ? `mx-auto max-w-6xl pt-1 text-base font-semibold ${aviso.erro ? "text-perigo" : "text-verde-escuro"}` : "sr-only"}
+        className={aviso ? `mx-auto max-w-6xl pt-1 text-sm font-semibold ${aviso.erro ? "text-perigo" : "text-verde-escuro"}` : "sr-only"}
       >
         {aviso?.texto}
       </p>

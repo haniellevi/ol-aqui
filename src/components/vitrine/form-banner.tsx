@@ -166,7 +166,7 @@ export function FormBanner({
                   aria-pressed={cor === c}
                   aria-label={`Cor ${c}`}
                   disabled={ocupado}
-                  className={`grid size-12 place-items-center rounded-full border-4 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
+                  className={`grid size-10 place-items-center rounded-full border-4 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro ${
                     cor === c ? "border-laranja-escuro" : "border-cartao ring-1 ring-borda"
                   }`}
                   style={{ backgroundColor: c }}

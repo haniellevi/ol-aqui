@@ -50,7 +50,7 @@ export default async function PaginaQueroVender() {
 
       <section aria-labelledby="titulo-loja" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
         <div className="flex items-start gap-3">
-          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
             <Store className="size-6" />
           </span>
           <div className="flex flex-col gap-1">

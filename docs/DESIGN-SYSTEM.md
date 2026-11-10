@@ -125,6 +125,8 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 
 ---
 
+**3ª passada (10/11/2026):** botões só de ícone (fechar, sino, setas da galeria, coração) têm 40px; ícone de status 40px; linhas de lista 48 a 56px; foto da loja 72px no topo da vitrine. Barras fixas ficam a 3,5rem do fim (altura da barra de baixo). O painel admin usa a mesma escala de letra do app, com campos e botões de 36px no mouse.
+
 ## 4. Ícones e imagens
 
 - Ícones: **lucide-react** (já está no projeto), traço 2px, sempre **com texto embaixo ou ao lado** nos menus. Ícone sozinho só em coisas universais (fechar, voltar, coração de favorito, lupa).

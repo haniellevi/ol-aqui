@@ -214,7 +214,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                 ref={fechar}
                 type="button"
                 disabled={ocupado} onClick={() => setAberta(false)}
-                className="grid size-12 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                className="grid size-10 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                 aria-label="Fechar"
               >
                 <X className="size-6" aria-hidden />
@@ -245,7 +245,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                               // eslint-disable-next-line @next/next/no-img-element -- capa do anúncio no Storage
                               <img src={a.capa} alt="" width={48} height={48} className="size-12 shrink-0 rounded-campo bg-borda object-cover" />
                             ) : (
-                              <span className="grid size-12 shrink-0 place-items-center rounded-campo bg-fundo" aria-hidden>
+                              <span className="grid size-10 shrink-0 place-items-center rounded-campo bg-fundo" aria-hidden>
                                 <Camera className="size-5 text-texto-suave" />
                               </span>
                             )}

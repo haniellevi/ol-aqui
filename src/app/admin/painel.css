@@ -1,11 +1,5 @@
 /* Escala do painel: conteúdo estável e compacto, com controles maiores no toque. */
 .painel-admin {
-  --text-lg: 1rem;
-  --text-lg--line-height: 1.5;
-  --text-xl: 1.125rem;
-  --text-xl--line-height: 1.5;
-  --text-2xl: 1.375rem;
-  --text-2xl--line-height: 1.3;
   font-size: 0.875rem;
   line-height: 1.5;
 }
@@ -24,12 +18,12 @@
 @media (min-width: 48rem) and (pointer: fine) {
   .painel-admin .admin-campo,
   .painel-admin .olaki-acao {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     line-height: 1.4;
   }
-  .painel-admin .admin-campo:not(textarea) { height: 2.5rem; }
-  .painel-admin .olaki-acao { min-height: 2.5rem; }
-  .painel-admin .admin-menu-item { min-height: 2.5rem; }
+  .painel-admin .admin-campo:not(textarea) { height: 2.25rem; }
+  .painel-admin .olaki-acao { min-height: 2.25rem; }
+  .painel-admin .admin-menu-item { min-height: 2.25rem; }
 }
 
 /* Categorias de configuração: rolagem perceptível no toque, todas à vista no desktop. */
