@@ -12,7 +12,7 @@ import { classesBotao } from "@/components/ui/botao";
 /** Para onde vai o toque na cidade (a tela T1 "Escolher cidade" vem depois). */
 export const HREF_ESCOLHER_CIDADE = "/cidades";
 
-const LINK = "inline-flex h-12 items-center gap-2 rounded-card px-3 text-base font-semibold text-texto hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
+const LINK = "inline-flex h-12 items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
 export async function CabecalhoPublico() {
   const regiao = await regiaoAtual();
@@ -31,7 +31,7 @@ export async function CabecalhoPublico() {
         {cidade && (
           <Link
             href={HREF_ESCOLHER_CIDADE}
-            className="ml-1 inline-flex h-12 min-w-0 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-[15px] font-semibold text-texto hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+            className="ml-1 inline-flex h-12 min-w-0 items-center gap-1 rounded-campo border border-borda bg-cartao px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
             aria-label={`Cidade: ${cidade}. Trocar cidade`}
           >
             <MapPin className="size-4 shrink-0" aria-hidden />

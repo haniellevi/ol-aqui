@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 // erro escrito embaixo (não só borda vermelha) e dica opcional.
 
 const ESTILO_CAIXA =
-  "w-full rounded-campo border-2 bg-cartao px-3 text-base text-texto placeholder:text-texto-suave/70 " +
+  "w-full rounded-campo border bg-cartao px-3 text-base font-normal text-texto placeholder:text-texto-suave " +
   "focus:outline-none focus-visible:border-laranja-escuro focus-visible:ring-2 focus-visible:ring-laranja-escuro/30 " +
   "disabled:bg-fundo disabled:opacity-70";
 
@@ -35,12 +35,12 @@ export function Campo(props: CampoProps) {
   const idDica = dica ? `${id}-dica` : undefined;
   const idErro = erro ? `${id}-erro` : undefined;
   const descritoPor = [idErro, idDica].filter(Boolean).join(" ") || undefined;
-  const borda = erro ? "border-perigo" : "border-borda";
+  const borda = erro ? "border-perigo" : "border-borda-campo";
   const aria = { "aria-invalid": erro ? true : undefined, "aria-describedby": descritoPor };
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      <label htmlFor={id} className="text-base font-semibold text-texto">
+      <label htmlFor={id} className="text-rotulo font-semibold text-texto">
         {rotulo}
         {opcional && <span className="ml-1 font-normal text-texto-suave">(opcional)</span>}
       </label>

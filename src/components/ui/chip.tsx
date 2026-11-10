@@ -6,11 +6,11 @@ import type { ComponentProps, ReactNode } from "react";
 // e um ✓, para o estado não depender só da cor. Altura 48px (área de toque).
 
 const BASE =
-  "inline-flex h-12 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-campo border px-4 text-[15px] font-semibold " +
+  "inline-flex h-12 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-campo border px-3 text-rotulo font-semibold " +
   "transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 export function classesChip(ativo = false, extra = "") {
-  return `${BASE} ${ativo ? "border-laranja-escuro bg-laranja-claro text-beringela" : "border-borda bg-cartao text-beringela hover:bg-fundo active:bg-fundo"} ${extra}`.trim();
+  return `${BASE} ${ativo ? "border-laranja-escuro bg-selecao text-beringela" : "border-borda-campo bg-cartao text-beringela hover:bg-fundo active:bg-fundo"} ${extra}`.trim();
 }
 
 type Comum = { ativo?: boolean; icone?: ReactNode; className?: string; children: ReactNode };
