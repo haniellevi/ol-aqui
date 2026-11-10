@@ -3,7 +3,7 @@ import Link from "next/link";
 import { exigirEquipe } from "@/lib/admin/equipe";
 import { podeVerTela, primeiraTela } from "@/lib/tipos-equipe";
 import { NavAdmin } from "@/components/admin/nav-admin";
-import { ProvedorConfirmar } from "@/components/ui/confirmar";
+import { JanelaConfirmar } from "@/components/ui/confirmar";
 import "./painel.css";
 
 export const metadata = { title: { default: "Painel", template: "%s · Painel Mercado da Região" }, robots: { index: false } };
@@ -31,7 +31,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </Link>
         <NavAdmin pendencias={pendencias} papel={papel} />
       </aside>
-      <main id="painel-conteudo" className="mx-auto min-w-0 w-full max-w-6xl flex-1 px-4 pb-24 pt-6 md:px-6 md:pb-10 lg:px-8"><ProvedorConfirmar>{children}</ProvedorConfirmar></main>
+      <main id="painel-conteudo" className="mx-auto min-w-0 w-full max-w-6xl flex-1 px-4 pb-24 pt-6 md:px-6 md:pb-10 lg:px-8">{children}</main>
+      <JanelaConfirmar />
     </div>
   );
 }
