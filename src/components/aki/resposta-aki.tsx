@@ -1,5 +1,6 @@
 "use client";
 
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { BadgeCheck, CircleCheck, ClipboardCheck, ImageOff, Loader2, Phone, Radar, Sparkles, Store, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
@@ -179,13 +180,13 @@ function Avaliacao({ mensagem, aoAvaliar, atendimentoHref }: {
           <label htmlFor={`coment-${id}`} className="sr-only">
             O que faltou?
           </label>
-          <input
+          <Input
             id={`coment-${id}`}
             value={comentario}
             onChange={(e) => setComentario(e.target.value)}
             maxLength={500}
             placeholder="O que faltou? (opcional)"
-            className="h-10 min-w-0 flex-1 rounded-campo border border-borda px-3 text-base focus:outline-none focus-visible:border-laranja-escuro"
+            className="flex-1"
           />
           <Botao type="submit" variante="secundario" carregando={salvando} textoCarregando="…">
             Mandar
