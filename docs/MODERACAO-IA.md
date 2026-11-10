@@ -1,6 +1,6 @@
 # Triagem automática de anúncios
 
-A IA analisa apenas anúncios em análise por preço ou palavras do filtro. Aprova falsos positivos claros; dúvidas, infrações, denúncias e restrições administrativas continuam com a equipe. Não há exclusão automática nem decisão sobre a pessoa anunciante.
+Com a migração `20261110170000_moderacao_sensivel_anuncios.sql`, anúncios comuns são publicados imediatamente e termos sexuais ou violentos exigem conferência humana. A regra está em [Publicação e moderação dos anúncios](MODERACAO-ANUNCIOS.md). A rotina de IA descrita abaixo permanece apenas para pendências da regra anterior por preço ou palavras; ela não aprova os casos sujeitos à nova revisão humana. Não há exclusão automática nem decisão sobre a pessoa anunciante.
 
 ## Funcionamento
 

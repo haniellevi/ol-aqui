@@ -129,7 +129,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
 
       {categorias.length > 0 && (
         <Seletor
-          rotulo="Categoria ou nicho (opcional)"
+          rotulo="Categoria (opcional)"
           name="categoria"
           value={categoriaId ?? ""}
           onChange={(e) => setCategoriaId(e.target.value || null)}

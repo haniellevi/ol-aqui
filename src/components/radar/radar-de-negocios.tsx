@@ -92,7 +92,7 @@ export function RadarDeNegocios({
           <input type="hidden" name="aba" value="regiao" />
           {textoBusca && <input type="hidden" name="q" value={textoBusca} />}
           <div className="min-w-0 flex-[1_1_14rem]">
-            <label htmlFor="radar-nicho" className="mb-1 block text-sm font-semibold text-beringela">Filtrar por nicho</label>
+            <label htmlFor="radar-nicho" className="mb-1 block text-sm font-semibold text-beringela">Filtrar por categoria</label>
             <select
               id="radar-nicho"
               name="nicho"
@@ -100,8 +100,8 @@ export function RadarDeNegocios({
               key={nicho}
               className="h-12 w-full rounded-campo border border-borda-campo bg-cartao px-3 text-base text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
             >
-              <option value="todas">Todos os nichos</option>
-              {vende && <option value="meu_nicho">Do meu nicho</option>}
+              <option value="todas">Todas as categorias</option>
+              {vende && <option value="meu_nicho">Das minhas categorias</option>}
               <option value="sem_categoria">Sem categoria</option>
               {categorias.map((c) => c.filhas.length > 0 ? (
                 <optgroup key={c.id} label={c.nome}>

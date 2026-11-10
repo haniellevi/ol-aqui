@@ -184,7 +184,7 @@ export const avisosNaoLidos = cache(async (): Promise<number> => {
 // Nome e explicação de cada aviso na tela. A lista de quais a pessoa pode escolher vem do painel
 // (radar.avisos_escolha); aviso novo sem nome aqui aparece com um nome simples.
 const NOMES_AVISO: Record<string, { nome: string; explicacao: string }> = {
-  pedido_novo: { nome: "Pedido novo no seu nicho", explicacao: "Para quem vende com plano pago e tem anúncios ativos na área do pedido." },
+  pedido_novo: { nome: "Pedido novo nas suas categorias", explicacao: "Para quem vende com plano pago e tem anúncios ativos na área do pedido." },
   proposta_nova: { nome: "Chegou proposta", explicacao: "Uma loja mandou oferta para o seu pedido." },
   prazo_acabou: { nome: "Prazo do pedido acabou", explicacao: "Resumo das ofertas para você escolher." },
   proposta_escolhida: { nome: "Escolheram minha proposta", explicacao: "Para lojas: o comprador quer falar com você." },

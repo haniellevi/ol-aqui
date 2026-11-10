@@ -64,7 +64,7 @@ try:
     checked(sql((root/'supabase/testes/270_confirmacao_whatsapp.sql').read_text()))
     print('PASS: OTP privado, três erros, prazo, consumo único, cotas, troca segura e contadores públicos', flush=True)
     checked(sql((root/'supabase/testes/280_moderacao_aluguel.sql').read_text()))
-    print('PASS: aluguel não herda piso de venda, preserva limites e conteúdo e reavalia mudança de finalidade', flush=True)
+    print('PASS: aluguel e venda publicam sem moderação por preço e preservam filtro de conteúdo', flush=True)
     checked(sql((root/'supabase/testes/290_moderacao_ia.sql').read_text()))
     print('PASS: IA protege revisão, orçamento, fotos, denúncias, contato, congelamento, concorrência e repetição', flush=True)
     checked(sql((root/'supabase/testes/300_privacidade.sql').read_text()))
@@ -91,6 +91,12 @@ try:
     print('PASS: catálogo, cidade, campanhas e contatos verificados', flush=True)
     checked(sql((root/'supabase/testes/380_documentos_vendedor_pf.sql').read_text()))
     print('PASS: documentos PF privados, revisão autorizada, reenvio e limpeza', flush=True)
+    checked(sql((root/'supabase/testes/390_moderacao_sensivel.sql').read_text()))
+    print('PASS: termos sensíveis, publicação imediata, edição, revisão humana e isolamento do Radar', flush=True)
+    migracao_moderacao = (root/'supabase/migrations/20261110170000_moderacao_sensivel_anuncios.sql').read_text()
+    checked(sql((root/'supabase/testes/400_migracao_moderacao_sensivel.sql').read_text().replace(
+        '-- REAPLICAR_MIGRACAO_MODERACAO_SENSIVEL', migracao_moderacao + '\n' + migracao_moderacao)))
+    print('PASS: migração repetida libera retenções antigas e preserva conteúdo sensível, restrições e ajuda personalizada', flush=True)
     def solicitar_otp(i):
         return sql("select reservar_codigo_whatsapp('user_semcodigo',gen_random_uuid(),'5589999990088',repeat('a',64));")
     with ThreadPoolExecutor(max_workers=4) as pool:

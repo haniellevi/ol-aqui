@@ -154,7 +154,14 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
 
       {anuncio.status === "em_analise" && (
         <p className="rounded-card bg-aviso-fundo p-3 text-base text-aviso">
-          Este anúncio está em análise. Avisamos quando ele for liberado.
+          Este anúncio aguarda conferência da equipe.
+          {anuncio.motivo_analise && <> <strong>Motivo:</strong> {anuncio.motivo_analise}</>}
+        </p>
+      )}
+
+      {!jaPublicado && (
+        <p className="text-sm text-texto-suave">
+          Ao publicar, seu anúncio entra no ar. Se forem encontrados termos sexuais ou violentos, ele aguarda conferência da equipe.
         </p>
       )}
 
