@@ -1,5 +1,7 @@
 "use client";
 import { useRef, useState, useTransition } from "react";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Alert } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 import { Archive, ArchiveRestore, CheckCircle2, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
@@ -18,8 +20,7 @@ export function AcoesPedido({
   aberto: boolean;
 }) {
   const router = useRouter();
-  const dialogo = useRef<HTMLDialogElement>(null);
-  const voltar = useRef<HTMLButtonElement>(null);
+  const [janela, setJanela] = useState(false);
   const trava = useRef(false);
   const [acao, setAcao] = useState<Acao>("arquivar");
   const [erro, setErro] = useState<string | null>(null);
@@ -28,8 +29,7 @@ export function AcoesPedido({
   function abrir(motivo: Acao) {
     setErro(null);
     setAcao(motivo);
-    dialogo.current?.showModal();
-    voltar.current?.focus();
+    setJanela(true);
   }
   function confirmar() {
     if (trava.current) return;
@@ -41,7 +41,7 @@ export function AcoesPedido({
           ? await mudarArquivoPedido(pedidoId, acao === "arquivar")
           : await fecharPedido(pedidoId, acao);
         if (!r.ok) { setErro(r.erro); return; }
-        dialogo.current?.close();
+        setJanela(false);
         router.refresh();
       } catch { setErro("Não conseguimos salvar a mudança. Tente novamente."); }
       finally { trava.current = false; }
@@ -84,16 +84,18 @@ export function AcoesPedido({
       </Botao>
     )}
     {podeCancelar && <Botao variante="texto" icone={<XCircle />} disabled={pendente} onClick={() => abrir("cancelado")}>Cancelar pedido</Botao>}
-    <dialog ref={dialogo} role="alertdialog" aria-labelledby="acao-pedido-titulo" aria-describedby="acao-pedido-detalhe"
-      onCancel={(e) => { if (trava.current) e.preventDefault(); }}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%_-_2rem)] max-w-sm overflow-y-auto rounded-card bg-cartao p-5 text-texto shadow-2 backdrop:bg-beringela/50">
-      <h2 id="acao-pedido-titulo" className="text-xl font-semibold">{textos.titulo}</h2>
-      <p id="acao-pedido-detalhe" className="mt-2 text-base text-texto-suave">{textos.detalhe}</p>
-      {erro && <p role="alert" className="mt-3 text-sm font-semibold text-perigo">{erro}</p>}
-      <div className="mt-4 flex flex-col gap-2">
-        <Botao larguraTotal variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar}>{textos.botao}</Botao>
-        <Botao ref={voltar} larguraTotal variante="secundario" disabled={pendente} onClick={() => dialogo.current?.close()}>Voltar</Botao>
-      </div>
-    </dialog>
+    <AlertDialog open={janela} onOpenChange={(abrir) => { if (!abrir && !trava.current) setJanela(false); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{textos.titulo}</AlertDialogTitle>
+          <AlertDialogDescription>{textos.detalhe}</AlertDialogDescription>
+        </AlertDialogHeader>
+        {erro && <Alert variant="destructive">{erro}</Alert>}
+        <AlertDialogFooter>
+          <Botao variante="secundario" disabled={pendente} onClick={() => setJanela(false)}>Voltar</Botao>
+          <Botao variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar}>{textos.botao}</Botao>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </section>;
 }

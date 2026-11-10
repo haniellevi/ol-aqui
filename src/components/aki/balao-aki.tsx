@@ -659,7 +659,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     rows={1}
                     disabled={!podeEscrever}
                     placeholder={podeEscrever ? "Escreva para o Aki" : DESCANSANDO}
-                    className="max-h-32 min-h-10 flex-1 resize-none rounded-campo border-2 border-borda bg-cartao px-3 py-2.5 text-base leading-6 text-texto placeholder:text-texto-suave/80 focus:outline-none focus-visible:border-laranja-escuro disabled:bg-fundo"
+                    className="max-h-32 min-h-10 flex-1 resize-none rounded-campo border border-borda bg-cartao px-3 py-2.5 text-base leading-6 text-texto placeholder:text-texto-suave/80 focus:outline-none focus-visible:border-laranja-escuro disabled:bg-fundo"
                   />
                   <Botao
                     type="submit"
