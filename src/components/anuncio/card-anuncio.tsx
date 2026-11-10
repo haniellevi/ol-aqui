@@ -7,7 +7,7 @@ import type { AnuncioCard } from "@/lib/tipos";
 export type CardAnuncioProps = {
   anuncio: Pick<
     AnuncioCard,
-    "id" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo"
+    "id" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo" | "vendedor_pago" | "vendedor_pf_verificado"
   > & { aceita_troca?: boolean };
   /** Carrega a foto já (use nos primeiros cards da tela). Padrão: preguiçoso. */
   prioridade?: boolean;
@@ -63,6 +63,14 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
               </>
             )}
           </span>
+          {a.vendedor_pago && a.vitrine_tipo === "loja" && (
+            <span className="w-fit rounded-full bg-fundo px-2 py-0.5 text-xs font-semibold text-beringela">Loja</span>
+          )}
+          {a.vendedor_pago && a.vitrine_tipo === "pf" && a.vendedor_pf_verificado && (
+            <span className="flex w-fit items-center gap-1 rounded-full bg-sucesso-fundo px-2 py-0.5 text-xs font-semibold text-verde-escuro">
+              <ShieldCheck className="size-3.5" aria-hidden /> Vendedor individual verificado
+            </span>
+          )}
           {a.vitrine_tipo === "loja" && (
             <span className="flex items-center gap-1 truncate text-[13px] leading-[18px] text-texto-suave">
               {a.vitrine_selo && <ShieldCheck className="size-4 shrink-0 text-verde-escuro" aria-hidden />}

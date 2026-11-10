@@ -111,3 +111,22 @@ export async function analisarVerificacao(_: EstadoForm, form: FormData): Promis
     return { erro: e instanceof Error ? e.message : "Não deu para salvar." };
   }
 }
+
+export async function verificarVendedorPf(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  const { supabase, papel } = await exigirTela("lojas");
+  if (papel !== "administrador" && papel !== "suporte") return { erro: "Seu papel não pode verificar vendedores." };
+  const vitrine = String(form.get("vitrine") ?? "");
+  const decisao = form.get("decisao");
+  if (!ehUuid(vitrine) || (decisao !== "aprovar" && decisao !== "revogar")) return { erro: "Escolha uma decisão válida." };
+  const { error } = await supabase.rpc("admin_verificar_vendedor_pf", {
+    p_vitrine: vitrine,
+    p_nome: String(form.get("nome") ?? ""),
+    p_aprovar: decisao === "aprovar",
+    p_dados: form.get("dados") === "on",
+    p_documento: form.get("documento") === "on",
+    p_endereco: form.get("endereco") === "on",
+  });
+  if (error) return { erro: traduzirErro(error).mensagem };
+  atualizar();
+  return { ok: decisao === "aprovar" ? "Identidade do vendedor verificada." : "Verificação revogada." };
+}

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { Aviso, estiloCampo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
-import { acaoLoja, analisarVerificacao, revisarLoja } from "./actions";
+import { acaoLoja, analisarVerificacao, revisarLoja, verificarVendedorPf } from "./actions";
 import type { AcaoLoja, LojaAdmin } from "@/lib/tipos-cobranca";
 
 // Formulários da tela 5. Cada ação pede o motivo (fica no histórico) e mostra "carregando".
@@ -121,8 +121,8 @@ export function FormRevisaoLoja({
   const [conferido, setConferido] = useState({ dados: false, link: false, whatsapp: false });
   const itens = [
     ["dados", "Conferi o nome, a titularidade e os dados comerciais cadastrados."],
-    ["link", "Abri a vitrine e conferi manualmente o Instagram, quando cadastrado."],
-    ["whatsapp", "Conferi o contato. Se o WhatsApp comercial difere do número da conta, verifiquei que a loja controla esse número."],
+    ["link", "Abri a vitrine e conferi o site e o Instagram cadastrados."],
+    ["whatsapp", "Conferi os contatos comerciais e o controle de números diferentes do WhatsApp confirmado da conta."],
   ] as const;
 
   return (
@@ -197,6 +197,32 @@ export function FormVerificacao({ id, podeAprovar = true }: { id: string; podeAp
         <Botao type="submit" variante="perigo" carregando={pendente && decisao === "recusar"} textoCarregando="Salvando..." disabled={pendente} name="decisao" value="recusar" onClick={() => setDecisao("recusar")}>
           Recusar
         </Botao>
+      </div>
+      <Retorno estado={estado} />
+    </form>
+  );
+}
+
+export function FormVerificarVendedorPf({ vitrine, nome }: { vitrine: string; nome: string }) {
+  const [estado, acao, pendente] = useActionState(verificarVendedorPf, null);
+  return (
+    <form action={acao} className="mt-3 space-y-3">
+      <input type="hidden" name="vitrine" value={vitrine} />
+      <input type="hidden" name="nome" value={nome} />
+      <p className="text-sm text-texto-suave">Confira as evidências por um canal privado da equipe. Aqui fica registrado o resultado da conferência.</p>
+      <fieldset disabled={pendente} className="space-y-2">
+        <legend className="font-semibold">Conferências de {nome}</legend>
+        {[
+          ["dados", "Dados oficiais correspondem ao vendedor"],
+          ["documento", "Documento oficial e identidade conferidos"],
+          ["endereco", "Comprovante de endereço conferido"],
+        ].map(([campo, texto]) => (
+          <label key={campo} className="flex gap-2 text-sm"><input type="checkbox" name={campo} />{texto}</label>
+        ))}
+      </fieldset>
+      <div className="flex flex-wrap gap-2">
+        <Botao name="decisao" value="aprovar" type="submit" disabled={pendente}>Aprovar identidade</Botao>
+        <Botao name="decisao" value="revogar" type="submit" disabled={pendente} variante="secundario">Revogar verificação</Botao>
       </div>
       <Retorno estado={estado} />
     </form>

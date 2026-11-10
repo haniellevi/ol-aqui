@@ -1,15 +1,16 @@
 import "server-only";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
-import { lojasEmDestaque } from "@/lib/dados/destaques";
+import { lojasCatalogo } from "@/lib/dados/catalogo";
+import type { Regiao } from "@/lib/tipos";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
 import { linkLoja } from "@/lib/formato";
 
 // "Lojas em destaque" no Início: lojas que contrataram o tipo "loja" na região.
 // Lugar pago: sempre com a etiqueta "Patrocinado" (Código de Defesa do Consumidor).
 // titulo: vem do painel (tela 12, home_blocos); sem ele, o de sempre.
-export async function LojasEmDestaque({ microrregiaoId, titulo = "Lojas em destaque" }: { microrregiaoId: string; titulo?: string }) {
-  const lojas = await lojasEmDestaque(microrregiaoId);
+export async function LojasEmDestaque({ regiao, titulo = "Lojas em destaque" }: { regiao: Regiao; titulo?: string }) {
+  const lojas = await lojasCatalogo(regiao, null, 12, 0, true);
   if (!lojas.length) return null;
   return (
     <section aria-labelledby="titulo-lojas-destaque" className="flex flex-col gap-3">
@@ -27,7 +28,7 @@ export async function LojasEmDestaque({ microrregiaoId, titulo = "Lojas em desta
               <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="lg" />
               <span className="line-clamp-2 text-[15px] font-semibold leading-5">{l.nome}</span>
               <span className="text-[13px] leading-[18px] text-texto-suave">{l.cidade}</span>
-              {l.selo_loja_verificada && (
+              {l.verificada && (
                 <span className="flex items-center gap-1 text-[13px] font-semibold leading-[18px] text-verde-escuro">
                   <ShieldCheck className="size-4" aria-hidden />
                   Verificada

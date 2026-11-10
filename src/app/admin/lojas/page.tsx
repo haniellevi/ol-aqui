@@ -1,3 +1,4 @@
+import { linkSiteLoja } from "@/components/vitrine/regras";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { exigirTela } from "@/lib/admin/equipe";
@@ -7,7 +8,7 @@ import { ehUuid, linkLoja, telefone } from "@/lib/formato";
 import { LINK_ADMIN_LOJAS } from "@/lib/rotas";
 import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { linkInstagram } from "@/components/vitrine/regras";
-import { FormAcaoLoja, FormRevisaoLoja, FormVerificacao } from "./formularios";
+import { FormAcaoLoja, FormRevisaoLoja, FormVerificacao, FormVerificarVendedorPf } from "./formularios";
 import type { AcaoLoja, LojaAdmin, SituacaoConta } from "@/lib/tipos-cobranca";
 
 export const metadata = { title: "Lojas" };
@@ -71,6 +72,8 @@ type RevisaoLoja = {
   cidade: string | null;
   bairro: string | null;
   endereco: string | null;
+  site_url: string | null;
+  telefone_publico: string | null;
 };
 
 const BUCKET_VERIFICACOES = "verificacoes";
@@ -342,6 +345,12 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                       !franqueado && <PainelRevisaoLoja revisao={revisao} />
                     ) : <p className="mt-3 text-sm font-semibold text-aviso">Estado da verificação indisponível. Atualize a página.</p>
                   )}
+                  {l.tipo === "pf" && !franqueado && l.dono_nome && (
+                    <details className="mt-3 border-t border-borda pt-3">
+                      <summary className="cursor-pointer font-semibold text-laranja-escuro">Verificar vendedor individual</summary>
+                      <FormVerificarVendedorPf vitrine={l.id} nome={l.dono_nome} />
+                    </details>
+                  )}
                   {(acoesDoPapel === null || acoesDoPapel.length > 0) && (
                     <details className="mt-3 border-t border-borda pt-3">
                       <summary className="flex min-h-12 cursor-pointer items-center font-semibold text-laranja-escuro">Ações</summary>
@@ -383,6 +392,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
 
 function PainelRevisaoLoja({ revisao }: { revisao: RevisaoLoja }) {
   const urlVitrine = revisao.slug && /^[a-z0-9-]{3,60}$/.test(revisao.slug) ? linkLoja(revisao.slug) : null;
+  const site = linkSiteLoja(revisao.site_url);
   const urlInstagram = linkInstagram(revisao.instagram);
   const motivo = MOTIVOS_REVISAO.find((opcao) => opcao.valor === revisao.motivo);
   const estiloLink = "inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline underline-offset-4";
@@ -422,6 +432,8 @@ function PainelRevisaoLoja({ revisao }: { revisao: RevisaoLoja }) {
         {urlVitrine && (
           <Link href={urlVitrine} target="_blank" rel="noopener noreferrer" className={estiloLink}>Abrir vitrine</Link>
         )}
+        {site && <a href={site} target="_blank" rel="noopener noreferrer" className={estiloLink}>Conferir site da loja</a>}
+        {revisao.telefone_publico && <span>Telefone comercial {telefone(revisao.telefone_publico)}</span>}
         {urlInstagram ? (
           <a href={urlInstagram} target="_blank" rel="noopener noreferrer" className={estiloLink}>Abrir Instagram (@{revisao.instagram})</a>
         ) : (

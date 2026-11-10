@@ -39,6 +39,8 @@ export default async function PaginaInformacoesLoja() {
           lng: v.lng,
           horarios: v.horarios,
           instagram: v.instagram,
+          site_url: v.site_url,
+          telefone_publico: v.telefone_publico,
           sobre: v.sobre ?? v.descricao,
           formas_pagamento: v.formas_pagamento,
           faz_entrega: v.faz_entrega,

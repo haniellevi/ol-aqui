@@ -46,6 +46,8 @@ export type TipoVitrine = "pf" | "loja";
 
 /** Linha de buscar_anuncios(): o que o card precisa. */
 export type AnuncioCard = {
+  vendedor_pago?: boolean;
+  vendedor_pf_verificado?: boolean;
   id: string;
   titulo: string;
   preco_centavos: number | null; // null = "a combinar"

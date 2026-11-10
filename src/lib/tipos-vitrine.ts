@@ -44,6 +44,8 @@ export type VitrinePublica = {
   lng: number | null;
   horarios: Horarios | null;
   instagram: string | null;
+  site_url?: string | null;
+  telefone_publico?: string | null;
   sobre: string | null;
   formas_pagamento: string[];
   faz_entrega: boolean | null;
@@ -115,6 +117,8 @@ export type MinhaVitrineCompleta = {
   lng: number | null;
   horarios: Horarios | null;
   instagram: string | null;
+  site_url?: string | null;
+  telefone_publico?: string | null;
   sobre: string | null;
   descricao: string | null;
   formas_pagamento: string[];

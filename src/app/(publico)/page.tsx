@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Ellipsis, Radar } from "lucide-react";
 import { listarCategorias } from "@/lib/dados/categorias";
-import { buscarAnuncios } from "@/lib/dados/anuncios";
+import { anunciosCatalogo } from "@/lib/dados/catalogo";
 import { regiaoAtual } from "@/lib/dados/regiao";
 import { CampoBusca } from "@/components/busca/campo-busca";
 import { lugarDaRegiao } from "@/components/busca/parametros";
@@ -13,7 +13,6 @@ import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { LojasDaRegiao } from "@/components/vitrine/lojas-da-regiao";
 import { LojasEmDestaque } from "@/components/destaques/lojas-em-destaque";
-import { destaquesHome } from "@/lib/dados/destaques";
 import { linkCategoria } from "@/lib/formato";
 import { blocosHome } from "@/lib/dados/paginas";
 import { LINK_AJUDA, LINK_PRIVACIDADE, LINK_TERMOS, linkPedirRadar } from "@/lib/rotas";
@@ -42,18 +41,16 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Inicio() {
-  const [regiao, categorias, recentes, blocos] = await Promise.all([
-    regiaoAtual(),
-    listarCategorias(),
-    buscarAnuncios({ ordem: "recentes", limite: POR_VEZ }),
-    blocosHome(),
+export default async function Inicio({ searchParams }: { searchParams: Promise<{ pagina?: string }> }) {
+  const [regiao, categorias, blocos, params] = await Promise.all([
+    regiaoAtual(), listarCategorias(), blocosHome(), searchParams,
   ]);
+  const pagina = typeof params.pagina === "string" && /^\d{1,4}$/.test(params.pagina) ? Math.max(1, Number(params.pagina)) : 1;
   const lugar = lugarDaRegiao(regiao);
-  // Carrossel: só o tipo "Vitrine da página inicial" da região (vagas limitadas, rodízio justo no banco).
-  // "Destaque na busca" continua no topo da grade, com "Patrocinado", como na busca.
-  const destaques = regiao ? await destaquesHome(regiao.id) : [];
-  const normais = recentes.anuncios;
+  const [normais, destaques] = regiao ? await Promise.all([
+    anunciosCatalogo(regiao, "feed", POR_VEZ, null, (pagina - 1) * POR_VEZ),
+    anunciosCatalogo(regiao, "patrocinados", 12),
+  ]) : [[], []];
 
   return (
     <div className={estilos.fundo}>
@@ -68,6 +65,10 @@ export default async function Inicio() {
           </p>
         </div>
         <CampoBusca id="busca-inicio" />
+        <Link href="/lojas" className="flex items-center justify-between gap-3 rounded-card border border-borda bg-cartao px-4 py-3 font-semibold text-beringela hover:border-laranja-escuro">
+          <span>Conheça as lojas de {lugar}</span>
+          <span className="shrink-0 text-sm text-laranja-escuro">Ver lojas</span>
+        </Link>
       </section>
 
       {categorias.length > 0 && (
@@ -123,7 +124,7 @@ export default async function Inicio() {
 
             case "lojas_destaque":
               return regiao ? (
-                <LojasEmDestaque key={bloco.chave} microrregiaoId={regiao.id} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} />
+                <LojasEmDestaque key={bloco.chave} regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} />
               ) : null;
 
             case "radar":
@@ -150,12 +151,12 @@ export default async function Inicio() {
 
             case "lojas_regiao":
               return regiao ? (
-                <LojasDaRegiao key={bloco.chave} microrregiaoId={regiao.id} lugar={lugar} titulo={textoDe(bloco.titulo, "Lojas de {lugar}", lugar)} />
+                <LojasDaRegiao key={bloco.chave} regiao={regiao} lugar={lugar} titulo={textoDe(bloco.titulo, "Lojas de {lugar}", lugar)} />
               ) : null;
 
             case "recentes":
               return (
-                <section key={bloco.chave} aria-labelledby="titulo-recentes" className="flex flex-col gap-3">
+                <section id="anuncios" key={bloco.chave} aria-labelledby="titulo-recentes" className="flex flex-col gap-3">
                   <h2 id="titulo-recentes" className="text-lg font-semibold">
                     {textoDe(bloco.titulo, "Mais recentes em {lugar}", lugar)}
                   </h2>
@@ -174,11 +175,12 @@ export default async function Inicio() {
                       </Vazio>
                     }
                   />
-                  {recentes.total > recentes.anuncios.length && (
-                    <Botao href="/busca?ordem=recentes&pagina=2" variante="secundario" className="self-center">
-                      Ver mais anúncios
-                    </Botao>
-                  )}
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {pagina > 1 && <Botao href={pagina === 2 ? "/#anuncios" : `/?pagina=${pagina - 1}#anuncios`} variante="secundario">Anterior</Botao>}
+                    {(Number(normais[0]?.total ?? 0) > pagina * POR_VEZ && pagina < 9999) && (
+                      <Botao href={`/?pagina=${pagina + 1}#anuncios`} variante="secundario">Ver mais anúncios</Botao>
+                    )}
+                  </div>
                 </section>
               );
 

@@ -42,6 +42,8 @@ export type DadosInformacoes = {
   lng: number | null;
   horarios: Horarios | null;
   instagram: string | null;
+  site_url?: string | null;
+  telefone_publico?: string | null;
   sobre: string | null;
   formas_pagamento: string[];
   faz_entrega: boolean | null;
@@ -295,6 +297,11 @@ export function FormInformacoes({ dados, formasDoPainel }: { dados: DadosInforma
           dica="Só o nome, sem o @."
           erro={campos.instagram}
         />
+        <Campo rotulo="Site da loja" name="site_url" type="url" opcional maxLength={300}
+          defaultValue={dados.site_url ?? ""} placeholder="https://minhaloja.com.br" erro={campos.site_url} />
+        <Campo rotulo="Telefone comercial" name="telefone_publico" type="tel" opcional maxLength={22}
+          defaultValue={dados.telefone_publico ?? ""} erro={campos.telefone_publico} />
+        <p className="text-sm text-texto-suave">Site e telefone ficam públicos após a conferência da loja.</p>
         <Campo
           rotulo="Sobre nós"
           name="sobre"

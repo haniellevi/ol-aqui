@@ -155,3 +155,16 @@ export function corDoTextoSobre(fundo: string): "#FFFFFF" | "#4B1248" {
   const contrasteEscuro = (Math.max(lum, lumBeringela) + 0.05) / (Math.min(lum, lumBeringela) + 0.05);
   return contrasteBranco >= contrasteEscuro ? "#FFFFFF" : "#4B1248";
 }
+
+/** Endereço externo de loja. Mantém só HTTP(S), com domínio e sem credenciais. */
+export function linkSiteLoja(valor: string | null | undefined): string | null {
+  if (!valor?.trim() || valor.length > 300 || /[\s\\]/.test(valor)) return null;
+  try {
+    const site = new URL(valor);
+    if (!["https:", "http:"].includes(site.protocol) || site.username || site.password ||
+        !/^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/i.test(site.hostname) || site.href.length > 300) return null;
+    return site.href;
+  } catch {
+    return null;
+  }
+}

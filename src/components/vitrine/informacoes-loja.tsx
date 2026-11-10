@@ -1,7 +1,8 @@
+import { telefone as formatarTelefone } from "@/lib/formato";
 import type { ReactNode } from "react";
 import { Clock, CreditCard, Instagram, MapPin, Navigation, Store, Truck } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
-import { DIAS_EM_ORDEM, NOME_DIA, agoraNaRegiao, faixasDoDia, linkComoChegar, linkInstagram, situacaoAgora, temHorarios, textoDoDia } from "@/components/vitrine/regras";
+import { DIAS_EM_ORDEM, NOME_DIA, agoraNaRegiao, faixasDoDia, linkComoChegar, linkInstagram, linkSiteLoja, situacaoAgora, temHorarios, textoDoDia } from "@/components/vitrine/regras";
 import type { VitrinePublica } from "@/lib/tipos-vitrine";
 
 // Bloco "Informações da loja" da vitrine pública: só aparece o que a loja preencheu.
@@ -10,7 +11,9 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
   const insta = linkInstagram(v.instagram);
   const situacao = situacaoAgora(v.horarios, agora);
   const hoje = agoraNaRegiao(agora).dia;
-  const temAlgo = v.endereco || comoChegar || temHorarios(v.horarios) || insta || v.sobre || v.formas_pagamento.length || v.faz_entrega !== null;
+  const site = linkSiteLoja(v.site_url);
+  const telefone = /^55[1-9][0-9]9?[0-9]{8}$/.test(v.telefone_publico ?? "") ? v.telefone_publico : null;
+  const temAlgo = site || telefone || v.endereco || comoChegar || temHorarios(v.horarios) || insta || v.sobre || v.formas_pagamento.length || v.faz_entrega !== null;
   if (!temAlgo) return null;
 
   return (
@@ -19,6 +22,12 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
         Informações da loja
       </h2>
 
+      {(site || telefone) && (
+        <div className="flex flex-wrap gap-4">
+          {site && <a href={site} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline">Visitar site da loja</a>}
+          {telefone && <a href={`tel:+${telefone}`} className="inline-flex min-h-12 items-center font-semibold text-laranja-escuro underline">Ligar para {formatarTelefone(telefone)}</a>}
+        </div>
+      )}
       {(v.endereco || comoChegar) && (
         <Bloco icone={<MapPin />} titulo="Endereço">
           <p className="break-words text-base">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>

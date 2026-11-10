@@ -176,7 +176,8 @@ export function comParametros(caminho: string, sp: ParametrosUrl, mudar: Record<
 }
 
 /** "Corrente e região" (cidade-sede da região) ou o nome da região. */
-export function lugarDaRegiao(regiao: { cidadeSede: string | null; nome: string } | null | undefined): string {
+export function lugarDaRegiao(regiao: { cidadeSede: string | null; cidade?: string | null; nome: string } | null | undefined): string {
   if (!regiao) return "sua região";
-  return regiao.cidadeSede ? `${regiao.cidadeSede} e região` : regiao.nome;
+  const cidade = regiao.cidade ?? regiao.cidadeSede;
+  return cidade ? `${cidade} e região` : regiao.nome;
 }

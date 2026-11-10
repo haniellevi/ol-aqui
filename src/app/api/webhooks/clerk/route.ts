@@ -121,6 +121,8 @@ async function apagarConta(id: string) {
             lat: null,
             lng: null,
             instagram: null,
+            site_url: null,
+            telefone_publico: null,
             entrega_obs: null,
             horarios: null,
             formas_pagamento: [],

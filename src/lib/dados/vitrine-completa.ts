@@ -70,7 +70,7 @@ export const minhaVitrineCompleta = cache(async (exigirLeitura = false): Promise
     const db = await createClient();
     const [{ data, error }, contatos] = await Promise.all([
       db.from("vitrines_lojas").select(COLUNAS_MINHA).eq("dono_id", userId).maybeSingle(),
-      db.rpc("meus_contatos_vitrine").maybeSingle<{ whatsapp: string | null; instagram: string | null }>(),
+      db.rpc("meus_contatos_vitrine").maybeSingle<{ whatsapp: string | null; instagram: string | null; site_url?: string | null; telefone_publico?: string | null }>(),
     ]);
     if (error || contatos.error) throw new Error("Não foi possível carregar sua loja. Tente novamente.");
     if (!data) return null;
@@ -78,6 +78,8 @@ export const minhaVitrineCompleta = cache(async (exigirLeitura = false): Promise
       ...(data as unknown as Omit<MinhaVitrineCompleta, "whatsapp" | "instagram">),
       whatsapp: contatos.data?.whatsapp ?? null,
       instagram: contatos.data?.instagram ?? null,
+      site_url: contatos.data?.site_url ?? null,
+      telefone_publico: contatos.data?.telefone_publico ?? null,
     };
     if (exigirLeitura && (v.dono_id !== userId || !ehUuid(v.id))) throw new Error("Não foi possível confirmar sua loja.");
     return {
