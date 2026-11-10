@@ -1,7 +1,8 @@
 import { exigirTela } from "@/lib/admin/equipe";
 import { quando, reais } from "@/lib/admin/formato";
 import { Aviso, Cartao, estiloCampo } from "@/components/admin/ui";
-import { BotaoEnviar } from "@/components/radar/botao-enviar";
+import { classesBotao } from "@/components/ui/botao";
+import { BotaoDecisao } from "./botao-decisao";
 import { moderarRadar } from "./actions";
 
 // Radar na moderação: pedidos e propostas mais recentes, com ocultar / devolver / remover e o motivo.
@@ -110,7 +111,7 @@ export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string 
 function FormModerar({ tipo, id, oculto }: { tipo: "pedido" | "proposta"; id: string; oculto: boolean }) {
   return (
     <div className="mt-4 space-y-2">
-      <form action={moderarRadar} className="space-y-2">
+      <form action={moderarRadar.bind(null, "")} className="space-y-2">
         <input type="hidden" name="tipo" value={tipo} />
         <input type="hidden" name="id" value={id} />
         <input name="motivo" maxLength={300} placeholder="Motivo (o dono vê e fica no histórico)" className={estiloCampo} aria-label="Motivo" />
@@ -131,11 +132,11 @@ function FormModerar({ tipo, id, oculto }: { tipo: "pedido" | "proposta"; id: st
   );
 }
 
-// Cada ação num formulário próprio com o mesmo motivo seria repetir o campo; aqui o botão leva a ação.
+// A ação de cada botão é explícita; motivo e confirmação continuam no mesmo formulário.
 function BotaoAcao({ acao, variante, texto }: { acao: string; variante: "secundario" | "perigo"; texto: string }) {
   return (
-    <BotaoEnviar variante={variante} textoCarregando="Salvando..." nome="acao" valor={acao}>
+    <BotaoDecisao action={moderarRadar.bind(null, acao)} className={classesBotao(variante)}>
       {texto}
-    </BotaoEnviar>
+    </BotaoDecisao>
   );
 }

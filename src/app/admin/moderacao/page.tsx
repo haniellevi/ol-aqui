@@ -125,14 +125,14 @@ export default async function ModeracaoPage({
                   ))}
                 </ul>
               )}
-              <form action={decidirAnuncio} className="mt-4 space-y-2">
+              <form action={decidirAnuncio.bind(null, "")} className="mt-4 space-y-2">
                 <input type="hidden" name="id" value={a.id} />
                 <input name="motivo" placeholder={podeCongelar ? "Motivo (para recusar ou congelar)" : "Motivo (para recusar)"} className={estiloCampo} />
                 <div className="flex flex-wrap gap-2">
-                  <BotaoDecisao name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
-                  <BotaoDecisao name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</BotaoDecisao>
+                  <BotaoDecisao action={decidirAnuncio.bind(null, "aprovar")} className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
+                  <BotaoDecisao action={decidirAnuncio.bind(null, "recusar")} className={estiloBotaoSec}>Recusar</BotaoDecisao>
                   {podeCongelar && (
-                    <BotaoDecisao name="decisao" value="congelar" className={estiloBotaoPerigo}>Congelar (Compliance)</BotaoDecisao>
+                    <BotaoDecisao action={decidirAnuncio.bind(null, "congelar")} className={estiloBotaoPerigo}>Congelar (Compliance)</BotaoDecisao>
                   )}
                 </div>
               </form>
@@ -149,12 +149,12 @@ export default async function ModeracaoPage({
             <p className="text-sm text-texto-suave">{p.cidade} · {quando(p.criado_em)}</p>
             <p className="mt-1 inline-block rounded-full bg-aviso-fundo px-2 py-0.5 text-[13px] font-semibold text-aviso">{p.motivo_analise}</p>
             {p.detalhes && <p className="mt-2 text-sm text-texto-suave">{p.detalhes}</p>}
-            <form action={decidirPedido} className="mt-4 space-y-2">
+            <form action={decidirPedido.bind(null, "")} className="mt-4 space-y-2">
               <input type="hidden" name="id" value={p.id} />
               <input name="motivo" placeholder="Motivo (para recusar)" className={estiloCampo} />
               <div className="flex gap-2">
-                <BotaoDecisao name="decisao" value="aprovar" className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
-                <BotaoDecisao name="decisao" value="recusar" className={estiloBotaoSec}>Recusar</BotaoDecisao>
+                <BotaoDecisao action={decidirPedido.bind(null, "aprovar")} className={estiloBotaoAprovar}>Aprovar</BotaoDecisao>
+                <BotaoDecisao action={decidirPedido.bind(null, "recusar")} className={estiloBotaoSec}>Recusar</BotaoDecisao>
               </div>
             </form>
           </Cartao>
@@ -201,10 +201,10 @@ export default async function ModeracaoPage({
               {d.detalhes && <p className="text-texto-suave">{d.detalhes}</p>}
               <p className="text-[13px] text-texto-suave">{quando(d.criado_em)}</p>
             </div>
-            <form action={resolverDenuncia} className="flex gap-2">
+            <form action={resolverDenuncia.bind(null, "")} className="flex gap-2">
               <input type="hidden" name="id" value={d.id} />
-              <BotaoDecisao name="procedente" value="sim" className={estiloBotaoPerigo}>Procede</BotaoDecisao>
-              <BotaoDecisao name="procedente" value="nao" className={estiloBotaoSec}>Não procede</BotaoDecisao>
+              <BotaoDecisao action={resolverDenuncia.bind(null, "sim")} className={estiloBotaoPerigo}>Procede</BotaoDecisao>
+              <BotaoDecisao action={resolverDenuncia.bind(null, "nao")} className={estiloBotaoSec}>Não procede</BotaoDecisao>
             </form>
           </Cartao>
         ))}
