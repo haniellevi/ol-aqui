@@ -123,16 +123,15 @@ export async function revogarVendedorPf(_: EstadoForm, form: FormData): Promise<
   return { ok: "Verificação revogada." };
 }
 
-export async function decidirVerificacaoPf(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+export async function decidirVerificacaoPf(aprovar: boolean, _: EstadoForm, form: FormData): Promise<EstadoForm> {
   const { supabase, papel } = await exigirTela("lojas");
   if (papel !== "administrador" && papel !== "suporte") return { erro: "Seu papel não pode revisar envios." };
   const id = String(form.get("id") ?? "");
-  const decisao = form.get("decisao");
-  if (!ehUuid(id) || (decisao !== "aprovar" && decisao !== "recusar")) return { erro: "Escolha uma decisão válida." };
+  if (!ehUuid(id) || typeof aprovar !== "boolean") return { erro: "Escolha uma decisão válida." };
 
   const { error } = await supabase.rpc("admin_decidir_verificacao_pf", {
     p_id: id,
-    p_aprovar: decisao === "aprovar",
+    p_aprovar: aprovar,
     p_dados: form.get("dados") === "on",
     p_documento: form.get("documento") === "on",
     p_endereco: form.get("endereco") === "on",
@@ -140,5 +139,5 @@ export async function decidirVerificacaoPf(_: EstadoForm, form: FormData): Promi
   });
   if (error) return { erro: traduzirErro(error).mensagem };
   atualizar();
-  return { ok: decisao === "aprovar" ? "Identidade do vendedor verificada." : "Novo envio solicitado." };
+  return { ok: aprovar ? "Identidade do vendedor verificada." : "Novo envio solicitado." };
 }

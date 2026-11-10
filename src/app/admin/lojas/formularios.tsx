@@ -218,7 +218,9 @@ export function FormRevogarVendedorPf({ vitrine, nome }: { vitrine: string; nome
 }
 
 export function FormDecidirVerificacaoPf({ id, dadosAtuais }: { id: string; dadosAtuais: boolean }) {
-  const [estado, acao, pendente] = useActionState(decidirVerificacaoPf, null);
+  const [estadoAprovar, aprovar, aprovando] = useActionState(decidirVerificacaoPf.bind(null, true), null);
+  const [estadoRecusar, recusar, recusando] = useActionState(decidirVerificacaoPf.bind(null, false), null);
+  const pendente = aprovando || recusando;
   const [motivo, setMotivo] = useState("");
   const [conferidos, setConferidos] = useState<string[]>([]);
   const itens = [
@@ -227,7 +229,7 @@ export function FormDecidirVerificacaoPf({ id, dadosAtuais }: { id: string; dado
     ["endereco", "Conferi o comprovante de endereço"],
   ];
   return (
-    <form action={acao} className="mt-3 space-y-3">
+    <form className="mt-3 space-y-3">
       <input type="hidden" name="id" value={id} />
       {dadosAtuais ? (
         <fieldset className="space-y-2">
@@ -250,10 +252,11 @@ export function FormDecidirVerificacaoPf({ id, dadosAtuais }: { id: string; dado
         </select>
       </label>
       <div className="flex flex-wrap gap-2">
-        <Botao type="submit" name="decisao" value="aprovar" disabled={pendente || !dadosAtuais || conferidos.length !== itens.length}>Aprovar identidade</Botao>
-        <Botao type="submit" name="decisao" value="recusar" variante="secundario" disabled={pendente || !motivo}>Pedir novo envio</Botao>
+        <Botao type="submit" formAction={aprovar} disabled={pendente || !dadosAtuais || conferidos.length !== itens.length}>Aprovar identidade</Botao>
+        <Botao type="submit" formAction={recusar} variante="secundario" disabled={pendente || !motivo}>Pedir novo envio</Botao>
       </div>
-      <Retorno estado={estado} />
+      <Retorno estado={estadoAprovar} />
+      <Retorno estado={estadoRecusar} />
     </form>
   );
 }
