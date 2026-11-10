@@ -22,7 +22,7 @@ Pareamento concluído pelo usuário. Corrigida a tela auxiliar que podia exibir 
 
 O usuário entrou na prévia protegida, solicitou o código, recebeu no WhatsApp e confirmou. A página Editar perfil mostrou confirmação por código. No banco: uma solicitação, um consumo e uma confirmação persistida com telefone correspondente e origem Evolution. Sem leitura ou registro do código e do número neste relatório.
 
-Depois do teste, somente o contêiner da API OL-AKI foi reiniciado; a sessão voltou a `open` sem novo QR. Os dez contêineres anteriores preservaram IDs, horários de início e contadores de reinício. O serviço OL-AKI usava aproximadamente 250 MiB no conjunto após o pareamento.
+Depois do teste, somente o contêiner da API Mercado da Região foi reiniciado; a sessão voltou a `open` sem novo QR. Os dez contêineres anteriores preservaram IDs, horários de início e contadores de reinício. O serviço Mercado da Região usava aproximadamente 250 MiB no conjunto após o pareamento.
 
 ## Corte de produção
 

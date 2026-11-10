@@ -136,7 +136,7 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
       const resto = url.pathname.startsWith(prefixo) ? url.pathname.slice(prefixo.length) : "";
       return (
         url.protocol === origemOlaki.protocol &&
-        url.host === origemOlaki.host && // só o Storage do OLAKI (o banco confere de novo com fotos.origem)
+        url.host === origemOlaki.host && // só o Storage do Mercado da Região (o banco confere de novo com fotos.origem)
         !url.search &&
         !url.hash &&
         /^[A-Za-z0-9._/-]+$/.test(resto) &&
@@ -147,7 +147,7 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
     }
   };
   if (!fotos.every(valida) || new Set(fotos).size !== fotos.length) {
-    return { ok: false, erro: { mensagem: "Use só fotos enviadas pelo OLAKI.", campo: "fotos" } };
+    return { ok: false, erro: { mensagem: "Use só fotos enviadas pelo Mercado da Região.", campo: "fotos" } };
   }
   if (publicado(anuncio) && fotos.length < ((await lerConfigNumero("anuncio.fotos_minimo", regiao)) ?? 0)) {
     return { ok: false, erro: { mensagem: "Anúncio publicado precisa de foto. Coloque outra antes de tirar esta.", campo: "fotos" } };

@@ -1,7 +1,7 @@
 # Criação e publicação de anúncio
 
 Base: `9c73f54c17c4f24e44cf66683e7c4ca761cff0a0`.
-Escopo: início explícito, fotos, categoria, detalhes, preço, localização e revisão/publicação. Identidade visual OL-AKI preservada.
+Escopo: início explícito, fotos, categoria, detalhes, preço, localização e revisão/publicação. Identidade visual Mercado da Região preservada.
 
 ## Correções
 

@@ -138,7 +138,7 @@ export function BuscaConta({ regioes, euId }: { regioes: Regiao[]; euId: string 
           maxLength={120}
           defaultValue={estado?.termo ?? ""}
           placeholder="Ex.: (89) 99999-0000"
-          dica="A pessoa precisa ter entrado no OLAKI pelo menos uma vez."
+          dica="A pessoa precisa ter entrado no Mercado da Região pelo menos uma vez."
           autoComplete="off"
         />
         <Botao type="submit" carregando={pendente} textoCarregando="Buscando..." icone={<Search />} className="md:mb-7">

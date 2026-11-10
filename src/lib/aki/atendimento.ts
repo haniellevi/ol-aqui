@@ -10,11 +10,11 @@ const RESPOSTAS = new Map([
   ["editar", "Abra Minha conta > Meus anúncios e escolha Editar no anúncio que quer ajustar. Confira os dados antes de salvar. Algumas mudanças podem levar o anúncio para análise."],
   ["pausado", "Anúncios pausados ficam fora da busca. Em Meus anúncios, confira a situação e as ações disponíveis. Se precisar entender por que a equipe tirou o anúncio do ar, fale com a equipe nesta conversa."],
   ["analise", "Anúncios em análise ainda não aparecem na busca. Acompanhe a situação em Meus anúncios. A equipe pode explicar o motivo de um caso específico aqui na conversa."],
-  ["whatsapp", "Em Minha conta > Meus dados, escolha confirmar ou trocar o WhatsApp. Digite o código apenas na tela de confirmação do OL-AKI."],
+  ["whatsapp", "Em Minha conta > Meus dados, escolha confirmar ou trocar o WhatsApp. Digite o código apenas na tela de confirmação do Mercado da Região."],
   ["agradecimento", "Por nada! Se precisar de ajuda com seu anúncio, é só escrever."],
   ["saudacao", "Olá! Como posso ajudar com seu anúncio?"],
 ]);
-const INSTRUCOES = `Classifique uma dúvida de suporte de um anunciante do OL-AKI. Responda somente com um código em minúsculas:
+const INSTRUCOES = `Classifique uma dúvida de suporte de um anunciante do Mercado da Região. Responda somente com um código em minúsculas:
 publicar: como criar, colocar fotos ou publicar um anúncio;
 editar: como alterar dados de um anúncio;
 pausado: o que significa um anúncio pausado ou onde verificar ações disponíveis;

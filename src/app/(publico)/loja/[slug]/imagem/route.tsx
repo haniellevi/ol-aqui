@@ -4,7 +4,7 @@ import { corDoTextoSobre, corSegura } from "@/components/vitrine/regras";
 import { iniciais } from "@/components/vitrine/util";
 
 // Imagem de compartilhamento (WhatsApp, Instagram, Facebook) da vitrine quando a loja usa o banner
-// modelo: a cor da loja + iniciais + nome + cidade + OLAKI. Sem imagem de fora (nada para dar erro).
+// modelo: a cor da loja + iniciais + nome + cidade + Mercado da Região. Sem imagem de fora (nada para dar erro).
 // Com foto da fachada, a página usa a própria foto.
 
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
@@ -14,7 +14,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const headers = { "Cache-Control": "private, no-store" };
   if (v === undefined) return new Response("Imagem temporariamente indisponível", { status: 503, headers });
   if (!v || v.status !== "ativa") return new Response("Loja não encontrada", { status: 404, headers });
-  const nome = v?.nome ?? "Loja no OLAKI";
+  const nome = v?.nome ?? "Loja no Mercado da Região";
   const fundo = corSegura(v?.banner_cor);
   const texto = corDoTextoSobre(fundo);
   const cidade = v ? [v.bairro, v.cidade].filter(Boolean).join(", ") : "";

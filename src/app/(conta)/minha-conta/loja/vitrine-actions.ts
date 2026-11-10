@@ -34,7 +34,7 @@ function atualizar(slug: string) {
   revalidatePath(linkLoja(slug));
 }
 
-/** Endereço público de uma foto do banner: só arquivo da pasta <usuario>/vitrine/ no Storage do OLAKI. */
+/** Endereço público de uma foto do banner: só arquivo da pasta <usuario>/vitrine/ no Storage do Mercado da Região. */
 function bannerValido(url: string, userId: string): boolean {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, "");
   if (!base) return false;
@@ -99,7 +99,7 @@ export async function salvarBanner(_antes: EstadoVitrine, form: FormData): Promi
     if (!/^#[0-9A-F]{6}$/.test(cor) || (opcoes.cores.length > 0 && !opcoes.cores.includes(cor) && cor !== v.banner_cor)) {
       return { erro: "Escolha uma das cores da lista.", campos: { banner_cor: "Escolha uma das cores da lista." } };
     }
-    // Foto nova precisa ser do Storage do OLAKI; a atual (mesmo endereço) pode ficar.
+    // Foto nova precisa ser do Storage do Mercado da Região; a atual (mesmo endereço) pode ficar.
     if (url && url !== v.banner_url && !bannerValido(url, userId)) {
       return { erro: "Envie a foto pelo botão.", campos: { banner: "Envie a foto pelo botão." } };
     }

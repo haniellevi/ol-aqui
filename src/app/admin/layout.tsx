@@ -5,7 +5,7 @@ import { podeVerTela, primeiraTela } from "@/lib/tipos-equipe";
 import { NavAdmin } from "@/components/admin/nav-admin";
 import "./painel.css";
 
-export const metadata = { title: { default: "Painel", template: "%s · Painel OLAKI" }, robots: { index: false } };
+export const metadata = { title: { default: "Painel", template: "%s · Painel Mercado da Região" }, robots: { index: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // Qualquer pessoa ativa da equipe entra; o menu mostra só as telas do papel dela (tela 14).
@@ -25,7 +25,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <a href="#painel-conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-campo focus:bg-laranja focus:p-3 focus:text-beringela">Pular para o conteúdo</a>
       <aside className="md:sticky md:top-0 md:flex md:h-dvh md:w-56 md:shrink-0 md:flex-col md:border-r md:border-borda md:bg-cartao">
         <Link href={primeiraTela(papel)} className="hidden min-h-20 shrink-0 items-center gap-2 px-6 md:flex focus-visible:outline-2 focus-visible:outline-laranja-escuro">
-          <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={88} height={36} />
+          <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={98} height={36} />
           <span className="text-legenda text-texto-suave">Painel</span>
         </Link>
         <NavAdmin pendencias={pendencias} papel={papel} />

@@ -26,7 +26,7 @@ import type { MeuPagamento, RespostaCobranca } from "@/lib/tipos-cobranca";
 // Núcleo comum da cobrança no Asaas (destaques, planos e anúncio avulso). O pagamento nasce no
 // banco com o token da pessoa (contratar_destaque, pedir_assinatura, pedir_anuncio_avulso).
 // Aqui o servidor cria o cliente e a cobrança no Asaas e grava os ids com a chave secreta
-// (registrar_cobranca_asaas). O CPF/CNPJ vai só para o Asaas: o OLAKI guarda só o id do cliente.
+// (registrar_cobranca_asaas). O CPF/CNPJ vai só para o Asaas: o Mercado da Região guarda só o id do cliente.
 
 export class ErroCobranca extends Error {}
 
@@ -237,9 +237,9 @@ export async function precisaDocumentoNoAsaas(vitrineId: string): Promise<boolea
 // ---------------------------------------------------------------- planos e anúncio avulso
 
 function descricaoDe(p: MeuPagamento): string {
-  if (p.tipo === "anuncio_avulso") return "OLAKI · Anúncio avulso";
+  if (p.tipo === "anuncio_avulso") return "Mercado da Região · Anúncio avulso";
   const nome = p.plano_nome ?? p.plano_codigo ?? "plano";
-  return `OLAKI · Plano ${nome}${p.meses > 1 ? ` (${p.meses} períodos)` : ""}`;
+  return `Mercado da Região · Plano ${nome}${p.meses > 1 ? ` (${p.meses} períodos)` : ""}`;
 }
 
 /** null quando o pagamento ainda pode ser cobrado; senão o motivo (cobranca_pode_seguir, com o token da pessoa). */
@@ -261,7 +261,7 @@ export async function cobrarMeuPagamento(pagamentoId: string, forma: FormaPagame
   if (!meu || meu.tipo === "destaque") throw new ErroCobranca("Pagamento não encontrado.");
   if (meu.status === "pago") return { etapa: "pago", pagamento: meu };
   if (meu.status !== "pendente") throw new ErroCobranca("Esta cobrança não está mais esperando pagamento. Comece de novo.");
-  if (!asaasConfigurado()) throw new ErroCobranca("Pagamento em breve. Fale com a equipe OLAKI se precisar agora.");
+  if (!asaasConfigurado()) throw new ErroCobranca("Pagamento em breve. Fale com a equipe Mercado da Região se precisar agora.");
 
   // A cobrança pode ter nascido antes de a conta ser suspensa ou de o anúncio entrar no ar:
   // o banco confere de novo o que pedir_* conferiu antes de criar ou trocar a cobrança no Asaas.

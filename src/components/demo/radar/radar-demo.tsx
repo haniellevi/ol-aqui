@@ -5,7 +5,7 @@ import { Check as CheckIcon, Clock, Flame, MapPin, Send, Users } from 'lucide-re
 import { Bar, Button, Check, Collapse, Phone, Roll, Row, Spinner, Stage, type Act } from '../kit'
 import './radar-demo.css'
 
-// OLAKI · Radar de Negócios, visto pela loja. Um celular Android (o público
+// Mercado da Região · Radar de Negócios, visto pela loja. Um celular Android (o público
 // da região usa Android de entrada), a tela real do Radar: cabeçalho, chips
 // de categoria e os pedidos dos compradores. A história em quatro batidas:
 // um pedido novo chega no topo ("Precisa hoje"), a loja toca em Propor

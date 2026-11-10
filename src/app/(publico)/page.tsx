@@ -35,7 +35,7 @@ function textoDe(doPainel: BlocoHome["titulo"], padrao: string, lugar: string) {
 export async function generateMetadata(): Promise<Metadata> {
   const lugar = lugarDaRegiao(await regiaoAtual());
   return {
-    title: { absolute: `OLAKI · Compre e venda em ${lugar}` },
+    title: { absolute: `Mercado da Região · Compre e venda em ${lugar}` },
     description: `Classificados e lojas de ${lugar}. Ache carro, moto, casa, gado, móveis e serviços e chame o vendedor no WhatsApp.`,
     alternates: { canonical: "/" },
   };

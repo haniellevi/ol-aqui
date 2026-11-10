@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: resumo,
       url: caminho,
       type: "website",
-      siteName: "OLAKI",
+      siteName: "Mercado da Região",
       locale: "pt_BR",
       images: a.fotos[0] ? [{ url: a.fotos[0], alt: titulo }] : undefined,
     },

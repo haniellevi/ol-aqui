@@ -32,7 +32,7 @@ export default async function ConviteLoja({ searchParams }: { searchParams: Prom
     return (
       <PaginaConta>
         <TopoConta titulo="Convite para gerenciar uma loja" voltar={null}
-          texto="Entre ou crie sua conta no OLAKI. Confirme o mesmo WhatsApp informado por quem enviou o convite." />
+          texto="Entre ou crie sua conta no Mercado da Região. Confirme o mesmo WhatsApp informado por quem enviou o convite." />
         <Botao href={`/entrar${retorno}`} larguraTotal>Entrar ou criar conta</Botao>
       </PaginaConta>
     );

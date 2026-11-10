@@ -36,7 +36,7 @@ Film (cada linha → quadro → correção ou por que fica):
 
 Review (olho fresco, subagente com review.md + verify.md + gold) → resposta:
 1. "A capa mostra a geladeira com barras cinza" → a capa é o `poster` (estado enviado, olaki-reduced.png); o still de repouso é o início do loop. Mesmo assim troquei as barras da descrição da geladeira por palavras reais ("Pode ser usada, funcionando bem." / "Compradora: Lúcia"); o cartão de preenchimento de baixo segue em barras porque é borda cortada pelo estágio.
-2. "Chão colorido, diferente da gold" → proposital: é a faixa laranja-claro do Radar na home do OLAKI.
+2. "Chão colorido, diferente da gold" → proposital: é a faixa laranja-claro do Radar na home do Mercado da Região.
 3. "Cartões brancos, mais magros que a gold" → é a densidade real do app (cartão branco sobre #F6F4F7); não inflei o cartão.
 4. "Verde fora da paleta" → verde (#12A150) e verde-escuro (#0E7A3D) são os tokens de sucesso do DESIGN-SYSTEM.md; fica.
 5. "Oliva na troca laranja→verde" → ver acima; fica.

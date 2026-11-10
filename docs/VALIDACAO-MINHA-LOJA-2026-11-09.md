@@ -1,6 +1,6 @@
 # Minha loja: edição e validação
 
-Escopo: logo, capa, nome, WhatsApp, cidade, bairro, endereço, horários, Instagram, apresentação, pagamento e entrega. Identidade OL-AKI e recursos existentes de seções, fixados, destaque e planos preservados. Nenhuma migração de produção é necessária.
+Escopo: logo, capa, nome, WhatsApp, cidade, bairro, endereço, horários, Instagram, apresentação, pagamento e entrega. Identidade Mercado da Região e recursos existentes de seções, fixados, destaque e planos preservados. Nenhuma migração de produção é necessária.
 
 ## Correções
 

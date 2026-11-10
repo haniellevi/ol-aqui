@@ -32,7 +32,7 @@ export async function sincronizarPerfil(u: UsuarioClerk) {
   const tel = u.phoneNumbers.find((p) => p.id === u.primaryPhoneNumberId && p.verification?.status === "verified");
   const whatsapp = whatsappDe(tel?.phoneNumber);
   const avatar = u.hasImage === false ? null : u.imageUrl;
-  const nome = [u.firstName, u.lastName].filter(Boolean).join(" ").trim() || "Usuário OLAKI";
+  const nome = [u.firstName, u.lastName].filter(Boolean).join(" ").trim() || "Usuário Mercado da Região";
 
   async function lerPerfil() {
     const { data, error } = await db.from("perfis").select("id, whatsapp, whatsapp_verificado_em, whatsapp_origem, avatar_url").eq("id", u.id).maybeSingle();

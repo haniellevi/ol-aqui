@@ -1,7 +1,7 @@
-/* OLAKI · Radar de Negócios. Tudo aqui pertence a este exemplo.
+/* Mercado da Região · Radar de Negócios. Tudo aqui pertence a este exemplo.
    Tokens de docs/DESIGN-SYSTEM.md e src/app/globals.css do projeto. */
 
-/* O look do OLAKI sobre o tema claro do kit */
+/* O look do Mercado da Região sobre o tema claro do kit */
 .look-olaki .ss-stage {
   --ol-beringela: #4b1248;
   --ol-laranja: #ff6a13;
@@ -267,7 +267,7 @@
     flex: none;
   }
 
-  /* O botão principal do OLAKI: 52 de altura, laranja com texto beringela
+  /* O botão principal do Mercado da Região: 52 de altura, laranja com texto beringela
      (branco sobre o laranja não passa no contraste). No cartão vai de
      ponta a ponta, rente ao pé; na folha tem os cantos do cartão. */
   .ol-cta {

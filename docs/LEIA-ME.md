@@ -1,7 +1,7 @@
-# OLAKI · pacote inicial (07/11/2026)
+# Mercado da Região · pacote inicial (07/11/2026)
 
-Domínio oficial: **olaki.com.br** (redirecionar olaqui.com.br com 301).
-O nome soa como **"olha aqui"**, e isso é ouro para marketing: "Olha aqui o que você procura".
+Domínio oficial: **mercadodaregiao.com.br** (será ligado só no lançamento). O projeto nasceu como OLAKI e mudou de nome em 10/11/2026; o guia da marca está em [MARCA.md](MARCA.md).
+O nome diz o que é sem explicação, e a frase da marca é **"aqui a sua cidade aparece"**.
 
 ## Arquivos
 
@@ -14,7 +14,7 @@ O nome soa como **"olha aqui"**, e isso é ouro para marketing: "Olha aqui o que
 | `app/radar/page.tsx` | Página do Radar (Server Component, decide o bloqueio no servidor) |
 | `app/radar/actions.ts` | Server Action "Propor Produto" → abre WhatsApp |
 | `components/radar/radar-de-negocios.tsx` | Componente visual do Radar (mobile-first) |
-| `public/logo/*.svg`, `app/icon.svg`, `app/apple-icon.png`, `app/opengraph-image.png`, `public/icone-*.png` | Logo oficial: OLAKI em caixa alta com o pin sobre o I (claro e para fundo escuro) e ícone do app "AKI" com o pin. Alternativas e gerador em `docs/logo-opcoes/` |
+| `public/logo/*.svg`, `app/icon.svg`, `app/apple-icon.png`, `app/opengraph-image.png`, `public/icone-*.png` | Logo oficial do Mercado da Região: M beringela com o pin laranja, "Mercado" + "da Região" (claro e para fundo escuro) e ícone do app com o M branco no quadrado beringela. Guia em `docs/MARCA.md`, gerador em `docs/marca/`; logos antigos do OLAKI em `docs/logo-opcoes/` |
 
 O código assume Next.js 15 (App Router), Tailwind v4, `lucide-react` e `@supabase/ssr` com um `createClient` em `lib/supabase/server.ts` (padrão da documentação do Supabase).
 
@@ -41,7 +41,7 @@ O código assume Next.js 15 (App Router), Tailwind v4, `lucide-react` e `@supaba
 Lá o profissional paga por cada contato que abre, e o pedido some depois de 5 respostas. Adaptação: o plano inclui X "Propor Produto" por mês (ex.: Slim 20, Full ilimitado) e vende pacotes avulsos de créditos. Isso cria uma segunda receita e deixa o lojista escolher bem onde gastar, o que protege o comprador de spam. A tabela `radar_propostas` já registra cada lead, então dá para cobrar por uso sem mudar o banco.
 
 **2) Leilão reverso com prazo (Alibaba RFQ / plataformas B2B europeias): "Pedido com relógio".**
-O comprador define um prazo curto (24h, 3 dias) e recebe as ofertas organizadas, sem ficar exposto. Adaptação: em vez de abrir o WhatsApp do comprador na hora, o lojista envia uma proposta (preço + foto + link do anúncio) e o comprador recebe **um resumo no WhatsApp** quando o prazo acaba ("Você recebeu 6 ofertas, a menor é R$ 92 mil"). O comprador escolhe com quem falar. Menos spam, mais confiança, e o comprador volta ao OLAKI para comparar.
+O comprador define um prazo curto (24h, 3 dias) e recebe as ofertas organizadas, sem ficar exposto. Adaptação: em vez de abrir o WhatsApp do comprador na hora, o lojista envia uma proposta (preço + foto + link do anúncio) e o comprador recebe **um resumo no WhatsApp** quando o prazo acaba ("Você recebeu 6 ofertas, a menor é R$ 92 mil"). O comprador escolhe com quem falar. Menos spam, mais confiança, e o comprador volta ao Mercado da Região para comparar.
 
 **3) Nextdoor + Carousell "Buyer Requests": prova social local e alerta automático.**
 Quando um pedido entra no Radar, o sistema cruza com o estoque das vitrines (busca de texto já indexada) e avisa o lojista que tem algo parecido: "3 clientes procuram moto até R$ 15 mil e você tem 2". Do outro lado, o comprador vê "4 lojas da sua cidade têm algo parecido" antes mesmo de postar. Isso transforma o Radar em notificação ativa (o lojista abre o app porque recebeu um alerta), e é o melhor argumento de retenção do plano.

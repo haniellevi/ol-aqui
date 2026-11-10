@@ -1,4 +1,4 @@
-# OLAKI · Guia de usabilidade · 07/11/2026
+# Mercado da Região · Guia de usabilidade · 07/11/2026
 
 Para quem estamos desenhando: gente de **Corrente e região**, de 16 a 70 anos, quase sempre no **celular Android de entrada**, muitas vezes com **internet fraca ou pacote de dados acabando**, que usa **WhatsApp o dia todo** e pouco mais que isso. Muitos leem devagar, alguns quase não leem, muitos mandam **áudio** em vez de escrever. Comerciantes ocupados, com uma mão no balcão.
 
@@ -56,7 +56,7 @@ Nenhuma tela vazia sem caminho: busca sem resultado oferece Radar e Aki; lista d
 - "Patrocinado" sempre escrito em anúncio pago.
 - Aviso "nunca pague antes de ver o produto" em todo anúncio.
 - Selo da loja verificada com nome ("Loja verificada"), não só um escudinho.
-- Mostrar quanto tempo o vendedor está no OLAKI e se responde rápido.
+- Mostrar quanto tempo o vendedor está no Mercado da Região e se responde rápido.
 - Endereço exato de pessoa física nunca aparece; só bairro.
 - O Aki sempre se apresenta como robô.
 

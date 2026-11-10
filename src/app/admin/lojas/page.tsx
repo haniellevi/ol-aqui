@@ -174,7 +174,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
       <Titulo
         sub={
           franqueado
-            ? "Lojas e vendedores da sua região. Só para ver: mudanças são feitas pela equipe OLAKI."
+            ? "Lojas e vendedores da sua região. Só para ver: mudanças são feitas pela equipe Mercado da Região."
             : "Lojas e vendedores pessoa física. Toda ação pede o motivo e fica no histórico."
         }
       >

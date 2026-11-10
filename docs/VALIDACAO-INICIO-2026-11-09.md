@@ -7,7 +7,7 @@ Alteração: [PR 23](https://github.com/haniellevi/ol-aqui/pull/23). Destino: ht
 - Apresentação regional visível, busca GET com rótulo acessível e categorias em grade responsiva, sem esconder opções na rolagem horizontal.
 - Estado sem anúncios com uma ação para anunciar, sem repetir o botão do Radar.
 - Radar e busca sem resultados explicam que as lojas podem enviar propostas e o comprador escolhe com quem conversar.
-- Logotipo OL-AKI, cores, Poppins, destaques e controle editorial do painel preservados.
+- Logotipo Mercado da Região, cores, Poppins, destaques e controle editorial do painel preservados.
 
 ## Verificação antes da publicação
 

@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 // campo de escrever ficar embaixo, sem a barra de navegação por cima; a seta do topo volta ao Início.
 
 export const metadata: Metadata = {
-  title: "Aki, o ajudante do OLAKI",
+  title: "Aki, o ajudante do Mercado da Região",
   description: "Converse com o Aki: ele ajuda a achar coisas à venda na região e a montar seu anúncio.",
   alternates: { canonical: "/aki" },
 };

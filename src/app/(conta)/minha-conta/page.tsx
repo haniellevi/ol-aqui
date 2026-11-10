@@ -142,7 +142,7 @@ export default async function PaginaMinhaConta() {
             <p className="text-base text-texto-suave">
               Tem uma loja?{" "}
               <Link href="/quero-vender/loja" className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
-                Abrir minha loja no OLAKI
+                Abrir minha loja no Mercado da Região
               </Link>
             </p>
           )}

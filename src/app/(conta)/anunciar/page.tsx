@@ -33,7 +33,7 @@ export default async function PaginaAnunciar() {
   if (conta.vitrine.status === "suspensa") {
     return (
       <main className="mx-auto w-full max-w-xl px-4 py-6">
-        <Vazio titulo="Sua conta de vendedor está suspensa" texto="Fale com o suporte do OLAKI para saber o que aconteceu." icone={<ShieldAlert />}>
+        <Vazio titulo="Sua conta de vendedor está suspensa" texto="Fale com o suporte do Mercado da Região para saber o que aconteceu." icone={<ShieldAlert />}>
           <Botao href="/" variante="secundario" larguraTotal>Voltar ao início</Botao>
         </Vazio>
       </main>

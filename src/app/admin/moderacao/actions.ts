@@ -90,7 +90,7 @@ export async function tirarFotoBanner(form: FormData): Promise<void> {
   revalidatePath("/loja", "layout");
 }
 
-/** "<usuario>/vitrine/<arquivo>" de um endereço público do bucket "anuncios" do OLAKI (ou null). */
+/** "<usuario>/vitrine/<arquivo>" de um endereço público do bucket "anuncios" do Mercado da Região (ou null). */
 function caminhoNoBucket(url: string | null): string | null {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, "");
   const prefixo = `${base}/storage/v1/object/public/anuncios/`;

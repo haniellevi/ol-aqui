@@ -2,7 +2,7 @@
 
 ## Escopo
 
-Busca geral e listas de categorias, mantendo logo, cores, tipografia e componentes OL-AKI. Sem alteração de schema ou dados de produção.
+Busca geral e listas de categorias, mantendo logo, cores, tipografia e componentes Mercado da Região. Sem alteração de schema ou dados de produção.
 
 - Nova busca preserva cidade, categoria, preços, ordenação e valores múltiplos.
 - Filtros ativos podem ser removidos individualmente. Limpar preserva o texto pesquisado; alterações reiniciam a paginação.

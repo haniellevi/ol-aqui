@@ -3,7 +3,7 @@ import { PaginaDocumento, versaoPedida } from "@/components/paginas/pagina-docum
 
 export const metadata: Metadata = {
   title: "Política de privacidade",
-  description: "Quais dados o OLAKI usa, para quê, com quem divide e como você baixa ou apaga seus dados (LGPD).",
+  description: "Quais dados o Mercado da Região usa, para quê, com quem divide e como você baixa ou apaga seus dados (LGPD).",
   alternates: { canonical: "/privacidade" },
 };
 

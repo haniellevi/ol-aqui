@@ -1,4 +1,4 @@
-# OLAKI · Arquitetura do projeto · 07/11/2026
+# Mercado da Região · Arquitetura do projeto · 07/11/2026
 
 **Para o Raniel, em uma frase:** é um site que funciona como aplicativo no celular (dá para "instalar" na tela inicial sem passar pela loja de apps), com um banco de dados na nuvem que guarda tudo e um painel onde você muda preços e regras sem programador.
 
@@ -158,7 +158,7 @@ A conversa de produto propõe as próximas: `categorias` (com campos em JSON), t
 3. O mesmo aviso nunca é processado duas vezes (guarda o id do evento).
 4. Tarefa diária confere pagamentos que ficaram sem aviso.
 
-O OLAKI nunca guarda dados de cartão (fica tudo no Asaas).
+O Mercado da Região nunca guarda dados de cartão (fica tudo no Asaas).
 
 ---
 
@@ -190,7 +190,7 @@ Pelo agendador do Supabase (pg_cron) ou da Vercel:
 |---|---|
 | Local | Desenvolvedor, com Supabase local |
 | **Prévia** | Cada mudança proposta (PR) ganha um link próprio da Vercel para você testar no celular antes de aprovar |
-| Produção | olaki.com.br (olaqui.com.br redireciona) |
+| Produção | mercadodaregiao.com.br (ligar só no lançamento) |
 
 Fluxo: mudança no GitHub → link de prévia → você testa → aprova → vai para produção sozinho. Migrações do banco rodam antes da publicação. **(proposta)** Testes automáticos mínimos: regras de acesso do banco (quem vê o quê), cadastro de anúncio do início ao fim e o aviso de pagamento do Asaas.
 
@@ -200,7 +200,7 @@ Fluxo: mudança no GitHub → link de prévia → você testa → aprova → vai
 
 - **Vercel Analytics** (visitas e velocidade real nos celulares da região).
 - **Sentry** (plano grátis) para ver erros que acontecem no celular das pessoas.
-- Eventos próprios em `eventos_anuncio` e no painel: anúncios publicados por dia, cliques no WhatsApp, pedidos no Radar com resposta, "vendeu pelo OLAKI?".
+- Eventos próprios em `eventos_anuncio` e no painel: anúncios publicados por dia, cliques no WhatsApp, pedidos no Radar com resposta, "vendeu pelo Mercado da Região?".
 
 ---
 

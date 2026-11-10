@@ -1,5 +1,5 @@
 // CPF/CNPJ: confere os dígitos verificadores (serve no navegador e no servidor).
-// O número só é enviado ao Asaas na hora de pagar; o OLAKI nunca guarda.
+// O número só é enviado ao Asaas na hora de pagar; o Mercado da Região nunca guarda.
 
 /** Só os números. */
 export const soDigitos = (t: string | null | undefined) => String(t ?? "").replace(/\D/g, "");

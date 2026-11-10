@@ -4,7 +4,7 @@ Base: `8124c1bc1d475c08474a57c984090250af2efe00`.
 
 ## Comportamento
 
-Minha conta mantém os acessos anteriores e ganha um título visível e um atalho direto para editar perfil, foto e WhatsApp. A edição usa as cores, tipografia e componentes OL-AKI, com duas colunas no computador e sequência única no celular.
+Minha conta mantém os acessos anteriores e ganha um título visível e um atalho direto para editar perfil, foto e WhatsApp. A edição usa as cores, tipografia e componentes Mercado da Região, com duas colunas no computador e sequência única no celular.
 
 Nome, cidade e bairro usam formulário controlado: erros preservam o preenchimento, campos inválidos recebem foco e envios duplicados ficam bloqueados. O servidor valida sessão, identidade, limites, tipos e cidade da região; só retorna sucesso quando o banco devolve o identificador da própria conta. Uma falha ao carregar as cidades não vira campo livre que aceita qualquer localização. A localização de anúncios existentes continua sendo editada nos próprios anúncios.
 
