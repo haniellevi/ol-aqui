@@ -55,8 +55,8 @@ export function LinhaAviso({ aviso: a }: { aviso: Notificacao }) {
       <span className="mt-1 grid size-9 shrink-0 place-items-center rounded-full bg-fundo text-beringela"><Icone className="size-5" aria-hidden /></span>
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className={`break-words text-base ${lido ? "font-semibold" : "font-bold"}`}>{a.titulo}</span>
-        <span className="break-words text-[15px] text-texto-suave">{a.texto}</span>
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-texto-suave">
+        <span className="break-words text-base leading-6 text-texto-suave">{a.texto}</span>
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-legenda text-texto-suave">
           <span className={lido ? "" : "font-semibold text-laranja-escuro"}>{lido ? "Lido" : "Não lido"}</span>
           <time dateTime={a.criado_em} title={dataHoraCurta(a.criado_em)}>{tempoRelativo(a.criado_em)}</time>
         </span>
@@ -77,9 +77,9 @@ export function PreferenciaAvisoBotao({ preferencia: p }: { preferencia: Prefere
       className={`flex min-h-14 w-full flex-wrap items-center gap-3 rounded-campo border px-4 py-3 text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:cursor-wait ${p.ligado ? "border-laranja-escuro bg-laranja-claro" : "border-borda bg-cartao hover:bg-fundo"}`}>
       <span className="flex min-w-40 flex-1 flex-col gap-0.5">
         <span className="break-words text-base font-semibold text-beringela">{p.nome}</span>
-        {p.explicacao && <span className="text-[13px] text-texto-suave">{p.explicacao}</span>}
+        {p.explicacao && <span className="text-legenda text-texto-suave">{p.explicacao}</span>}
       </span>
-      <span className="inline-flex shrink-0 items-center gap-1 text-[13px] font-semibold text-beringela">
+      <span className="inline-flex shrink-0 items-center gap-1 text-legenda font-semibold text-beringela">
         {pendente ? "Salvando..." : p.ligado ? <><Check className="size-4" aria-hidden />Ligado</> : "Desligado"}
       </span>
     </button>

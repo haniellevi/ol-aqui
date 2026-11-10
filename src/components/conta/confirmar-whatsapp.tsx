@@ -80,6 +80,6 @@ export function ConfirmarWhatsapp({ siteKey, destino, numero = "" }: { siteKey: 
       <Botao type="submit" larguraTotal carregando={pendente} textoCarregando="Conferindo..." disabled={codigo.length !== 6 || estado.encerrado}>Confirmar WhatsApp</Botao>
       <Botao type="button" variante="texto" disabled={pendente} onClick={() => { setDesafio(""); setCodigo(""); setEstado({}); }}>Corrigir número</Botao>
     </form>}
-    <p className="text-xs leading-5 text-texto-suave">Solicite o código apenas para um número seu. Nunca compartilhe o código, nem com alguém que diga fazer parte do OL-AKI.</p>
+    <p className="text-sm leading-5 text-texto-suave">Solicite o código apenas para um número seu. Nunca compartilhe o código, nem com alguém que diga fazer parte do OL-AKI.</p>
   </section>;
 }

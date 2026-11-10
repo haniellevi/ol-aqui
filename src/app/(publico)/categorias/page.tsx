@@ -18,7 +18,7 @@ export default async function PaginaCategorias() {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4">
-      <h1 className="text-[22px] font-semibold leading-7">Todas as categorias</h1>
+      <h1 className="text-titulo font-semibold text-beringela">Todas as categorias</h1>
       {categorias.length === 0 ? (
         <Vazio titulo="Não conseguimos carregar as categorias." texto="Confira a internet e tente de novo.">
           <Botao href="/categorias">Tentar de novo</Botao>

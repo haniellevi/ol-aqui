@@ -100,7 +100,7 @@ export function FormLoja({
         <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
           <CheckCircle2 className="size-12" />
         </span>
-        <h1 id="titulo-pronta" className="text-2xl font-semibold">
+        <h1 id="titulo-pronta" className="text-titulo font-semibold text-beringela">
           Sua loja está pronta!
         </h1>
         <p className="text-base">

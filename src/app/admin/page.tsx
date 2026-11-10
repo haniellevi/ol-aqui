@@ -64,7 +64,7 @@ export default async function ResumoPage() {
       )}
 
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Dinheiro</h2>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Numero rotulo="Recebido no mês" valor={reais(receitaMes)} />
         <Numero rotulo="Receita mensal recorrente" valor={reais(mrr)} detalhe="assinaturas em dia × preço atual" />
         <Numero rotulo="Cobranças vencidas" valor={inteiro(inadimplentes)} alerta={inadimplentes > 0} />
@@ -72,7 +72,7 @@ export default async function ResumoPage() {
       </div>
 
       <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Lojistas</h2>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Numero rotulo="Vitrines no total" valor={inteiro(vitrines.length)} />
         <Numero rotulo="Em teste grátis" valor={inteiro(emTeste)} />
         {porPlano.map((p) => (
@@ -81,7 +81,7 @@ export default async function ResumoPage() {
       </div>
 
       <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Movimento</h2>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Numero rotulo="Anúncios no ar" valor={inteiro(anunciosAtivos)} />
         <Numero rotulo="Pedidos abertos no Radar" valor={inteiro(pedidosAbertos)} />
         <Numero rotulo="Propostas no mês" valor={inteiro(propostasMes)} />
@@ -93,7 +93,7 @@ export default async function ResumoPage() {
       </div>
 
       <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Radar no mês</h2>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Numero rotulo="Pedidos feitos" valor={inteiro(pedidosMes)} />
         <Numero
           rotulo="Pedidos com proposta"

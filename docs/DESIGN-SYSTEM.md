@@ -216,3 +216,12 @@ Em Destaques, Planos, ações de Lojas e modelos do Aki, a grade responde à lar
 Movimento tem função de resposta à pressão: `olaki-acao` desloca 1 px em 120 ms, apenas durante o clique. O foco por teclado não se move; `prefers-reduced-motion` elimina esse deslocamento. Cores transitam em 150 ms. Não há animação de entrada nem movimento contínuo novo.
 
 As ações, permissões, campos enviados, preços, regras de pagamento e configurações continuam sob as mesmas funções de servidor. Qualquer revisão futura deve conferir primeiro que cada função antiga continua acessível.
+
+
+## 9. Conta, Radar e demais telas operacionais
+
+A página Minha conta usa duas colunas a partir de 768 px, com identificação e início de venda à esquerda e navegação à direita. No celular conserva a sequência completa em uma coluna. Nomes de pessoas e lojas podem quebrar linha; não truncar a identificação principal.
+
+`TopoConta` e `CabecalhoPasso` usam o mesmo título de 22 px em rem. Corpo de pedidos, propostas e notificações fica em 16 px; datas, selos e metadados usam `text-legenda`. `Seletor` acompanha os rótulos, bordas e foco do Campo, mantendo 48 px e valor de 16 px. Filtros do Radar reutilizam Chip com marca de seleção e foco; ações de card crescem se o texto precisar de mais linhas.
+
+No painel, datas e filtros começam em uma coluna quando o cartão é estreito. Indicadores só passam a quatro colunas em telas de 1280 px. Tabelas roláveis têm região nomeada, foco por teclado e rolagem local. Abas administrativas mostram a possibilidade de rolar no celular e quebram linha no desktop. Campos de configuração têm nome acessível e ajuda associada; descrições longas e prévias admitem quebra. O editor de campos adapta os controles numéricos e de ordenação à largura do próprio cartão.

@@ -7,6 +7,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, MessageCircle, Radar, Send, Users } from "lucide-react";
+import { Chip } from "@/components/ui/chip";
 import { AtualizarRadar } from "./atualizar-radar";
 import { faixaPreco, dataHoraCurta } from "./util";
 import { LINK_PLANOS, linkMeuPedidoRadar, linkPedidoRadarLoja } from "@/lib/rotas";
@@ -82,30 +83,21 @@ export function RadarDeNegocios({
 
   return (
     <main className="mx-auto min-h-dvh max-w-5xl bg-fundo pb-28">
-      <header className=" border-b border-borda bg-cartao/95 px-4 pb-3 pt-4 backdrop-blur">
+      <header className=" border-b border-borda bg-cartao px-4 pb-4 pt-5">
         <div className="flex items-center gap-2">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
-          <h1 className="text-xl font-bold tracking-tight text-beringela">Radar de Negócios</h1>
+          <h1 className="text-titulo font-semibold text-beringela">Radar de Negócios</h1>
         </div>
         <p className="mt-0.5 text-sm text-texto-suave">
           {pedidos.length} {pedidos.length === 1 ? "comprador procurando" : "compradores procurando"} na sua região
         </p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-3">{abas}<AtualizarRadar /></div>
 
-        <nav className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]" aria-label="Filtrar por categoria">
+        <nav className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:thin]" aria-label="Filtrar por categoria">
           {categorias.map((c) => (
-            <button
-              key={c.valor}
-              onClick={() => setFiltro(c.valor)}
-              aria-pressed={filtro === c.valor}
-              className={`h-12 shrink-0 rounded-campo border px-4 text-sm font-semibold transition-colors ${
-                filtro === c.valor
-                  ? "border-laranja-escuro bg-laranja-claro text-beringela"
-                  : "border-borda bg-cartao text-beringela active:bg-fundo"
-              }`}
-            >
+            <Chip key={c.valor} ativo={filtro === c.valor} onClick={() => setFiltro(c.valor)}>
               {c.rotulo}
-            </button>
+            </Chip>
           ))}
         </nav>
       </header>
@@ -155,7 +147,7 @@ function CartaoPedido({
   return (
     <article className="overflow-hidden rounded-card border border-borda bg-cartao shadow-1">
       <div className="p-4">
-        <div className="flex flex-wrap items-center gap-2 text-[13px]">
+        <div className="flex flex-wrap items-center gap-2 text-legenda">
           {p.urgencia !== "normal" && (
             <span className="inline-flex items-center gap-1 rounded-full bg-laranja-claro px-2 py-0.5 font-semibold text-laranja-escuro">
               <Flame className="size-3.5" aria-hidden />
@@ -199,9 +191,9 @@ function CartaoPedido({
 
         <div className="relative mt-3">
           {temAcesso ? (
-            <div className="rounded-card bg-fundo p-3 text-sm text-beringela">
+            <div className="rounded-card bg-fundo p-3 text-base leading-6 text-texto">
               {p.detalhes ? <p className="whitespace-pre-line break-words">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
-              <p className="mt-2 text-[13px] text-texto-suave">
+              <p className="mt-2 text-legenda text-texto-suave">
                 Comprador: {p.compradorNome}
                 {modoPrazo && " · prefere receber as ofertas e escolher com quem falar"}
               </p>
@@ -211,10 +203,10 @@ function CartaoPedido({
               {/* Texto falso: o real nunca chega ao navegador de quem não tem acesso */}
               <div aria-hidden className="select-none rounded-card bg-fundo p-3 text-sm text-beringela blur-[5px]">
                 <p>Detalhes do pedido com modelo, ano, condição de pagamento e prazo para fechar negócio.</p>
-                <p className="mt-2 text-[13px]">Comprador: ••••••• · (89) 9••••-••••</p>
+                <p className="mt-2 text-legenda">Comprador: ••••••• · (89) 9••••-••••</p>
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-beringela/90 px-3 py-1.5 text-[13px] font-semibold text-white">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-beringela/90 px-3 py-1.5 text-legenda font-semibold text-white">
                   <Lock className="size-3.5" aria-hidden />
                   Exclusivo para lojistas assinantes
                 </span>
@@ -223,7 +215,7 @@ function CartaoPedido({
           )}
         </div>
 
-        <p className="mt-3 inline-flex items-center gap-1 text-[13px] text-texto-suave">
+        <p className="mt-3 inline-flex items-center gap-1 text-legenda text-texto-suave">
           <Users className="size-3.5" aria-hidden />
           {p.totalPropostas === 0
             ? "Nenhuma proposta ainda. Seja o primeiro!"
@@ -236,35 +228,35 @@ function CartaoPedido({
       {p.souComprador ? (
         <Link
           href={linkMeuPedidoRadar(p.id)}
-          className="flex h-13 w-full items-center justify-center gap-2 border-t border-borda bg-cartao text-base font-semibold text-beringela active:brightness-90"
+          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 px-4 py-3 text-center focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro border-t border-borda bg-cartao text-base font-semibold text-beringela active:brightness-90"
         >
-          <Users className="size-5" aria-hidden />
+          <Users className="size-5 shrink-0" aria-hidden />
           Seu pedido · ver propostas
         </Link>
       ) : !temAcesso || !liberado ? (
         <Link
           href={`${LINK_PLANOS}?origem=radar`}
-          className="flex h-13 w-full items-center justify-center gap-2 bg-laranja text-base font-semibold text-beringela active:brightness-90"
+          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 px-4 py-3 text-center focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro bg-laranja text-base font-semibold text-beringela active:brightness-90"
         >
-          <Lock className="size-5" aria-hidden />
+          <Lock className="size-5 shrink-0" aria-hidden />
           Desbloquear e Propor Produto
         </Link>
       ) : esgotado ? (
         <span
           aria-disabled
-          className="flex h-13 w-full items-center justify-center gap-2 bg-borda text-base font-semibold text-texto-suave"
+          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 px-4 py-3 text-center focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro bg-borda text-base font-semibold text-texto-suave"
         >
-          <Send className="size-5" aria-hidden />
+          <Send className="size-5 shrink-0" aria-hidden />
           Propostas esgotadas
         </span>
       ) : (
         <Link
           href={`${linkPedido}?propor=1`}
-          className={`flex h-13 w-full items-center justify-center gap-2 text-base font-semibold transition-colors active:brightness-90 ${
+          className={`olaki-acao flex min-h-13 w-full items-center justify-center gap-2 px-4 py-3 text-center focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro text-base font-semibold transition-colors active:brightness-90 ${
             modoPrazo ? "bg-laranja text-beringela" : "bg-verde-escuro text-white"
           }`}
         >
-          {modoPrazo ? <Send className="size-5" aria-hidden /> : <MessageCircle className="size-5" aria-hidden />}
+          {modoPrazo ? <Send className="size-5 shrink-0" aria-hidden /> : <MessageCircle className="size-5 shrink-0" aria-hidden />}
           {propus ? "Ver minha proposta" : "Propor Produto"}
         </Link>
       )}

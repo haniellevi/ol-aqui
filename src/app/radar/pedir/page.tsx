@@ -36,7 +36,7 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
           <ChevronLeft className="size-5" aria-hidden />
           Radar
         </Link>
-        <h1 className="text-2xl font-bold leading-8">O que você procura?</h1>
+        <h1 className="text-titulo font-semibold text-beringela">O que você procura?</h1>
         <p className="text-base text-texto-suave">As lojas da região veem seu pedido e mandam ofertas.</p>
       </header>
       {!conta ? (

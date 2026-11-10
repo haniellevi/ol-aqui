@@ -45,17 +45,17 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
         Configurações
       </Titulo>
 
-      <nav className="-mx-4 mb-6 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
+      <nav aria-label="Seções do painel" className="admin-abas -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
         {grupos.map((g) => (
           <Link
             key={g}
             href={`/admin/configuracoes?grupo=${g}`}
             aria-current={g === grupoAtual ? "page" : undefined}
             className={`inline-flex h-12 shrink-0 items-center rounded-campo border px-4 text-sm font-semibold text-beringela active:brightness-90 ${
-              g === grupoAtual ? "border-laranja-escuro bg-laranja-claro" : "border-borda bg-cartao"
+              g === grupoAtual ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
             }`}
           >
-            {NOMES_GRUPO[g] ?? g}
+            {NOMES_GRUPO[g] ?? ({ anuncios: "Anúncios", busca: "Busca" } as Record<string, string>)[g] ?? g}
           </Link>
         ))}
       </nav>
@@ -68,7 +68,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
             <Cartao key={c.id}>
               <div className="mb-3">
                 <h2 className="font-semibold text-beringela">{c.descricao ?? c.chave}</h2>
-                <p className="text-[13px] text-texto-suave">
+                <p className="text-legenda text-texto-suave [overflow-wrap:anywhere]">
                   {c.chave} · {c.publico ? "visível no site" : "só no sistema"} · alterado em {quando(c.atualizado_em)}
                 </p>
               </div>
@@ -77,7 +77,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
               {excecoes.length > 0 && (
                 <ul className="mt-4 space-y-2">
                   {excecoes.map((e) => (
-                    <li key={e.id} className="flex min-h-12 items-center gap-3 rounded-card bg-laranja-claro pl-3 pr-1 text-sm text-beringela">
+                    <li key={e.id} className="flex min-h-12 flex-wrap items-center gap-3 rounded-card bg-selecao pl-3 pr-1 text-sm text-beringela">
                       <span className="font-semibold">{nomesRegiao.get(e.microrregiao_id!) ?? "Região"}:</span>
                       <span className="truncate font-mono text-[13px]">{nomeValor(tipoDe(e.valor), e.valor, opcoesDe(c.chave))}</span>
                       <form action={removerExcecao} className="ml-auto">

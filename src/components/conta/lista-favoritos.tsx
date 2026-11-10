@@ -16,7 +16,7 @@ export function ListaFavoritos({ itens }: { itens: Favorito[] }) {
       {itens.map((f, indice) => {
         const titulo = f.anuncio?.titulo ?? `Anúncio indisponível ${indice + 1}`;
         return <li key={f.id} className="flex min-w-0 flex-col gap-2 rounded-card bg-cartao p-2 shadow-1">
-          <span className={`w-fit rounded-full px-2 py-1 text-xs font-semibold ${f.situacao === "ativo" ? "bg-sucesso-fundo text-verde-escuro" : "bg-fundo text-texto-suave"}`}>
+          <span className={`w-fit rounded-full px-2 py-1 text-legenda font-semibold ${f.situacao === "ativo" ? "bg-sucesso-fundo text-verde-escuro" : "bg-fundo text-texto-suave"}`}>
             {f.situacao === "ativo" ? "Disponível" : f.situacao === "vendido" ? "Vendido" : "Fora do ar"}
           </span>
           {f.anuncio ? <div className="flex flex-1 flex-col [&>article]:flex-1 [&>article]:shadow-none"><CardAnuncio anuncio={f.anuncio} prioridade={indice < 2} /></div> :
@@ -25,7 +25,7 @@ export function ListaFavoritos({ itens }: { itens: Favorito[] }) {
               <h2 className="break-words text-base font-semibold">Anúncio indisponível</h2>
               <p className="text-sm text-texto-suave">Ele saiu do ar. Você pode removê-lo da lista.</p>
             </div>}
-          <p className="px-1 text-xs text-texto-suave">Salvo em <time dateTime={f.salvoEm}>{new Date(f.salvoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time></p>
+          <p className="px-1 text-legenda text-texto-suave">Salvo em <time dateTime={f.salvoEm}>{new Date(f.salvoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time></p>
           <div className="border-t border-borda pt-1"><BotaoRemoverFavorito anuncioId={f.id} titulo={titulo} comTexto onRemovido={() => setRemovido(titulo)} /></div>
         </li>;
       })}

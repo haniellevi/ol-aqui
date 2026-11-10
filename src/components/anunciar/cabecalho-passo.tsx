@@ -67,7 +67,7 @@ export function CabecalhoPasso({
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold leading-7">{titulo}</h1>
+        <h1 className="text-titulo font-semibold text-beringela">{titulo}</h1>
         {subtitulo && <p className="text-base text-texto-suave">{subtitulo}</p>}
       </div>
     </div>

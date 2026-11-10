@@ -72,7 +72,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
 
       {/* Filtros */}
       <Cartao className="mb-6">
-        <form method="get" className="grid grid-cols-2 gap-3 md:grid-cols-6">
+        <form method="get" className="grid grid-cols-1 items-end gap-3 @sm/painel:grid-cols-2 @3xl/painel:grid-cols-4">
           <label className="text-sm font-semibold">
             Situação
             <select name="status" defaultValue={filtros.status ?? ""} className={estiloCampo}>
@@ -95,7 +95,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
               ))}
             </select>
           </label>
-          <label className="col-span-2 text-sm font-semibold">
+          <label className="col-span-full text-sm font-semibold @3xl/painel:col-span-2">
             Região
             <select name="regiao" defaultValue={filtros.regiao ?? ""} className={estiloCampo}>
               <option value="">Todas</option>
@@ -114,7 +114,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
             Até
             <input type="date" name="ate" defaultValue={filtros.ate ?? ""} className={estiloCampo} />
           </label>
-          <div className="col-span-2 flex flex-wrap items-center gap-3 md:col-span-6">
+          <div className="col-span-full flex flex-wrap items-center gap-3 ">
             <button type="submit" className={estiloBotao}>
               Filtrar
             </button>
@@ -128,14 +128,14 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
               Exportar CSV
             </a>
           </div>
-          <p className="col-span-2 text-[13px] text-texto-suave md:col-span-6">
+          <p className="col-span-full text-[13px] text-texto-suave ">
             O período usa a data em que foi pago (ou, se não foi pago, a data do pedido), no horário de Fortaleza.
           </p>
         </form>
       </Cartao>
 
       {/* Totais */}
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Numero rotulo="Recebido" valor={reais(somar("pago"))} detalhe={`${inteiro(contar("pago"))} pagamentos`} />
         <Numero rotulo="Aguardando" valor={reais(somar("pendente"))} detalhe={`${inteiro(contar("pendente"))} cobranças`} />
         <Numero rotulo="Devolvido" valor={reais(somar("estornado"))} detalhe={`${inteiro(contar("estornado"))} pagamentos`} />
@@ -146,15 +146,16 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
         />
       </div>
       {resumo.length > 0 && (
-        <Cartao className="mb-6 overflow-x-auto">
+        <Cartao className="mb-6 overflow-x-auto focus-visible:outline-2 focus-visible:outline-laranja-escuro" role="region" aria-label="Resumo de pagamentos por tipo" tabIndex={0}>
           <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-texto-suave">Por tipo</h2>
           <table className="w-full min-w-[420px] text-left text-sm">
+            <caption className="sr-only">Totais de pagamentos por tipo e situação</caption>
             <thead className="text-texto-suave">
               <tr>
-                <th className="py-2 pr-3 font-semibold">Tipo</th>
-                <th className="py-2 pr-3 font-semibold">Situação</th>
-                <th className="py-2 pr-3 text-right font-semibold">Quantos</th>
-                <th className="py-2 text-right font-semibold">Total</th>
+                <th scope="col" className="py-2 pr-3 font-semibold">Tipo</th>
+                <th scope="col" className="py-2 pr-3 font-semibold">Situação</th>
+                <th scope="col" className="py-2 pr-3 text-right font-semibold">Quantos</th>
+                <th scope="col" className="py-2 text-right font-semibold">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-borda">

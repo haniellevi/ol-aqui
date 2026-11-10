@@ -69,7 +69,7 @@ export default async function PaginaAnunciar() {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold text-beringela">O que você quer vender?</h1>
+          <h1 className="text-titulo font-semibold text-beringela text-beringela">O que você quer vender?</h1>
           <p className="text-base text-texto-suave">Coloque as fotos, conte sobre o produto e escolha o preço e a cidade. Você confere tudo antes de publicar.</p>
         </div>
         <ol className="grid gap-3 rounded-card bg-cartao p-5 shadow-1">
