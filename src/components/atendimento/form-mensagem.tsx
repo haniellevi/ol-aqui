@@ -14,6 +14,7 @@ export function FormMensagemAtendimento({ id, ofereceAki }: { id: string; oferec
   const formulario = useRef<HTMLFormElement>(null);
   const chave = useRef<string | null>(null);
   const router = useRouter();
+  const botaoCompacto = ofereceAki ? "max-[360px]:min-w-0 max-[360px]:px-1 max-[360px]:text-legenda" : "";
   function enviar(aoAki: boolean) {
     if (pendente) return;
     setErro(null);
@@ -47,10 +48,10 @@ export function FormMensagemAtendimento({ id, ofereceAki }: { id: string; oferec
     <p role="status" className="text-legenda text-texto-suave empty:hidden">{pendente ? destino === "aki" ? "O Aki está respondendo..." : "Enviando mensagem..." : aviso}</p>
     <div className="flex flex-wrap items-center justify-between gap-2">
       {ofereceAki && <span id="aviso-ia-atendimento" className="text-legenda text-texto-suave">Aki usa IA.</span>}
-      <div className="ml-auto flex flex-wrap gap-2">
-        {ofereceAki && <Botao type="button" variante="texto" disabled={pendente} carregando={pendente && destino === "equipe"} textoCarregando="Enviando..."
+      <div className={`ml-auto flex flex-wrap gap-2 ${ofereceAki ? "max-[360px]:grid max-[360px]:w-full max-[360px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] max-[360px]:gap-1.5" : ""}`}>
+        {ofereceAki && <Botao type="button" variante="texto" className={botaoCompacto} disabled={pendente} carregando={pendente && destino === "equipe"} textoCarregando="Enviando..."
           onClick={() => { if (formulario.current?.reportValidity()) enviar(false); }}>Falar com a equipe</Botao>}
-        <Botao type="submit" disabled={pendente} carregando={pendente && destino === (ofereceAki ? "aki" : "equipe")} textoCarregando={ofereceAki ? "Respondendo..." : "Enviando..."}>
+        <Botao type="submit" className={botaoCompacto} disabled={pendente} carregando={pendente && destino === (ofereceAki ? "aki" : "equipe")} textoCarregando={ofereceAki ? "Aguarde..." : "Enviando..."}>
           {ofereceAki ? "Enviar ao Aki" : "Enviar mensagem"}
         </Botao>
       </div>

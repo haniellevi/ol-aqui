@@ -130,7 +130,7 @@ test('carregamento identifica o destino e bloqueia outro envio até terminar', a
     assert.equal(f.botao('submit').carregando, destino === 'aki');
     assert.equal(f.botao('button').carregando, destino === 'equipe');
     assert.equal(f.aviso('status'), destino === 'aki' ? 'O Aki está respondendo...' : 'Enviando mensagem...');
-    assert.equal(f.botao(destino === 'aki' ? 'submit' : 'button').textoCarregando, destino === 'aki' ? 'Respondendo...' : 'Enviando...');
+    assert.equal(f.botao(destino === 'aki' ? 'submit' : 'button').textoCarregando, destino === 'aki' ? 'Aguarde...' : 'Enviando...');
     f.iniciar();
     await f.concluir();
     assert.equal(f.chamadas.length, 1);
