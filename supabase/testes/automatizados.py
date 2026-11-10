@@ -66,7 +66,7 @@ try:
     checked(sql((root/'supabase/testes/260_meu_plano.sql').read_text()))
     print('PASS: Meu plano protege preço, histórico, reserva e confirmação repetida', flush=True)
     checked(sql((root/'supabase/testes/270_confirmacao_whatsapp.sql').read_text()))
-    print('PASS: OTP privado, três erros, prazo, consumo único, cotas, troca segura e contadores públicos', flush=True)
+    print('PASS: OTP privado, três erros, prazo, consumo único, reenvio com intervalo e sem cota diária, troca segura e contadores públicos', flush=True)
     checked(sql((root/'supabase/testes/280_moderacao_aluguel.sql').read_text()))
     print('PASS: aluguel e venda publicam sem moderação por preço e preservam filtro de conteúdo', flush=True)
     checked(sql((root/'supabase/testes/290_moderacao_ia.sql').read_text()))
