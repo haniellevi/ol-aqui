@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { Flag } from "lucide-react";
 import { Botao, classesBotao } from "@/components/ui/botao";
 import { Alert } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Folha, FolhaContent, FolhaDescription, FolhaHeader, FolhaTitle, FolhaTrigger } from "@/components/ui/folha";
 import { denunciarAnuncio, type EstadoDenuncia } from "./actions";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -34,18 +34,18 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
   }, null);
 
   return (
-    <Dialog>
-      <DialogTrigger
+    <Folha>
+      <FolhaTrigger
         id="denunciar"
         className="olaki-toque inline-flex min-h-10 w-fit cursor-pointer items-center gap-2 rounded-campo px-2 text-sm text-perigo underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro"
       >
         <Flag className="size-4" aria-hidden /> Denunciar este anúncio
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Denunciar este anúncio</DialogTitle>
-          <DialogDescription>A equipe do Mercado da Região revisa cada denúncia.</DialogDescription>
-        </DialogHeader>
+      </FolhaTrigger>
+      <FolhaContent>
+        <FolhaHeader>
+          <FolhaTitle>Denunciar este anúncio</FolhaTitle>
+          <FolhaDescription>A equipe do Mercado da Região revisa cada denúncia.</FolhaDescription>
+        </FolhaHeader>
         {estado?.ok ? (
           <Alert variant="success" role="status">{estado.mensagem}</Alert>
         ) : !logado ? (
@@ -93,7 +93,7 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
             </Botao>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+      </FolhaContent>
+    </Folha>
   );
 }
