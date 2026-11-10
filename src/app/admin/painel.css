@@ -19,6 +19,7 @@
 .painel-admin :is(th, td) { font-variant-numeric: tabular-nums; }
 .painel-admin :is(input, select, textarea) { min-width: 0; }
 .painel-admin textarea { resize: vertical; }
+.painel-admin input[type="checkbox"] { flex-shrink: 0; }
 
 @media (min-width: 48rem) and (pointer: fine) {
   .painel-admin .admin-campo,

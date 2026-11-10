@@ -211,7 +211,7 @@ Direção: preservar a marca OL-AKI e melhorar a operação. Dials: DESIGN_VARIA
 
 O painel tem título de 22 px, seções de 18 px, títulos de cartão de 16 px, corpo de 14 px e metadados de 13 px. Esses tamanhos são definidos em rem. A escala fica em `src/app/admin/painel.css`, sem reduzir a base de leitura pública. O menu lateral tem rolagem própria e permite que nomes longos quebrem linha.
 
-Em Destaques, a grade responde à largura interna do cartão: quatro colunas somente a partir de 48 rem disponíveis; abaixo disso usa duas, com nome e descrição ocupando a largura inteira. Descrições usam textarea para mostrar o conteúdo sem cortar. Atalhos levam às seis seções principais. Informações técnicas da integração e prazos avançados usam detalhes expansíveis nativos, preservando os controles e o acesso por teclado.
+Em Destaques, Planos, ações de Lojas e modelos do Aki, a grade responde à largura interna do cartão: quatro colunas somente a partir de 48 rem disponíveis; abaixo disso usa duas, com nome e descrição ocupando a largura inteira. Descrições de tipos e planos usam textarea para mostrar o conteúdo sem cortar. A tabela de créditos mantém rolagem horizontal dentro da própria região, incluindo os rótulos para leitores de tela. Atalhos levam às seis seções principais. Informações técnicas da integração e prazos avançados usam detalhes expansíveis nativos, preservando os controles e o acesso por teclado.
 
 Movimento tem função de resposta à pressão: `olaki-acao` desloca 1 px em 120 ms, apenas durante o clique. O foco por teclado não se move; `prefers-reduced-motion` elimina esse deslocamento. Cores transitam em 150 ms. Não há animação de entrada nem movimento contínuo novo.
 

@@ -81,7 +81,7 @@ export function FormCreditos({
   const [estado, acao, pendente] = useActionState(salvarCreditosDestaque, null);
   return (
     <form action={acao} className="space-y-3">
-      <div className="-mx-4 overflow-x-auto px-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro" role="region" aria-label="Créditos por plano e tipo de destaque" tabIndex={0}>
+      <div className="relative -mx-4 overflow-x-auto px-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro" role="region" aria-label="Créditos por plano e tipo de destaque" tabIndex={0}>
         <table className="w-full min-w-[480px] text-sm">
           <thead>
             <tr className="text-left text-texto-suave">
