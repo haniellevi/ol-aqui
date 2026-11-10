@@ -18,7 +18,7 @@ As edições usam a versão lida para recusar sobrescrita concorrente. O motivo 
 
 ## Publicação
 
-Integrado sobre `955449a`, preservando a ficha, o arquivo de lojas e os gerentes já publicados. Aplicar a migração `gestao_usuarios_lojas` antes do código. A migração de marca já publicada não é reaplicada. `marca_documentos_atuais` cria versões com o nome atual sem modificar os textos ou aceites anteriores; o site poderá pedir aceite das novas versões. Funções históricas são preservadas. URLs de compartilhamento usam mercadodaregiao.com.br e mensagens de validação traduzem a marca antiga na apresentação.
+Integrado sobre `955449a`, preservando a ficha, o arquivo de lojas e os gerentes já publicados. Aplicar a migração `gestao_usuarios_lojas` antes do código. A migração de marca já publicada não é reaplicada. `marca_documentos_atuais` cria versões com o nome atual sem modificar os textos ou aceites anteriores; o site poderá pedir aceite das novas versões. A migração `marca_mensagens_operacionais` troca apenas frases literais em sete funções que geram contato, notificações e motivos de moderação, preservando assinaturas, permissões e identificadores técnicos. URLs de compartilhamento usam mercadodaregiao.com.br e mensagens de validação traduzem a marca antiga na apresentação.
 
 Lojas arquivadas precisam ser restauradas antes de editar. Arquivamento, restauração, permissões e histórico anteriores permanecem na mesma ficha. A exclusão também remove convites e vínculos de gerentes.
 
