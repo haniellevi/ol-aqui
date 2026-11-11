@@ -222,7 +222,7 @@ test('página mostra o resumo da última decisão', async () => {
   const banco = bancoAdmin();
   const { default: pagina } = carregar('src/app/admin/categorias/sugeridas/page.tsx', mocksAdmin(banco));
   const html = render(await pagina({ searchParams: Promise.resolve({ feito: 'aprovar', decididas: '3', movidos: '2', revisar: '1' }) }));
-  assert.match(html, /Categoria criada\. 3 sugestões decididas\. 2 anúncios mudaram de categoria\. 1 precisa que o vendedor confirme a categoria\./);
+  assert.match(html, /Categoria criada\. 3 sugestões decididas\. 2 anúncios mudaram de categoria\. 1 anúncio ficou onde estava: a categoria pede informações que ele não tem\. O vendedor foi avisado\./);
 });
 
 test('página de sugestões barra quem não é admin', async () => {

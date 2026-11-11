@@ -122,7 +122,7 @@ begin
   assert (res->>'movidos')::int = 1, 'Juntou e moveu';
   assert (select estado from categorias_sugeridas where anuncio_id = '52100000-0000-4000-a000-000000000004' and estado <> 'recusada') = 'juntada', 'Estado juntada';
 end $$;
--- [7] Juntar com categoria que pede campos: o anúncio vai para "Revise suas categorias" (admin sem WhatsApp).
+-- [7] Juntar com categoria que pede campos: o anúncio fica onde está e o dono é avisado (admin sem WhatsApp).
 --     E o dono que trocou de categoria antes da decisão não é movido.
 reset role;
 insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,status,publicado_em) values
@@ -142,8 +142,8 @@ begin
 end $$;
 reset role;
 do $$ begin
-  assert (select categoria_sugestao_estado = 'pendente' and categoria_sugerida_id = (select id from categorias where slug='racao')
-            from anuncios where id = '52100000-0000-4000-a000-000000000006'), 'Foi para revisão';
+  assert (select categoria_id = (select id from categorias where slug='diversos') and categoria_sugestao_estado is null
+            from anuncios where id = '52100000-0000-4000-a000-000000000006'), 'Ficou onde estava, sem revisão impossível';
   assert (select categoria_id = (select id from categorias where slug='sal-grosso') from anuncios where id = '52100000-0000-4000-a000-000000000007'), 'Troca do dono respeitada';
   assert coalesce(current_setting('olaki.sistema', true), '') = '', 'Atalho do sistema desligado no fim';
 end $$;

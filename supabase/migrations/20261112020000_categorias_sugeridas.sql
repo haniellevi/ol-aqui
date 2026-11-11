@@ -302,18 +302,15 @@ begin
         '/minha-conta/anuncios', 'categoria_sugerida:' || s.id::text,
         jsonb_build_object('anuncio_id', an.id, 'categoria_id', final_id));
     exception when sqlstate '23514' or sqlstate '22023' then
-      -- A categoria nova pede um campo que o anúncio não tem: o dono confirma em "Revise suas categorias".
-      perform set_config('olaki.sistema', '1', true);
-      update public.anuncios
-         set categoria_sugerida_id = final_id, categoria_sugestao_estado = 'pendente', categoria_sugerida_em = now()
-       where id = an.id;
-      perform set_config('olaki.sistema', sistema_anterior, true);
+      -- A categoria nova pede um campo obrigatório que o anúncio não tem. "Revise suas categorias" só
+      -- aceita ou recusa (não pede campos), então o anúncio fica onde está e o dono é avisado.
       revisar := revisar + 1;
       perform public.notificar(s.dono_id, 'categoria_sugerida',
-        'Sua categoria foi aceita',
-        format('Confirme a categoria %s para o anúncio "%s".', caminho, left(coalesce(an.titulo, ''), 80)),
-        '/minha-conta/loja/categorias', 'categoria_sugerida:' || s.id::text,
-        jsonb_build_object('anuncio_id', an.id, 'categoria_id', final_id));
+        'Sua sugestão de categoria foi aceita',
+        format('A categoria %s foi criada, mas o anúncio "%s" continua onde estava: ela pede informações que ele ainda não tem.',
+               caminho, left(coalesce(an.titulo, ''), 80)),
+        '/minha-conta/anuncios', 'categoria_sugerida:' || s.id::text,
+        jsonb_build_object('anuncio_id', an.id, 'categoria_id', final_id, 'movido', false));
     end;
   end loop;
 

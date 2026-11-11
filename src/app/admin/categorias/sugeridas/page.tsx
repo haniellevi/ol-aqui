@@ -26,7 +26,9 @@ function mensagemDecisao(sp: Busca): string {
   if (feito === "recusar") return `${inteiro(decididas)} ${decididas === 1 ? "sugestão recusada" : "sugestões recusadas"}. Os anúncios continuam na categoria atual.`;
   const quantas = `${inteiro(decididas)} ${decididas === 1 ? "sugestão decidida" : "sugestões decididas"}`;
   const mudaram = `${inteiro(movidos)} ${movidos === 1 ? "anúncio mudou" : "anúncios mudaram"} de categoria`;
-  const revisao = revisar ? ` ${inteiro(revisar)} ${revisar === 1 ? "precisa" : "precisam"} que o vendedor confirme a categoria.` : "";
+  const revisao = revisar
+    ? ` ${inteiro(revisar)} ${revisar === 1 ? "anúncio ficou" : "anúncios ficaram"} onde ${revisar === 1 ? "estava" : "estavam"}: a categoria pede informações que ${revisar === 1 ? "ele não tem" : "eles não têm"}. O vendedor foi avisado.`
+    : "";
   const inicio = feito === "aprovar" ? "Categoria criada. " : "Sugestões unidas à categoria escolhida. ";
   return `${inicio}${quantas}. ${mudaram}.${revisao}`;
 }
