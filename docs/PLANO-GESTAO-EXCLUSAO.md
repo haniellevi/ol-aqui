@@ -98,7 +98,7 @@ Decidido com o Raniel em 10/11/2026. Base para os próximos PRs (um por etapa).
 
 ## Etapa 1 — feita na branch `claude/gestao-exclusao` (ainda não está em produção)
 
-**Banco** (`supabase/migrations/20261111003000_lixeira_contas_lojas.sql`, teste `450_lixeira_contas_lojas.sql`):
+**Banco** (`supabase/migrations/20261111011000_lixeira_contas_lojas.sql`, teste `450_lixeira_contas_lojas.sql`):
 - Tabelas `lixeira_contas` e `lixeira_lojas` (prazo de 30 dias, origem, motivo, status anterior).
 - `vitrines_lojas.excluida_em` (situação `excluida`) e `anuncios.excluido_com_loja`.
 - Conta na lixeira: `usuario_id()` fica nulo, igual a uma conta bloqueada.
@@ -126,7 +126,7 @@ Decidido com o Raniel em 10/11/2026. Base para os próximos PRs (um por etapa).
 
 ## Etapa 2 — feita na branch `claude/gestao-exclusao-painel` (sobre a etapa 1; ainda não está em produção)
 
-**Banco** (`supabase/migrations/20261111010000_painel_lixeira.sql`): `minha_loja_exclusao()` diz ao dono se a loja está na lixeira, o prazo, se ele pode restaurar e se a loja já teve pagamento. Teste no `450_lixeira_contas_lojas.sql`.
+**Banco** (`supabase/migrations/20261111012000_painel_lixeira.sql`): `minha_loja_exclusao()` diz ao dono se a loja está na lixeira, o prazo, se ele pode restaurar e se a loja já teve pagamento. Teste no `450_lixeira_contas_lojas.sql`.
 
 **Painel:**
 - Nova tela `/admin/lixeira`, como aba da área Lojas (o menu lateral continua com 7 itens). Lista contas, lojas e anúncios, com dias restantes, "Restaurar" e "Apagar de vez agora" (pede o nome exato e roda a limpeza na hora).
