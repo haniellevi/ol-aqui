@@ -5,6 +5,8 @@ import { Vazio } from "@/components/ui/vazio";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
 import { EscolhaCategoria } from "@/components/anunciar/escolha-categoria";
+import { SugestaoPendente } from "@/components/anunciar/sugestao-pendente";
+import { minhaSugestaoCategoria } from "@/lib/dados/sugestoes-categoria";
 import { urlPasso } from "@/components/anunciar/passos";
 import { carregarPasso, type ParamsPasso } from "../_carregar";
 
@@ -16,6 +18,7 @@ const FORM = "form-categoria";
 export default async function PassoCategoria({ searchParams }: { searchParams: ParamsPasso }) {
   const { anuncio, editar } = await carregarPasso(searchParams);
   const arvore = await listarCategorias();
+  const sugestao = await minhaSugestaoCategoria(anuncio.id);
 
   return (
     <CorpoPasso>
@@ -27,6 +30,7 @@ export default async function PassoCategoria({ searchParams }: { searchParams: P
         titulo="O que você está vendendo?"
         subtitulo="Escolha a categoria. Assim quem procura acha seu anúncio."
       />
+      {sugestao && <SugestaoPendente id={anuncio.id} editar={editar} texto={sugestao.texto} />}
       {arvore.length ? (
         <EscolhaCategoria id={anuncio.id} editar={editar} formId={FORM} arvore={arvore} selecionadaId={anuncio.categoria_id} />
       ) : (

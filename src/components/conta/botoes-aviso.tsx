@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Check, ChevronRight, Loader2, MessageCircle, Star } from "lucide-react";
+import { Bell, Check, ChevronRight, Loader2, MessageCircle, Star, Tags } from "lucide-react";
 import { abrirAviso, marcarTodasLidas, salvarPreferenciaAviso } from "@/app/(conta)/minha-conta/notificacoes/actions";
 import { tempoRelativo } from "@/lib/formato";
 import { dataHoraCurta } from "@/components/radar/util";
@@ -52,7 +52,7 @@ export function MarcarAvisos({ desabilitado }: { desabilitado: boolean }) {
 export function LinhaAviso({ aviso: a }: { aviso: Notificacao }) {
   const { executar, pendente, erro, mensagem } = useAcaoAviso();
   const lido = !!a.lida_em;
-  const Icone = a.tipo === "proposta_nova" ? MessageCircle : a.tipo === "proposta_escolhida" ? Star : Bell;
+  const Icone = a.tipo === "proposta_nova" ? MessageCircle : a.tipo === "proposta_escolhida" ? Star : a.tipo === "categoria_sugerida" ? Tags : Bell;
   return <>
     <button type="button" disabled={pendente} aria-busy={pendente} onClick={() => executar(() => abrirAviso(a.id))}
       className={`flex min-h-14 w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-wait max-[360px]:min-h-14 max-[360px]:gap-2 max-[360px]:p-2 ${lido ? "" : "bg-selecao/40"}`}>

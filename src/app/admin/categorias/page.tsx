@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Tags } from "lucide-react";
 import { exigirAdmin } from "@/lib/admin/auth";
-import { lerCategorias, maesPossiveis } from "@/lib/admin/cadastros";
+import { lerCategorias, lerCategoriasSugeridas, maesPossiveis } from "@/lib/admin/cadastros";
 import { inteiro } from "@/lib/admin/formato";
 import { nomeDoNivel } from "@/lib/categorias-arvore";
-import { LINK_ADMIN_CATEGORIAS, linkAdminCategoria } from "@/lib/rotas";
+import { LINK_ADMIN_CATEGORIAS, LINK_ADMIN_CATEGORIAS_SUGERIDAS, linkAdminCategoria } from "@/lib/rotas";
 import type { CategoriaAdminArvore } from "@/lib/tipos-cadastros";
 import { Cartao, Titulo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
@@ -65,6 +65,8 @@ export default async function CategoriasPage() {
   const { supabase } = await exigirAdmin();
   const { arvore, todas, falhou } = await lerCategorias(supabase);
   const principais = maesPossiveis(todas);
+  const { grupos: sugeridas, falhou: falhouSugeridas } = await lerCategoriasSugeridas(supabase);
+  const pendentes = sugeridas.reduce((soma, g) => soma + g.quantidade, 0);
 
   return (
     <>
@@ -73,6 +75,11 @@ export default async function CategoriasPage() {
       </Titulo>
 
       <div className="space-y-4">
+        {!falhouSugeridas && (
+          <Botao href={LINK_ADMIN_CATEGORIAS_SUGERIDAS} variante="secundario">
+            Categorias sugeridas ({inteiro(pendentes)})
+          </Botao>
+        )}
         {falhou && !arvore.length ? (
           <Vazio titulo="Não conseguimos abrir as categorias" texto="Confira a internet e tente de novo.">
             <Botao href={LINK_ADMIN_CATEGORIAS} variante="secundario" larguraTotal>

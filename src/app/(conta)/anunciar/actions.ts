@@ -173,6 +173,23 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
 
 /* ----------------------------- Categoria ----------------------------- */
 
+/** Texto da sugestão de categoria (campo escondido): espaços limpos, até 60 letras. */
+function limparSugestao(valor: FormDataEntryValue | null): string {
+  return String(valor ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+}
+
+/**
+ * Manda a sugestão à equipe. Erro volta como mensagem que avisa que a categoria JÁ foi salva,
+ * para a pessoa não achar que perdeu a escolha.
+ */
+async function sugerirCategoria(id: string, texto: string): Promise<EstadoForm> {
+  if (!texto) return null;
+  const db = await createClient();
+  const { error } = await db.rpc("sugerir_categoria", { p_anuncio: id, p_texto: texto });
+  if (!error) return null;
+  return { erro: { mensagem: `Categoria salva. A sugestão não foi enviada: ${traduzirErro(error).mensagem}` } };
+}
+
 export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promise<EstadoForm> {
   const c = lerComum(form);
   const anuncio = await abrir(c.id);
@@ -184,7 +201,12 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
     return { erro: { mensagem: "Escolha a categoria do anúncio.", campo: "categoria" } };
   }
   // anúncio que já esteve no ar (no ar, pausado...) e continua na mesma categoria (mesmo escondida no painel): segue sem mudar nada
-  if (categoriaId === anuncio.categoria_id && anuncio.publicado_em) redirect(destino("categoria", c));
+  const sugestao = limparSugestao(form.get("sugestao_categoria"));
+  if (categoriaId === anuncio.categoria_id && anuncio.publicado_em) {
+    const falha = await sugerirCategoria(c.id, sugestao);
+    if (falha) return falha;
+    redirect(destino("categoria", c));
+  }
   const achada = ehUuid(categoriaId) ? await categoriaPorId(categoriaId) : null;
   if (!achada) return { erro: { mensagem: "Essa categoria não está mais disponível. Escolha outra.", campo: "categoria" } };
   // só a folha recebe anúncio: se tem filhas, escolhe uma dentro dela
@@ -205,8 +227,26 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
       }
       return r;
     }
+    // Trocou de categoria sem sugerir nada: a sugestão antiga (feita na categoria anterior) deixa de valer.
+    if (!sugestao) {
+      const db = await createClient();
+      await db.rpc("cancelar_sugestao_categoria", { p_anuncio: c.id });
+    }
   }
+  const falha = await sugerirCategoria(c.id, sugestao);
+  if (falha) return falha;
   redirect(destino("categoria", c));
+}
+
+/** O vendedor desiste da sugestão pendente deste anúncio (a equipe não recebe mais o pedido). */
+export async function cancelarSugestaoCategoria(_antes: EstadoForm, form: FormData): Promise<EstadoForm> {
+  const c = lerComum(form);
+  const anuncio = await abrir(c.id);
+  if (!anuncio) return { erro: { mensagem: NAO_ACHOU } };
+  const db = await createClient();
+  const { error } = await db.rpc("cancelar_sugestao_categoria", { p_anuncio: anuncio.id });
+  if (error) return { erro: traduzirErro(error) };
+  return { ok: "Sugestão cancelada." };
 }
 
 /* ----------------------------- Detalhes ------------------------------ */

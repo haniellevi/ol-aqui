@@ -41,6 +41,8 @@ export function EscolhaCategoria({
   const [abertas, setAbertas] = useState<string[]>((caminhoAte(arvore, selecionadaId ?? "") ?? []).slice(0, -1).map((c) => c.id));
   const [filhaId, setFilhaId] = useState<string | null>(selecionadaId);
   const [busca, setBusca] = useState("");
+  // Categoria sugerida pela pessoa (quando a busca não acha nada). Vai junto ao salvar a categoria.
+  const [sugestao, setSugestao] = useState<string | null>(null);
 
   const aberta = useMemo(() => {
     let nivel = arvore;
@@ -108,6 +110,19 @@ export function EscolhaCategoria({
       <input type="hidden" name="categoria_id" value={filhaId ?? ""} />
 
       <AvisoErro mensagem={estado?.erro?.mensagem} />
+      <input type="hidden" name="sugestao_categoria" value={sugestao ?? ""} />
+
+      {sugestao && (
+        <div role="status" className="flex flex-col gap-2 rounded-card border border-borda bg-fundo p-3 text-base">
+          <p>Escolha abaixo a categoria mais parecida. Seu anúncio vai ao ar nela enquanto a equipe analisa a sugestão.</p>
+          <p className="text-sm text-texto-suave">
+            Sugestão: <strong>{sugestao}</strong>
+          </p>
+          <Botao variante="texto" className="self-start" onClick={() => setSugestao(null)}>
+            Tirar a sugestão
+          </Botao>
+        </div>
+      )}
 
       {escolhida && (
         <p className="rounded-card bg-selecao p-3 text-base" aria-live="polite">
@@ -148,7 +163,19 @@ export function EscolhaCategoria({
               <p className="text-sm text-texto-suave">
                 {diversos ? "Procure a categoria mais próxima. Se nenhuma servir, escolha Outros › Diversos." : "Tente uma palavra mais ampla ou veja a lista de categorias."}
               </p>
-              {/* Espaço reservado para o botão "Sugerir categoria" (próxima etapa). */}
+              {busca.trim().length >= 2 && (
+                <Botao
+                  variante="secundario"
+                  className="self-start"
+                  onClick={() => {
+                    setSugestao(busca.trim().replace(/\s+/g, " ").slice(0, 60));
+                    setBusca("");
+                    setAbertas([]);
+                  }}
+                >
+                  Sugerir a categoria “{busca.trim()}”
+                </Botao>
+              )}
               <Botao variante="secundario" className="self-start" onClick={() => { setBusca(""); setAbertas([]); }}>Ver todas as categorias</Botao>
               {outros && diversos && <ul>{opcao({ no: diversos, caminho: [outros, diversos] }, true)}</ul>}
             </>

@@ -25,7 +25,7 @@ const AREAS = [
   { nome: "Merc", texto: "Modelo, orçamento e qualidade das respostas.", links: [["Configurar Merc", "/admin/robo"]] },
   { nome: "Conteúdo", texto: "Página inicial, ajuda e documentos.", links: [["Textos e página inicial", "/admin/textos"]] },
   { nome: "Região", texto: "Região atendida e cidades disponíveis.", links: [["Regiões e cidades", "/admin/regioes"]] },
-  { nome: "Catálogo", texto: "Categorias e campos dos anúncios.", links: [["Categorias e campos", "/admin/categorias"]] },
+  { nome: "Catálogo", texto: "Categorias e campos dos anúncios.", links: [["Categorias e campos", "/admin/categorias"], ["Categorias sugeridas", "/admin/categorias/sugeridas"]] },
   { nome: "Comunicação", texto: "Avisos no site e canais de contato.", links: [["Mensagens automáticas", "/admin/mensagens"], ["Contatos da equipe", "/admin/configuracoes?grupo=geral"]] },
   { nome: "Equipe", texto: "Pessoas com acesso ao painel.", links: [["Equipe e permissões", "/admin/equipe"]] },
   { nome: "Privacidade", texto: "Consultas e solicitações registradas.", links: [["Consultas e histórico", "/admin/compliance"]] },
