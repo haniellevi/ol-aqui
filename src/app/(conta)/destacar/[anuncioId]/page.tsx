@@ -64,7 +64,7 @@ export default async function PaginaDestacar({ params, searchParams }: Props) {
           )}
         </div>
         <div className="min-w-0">
-          <p className="line-clamp-2 text-base font-semibold leading-5">{titulo}</p>
+          <p className="line-clamp-2 text-base leading-5 font-semibold">{titulo}</p>
           <p className="text-base font-bold">{preco(anuncio.preco_centavos)}</p>
         </div>
       </div>

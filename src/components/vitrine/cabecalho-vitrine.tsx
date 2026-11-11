@@ -63,7 +63,7 @@ export function CabecalhoVitrine({
             {desdeTexto && <span>{desdeTexto}</span>}
           </p>
         </div>
-        {descricao && <p className="whitespace-pre-line break-words text-base leading-6">{descricao}</p>}
+        {descricao && <p className="text-base leading-6 break-words whitespace-pre-line">{descricao}</p>}
         {children}
       </div>
     </header>

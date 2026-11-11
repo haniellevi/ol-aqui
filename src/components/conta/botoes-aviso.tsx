@@ -55,7 +55,7 @@ export function LinhaAviso({ aviso: a }: { aviso: Notificacao }) {
   const Icone = a.tipo === "proposta_nova" ? MessageCircle : a.tipo === "proposta_escolhida" ? Star : Bell;
   return <>
     <button type="button" disabled={pendente} aria-busy={pendente} onClick={() => executar(() => abrirAviso(a.id))}
-      className={`flex min-h-14 w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-wait max-[360px]:min-h-14 max-[360px]:gap-1.5 max-[360px]:p-2 ${lido ? "" : "bg-selecao/40"}`}>
+      className={`flex min-h-14 w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-wait max-[360px]:min-h-14 max-[360px]:gap-2 max-[360px]:p-2 ${lido ? "" : "bg-selecao/40"}`}>
       <span className="grid size-8 shrink-0 place-items-center rounded-full bg-fundo text-beringela max-[360px]:size-6"><Icone className="size-4" aria-hidden /></span>
       <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1 max-[360px]:gap-x-2 max-[360px]:gap-y-0.5">
         <span className={`min-w-0 break-words text-rotulo max-[360px]:col-span-2 ${lido ? "font-normal" : "font-semibold text-beringela"}`}>{a.titulo}</span>
@@ -64,7 +64,7 @@ export function LinhaAviso({ aviso: a }: { aviso: Notificacao }) {
         <span className="sr-only">{lido ? "Lido." : "Não lido."} {pendente ? "Abrindo..." : a.link ? "Abrir aviso." : lido ? "" : "Marcar como lido."}</span>
       </span>
       <span className="flex w-4 shrink-0 flex-col items-center gap-2 max-[360px]:w-3" aria-hidden>
-        {pendente ? <Loader2 className="size-4 animate-spin motion-reduce:animate-none text-texto-suave" /> : <>
+        {pendente ? <Loader2 className="size-4 animate-spin text-texto-suave motion-reduce:animate-none" /> : <>
           {!lido && <span className="size-1.5 rounded-full bg-beringela" />}
           {a.link && <ChevronRight className="size-4 text-texto-suave" />}
         </>}
@@ -81,7 +81,7 @@ export function PreferenciaAvisoBotao({ preferencia: p }: { preferencia: Prefere
     <button type="button" disabled={pendente} aria-pressed={p.ligado} aria-busy={pendente}
       onClick={() => executar(() => salvarPreferenciaAviso(p.tipo, !p.ligado))}
       className="flex min-h-10 w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-wait">
-      <span className="min-w-0 flex-1 break-words text-rotulo font-normal text-texto">{p.nome}</span>
+      <span className="min-w-0 flex-1 text-rotulo font-normal break-words text-texto">{p.nome}</span>
       <span className={`inline-flex shrink-0 items-center gap-1 text-legenda ${p.ligado ? "font-semibold text-beringela" : "text-texto-suave"}`}>
         {pendente ? "Salvando..." : p.ligado ? <><Check className="size-3.5" aria-hidden />Ligado</> : "Desligado"}
       </span>

@@ -309,14 +309,14 @@ export function EnvioFotos({
             const src = item.previa ?? item.url;
             const nome = `Foto ${i + 1}${i === 0 ? " (capa)" : ""}`;
             return (
-              <li key={item.chave} className="flex flex-col gap-1.5 rounded-card bg-cartao p-1.5 shadow-1">
+              <li key={item.chave} className="flex flex-col gap-2 rounded-card bg-cartao p-2 shadow-1">
                 <div className="relative aspect-square overflow-hidden rounded-campo bg-borda">
                   {src && (
                     // eslint-disable-next-line @next/next/no-img-element -- prévia local (blob:) ou foto do Storage
                     <img src={src} alt={nome} className="absolute inset-0 size-full object-cover" />
                   )}
                   {i === 0 && (
-                    <Badge variant="solid" className="absolute left-1.5 top-1.5">Capa</Badge>
+                    <Badge variant="solid" className="absolute top-1.5 left-1.5">Capa</Badge>
                   )}
                   {(item.estado === "enviando" || item.estado === "fila") && (
                     <span className="absolute inset-0 grid place-items-center bg-beringela/70 text-center text-sm font-semibold text-white">
@@ -332,7 +332,7 @@ export function EnvioFotos({
                         type="button"
                         onClick={() => tentarDeNovo(item.chave)}
                         disabled={travado}
-                        className="inline-flex min-h-10 items-center gap-1.5 rounded-card border-2 border-beringela bg-cartao px-3 text-sm font-semibold text-beringela hover:bg-fundo active:bg-borda focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                        className="inline-flex min-h-10 items-center gap-2 rounded-card border-2 border-beringela bg-cartao px-3 text-sm font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro active:bg-borda"
                       >
                         <RotateCw className="size-4" aria-hidden />
                         Tentar de novo

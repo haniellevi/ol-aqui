@@ -16,20 +16,20 @@ export async function LojasEmDestaque({ regiao, titulo = "Lojas em destaque" }: 
     <section aria-labelledby="titulo-lojas-destaque" className="flex flex-col gap-3">
       <h2 id="titulo-lojas-destaque" className="flex items-center gap-2 text-lg font-semibold">
         {titulo}
-        <span className="rounded-full bg-patrocinado-fundo px-1.5 py-px text-xs font-semibold text-beringela">Patrocinado</span>
+        <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-xs font-semibold text-beringela">Patrocinado</span>
       </h2>
       <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
         {lojas.map((l) => (
           <li key={l.id} className="w-28 shrink-0 snap-start">
             <Link
               href={linkLoja(l.slug)}
-              className="flex h-full flex-col items-center gap-1.5 rounded-card bg-cartao p-2.5 text-center shadow-1 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+              className="flex h-full flex-col items-center gap-2 rounded-card bg-cartao p-3 text-center shadow-1 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
             >
               <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="md" />
-              <span className="line-clamp-2 text-sm font-semibold leading-4">{l.nome}</span>
+              <span className="line-clamp-2 text-sm leading-4 font-semibold">{l.nome}</span>
               <span className="text-legenda leading-[18px] text-texto-suave">{l.cidade}</span>
               {l.verificada && (
-                <span className="flex items-center gap-1 text-legenda font-semibold leading-[18px] text-verde-escuro">
+                <span className="flex items-center gap-1 text-legenda leading-[18px] font-semibold text-verde-escuro">
                   <ShieldCheck className="size-4" aria-hidden />
                   Verificada
                 </span>

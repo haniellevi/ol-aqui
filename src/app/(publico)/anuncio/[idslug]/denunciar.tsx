@@ -67,7 +67,7 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
                 </label>
               ))}
             </fieldset>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <label htmlFor="denuncia-detalhes" className="text-base font-semibold">
                 Conte mais <span className="font-normal text-texto-suave">(opcional; obrigatório em “Outro”)</span>
               </label>

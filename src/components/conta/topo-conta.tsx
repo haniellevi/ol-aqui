@@ -28,8 +28,8 @@ export function TopoConta({
           {textoVoltar}
         </Link>
       )}
-      <h1 className="text-balance text-titulo font-semibold text-beringela [overflow-wrap:anywhere]">{titulo}</h1>
-      {texto && <p className="max-w-[65ch] text-pretty text-sm text-texto-suave">{texto}</p>}
+      <h1 className="text-titulo font-semibold text-balance [overflow-wrap:anywhere] text-beringela">{titulo}</h1>
+      {texto && <p className="max-w-[65ch] text-sm text-pretty text-texto-suave">{texto}</p>}
       {children}
     </header>
   );

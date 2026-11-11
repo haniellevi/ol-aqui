@@ -21,7 +21,7 @@ export function CartaoVendedor({ v }: { v: Dados }) {
   return (
     <Link
       href={href}
-      className="flex min-h-10 items-center gap-2 rounded-card border border-borda bg-cartao px-2.5 py-2 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+      className="flex min-h-10 items-center gap-2 rounded-card border border-borda bg-cartao px-3 py-2 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
     >
       <AvatarVitrine nome={nome} logo={loja ? v.vitrine_logo_url : null} tamanho="sm" />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">

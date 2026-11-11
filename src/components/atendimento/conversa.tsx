@@ -32,8 +32,8 @@ export async function ConversaAtendimento({ id, caminho, antes, equipe, aki, cad
               <p className="text-legenda font-semibold text-beringela">
                 {minha ? "Você" : cadastro && m.autor === "anunciante" ? "Usuário" : AUTOR[m.autor]}
               </p>
-              <p className="mt-0.5 whitespace-pre-wrap text-sm">{m.texto}</p>
-              <time dateTime={m.criado_em} className="mt-1 block text-legenda tabular-nums text-texto-suave">{quando(m.criado_em)}</time>
+              <p className="mt-0.5 text-sm whitespace-pre-wrap">{m.texto}</p>
+              <time dateTime={m.criado_em} className="mt-1 block text-legenda text-texto-suave tabular-nums">{quando(m.criado_em)}</time>
             </li>;
           })}
         </ol>}

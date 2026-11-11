@@ -17,7 +17,7 @@ import { classesCampo } from "@/components/ui/input";
 const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
 const OPCAO =
-  "flex min-h-12 cursor-pointer items-center gap-3 rounded-card border border-borda bg-cartao p-2.5 pr-3 text-base font-semibold " +
+  "flex min-h-12 cursor-pointer items-center gap-3 rounded-card border border-borda bg-cartao p-3 pr-3 text-base font-semibold " +
   "hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 " +
   "has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
@@ -99,12 +99,12 @@ export function EscolhaCategoria({
         </p>
       )}
 
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <label htmlFor="busca-categoria" className="text-base font-semibold">
           Procurar categoria
         </label>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
           <input
             id="busca-categoria"
             type="search"
@@ -155,7 +155,7 @@ export function EscolhaCategoria({
                 <button
                   type="button"
                   onClick={() => setPaiId(p.id)}
-                  className="flex min-h-14 w-full items-center gap-3 rounded-card border border-borda bg-cartao p-2.5 text-left text-base font-semibold hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                  className="flex min-h-14 w-full items-center gap-3 rounded-card border border-borda bg-cartao p-3 text-left text-base font-semibold hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                 >
                   <CirculoCategoria nome={p.icone} />
                   <span className="flex-1">{p.nome}</span>

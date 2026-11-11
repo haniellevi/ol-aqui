@@ -130,7 +130,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
       {busca.p && (!pagamentoPedido || !retomado || retomado.tipo !== "assinatura") && <Aviso tipo="atencao">Esse pagamento não está disponível nesta conta. Confira seu histórico abaixo.</Aviso>}
       {/* Plano atual */}
       <section aria-labelledby="plano-atual" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h2 id="plano-atual" className="text-sm font-semibold uppercase text-texto-suave">
+        <h2 id="plano-atual" className="text-sm font-semibold text-texto-suave uppercase">
           Plano atual
         </h2>
         <p className="text-xl font-bold">{resumo.nome ?? "Sem plano ativo"}</p>
@@ -167,7 +167,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
           </Aviso>
         )}
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <p className="text-base font-semibold">{resumo.uso}</p>
           {pct !== null && (
             <div

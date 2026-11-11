@@ -144,7 +144,7 @@ export function FormLoja({
         erro={erroDe("nome_loja")}
       />
 
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <Campo
           rotulo="Link da sua loja"
           name="slug"
@@ -164,7 +164,7 @@ export function FormLoja({
             </>
           }
         />
-        <p className={`flex min-h-6 items-center gap-1.5 text-sm font-semibold ${status?.cor ?? ""}`} aria-live="polite">
+        <p className={`flex min-h-6 items-center gap-2 text-sm font-semibold ${status?.cor ?? ""}`} aria-live="polite">
           {situacao === "conferindo" && <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />}
           {situacao === "livre" && <CheckCircle2 className="size-4" aria-hidden />}
           {(situacao === "ocupado" || situacao === "invalido") && <XCircle className="size-4" aria-hidden />}
@@ -192,7 +192,7 @@ export function FormLoja({
       />
 
       {cidades.length ? (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <label htmlFor="campo-cidade" className="text-base font-semibold">
             Cidade da loja
           </label>
@@ -213,7 +213,7 @@ export function FormLoja({
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
+            <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
           </div>
           {erroDe("cidade") && (
             <p id="campo-cidade-erro" role="alert" className="text-sm font-semibold text-perigo">

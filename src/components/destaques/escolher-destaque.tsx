@@ -453,8 +453,8 @@ function CartaoOpcao({
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="flex flex-wrap items-baseline justify-between gap-x-3">
-          <span className="text-lg font-semibold leading-6">{o.nome}</span>
-          <span className="text-lg font-bold leading-6">{o.creditos_restantes > 0 ? "Grátis" : o.preco_centavos === 0 ? "Grátis" : preco(o.preco_centavos)}</span>
+          <span className="text-lg leading-6 font-semibold">{o.nome}</span>
+          <span className="text-lg leading-6 font-bold">{o.creditos_restantes > 0 ? "Grátis" : o.preco_centavos === 0 ? "Grátis" : preco(o.preco_centavos)}</span>
         </span>
         {prazo && <span className="text-sm font-semibold text-texto-suave">{prazo}</span>}
         {o.descricao && <span className="text-base">{o.descricao}</span>}
@@ -535,7 +535,7 @@ export function PagarPix({ cobranca }: { cobranca: Extract<Cobranca, { forma: "p
             readOnly
             value={cobranca.copiaECola}
             rows={3}
-            className="w-full resize-none break-all rounded-campo border border-borda bg-fundo p-3 font-mono text-legenda leading-5"
+            className="w-full resize-none rounded-campo border border-borda bg-fundo p-3 font-mono text-legenda leading-5 break-all"
             onFocus={(e) => e.currentTarget.select()}
           />
           <Botao larguraTotal icone={copiado ? <CheckCircle2 /> : <Copy />} onClick={copiar}>

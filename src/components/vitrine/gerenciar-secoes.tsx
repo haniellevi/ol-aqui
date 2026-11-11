@@ -121,7 +121,7 @@ export function GerenciarSecoes({
                 ) : (
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="flex min-w-0 flex-col gap-1">
-                      <h2 className="break-words text-lg font-bold">{s.nome}</h2>
+                      <h2 className="text-lg font-bold break-words">{s.nome}</h2>
                       <p className="text-sm text-texto-suave">
                         {s.anuncios.length === 0 ? "Nenhum produto ainda" : s.anuncios.length === 1 ? "1 produto" : `${s.anuncios.length} produtos`}
                       </p>

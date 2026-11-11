@@ -41,7 +41,7 @@ export function FormLocal({
       <AvisoErro mensagem={estado?.erro?.mensagem} />
 
       {cidades.length ? (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <label htmlFor="campo-cidade" className="text-base font-semibold">
             Cidade
           </label>
@@ -62,7 +62,7 @@ export function FormLocal({
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
+            <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
           </div>
           {erroCidade && (
             <p id="campo-cidade-erro" role="alert" className="text-sm font-semibold text-perigo">

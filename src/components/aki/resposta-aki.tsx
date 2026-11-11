@@ -86,7 +86,7 @@ function BotaoRadar({
 function CardRascunho({ acao }: { acao: Extract<AcaoAki, { tipo: "rascunho" }> }) {
   return (
     <div className="overflow-hidden rounded-card border border-borda bg-cartao">
-      <div className="flex gap-3 p-2.5">
+      <div className="flex gap-3 p-3">
         <div className="relative size-20 shrink-0 overflow-hidden rounded-campo bg-borda">
           {acao.capa ? (
             // eslint-disable-next-line @next/next/no-img-element -- foto do rascunho no Storage (img simples, leve no 3G)
@@ -99,12 +99,12 @@ function CardRascunho({ acao }: { acao: Extract<AcaoAki, { tipo: "rascunho" }> }
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-legenda font-semibold text-texto-suave">Rascunho guardado · ainda não publicado</p>
-          <p className="text-lg font-bold leading-6">{preco(acao.preco_centavos)}</p>
+          <p className="text-lg leading-6 font-bold">{preco(acao.preco_centavos)}</p>
           <p className="line-clamp-2 text-base leading-5">{acao.titulo ?? "Sem título ainda"}</p>
           <p className="text-legenda text-texto-suave">{acao.fotos === 1 ? "1 foto" : `${acao.fotos} fotos`}</p>
         </div>
       </div>
-      <div className="border-t border-borda p-2.5">
+      <div className="border-t border-borda p-3">
         <Botao href={acao.href} variante="secundario" larguraTotal icone={<ClipboardCheck />}>
           Revisar e publicar
         </Botao>
@@ -218,7 +218,7 @@ export function RespostaAki({
       <div className="min-w-0 flex-1 space-y-3">
         {(c.texto || pensando) && (
           <div className="rounded-card rounded-tl-none bg-fundo px-3 py-2">
-            {c.texto && <p className="whitespace-pre-wrap break-words text-base leading-6">{c.texto}</p>}
+            {c.texto && <p className="text-base leading-6 break-words whitespace-pre-wrap">{c.texto}</p>}
             {pensando && (
               <p className="flex items-center gap-2 text-sm text-texto-suave">
                 <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />

@@ -110,7 +110,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
       </nav>
 
       {loja && !podeFixar && (aba.chave === "ativos" || aba.chave === "todos") && lista.some((a) => a.status === "ativo") && (
-        <p className="flex flex-wrap items-center gap-x-1.5 text-legenda text-texto-suave">
+        <p className="flex flex-wrap items-center gap-x-2 text-legenda text-texto-suave">
           <Pin className="size-3.5 shrink-0 text-laranja-escuro" aria-hidden />
           <span>Fixar produtos no topo da loja: {disponivelFixar ?? "não faz parte do seu plano agora"}.</span>
           <Link
@@ -183,13 +183,13 @@ function LinhaAnuncio({
           foto
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant={rotulo.cor}>{rotulo.texto}</Badge>
             {destaque && <Badge variant="featured">Destaque</Badge>}
             {pago && <Badge variant="secondary">Avulso pago</Badge>}
             {fixado && <Badge variant="default">No topo da loja</Badge>}
           </div>
-          <h2 className="line-clamp-2 break-words text-base font-semibold leading-5">
+          <h2 className="line-clamp-2 text-base leading-5 font-semibold break-words">
             {publico ? (
               <Link href={linkAnuncio(a.id, a.titulo)} className="hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
                 {titulo}
@@ -198,8 +198,8 @@ function LinhaAnuncio({
               titulo
             )}
           </h2>
-          <p className="text-lg font-bold leading-6">{preco(a.preco_centavos)}</p>
-          {a.cidade && <p className="break-words text-sm text-texto-suave">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</p>}
+          <p className="text-lg leading-6 font-bold">{preco(a.preco_centavos)}</p>
+          {a.cidade && <p className="text-sm break-words text-texto-suave">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</p>}
           {quando && <p className="text-legenda text-texto-suave">{a.status === "rascunho" ? `Salvo ${quando}` : quando}</p>}
         </div>
       </div>

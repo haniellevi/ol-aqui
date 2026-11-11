@@ -112,7 +112,7 @@ function agrupar(anuncios: AnuncioVitrine[]) {
 export default async function PaginaLoja({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const v = await vitrinePublica(slug).catch(() => undefined);
-  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8"><h1 className="text-balance text-titulo font-semibold">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} larguraTotal>Tentar novamente</Botao></main>;
+  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8"><h1 className="text-titulo font-semibold text-balance">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} larguraTotal>Tentar novamente</Botao></main>;
   if (!v) notFound();
   const ordem = lerOrdem(sp.ordem);
   const pagina = lerPagina(sp.pagina);
@@ -162,7 +162,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-legenda text-texto-suave">Loja</span>
-            <h1 className="break-words text-balance text-titulo font-semibold">{v.nome}</h1>
+            <h1 className="text-titulo font-semibold text-balance break-words">{v.nome}</h1>
             {v.selo && (
               <span>
                 <SeloLoja />
