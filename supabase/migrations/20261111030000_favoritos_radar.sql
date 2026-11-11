@@ -2,7 +2,8 @@
 -- Uma vez por dia, cada pessoa recebe no sino no máximo um lembrete: quando um favorito sai do ar
 -- ou quando foi salvo há 7 dias e continua no ar. Cada favorito lembra uma vez só.
 -- A pessoa pode desligar o aviso em Minha conta > Notificações (tipo favorito_radar).
--- Só roda com a vitrine nova ligada (vitrine_ia.ativa).
+-- Só vale onde a vitrine nova está ligada (vitrine_ia.ativa, respeitando a chave da região da pessoa).
+-- No máximo um lembrete por pessoa por dia, mesmo que a rotina rode de novo no mesmo dia.
 
 alter table public.favoritos add column radar_lembrado_em timestamptz;
 create index favoritos_sem_lembrete_idx on public.favoritos (criado_em) where radar_lembrado_em is null;
@@ -18,16 +19,18 @@ begin
   if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
     raise exception 'Só o sistema envia os lembretes.' using errcode = '42501';
   end if;
-  if public.config('vitrine_ia.ativa', null, 'false') is distinct from 'true'::jsonb then
-    return 0;
-  end if;
   for c in
     select distinct on (f.usuario_id) f.usuario_id, f.anuncio_id, a.titulo,
            (a.status <> 'ativo' or v.status <> 'ativa') as fora
       from public.favoritos f
       join public.anuncios a on a.id = f.anuncio_id
       join public.vitrines_lojas v on v.id = a.vitrine_id
+      join public.perfis pe on pe.id = f.usuario_id
      where f.radar_lembrado_em is null
+       and public.config('vitrine_ia.ativa', pe.microrregiao_id, 'false') = 'true'::jsonb
+       -- um por dia: quem já teve favorito lembrado hoje espera o próximo dia
+       and not exists (select 1 from public.favoritos g
+                        where g.usuario_id = f.usuario_id and g.radar_lembrado_em >= public.robo_inicio('dia'))
        and v.dono_id <> f.usuario_id
        and (a.status <> 'ativo' or v.status <> 'ativa' or f.criado_em <= now() - interval '7 days')
        -- quem já pediu no Radar nos últimos 7 dias não precisa do lembrete agora
