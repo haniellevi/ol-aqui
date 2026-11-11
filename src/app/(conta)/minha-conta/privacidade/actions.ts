@@ -1,9 +1,11 @@
 "use server";
-// LGPD · Excluir minha conta. Apaga o usuário no Clerk; o webhook do Clerk (user.deleted)
-// remove o perfil no banco ou, se houver pagamentos (guarda fiscal), tira tudo do ar e anonimiza.
-import { auth, clerkClient } from "@clerk/nextjs/server";
+// LGPD · Excluir minha conta. A conta, a loja e os anúncios saem do ar e ficam 30 dias na
+// lixeira (pedir_exclusao_conta). Entrar de novo nesse prazo permite cancelar.
+// Depois do prazo, /api/interno/limpeza apaga no Clerk e no banco (guarda fiscal e provas ficam).
+import { auth } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 
-export type EstadoExcluir = { ok?: boolean; erro?: string } | null;
+export type EstadoExcluir = { ok?: boolean; apagarApos?: string; erro?: string } | null;
 
 const PALAVRA_CONFIRMACAO = "EXCLUIR";
 
@@ -12,10 +14,11 @@ export async function excluirConta(_antes: EstadoExcluir, form: FormData): Promi
   if (!userId) return { erro: "Entre na sua conta para continuar." };
   const digitado = String(form.get("confirmacao") ?? "").trim().toUpperCase();
   if (digitado !== PALAVRA_CONFIRMACAO) return { erro: `Para confirmar, escreva ${PALAVRA_CONFIRMACAO} no campo.` };
-  try {
-    await (await clerkClient()).users.deleteUser(userId);
-  } catch {
+  const db = await createClient();
+  const { data, error } = await db.rpc("pedir_exclusao_conta", { p_confirmacao: digitado });
+  if (error) {
+    if (error.code === "23514") return { erro: error.message };
     return { erro: "Não deu para excluir sua conta agora. Tente de novo em alguns minutos." };
   }
-  return { ok: true };
+  return { ok: true, apagarApos: String(data) };
 }

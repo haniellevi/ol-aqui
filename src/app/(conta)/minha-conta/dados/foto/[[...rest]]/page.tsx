@@ -13,7 +13,8 @@ export default function PaginaFotoCelular() {
         texto="Gerencie sua foto e as formas de entrar na conta. Para confirmar o WhatsApp de contato, volte a Editar perfil." />
       <div className="flex justify-center [&_.cl-cardBox]:w-full [&_.cl-cardBox]:max-w-none [&_.cl-rootBox]:w-full">
         <UserProfile routing="path" path="/minha-conta/dados/foto" fallback={<p role="status" className="p-5">Carregando os dados de acesso...</p>}
-          appearance={{ elements: { cardBox: "shadow-none border border-borda", formButtonPrimary: "min-h-10", formFieldInput: "min-h-10 text-base" } }} />
+          // Sem o "Excluir conta" do Clerk: ele apagaria na hora, pulando a lixeira de 30 dias (fica o de Privacidade).
+          appearance={{ elements: { cardBox: "shadow-none border border-borda", formButtonPrimary: "min-h-10", formFieldInput: "min-h-10 text-base", profileSection__danger: "hidden" } }} />
       </div>
       <ConcluirDadosClerk />
     </PaginaConta>

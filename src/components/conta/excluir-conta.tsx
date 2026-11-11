@@ -10,6 +10,13 @@ import { Aviso } from "./aviso";
 
 const PALAVRA = "EXCLUIR";
 
+function dataCurta(iso?: string) {
+  const d = iso ? new Date(iso) : null;
+  return d && !Number.isNaN(d.getTime())
+    ? d.toLocaleDateString("pt-BR", { day: "numeric", month: "long", timeZone: "America/Fortaleza" })
+    : "30 dias";
+}
+
 // LGPD · Excluir minha conta: confirmação forte (escrever EXCLUIR) e depois sai da conta.
 export function ExcluirConta({ temPagamentos }: { temPagamentos: boolean }) {
   const { signOut } = useClerk();
@@ -20,10 +27,13 @@ export function ExcluirConta({ temPagamentos }: { temPagamentos: boolean }) {
 
   useEffect(() => {
     if (!estado?.ok) return;
-    // A conta já foi apagada no Clerk: encerra a sessão neste aparelho e volta para o início.
-    signOut({ redirectUrl: "/" }).catch(() => {
-      window.location.assign("/");
-    });
+    // A conta foi para a lixeira: encerra a sessão neste aparelho depois de mostrar o prazo.
+    const t = setTimeout(() => {
+      signOut({ redirectUrl: "/" }).catch(() => {
+        window.location.assign("/");
+      });
+    }, 4000);
+    return () => clearTimeout(t);
   }, [estado, signOut]);
 
   useEffect(() => {
@@ -31,7 +41,12 @@ export function ExcluirConta({ temPagamentos }: { temPagamentos: boolean }) {
   }, [aberto]);
 
   if (estado?.ok) {
-    return <Aviso tipo="ok">Seu acesso foi encerrado. A exclusão dos dados será processada. Saindo...</Aviso>;
+    return (
+      <Aviso tipo="ok">
+        Sua conta saiu do ar e será apagada em {dataCurta(estado.apagarApos)}. Se mudar de ideia, é só entrar de novo até lá.
+        Saindo...
+      </Aviso>
+    );
   }
 
   if (!aberto) {
@@ -47,10 +62,10 @@ export function ExcluirConta({ temPagamentos }: { temPagamentos: boolean }) {
     <form action={acao} className="flex flex-col gap-3 rounded-card border border-perigo bg-perigo-fundo p-4">
       <h3 className="text-lg font-bold text-perigo">Tem certeza?</h3>
       <ul className="flex list-disc flex-col gap-1 pl-5 text-base">
-        <li>Seus anúncios saem do ar e sua loja fecha.</li>
-        <li>A exclusão dos dados é processada após o encerramento do acesso.</li>
-        {temPagamentos && <li>Registros financeiros e de segurança podem ser mantidos conforme a política de privacidade.</li>}
-        <li>Não dá para desfazer.</li>
+        <li>Sua conta, sua loja e seus anúncios saem do ar na hora.</li>
+        <li>Tudo fica guardado por 30 dias. Para desistir, é só entrar de novo nesse prazo.</li>
+        <li>Depois de 30 dias, seus dados são apagados de vez.</li>
+        {temPagamentos && <li>Registros de pagamento ficam guardados pelo prazo da lei, sem seus dados pessoais.</li>}
       </ul>
       <div ref={campo}>
         <Campo
@@ -65,7 +80,7 @@ export function ExcluirConta({ temPagamentos }: { temPagamentos: boolean }) {
         />
       </div>
       <Botao type="submit" variante="perigo" larguraTotal icone={<Trash2 />} disabled={!confere} carregando={enviando} textoCarregando="Excluindo...">
-        Excluir minha conta para sempre
+        Excluir minha conta
       </Botao>
       <Botao variante="secundario" larguraTotal disabled={enviando} onClick={() => { setAberto(false); setTexto(""); }}>
         Não, manter minha conta

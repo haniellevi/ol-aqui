@@ -104,7 +104,7 @@ export default async function PaginaPrivacidade() {
         <h2 id="excluir" className="text-lg font-bold">
           Excluir minha conta
         </h2>
-        <p className="text-base text-texto-suave">Apaga sua conta e tira seus anúncios do ar.</p>
+        <p className="text-base text-texto-suave">Tira sua conta e seus anúncios do ar. Você tem 30 dias para desistir.</p>
         <ExcluirConta temPagamentos={temPagamentos} />
       </section>
     </PaginaConta>

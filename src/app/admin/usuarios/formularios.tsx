@@ -56,11 +56,13 @@ export function FormAcessoUsuario({ id, email }: { id: string; email: string | n
 
 export function FormBloqueioUsuario({ id, bloqueado }: { id: string; bloqueado: boolean }) {
   const [estado, acao, pendente] = useGestaoForm(bloquearUsuario);
-  return <Cartao className="mt-6"><h2 className="mb-2 text-lg font-semibold">Acesso ao site</h2>
-    <p className="mb-4 text-sm text-texto-suave">O bloqueio impede as operações da conta. Para retirar produtos e a vitrine do ar, suspenda também a loja.</p>
+  return <Cartao className="mt-6"><h2 className="mb-2 text-lg font-semibold">Suspender conta</h2>
+    <p className="mb-4 text-sm text-texto-suave">{bloqueado
+      ? "Esta conta está suspensa. Reativar devolve o acesso, a loja e os anúncios que estavam no ar."
+      : "Para golpe ou regra quebrada. A conta perde o acesso, a loja e os anúncios saem do ar, e tudo fica guardado como prova. O celular continua preso a esta conta."}</p>
     <form onSubmit={acao} className="space-y-4"><input type="hidden" name="id" value={id} />
       <input type="hidden" name="operacao" value={bloqueado ? "desbloquear" : "bloquear"} />
-      <MotivoGestao /><Botao type="submit" variante={bloqueado ? "secundario" : "perigo"} carregando={pendente}>{bloqueado ? "Liberar acesso" : "Bloquear acesso"}</Botao>
+      <MotivoGestao /><Botao type="submit" variante={bloqueado ? "secundario" : "perigo"} carregando={pendente}>{bloqueado ? "Reativar conta" : "Suspender conta"}</Botao>
       <RetornoGestao estado={estado} />
     </form>
   </Cartao>;

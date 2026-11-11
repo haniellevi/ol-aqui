@@ -248,14 +248,15 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
   }
 }
 
-/** Conta excluída ou bloqueada no painel não usa o Merc, mesmo com sessão do Clerk aberta. */
+/** Conta excluída, bloqueada ou na lixeira não usa o Merc, mesmo com sessão do Clerk aberta. */
 async function contaAtiva(db: ReturnType<typeof supabaseAdmin>, uid: string): Promise<boolean> {
-  const [revogada, bloqueada] = await Promise.all([
+  const [revogada, bloqueada, lixeira] = await Promise.all([
     db.from("contas_revogadas").select("usuario_id").eq("usuario_id", uid).maybeSingle(),
     db.from("contas_bloqueadas").select("usuario_id").eq("usuario_id", uid).maybeSingle(),
+    db.from("lixeira_contas").select("usuario_id").eq("usuario_id", uid).maybeSingle(),
   ]);
-  if (revogada.error || bloqueada.error) throw new Error("conta_indisponivel");
-  return !revogada.data && !bloqueada.data;
+  if (revogada.error || bloqueada.error || lixeira.error) throw new Error("conta_indisponivel");
+  return !revogada.data && !bloqueada.data && !lixeira.data;
 }
 
 export async function GET(req: Request) {
