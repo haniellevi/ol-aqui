@@ -29,6 +29,7 @@ insert into eventos_anuncio(anuncio_id,tipo,criado_em)
  select '49100000-0000-4000-a000-000000000002'::uuid,'visualizacao',now()-interval '1 day' from generate_series(1,5)
  union all select '49100000-0000-4000-a000-000000000003','visualizacao',now()-interval '2 days' from generate_series(1,2)
  union all select '49100000-0000-4000-a000-000000000002','clique_whatsapp',now()-interval '1 day'
+ union all select '49100000-0000-4000-a000-000000000001','compartilhar',now()-interval '1 day'
  union all select '49100000-0000-4000-a000-000000000002','visualizacao',now()-interval '10 days' from generate_series(1,3);
 insert into favoritos(usuario_id,anuncio_id,criado_em) values ('user_outro490','49100000-0000-4000-a000-000000000002',now()-interval '1 day');
 
@@ -58,7 +59,7 @@ begin
   assert (d->'anterior'->>'visualizacoes')::int = 3, 'Semana anterior';
   assert d->'mais_vistos'->0->>'titulo' = 'Mesa de jantar 6 lugares 490' and (d->'mais_vistos'->0->>'visualizacoes')::int = 5
      and (d->'mais_vistos'->0->>'cliques')::int = 1, 'Mais visto primeiro';
-  assert jsonb_array_length(d->'mais_vistos') = 2, 'Só produtos vistos';
+  assert jsonb_array_length(d->'mais_vistos') = 2, 'Só produtos vistos (compartilhado sem vista não entra)';
   assert (minha_loja_desempenho('49000000-0000-4000-a000-000000000001', 99)->>'dias') = '7', 'Período inválido vira 7';
   assert (minha_loja_desempenho('49000000-0000-4000-a000-000000000001', 30)->'atual'->>'visualizacoes')::int = 10, 'Trinta dias';
   -- [3] Sugestões: sem foto primeiro; produto completo sem dica.
