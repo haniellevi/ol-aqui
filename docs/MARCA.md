@@ -83,10 +83,10 @@ Fala como um vizinho que entende de negócio: direto, simples, bem-humorado, do 
 - No site, o nome completo aparece uma vez por tela no máximo. Depois, "aqui", "o site" ou "a gente".
 - Nas mensagens automáticas: "Mercado da Região" por extenso, para a pessoa saber quem está falando.
 
-## 6. O robô Aki
+## 6. O robô Merc
 
-O ajudante continua se chamando **Aki** e continua sendo o balão laranja com dois olhinhos. Ele é o mascote, não o logo.
-Apresentação: "Oi! Eu sou o Aki, o ajudante do Mercado da Região."
+O ajudante se chama **Merc** (decidido pelo Raniel em 11/11/2026; antes era Aki) e continua sendo o balão laranja com dois olhinhos. Ele é o mascote, não o logo.
+Apresentação: "Oi! Eu sou o Merc, o ajudante do Mercado da Região."
 
 ## 7. O que continua com o nome antigo (de propósito)
 

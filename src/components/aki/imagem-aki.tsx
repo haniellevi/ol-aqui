@@ -71,7 +71,7 @@ export function useImagemAki(chave: string, consulta: string) {
 
 export function TextoSaldoAki({ saldo }: { saldo: Saldo | null }) {
   return <p className="text-sm text-texto-suave" aria-live="polite">
-    {saldo?.disponivel === false ? "As imagens do Aki estão indisponíveis agora."
+    {saldo?.disponivel === false ? "As imagens do Merc estão indisponíveis agora."
       : saldo ? `${saldo.restantes} ${saldo.restantes === 1 ? "crédito de imagem disponível" : "créditos de imagem disponíveis"}.`
       : "Cada imagem pronta usa 1 crédito."}
   </p>;

@@ -381,7 +381,7 @@
       "Do mostrar o preço sempre, com \"a combinar\" claro quando não houver valor.",
       "Do escrever \"Patrocinado\" em anúncio pago e \"Exemplo\" em quadro ilustrativo.",
       "Do usar fotos reais do produto anunciado.",
-      "Do dar uma saída em toda tela vazia (\"Pedir no Radar\", \"Perguntar ao Aki\")."
+      "Do dar uma saída em toda tela vazia (\"Pedir no Radar\", \"Perguntar ao Merc\")."
     ],
     "donts": [
       "Don't colocar texto branco sobre o laranja `#ff6a13`.",

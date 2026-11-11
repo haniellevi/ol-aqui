@@ -158,7 +158,7 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
   if (!Array.isArray(anteriores) || anteriores.length > MAX_FOTOS_BANCO || !anteriores.every((f) => typeof f === "string" && f.length <= 500)) {
     return { ok: false, erro: { mensagem: "Lista de fotos inválida." } };
   }
-  // Comparação atômica: outra aba ou o Aki não podem perder fotos por uma lista desatualizada.
+  // Comparação atômica: outra aba ou o Merc não podem perder fotos por uma lista desatualizada.
   const { data, error } = await db.from("anuncios").update({ fotos }).eq("id", id)
     .filter("fotos", "eq", `{${anteriores.map((f) => JSON.stringify(f)).join(",")}}`).select("id").maybeSingle();
   if (error) return { ok: false, erro: traduzirErro(error) };
@@ -168,7 +168,7 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
   const fotosAtuais = (atual.data.fotos ?? []) as string[];
   // Uma resposta perdida pode ter sido gravada. Repetir a mesma lista é seguro.
   if (JSON.stringify(fotosAtuais) === JSON.stringify(fotos)) return { ok: true, dados: undefined };
-  return { ok: false, fotosAtuais, erro: { mensagem: "As fotos mudaram em outra janela ou pelo Aki. A lista salva foi atualizada nesta tela. Confira e tente novamente." } };
+  return { ok: false, fotosAtuais, erro: { mensagem: "As fotos mudaram em outra janela ou pelo Merc. A lista salva foi atualizada nesta tela. Confira e tente novamente." } };
 }
 
 /* ----------------------------- Categoria ----------------------------- */

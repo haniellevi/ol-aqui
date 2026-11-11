@@ -31,7 +31,7 @@ export default async function PassoFotos({ searchParams }: { searchParams: Param
         subtitulo="Escolha fotos nítidas. A primeira será a capa do anúncio."
       />
       {!editar && (
-        <BotaoAbrirAki pedido={{ foto: true, rascunhoId: anuncio.id }}>Cadastrar com o Aki pela foto</BotaoAbrirAki>
+        <BotaoAbrirAki pedido={{ foto: true, rascunhoId: anuncio.id }}>Cadastrar com o Merc pela foto</BotaoAbrirAki>
       )}
       <EnvioFotos id={anuncio.id} editar={editar} fotosIniciais={anuncio.fotos} maximo={maximo} minimo={minimo ?? 0} podeEditarComAki={conta.vitrine.tipo === "loja"} />
     </CorpoPasso>

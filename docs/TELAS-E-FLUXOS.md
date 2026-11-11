@@ -1,6 +1,6 @@
 # Mercado da Região · Mapa de telas e caminhos do usuário · 07/11/2026
 
-Este é o mapa do **app público** (o que comprador, vendedor e loja veem). O painel administrativo está em PAINEL-ADMIN.md. As regras de cadastro, anúncio, destaques e Aki estão em PRODUTO-CONTAS-ANUNCIOS-ROBO.md; aqui só organizo as telas e o caminho entre elas. Visual em DESIGN-SYSTEM.md, regras de uso em USABILIDADE.md, ideias de outros apps em PESQUISA-MERCADO.md.
+Este é o mapa do **app público** (o que comprador, vendedor e loja veem). O painel administrativo está em PAINEL-ADMIN.md. As regras de cadastro, anúncio, destaques e Merc estão em PRODUTO-CONTAS-ANUNCIOS-ROBO.md; aqui só organizo as telas e o caminho entre elas. Visual em DESIGN-SYSTEM.md, regras de uso em USABILIDADE.md, ideias de outros apps em PESQUISA-MERCADO.md.
 
 **Fase 1** = lançamento do piloto em Corrente. **Fase 2** = depois.
 
@@ -9,7 +9,7 @@ Este é o mapa do **app público** (o que comprador, vendedor e loja veem). O pa
 ## 1. Estrutura geral
 
 Sempre visível no celular, embaixo: **Início · Buscar · [+ Anunciar] · Radar · Conta**
-Sempre visível no topo: logo, cidade escolhida ("Corrente ▾"), e o balão do **Aki** flutuando no canto.
+Sempre visível no topo: logo, cidade escolhida ("Corrente ▾"), e o balão do **Merc** flutuando no canto.
 
 ```
 INÍCIO ─┬─ Busca / Categoria ── Página do anúncio ── WhatsApp do vendedor
@@ -18,7 +18,7 @@ INÍCIO ─┬─ Busca / Categoria ── Página do anúncio ── WhatsApp d
         │        └── Pedidos da região / Propor (loja)
         ├─ + Anunciar ── 6 passos ── "Está no ar!" ── Destacar
         ├─ Conta ── Minha conta (abas)
-        └─ Aki (balão em todas as telas; tela cheia em /aki)
+        └─ Merc (balão em todas as telas; tela cheia em /aki)
 ```
 
 ---
@@ -60,7 +60,7 @@ INÍCIO ─┬─ Busca / Categoria ── Página do anúncio ── WhatsApp d
 | T36 | Notificações | `/minha-conta/notificacoes` | logado | 1 |
 | T37 | Privacidade (baixar dados, excluir conta) | `/minha-conta/privacidade` | logado | 1 |
 | T38 | Minha loja (capa, logo, horário) | `/minha-conta/loja` | loja | 1 |
-| T39 | **Aki** em tela cheia | `/aki` | todos | 1 |
+| T39 | **Merc** em tela cheia | `/aki` | todos | 1 |
 | T40 | Ajuda e dicas de segurança | `/ajuda` | todos | 1 |
 | T41 | Termos e privacidade | `/termos`, `/privacidade` | todos | 1 |
 | T42 | Planos e preços (para lojas) | `/planos` | todos | 1 |
@@ -73,7 +73,7 @@ INÍCIO ─┬─ Busca / Categoria ── Página do anúncio ── WhatsApp d
 
 ### T2 · Início
 1. Topo: logo, cidade ("Corrente ▾"), sino de avisos
-2. **Busca grande** "O que você procura?" com microfone e botão do Aki
+2. **Busca grande** "O que você procura?" com microfone e botão do Merc
 3. Categorias em ícones (rolagem para o lado): Veículos, Agro, Imóveis, Casa, Eletrônicos, Moda, Serviços, Empregos, Doação, Mais
 4. **Destaques perto de você** (carrossel, cada card com "Patrocinado"; vagas limitadas)
 5. **Faixa do Radar** (fundo laranja-claro): "Não achou? Diga o que procura e as lojas da região te chamam." → Pedir no Radar
@@ -87,7 +87,7 @@ Textos e ordem dos blocos vêm do painel (tela 12).
 - Chips: **Filtros (n)**, Cidade, Preço, Categoria, Ordenar
 - Linha: "128 anúncios em Corrente e região" + **Salvar busca** (sino)
 - Grade de cards; a cada 10 cards, no máximo 2 patrocinados
-- **Nada encontrado:** "Não achamos 'trator 75cv' por aqui ainda." Botões: **Pedir no Radar** (já preenchido) e **Perguntar ao Aki**. Embaixo: parecidos em cidades vizinhas.
+- **Nada encontrado:** "Não achamos 'trator 75cv' por aqui ainda." Botões: **Pedir no Radar** (já preenchido) e **Perguntar ao Merc**. Embaixo: parecidos em cidades vizinhas.
 
 ### T7 · Página do anúncio
 1. Galeria (deslizar), contador "1/8", coração, compartilhar
@@ -103,8 +103,8 @@ Textos e ordem dos blocos vêm do painel (tela 12).
 
 ### T17–T22 · Anunciar (6 passos)
 Barra "Passo 2 de 6", botão **Voltar** e **Salvar e sair** sempre visíveis. Botão principal fixo embaixo ("Continuar").
-- **Fotos:** botões grandes "Tirar foto" e "Escolher da galeria"; miniaturas com arrastar para ordenar; o Aki sugere título e categoria ("Parece uma **moto Honda Titan**. Está certo?" Sim / Não, escolher)
-- **Categoria:** a sugestão do Aki em cima; lista com ícones embaixo
+- **Fotos:** botões grandes "Tirar foto" e "Escolher da galeria"; miniaturas com arrastar para ordenar; o Merc sugere título e categoria ("Parece uma **moto Honda Titan**. Está certo?" Sim / Não, escolher)
+- **Categoria:** a sugestão do Merc em cima; lista com ícones embaixo
 - **Detalhes:** só os campos da categoria; escolha por botões grandes
 - **Preço:** teclado de número, "R$" fixo; dica "Parecidos na região: R$ 8 mil a R$ 11 mil"; caixas "A combinar" e "Aceito troca"
 - **Local:** cidade e bairro já preenchidos do perfil
@@ -143,8 +143,8 @@ Aviso no WhatsApp/celular "Novo pedido: geladeira até R$ 2 mil em Corrente" →
 ### F6 · Vendedor destaca um anúncio
 "Está no ar!" ou Meus anúncios → **Destacar** → escolhe tipo (Subir, Destaque na busca...) com preço e o que acontece → Pix (QR e copia-e-cola) → tela espera e confirma sozinha quando o Asaas avisa → depois mostra "340 visualizações, 12 cliques no WhatsApp".
 
-### F7 · Conversar com o Aki
-Balão → "O que você procura? Pode escrever ou falar." → a pessoa escreve → o Aki mostra cards reais dentro da conversa → se não tiver: oferece o Radar já preenchido → a pessoa toca **Confirmar**. Para vender: manda foto → Aki pergunta só o que falta → mostra o card pronto → pessoa toca **Publicar**.
+### F7 · Conversar com o Merc
+Balão → "O que você procura? Pode escrever ou falar." → a pessoa escreve → o Merc mostra cards reais dentro da conversa → se não tiver: oferece o Radar já preenchido → a pessoa toca **Confirmar**. Para vender: manda foto → Merc pergunta só o que falta → mostra o card pronto → pessoa toca **Publicar**.
 
 ### F8 · Marcar como vendido
 Meus anúncios → **Vendi** → "Vendeu pelo Mercado da Região?" Sim / Não → o anúncio sai da busca e mostra "Vendido" para quem tinha o link (com parecidos embaixo, em vez de página de erro).

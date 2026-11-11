@@ -9,7 +9,7 @@ export const metadata = { title: "Entrar" };
 // Tela de login do Clerk: Google ou celular com código (configurados no painel do Clerk).
 // withSignUp junta "entrar" e "criar conta" no mesmo lugar. Conta nova passa por /completar-perfil
 // (aceite dos termos e da privacidade na versão que está no ar) e depois volta para onde estava.
-// "Force" porque quase toda entrada chega com redirect_url (auth.protect, anúncio, planos, Aki), e
+// "Force" porque quase toda entrada chega com redirect_url (auth.protect, anúncio, planos, Merc), e
 // com redirect_url o Clerk ignoraria o "Fallback".
 
 // A marca já aparece acima do cartão: sem logo repetido dentro dele, sem subtítulo que só repete

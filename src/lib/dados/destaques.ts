@@ -115,7 +115,7 @@ export async function lojasEmDestaque(microrregiaoId: string, limite = 12): Prom
 }
 
 /**
- * Link completo da tela "Destacar" de um anúncio do usuário logado (para o robô Aki mandar).
+ * Link completo da tela "Destacar" de um anúncio do usuário logado (para o robô Merc mandar).
  * Confere se o anúncio é da pessoa; de outra pessoa (ou sem login) → null.
  */
 export async function gerarLinkDestaque(anuncioId: string): Promise<string | null> {

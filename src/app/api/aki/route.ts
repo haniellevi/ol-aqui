@@ -6,7 +6,7 @@ import { mensagemBloqueio } from "@/lib/aki/textos";
 import { ehId } from "@/lib/aki/validar";
 import type { EventoAki, PedidoAki } from "@/lib/aki/tipos";
 
-// Conversa com o Aki.
+// Conversa com o Merc.
 // GET  → estado do balão (pode falar? textos do painel, conversa atual).
 // POST → manda uma mensagem; a resposta chega aos pedaços, uma linha JSON por evento (EventoAki).
 // Exige login (v1). Antes de chamar a IA o banco confere robô ligado, limite do dia e orçamento.
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
         try {
           await responder({ userId, pedido: { texto, conversaId, foto, rascunhoId, ajudaWhatsapp: corpo.ajudaWhatsapp === true }, ajustes, emitir, sinal: req.signal });
         } catch {
-          emitir({ tipo: "erro", mensagem: "O Aki não conseguiu responder agora. Tente de novo." });
+          emitir({ tipo: "erro", mensagem: "O Merc não conseguiu responder agora. Tente de novo." });
         } finally {
           aberto = false;
           try {
@@ -115,6 +115,6 @@ export async function POST(req: Request) {
       headers: { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store, no-transform", "x-accel-buffering": "no" },
     });
   } catch {
-    return umEvento({ tipo: "erro", mensagem: "O Aki não conseguiu responder agora. Tente de novo." }, 500);
+    return umEvento({ tipo: "erro", mensagem: "O Merc não conseguiu responder agora. Tente de novo." }, 500);
   }
 }

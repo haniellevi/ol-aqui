@@ -62,7 +62,7 @@ export function FormGestaoLoja({ loja: l, locais }: { loja: LojaGestao | null; l
           <ImagemGestao tipo="loja" id={l?.id} campo="banner_url" rotulo="Foto do banner" valor={l?.banner_url} onEnvio={setEnviandoFoto} />
           <label className="block text-sm font-semibold">Modelo<select name="banner_modelo" defaultValue={l?.banner_modelo ?? "liso"} className={estiloCampo}><option value="liso">Liso</option><option value="listras">Listras</option><option value="pontos">Pontos</option></select></label>
           <CampoGestao rotulo="Cor do banner" name="banner_cor" type="color" defaultValue={l?.banner_cor ?? "#4B1248"} />
-          <CampoGestao rotulo="Posição do logo no banner do Aki (0 a 100)" name="banner_aki_posicao" type="number" min={0} max={100} defaultValue={l?.banner_aki_posicao ?? ""} />
+          <CampoGestao rotulo="Posição do logo no banner do Merc (0 a 100)" name="banner_aki_posicao" type="number" min={0} max={100} defaultValue={l?.banner_aki_posicao ?? ""} />
         </div>
       </Cartao>
       <MotivoGestao /><Botao type="submit" carregando={pendente} textoCarregando="Salvando...">{l ? "Salvar loja" : "Criar loja"}</Botao>

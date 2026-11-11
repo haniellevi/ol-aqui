@@ -10,7 +10,7 @@ export const LINK_LOJA_INFORMACOES = "/minha-conta/loja/informacoes";
 export const LINK_LOJA_SECOES = "/minha-conta/loja/secoes";
 export const LINK_LOJA_FIXADOS = "/minha-conta/loja/fixados";
 
-/** Tela "Destacar" de um anúncio (também usada pelo robô Aki, via gerarLinkDestaque). */
+/** Tela "Destacar" de um anúncio (também usada pelo robô Merc, via gerarLinkDestaque). */
 export const linkDestacar = (anuncioId: string, pedidoId?: string | null) =>
   `/destacar/${anuncioId}${pedidoId ? `?d=${pedidoId}` : ""}`;
 
@@ -58,7 +58,7 @@ export const linkMeuPedidoRadar = (pedidoId: string) => `/radar/pedido/${pedidoI
 export const linkPedidoRadarLoja = (pedidoId: string) => `/radar/${pedidoId}`;
 export const LINK_AVISOS = "/minha-conta/notificacoes";
 
-/** Páginas e textos: ajuda, termos, privacidade, Aki em tela cheia, aceite no 1º acesso e painel (tela 12). */
+/** Páginas e textos: ajuda, termos, privacidade, Merc em tela cheia, aceite no 1º acesso e painel (tela 12). */
 export const LINK_AJUDA = "/ajuda";
 export const LINK_TERMOS = "/termos";
 export const LINK_PRIVACIDADE = "/privacidade";

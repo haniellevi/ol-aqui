@@ -7,13 +7,13 @@ import { caminhoInterno } from "@/lib/caminho-seguro";
 import { atendimentoCadastro } from "@/lib/dados/atendimento";
 import { createClient } from "@/lib/supabase/server";
 
-// T39 · Aki em tela cheia. É a mesma conversa do balão (mesmo componente, mesma API /api/aki,
+// T39 · Merc em tela cheia. É a mesma conversa do balão (mesmo componente, mesma API /api/aki,
 // mesmas regras e limites do painel), só que ocupando a tela. Fica fora do layout público para o
 // campo de escrever ficar embaixo, sem a barra de navegação por cima; a seta do topo volta ao Início.
 
 export const metadata: Metadata = {
-  title: "Aki, o ajudante do Mercado da Região",
-  description: "Converse com o Aki: ele ajuda a achar coisas à venda na região e a montar seu anúncio.",
+  title: "Merc, o ajudante do Mercado da Região",
+  description: "Converse com o Merc: ele ajuda a achar coisas à venda na região e a montar seu anúncio.",
   alternates: { canonical: "/aki" },
 };
 
@@ -33,7 +33,7 @@ export default async function PaginaAki({ searchParams }: {
   const conversa = userId ? await atendimentoCadastro(await createClient(), { dono: userId }) : null;
   if (atendimento === "1" && (conversa?.data || conversa?.error)) {
     return <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-5 bg-fundo p-4">
-      <Botao href={chat} variante="texto">Voltar ao Aki</Botao>
+      <Botao href={chat} variante="texto">Voltar ao Merc</Botao>
       <h1 className="text-xl font-semibold">Atendimento com a equipe</h1>
       {conversa.data ? <>
         <p role="status">{conversa.data.aguarda_equipe ? "Aguardando resposta da equipe." : "A equipe respondeu."}</p>

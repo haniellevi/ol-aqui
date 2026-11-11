@@ -1,5 +1,5 @@
 "use server";
-// Tela 11 · Robô Aki. Tudo grava com a sessão do admin (RLS confere e_admin()) e cai no
+// Tela 11 · Robô Merc. Tudo grava com a sessão do admin (RLS confere e_admin()) e cai no
 // histórico (gatilhos de configuracoes, robo_modelos e robo_buscas_vazias em logs_atividade).
 
 import { revalidatePath } from "next/cache";
@@ -58,7 +58,7 @@ export async function ligarGeral(_: EstadoForm, form: FormData): Promise<EstadoF
     const ligar = form.get("ligar") === "1";
     await gravarConfig(supabase, userId, "robo.ativo", ligar);
     revalidatePath(CAMINHO);
-    return { ok: ligar ? "Aki ligado para todas as regiões (menos as exceções)." : "Aki desligado (menos nas regiões com exceção ligada)." };
+    return { ok: ligar ? "Merc ligado para todas as regiões (menos as exceções)." : "Merc desligado (menos nas regiões com exceção ligada)." };
   } catch (e) {
     return erroDe(e);
   }
@@ -148,7 +148,7 @@ async function garantirNoCatalogo(supabase: Supa, userId: string, provedor: Prov
   if (!serveParaOAki(vivo)) {
     return vivo.preco_entrada_usd === null || vivo.preco_saida_usd === null
       ? "Não achei o preço desse modelo. Cadastre o preço no catálogo de modelos, lá embaixo, e escolha de novo."
-      : "Esse modelo não lê imagem ou não usa ferramentas, e o Aki precisa das duas coisas. Escolha outro.";
+      : "Esse modelo não lê imagem ou não usa ferramentas, e o Merc precisa das duas coisas. Escolha outro.";
   }
   const dados = {
     nome: vivo.nome,
@@ -181,7 +181,7 @@ export async function escolherModelo(_: EstadoForm, form: FormData): Promise<Est
     await gravarConfig(supabase, userId, `robo.modelo_${tipo}`, modelo);
     revalidatePath(CAMINHO);
     const semChave = !adaptador(provedor)?.temChave();
-    return { ok: semChave ? `Salvo. Atenção: falta a chave ${NOME_CHAVE[provedor as ProvedorIA]} na Vercel; até lá o Aki descansa.` : "Salvo." };
+    return { ok: semChave ? `Salvo. Atenção: falta a chave ${NOME_CHAVE[provedor as ProvedorIA]} na Vercel; até lá o Merc descansa.` : "Salvo." };
   } catch (e) {
     return erroDe(e);
   }
@@ -206,7 +206,7 @@ export async function testarModelo(tipo: "conversa" | "foto", escolhido: string)
     const modelo = resto.join("|");
     const prov = adaptador(provedor);
     if (!prov || !modelo) return { ok: false, erro: "Escolha um modelo da lista primeiro." };
-    // o mesmo filtro da escolha: ativo no catálogo, ou ainda fora dele mas servindo para o Aki na lista ao vivo
+    // o mesmo filtro da escolha: ativo no catálogo, ou ainda fora dele mas servindo para o Merc na lista ao vivo
     const { data: noCatalogo } = await supabase
       .from("robo_modelos")
       .select("fallback_servidor")
@@ -220,7 +220,7 @@ export async function testarModelo(tipo: "conversa" | "foto", escolhido: string)
     if (!linha) {
       const vivo = await modeloAoVivo(prov.nome, modelo).catch(() => null);
       if (!vivo || !vivo.le_imagem || !vivo.usa_ferramentas) {
-        return { ok: false, erro: "Esse modelo não lê imagem ou não usa ferramentas, e o Aki precisa das duas coisas." };
+        return { ok: false, erro: "Esse modelo não lê imagem ou não usa ferramentas, e o Merc precisa das duas coisas." };
       }
       linha = { fallback_servidor: false };
     }
@@ -264,7 +264,7 @@ export async function testarModelo(tipo: "conversa" | "foto", escolhido: string)
     const resp = await prov.conversar(
       {
         modelo,
-        sistemaFixo: "Você é o Aki, ajudante do site Mercado da Região. Responda em português do Brasil.",
+        sistemaFixo: "Você é o Merc, ajudante do site Mercado da Região. Responda em português do Brasil.",
         mensagens: [{ papel: "usuario", partes }],
         ferramentas: [ferramenta],
         maxTokens: 300,
@@ -284,7 +284,7 @@ export async function testarModelo(tipo: "conversa" | "foto", escolhido: string)
     if (!chamada) {
       return {
         ok: false,
-        erro: `O modelo respondeu mas não usou a função do site${t === "foto" ? " para ler a foto" : ""}. O Aki precisa disso: escolha outro modelo. Resposta: ${resp.texto.trim().slice(0, 200) || "(vazia)"}`,
+        erro: `O modelo respondeu mas não usou a função do site${t === "foto" ? " para ler a foto" : ""}. O Merc precisa disso: escolha outro modelo. Resposta: ${resp.texto.trim().slice(0, 200) || "(vazia)"}`,
       };
     }
     const resposta = t === "foto" ? `Leu a foto e usou a função: cor = ${valor || "(vazio)"}` : `Usou a função: ${valor || "(vazio)"}`;
@@ -380,7 +380,7 @@ export async function salvarModelo(_: EstadoForm, form: FormData): Promise<Estad
     if (id) {
       if (!ehId(id)) return { erro: "Modelo inválido." };
       if (!dados.ativo || !dados.le_imagem || !dados.usa_ferramentas) {
-        // não deixa tirar de uso o modelo que o Aki está usando agora (ele ficaria sem modelo)
+        // não deixa tirar de uso o modelo que o Merc está usando agora (ele ficaria sem modelo)
         const { data: m } = await supabase.from("robo_modelos").select("provedor, modelo").eq("id", id).single();
         const { data: emUso } = await supabase
           .from("configuracoes")
@@ -392,7 +392,7 @@ export async function salvarModelo(_: EstadoForm, form: FormData): Promise<Estad
             (emUso ?? []).some((c) => c.chave === `robo.modelo_${t}` && c.valor === m?.modelo) &&
             (provs ?? []).some((c) => c.chave === `robo.provedor_${t}` && c.valor === m?.provedor),
         );
-        if (usado) throw new Error("Esse modelo está em uso pelo Aki. Escolha outro modelo para a conversa e a foto antes de desligar este.");
+        if (usado) throw new Error("Esse modelo está em uso pelo Merc. Escolha outro modelo para a conversa e a foto antes de desligar este.");
       }
       const { error } = await supabase.from("robo_modelos").update(dados).eq("id", id);
       if (error) throw new Error(error.message);

@@ -77,7 +77,7 @@ export function EditorBannerAki({
       }
       const resultado = await aplicarBannerAki(geracaoId, posicao, url);
       if (!resultado.ok) throw new Error(resultado.erro.mensagem);
-      setMensagem("Banner do Aki salvo na loja.");
+      setMensagem("Banner do Merc salvo na loja.");
       router.refresh();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não deu para salvar o banner. Tente de novo.");
@@ -88,7 +88,7 @@ export function EditorBannerAki({
 
   return (
     <section aria-labelledby="banner-aki-titulo" className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
-      <h2 id="banner-aki-titulo" className="text-lg font-semibold text-beringela">Criar banner com o Aki</h2>
+      <h2 id="banner-aki-titulo" className="text-lg font-semibold text-beringela">Criar banner com o Merc</h2>
       <TextoSaldoAki saldo={aki.saldo} />
       <Campo name="estilo_aki" rotulo="Estilo do banner" placeholder="Ex.: cores quentes e visual esportivo"
         value={estilo} onChange={(e) => setEstilo(e.target.value)} maxLength={400} disabled={ocupado || aki.pendente} />
@@ -107,7 +107,7 @@ export function EditorBannerAki({
       </Botao>}
       <Botao type="button" variante="secundario"
         disabled={ocupado || (!aki.pendente && (aki.saldo?.disponivel === false || aki.saldo?.restantes === 0))}
-        carregando={aki.ocupado} textoCarregando="O Aki está criando a arte..."
+        carregando={aki.ocupado} textoCarregando="O Merc está criando a arte..."
         onClick={() => { setMensagem(""); void aki.gerar({ tipo: "banner", id: crypto.randomUUID(), estilo, cor }); }}>
         {aki.pendente ? "Conferir pedido" : arte ? "Criar outra arte · usa 1 crédito" : "Gerar banner · usa 1 crédito"}
       </Botao>

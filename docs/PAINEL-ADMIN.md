@@ -90,7 +90,7 @@ As telas 1 a 8 continuam iguais. A tela 5 passa a se chamar **Contas e vitrines*
 ### 10. Destaques
 Tipos de destaque (Subir, Destaque na busca, Vitrine da home, Loja em destaque): preço, dias, vagas por região, ativo. Créditos incluídos em cada plano. Lista de destaques ativos com resultado (visualizações, cliques). Dar destaque de cortesia.
 
-### 11. Robô Aki
+### 11. Robô Merc
 Ligar e desligar (geral e por região). Modelo da IA, limite de mensagens por pessoa por dia, **orçamento mensal em R$** com alerta em 80%. Mensagem de boas-vindas e sugestões de perguntas. Temas proibidos. Custo do mês, conversas por dia, avaliações ruins (para melhorar), e as **buscas que não acharam nada** (mostra o que falta na região, ótimo para semear o Radar e atrair lojas).
 
 ### 12. Página inicial e textos

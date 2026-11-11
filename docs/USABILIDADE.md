@@ -50,7 +50,7 @@ Tudo que se toca tem pelo menos 48 × 48 px e 8 px de espaço do vizinho. Nada d
 Ver, buscar e chamar no WhatsApp: sem conta. O "entre com seu celular" só aparece quando a pessoa quer favoritar, anunciar ou pedir no Radar, e depois volta para o que ela estava fazendo.
 
 **10. Sempre uma saída.**
-Nenhuma tela vazia sem caminho: busca sem resultado oferece Radar e Aki; lista de favoritos vazia mostra "Toque no ♡ dos anúncios que gostar"; erro oferece "Tentar de novo". Sempre dá para voltar.
+Nenhuma tela vazia sem caminho: busca sem resultado oferece Radar e Merc; lista de favoritos vazia mostra "Toque no ♡ dos anúncios que gostar"; erro oferece "Tentar de novo". Sempre dá para voltar.
 
 **11. Confiança visível.**
 - "Patrocinado" sempre escrito em anúncio pago.
@@ -58,7 +58,7 @@ Nenhuma tela vazia sem caminho: busca sem resultado oferece Radar e Aki; lista d
 - Selo da loja verificada com nome ("Loja verificada"), não só um escudinho.
 - Mostrar quanto tempo o vendedor está no Mercado da Região e se responde rápido.
 - Endereço exato de pessoa física nunca aparece; só bairro.
-- O Aki sempre se apresenta como robô.
+- O Merc sempre se apresenta como robô.
 
 **12. Confirmar o que não tem volta, desfazer o que tem.**
 Excluir anúncio e excluir conta pedem confirmação. Pausar, marcar como vendido e tirar favorito mostram "Desfazer" por alguns segundos.
@@ -73,7 +73,7 @@ Meta: **WCAG 2.1 nível AA** (é a referência da Lei Brasileira de Inclusão).
 - Erro de formulário escrito ao lado do campo, em texto, não só borda vermelha.
 - Nada depende só de cor (selo "Vendido" tem palavra, não só cinza).
 - Funciona com zoom de 200% sem cortar texto.
-- Fase 2: botão "ouvir" na descrição do anúncio (leitura em voz alta do próprio celular) e anunciar por áudio pelo Aki.
+- Fase 2: botão "ouvir" na descrição do anúncio (leitura em voz alta do próprio celular) e anunciar por áudio pelo Merc.
 
 ---
 

@@ -168,7 +168,7 @@ export function EnvioFotos({
     };
   }, [pendente]);
 
-  // O Aki guardou no rascunho a foto que a pessoa mandou para ele: mostra aqui sem salvar de novo.
+  // O Merc guardou no rascunho a foto que a pessoa mandou para ele: mostra aqui sem salvar de novo.
   useEffect(() => {
     const ouvir = (e: Event) => {
       const { anuncioId, url } = (e as CustomEvent<FotoGuardadaAki>).detail ?? {};
@@ -267,7 +267,7 @@ export function EnvioFotos({
         if (anterior?.previa) URL.revokeObjectURL(anterior.previa);
         mudar(() => lista);
         setFotoAki(null);
-        setAviso("A versão do Aki foi salva no anúncio.");
+        setAviso("A versão do Merc foi salva no anúncio.");
       }
     } finally {
       operacao.current = false;
@@ -387,8 +387,8 @@ export function EnvioFotos({
                   {podeEditarComAki && item.estado === "pronta" && item.url && (
                     <button type="button" className={`${BOTAO_MINI} col-span-2 flex items-center justify-center gap-1 text-sm font-semibold`}
                       disabled={travado || (fotoAki !== null && itens.some((f) => f.url === fotoAki))} onClick={() => setFotoAki(item.url ?? null)}
-                      aria-label={`Melhorar ${nome} com o Aki`}>
-                      <Sparkles className="size-4" aria-hidden /> Melhorar com o Aki
+                      aria-label={`Melhorar ${nome} com o Merc`}>
+                      <Sparkles className="size-4" aria-hidden /> Melhorar com o Merc
                     </button>
                   )}
                   <button

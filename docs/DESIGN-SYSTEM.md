@@ -113,7 +113,7 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 | Barra de busca | 44 px | 40 px | `CampoBusca` |
 | Cabeçalho | 52 px | 56 px | `CabecalhoPublico` |
 | Barra de baixo | 56 px | não aparece | `BarraInferior` |
-| Botão do Aki | 40 px | 40 px | `BalaoAki` |
+| Botão do Merc | 40 px | 40 px | `BalaoAki` |
 
 > **2ª passada (10/11/2026, mesmo dia):** a primeira redução (48 para 44 px) quase não se notava, e o Raniel continuou vendo tudo grande. A escala inteira desceu um degrau (texto 15 para 14, legenda 13 para 12, título 20 para 18, controles 44 para 40) e a letra dos campos, que ficava em 16 px ao lado de texto de 14, passou a 14 px. O 16 px ficou só no iPhone (`@supports (-webkit-touch-callout: none)`), onde evita o zoom automático do Safari. A tabela da seção 2 traz os nomes; os tamanhos que valem são os desta régua.
 
@@ -139,7 +139,7 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 - Ícones: **lucide-react** (já está no projeto), traço 2px, sempre **com texto embaixo ou ao lado** nos menus. Ícone sozinho só em coisas universais (fechar, voltar, coração de favorito, lupa).
 - Ícones das categorias: desenho simples em círculo `selecao` com ícone beringela (trator, moto, casa, boi...). Arte própria, nunca copiada de outro app.
 - Fotos dos anúncios: proporção 4:3 no card, cortadas no centro; carregadas em WebP pequeno primeiro (ver ARQUITETURA.md, "Imagens").
-- Mascote/Aki: um balão de conversa laranja com dois olhinhos (é só o robô, não substitui o logo). Simples o bastante para ficar bom em 24px.
+- Mascote/Merc: um balão de conversa laranja com dois olhinhos (é só o robô, não substitui o logo). Simples o bastante para ficar bom em 24px.
 
 ---
 
@@ -176,7 +176,7 @@ Preferências usam uma lista branca com nome e estado Ligado/Desligado. Explica�
 
 ### Outros componentes
 
-- **Campo de busca** no topo ("O que você procura?"), com microfone (busca por voz do próprio celular) e botão do Aki.
+- **Campo de busca** no topo ("O que você procura?"), com microfone (busca por voz do próprio celular) e botão do Merc.
 - **Chips de filtro** roláveis (cidade, preço, categoria), com contador "Filtros (3)". Chip selecionado: fundo `selecao`, borda `laranja-escuro` e um ✓ (a borda laranja comum tem só 2,9 : 1 sobre branco e o estado não pode depender só da cor). Foco de campo: borda `laranja-escuro`.
 - **Folha que sobe de baixo** (bottom sheet) para filtros, escolher cidade e confirmar ações. Mais fácil com uma mão que janela no meio da tela.
 - **Seletor de cidade** com as cidades da região e "Perto de mim".
@@ -186,9 +186,9 @@ Preferências usam uma lista branca com nome e estado Ligado/Desligado. Explica�
 - **Barra de passos** do cadastro de anúncio: "Passo 2 de 6" com barrinha.
 - **Selos:** Loja Verificada (verde, ícone de escudo), Destaque, Novo. Selo sempre com texto, nunca só cor.
 - **Aviso na tela** (toast) embaixo, some em 4s, com "Desfazer" quando der.
-- **Tela vazia** sempre com uma saída: "Nenhuma moto até R$ 5 mil aqui. **Pedir no Radar** · **Perguntar ao Aki**".
+- **Tela vazia** sempre com uma saída: "Nenhuma moto até R$ 5 mil aqui. **Pedir no Radar** · **Perguntar ao Merc**".
 - **Esqueleto de carregamento** (caixas cinzas piscando) em vez de tela em branco.
-- **Balão do Aki** flutuante no canto, acima da barra de baixo.
+- **Balão do Merc** flutuante no canto, acima da barra de baixo.
 - **Cartão do vendedor:** foto, nome, selo, "no Mercado da Região desde 2026", cidade, tempo de resposta.
 
 ---
@@ -270,7 +270,7 @@ Direção: preservar a marca Mercado da Região com telas mais compactas e menos
 
 O painel acompanha os títulos de 20, 18 e 16 px, com corpo de 14 px e metadados de 13 px. A base pública usa 15 px. Os tamanhos são definidos em rem nos tokens globais e em `src/app/admin/painel.css`. O menu lateral tem rolagem própria e permite que nomes longos quebrem linha.
 
-Em Destaques, Planos, ações de Lojas e modelos do Aki, a grade responde à largura interna do cartão: quatro colunas somente a partir de 48 rem disponíveis; abaixo disso usa duas, com nome e descrição ocupando a largura inteira. Descrições de tipos e planos usam textarea para mostrar o conteúdo sem cortar. A tabela de créditos mantém rolagem horizontal dentro da própria região, incluindo os rótulos para leitores de tela. Atalhos levam às seis seções principais. Informações técnicas da integração e prazos avançados usam detalhes expansíveis nativos, preservando os controles e o acesso por teclado.
+Em Destaques, Planos, ações de Lojas e modelos do Merc, a grade responde à largura interna do cartão: quatro colunas somente a partir de 48 rem disponíveis; abaixo disso usa duas, com nome e descrição ocupando a largura inteira. Descrições de tipos e planos usam textarea para mostrar o conteúdo sem cortar. A tabela de créditos mantém rolagem horizontal dentro da própria região, incluindo os rótulos para leitores de tela. Atalhos levam às seis seções principais. Informações técnicas da integração e prazos avançados usam detalhes expansíveis nativos, preservando os controles e o acesso por teclado.
 
 Movimento tem função de resposta à pressão: `olaki-acao` desloca 1 px em 120 ms, apenas durante o clique. O foco por teclado não se move; `prefers-reduced-motion` elimina esse deslocamento. Cores transitam em 150 ms. Não há animação de entrada nem movimento contínuo novo.
 

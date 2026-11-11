@@ -4,7 +4,7 @@ const React = require('react');
 const { carregar } = require('./carregar.cjs');
 
 const conversa = '10000000-0000-4000-a000-000000000001';
-const sucesso = { ok: true, dados: { destino: 'aki', mensagem: 'O Aki respondeu na conversa.' } };
+const sucesso = { ok: true, dados: { destino: 'aki', mensagem: 'O Merc respondeu na conversa.' } };
 
 function encontrar(no, predicado) {
   if (!React.isValidElement(no)) return null;
@@ -82,10 +82,10 @@ function formulario({ ofereceAki = true, resultado = sucesso, falha = false, val
   };
 }
 
-test('Enviar ao Aki usa aoAki=true e mostra o retorno da ação após confirmar o envio', async () => {
+test('Enviar ao Merc usa aoAki=true e mostra o retorno da ação após confirmar o envio', async () => {
   const f = formulario();
   f.mudar('Como edito meu anúncio?');
-  assert.equal(f.botao('submit').children, 'Enviar ao Aki');
+  assert.equal(f.botao('submit').children, 'Enviar ao Merc');
   f.iniciar();
   await f.concluir();
   assert.equal(f.chamadas.length, 1);
@@ -129,7 +129,7 @@ test('carregamento identifica o destino e bloqueia outro envio até terminar', a
     assert.equal(f.botao('button').disabled, true);
     assert.equal(f.botao('submit').carregando, destino === 'aki');
     assert.equal(f.botao('button').carregando, destino === 'equipe');
-    assert.equal(f.aviso('status'), destino === 'aki' ? 'O Aki está respondendo...' : 'Enviando mensagem...');
+    assert.equal(f.aviso('status'), destino === 'aki' ? 'O Merc está respondendo...' : 'Enviando mensagem...');
     assert.equal(f.botao(destino === 'aki' ? 'submit' : 'button').textoCarregando, destino === 'aki' ? 'Aguarde...' : 'Enviando...');
     f.iniciar();
     await f.concluir();

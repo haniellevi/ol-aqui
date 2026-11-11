@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { FormMensagemAtendimento } from "./form-mensagem";
 import { AtualizarConversa } from "./atualizar";
 
-const AUTOR: Record<MensagemAtendimento["autor"], string> = { equipe: "Equipe Mercado da Região", anunciante: "Anunciante", aki: "Aki · IA" };
+const AUTOR: Record<MensagemAtendimento["autor"], string> = { equipe: "Equipe Mercado da Região", anunciante: "Anunciante", aki: "Merc · IA" };
 
 export async function ConversaAtendimento({ id, caminho, antes, equipe, aki, cadastro = false }: {
   id: string; caminho: string; antes?: string; equipe?: boolean; aki: boolean; cadastro?: boolean;
@@ -19,7 +19,7 @@ export async function ConversaAtendimento({ id, caminho, antes, equipe, aki, cad
     </div>
     <details className="text-legenda text-texto-suave">
       <summary className="olaki-controle min-h-10 cursor-pointer content-center rounded-campo focus-visible:outline-2 focus-visible:outline-laranja-escuro">Privacidade da conversa</summary>
-      <p className="pb-2">Apenas {cadastro ? "a pessoa que pediu ajuda" : "o anunciante"} e a administração têm acesso. Não compartilhe senhas, documentos ou códigos.{!equipe && aki && " Mensagens enviadas ao Aki podem ser processadas pelo provedor de IA."}</p>
+      <p className="pb-2">Apenas {cadastro ? "a pessoa que pediu ajuda" : "o anunciante"} e a administração têm acesso. Não compartilhe senhas, documentos ou códigos.{!equipe && aki && " Mensagens enviadas ao Merc podem ser processadas pelo provedor de IA."}</p>
     </details>
     {error ? <p role="alert" className="text-sm text-perigo">Não foi possível carregar as mensagens. Use Atualizar para tentar novamente.</p> : <>
       {cursor && <Botao href={caminho} variante="secundario" prefetch={false}>Mensagens recentes</Botao>}
