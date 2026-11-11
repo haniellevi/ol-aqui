@@ -46,11 +46,27 @@ do $$ begin
   assert not exists(select 1 from notificacoes where usuario_id in ('user_desligou470','user_loja470','user_pediu470') and tipo='favorito_radar'), 'Sem aviso para quem desligou, para o dono e para quem pediu';
   assert (select radar_lembrado_em is null from favoritos where usuario_id='user_loja470'), 'Favorito do próprio dono ignorado';
   assert (select radar_lembrado_em is null from favoritos where usuario_id='user_pediu470'), 'Quem pediu no Radar volta a ser avaliado depois';
+  -- Rodar de novo no mesmo dia não manda outro.
+  assert favoritos_lembrar_radar() = 0, 'Um por dia, mesmo rodando de novo';
   -- [3] Segundo dia: o salvo há 8 dias; o salvo hoje espera.
+  update favoritos set radar_lembrado_em = radar_lembrado_em - interval '1 day' where radar_lembrado_em is not null;
   assert favoritos_lembrar_radar() = 1, 'Segundo lembrete';
+  update favoritos set radar_lembrado_em = radar_lembrado_em - interval '1 day' where radar_lembrado_em is not null;
   assert exists(select 1 from notificacoes where usuario_id='user_comprador470' and titulo='Ainda procura Sofá antigo 470?'), 'Parado com título';
   assert favoritos_lembrar_radar() = 0, 'Favorito de hoje ainda não';
   assert (select count(*)=2 from notificacoes where usuario_id='user_comprador470' and tipo='favorito_radar'), 'Cada favorito lembra uma vez';
+end $$;
+
+-- [3b] Região com a vitrine nova desligada não recebe, mesmo com a chave geral ligada.
+insert into favoritos(usuario_id,anuncio_id,criado_em) values ('user_pediu470','47100000-0000-4000-a000-000000000001',now()-interval '10 days');
+delete from radar_pedidos where comprador_id='user_pediu470';
+insert into configuracoes(chave,valor,grupo,publico,descricao,microrregiao_id)
+ select 'vitrine_ia.ativa','false','vitrine',true,'teste região',microrregiao_id from perfis where id='user_pediu470';
+do $$ begin
+  assert favoritos_lembrar_radar() = 0, 'Região desligada não recebe';
+  update configuracoes set valor='true' where chave='vitrine_ia.ativa' and microrregiao_id=(select microrregiao_id from perfis where id='user_pediu470');
+  update configuracoes set valor='false' where chave='vitrine_ia.ativa' and microrregiao_id is null;
+  assert favoritos_lembrar_radar() = 1, 'Região ligada recebe com a geral desligada';
 end $$;
 
 -- [4] Pessoa logada não chama a rotina.
