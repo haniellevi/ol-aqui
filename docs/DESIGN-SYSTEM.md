@@ -101,6 +101,7 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 | Texto de apoio, botões e rótulos | 13 px | 13 px | `text-sm`, `text-rotulo` |
 | Legenda (cidade, data) | 12 px | 12 px | `text-legenda` |
 | Título da tela | 18 px | 20 px | `text-titulo` (muda sozinho no computador) |
+| Título da vitrine (só o h1 do Início) | 22 px | até 32 px | `text-vitrine` (cresce com a largura da tela) |
 | Título de seção | 15 px | 15 px | `text-lg font-semibold` |
 | Preço e destaque | 16 a 20 px | 16 a 20 px | `text-xl`, `text-2xl` |
 | Botão normal | 40 px | 36 px | `<Botao>` |
@@ -314,3 +315,12 @@ Página para conferir tudo num lugar só: `/admin/pecas`.
 - Outras peças já instaladas e prontas para as próximas fases: `card`, `tabs`, `dropdown-menu`, `dialog`, `drawer`, `sheet`, `field`, `input`, `select`, `textarea`, `label`, `toggle-group`, `table`, `tooltip`, `switch`, `checkbox`, `radio-group`. Ao usar uma delas pela primeira vez, conferir altura (40/36), letra e escrever `border-border` onde houver `border` (o projeto não define cor de borda padrão).
 - Larguras de página: só três. `max-w-md` (entrar e telas de uma ação), `max-w-xl` (formulários e leitura) e `max-w-6xl` (vitrines e listas). Espaço entre blocos da página: `gap-5`.
 - Na nuvem o endereço `ui.shadcn.com` é bloqueado. As peças foram trazidas do código-fonte oficial no GitHub (`apps/v4/registry/bases/base/ui` + `styles/style-nova.css`).
+
+
+## Início "no começo" (10/11/2026)
+
+Enquanto a região tem menos de 8 anúncios (configuração `home.comeco_min_anuncios`), a primeira página do Início troca a prateleira vazia por duas portas: "Procurando alguma coisa?" (Radar, fundo beringela, botão laranja) e "Tem algo para vender?" (cartão branco, botão secundário). As categorias descem para baixo das portas com o título "Veja por categoria". Os textos e a ordem das portas seguem os blocos `radar` e `recentes` do painel; com o Radar desligado, sobra só a porta de vender, com o botão laranja.
+
+Os quadros dentro das portas são ilustração: levam sempre a etiqueta "Exemplo" (fundo `selecao`, texto beringela) e ficam fora do leitor de tela. Nunca mostrar anúncio ou pedido inventado sem essa etiqueta. Com 8 anúncios ou mais, o Início volta ao formato normal sozinho.
+
+O rodapé do Início (`RodapeInicio`) leva a marca, a frase "aqui a sua cidade aparece." e os links de ajuda. O acesso às lojas continua único, na seção de lojas.
