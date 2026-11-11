@@ -198,12 +198,13 @@ export default async function PaginaMinhaLoja() {
         </section>
       )}
       <DestaquesAtivos lista={destaquesLoja} titulo="Destaques da loja" />
-      {exclusao && v.status === "ativa" && (
+      {exclusao && v.status !== "suspensa" && (
         <section aria-labelledby="titulo-excluir-loja" className="flex flex-col gap-3">
           <h2 id="titulo-excluir-loja" className="text-lg font-bold">
             Excluir loja
           </h2>
           <p className="text-base text-texto-suave">Tira a vitrine e os anúncios da loja do ar. Você tem 30 dias para desistir.</p>
+          {/* Loja com pagamento atrasado também pode sair; só a suspensa pela equipe não. */}
           <ExcluirLoja temPagamentos={exclusao.tem_pagamentos} />
         </section>
       )}
