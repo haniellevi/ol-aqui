@@ -80,7 +80,7 @@ export function RadarDeNegocios({
 
   return (
     <main className="mx-auto min-h-dvh max-w-5xl bg-fundo pb-28">
-      <header className=" border-b border-borda bg-cartao px-4 pb-4 pt-5">
+      <header className=" border-b border-borda bg-cartao px-4 pt-5 pb-4">
         <div className="flex items-center gap-2">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
           <h1 className="text-titulo font-semibold text-beringela">Radar de Negócios</h1>
@@ -193,14 +193,14 @@ function CartaoPedido({
         </div>
 
         {/* O que procura: sempre visível, é o "gancho" que vende o plano */}
-        <h2 className="mt-2 break-words text-base font-semibold leading-snug text-beringela">
+        <h2 className="mt-2 text-base leading-snug font-semibold break-words text-beringela">
           <Link href={p.souComprador ? linkMeuPedidoRadar(p.id) : linkPedido} className="hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
             {p.titulo}
           </Link>
         </h2>
 
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-          <span className="text-base font-bold tabular-nums text-beringela">
+          <span className="text-base font-bold text-beringela tabular-nums">
             {faixaPreco(p.precoMinCentavos, p.precoMaxCentavos)}
           </span>
           <span className="inline-flex items-center gap-1 text-sm text-texto-suave">
@@ -212,7 +212,7 @@ function CartaoPedido({
         <div className="relative mt-3">
           {temAcesso ? (
             <div className="rounded-card bg-fundo p-3 text-sm leading-5 text-texto">
-              {p.detalhes ? <p className="whitespace-pre-line break-words">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
+              {p.detalhes ? <p className="break-words whitespace-pre-line">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
               <p className="mt-2 text-legenda text-texto-suave">
                 Comprador: {p.compradorNome}
                 {modoPrazo && " · prefere receber as ofertas e escolher com quem falar"}
@@ -221,12 +221,12 @@ function CartaoPedido({
           ) : (
             <>
               {/* Texto falso: o real nunca chega ao navegador de quem não tem acesso */}
-              <div aria-hidden className="select-none rounded-card bg-fundo p-3 text-sm text-beringela blur-[5px]">
+              <div aria-hidden className="rounded-card bg-fundo p-3 text-sm text-beringela blur-[5px] select-none">
                 <p>Detalhes do pedido com modelo, ano, condição de pagamento e prazo para fechar negócio.</p>
                 <p className="mt-2 text-legenda">Comprador: ••••••• · (89) 9••••-••••</p>
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-beringela/90 px-3 py-1.5 text-legenda font-semibold text-white">
+                <span className="inline-flex items-center gap-2 rounded-full bg-beringela/90 px-3 py-2 text-legenda font-semibold text-white">
                   <Lock className="size-3.5" aria-hidden />
                   Exclusivo para lojistas assinantes
                 </span>
@@ -248,7 +248,7 @@ function CartaoPedido({
       {p.souComprador ? (
         <Link
           href={linkMeuPedidoRadar(p.id)}
-          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 px-4 py-3 text-center focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro border-t border-borda bg-cartao text-base font-semibold text-beringela active:brightness-90"
+          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 border-t border-borda bg-cartao px-4 py-3 text-center text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro active:brightness-90"
         >
           <Users className="size-5 shrink-0" aria-hidden />
           Seu pedido · ver propostas
@@ -256,7 +256,7 @@ function CartaoPedido({
       ) : !temAcesso || !liberado ? (
         <Link
           href={`${LINK_PLANOS}?origem=radar`}
-          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 px-4 py-3 text-center focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro bg-laranja text-base font-semibold text-beringela active:brightness-90"
+          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 bg-laranja px-4 py-3 text-center text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro active:brightness-90"
         >
           <Lock className="size-5 shrink-0" aria-hidden />
           Desbloquear e Propor Produto
@@ -264,7 +264,7 @@ function CartaoPedido({
       ) : esgotado ? (
         <span
           aria-disabled
-          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 px-4 py-3 text-center focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro bg-borda text-base font-semibold text-texto-suave"
+          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 bg-borda px-4 py-3 text-center text-base font-semibold text-texto-suave focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
         >
           <Send className="size-5 shrink-0" aria-hidden />
           Propostas esgotadas

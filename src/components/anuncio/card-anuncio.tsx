@@ -45,13 +45,13 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
             </span>
           )}
           {a.destaque && (
-            <span className="absolute left-2 top-2 rounded-full bg-patrocinado-fundo px-1.5 py-px text-xs font-semibold text-beringela">
+            <span className="absolute top-2 left-2 rounded-full bg-patrocinado-fundo px-2 py-0.5 text-xs font-semibold text-beringela">
               Patrocinado
             </span>
           )}
         </div>
-        <div className="flex flex-1 flex-col gap-0.5 p-2.5">
-          <span className="text-lg font-semibold leading-5 tabular-nums">{preco(a.preco_centavos)}</span>
+        <div className="flex flex-1 flex-col gap-0.5 p-3">
+          <span className="text-lg leading-5 font-semibold tabular-nums">{preco(a.preco_centavos)}</span>
           <h3 className="line-clamp-2 text-sm leading-5">{a.titulo}</h3>
           <span className="mt-auto pt-1 text-legenda leading-[18px] text-texto-suave">
             {a.cidade}
@@ -80,7 +80,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
           )}
         </div>
       </Link>
-      {acao && <div className="absolute right-1 top-1">{acao}</div>}
+      {acao && <div className="absolute top-1 right-1">{acao}</div>}
     </article>
   );
 }

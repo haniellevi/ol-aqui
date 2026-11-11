@@ -33,11 +33,11 @@ export async function LojasDaRegiao({
             <li key={l.id} className="w-24 shrink-0">
               <Link
                 href={linkLoja(l.slug)}
-                className="flex flex-col items-center gap-1.5 rounded-card p-1 text-center hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                className="flex flex-col items-center gap-2 rounded-card p-1 text-center hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
               >
                 <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="lg" />
-                <span className="line-clamp-2 text-legenda font-semibold leading-[18px]">{l.nome}</span>
-                {l.verificada && <span className="text-legenda font-semibold leading-[18px] text-verde-escuro">Verificada</span>}
+                <span className="line-clamp-2 text-legenda leading-[18px] font-semibold">{l.nome}</span>
+                {l.verificada && <span className="text-legenda leading-[18px] font-semibold text-verde-escuro">Verificada</span>}
               </Link>
             </li>
           ))}

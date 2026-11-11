@@ -86,7 +86,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
       )}
 
       {vendido && (
-        <div role="status" className="mx-4 mb-3 mt-3 flex flex-col gap-2 rounded-card border-2 border-beringela bg-fundo p-4 md:mx-0 md:mt-0">
+        <div role="status" className="mx-4 mt-3 mb-3 flex flex-col gap-2 rounded-card border-2 border-beringela bg-fundo p-4 md:mx-0 md:mt-0">
           <p className="text-lg font-bold">Vendido</p>
           <p className="text-base">Este anúncio já foi vendido. Veja abaixo outros parecidos na região.</p>
           {parecidos.length > 0 && (
@@ -98,7 +98,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
       )}
 
       {!publico(a) && (
-        <Alert variant="warning" role="status" className="mx-4 mb-3 mt-3 md:mx-0 md:mt-0 flex flex-col gap-2">
+        <Alert variant="warning" role="status" className="mx-4 mt-3 mb-3 flex flex-col gap-2 md:mx-0 md:mt-0">
           <p className="text-base font-semibold">Prévia: só você vê esta página.</p>
           <p className="text-base">{STATUS_PREVIA[a.status] ?? "Fora do ar."}</p>
           {a.e_dono && (
@@ -115,7 +115,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
         </div>
 
         <aside className="min-w-0 px-4 md:row-span-2 md:px-0">
-          <div className="flex flex-col gap-1.5 md:sticky md:top-20">
+          <div className="flex flex-col gap-2 md:sticky md:top-20">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-xl font-bold tabular-nums">{preco(a.preco_centavos)}</p>
               {vendido && <span className="rounded-full bg-beringela px-3 py-0.5 text-legenda font-bold text-white">Vendido</span>}
@@ -124,14 +124,14 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
               )}
             </div>
             {a.aceita_troca && (
-              <p className="flex items-center gap-1.5 text-base font-semibold text-verde-escuro">
+              <p className="flex items-center gap-2 text-base font-semibold text-verde-escuro">
                 <Repeat className="size-5" aria-hidden /> Aceita troca
               </p>
             )}
-            <h1 className="break-words text-xl font-semibold leading-6">{titulo}</h1>
+            <h1 className="text-xl leading-6 font-semibold break-words">{titulo}</h1>
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-legenda text-texto-suave">
               {a.cidade && (
-                <span className="inline-flex min-w-0 max-w-full items-center gap-1">
+                <span className="inline-flex max-w-full min-w-0 items-center gap-1">
                   <MapPin className="size-4 shrink-0" aria-hidden />
                   <span className="min-w-0 [overflow-wrap:anywhere]">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</span>
                 </span>
@@ -188,7 +188,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
                 {detalhes.map(({ c, texto }) => (
                   <div key={c.chave} className="flex min-w-0 flex-col">
                     <dt className="text-legenda text-texto-suave">{c.rotulo}</dt>
-                    <dd className="break-words text-base font-semibold">{texto}</dd>
+                    <dd className="text-base font-semibold break-words">{texto}</dd>
                   </div>
                 ))}
               </dl>

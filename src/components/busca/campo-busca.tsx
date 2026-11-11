@@ -28,7 +28,7 @@ export function CampoBusca({
       {Object.entries(manterFiltros(manter)).flatMap(([k, v]) =>
         (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean).map((valor, i) => <input key={`${k}-${i}`} type="hidden" name={k} value={valor} />),
       )}
-      <div className="flex h-12 items-center gap-2 rounded-card border-2 border-beringela bg-cartao pl-3 pr-1 md:h-10 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro">
+      <div className="flex h-12 items-center gap-2 rounded-card border-2 border-beringela bg-cartao pr-1 pl-3 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro md:h-10">
         <Search className="size-5 shrink-0 text-beringela" aria-hidden />
         <input
           id={id}
@@ -44,7 +44,7 @@ export function CampoBusca({
         />
         <button
           type="submit"
-          className="inline-flex h-8 shrink-0 items-center rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela md:h-7 hover:brightness-95 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+          className="inline-flex h-8 shrink-0 items-center rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela hover:brightness-95 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro active:brightness-90 md:h-7"
         >
           Buscar
         </button>

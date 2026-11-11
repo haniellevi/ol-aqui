@@ -30,7 +30,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
       )}
       {(v.endereco || comoChegar) && (
         <Bloco icone={<MapPin />} titulo="Endereço">
-          <p className="break-words text-base">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>
+          <p className="text-base break-words">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>
           {comoChegar && (
             <a href={comoChegar} target="_blank" rel="noopener noreferrer" aria-label="Como chegar à loja (abre em nova aba)" className={classesBotao("secundario", false, "mt-1 w-full sm:w-fit")}>
               <Navigation className="size-5" aria-hidden />
@@ -67,7 +67,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
 
       {insta && (
         <Bloco icone={<Instagram />} titulo="Instagram">
-          <a href={insta} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da loja: @${v.instagram} (abre em nova aba)`} className="inline-flex min-h-10 max-w-full items-center break-all font-semibold text-laranja-escuro underline underline-offset-4">
+          <a href={insta} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da loja: @${v.instagram} (abre em nova aba)`} className="inline-flex min-h-10 max-w-full items-center font-semibold break-all text-laranja-escuro underline underline-offset-4">
             @{v.instagram}
           </a>
         </Bloco>
@@ -94,7 +94,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
 
       {v.sobre && (
         <Bloco icone={<Store />} titulo="Sobre nós">
-          <p className="whitespace-pre-line break-words text-base leading-6">{v.sobre}</p>
+          <p className="text-base leading-6 break-words whitespace-pre-line">{v.sobre}</p>
         </Bloco>
       )}
     </section>

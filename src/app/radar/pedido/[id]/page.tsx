@@ -68,8 +68,8 @@ export default async function MeuPedidoPage({
           <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
           {arquivado && <Badge variant="secondary">Arquivado</Badge>}
         </div>
-        <h1 className="break-words text-xl font-bold leading-7">{pedido.titulo}</h1>
-        {pedido.detalhes && <p className="whitespace-pre-line break-words text-base text-texto-suave">{pedido.detalhes}</p>}
+        <h1 className="text-xl leading-7 font-bold break-words">{pedido.titulo}</h1>
+        {pedido.detalhes && <p className="text-base break-words whitespace-pre-line text-texto-suave">{pedido.detalhes}</p>}
         <p className="text-base font-semibold">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
         <p className="flex flex-wrap items-center gap-x-2 text-sm text-texto-suave">
           {pedido.categoria_nome && <span>{pedido.categoria_nome} ·</span>}
@@ -77,13 +77,13 @@ export default async function MeuPedidoPage({
           <span>pedido {tempoRelativo(pedido.criado_em)}</span>
         </p>
         {modoPrazo && pedido.propostas_ate && pedido.situacao === "aberto" && (
-          <p className="inline-flex items-center gap-1.5 text-base font-semibold text-laranja-escuro">
+          <p className="inline-flex items-center gap-2 text-base font-semibold text-laranja-escuro">
             <Hourglass className="size-4" aria-hidden />
             Propostas até {dataHoraCurta(pedido.propostas_ate)}
           </p>
         )}
         {!modoPrazo && !fechado && (
-          <p className="inline-flex items-center gap-1.5 text-base text-texto-suave">
+          <p className="inline-flex items-center gap-2 text-base text-texto-suave">
             <MessageCircle className="size-4" aria-hidden />
             As lojas chamam você no WhatsApp.
           </p>

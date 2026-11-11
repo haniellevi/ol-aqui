@@ -100,8 +100,8 @@ export default async function PaginaMinhaConta() {
                 </span>
               )}
               <div className="flex min-w-0 flex-col">
-                <p className="break-words text-base font-semibold leading-6">{ehLoja && vitrine ? vitrine.nome : perfil.nome}</p>
-                {ehLoja && <p className="break-words text-sm text-white/85">{perfil.nome}</p>}
+                <p className="text-base leading-6 font-semibold break-words">{ehLoja && vitrine ? vitrine.nome : perfil.nome}</p>
+                {ehLoja && <p className="text-sm break-words text-white/85">{perfil.nome}</p>}
                 {selo && (
                   <p className="mt-0.5 inline-flex items-center gap-1 text-sm font-semibold text-white">
                     <ShieldCheck className="size-4 shrink-0" aria-hidden />

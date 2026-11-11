@@ -49,7 +49,7 @@ export function FormMensagemAtendimento({ id, ofereceAki }: { id: string; oferec
     <p role="status" className="text-legenda text-texto-suave empty:hidden">{pendente ? destino === "aki" ? "O Aki está respondendo..." : "Enviando mensagem..." : aviso}</p>
     <div className="flex flex-wrap items-center justify-between gap-2">
       {ofereceAki && <span id="aviso-ia-atendimento" className="text-legenda text-texto-suave">Aki usa IA.</span>}
-      <div className={`ml-auto flex flex-wrap gap-2 ${ofereceAki ? "max-[360px]:grid max-[360px]:w-full max-[360px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] max-[360px]:gap-1.5" : ""}`}>
+      <div className={`ml-auto flex flex-wrap gap-2 ${ofereceAki ? "max-[360px]:grid max-[360px]:w-full max-[360px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] max-[360px]:gap-2" : ""}`}>
         {ofereceAki && <Botao type="button" variante="texto" className={botaoCompacto} disabled={pendente} carregando={pendente && destino === "equipe"} textoCarregando="Enviando..."
           onClick={() => { if (formulario.current?.reportValidity()) enviar(false); }}>Falar com a equipe</Botao>}
         <Botao type="submit" className={botaoCompacto} disabled={pendente} carregando={pendente && destino === (ofereceAki ? "aki" : "equipe")} textoCarregando={ofereceAki ? "Aguarde..." : "Enviando..."}>

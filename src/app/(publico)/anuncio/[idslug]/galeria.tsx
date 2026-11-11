@@ -118,7 +118,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
       {total > 1 && (
         <>
           <span
-            className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-beringela/80 px-3 py-1 text-legenda font-semibold text-white"
+            className="pointer-events-none absolute right-3 bottom-3 rounded-full bg-beringela/80 px-3 py-1 text-legenda font-semibold text-white"
             aria-live="polite"
           >
             {atual + 1}/{total}
@@ -152,7 +152,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
             <button
               type="button"
               onClick={fechar}
-              className="grid size-10 place-items-center rounded-full bg-white/15 hover:bg-white/25 active:bg-white/25 focus-visible:outline-3 focus-visible:outline-laranja"
+              className="grid size-10 place-items-center rounded-full bg-white/15 hover:bg-white/25 focus-visible:outline-3 focus-visible:outline-laranja active:bg-white/25"
               aria-label="Fechar fotos"
               autoFocus
             >

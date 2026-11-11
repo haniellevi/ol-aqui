@@ -101,12 +101,12 @@ export default async function PedidoLojaPage({
           <span>{pedido.cidade} ·</span>
           <span>{tempoRelativo(pedido.criado_em)}</span>
         </p>
-        <h1 className="break-words text-xl font-bold leading-7">{pedido.titulo}</h1>
+        <h1 className="text-xl leading-7 font-bold break-words">{pedido.titulo}</h1>
         {pedido.detalhes ? (
-          <p className="whitespace-pre-line break-words text-base text-texto">{pedido.detalhes}</p>
+          <p className="text-base break-words whitespace-pre-line text-texto">{pedido.detalhes}</p>
         ) : (
           !pedido.tem_acesso && (
-            <p className="inline-flex items-center gap-1.5 text-base text-texto-suave">
+            <p className="inline-flex items-center gap-2 text-base text-texto-suave">
               <Lock className="size-4" aria-hidden />
               Detalhes só para quem tem plano com Radar.
             </p>
@@ -126,12 +126,12 @@ export default async function PedidoLojaPage({
           </span>
         </p>
         {modoPrazo && pedido.propostas_ate ? (
-          <p className="inline-flex items-center gap-1.5 text-base font-semibold text-laranja-escuro">
+          <p className="inline-flex items-center gap-2 text-base font-semibold text-laranja-escuro">
             <Hourglass className="size-4" aria-hidden />
             {aberto ? `Propostas até ${dataHoraCurta(pedido.propostas_ate)}` : "O prazo das propostas acabou"}
           </p>
         ) : (
-          <p className="inline-flex items-center gap-1.5 text-base text-texto-suave">
+          <p className="inline-flex items-center gap-2 text-base text-texto-suave">
             <MessageCircle className="size-4" aria-hidden />
             Ao propor, você chama o comprador no WhatsApp.
           </p>
@@ -142,18 +142,18 @@ export default async function PedidoLojaPage({
         <section className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-4">
           <h2 className="text-base font-bold">Sua proposta</h2>
           {minha.status === "oculta" ? (
-            <p className="inline-flex items-start gap-1.5 text-base font-semibold text-perigo">
+            <p className="inline-flex items-start gap-2 text-base font-semibold text-perigo">
               <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
               Tirada pela equipe{minha.moderado_motivo ? `: ${minha.moderado_motivo}` : ""}
             </p>
           ) : minha.escolhida ? (
-            <p className="inline-flex items-center gap-1.5 text-base font-semibold text-verde-escuro">
+            <p className="inline-flex items-center gap-2 text-base font-semibold text-verde-escuro">
               <Star className="size-4" aria-hidden />
               O comprador escolheu sua proposta para conversar.
             </p>
           ) : null}
           <p className="text-lg font-bold text-beringela">{minha.preco_centavos != null ? preco(minha.preco_centavos) : "Preço a combinar"}</p>
-          {minha.mensagem && <p className="whitespace-pre-line break-words text-base">{minha.mensagem}</p>}
+          {minha.mensagem && <p className="text-base break-words whitespace-pre-line">{minha.mensagem}</p>}
         </section>
       )}
 

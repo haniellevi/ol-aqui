@@ -21,7 +21,7 @@ export default async function MinhasLojas() {
             {lojas.map((loja) => (
               <li key={loja.id} className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
                 <div>
-                  <h2 className="break-words text-lg font-semibold">{loja.nome}</h2>
+                  <h2 className="text-lg font-semibold break-words">{loja.nome}</h2>
                   <p className="text-sm text-texto-suave">{loja.dono ? "Sua loja" : "Você é gerente"}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">

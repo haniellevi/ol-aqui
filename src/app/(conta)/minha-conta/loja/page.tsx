@@ -79,7 +79,7 @@ export default async function PaginaMinhaLoja() {
   return (
     <PaginaConta>
       <TopoConta titulo="Minha loja">
-        <p className="break-all text-base text-texto-suave">
+        <p className="text-base break-all text-texto-suave">
           Sua vitrine: <strong className="text-texto">{endereco}</strong>
         </p>
         {v.status === "ativa" && (

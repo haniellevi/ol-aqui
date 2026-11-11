@@ -49,7 +49,7 @@ export function CabecalhoPasso({
           </Link>
         )}
       </div>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-texto-suave">
           Passo {n} de {TOTAL_PASSOS} · {nome}
           {editar && <span className="ml-1 font-normal">(editando)</span>}

@@ -135,7 +135,7 @@ export function FolhaFiltros({
         className="relative flex max-h-[92dvh] w-full max-w-lg flex-col rounded-t-folha bg-cartao shadow-2 md:rounded-folha"
       >
         <form action={caminho} method="get" onSubmit={validar} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center justify-between border-b border-borda py-1 pl-4 pr-1">
+          <div className="flex items-center justify-between border-b border-borda py-1 pr-1 pl-4">
             <h2 id="titulo-filtros" className="text-lg font-semibold">
               Filtros
             </h2>
@@ -230,7 +230,7 @@ export function FolhaFiltros({
             </fieldset>
           </div>
 
-          <div className="flex gap-3 border-t border-borda bg-cartao px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
+          <div className="flex gap-3 border-t border-borda bg-cartao px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <a href={limpar} className={classesBotao("secundario", false, "flex-1")}>
               Limpar
             </a>
@@ -247,7 +247,7 @@ export function FolhaFiltros({
 function CaixaNumero({ rotulo, name, valor, exemplo, erro }: { rotulo: string; name: string; valor: string; exemplo?: string; erro?: string }) {
   const id = `f-${name}`;
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <label htmlFor={id} className="text-base text-texto-suave">
         {rotulo}
       </label>

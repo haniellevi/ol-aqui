@@ -257,7 +257,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                       <Botao
                         variante="texto"
                         icone={<Plus />}
-                        className="h-auto min-h-10 w-fit whitespace-normal px-0 text-left"
+                        className="h-auto min-h-10 w-fit px-0 text-left whitespace-normal"
                         onClick={() => {
                           const ultimo = dia.faixas[dia.faixas.length - 1];
                           mudarDia(d, (x) => ({ ...x, faixas: [...x.faixas, { abre: ultimo?.fecha ?? "14:00", fecha: "23:59" }] }));
@@ -269,7 +269,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                   </div>
                 )}
                 {d === "seg" && (
-                  <Botao variante="texto" icone={<Copy />} className="h-auto min-h-10 w-fit whitespace-normal px-0 text-left" onClick={copiarParaDiasUteis}>
+                  <Botao variante="texto" icone={<Copy />} className="h-auto min-h-10 w-fit px-0 text-left whitespace-normal" onClick={copiarParaDiasUteis}>
                     Copiar segunda para os dias úteis
                   </Botao>
                 )}

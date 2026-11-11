@@ -425,7 +425,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           <button
             type="button"
             onClick={() => abrir(dica.pedido)}
-            className="min-h-10 flex-1 py-2 pl-4 pr-2 text-left text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+            className="min-h-10 flex-1 py-2 pr-2 pl-4 text-left text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
           >
             {dica.texto}
           </button>
@@ -439,7 +439,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
         <button
           type="button"
           onClick={() => abrir()}
-          className={`fixed right-4 z-30 flex h-10 items-center gap-1.5 rounded-full bg-cartao pl-1.5 pr-3.5 text-sm font-semibold text-beringela shadow-2 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:right-6 ${posicao} ${semAtalhoMovel}`}
+          className={`fixed right-4 z-30 flex h-10 items-center gap-2 rounded-full bg-cartao pl-2 pr-4 text-sm font-semibold text-beringela shadow-2 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:right-6 ${posicao} ${semAtalhoMovel}`}
           aria-haspopup="dialog"
         >
           <MascoteAki tamanho={30} />
@@ -471,11 +471,11 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
               <MascoteAki tamanho={32} />
               <div className="min-w-0 flex-1">
                 {pagina ? (
-                  <h1 id="aki-titulo" className="text-lg font-semibold leading-6">
+                  <h1 id="aki-titulo" className="text-lg leading-6 font-semibold">
                     Aki
                   </h1>
                 ) : (
-                  <h2 id="aki-titulo" className="text-lg font-semibold leading-6">
+                  <h2 id="aki-titulo" className="text-lg leading-6 font-semibold">
                     Aki
                   </h2>
                 )}
@@ -552,7 +552,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   {podeEscrever && estado.sugestoes.length > 0 && (
                     <div className="flex flex-wrap gap-2" aria-label="Sugestões">
                       {estado.sugestoes.map((s) => (
-                        <Chip key={s} onClick={() => void enviar(s)} disabled={enviando} className="whitespace-normal text-left">
+                        <Chip key={s} onClick={() => void enviar(s)} disabled={enviando} className="text-left whitespace-normal">
                           {s}
                         </Chip>
                       ))}
@@ -564,7 +564,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
               {mensagens.map((m, i) =>
                 m.papel === "usuario" ? (
                   <div key={`u${m.id ?? i}`} className="flex justify-end">
-                    <p className="max-w-[85%] whitespace-pre-wrap rounded-card rounded-br-none bg-selecao px-3 py-2 text-base leading-6">
+                    <p className="max-w-[85%] rounded-card rounded-br-none bg-selecao px-3 py-2 text-base leading-6 whitespace-pre-wrap">
                       {m.conteudo.foto && (
                         <span className="mb-1 flex items-center gap-1 text-legenda text-texto-suave">
                           <Camera className="size-4" aria-hidden /> Foto enviada
@@ -588,7 +588,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
               )}
             </div>
 
-            <footer className="border-t border-borda px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2">
+            <footer className="border-t border-borda px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
               {aviso && (
                 <Alert variant="info" role="status" className="mb-2">
                   {aviso}
@@ -637,7 +637,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     type="button"
                     onClick={() => inputFoto.current?.click()}
                     disabled={!podeEscrever || enviando || preparandoFoto}
-                    className="flex h-10 shrink-0 flex-col items-center justify-center rounded-campo border border-borda px-2 text-legenda font-semibold leading-4 text-beringela disabled:opacity-50"
+                    className="flex h-10 shrink-0 flex-col items-center justify-center rounded-campo border border-borda px-2 text-legenda leading-4 font-semibold text-beringela disabled:opacity-50"
                   >
                     {preparandoFoto ? <Loader2 className="size-5 animate-spin motion-reduce:animate-none" aria-hidden /> : <Camera className="size-5" aria-hidden />}
                     Foto
@@ -660,7 +660,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     rows={1}
                     disabled={!podeEscrever}
                     placeholder={podeEscrever ? "Escreva para o Aki" : DESCANSANDO}
-                    className={`${classesCampo} max-h-32 min-h-10 flex-1 resize-none py-2.5 leading-6`}
+                    className={`${classesCampo} max-h-32 min-h-10 flex-1 resize-none py-2 leading-6`}
                   />
                   <Botao
                     type="submit"

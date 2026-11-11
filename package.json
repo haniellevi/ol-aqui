@@ -9,7 +9,9 @@
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.cjs",
-    "test:db": "python3 supabase/testes/automatizados.py"
+    "test:db": "python3 supabase/testes/automatizados.py",
+    "classes:ordenar": "node scripts/ordenar-classes.mjs",
+    "classes:conferir": "node scripts/ordenar-classes.mjs --check"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

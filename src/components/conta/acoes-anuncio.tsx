@@ -115,7 +115,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAco
         <h2 id={`confirmar-${id}`} className="text-xl font-semibold">
           {confirmacao === "excluir" ? "Mover para a lixeira?" : confirmacao === "pausar" ? "Pausar este anúncio?" : "Vendeu pelo Mercado da Região?"}
         </h2>
-        <p className="mt-2 break-words font-semibold">{titulo}</p>
+        <p className="mt-2 font-semibold break-words">{titulo}</p>
         <p id={`explicacao-${id}`} className="mt-2 text-base text-texto-suave">
           {confirmacao === "excluir" ? "O anúncio ficará oculto. As fotos e o histórico serão guardados, e você poderá restaurá-lo na aba Lixeira."
             : confirmacao === "pausar" ? "O anúncio sai da busca e o contato fica indisponível. Você pode reativá-lo quando quiser."

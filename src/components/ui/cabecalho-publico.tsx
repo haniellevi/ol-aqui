@@ -18,7 +18,7 @@ export async function CabecalhoPublico() {
 
   return (
     <header className="olaki-material sticky top-0 z-30">
-      <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-card focus:bg-laranja focus:px-4 focus:py-3 focus:font-bold focus:text-beringela">
+      <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-4 focus:z-50 focus:rounded-card focus:bg-laranja focus:px-4 focus:py-3 focus:font-bold focus:text-beringela">
         Pular para o conteúdo
       </a>
       <div className="mx-auto flex h-13 max-w-6xl items-center gap-2 px-4 md:h-14">

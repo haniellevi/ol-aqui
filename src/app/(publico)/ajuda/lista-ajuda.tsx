@@ -44,7 +44,7 @@ export function ListaAjuda({
         <label htmlFor="busca-ajuda" className="sr-only">
           Buscar na ajuda
         </label>
-        <div className="flex h-11 items-center gap-2 rounded-card border-2 border-beringela bg-cartao px-3 md:h-10 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro">
+        <div className="flex h-11 items-center gap-2 rounded-card border-2 border-beringela bg-cartao px-3 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro md:h-10">
           <Search className="size-6 shrink-0 text-beringela" aria-hidden />
           <input
             id="busca-ajuda"
@@ -93,7 +93,7 @@ export function ListaAjuda({
             <div className="flex items-start gap-2">
               {seguranca && <ShieldAlert className="mt-0.5 size-6 shrink-0 text-laranja-escuro" aria-hidden />}
               <div className="flex flex-col">
-                <h2 id={`titulo-ajuda-${c.slug}`} className="text-lg font-semibold leading-6">
+                <h2 id={`titulo-ajuda-${c.slug}`} className="text-lg leading-6 font-semibold">
                   {c.nome}
                 </h2>
                 {c.descricao && <p className="text-sm text-texto-suave">{c.descricao}</p>}

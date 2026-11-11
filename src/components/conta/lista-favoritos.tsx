@@ -23,7 +23,7 @@ export function ListaFavoritos({ itens }: { itens: Favorito[] }) {
           {f.anuncio ? <div className="flex flex-1 flex-col [&>article]:flex-1 [&>article]:shadow-none"><CardAnuncio anuncio={f.anuncio} prioridade={indice < 2} /></div> :
             <div className="flex flex-1 flex-col gap-3 px-1 py-3">
               <PackageX className="size-8 text-texto-suave" aria-hidden />
-              <h2 className="break-words text-base font-semibold">Anúncio indisponível</h2>
+              <h2 className="text-base font-semibold break-words">Anúncio indisponível</h2>
               <p className="text-sm text-texto-suave">Ele saiu do ar. Você pode removê-lo da lista.</p>
             </div>}
           <p className="px-1 text-legenda text-texto-suave">Salvo em <time dateTime={f.salvoEm}>{new Date(f.salvoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time></p>

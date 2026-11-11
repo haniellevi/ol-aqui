@@ -50,7 +50,7 @@ export default async function GerenciarLoja({ params }: { params: Promise<{ id: 
           <ul className="grid gap-2">
             {convites.map((c) => (
               <li key={c.id} className="rounded-card border border-borda bg-cartao p-4">
-                <p className="break-words font-semibold">{c.gerente ?? `WhatsApp final ${c.final_telefone}`}</p>
+                <p className="font-semibold break-words">{c.gerente ?? `WhatsApp final ${c.final_telefone}`}</p>
                 <p className="text-sm text-texto-suave">{c.gerente ? "Gerente ativo" : `Convite pendente até ${dataCurta.format(new Date(c.expira_em))}`}</p>
                 <FormRevogarGerente loja={id} convite={c.id} aceito={c.gerente !== null} />
               </li>

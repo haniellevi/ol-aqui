@@ -12,12 +12,12 @@ export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | 
 export type TamanhoBotao = "normal" | "pequeno";
 
 const TAMANHOS: Record<TamanhoBotao, string> = {
-  normal: "olaki-controle min-h-10 px-3.5 text-sm leading-5",
-  pequeno: "olaki-controle-pequeno min-h-8 px-2.5 text-legenda leading-4",
+  normal: "olaki-controle min-h-10 px-4 text-sm leading-5",
+  pequeno: "olaki-controle-pequeno min-h-8 px-3 text-legenda leading-4",
 };
 
 const BASE =
-  "olaki-acao inline-flex select-none items-center justify-center gap-1.5 rounded-campo font-semibold " +
+  "olaki-acao inline-flex select-none items-center justify-center gap-2 rounded-campo font-semibold " +
   "transition-colors active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro " +
   "disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:pointer-events-none aria-disabled:opacity-60";
 

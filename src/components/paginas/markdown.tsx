@@ -146,7 +146,7 @@ export function Markdown({ texto, className = "" }: { texto: string; className?:
               </h3>
             );
           return (
-            <h2 key={k} id={id} className="mt-3 scroll-mt-20 text-lg font-semibold leading-6">
+            <h2 key={k} id={id} className="mt-3 scroll-mt-20 text-lg leading-6 font-semibold">
               {conteudo}
             </h2>
           );
@@ -154,7 +154,7 @@ export function Markdown({ texto, className = "" }: { texto: string; className?:
         if (b.tipo === "lista") {
           const Tag = b.ordenada ? "ol" : "ul";
           return (
-            <Tag key={k} className={`flex flex-col gap-1.5 pl-6 ${b.ordenada ? "list-decimal" : "list-disc"}`}>
+            <Tag key={k} className={`flex flex-col gap-2 pl-6 ${b.ordenada ? "list-decimal" : "list-disc"}`}>
               {b.itens.map((it, j) => (
                 <li key={`${k}-${j}`}>{emLinha(it, `${k}-${j}`)}</li>
               ))}
