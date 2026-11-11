@@ -65,7 +65,7 @@ test('favoritos: sem confirmação ou com falha não mostra sucesso nem detalhes
  assert.equal((await acao({erro:{code:'XX000'}}).a.removerFavorito(id)).ok,false);
 });
 const nav={useRouter:()=>({refresh(){},push(){}}),redirect:url=>{throw Error('redirect:'+url);}};
-async function pagina(op={}) {const l=await leitura({data:op.data??[linha],count:op.total??1}).a.meusFavoritos();const {default:Page}=carregar('src/app/(conta)/minha-conta/favoritos/page.tsx',{'next/navigation':nav,'@/lib/dados/favoritos':{FAVORITOS_POR_PAGINA:24,meusFavoritos:async()=>{if(op.erro)throw Error('offline');return l;}},'@/app/(conta)/minha-conta/favoritos/actions':{}});return render(await Page({searchParams:Promise.resolve({pagina:op.pagina??'1'})}));}
+async function pagina(op={}) {const l=await leitura({data:op.data??[linha],count:op.total??1}).a.meusFavoritos();const {default:Page}=carregar('src/app/(conta)/minha-conta/favoritos/page.tsx',{'next/navigation':nav,'@/lib/dados/favoritos':{FAVORITOS_POR_PAGINA:24,meusFavoritos:async()=>{if(op.erro)throw Error('offline');return l;}},'@/app/(conta)/minha-conta/favoritos/actions':{},'@/lib/dados/vitrine-completa':{vitrineNovaAtiva:async()=>{if(op.radar==='erro')throw Error('offline');return op.radar===true;}}});return render(await Page({searchParams:Promise.resolve({pagina:op.pagina??'1'})}));}
 test('favoritos: página exibe erro recuperável diferente do vazio real',async()=>{
  assert.match(await pagina({erro:true}),/Não conseguimos carregar seus favoritos/);assert.doesNotMatch(await pagina({erro:true}),/Você ainda não tem favoritos/);
  const vazio=await pagina({data:[],total:0});assert.match(vazio,/Você ainda não tem favoritos/);assert.match(vazio,/Encontrar anúncios/);
@@ -76,6 +76,19 @@ test('favoritos: card tem link canônico, remoção separada e paginação',asyn
 });
 test('favoritos: anúncio fora do ar não recebe link de detalhe',async()=>{
  const html=await pagina({data:[{...linha,anuncios:null}]});assert.match(html,/Anúncio indisponível/);assert.doesNotMatch(html,/href="\/anuncio\//);assert.match(html,/Remover/);
+});
+test('favoritos: link do Radar leva título e categoria; fora do ar vai sem título',async()=>{
+ const comCat={...linha,anuncios:{...linha.anuncios,titulo:'Mesa & cadeiras',categorias:{slug:'moveis'}}};
+ let r=await leitura({data:[comCat]}).a.meusFavoritos();assert.equal(r.itens[0].radar,'/radar/pedir?q=Mesa%20%26%20cadeiras&categoria=moveis');
+ r=await leitura({data:[{...linha,anuncios:{...linha.anuncios,categorias:{slug:'x" onload'}}}]}).a.meusFavoritos();assert.equal(r.itens[0].radar,'/radar/pedir?q=Mesa%20de%20teste');
+ r=await leitura({data:[{...comCat,anuncios:{...comCat.anuncios,status:'pausado'}}]}).a.meusFavoritos();assert.equal(r.itens[0].radar,'/radar/pedir');
+ const l=leitura();await l.a.meusFavoritos();assert.match(l.chamadas.find(c=>c[0]==='select')[1],/categorias!anuncios_categoria_id_fkey\(slug\)/);
+});
+test('favoritos: botão do Radar só com a vitrine nova ligada',async()=>{
+ const desligada=await pagina();assert.doesNotMatch(desligada,/radar\/pedir|Pedir no Radar/);
+ assert.doesNotMatch(await pagina({radar:'erro'}),/radar\/pedir|Pedir no Radar/);
+ const ligada=await pagina({radar:true});assert.match(ligada,/>Pedir no Radar</);assert.match(ligada,/aria-label="Pedir parecido com Mesa de teste no Radar"/);assert.match(ligada,/href="\/radar\/pedir\?q=Mesa%20de%20teste"/);
+ const fora=await pagina({radar:true,data:[{...linha,anuncios:null}]});assert.match(fora,/href="\/radar\/pedir"/);assert.match(fora,/aria-label="Pedir parecido no Radar"/);assert.match(fora,/Peça parecido no Radar/);
 });
 test('anúncio: estado desconhecido bloqueia alteração e oferece consulta novamente',()=>{
  const {BarraContato}=carregar('src/app/(publico)/anuncio/[idslug]/barra-contato.tsx',{'next/navigation':nav,'./actions':{}});

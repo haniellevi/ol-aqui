@@ -43,6 +43,8 @@ try:
     print('PASS: lixeira de 30 dias para conta e loja, cancelamento, suspensão em cascata e limpeza com provas preservadas', flush=True)
     checked(sql((root/'supabase/testes/460_vitrine_ia_base.sql').read_text()))
     print('PASS: vitrine com IA, base: nicho da loja, buscas somadas, categoria sugerida e chave desligada', flush=True)
+    checked(sql((root/'supabase/testes/470_favoritos_radar.sql').read_text()))
+    print('PASS: lembrete de favoritos no sino: chave, um por dia, fora do ar primeiro, preferência e privacidade', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

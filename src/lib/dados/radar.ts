@@ -188,6 +188,7 @@ const NOMES_AVISO: Record<string, { nome: string; explicacao: string }> = {
   proposta_nova: { nome: "Chegou proposta", explicacao: "Uma loja mandou oferta para o seu pedido." },
   prazo_acabou: { nome: "Prazo do pedido acabou", explicacao: "Resumo das ofertas para você escolher." },
   proposta_escolhida: { nome: "Escolheram minha proposta", explicacao: "Para lojas: o comprador quer falar com você." },
+  favorito_radar: { nome: "Lembrete dos meus favoritos", explicacao: "Quando um favorito sai do ar ou fica parado, sugerimos pedir parecido no Radar." },
 };
 
 /** Avisos que a pessoa pode ligar ou desligar, com o que ela já escolheu (sem linha = ligado). */
