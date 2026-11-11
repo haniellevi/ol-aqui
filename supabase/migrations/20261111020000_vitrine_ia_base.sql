@@ -101,6 +101,26 @@ revoke all on public.buscas_termos from anon, authenticated;
 grant select on public.buscas_termos to authenticated;   -- a policy deixa só o admin
 grant all on public.buscas_termos to service_role;
 
+-- Apagar uma categoria junta os contadores dela no balde "sem categoria" do mesmo dia, região e termo.
+-- Sem isso, o "on delete set null" criaria duas linhas com a mesma chave e a exclusão falharia.
+create function public.buscas_termos_soltar_categoria()
+returns trigger language plpgsql
+set search_path = public
+as $$
+begin
+  insert into public.buscas_termos (microrregiao_id, dia, termo_normalizado, categoria_id, vezes, vezes_sem_resultado)
+  select b.microrregiao_id, b.dia, b.termo_normalizado, null, b.vezes, b.vezes_sem_resultado
+    from public.buscas_termos b where b.categoria_id = old.id
+  on conflict (coalesce(microrregiao_id, '00000000-0000-0000-0000-000000000000'), dia, termo_normalizado,
+               coalesce(categoria_id, '00000000-0000-0000-0000-000000000000'))
+  do update set vezes = buscas_termos.vezes + excluded.vezes,
+                vezes_sem_resultado = buscas_termos.vezes_sem_resultado + excluded.vezes_sem_resultado;
+  delete from public.buscas_termos where categoria_id = old.id;
+  return old;
+end $$;
+create trigger categorias_soltar_buscas before delete on public.categorias
+  for each row execute function public.buscas_termos_soltar_categoria();
+
 -- Soma uma busca. Só o servidor chama (o navegador não consegue inflar os números).
 create function public.registrar_busca(p_termo text, p_microrregiao uuid, p_categoria_slug text default null,
                                         p_total integer default null)
@@ -195,6 +215,10 @@ begin
   if not found then
     raise exception using errcode = '42501', message = 'Anúncio não encontrado.';
   end if;
+  -- Esta função roda como dono do banco e pularia a trava do Compliance: confere aqui.
+  if a.status = 'congelado' then
+    raise exception using errcode = '42501', message = 'Anúncio congelado pelo Compliance. Fale com o suporte.';
+  end if;
   if a.categoria_sugestao_estado is distinct from 'pendente' or a.categoria_sugerida_id is null then
     raise exception using errcode = '22023', message = 'Essa sugestão já foi decidida.';
   end if;
@@ -219,8 +243,8 @@ select 'vitrine_ia.ativa', 'false', 'vitrine', true, 'Liga a vitrine nova das lo
 -- ---------------------------------------------------------------------
 -- 5. Permissões das funções
 -- ---------------------------------------------------------------------
-revoke all on function public.validar_nicho_loja(), public.proteger_categoria_sugerida()
-  from public, anon, authenticated;
+revoke all on function public.validar_nicho_loja(), public.proteger_categoria_sugerida(),
+                       public.buscas_termos_soltar_categoria() from public, anon, authenticated;
 revoke all on function public.registrar_busca(text, uuid, text, integer) from public, anon, authenticated;
 grant execute on function public.registrar_busca(text, uuid, text, integer) to service_role;
 revoke all on function public.minha_sugestao_nicho(uuid), public.minhas_sugestoes_categoria(uuid),

@@ -114,4 +114,41 @@ do $$ begin
     raise exception 'Visitante não lê a sugestão';
   exception when insufficient_privilege then null; end;
 end $$;
+
+-- [5] Anúncio congelado pelo Compliance não aceita decisão de categoria.
+reset role;
+set local request.jwt.claim.role='';
+set local request.jwt.claim.sub='';
+insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,status,publicado_em) values
+ ('46100000-0000-4000-a000-000000000004','46000000-0000-4000-a000-000000000001',:'sub_moveis','Estante 460','Corrente',20000,'ativo',now());
+update anuncios set categoria_sugerida_id=:'sub_carros', categoria_sugestao_estado='pendente', categoria_sugerida_em=now(),
+                    status='congelado', congelado_motivo='Teste 460'
+ where id='46100000-0000-4000-a000-000000000004';
+set local role authenticated;
+set local request.jwt.claim.role='authenticated';
+set local request.jwt.claim.sub='user_vitrine460';
+do $$ begin
+  begin
+    perform decidir_categoria_sugerida('46100000-0000-4000-a000-000000000004', true);
+    raise exception 'Congelado não pode trocar de categoria';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+set local request.jwt.claim.role='';
+set local request.jwt.claim.sub='';
+do $$ begin
+  assert (select categoria_id=(select id from categorias where slug='moveis') and categoria_sugestao_estado='pendente'
+           from anuncios where id='46100000-0000-4000-a000-000000000004'), 'Congelado intacto';
+end $$;
+
+-- [6] Apagar uma categoria junta as buscas dela no balde sem categoria, sem quebrar a exclusão.
+insert into categorias(slug,nome) values ('teste-460','Teste 460');
+select registrar_busca('geladeira frost free', :'reg', 'teste-460', 0);
+select registrar_busca('geladeira frost free', :'reg', 'teste-460', 3);
+delete from categorias where slug='teste-460';
+do $$ begin
+  assert (select vezes=3 and vezes_sem_resultado=2 from buscas_termos
+           where termo_normalizado='geladeira frost free' and categoria_id is null), 'Contadores juntados no balde sem categoria';
+  assert (select count(*)=2 from buscas_termos), 'Nenhuma linha duplicada';
+end $$;
 rollback;
