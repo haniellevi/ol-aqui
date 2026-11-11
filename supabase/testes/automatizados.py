@@ -47,6 +47,8 @@ try:
     print('PASS: lembrete de favoritos no sino: chave, um por dia, fora do ar primeiro, preferência e privacidade', flush=True)
     checked(sql((root/'supabase/testes/480_categorizacao_ia.sql').read_text()))
     print('PASS: categorias com IA: lote, sugestão confiante, falha volta à fila, limites, nicho e decisão do dono', flush=True)
+    checked(sql((root/'supabase/testes/490_painel_loja.sql').read_text()))
+    print('PASS: painel da loja: eventos, números, dicas por regra e resumo semanal', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

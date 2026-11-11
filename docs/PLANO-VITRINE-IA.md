@@ -92,6 +92,13 @@ A rotina `olaki-categorizacao-ia` roda a cada 5 minutos e usa o mesmo segredo in
 (`MODERACAO_IA_SECRET` na Vercel e `olaki_moderacao_ia_token` no cofre do Supabase).
 A tela "Revise suas categorias" e o aviso no sino só aparecem com `vitrine_ia.ativa` ligada.
 
+## Painel da loja (etapa 5a, sem IA)
+
+- Conta visita na loja e cliques no WhatsApp e no mapa (`eventos_loja`), só com a vitrine nova ligada na região. Guarda um resumo embaralhado, nunca o IP. Visitas do dono não contam; o mesmo visitante só conta de novo depois de `eventos.repetir_apos_minutos`.
+- Tela `/minha-conta/loja/desempenho`: números de 7 ou 30 dias comparados ao período anterior, 5 produtos mais vistos e dicas por regra (sem foto, sem preço, poucas fotos, descrição ou título curtos, muito visto sem clique).
+- Resumo semanal no sino toda segunda, 9h de Fortaleza (`olaki-resumo-semanal-loja`); a loja pode desligar em Avisos. Pula loja sem visita e sem dica.
+- Etapa 5b (depois): melhoria de texto e foto com IA, com antes/depois aprovado pelo lojista.
+
 ## Riscos e pontos em aberto
 
 - **Tamanho:** lançar tudo junto é o caminho mais longo. A chave em `configuracoes` permite ligar por partes se for preciso.

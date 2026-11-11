@@ -14,6 +14,7 @@ import { BannerLoja } from "@/components/vitrine/banner-loja";
 import { CopiarLinkLoja } from "@/components/vitrine/copiar-link-loja";
 import { InformacoesLoja } from "@/components/vitrine/informacoes-loja";
 import { BarraLoja } from "@/components/vitrine/barra-loja";
+import { MedirLoja } from "./medir-loja";
 import { FavoritoCard } from "@/components/vitrine/favorito-card";
 import { coordenadasValidas } from "@/components/vitrine/mapa-loja";
 import { SeloLoja } from "@/components/vitrine/selos";
@@ -212,7 +213,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           </div>
           <div className="flex flex-wrap items-start gap-2">
             {whatsapp && (
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "flex-1 whitespace-nowrap sm:flex-none")}>
+              <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "flex-1 whitespace-nowrap sm:flex-none")}>
                 <MessageCircle className="size-5" aria-hidden />
                 Chamar no WhatsApp
               </a>
@@ -274,7 +275,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           ) : anuncios.length === 0 ? (
             <Vazio titulo="Esta loja ainda não tem anúncio no ar." texto="Volte daqui a pouco ou veja outros anúncios da região.">
               {whatsapp && (
-                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={classesBotao("whatsapp", true)}>
+                <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" className={classesBotao("whatsapp", true)}>
                   <MessageCircle className="size-5" aria-hidden />
                   Perguntar no WhatsApp
                 </a>
@@ -338,6 +339,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
         </aside>
       </div>
       {temBarra && <BarraLoja whatsappHref={whatsapp} mapaHref={mapaHref} />}
+      {nova && v.status === "ativa" && !v.e_dono && <MedirLoja vitrineId={v.id} />}
     </main>
   );
 }
