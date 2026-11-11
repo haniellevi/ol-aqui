@@ -169,7 +169,8 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
     reserva.estado === "falhou" ? "A imagem não ficou pronta. Seu crédito está disponível para outra tentativa."
       : "A geração de imagens está indisponível agora.", 503);
 
-  const caminho = `${uid}/${anuncio ? "aki-produtos" : "aki-banners"}/aki-${id}.webp`;
+  // Foto de produto fica na pasta do anúncio, a única que a moderação automática aceita.
+  const caminho = anuncio ? `${uid}/${anuncio}/aki-${id}.webp` : `${uid}/aki-banners/aki-${id}.webp`;
   let gravacaoIncerta = false;
   try {
     const opcoes = { model: modeloImagem, quality: "medium", output_format: "webp", output_compression: 90, n: 1 };
@@ -247,11 +248,22 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
   }
 }
 
+/** Conta excluída ou bloqueada no painel não usa o Aki, mesmo com sessão do Clerk aberta. */
+async function contaAtiva(db: ReturnType<typeof supabaseAdmin>, uid: string): Promise<boolean> {
+  const [revogada, bloqueada] = await Promise.all([
+    db.from("contas_revogadas").select("usuario_id").eq("usuario_id", uid).maybeSingle(),
+    db.from("contas_bloqueadas").select("usuario_id").eq("usuario_id", uid).maybeSingle(),
+  ]);
+  if (revogada.error || bloqueada.error) throw new Error("conta_indisponivel");
+  return !revogada.data && !bloqueada.data;
+}
+
 export async function GET(req: Request) {
   const { userId } = await auth();
   if (!userId) return falha("Entre na sua conta para usar o Aki.", 401);
   try {
     const db = supabaseAdmin();
+    if (!(await contaAtiva(db, userId))) return falha("Sua conta não pode usar o Aki.", 403);
     const { data, error } = await db.rpc("aki_creditos_imagem", { p_usuario: userId }).single();
     if (error || !data) return falha("Não foi possível consultar o saldo.", 503);
     const saldo = data as { restantes: number; ligado: boolean };
@@ -288,6 +300,7 @@ export async function POST(req: Request) {
     const corpo = JSON.parse(bruto);
     if (!corpo || typeof corpo !== "object") return falha("Confira o pedido ao Aki.");
     const db = supabaseAdmin();
+    if (!(await contaAtiva(db, userId))) return falha("Sua conta não pode usar o Aki.", 403);
     if (corpo.tipo === "cadastro") return await sugerirCadastro(db, userId, chave, corpo);
     if (corpo.tipo === "banner" || corpo.tipo === "produto") return await gerarImagem(db, userId, chave, corpo);
     return falha("Confira o pedido ao Aki.");
