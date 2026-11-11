@@ -36,7 +36,9 @@ test('loja: erro dos produtos mantém informações e contato, sem simular lista
  assert.match(await html({erroLoja:true}),/Não conseguimos carregar a loja/);await assert.rejects(html({v:null}),/404/);
 });
 test('loja: estado vazio e página fora da faixa têm saídas úteis',async()=>{
- assert.match(await html({anuncios:[],v:{total_anuncios:0}}),/Esta loja ainda não tem anúncio no ar/);
+ const vazia=await html({anuncios:[],v:{total_anuncios:0}});assert.match(vazia,/Esta loja ainda não tem anúncio no ar/);assert.doesNotMatch(vazia,/Adicionar produto/);
+ const doDono=await html({anuncios:[],v:{total_anuncios:0,e_dono:true}});assert.match(doDono,/Sua loja ainda não tem anúncio no ar/);assert.match(doDono,/href="\/anunciar"[^>]*>.*Adicionar produto/s);assert.doesNotMatch(doDono,/Perguntar no WhatsApp/);
+ assert.doesNotMatch(await html({anuncios:[],v:{total_anuncios:0,e_dono:true,status:'suspensa'}}),/Adicionar produto/);
  const h=await html({anuncios:[],sp:{pagina:'99',ordem:'menor_preco'}});assert.match(h,/Não tem mais produtos/);assert.match(h,/href="\/loja\/loja-teste\?ordem=menor_preco"/);
 });
 test('loja: menor preço preserva sequência global sem duplicar produtos das seções',async()=>{
