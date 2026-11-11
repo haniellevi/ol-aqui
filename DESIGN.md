@@ -296,7 +296,7 @@ Diretos e firmes, com o texto dizendo o que acontece ("Publicar anúncio", nunca
 ### Logo
 O "M" de Mercado segurando o pin laranja, com "Mercado" em beringela e "da Região" em laranja, em Poppins Bold. Versões para fundo claro e escuro, marca sem frase para o cabeçalho, símbolo sozinho e ícone do app (M branco com pin laranja no quadrado beringela). Tamanho mínimo da marca: 24 px de altura; abaixo disso, só o símbolo. Arquivos em `public/logo/`, regras em `docs/MARCA.md`. Franquia: nome da cidade embaixo, em maiúsculas espaçadas, separado por um fio.
 
-### Aki
+### Merc
 O ajudante é um balão de conversa laranja com dois olhinhos, flutuando no canto acima da barra de baixo (botão de 40 px). É o mascote, não o logo.
 
 ## Do's and Don'ts
@@ -308,7 +308,7 @@ O ajudante é um balão de conversa laranja com dois olhinhos, flutuando no cant
 - **Do** mostrar o preço sempre, com "a combinar" claro quando não houver valor.
 - **Do** escrever "Patrocinado" em anúncio pago e "Exemplo" em quadro ilustrativo.
 - **Do** usar fotos reais do produto anunciado.
-- **Do** dar uma saída em toda tela vazia ("Pedir no Radar", "Perguntar ao Aki").
+- **Do** dar uma saída em toda tela vazia ("Pedir no Radar", "Perguntar ao Merc").
 
 ### Don't:
 - **Don't** colocar texto branco sobre o laranja `#ff6a13`.

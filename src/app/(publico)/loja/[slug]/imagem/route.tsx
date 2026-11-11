@@ -57,9 +57,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", fontSize: "36px" }}>
           <div style={{ display: "flex" }}>Conheça esta loja da sua região</div>
-          <div style={{ display: "flex", fontWeight: 700, fontSize: "48px" }}>
-            <span>OL</span>
-            <span style={{ color: texto === "#FFFFFF" ? "#FFE4D1" : "#C2410C" }}>AKI</span>
+          <div style={{ display: "flex", gap: "12px", fontWeight: 700, fontSize: "44px" }}>
+            <span>Mercado</span>
+            <span style={{ color: texto === "#FFFFFF" ? "#FFE4D1" : "#C2410C" }}>da Região</span>
           </div>
         </div>
       </div>

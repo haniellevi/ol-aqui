@@ -88,11 +88,11 @@ export function FormLigarGeral({ ligado }: { ligado: boolean }) {
     <form action={acao} className="space-y-3">
       <input type="hidden" name="ligar" value={ligado ? "0" : "1"} />
       <p className="text-base">
-        Agora o Aki está <strong className={ligado ? "text-verde-escuro" : "text-perigo"}>{ligado ? "ligado" : "desligado"}</strong> em
+        Agora o Merc está <strong className={ligado ? "text-verde-escuro" : "text-perigo"}>{ligado ? "ligado" : "desligado"}</strong> em
         todas as regiões (menos as exceções abaixo).
       </p>
       <button disabled={pendente} className={ligado ? estiloBotaoSec : estiloBotao}>
-        {pendente ? (ligado ? "Desligando…" : "Ligando…") : ligado ? "Desligar o Aki" : "Ligar o Aki"}
+        {pendente ? (ligado ? "Desligando…" : "Ligando…") : ligado ? "Desligar o Merc" : "Ligar o Merc"}
       </button>
       <Retorno estado={estado} />
     </form>
@@ -195,7 +195,7 @@ export function FormModeloEscolhido({
         {erro && <Aviso tipo="erro">{erro}</Aviso>}
         {!atualServe && (
           <p className="text-legenda text-aviso">
-            O modelo salvo ({atual.replace("|", " · ") || "nenhum"}) não está pronto para uso. O Aki fica descansando até escolher outro e salvar.
+            O modelo salvo ({atual.replace("|", " · ") || "nenhum"}) não está pronto para uso. O Merc fica descansando até escolher outro e salvar.
           </p>
         )}
         <div className="flex flex-wrap gap-2">
@@ -262,8 +262,8 @@ export function FormLimites(p: { limite: number; orcamentoReais: string; alerta:
         <input name="reserva_tokens_entrada" type="number" min={0} max={1000000} defaultValue={p.reservaTokens} className={estiloCampo} />
       </label>
       <p className="text-legenda text-texto-suave sm:col-span-2">
-        Antes de cada resposta o Aki separa do orçamento o máximo que ela pode custar; no fim entra o valor certo. Assim muita gente ao
-        mesmo tempo não passa do orçamento. Quando o gasto do mês chega no orçamento, o Aki descansa até o mês seguinte e o resto do site funciona normal.
+        Antes de cada resposta o Merc separa do orçamento o máximo que ela pode custar; no fim entra o valor certo. Assim muita gente ao
+        mesmo tempo não passa do orçamento. Quando o gasto do mês chega no orçamento, o Merc descansa até o mês seguinte e o resto do site funciona normal.
       </p>
       <div className="sm:col-span-2">
         <button disabled={pendente} className={estiloBotaoSec}>
@@ -296,7 +296,7 @@ export function FormTextos(p: { boasVindas: string; avisoIa: string; sugestoes: 
         <textarea name="sugestoes" rows={4} defaultValue={p.sugestoes.join("\n")} className={`${estiloCampo} h-auto py-2`} />
       </label>
       <label className="block text-sm font-medium">
-        Temas proibidos (um por linha): o Aki explica que não pode ajudar
+        Temas proibidos (um por linha): o Merc explica que não pode ajudar
         <textarea name="temas_proibidos" rows={4} defaultValue={p.temas.join("\n")} className={`${estiloCampo} h-auto py-2`} />
       </label>
       <button disabled={pendente} className={estiloBotaoSec}>

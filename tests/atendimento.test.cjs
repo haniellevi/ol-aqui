@@ -25,7 +25,7 @@ test('atendimento guarda a mensagem antes da IA e só a chama se o anunciante es
   assert.deepEqual(await humano.enviar(false), { ok: true, dados: { destino: 'equipe', mensagem: 'Mensagem enviada.' } });
   assert.deepEqual(humano.chamadas.map(c => c[0]), ['enviar_mensagem_atendimento']);
   const assistido = envio();
-  assert.deepEqual(await assistido.enviar(true), { ok: true, dados: { destino: 'aki', mensagem: 'O Aki respondeu na conversa.' } });
+  assert.deepEqual(await assistido.enviar(true), { ok: true, dados: { destino: 'aki', mensagem: 'O Merc respondeu na conversa.' } });
   assert.deepEqual(assistido.chamadas.map(c => c[0]), ['enviar_mensagem_atendimento', 'aki']);
   assert.deepEqual(assistido.chamadas[1], ['aki', 'user_anunciante', 42]);
 });
@@ -71,7 +71,7 @@ function assistente({ reserva = true, saida = 'editar', custoFalhou = false, ind
   return { chamadas, executar: () => responderAtendimento({}, 'user_anunciante', 42) };
 }
 
-test('Aki recebe só a pergunta e publica texto conhecido depois de registrar o custo', async () => {
+test('Merc recebe só a pergunta e publica texto conhecido depois de registrar o custo', async () => {
   const a = assistente();
   assert.equal(await a.executar(), 'respondido');
   assert.deepEqual(a.chamadas.map(c => c[0]), ['reservar_atendimento_aki', 'modelo', 'robo_registrar_resposta', 'concluir_atendimento_aki']);
@@ -100,7 +100,7 @@ test('falhas de IA ou registro retornam indisponibilidade em vez de silêncio', 
   }
 });
 
-test('só anuncia resposta do Aki depois que o banco confirma a publicação', async () => {
+test('só anuncia resposta do Merc depois que o banco confirma a publicação', async () => {
   assert.equal(await assistente({ conclusao: false }).executar(), 'equipe');
   assert.equal(await assistente({ erroConclusao: true }).executar(), 'indisponivel');
 });

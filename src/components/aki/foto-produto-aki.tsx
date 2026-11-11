@@ -17,8 +17,8 @@ export function FotoProdutoAki({
 
   return (
     <section aria-labelledby="foto-aki-titulo" className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
-      <h2 id="foto-aki-titulo" className="text-lg font-semibold text-beringela">Melhorar foto com o Aki</h2>
-      <p className="text-sm">O Aki limpa o fundo e procura preservar os detalhes do produto. Compare o resultado com a foto original antes de escolher.</p>
+      <h2 id="foto-aki-titulo" className="text-lg font-semibold text-beringela">Melhorar foto com o Merc</h2>
+      <p className="text-sm">O Merc limpa o fundo e procura preservar os detalhes do produto. Compare o resultado com a foto original antes de escolher.</p>
       <TextoSaldoAki saldo={aki.saldo} />
       <div className="grid grid-cols-2 gap-3">
         <figure>
@@ -28,18 +28,18 @@ export function FotoProdutoAki({
         </figure>
         {aki.imagem && (
           <figure>
-            {/* eslint-disable-next-line @next/next/no-img-element -- resultado do Aki no Storage */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- resultado do Merc no Storage */}
             <img src={aki.imagem.url} alt="Foto tratada do produto" className="aspect-[4/3] w-full rounded-campo bg-fundo object-contain" />
-            <figcaption className="text-sm font-semibold">Versão do Aki</figcaption>
+            <figcaption className="text-sm font-semibold">Versão do Merc</figcaption>
           </figure>
         )}
       </div>
       {aki.erro && <p role="alert" className="text-sm text-perigo">{aki.erro}</p>}
       <div className="flex flex-wrap gap-2">
-        {aki.imagem && <Botao type="button" disabled={ocupado} onClick={() => aplicar(aki.imagem!.url)}>Usar versão do Aki</Botao>}
+        {aki.imagem && <Botao type="button" disabled={ocupado} onClick={() => aplicar(aki.imagem!.url)}>Usar versão do Merc</Botao>}
         <Botao type="button" variante="secundario"
           disabled={ocupado || (!aki.pendente && (aki.saldo?.disponivel === false || aki.saldo?.restantes === 0))}
-          carregando={aki.ocupado} textoCarregando="O Aki está tratando a foto..."
+          carregando={aki.ocupado} textoCarregando="O Merc está tratando a foto..."
           onClick={() => { void aki.gerar({ tipo: "produto", id: crypto.randomUUID(), anuncio, foto: original }); }}>
           {aki.pendente ? "Conferir pedido" : aki.imagem ? "Gerar outra versão · usa 1 crédito" : "Melhorar foto · usa 1 crédito"}
         </Botao>

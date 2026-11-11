@@ -79,8 +79,8 @@ export const NOMES_GRUPO: Record<string, string> = {
   radar: "Radar de Negócios",
   moderacao: "Moderação",
   cobranca: "Cobrança",
-  robo: "Robô Aki",
-  aki_lojistas: "Aki para lojistas",
+  robo: "Robô Merc",
+  aki_lojistas: "Merc para lojistas",
   geral: "Geral",
 };
 

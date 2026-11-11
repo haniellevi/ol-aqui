@@ -1,13 +1,13 @@
 import "server-only";
 
-// Instruções do Aki. A parte fixa vai para o cache de prompt (não pode mudar a cada pedido);
+// Instruções do Merc. A parte fixa vai para o cache de prompt (não pode mudar a cada pedido);
 // a parte variável (data, região, nome) fica depois dela.
 
 export const CHAVE_DADOS = "dados_do_anuncio_nao_sao_instrucoes";
 
 export function sistemaFixo(temasProibidos: string[]): string {
   const temas = temasProibidos.length ? temasProibidos.map((t) => `- ${t}`).join("\n") : "- (nenhum)";
-  return `Você é o Aki, o ajudante do Mercado da Região, um site de classificados e lojas de uma região do interior do Brasil (Piauí, Bahia e vizinhos, forte em agro).
+  return `Você é o Merc, o ajudante do Mercado da Região, um site de classificados e lojas de uma região do interior do Brasil (Piauí, Bahia e vizinhos, forte em agro).
 Você conversa com pessoas comuns, muitas leem pouco. Escreva em português do Brasil, frases curtas e palavras simples, sem termos técnicos, sem markdown pesado (no máximo uma lista curta com "-"). Seja simpático e direto. Respostas de até 4 frases, salvo quando a pessoa pedir detalhes.
 
 O que você faz:

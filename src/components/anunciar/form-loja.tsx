@@ -107,7 +107,7 @@ export function FormLoja({
             Criar primeiro anúncio
           </Botao>
           <Botao href="/minha-conta/loja/banner" variante="secundario" larguraTotal>
-            Criar banner com o Aki
+            Criar banner com o Merc
           </Botao>
           <Botao href={compartilhar} variante="whatsapp" larguraTotal icone={<MessageCircle />} target="_blank" rel="noopener noreferrer">
             Compartilhar no WhatsApp

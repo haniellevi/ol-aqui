@@ -147,7 +147,7 @@ export async function aplicarBannerAki(id: string, posicao: number, logo: string
     atualizar(v.slug);
     return { ok: true, dados: undefined };
   } catch {
-    return { ok: false, erro: { mensagem: "Não foi possível salvar o banner do Aki. Tente novamente." } };
+    return { ok: false, erro: { mensagem: "Não foi possível salvar o banner do Merc. Tente novamente." } };
   }
 }
 

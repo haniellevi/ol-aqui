@@ -54,7 +54,7 @@ export default async function PaginaPrivacidade() {
           Baixar meus dados
         </h2>
         <p className="text-base text-texto-suave">
-          Um arquivo com seu perfil, sua loja, seus anúncios, favoritos, pedidos no Radar e conversas com o Aki.
+          Um arquivo com seu perfil, sua loja, seus anúncios, favoritos, pedidos no Radar e conversas com o Merc.
         </p>
         {/* Link comum (não next/link): é um download de arquivo, não uma página */}
         <a href="/minha-conta/privacidade/baixar" download className={classesBotao("secundario", true)}>
@@ -65,14 +65,14 @@ export default async function PaginaPrivacidade() {
 
       <section aria-labelledby="aki" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
         <h2 id="aki" className="text-lg font-bold">
-          Conversas com o Aki
+          Conversas com o Merc
         </h2>
         <p className="text-base text-texto-suave">
           {conversasAki === 0
-            ? "Você não tem conversas guardadas com o Aki."
+            ? "Você não tem conversas guardadas com o Merc."
             : conversasAki === 1
-              ? "Você tem 1 conversa guardada com o Aki (o robô do Mercado da Região)."
-              : `Você tem ${conversasAki} conversas guardadas com o Aki (o robô do Mercado da Região).`}
+              ? "Você tem 1 conversa guardada com o Merc (o robô do Mercado da Região)."
+              : `Você tem ${conversasAki} conversas guardadas com o Merc (o robô do Mercado da Região).`}
         </p>
         {conversasAki > 0 && <ApagarConversasAki />}
       </section>

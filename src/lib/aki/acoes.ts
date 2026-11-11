@@ -1,5 +1,5 @@
 "use server";
-// Ações que a PESSOA dispara tocando num botão da folha do Aki (nunca a IA sozinha).
+// Ações que a PESSOA dispara tocando num botão da folha do Merc (nunca a IA sozinha).
 // Todas usam o cliente com a sessão dela: a RLS e as funções do banco conferem tudo de novo.
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -23,7 +23,7 @@ export async function abrirAtendimentoCadastro(mensagemId: number): Promise<Resp
   return { ok: true, mensagem: "Atendimento encaminhado à equipe." };
 }
 
-/** Joinha (1), não joinha (-1) ou tirar (0) numa resposta do Aki. */
+/** Joinha (1), não joinha (-1) ou tirar (0) numa resposta do Merc. */
 export async function avaliarResposta(mensagemId: number, nota: -1 | 0 | 1, comentario?: string | null): Promise<RespostaAcao> {
   const { userId } = await auth();
   if (!userId) return SEM_LOGIN;
@@ -35,11 +35,11 @@ export async function avaliarResposta(mensagemId: number, nota: -1 | 0 | 1, come
     p_comentario: typeof comentario === "string" ? comentario.slice(0, 500) : null,
   });
   if (error) return { ok: false, erro: traduzirErro(error).mensagem };
-  return { ok: true, mensagem: nota === 0 ? "Avaliação tirada." : "Obrigado! Isso ajuda o Aki a melhorar." };
+  return { ok: true, mensagem: nota === 0 ? "Avaliação tirada." : "Obrigado! Isso ajuda o Merc a melhorar." };
 }
 
 /**
- * "Usar esta foto no anúncio": põe no rascunho a foto que a pessoa mandou ao Aki (já enviada ao
+ * "Usar esta foto no anúncio": põe no rascunho a foto que a pessoa mandou ao Merc (já enviada ao
  * Storage pelo navegador com criarUrlEnvioFoto). Só rascunho dela; salvarFotos confere o endereço.
  */
 export async function adicionarFotoRascunho(anuncioId: string, url: string): Promise<RespostaAcao> {
@@ -55,7 +55,7 @@ export async function adicionarFotoRascunho(anuncioId: string, url: string): Pro
   return { ok: true, mensagem: "Foto guardada no anúncio." };
 }
 
-/** LGPD: apaga todas as conversas da pessoa com o Aki (o uso sem texto continua contando no limite). */
+/** LGPD: apaga todas as conversas da pessoa com o Merc (o uso sem texto continua contando no limite). */
 export async function apagarMinhasConversas(): Promise<RespostaAcao> {
   const { userId } = await auth();
   if (!userId) return SEM_LOGIN;
@@ -63,11 +63,11 @@ export async function apagarMinhasConversas(): Promise<RespostaAcao> {
   const { error } = await db.from("robo_conversas").delete().eq("usuario_id", userId);
   if (error) return { ok: false, erro: traduzirErro(error).mensagem };
   revalidatePath("/minha-conta/privacidade");
-  return { ok: true, mensagem: "Pronto. Suas conversas com o Aki foram apagadas." };
+  return { ok: true, mensagem: "Pronto. Suas conversas com o Merc foram apagadas." };
 }
 
 /**
- * "Confirmar pedido no Radar": cria o pedido que o Aki preparou (a pessoa tocou no botão).
+ * "Confirmar pedido no Radar": cria o pedido que o Merc preparou (a pessoa tocou no botão).
  * Os dados vêm da resposta guardada no banco (não do navegador) e o botão vale uma vez só:
  * robo_marcar_acao marca a ação como usada antes de criar o pedido e desfaz a marca se falhar.
  */

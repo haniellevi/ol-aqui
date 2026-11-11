@@ -14,7 +14,7 @@ import type { AcaoAki, CartaoAki } from "@/lib/aki/tipos";
 import type { FerramentaIA } from "@/lib/aki/provedores";
 import type { AnuncioCard, Atributos, CampoCategoria } from "@/lib/tipos";
 
-// Funções que o Aki pode usar. Todas rodam com o cliente Supabase DA PRÓPRIA PESSOA
+// Funções que o Merc pode usar. Todas rodam com o cliente Supabase DA PRÓPRIA PESSOA
 // (createClient com o token do Clerk), então a RLS do banco vale como no site.
 // Não existe função que publique, pague, apague ou mostre contato.
 // Tudo que veio de anúncio ou de usuário volta dentro de CHAVE_DADOS (é dado, não ordem).
@@ -26,8 +26,8 @@ export type ContextoFerramentas = {
   cidades: string[];
   cidadePerfil: string | null;
   /**
-   * Rascunhos que o Aki pode alterar nesta conversa: o que a pessoa abriu (passo Fotos), os que o
-   * próprio Aki criou antes nesta conversa e os que criar agora. Outro id (por exemplo, vindo de texto
+   * Rascunhos que o Merc pode alterar nesta conversa: o que a pessoa abriu (passo Fotos), os que o
+   * próprio Merc criou antes nesta conversa e os que criar agora. Outro id (por exemplo, vindo de texto
    * de anúncio) não é aceito: assim nada de fora reescreve um rascunho que a pessoa está fazendo.
    */
   rascunhosPermitidos: Set<string>;
@@ -361,12 +361,12 @@ async function salvarRascunho(args: Record<string, unknown>, ctx: ContextoFerram
   if (id !== undefined && id !== null && id !== "") {
     if (!ehId(id)) return falha("rascunho_id inválido.");
     if (!ctx.rascunhosPermitidos.has(id)) {
-      return falha("Esse rascunho não foi aberto nesta conversa. Não mude: crie um rascunho novo (sem rascunho_id) ou peça para a pessoa abrir o Aki pelo passo Fotos do anúncio.");
+      return falha("Esse rascunho não foi aberto nesta conversa. Não mude: crie um rascunho novo (sem rascunho_id) ou peça para a pessoa abrir o Merc pelo passo Fotos do anúncio.");
     }
     const a = await meuAnuncio(id);
     if (!a) return falha("Rascunho não encontrado.");
     if (a.status !== "rascunho") {
-      return falha("Esse anúncio já foi publicado. O Aki só mexe em rascunho: a pessoa edita pelo botão Editar em Meus anúncios.");
+      return falha("Esse anúncio já foi publicado. O Merc só mexe em rascunho: a pessoa edita pelo botão Editar em Meus anúncios.");
     }
     categoriaAtual = a.categoria_id;
   } else if (!conta.podePublicar) {
@@ -457,7 +457,7 @@ async function salvarRascunho(args: Record<string, unknown>, ctx: ContextoFerram
   if (atual && atual.preco_centavos == null && args.a_combinar !== true) falta.push("preço (ou a combinar)");
   if (!atual?.cidade) falta.push("cidade");
 
-  // card pronto: a pessoa vê foto, título e preço e toca em "Revisar e publicar" (o Aki nunca publica)
+  // card pronto: a pessoa vê foto, título e preço e toca em "Revisar e publicar" (o Merc nunca publica)
   addAcao(ctx, {
     tipo: "rascunho",
     id: rascunhoId,

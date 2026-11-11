@@ -40,7 +40,7 @@ Ideia da marca (docs/MARCA.md): o site grande de classificados engole cidade peq
 ## Capabilities and Constraints
 
 - **Stack:** Next.js 15, React 19, Tailwind CSS 4, shadcn/ui (Base UI), Clerk (identidade), Supabase (Postgres com RLS e Storage), Evolution API (código pelo WhatsApp), Asaas (cobrança), publicação na Vercel.
-- **Funções:** Início com vitrine e o Radar, categorias com filtros, busca, anunciar em passos, página do anúncio, vitrine da loja, Minha conta (anúncios, plano, favoritos, notificações, privacidade), Radar (pedidos e propostas), robô **Aki**, moderação com IA e painel admin.
+- **Funções:** Início com vitrine e o Radar, categorias com filtros, busca, anunciar em passos, página do anúncio, vitrine da loja, Minha conta (anúncios, plano, favoritos, notificações, privacidade), Radar (pedidos e propostas), robô **Merc**, moderação com IA e painel admin.
 - **Regra de ouro:** preços, limites, categorias, nomes de planos e textos que mudam com o negócio vêm do painel admin, nunca ficam fixos no código.
 - **Contato do comprador no Radar:** só é revelado a loja com plano pago em dia, da mesma região, dentro do limite de propostas. Quem não paga vê só o "gancho" (título, valor, cidade).
 - **Termos:** "Entrar", "Anunciar", "Chamar no WhatsApp", "Pedir no Radar", "Destacar", "Meus anúncios". Sem inglês e sem jargão ("lead", "match", "checkout").
@@ -49,7 +49,7 @@ Ideia da marca (docs/MARCA.md): o site grande de classificados engole cidade peq
 
 ## Brand Commitments
 
-- **Nome:** Mercado da Região (decidido pelo Raniel em 10/11/2026). Escreve-se com M e R maiúsculos e "da" minúsculo; nunca sigla para o público. O robô continua se chamando **Aki**.
+- **Nome:** Mercado da Região (decidido pelo Raniel em 10/11/2026). Escreve-se com M e R maiúsculos e "da" minúsculo; nunca sigla para o público. O robô se chama **Merc** (decidido em 11/11/2026; antes era Aki).
 - **Logo oficial:** o "M" de Mercado segurando o pin laranja da Região, com "Mercado" em beringela e "da Região" em laranja, em Poppins Bold. Arquivos em `public/logo/` e `docs/marca/`, gerados por `docs/marca/gerar-logos.mjs`. Regras completas em `docs/MARCA.md`.
 - **Frase:** "aqui a sua cidade aparece." Frases de apoio: "Compre, venda e peça perto de casa." · "O que a região tem, está aqui." · "Negócio fechado com quem é daqui."
 - **Tom:** fala como um vizinho que entende de negócio: direto, simples, bem-humorado, do interior com orgulho. Trata por "você". Provoca o site grande pela ideia, nunca pelo nome. Não promete venda garantida.

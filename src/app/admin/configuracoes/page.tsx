@@ -22,7 +22,7 @@ type Config = {
 
 const AREAS = [
   { nome: "Comercial", texto: "Preços, planos e destaques.", links: [["Planos", "/admin/planos"], ["Destaques", "/admin/destaques"], ["Teste grátis e avulsos", "/admin/configuracoes?grupo=planos"]] },
-  { nome: "Aki", texto: "Modelo, orçamento e qualidade das respostas.", links: [["Configurar Aki", "/admin/robo"]] },
+  { nome: "Merc", texto: "Modelo, orçamento e qualidade das respostas.", links: [["Configurar Merc", "/admin/robo"]] },
   { nome: "Conteúdo", texto: "Página inicial, ajuda e documentos.", links: [["Textos e página inicial", "/admin/textos"]] },
   { nome: "Região", texto: "Região atendida e cidades disponíveis.", links: [["Regiões e cidades", "/admin/regioes"]] },
   { nome: "Catálogo", texto: "Categorias e campos dos anúncios.", links: [["Categorias e campos", "/admin/categorias"]] },
@@ -72,7 +72,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
       <Link href="/admin/configuracoes" className="mb-3 inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro hover:underline">Todas as configurações</Link>
       <Titulo>{NOMES_GRUPO[grupoAtual] ?? "Ajustes avançados"}</Titulo>
       {erroConfigs && <Aviso tipo="erro">Não foi possível carregar os ajustes. Tente novamente.</Aviso>}
-      {grupoAtual === "robo" && <p className="mb-4 text-sm text-texto-suave">Modelo, orçamento e textos ficam em <Link href="/admin/robo" className="font-semibold underline">Configurar Aki</Link>.</p>}
+      {grupoAtual === "robo" && <p className="mb-4 text-sm text-texto-suave">Modelo, orçamento e textos ficam em <Link href="/admin/robo" className="font-semibold underline">Configurar Merc</Link>.</p>}
       {grupoAtual === "radar" && <p className="mb-4 text-sm text-texto-suave">Os textos dos avisos ficam em <Link href="/admin/mensagens" className="font-semibold underline">Mensagens automáticas</Link>.</p>}
 
       <nav aria-label="Seções do painel" className="admin-abas -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">

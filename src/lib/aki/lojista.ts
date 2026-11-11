@@ -19,7 +19,7 @@ export async function pedirAoAki<T>(pedido: PedidoLojistaAki): Promise<T> {
     body: JSON.stringify(pedido),
   });
   const dados = await resposta.json();
-  if (!resposta.ok) throw new ErroLojistaAki(dados.erro ?? "O Aki não conseguiu concluir o pedido.", dados.repetir === true);
+  if (!resposta.ok) throw new ErroLojistaAki(dados.erro ?? "O Merc não conseguiu concluir o pedido.", dados.repetir === true);
   return dados as T;
 }
 

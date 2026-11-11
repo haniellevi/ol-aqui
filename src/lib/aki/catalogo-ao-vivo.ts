@@ -149,6 +149,6 @@ export async function listarModelosAoVivo(provedor: ProvedorIA): Promise<ModeloA
   return lista.filter((m) => ID_VALIDO.test(m.modelo)).sort((a, b) => (b.lancado_em ?? "").localeCompare(a.lancado_em ?? "") || a.nome.localeCompare(b.nome));
 }
 
-/** Serve para o Aki: lê imagem, usa ferramentas e tem preço (o custo de cada resposta depende dele). */
+/** Serve para o Merc: lê imagem, usa ferramentas e tem preço (o custo de cada resposta depende dele). */
 export const serveParaOAki = (m: ModeloAoVivo) =>
   m.le_imagem && m.usa_ferramentas && m.preco_entrada_usd !== null && m.preco_saida_usd !== null;
