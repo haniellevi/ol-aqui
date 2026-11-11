@@ -59,7 +59,7 @@ export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitri
 });
 
 const COLUNAS_MINHA =
-  "id, dono_id, cidade, bairro, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_modelo, banner_cor, " +
+  "id, dono_id, cidade, bairro, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_aki_posicao, categoria_loja, banner_modelo, banner_cor, " +
   "endereco, lat, lng, horarios, sobre, formas_pagamento, faz_entrega, entrega_obs";
 
 /** Vitrine do usuário logado com os campos da vitrine completa. Sem login ou sem vitrine → null. */

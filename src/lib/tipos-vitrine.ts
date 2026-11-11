@@ -33,6 +33,8 @@ export type VitrinePublica = {
   /** Banner que vale agora: "foto" só se o plano atual tiver foto da fachada. */
   banner_tipo: BannerTipo;
   banner_url: string | null;
+  banner_aki_posicao?: number | null;
+  categoria_loja?: string | null;
   banner_modelo: BannerModelo;
   banner_cor: string;
   selo: boolean;
@@ -110,6 +112,8 @@ export type MinhaVitrineCompleta = {
   capa_url: string | null;
   banner_tipo: BannerTipo;
   banner_url: string | null;
+  banner_aki_posicao?: number | null;
+  categoria_loja?: string | null;
   banner_modelo: BannerModelo;
   banner_cor: string;
   endereco: string | null;
