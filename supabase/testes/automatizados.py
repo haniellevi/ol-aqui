@@ -53,6 +53,8 @@ try:
     print('PASS: melhoria com IA: cota por plano, texto seguro, dicas de foto e decisão do dono', flush=True)
     checked(sql((root/'supabase/testes/510_categorias_3_niveis.sql').read_text()))
     print('PASS: categorias em 3 níveis: travas, caminho, busca, Radar, nicho e sugestão da troca', flush=True)
+    checked(sql((root/'supabase/testes/520_categorias_sugeridas.sql').read_text()))
+    print('PASS: categorias sugeridas: normalização, grupo, parecidas, aprovar, juntar, recusar e aviso', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

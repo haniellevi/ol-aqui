@@ -188,6 +188,7 @@ const NOMES_AVISO: Record<string, { nome: string; explicacao: string }> = {
   proposta_nova: { nome: "Chegou proposta", explicacao: "Uma loja mandou oferta para o seu pedido." },
   prazo_acabou: { nome: "Prazo do pedido acabou", explicacao: "Resumo das ofertas para você escolher." },
   proposta_escolhida: { nome: "Escolheram minha proposta", explicacao: "Para lojas: o comprador quer falar com você." },
+  categoria_sugerida: { nome: "Resposta da sugestão de categoria", explicacao: "Quando a equipe aceita ou junta a categoria que você sugeriu." },
   categorias_revisar: { nome: "Sugestões de categoria", explicacao: "Para lojas: a IA sugeriu categorias melhores para seus produtos." },
   resumo_semanal: { nome: "Resumo semanal da loja", explicacao: "Para lojas: toda segunda, as visitas, os cliques e as dicas da semana." },
   favorito_radar: { nome: "Lembrete dos meus favoritos", explicacao: "Quando um favorito sai do ar ou fica parado, sugerimos pedir parecido no Radar." },

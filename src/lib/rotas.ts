@@ -82,6 +82,7 @@ export const LINK_ADMIN_REGIOES = "/admin/regioes";
 export const linkAdminRegiao = (id: string) => `${LINK_ADMIN_REGIOES}/${id}`;
 export const LINK_ADMIN_CATEGORIAS = "/admin/categorias";
 export const linkAdminCategoria = (id: string) => `${LINK_ADMIN_CATEGORIAS}/${id}`;
+export const LINK_ADMIN_CATEGORIAS_SUGERIDAS = `${LINK_ADMIN_CATEGORIAS}/sugeridas`;
 
 /** Painel: telas 13 (mensagens automáticas) e 15 (relatórios). */
 export const LINK_ADMIN_MENSAGENS = "/admin/mensagens";

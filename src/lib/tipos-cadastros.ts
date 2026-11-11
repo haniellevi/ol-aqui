@@ -53,6 +53,19 @@ export type CategoriaAdmin = {
   filhas: number;
 };
 
+/** Um grupo de sugestões de categoria pendentes (mesmo texto normalizado): linha de admin_categorias_sugeridas(). */
+export type GrupoSugestao = {
+  texto_norm: string;
+  texto: string;
+  quantidade: number;
+  anuncios: number;
+  proximas: { id: string; caminho: string; vezes: number }[];
+  primeira: string;
+  ultima: string;
+  /** Textos normalizados de outros grupos pendentes parecidos (erro de digitação). */
+  parecidas: string[];
+};
+
 /** Categoria em árvore (até 3 níveis): nivel 1 = grande, 2 = sub, 3 = tipo. Filhas na ordem do painel. */
 export type CategoriaAdminArvore = CategoriaAdmin & { nivel: number; subcategorias: CategoriaAdminArvore[] };
 

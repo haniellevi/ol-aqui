@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CategoriaAdmin, CategoriaAdminArvore, CidadeAdmin, RegiaoAdmin } from "@/lib/tipos-cadastros";
+import type { CategoriaAdmin, CategoriaAdminArvore, CidadeAdmin, GrupoSugestao, RegiaoAdmin } from "@/lib/tipos-cadastros";
 import { NIVEIS_MAXIMOS, nomeCaminho } from "@/lib/categorias-arvore";
 
 // Leituras das telas 7 e 9 do painel. Usam o cliente do admin (exigirAdmin): as funções do banco
@@ -39,6 +39,12 @@ export async function lerCategorias(db: SupabaseClient): Promise<{ arvore: Categ
     else porNo.get(c.pai_id)?.subcategorias.push(c);
   }
   return { arvore, todas, falhou: !!error };
+}
+
+/** Sugestões de categoria pendentes, agrupadas (admin_categorias_sugeridas). Erro → lista vazia com `falhou`. */
+export async function lerCategoriasSugeridas(db: SupabaseClient): Promise<{ grupos: GrupoSugestao[]; falhou: boolean }> {
+  const { data, error } = await db.rpc("admin_categorias_sugeridas");
+  return { grupos: (data ?? []) as GrupoSugestao[], falhou: !!error };
 }
 
 /**
