@@ -49,6 +49,8 @@ try:
     print('PASS: categorias com IA: lote, sugestão confiante, falha volta à fila, limites, nicho e decisão do dono', flush=True)
     checked(sql((root/'supabase/testes/490_painel_loja.sql').read_text()))
     print('PASS: painel da loja: eventos, números, dicas por regra e resumo semanal', flush=True)
+    checked(sql((root/'supabase/testes/500_melhoria_ia.sql').read_text()))
+    print('PASS: melhoria com IA: cota por plano, texto seguro, dicas de foto e decisão do dono', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

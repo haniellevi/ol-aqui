@@ -62,7 +62,7 @@ async function tela(op = {}) {
   const pedidos = [];
   const { default: Page } = carregar('src/app/(conta)/minha-conta/loja/desempenho/page.tsx', {
     'next/navigation': nav,
-    '@/lib/dados/vitrine-completa': { minhaVitrineCompleta: async () => (op.v === undefined ? loja : op.v), vitrineNovaAtiva: async () => op.ativa !== false },
+    '@/lib/dados/vitrine-completa': { minhaVitrineCompleta: async () => (op.v === undefined ? loja : op.v), vitrineNovaAtiva: async () => op.ativa !== false, melhoriaIAAtiva: async () => !!op.ia },
     '@/lib/dados/painel-loja': {
       meuDesempenhoLoja: async (id, dias) => { pedidos.push(dias); return op.d === undefined ? { ...desempenho, dias } : op.d; },
       minhasDicasLoja: async () => (op.dicas === undefined ? dicas : op.dicas),
@@ -84,6 +84,8 @@ test('desempenho da loja: números com comparação, mais vistos e dicas com lin
   assert.match(h, /href="\/anunciar\/fotos\?rascunho=49100000-0000-4000-a000-000000000001&amp;editar=1"/);
   assert.match(h, /href="\/anunciar\/preco\?rascunho=49100000-0000-4000-a000-000000000002&amp;editar=1"/);
   assert.match(h, /aria-current="true"[^>]*>.*Últimos 7 dias/s);
+  assert.doesNotMatch(h, /Melhorar com IA/, 'Sem IA ligada, sem atalho');
+  assert.match((await tela({ ia: true })).h, /href="\/minha-conta\/loja\/melhorar\/49100000-0000-4000-a000-000000000001"/);
 });
 test('desempenho da loja: 30 dias, sem visitas, sem dicas e falhas de leitura', async () => {
   const { h, pedidos } = await tela({ sp: { dias: '30' }, d: { dias: 30, atual: zero, anterior: zero, mais_vistos: [] }, dicas: [] });
