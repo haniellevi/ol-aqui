@@ -83,7 +83,7 @@ async function lerFaixa(categoriaId: string, microrregiaoId: string | null): Pro
 }
 
 const COLUNAS_CARD =
-  "id, titulo, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, publicado_em, criado_em, destaque_ate, categorias(slug, nome)";
+  "id, titulo, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, publicado_em, criado_em, destaque_ate, categorias!anuncios_categoria_id_fkey(slug, nome)";
 
 type LinhaCard = {
   id: string;
