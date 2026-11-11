@@ -52,7 +52,7 @@ function ambiente(t, { fiel = true, detalhe = '', logado = true, contaBloqueada 
         eq: () => consulta, gt: () => consulta, select: () => consulta,
         single: async () => ({ data: { nome: 'Loja teste' } }),
         maybeSingle: async () => {
-          if (tabela === 'contas_revogadas' || tabela === 'contas_bloqueadas') {
+          if (['contas_revogadas', 'contas_bloqueadas', 'lixeira_contas'].includes(tabela)) {
             return { data: contaBloqueada === tabela ? { usuario_id: uid } : null, error: null };
           }
           return { data: { id } };
@@ -107,7 +107,7 @@ test('Aki exige sessão antes de reservar créditos ou chamar o provedor', async
   assert.deepEqual(a.chamadas, []);
 });
 
-for (const tabela of ['contas_revogadas', 'contas_bloqueadas']) {
+for (const tabela of ['contas_revogadas', 'contas_bloqueadas', 'lixeira_contas']) {
   test(`Aki recusa conta em ${tabela} antes de reservar créditos ou chamar o provedor`, async (t) => {
     const a = ambiente(t, { contaBloqueada: tabela });
     const resposta = await a.gerar({ tipo: 'banner' });
