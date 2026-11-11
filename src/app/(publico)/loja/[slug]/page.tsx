@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { Clock, MapPin, MessageCircle, Pencil } from "lucide-react";
-import { anunciosPorPaginaVitrine, anunciosVitrine, vitrinePublica } from "@/lib/dados/vitrine-completa";
+import { anunciosPorPaginaVitrine, anunciosVitrine, vitrineNovaAtiva, vitrinePublica } from "@/lib/dados/vitrine-completa";
+import { favoritosEntre } from "@/lib/dados/favoritos";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import type { CardAnuncioProps } from "@/components/anuncio/card-anuncio";
 import { Vazio } from "@/components/ui/vazio";
@@ -11,9 +13,13 @@ import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
 import { BannerLoja } from "@/components/vitrine/banner-loja";
 import { CopiarLinkLoja } from "@/components/vitrine/copiar-link-loja";
 import { InformacoesLoja } from "@/components/vitrine/informacoes-loja";
+import { BarraLoja } from "@/components/vitrine/barra-loja";
+import { MedirLoja } from "./medir-loja";
+import { FavoritoCard } from "@/components/vitrine/favorito-card";
+import { coordenadasValidas } from "@/components/vitrine/mapa-loja";
 import { SeloLoja } from "@/components/vitrine/selos";
 import { desde } from "@/components/vitrine/util";
-import { situacaoAgora } from "@/components/vitrine/regras";
+import { linkComoChegar, situacaoAgora } from "@/components/vitrine/regras";
 import { inteiro, linkLoja, urlAbsoluta } from "@/lib/formato";
 import { LINK_MINHA_LOJA } from "@/lib/rotas";
 import type { AnuncioVitrine, OrdemVitrine, VitrinePublica } from "@/lib/tipos-vitrine";
@@ -26,7 +32,7 @@ import { Alert } from "@/components/ui/alert";
 // → "Ver mais produtos" (?pagina=2...) → informações da loja.
 // O que o plano mostra (foto, seções, fixados) já vem decidido pelo banco.
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ ordem?: string | string[]; pagina?: string | string[] }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ ordem?: string | string[]; pagina?: string | string[]; nova?: string | string[] }> };
 export const dynamic = "force-dynamic";
 const grade = "lg:grid-cols-3! xl:grid-cols-3!";
 
@@ -39,9 +45,10 @@ function lerPagina(v: string | string[] | undefined): number {
   return Number.isInteger(n) && n > 1 && n <= 1000 ? n : 1;
 }
 
-/** Endereço da vitrine com ordem e página (página 1 e ordem padrão ficam de fora). */
-function linkPagina(base: string, ordem: OrdemVitrine, pagina: number) {
+/** Endereço da vitrine com ordem e página (página 1 e ordem padrão ficam de fora). previa = ?nova=1 do dono. */
+function linkPagina(base: string, ordem: OrdemVitrine, pagina: number, previa = false) {
   const q = new URLSearchParams();
+  if (previa) q.set("nova", "1");
   if (ordem === "menor_preco") q.set("ordem", ordem);
   if (pagina > 1) q.set("pagina", String(pagina));
   const t = q.toString();
@@ -143,8 +150,30 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const desdeTexto = desde(v.criado_em);
   const base = linkLoja(v.slug);
 
+  // Vitrine nova com IA (docs/PLANO-VITRINE-IA.md): chave vitrine_ia.ativa; o dono vê a prévia com ?nova=1.
+  const previa = v.e_dono && (Array.isArray(sp.nova) ? sp.nova[0] : sp.nova) === "1";
+  const nova = previa || (v.status === "ativa" && (await vitrineNovaAtiva(v.microrregiao_id)));
+  const { userId } = nova ? await auth() : { userId: null };
+  // Todos os produtos mostrados (inclusive os de seções fora desta página).
+  const favoritos = nova && v.status === "ativa" && userId ? await favoritosEntre(todos.map((a) => a.id), userId) : new Set<string>();
+  const entrarHref = `/entrar?redirect_url=${encodeURIComponent(linkPagina(base, ordem, pagina, previa))}`;
+  const acao = nova && v.status === "ativa"
+    ? (a: CardAnuncioProps["anuncio"]) => (
+        <FavoritoCard anuncioId={a.id} titulo={a.titulo} inicial={favoritos ? favoritos.has(a.id) : null} logado={!!userId} entrarHref={entrarHref} />
+      )
+    : undefined;
+  const pino = coordenadasValidas(v.lat, v.lng);
+  const mapaHref = !nova || v.status !== "ativa" ? null : pino ? "#mapa-loja" : linkComoChegar({ lat: v.lat, lng: v.lng, endereco: v.endereco, cidade: v.cidade });
+  const temBarra = nova && (!!whatsapp || !!mapaHref);
+  // Abas fixas: um atalho para cada bloco da página, na ordem em que aparecem.
+  const abas = !nova || !produtos || anuncios.length === 0 ? [] : [
+    ...(fixados.length > 0 ? [{ href: "#destaques-loja", nome: "Destaques" }] : []),
+    ...secoes.map((s) => ({ href: `#secao-${s.id}`, nome: s.nome })),
+    ...(ordem === "menor_preco" ? [] : grupos.map((g, i) => ({ href: `#grupo-${i}`, nome: g.nome }))),
+  ];
+
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 pb-8 md:px-4 md:py-4">
+    <main className={`mx-auto flex w-full max-w-6xl flex-col gap-5 md:px-4 md:py-4 ${temBarra ? "pb-24 md:pb-8" : "pb-8"}`}>
       {v.status !== "ativa" && (
         <Alert variant="warning" role="status" className="mx-4 mt-3 md:mx-0 md:mt-0">
           Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : "plano vencido"}). Visível apenas para o responsável e a equipe Mercado da Região.
@@ -184,7 +213,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           </div>
           <div className="flex flex-wrap items-start gap-2">
             {whatsapp && (
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "flex-1 whitespace-nowrap sm:flex-none")}>
+              <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "flex-1 whitespace-nowrap sm:flex-none")}>
                 <MessageCircle className="size-5" aria-hidden />
                 Chamar no WhatsApp
               </a>
@@ -197,12 +226,29 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
               </Botao>
             )}
           </div>
-          <nav aria-label="Nesta loja" className="flex flex-wrap gap-2">
-            <Chip href="#produtos-loja">Ver anúncios ({inteiro(v.total_anuncios)})</Chip>
-            <Chip href="#informacoes-loja">Informações da loja</Chip>
-          </nav>
+          {!nova && (
+            <nav aria-label="Nesta loja" className="flex flex-wrap gap-2">
+              <Chip href="#produtos-loja">Ver anúncios ({inteiro(v.total_anuncios)})</Chip>
+              <Chip href="#informacoes-loja">Informações da loja</Chip>
+            </nav>
+          )}
         </div>
       </header>
+
+      {nova && (
+        <nav aria-label="Categorias desta loja" className="olaki-material sticky top-13 z-20 -mt-5 md:top-14 md:mt-0 md:rounded-card">
+          <ul className="flex gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none]">
+            {abas.map((a) => (
+              <li key={a.href} className="flex">
+                <Chip href={a.href}>{a.nome}</Chip>
+              </li>
+            ))}
+            <li className="flex">
+              <Chip href="#informacoes-loja">Informações</Chip>
+            </li>
+          </ul>
+        </nav>
+      )}
 
       <div className="flex flex-col gap-6 px-4 md:px-0 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start">
         <div id="produtos-loja" className="flex min-w-0 scroll-mt-24 flex-col gap-6">
@@ -211,25 +257,25 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           {v.total_anuncios > 1 && (
             <nav aria-label="Ordem dos produtos" className="flex flex-wrap items-center gap-2">
               <span className="text-base text-texto-suave">Mostrar:</span>
-              <Chip href={base} ativo={ordem === "recentes"} scroll={false} replace>
+              <Chip href={linkPagina(base, "recentes", 1, previa)} ativo={ordem === "recentes"} scroll={false} replace>
                 Vitrine da loja
               </Chip>
-              <Chip href={`${base}?ordem=menor_preco`} ativo={ordem === "menor_preco"} scroll={false} replace>
+              <Chip href={linkPagina(base, "menor_preco", 1, previa)} ativo={ordem === "menor_preco"} scroll={false} replace>
                 Menor preço
               </Chip>
             </nav>
           )}
 
-          {!produtos ? <Vazio titulo="Não conseguimos carregar os anúncios" texto="As informações da loja continuam disponíveis. Tente carregar os produtos novamente."><Botao href={linkPagina(base, ordem, pagina)} larguraTotal>Tentar novamente</Botao></Vazio> : anuncios.length === 0 && pagina > 1 ? (
+          {!produtos ? <Vazio titulo="Não conseguimos carregar os anúncios" texto="As informações da loja continuam disponíveis. Tente carregar os produtos novamente."><Botao href={linkPagina(base, ordem, pagina, previa)} larguraTotal>Tentar novamente</Botao></Vazio> : anuncios.length === 0 && pagina > 1 ? (
             <Vazio titulo="Não tem mais produtos aqui." texto="Volte para o começo da loja.">
-              <Botao href={linkPagina(base, ordem, 1)} variante="primario" larguraTotal>
+              <Botao href={linkPagina(base, ordem, 1, previa)} variante="primario" larguraTotal>
                 Ver o começo da loja
               </Botao>
             </Vazio>
           ) : anuncios.length === 0 ? (
             <Vazio titulo="Esta loja ainda não tem anúncio no ar." texto="Volte daqui a pouco ou veja outros anúncios da região.">
               {whatsapp && (
-                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={classesBotao("whatsapp", true)}>
+                <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" className={classesBotao("whatsapp", true)}>
                   <MessageCircle className="size-5" aria-hidden />
                   Perguntar no WhatsApp
                 </a>
@@ -242,26 +288,26 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
             <>
               {fixados.length > 0 && (
                 <section aria-labelledby="destaques-loja" className="flex flex-col gap-3">
-                  <h2 id="destaques-loja" className="text-lg font-semibold">
+                  <h2 id="destaques-loja" className="scroll-mt-32 text-lg font-semibold">
                     Destaques da loja
                   </h2>
-                  <GradeAnuncios className={grade} anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} />
+                  <GradeAnuncios className={grade} anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} acao={acao} />
                 </section>
               )}
               {secoes.map((s) => (
                 <section key={s.id} aria-labelledby={`secao-${s.id}`} className="flex flex-col gap-3">
-                  <h2 id={`secao-${s.id}`} className="text-lg font-semibold">
+                  <h2 id={`secao-${s.id}`} className="scroll-mt-32 text-lg font-semibold">
                     {s.nome}
                   </h2>
-                  <GradeAnuncios className={grade} anuncios={s.itens.map((a) => paraCard(a, v))} />
+                  <GradeAnuncios className={grade} anuncios={s.itens.map((a) => paraCard(a, v))} acao={acao} />
                 </section>
               ))}
-              {ordem === "menor_preco" ? <section aria-labelledby="ordem-preco" className="flex flex-col gap-3"><h2 id="ordem-preco" className="text-lg font-semibold">Do menor para o maior preço</h2><GradeAnuncios className={grade} anuncios={anuncios.map((a) => paraCard(a, v))} /></section> : grupos.map((g, i) => (
+              {ordem === "menor_preco" ? <section aria-labelledby="ordem-preco" className="flex flex-col gap-3"><h2 id="ordem-preco" className="text-lg font-semibold">Do menor para o maior preço</h2><GradeAnuncios className={grade} anuncios={anuncios.map((a) => paraCard(a, v))} acao={acao} /></section> : grupos.map((g, i) => (
                 <section key={g.nome} aria-labelledby={`grupo-${i}`} className="flex flex-col gap-3">
-                  <h2 id={`grupo-${i}`} className="text-lg font-semibold">
+                  <h2 id={`grupo-${i}`} className="scroll-mt-32 text-lg font-semibold">
                     {g.nome} <span className="text-base font-normal text-texto-suave">({inteiro(g.itens.length)})</span>
                   </h2>
-                  <GradeAnuncios className={grade} anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} />
+                  <GradeAnuncios className={grade} anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} acao={acao} />
                 </section>
               ))}
               {(temMais || pagina > 1) && (
@@ -271,12 +317,12 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                   </p>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     {temMais && (
-                      <Botao href={linkPagina(base, ordem, pagina + 1)} variante="secundario" larguraTotal className="sm:w-auto">
+                      <Botao href={linkPagina(base, ordem, pagina + 1, previa)} variante="secundario" larguraTotal className="sm:w-auto">
                         Ver mais produtos
                       </Botao>
                     )}
                     {pagina > 1 && (
-                      <Botao href={linkPagina(base, ordem, pagina - 1)} variante="secundario" larguraTotal className="sm:w-auto">
+                      <Botao href={linkPagina(base, ordem, pagina - 1, previa)} variante="secundario" larguraTotal className="sm:w-auto">
                         Página anterior
                       </Botao>
                     )}
@@ -287,11 +333,13 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           )}
         </div>
 
-        <aside id="informacoes-loja" className="flex min-w-0 scroll-mt-24 flex-col gap-4">
-          <InformacoesLoja v={v.status === "ativa" ? v : { ...v, instagram: null, endereco: null, lat: null, lng: null }} agora={agora} />
+        <aside id="informacoes-loja" className="flex min-w-0 scroll-mt-32 flex-col gap-4">
+          <InformacoesLoja v={v.status === "ativa" ? v : { ...v, instagram: null, endereco: null, lat: null, lng: null }} agora={agora} mapa={nova} />
           <p className="rounded-card border border-borda p-4 text-sm text-texto-suave">Negocie com cuidado: confira o produto e o vendedor antes de pagar. O contato acontece diretamente com a loja.</p>
         </aside>
       </div>
+      {temBarra && <BarraLoja whatsappHref={whatsapp} mapaHref={mapaHref} />}
+      {nova && v.status === "ativa" && !v.e_dono && <MedirLoja vitrineId={v.id} />}
     </main>
   );
 }
