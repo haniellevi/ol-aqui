@@ -9,6 +9,7 @@ export const LINK_LOJA_BANNER = "/minha-conta/loja/banner";
 export const LINK_LOJA_INFORMACOES = "/minha-conta/loja/informacoes";
 export const LINK_LOJA_SECOES = "/minha-conta/loja/secoes";
 export const LINK_LOJA_FIXADOS = "/minha-conta/loja/fixados";
+export const LINK_LOJA_CATEGORIAS = "/minha-conta/loja/categorias";
 
 /** Tela "Destacar" de um anúncio (também usada pelo robô Merc, via gerarLinkDestaque). */
 export const linkDestacar = (anuncioId: string, pedidoId?: string | null) =>

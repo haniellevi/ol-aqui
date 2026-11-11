@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { ChevronRight, Clock, ExternalLink, Image as IconeImagem, LayoutList, Pin, Sparkles, Store } from "lucide-react";
+import { ChevronRight, Clock, ExternalLink, Image as IconeImagem, LayoutList, Pin, Sparkles, Store, Tags } from "lucide-react";
 import { listarCidades } from "@/lib/dados/regiao";
-import { meusRecursosVitrine, minhaVitrineCompleta, planosPublicos } from "@/lib/dados/vitrine-completa";
+import { meusRecursosVitrine, minhaVitrineCompleta, planosPublicos, vitrineNovaAtiva } from "@/lib/dados/vitrine-completa";
+import { minhasSugestoesCategoria } from "@/lib/dados/categorias-ia";
 import { linkLoja, preco, urlAbsoluta } from "@/lib/formato";
-import { LINK_DESTACAR_LOJA, LINK_LOJA_BANNER, LINK_LOJA_FIXADOS, LINK_LOJA_INFORMACOES, LINK_LOJA_SECOES, linkDestacarLoja } from "@/lib/rotas";
+import { LINK_DESTACAR_LOJA, LINK_LOJA_BANNER, LINK_LOJA_CATEGORIAS, LINK_LOJA_FIXADOS, LINK_LOJA_INFORMACOES, LINK_LOJA_SECOES, linkDestacarLoja } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
@@ -58,6 +59,8 @@ export default async function PaginaMinhaLoja() {
     createClient().then((db) => db.rpc("minha_verificacao_loja")),
     createClient().then((db) => db.rpc("minha_loja_exclusao")),
   ]);
+  // Vitrine com IA (etapa 4): sugestões de categoria, só com a vitrine nova ligada.
+  const sugestoesIA = (await vitrineNovaAtiva(v.microrregiao_id).catch(() => false)) ? await minhasSugestoesCategoria(v.id) : undefined;
   const exclusao = exclusaoR.error ? null : (exclusaoR.data as ExclusaoLoja | null);
   if (exclusao?.na_lixeira) {
     return (
@@ -154,6 +157,10 @@ export default async function PaginaMinhaLoja() {
             <ItemMenu href={LINK_LOJA_INFORMACOES} icone={<Store />} titulo="Horários e informações" detalhe="Endereço, Instagram, pagamento e entrega" />
             <ItemMenu href={LINK_LOJA_SECOES} icone={<LayoutList />} titulo="Seções próprias" detalhe={usoSecoes} />
             <ItemMenu href={LINK_LOJA_FIXADOS} icone={<Pin />} titulo="Produtos no topo" detalhe={usoFixados} />
+            {sugestoesIA !== undefined && (
+              <ItemMenu href={LINK_LOJA_CATEGORIAS} icone={<Tags />} titulo="Revise suas categorias"
+                detalhe={sugestoesIA === null ? "Nicho e categorias sugeridos pela IA" : sugestoesIA.length === 0 ? "Tudo organizado" : sugestoesIA.length === 1 ? "1 sugestão da IA" : `${sugestoesIA.length} sugestões da IA`} />
+            )}
           </ul>
         </section>
       )}

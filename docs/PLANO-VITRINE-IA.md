@@ -80,6 +80,18 @@ estiverem prontas, controlada por uma chave em `configuracoes`.
   limitar por plano (ex.: N melhorias por mês no Slim).
 - Todo custo passa pelo registro que já existe (`robo_uso`).
 
+## Como ligar a categorização com IA (etapa 4)
+
+1. Aplicar a migração `20261111040000_categorizacao_ia.sql`.
+2. Conferir `robo.cotacao_dolar` e `robo.orcamento_mensal_centavos` (o lote para quando o orçamento do mês acaba).
+3. Medir: pôr `vitrine_ia.categorizacao_por_dia` = 20 e ligar `vitrine_ia.categorizacao_ativa`.
+   No dia seguinte, ver o custo em `robo_uso` (tipo `categorizacao`) e a qualidade em `categorizacao_ia`.
+4. Se estiver bom, subir o limite por dia (padrão 300).
+
+A rotina `olaki-categorizacao-ia` roda a cada 5 minutos e usa o mesmo segredo interno da moderação
+(`MODERACAO_IA_SECRET` na Vercel e `olaki_moderacao_ia_token` no cofre do Supabase).
+A tela "Revise suas categorias" e o aviso no sino só aparecem com `vitrine_ia.ativa` ligada.
+
 ## Riscos e pontos em aberto
 
 - **Tamanho:** lançar tudo junto é o caminho mais longo. A chave em `configuracoes` permite ligar por partes se for preciso.

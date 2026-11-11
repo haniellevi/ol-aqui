@@ -45,6 +45,8 @@ try:
     print('PASS: vitrine com IA, base: nicho da loja, buscas somadas, categoria sugerida e chave desligada', flush=True)
     checked(sql((root/'supabase/testes/470_favoritos_radar.sql').read_text()))
     print('PASS: lembrete de favoritos no sino: chave, um por dia, fora do ar primeiro, preferência e privacidade', flush=True)
+    checked(sql((root/'supabase/testes/480_categorizacao_ia.sql').read_text()))
+    print('PASS: categorias com IA: lote, sugestão confiante, falha volta à fila, limites, nicho e decisão do dono', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
