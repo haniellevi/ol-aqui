@@ -30,6 +30,7 @@ A matriz não cobriu `selecao`, `aviso-fundo` e `patrocinado-fundo` como fundo. 
 - Família única: Poppins (a do logo), pesos 400, 600 e 700, via `next/font`.
 - Escala em `globals.css` (rem): 11 legenda · 12 apoio, botões e rótulos · 13 texto · 14 título de card · 15 seção · 16 e 18 título da tela · 20 `text-3xl`.
 - Campos ficam em 16 px no toque (evita zoom do iPhone).
+- Título da vitrine: `text-vitrine`, 22 px no celular até 32 px no computador, só no h1 do Início (criado em 2026-11-10 com a home "Duas portas").
 
 ## Shape language
 - Corner radius: 8 px campos, chips e botões (`radius-campo`) · 10 px cards (`radius-card`) · 20 px folhas (`radius-folha`) · cheio em selos e avatar.
@@ -47,7 +48,7 @@ A matriz não cobriu `selecao`, `aviso-fundo` e `patrocinado-fundo` como fundo. 
 Omitido: projeto de aplicativo (cabeçalho + barra de baixo). A forma das telas segue `docs/TELAS-E-FLUXOS.md`.
 
 ## Reference intelligence
-- Reference board: ainda não existe (`.tastemaker/reference-board.md` entra na Fase 1).
+- Reference board: `.tastemaker/reference-board.md` (fontes vistas: OLX, OfferUp, GetNinjas).
 - Design read: aplicativo de classificados para moradores e lojas de Corrente e região, modo Operate, visual simples e da região.
 - Foundation: stack do próprio repositório (Tailwind v4 + shadcn + lucide-react).
 - Anti-references: roxo violeta do OLX (#6E0AD6), imagem de banco de imagens na home.
@@ -55,7 +56,7 @@ Omitido: projeto de aplicativo (cabeçalho + barra de baixo). A forma das telas 
 ## Taste memory
 - Profile priors used: none (`~/.tastemaker/profile.md` não existe).
 - Decision log: `.tastemaker/decisions.log`
-- Last resolved decisions: nenhuma registrada pela skill. As decisões anteriores do Raniel estão no DESIGN-SYSTEM e viraram a lista "Do not" abaixo.
+- Last resolved decisions: 2026-11-10 kept — home "no começo" na variação 2 "Duas portas"; rejected — variação 1 "Três passos". As decisões anteriores do Raniel estão no DESIGN-SYSTEM e viraram a lista "Do not" abaixo.
 - Pending review: ver `decisions.log`.
 - Profile promotion: none.
 
