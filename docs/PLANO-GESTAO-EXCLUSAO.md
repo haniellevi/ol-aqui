@@ -121,9 +121,22 @@ Decidido com o Raniel em 10/11/2026. Base para os próximos PRs (um por etapa).
 4. Conferir se o Clerk deixa o usuário excluir a conta pelo próprio painel do Clerk. Se deixar, desligar essa opção, porque ela pula a lixeira.
 
 **Limites conhecidos:**
-- Quem tem loja com pagamento e apaga só a loja continua com ela anonimizada no nome. Como cada pessoa só pode ter uma loja, essa pessoa não consegue abrir outra. Resolver na etapa 2.
+- Quem tem loja com pagamento e apaga só a loja continua com ela anonimizada no nome. Como cada pessoa só pode ter uma loja, essa pessoa não consegue abrir outra. Na etapa 2 o dono é avisado disso antes de confirmar.
 - Os anúncios voltam ao ar ao restaurar. Os que venceram nesse meio-tempo são expirados pela rotina da noite.
-- A tela do painel (Lixeira, botões Excluir e Suspender) é a etapa 2.
+
+## Etapa 2 — feita na branch `claude/gestao-exclusao-painel` (sobre a etapa 1; ainda não está em produção)
+
+**Banco** (`supabase/migrations/20261111010000_painel_lixeira.sql`): `minha_loja_exclusao()` diz ao dono se a loja está na lixeira, o prazo, se ele pode restaurar e se a loja já teve pagamento. Teste no `450_lixeira_contas_lojas.sql`.
+
+**Painel:**
+- Nova tela `/admin/lixeira`, como aba da área Lojas (o menu lateral continua com 7 itens). Lista contas, lojas e anúncios, com dias restantes, "Restaurar" e "Apagar de vez agora" (pede o nome exato e roda a limpeza na hora).
+- Ficha do usuário: "Suspender conta" / "Reativar conta" (punição) e "Excluir conta" (lixeira, para pedido do titular).
+- Ficha da loja: "Excluir loja" agora manda para a lixeira. Apagar de vez só pela tela Lixeira. Loja na lixeira esconde edição e operação.
+- Filtro "Na lixeira" na lista de lojas. Histórico com os nomes novos (Conta suspensa, Movido para a lixeira etc.).
+
+**Dono (Minha loja):** botão "Excluir minha loja" (escrever EXCLUIR), aviso quando a loja já teve pagamento, e tela "Restaurar minha loja" enquanto estiver na lixeira.
+
+**Falta conferir:** os fluxos no navegador (sem as chaves no computador, o site não abre aqui). A ação antiga `excluirLojaAdmin` (apagar loja na hora) não aparece mais na tela; dá para retirar numa etapa seguinte.
 
 ## Riscos
 

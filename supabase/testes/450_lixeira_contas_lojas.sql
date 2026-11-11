@@ -43,12 +43,15 @@ select pg_temp.recusa($q$select limpeza_pendente()$q$,'42501');
 select pg_temp.recusa(format('select purgar_loja(%L)',:'loja'),'42501');
 select pg_temp.recusa(format('select lixeira_mover_loja(%L,%L,null,null)',:'loja','admin'),'42501');
 select pg_temp.recusa($q$select excluir_minha_loja('EXCLUIR')$q$,'22023');
+select pg_temp.confere(minha_loja_exclusao() is null,'sem loja nao ve situacao');
 
 -- Dono move um anúncio para a lixeira antes; depois exclui a loja
 set local request.jwt.claim.sub='user_lixDono';
 select mover_anuncio_lixeira(:'antes');
 select pg_temp.recusa($q$select excluir_minha_loja('sim')$q$,'23514');
+select pg_temp.confere(minha_loja_exclusao() @> '{"na_lixeira":false,"tem_pagamentos":false}','loja no ar fora da lixeira');
 select pg_temp.confere(excluir_minha_loja('excluir') > now()+interval '29 days','loja vai para lixeira por 30 dias');
+select pg_temp.confere(minha_loja_exclusao() @> '{"na_lixeira":true,"pode_restaurar":true}' and (minha_loja_exclusao()->>'apagar_apos') is not null,'dono ve prazo e pode restaurar');
 reset role;
 select pg_temp.confere((select status='suspensa' and excluida_em is not null from vitrines_lojas where id=:'loja'),'loja sai do ar');
 select pg_temp.confere(situacao_vitrine(v)='excluida','situacao excluida') from vitrines_lojas v where id=:'loja';

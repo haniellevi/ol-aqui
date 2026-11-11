@@ -108,7 +108,7 @@ export type LojaAdmin = {
   plano_proximo_nome: string | null;
   plano_proximo_ate: string | null;
   status: "ativa" | "inadimplente" | "suspensa";
-  situacao: SituacaoConta | "arquivada";
+  situacao: SituacaoConta | "arquivada" | "excluida";
   selo_loja_verificada: boolean;
   anuncios_ativos: number;
   limite_anuncios: number | null;

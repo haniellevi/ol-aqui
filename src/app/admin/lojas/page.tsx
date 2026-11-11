@@ -30,6 +30,7 @@ const SITUACOES: { valor: LojaAdmin["situacao"]; nome: string; cor: TomSelo }[] 
   { valor: "inadimplente", nome: "Inadimplente", cor: "destructive" },
   { valor: "arquivada", nome: "Arquivada", cor: "secondary" },
   { valor: "suspensa", nome: "Suspensa", cor: "destructive" },
+  { valor: "excluida", nome: "Na lixeira", cor: "destructive" },
 ];
 const SITUACAO = new Map(SITUACOES.map((s) => [s.valor, s]));
 
