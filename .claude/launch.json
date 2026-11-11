@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "prototipo-home",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4173", "--directory", "/home/raniel-linux/workspace/OLAQUI-otimizacao/docs/prototipos/home-fase1"],
+      "port": 4173
+    }
+  ]
+}
