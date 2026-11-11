@@ -2,11 +2,17 @@
 
 Decidido com o Raniel em 10/11/2026. Base para os próximos PRs (um por etapa).
 
-> **Antes de tudo:** o checkout `codex/visual-compacto-aki` está atrás de `origin/main`
-> (falta `gerentes_loja`, `ficha_arquivamento_lojas`, `gestao_usuarios_lojas` com timestamp
-> 20261110234135, telas `hoje/`, `funil/`, `visitas/`, `pecas/`). Toda etapa parte de `main`.
-> As migrations só locais (`20261110174000`, `20261110175000`, `20261110190000`, `20261110191000`)
-> precisam ser conferidas contra `main` antes de seguir.
+> **Base:** este trabalho está na branch `claude/gestao-exclusao`, criada a partir de `origin/main`
+> (e9dfb05), na pasta `~/workspace/OLAQUI-gestao-exclusao`. A `main` não tem migration repetida.
+>
+> **Pendência fora deste plano:** a pasta `~/workspace/OLAQUI` (branch `codex/visual-compacto-aki`)
+> tem cerca de 150 arquivos sem commit. Entre eles estão migrations que não existem em nenhuma branch:
+> `20261110174000_aki_lojistas.sql` e `20261110175000_admin_aki_lojistas.sql` (trabalho novo),
+> mais `20261110190000_gestao_usuarios_lojas.sql` e `20261110191000_marca_mercado_da_regiao.sql`,
+> versões antigas do que já entrou na `main` como `20261110234135` e `20261110190000`.
+> Essas duas antigas **não** devem ser aplicadas. Quem estiver mexendo nessa pasta precisa salvar o
+> trabalho do Aki para lojistas numa branch a partir da `main`, renomeando as migrations para
+> depois de `20261110234459`.
 
 ---
 
