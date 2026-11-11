@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { exigirAdmin } from "@/lib/admin/auth";
-import { lerCategorias } from "@/lib/admin/cadastros";
+import { lerCategorias, maesPossiveis, nomeAdmin } from "@/lib/admin/cadastros";
 import { inteiro } from "@/lib/admin/formato";
 import { ehUuid } from "@/lib/formato";
+import { nomeDoNivel } from "@/lib/categorias-arvore";
 import { LINK_ADMIN_CATEGORIAS, linkAdminCategoria } from "@/lib/rotas";
 import { Cartao, Titulo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
@@ -18,7 +19,7 @@ export default async function CategoriaPage({ params }: { params: Promise<{ id: 
   const { id } = await params;
   if (!ehUuid(id)) notFound();
   const { supabase } = await exigirAdmin();
-  const { arvore, todas, falhou } = await lerCategorias(supabase);
+  const { todas, falhou } = await lerCategorias(supabase);
   const categoria = todas.find((c) => c.id === id);
 
   if (!categoria) {
@@ -36,7 +37,11 @@ export default async function CategoriaPage({ params }: { params: Promise<{ id: 
   }
 
   const mae = categoria.pai_id ? todas.find((c) => c.id === categoria.pai_id) : null;
-  const principais = arvore.filter((p) => p.id !== categoria.id).map(({ id: pid, nome, ativa }) => ({ id: pid, nome, ativa }));
+  const principais = maesPossiveis(todas, categoria.id);
+  // a mãe atual sempre aparece no seletor (senão o formulário trocaria de mãe sem avisar)
+  if (mae && !principais.some((p) => p.id === mae.id)) {
+    principais.unshift({ id: mae.id, nome: nomeAdmin(new Map(todas.map((c) => [c.id, c])), mae), ativa: mae.ativa });
+  }
   const emUso = categoria.anuncios_total > 0 || categoria.pedidos_radar > 0 || categoria.filhas > 0;
   const uso = [
     categoria.anuncios_total ? `${inteiro(categoria.anuncios_total)} ${categoria.anuncios_total === 1 ? "anúncio" : "anúncios"} (${inteiro(categoria.anuncios_ativos)} no ar)` : null,
@@ -52,7 +57,7 @@ export default async function CategoriaPage({ params }: { params: Promise<{ id: 
         <ArrowLeft className="size-5" aria-hidden />
         Todas as categorias
       </Link>
-      <Titulo sub={`${mae ? `Dentro de ${mae.nome}` : "Categoria principal"} · ${uso || "sem anúncios"}`}>{categoria.nome}</Titulo>
+      <Titulo sub={`${mae ? `Dentro de ${mae.nome}` : "Categoria principal"} · ${nomeDoNivel(categoria.nivel)} · ${uso || "sem anúncios"}`}>{categoria.nome}</Titulo>
 
       <div className="space-y-4">
         <Cartao>

@@ -84,7 +84,7 @@ export function FormNovaCategoria({ principais }: { principais: Pick<CategoriaAd
             ))}
             <option value="">Nenhuma: é uma categoria principal</option>
           </select>
-          <p className="mt-1 text-legenda text-texto-suave">O anúncio entra numa subcategoria. A principal só agrupa.</p>
+          <p className="mt-1 text-legenda text-texto-suave">O anúncio entra na categoria mais fina. A de cima só agrupa (até 3 níveis).</p>
         </div>
       </div>
       <EscolhaIcone id="nova-cat-icone" inicial={null} />
@@ -146,6 +146,7 @@ export function FormCategoria({
 }) {
   const [estado, acao, pendente] = useActionState(salvarCategoria, null);
   const sub = !!categoria.pai_id;
+  const temFilhas = categoria.filhas > 0;
   return (
     <form onSubmit={enviarSemLimpar(acao)} className="space-y-5">
       <input type="hidden" name="id" value={categoria.id} />
@@ -170,7 +171,7 @@ export function FormCategoria({
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-legenda text-texto-suave">Mudar aqui leva a subcategoria (e os anúncios dela) para outra categoria.</p>
+            <p className="mt-1 text-legenda text-texto-suave">Mudar aqui leva a categoria (e os anúncios dela) para outro lugar. Máximo de 3 níveis.</p>
           </div>
         )}
       </div>
@@ -188,13 +189,15 @@ export function FormCategoria({
         </span>
       </label>
 
-      {sub ? (
+      {sub && !temFilhas ? (
         <>
           <EditorCampos inicial={categoria.campos.map(paraEditor)} temAnuncios={categoria.anuncios_total > 0} />
         </>
       ) : (
         <p className="rounded-card bg-fundo px-4 py-3 text-sm text-texto-suave">
-          Esta é uma categoria principal: ela só agrupa. Os campos do anúncio ficam em cada subcategoria.
+          {sub
+            ? "Esta categoria tem itens dentro dela: ela só agrupa. Os campos do anúncio ficam na categoria mais fina (a que não tem nada dentro)."
+            : "Esta é uma categoria principal: ela só agrupa. Os campos do anúncio ficam nas categorias mais finas."}
         </p>
       )}
 

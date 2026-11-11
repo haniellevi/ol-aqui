@@ -1,6 +1,21 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EtapaFunil, OpcoesFunil } from "@/lib/admin/funil";
+import { nomeCaminho } from "@/lib/categorias-arvore";
+
+/** Categorias ativas de qualquer nível com o caminho para mostrar ("Pet › Produtos para pets"). */
+function caminhosDe(linhas: { id: unknown; nome: unknown; pai_id: unknown }[]): { id: string; caminho: string }[] {
+  const porId = new Map(linhas.map((l) => [String(l.id), l]));
+  return linhas.map((l) => {
+    const caminho: { nome: string }[] = [];
+    let atual: { nome: unknown; pai_id: unknown } | undefined = l;
+    for (let k = 0; atual && k < 5; k++) {
+      caminho.unshift({ nome: String(atual.nome) });
+      atual = atual.pai_id ? porId.get(String(atual.pai_id)) : undefined;
+    }
+    return { id: String(l.id), caminho: nomeCaminho(caminho) };
+  });
+}
 
 /** Opções dos selects do funil, todas do banco. */
 export async function carregarOpcoes(supabase: SupabaseClient): Promise<OpcoesFunil> {
@@ -9,7 +24,7 @@ export async function carregarOpcoes(supabase: SupabaseClient): Promise<OpcoesFu
     supabase.from("microrregioes").select("id, nome").order("nome"),
     supabase.from("cidades").select("id, nome, uf, microrregiao_id").eq("ativa", true).order("nome"),
     supabase.from("origens_visita").select("codigo, nome").eq("ativa", true).order("ordem"),
-    supabase.from("categorias").select("id, nome").is("pai_id", null).eq("ativa", true).order("ordem"),
+    supabase.from("categorias").select("id, nome, pai_id").eq("ativa", true).order("ordem"),
     supabase.from("perfis").select("id, nome").eq("e_admin", true).order("nome"),
     supabase.from("equipe").select("usuario_id, perfis!equipe_usuario_id_fkey(nome)").eq("ativo", true),
   ]);
@@ -24,7 +39,8 @@ export async function carregarOpcoes(supabase: SupabaseClient): Promise<OpcoesFu
     regioes: (regioes.data ?? []).map((r) => ({ valor: r.id as string, nome: r.nome as string })),
     cidades: (cidades.data ?? []).map((c) => ({ valor: c.id as string, nome: `${c.nome}-${c.uf}`, regiao: c.microrregiao_id as string })),
     origens: (origens.data ?? []).map((o) => ({ valor: o.codigo as string, nome: o.nome as string })),
-    categorias: (categorias.data ?? []).map((c) => ({ valor: c.id as string, nome: c.nome as string })),
+    // todos os níveis (grande › sub › tipo): o nome mostra o caminho
+    categorias: caminhosDe(categorias.data ?? []).map((c) => ({ valor: c.id, nome: c.caminho })),
     responsaveis: [...responsaveis].map(([valor, nome]) => ({ valor, nome })).sort((a, b) => a.nome.localeCompare(b.nome)),
   };
 }

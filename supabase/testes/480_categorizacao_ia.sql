@@ -6,9 +6,9 @@ reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 select id as reg from microrregioes where slug='corrente-pi' \gset
-select id as moveis from categorias where slug='moveis' \gset
-select id as carros from categorias where slug='eletrodomesticos' \gset
-select id as raiz_casa from categorias where slug='casa-e-moveis' \gset
+select id as moveis from categorias where slug='sofas-e-poltronas' \gset
+select id as carros from categorias where slug='cozinha-e-utensilios' \gset
+select id as raiz_casa from categorias where slug='moveis' \gset
 insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em) values
  ('user_loja480',:'reg','Loja 480','Corrente','5589999990480',now()),
  ('user_pf480',:'reg','Pessoa 480','Corrente','5589999990481',now()),
@@ -24,7 +24,7 @@ insert into anuncios(id,vitrine_id,categoria_id,titulo,descricao,cidade,preco_ce
  ('48100000-0000-4000-a000-000000000004','48000000-0000-4000-a000-000000000002',:'carros','Cadeira da pessoa 480',null,'Corrente',9000,'ativo',now()+interval '1 day'),
  ('48100000-0000-4000-a000-000000000005','48000000-0000-4000-a000-000000000001',:'moveis','Rack 480',null,'Corrente',40000,'ativo',now()+interval '1 day');
 -- Catálogo antigo da loja (já avaliado, fora do lote): a maioria é de Agro.
-select id as sementes from categorias where slug='sementes-e-insumos' \gset
+select id as sementes from categorias where slug='sementes' \gset
 insert into anuncios(vitrine_id,categoria_id,titulo,cidade,preco_centavos,status,publicado_em,categoria_sugerida_em)
  select '48000000-0000-4000-a000-000000000001',:'sementes','Semente antiga 480 '||g,'Corrente',1000,'ativo',now()-interval '30 days',now()-interval '1 day'
    from generate_series(1,4) g;
@@ -51,8 +51,10 @@ begin
   assert cardinality(ids) <= 20, 'No máximo 20 por lote';
   assert (select array_agg(distinct k order by k) from jsonb_array_elements(r->'anuncios') x, jsonb_object_keys(x) k)
          = array['categoria','descricao','id','titulo'], 'Nada da pessoa vai para a IA';
-  assert exists(select 1 from jsonb_array_elements(r->'categorias') c where c->>'slug'='moveis' and c->>'nome' like '% > Móveis'), 'Folha com caminho';
-  assert not exists(select 1 from jsonb_array_elements(r->'categorias') c where c->>'slug' in ('veiculos','casa-e-moveis')), 'Categoria principal com filhas não entra';
+  assert exists(select 1 from jsonb_array_elements(r->'categorias') c where c->>'slug'='sofas-e-poltronas' and c->>'nome' = 'Móveis > Sofás e poltronas'), 'Folha com caminho';
+  assert exists(select 1 from jsonb_array_elements(r->'categorias') c where c->>'slug'='racao' and c->>'nome' = 'Pet > Produtos para pets > Ração'), 'Tipo com caminho de 3 níveis';
+  assert not exists(select 1 from jsonb_array_elements(r->'categorias') c where c->>'slug' in ('moveis','produtos-para-pets')), 'Categoria com filhas não entra';
+  assert not exists(select 1 from jsonb_array_elements(r->'categorias') c where c->>'slug' in ('veiculos','moveis')), 'Categoria principal com filhas não entra';
   assert (select categoria_sugerida_em is not null from anuncios where id='48100000-0000-4000-a000-000000000001'), 'Marcado como em análise';
   assert exists(select 1 from robo_uso where tipo='categorizacao' and erro='em_andamento' and usuario_id is null), 'Custo reservado sem pessoa';
 end $$;
@@ -62,14 +64,14 @@ declare r jsonb := (select r from lote480);
 begin
   -- [3] Conclusão: só sugestão confiante, de folha disponível, diferente da atual e de anúncio do lote.
   assert categorizacao_ia_concluir((r->>'id')::uuid, (r->>'reserva')::uuid, jsonb_build_array(
-    jsonb_build_object('anuncio_id','48100000-0000-4000-a000-000000000001','categoria','moveis','confianca',0.95),
-    jsonb_build_object('anuncio_id','48100000-0000-4000-a000-000000000002','categoria','eletrodomesticos','confianca',0.99),
+    jsonb_build_object('anuncio_id','48100000-0000-4000-a000-000000000001','categoria','sofas-e-poltronas','confianca',0.95),
+    jsonb_build_object('anuncio_id','48100000-0000-4000-a000-000000000002','categoria','cozinha-e-utensilios','confianca',0.99),
     jsonb_build_object('anuncio_id','48100000-0000-4000-a000-000000000005','categoria','carros','confianca',0.5),
-    jsonb_build_object('anuncio_id','48100000-0000-4000-a000-000000000004','categoria','moveis','confianca',0.99),
+    jsonb_build_object('anuncio_id','48100000-0000-4000-a000-000000000004','categoria','sofas-e-poltronas','confianca',0.99),
     jsonb_build_object('anuncio_id','48100000-0000-4000-a000-000000000002','categoria','nao-existe','confianca',0.99),
-    jsonb_build_object('anuncio_id','não é uuid','categoria','moveis','confianca',0.99),
+    jsonb_build_object('anuncio_id','não é uuid','categoria','sofas-e-poltronas','confianca',0.99),
     '"texto solto"'::jsonb), 0.001, 900, 120) = 1, 'Só uma sugestão vale';
-  assert (select categoria_sugestao_estado='pendente' and categoria_sugerida_id=(select id from categorias where slug='moveis')
+  assert (select categoria_sugestao_estado='pendente' and categoria_sugerida_id=(select id from categorias where slug='sofas-e-poltronas')
             from anuncios where id='48100000-0000-4000-a000-000000000001'), 'Sofá sugerido em Móveis';
   assert (select categoria_sugestao_estado is null and categoria_sugerida_em is not null from anuncios where id='48100000-0000-4000-a000-000000000002'), 'Mesma categoria: avaliado, sem sugestão';
   assert (select categoria_sugerida_em is null from anuncios where id='48100000-0000-4000-a000-000000000004'), 'Anúncio de fora do lote não muda';
@@ -138,17 +140,17 @@ do $$ begin
   assert (select sugerido_id=(select id from categorias where slug='agro') from minha_sugestao_nicho('48000000-0000-4000-a000-000000000001')), 'Dono vê o nicho sugerido';
   assert not exists(select 1 from nichos_disponiveis() n join categorias c on c.id=n.id where c.pai_id is not null), 'Só categorias principais';
   begin
-    perform definir_nicho_loja('48000000-0000-4000-a000-000000000001', (select id from categorias where slug='moveis'));
+    perform definir_nicho_loja('48000000-0000-4000-a000-000000000001', (select id from categorias where slug='sofas-e-poltronas'));
     raise exception 'Subcategoria virou nicho';
   exception when check_violation then null; end;
-  perform definir_nicho_loja('48000000-0000-4000-a000-000000000001', (select id from categorias where slug='casa-e-moveis'));
-  assert (select nicho_id=(select id from categorias where slug='casa-e-moveis') and sugerido_id is null from minha_sugestao_nicho('48000000-0000-4000-a000-000000000001')), 'Nicho aceito pelo dono';
+  perform definir_nicho_loja('48000000-0000-4000-a000-000000000001', (select id from categorias where slug='moveis'));
+  assert (select nicho_id=(select id from categorias where slug='moveis') and sugerido_id is null from minha_sugestao_nicho('48000000-0000-4000-a000-000000000001')), 'Nicho aceito pelo dono';
 end $$;
 reset role;
 do $$ begin
-  assert (select categoria_id=(select id from categorias where slug='moveis') and categoria_sugestao_estado='aceita'
+  assert (select categoria_id=(select id from categorias where slug='sofas-e-poltronas') and categoria_sugestao_estado='aceita'
             from anuncios where id='48100000-0000-4000-a000-000000000001'), 'Sofá mudou para Móveis';
-  assert (select nicho_id=(select id from categorias where slug='casa-e-moveis') and nicho_sugerido_id is null
+  assert (select nicho_id=(select id from categorias where slug='moveis') and nicho_sugerido_id is null
             from vitrines_lojas where id='48000000-0000-4000-a000-000000000001'), 'Nicho aceito';
 end $$;
 rollback;

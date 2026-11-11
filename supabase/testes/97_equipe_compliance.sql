@@ -20,7 +20,7 @@ insert into perfis (id,microrregiao_id,nome,whatsapp,cidade,tipo_pessoa) values
  ('user_lo97',:'reg_outra','Loja Longe Noventa e Sete','5589999997009','Longe','pj');
 update configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 update configuracoes set valor='1' where chave='anuncio.fotos_minimo' and microrregiao_id is null;
-select id as cat_moveis from categorias where slug='moveis' \gset
+select id as cat_moveis from categorias where slug='sofas-e-poltronas' \gset
 \set foto_lj '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_lj97/x/1.webp}'
 
 set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_lj97',false) \g /dev/null

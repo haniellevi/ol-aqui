@@ -4,7 +4,7 @@ begin;
 
 insert into microrregioes(slug,nome,cidade_sede) values ('teste-estatisticas-360','Região de teste 360','Cidade 360') returning id as reg \gset
 select id as distante from microrregioes where slug='teste-distante' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 select set_config('teste.regiao360', :'reg', true);
 
 insert into perfis(id,microrregiao_id,nome,criado_em,whatsapp,whatsapp_verificado_em,e_admin)

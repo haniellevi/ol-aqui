@@ -6,7 +6,7 @@ reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 select id as reg from microrregioes where slug='corrente-pi' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em) values
  ('user_loja500',:'reg','Loja 500','Corrente','5589999990500',now()),
  ('user_outro500',:'reg','Outro 500','Corrente','5589999990501',now());
@@ -37,7 +37,7 @@ begin
   -- [2] Só o produto vai para a IA.
   assert (select array_agg(k order by k) from jsonb_object_keys(r) k)
        = array['atributos','categoria','descricao','fotos','id','modelo','reserva','titulo'], 'Nada da pessoa vai para a IA';
-  assert jsonb_array_length(r->'fotos') = 2 and r->>'categoria' like '%Móveis', 'Fotos e categoria';
+  assert jsonb_array_length(r->'fotos') = 2 and r->>'categoria' = 'Móveis > Sofás e poltronas', 'Fotos e categoria';
   assert (select erro='em_andamento' and usuario_id='user_loja500' and tipo='melhoria' from robo_uso where id=(select uso_id from melhorias_ia where id=(r->>'id')::uuid)), 'Reserva no livro-caixa';
   assert melhoria_ia_reservar('50100000-0000-4000-a000-000000000001','user_loja500')->>'erro' = 'ocupado', 'Um pedido por produto de cada vez';
   -- [3] Conclusão: título com telefone cai; descrição boa fica; dica de foto inexistente ou fora da lista cai.

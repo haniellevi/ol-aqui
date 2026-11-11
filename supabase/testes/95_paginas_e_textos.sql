@@ -156,7 +156,7 @@ update home_blocos set ativo=true, ordem=30, titulo='Não achou o que queria?', 
 \echo '[18] anuncio que saiu do ar: pausado devolve so a categoria; ativo e inexistente nao devolvem nada (visitante pode chamar)'
 update configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 insert into vitrines_lojas (dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo) values ('user_b95',:'reg','beto-95','Beto','Corrente','5589999995002','pf') returning id as vit_b \gset
-select id as cat_moveis from categorias where slug='moveis' \gset
+select id as cat_moveis from categorias where slug='sofas-e-poltronas' \gset
 insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos, status) values
  (:'vit_b', :'cat_moveis', 'Mesa noventa e cinco', 'Corrente', 30000, '{"estado":"usado"}',
   '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_b95/x/1.webp}', 'ativo') returning id as anu_b \gset

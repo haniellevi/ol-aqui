@@ -12,8 +12,8 @@ select id as reg from microrregioes where slug = 'corrente-pi' \gset
 insert into microrregioes (slug, nome, cidade_sede)
 values ('teste-distante-radar340', 'Região 340', 'Cidade 340') returning id as distante \gset
 insert into cidades (microrregiao_id, nome, uf) values (:'distante', 'Cidade 340', 'PI');
-select id as moveis from categorias where slug = 'moveis' \gset
-select id as decoracao from categorias where slug = 'decoracao' \gset
+select id as moveis from categorias where slug = 'sofas-e-poltronas' \gset
+select id as decoracao from categorias where slug = 'mesas-e-cadeiras' \gset
 
 update configuracoes set valor = '100'
  where chave in ('radar.pedidos_por_dia', 'radar.pedidos_abertos_max',

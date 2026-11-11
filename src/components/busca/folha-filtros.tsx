@@ -5,6 +5,7 @@ import { Check, X } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
 import { ID_FOLHA, ID_RESULTADOS, ORDENS, lerEstadoBusca, paramCampo, type EstadoBusca } from "@/components/busca/parametros";
 import { inteiro, valorDoCampo } from "@/lib/formato";
+import { nomeCaminho, percorrer } from "@/lib/categorias-arvore";
 import type { CampoCategoria, CategoriaComFilhas, Cidade, FacetaBusca, FacetasBusca } from "@/lib/tipos";
 import { classesCampo } from "@/components/ui/input";
 
@@ -19,6 +20,11 @@ const OPCAO =
   "has-checked:border-laranja-escuro has-checked:bg-selecao " +
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 const LEGENDA = "mb-2 text-base font-semibold";
+// Chip de categoria (botão): as filhas da categoria escolhida, em qualquer nível.
+const CHIP_CATEGORIA =
+  "inline-flex min-h-10 items-center rounded-campo border border-borda bg-cartao px-4 text-base font-semibold text-beringela hover:bg-fundo " +
+  "aria-pressed:border-laranja-escuro aria-pressed:bg-selecao " +
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 export function FolhaFiltros({
   caminho,
@@ -35,15 +41,18 @@ export function FolhaFiltros({
   campos: CampoCategoria[];
   facetas?: FacetasBusca | null;
   cidades: Cidade[];
-  /** Mostra a escolha de categoria (só na tela de busca). */
+  /** Mostra a escolha de categoria (só na tela de busca). Árvore em até 3 níveis. */
   categorias?: CategoriaComFilhas[];
 }) {
   const dialogo = useRef<HTMLDialogElement>(null);
   const [pronto, setPronto] = useState(false);
   const [categoria, setCategoria] = useState(estado.categoria);
   const [erros, setErros] = useState(estado.erros);
-  const escolhida = categorias?.flatMap((p) => [p, ...p.filhas]).find((c) => c.slug === categoria);
-  const filtraveis = (categorias ? escolhida?.campos ?? [] : campos).filter((c) => c.filtro);
+  const todas = categorias ? percorrer(categorias) : [];
+  const escolhidaNo = todas.find((x) => x.no.slug === categoria) ?? null;
+  const escolhida = escolhidaNo?.no ?? null;
+  // Campos só valem na folha (categoria sem filhas); a categoria escolhida pode ter filhas (chips).
+  const filtraveis = (categorias ? (escolhida && !escolhida.filhas.length ? escolhida.campos : []) : campos).filter((c) => c.filtro);
   const estadoCampos = categoria === estado.categoria ? estado : { ...estado, valores: {} };
   const facetasAtuais = categoria === estado.categoria ? facetas : null;
   const limpar = estado.q ? `${caminho}?q=${encodeURIComponent(estado.q)}` : caminho;
@@ -163,17 +172,28 @@ export function FolhaFiltros({
                 }} aria-invalid={!!erros.categoria || undefined} aria-describedby={erros.categoria ? "erro-categoria" : undefined} className={SELECT}>
                   <option value="">Todas as categorias</option>
                   {categoria && !escolhida && <option value={categoria}>Categoria indisponível</option>}
-                  {categorias.map((p) => (
-                    <optgroup key={p.id} label={p.nome}>
-                      <option value={p.slug}>{p.nome}: tudo</option>
-                      {p.filhas.map((f) => (
-                        <option key={f.id} value={f.slug}>
-                          {f.nome}
-                        </option>
-                      ))}
-                    </optgroup>
+                  {todas.map(({ no, caminho }) => (
+                    <option key={no.id} value={no.slug}>
+                      {nomeCaminho(caminho)}
+                    </option>
                   ))}
                 </select>
+                {escolhida && escolhida.filhas.length > 0 && (
+                  <ul aria-label={`Dentro de ${escolhida.nome}`} className="mt-3 flex flex-wrap gap-2">
+                    <li>
+                      <button type="button" aria-pressed={categoria === escolhida.slug} onClick={() => setCategoria(escolhida.slug)} className={CHIP_CATEGORIA}>
+                        Tudo em {escolhida.nome}
+                      </button>
+                    </li>
+                    {escolhida.filhas.map((f) => (
+                      <li key={f.id}>
+                        <button type="button" aria-pressed={categoria === f.slug} onClick={() => setCategoria(f.slug)} className={CHIP_CATEGORIA}>
+                          {f.nome}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {erros.categoria && <p id="erro-categoria" role="alert" className="mt-1 text-sm text-perigo">{erros.categoria}</p>}
               </fieldset>
             )}

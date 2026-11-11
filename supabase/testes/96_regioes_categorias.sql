@@ -16,7 +16,7 @@ update perfis set whatsapp_verificado_em=now() where id='user_pf96';
 update configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 update configuracoes set valor='1' where chave='anuncio.fotos_minimo' and microrregiao_id is null;
 \set foto '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_pf96/x/1.webp}'
-select id as cat_moveis from categorias where slug='moveis' \gset
+select id as cat_moveis from categorias where slug='sofas-e-poltronas' \gset
 select id as cat_casa from categorias where slug='casa-e-moveis' \gset
 select id as cat_pedreiro from categorias where slug='pedreiro' \gset
 -- Paula vende (pessoa física) e tem um anúncio no ar em Corrente, categoria Móveis

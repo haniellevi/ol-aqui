@@ -12,10 +12,10 @@ export const metadata: Metadata = { title: "Anunciar · Categoria" };
 
 const FORM = "form-categoria";
 
-// T18 · Passo 2: categoria (categoria grande → tipo), com busca.
+// T18 · Passo 2: categoria em até 3 níveis (grande → sub → tipo), com busca.
 export default async function PassoCategoria({ searchParams }: { searchParams: ParamsPasso }) {
   const { anuncio, editar } = await carregarPasso(searchParams);
-  const arvore = (await listarCategorias()).filter((p) => p.filhas.length > 0);
+  const arvore = await listarCategorias();
 
   return (
     <CorpoPasso>

@@ -17,7 +17,7 @@ update perfis set e_admin=true where id='user_ad80';
 update configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 update configuracoes set valor='1' where chave='anuncio.fotos_minimo' and microrregiao_id is null;
 update planos set limite_anuncios=3 where codigo='pf_gratis';
-select id as cat_moveis from categorias where slug='moveis' \gset
+select id as cat_moveis from categorias where slug='sofas-e-poltronas' \gset
 \set foto_pf '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_pf80/x/1.webp}'
 
 set role authenticated; select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_lj80',false) \g /dev/null

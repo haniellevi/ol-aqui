@@ -4,7 +4,7 @@ create function pg_temp.checar(ok boolean, texto text) returns void language plp
 begin if ok is distinct from true then raise exception 'FALHOU: %', texto; end if; end $$;
 -- Visitas e favoritos atualizam contadores por funções protegidas, sem exigir cadastro.
 select id as loja from vitrines_lojas where dono_id='user_loja' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,status) values
  ('87000000-0000-4000-a000-000000000001',:'loja',:'cat','Mesa teste confirmação','Corrente',85000,'ativo');
 set local role anon;

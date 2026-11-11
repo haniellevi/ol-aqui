@@ -26,7 +26,7 @@ insert into vitrines_lojas (dono_id,microrregiao_id,slug,nome,cidade,whatsapp,ti
 select id as vit_t from vitrines_lojas where dono_id='user_t90' \gset
 select id as vit_p from vitrines_lojas where dono_id='user_p90' \gset
 select id as cat_motos from categorias where slug='motos' \gset
-select id as cat_moveis from categorias where slug='moveis' \gset
+select id as cat_moveis from categorias where slug='sofas-e-poltronas' \gset
 update configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, fotos, status) values
  (:'vit_p', :'cat_motos', 'Honda Biz 125 2020', 'Corrente', 900000, '{"marca":"Honda","modelo":"Biz","ano":2020,"km":10000}',
