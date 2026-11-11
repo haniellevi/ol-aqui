@@ -18,7 +18,9 @@ export function SecoesAdmin() {
   const caminho = usePathname();
   const entrada = entradaAdminAtiva(caminho);
   if (entrada === "/admin/configuracoes") {
-    return caminho !== entrada ? <Link href={entrada} className="mb-4 inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro hover:underline">Voltar às configurações</Link> : null;
+    // Página mais funda (ex.: /admin/categorias/sugeridas) já tem o próprio "voltar" para a página de cima.
+    const funda = caminho.split("/").filter(Boolean).length > 2;
+    return caminho !== entrada && !funda ?<Link href={entrada} className="mb-4 inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro hover:underline">Voltar às configurações</Link> : null;
   }
   const secoes = SECOES[entrada];
   if (!secoes) return null;

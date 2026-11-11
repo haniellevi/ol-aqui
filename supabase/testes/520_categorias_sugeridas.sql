@@ -150,6 +150,14 @@ end $$;
 
 do $$ begin
   assert (select count(*) from notificacoes where usuario_id = 'user_dono520' and tipo = 'categoria_sugerida') = 5, 'Aviso no sino (3 aprovados + 1 juntado + 1 revisar)';
+  -- Textos do aviso: título vazio vira "Seu anúncio"; juntar não diz que criou categoria.
+  assert nome_anuncio_aviso('  ', true) = 'Seu anúncio' and nome_anuncio_aviso(null, false) = 'seu anúncio', 'Sem título';
+  assert nome_anuncio_aviso('Bola', true) = 'O anúncio "Bola"', 'Com título';
+  assert exists (select 1 from notificacoes where usuario_id = 'user_dono520' and tipo = 'categoria_sugerida'
+                  and titulo = 'Seu anúncio mudou de categoria'), 'Título do aviso de juntar';
+  assert not exists (select 1 from notificacoes where usuario_id = 'user_dono520' and tipo = 'categoria_sugerida'
+                      and (coalesce(texto, '') like '%""%' or (titulo <> 'Sua categoria foi aceita' and texto like '%foi criada%'))),
+         'Aviso com título vazio ou juntar dizendo que criou';
 end $$;
 
 select 'ok' as categorias_sugeridas;
