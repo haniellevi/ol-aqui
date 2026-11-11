@@ -37,6 +37,8 @@ try:
     print('PASS: arquivamento e restauração de lojas, permissões, histórico e pagamentos por ambiente', flush=True)
     checked(sql((root/'supabase/testes/430_gestao_usuarios_lojas.sql').read_text()))
     print('PASS: gestão de usuários e lojas, permissões e exclusão', flush=True)
+    checked(sql((root/'supabase/testes/450_aki_lojistas.sql').read_text()))
+    print('PASS: cadastro assistido, créditos, falhas, renovação, isolamento e banner gratuito do Aki', flush=True)
     checked(sql((root/'supabase/testes/450_lixeira_contas_lojas.sql').read_text()))
     print('PASS: lixeira de 30 dias para conta e loja, cancelamento, suspensão em cascata e limpeza com provas preservadas', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
@@ -227,5 +229,20 @@ try:
       assert exists(select 1 from perfis where id='user_loja'), 'Cascata perdeu a conta com retenção';
     end $$;"""))
     print('PASS: congelamento concorrente preserva proposta, anúncio referenciado e cascata da conta', flush=True)
+    checked(sql("""
+      update configuracoes set valor='true' where chave='robo.ativo';
+      insert into perfis(id,microrregiao_id,nome,cidade)
+        select 'user_akiconcorrente', id, 'Loja Aki Concorrente', 'Corrente' from microrregioes where slug='corrente-pi';
+      insert into vitrines_lojas(dono_id,microrregiao_id,nome,slug,cidade,tipo,plano,teste_expira_em)
+        select id,microrregiao_id,nome,'loja-aki-concorrente',cidade,'loja','teste',now()+interval '30 days'
+        from perfis where id='user_akiconcorrente';
+    """))
+    def reservar_arte(_):
+        return sql("begin; select aki_reservar_imagem('user_akiconcorrente',gen_random_uuid(),'banner',null,null)->>'estado'; select pg_sleep(0.1); commit;")
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        artes=list(pool.map(reservar_arte,range(4)))
+    for result in artes: checked(result)
+    assert sum('nova' in r.stdout for r in artes)==1 and sum('sem_credito' in r.stdout for r in artes)==3, [r.stdout for r in artes]
+    print('PASS: quatro pedidos simultâneos do Aki disputam um único crédito', flush=True)
 finally:
     run('docker','stop',container)

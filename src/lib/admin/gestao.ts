@@ -13,7 +13,7 @@ export type LojaGestao = {
   descricao: string | null; sobre: string | null; endereco: string | null; lat: number | null; lng: number | null;
   horarios: Horarios | null; formas_pagamento: string[]; faz_entrega: boolean | null; entrega_obs: string | null;
   logo_url: string | null; capa_url: string | null; banner_url: string | null;
-  banner_tipo: string; banner_modelo: string; banner_cor: string;
+  banner_tipo: string; banner_modelo: string; banner_cor: string; categoria_loja: string | null; banner_aki_posicao: number | null;
   status: string; plano: string; atualizado_em: string; verificacao_estado: string;
   assinatura_vinculada: boolean; gerentes_total: number; anuncios_total: number; pagamentos_total: number; propostas_total: number; retencoes_total: number;
 };

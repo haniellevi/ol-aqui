@@ -98,7 +98,7 @@ Decidido com o Raniel em 10/11/2026. Base para os próximos PRs (um por etapa).
 
 ## Etapa 1 — feita na branch `claude/gestao-exclusao` (ainda não está em produção)
 
-**Banco** (`supabase/migrations/20261111000000_lixeira_contas_lojas.sql`, teste `450_lixeira_contas_lojas.sql`):
+**Banco** (`supabase/migrations/20261111003000_lixeira_contas_lojas.sql`, teste `450_lixeira_contas_lojas.sql`):
 - Tabelas `lixeira_contas` e `lixeira_lojas` (prazo de 30 dias, origem, motivo, status anterior).
 - `vitrines_lojas.excluida_em` (situação `excluida`) e `anuncios.excluido_com_loja`.
 - Conta na lixeira: `usuario_id()` fica nulo, igual a uma conta bloqueada.

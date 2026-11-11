@@ -16,7 +16,7 @@ export async function salvarLojaAdmin(_: EstadoForm, form: FormData): Promise<Es
     const id = textoForm(form, "id"), dono = textoForm(form, "dono_id"), motivo = motivoForm(form);
     if ((id && !ehUuid(id)) || !idUsuarioValido(dono)) return { erro: "Confira a loja e o ID do titular." };
     const dados: Record<string, unknown> = {};
-    for (const campo of ["nome", "slug", "tipo", "microrregiao_id", "cidade", "bairro", "site_url", "instagram", "descricao", "sobre", "endereco", "entrega_obs", "logo_url", "capa_url", "banner_url", "banner_tipo", "banner_modelo", "banner_cor"]) {
+    for (const campo of ["nome", "slug", "tipo", "microrregiao_id", "cidade", "bairro", "site_url", "instagram", "descricao", "sobre", "endereco", "entrega_obs", "logo_url", "capa_url", "banner_url", "banner_tipo", "banner_modelo", "banner_cor", "categoria_loja"]) {
       dados[campo] = textoForm(form, campo) || null;
     }
     if (typeof dados.nome !== "string" || dados.nome.length < 2 || dados.nome.length > 80) return { erro: "Nome da loja: use de 2 a 80 caracteres." };
@@ -25,7 +25,7 @@ export async function salvarLojaAdmin(_: EstadoForm, form: FormData): Promise<Es
     const cnpj = textoForm(form, "cnpj").replace(/\D/g, "");
     if (cnpj && (cnpj.length !== 14 || !documentoValido(cnpj))) return { erro: "Confira o CNPJ." };
     Object.assign(dados, { dono_id: dono, cnpj: cnpj || null, whatsapp: telefoneForm(form, "whatsapp"), telefone_publico: telefoneForm(form, "telefone_publico") });
-    for (const campo of ["lat", "lng"]) {
+    for (const campo of ["lat", "lng", "banner_aki_posicao"]) {
       const valor = textoForm(form, campo);
       if (valor && !Number.isFinite(Number(valor))) return { erro: "Confira os números da localização e da posição do banner." };
       dados[campo] = valor ? Number(valor) : null;

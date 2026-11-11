@@ -30,12 +30,12 @@ function imagemValida(url: string, userId: string): boolean {
 }
 
 /** Prepara o envio da logo direto do navegador para o Storage (endereço assinado). */
-export async function prepararEnvioImagemLoja(qual: "logo", formato: "webp" | "jpg"): Promise<Resultado<EnvioImagemLoja>> {
+export async function prepararEnvioImagemLoja(qual: "logo", formato: "webp" | "jpg" | "png"): Promise<Resultado<EnvioImagemLoja>> {
   try {
     const { userId } = await auth();
     if (!userId) return { ok: false, erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
     if (qual !== "logo") return { ok: false, erro: { mensagem: "Imagem inválida." } };
-    if (!["webp", "jpg"].includes(formato)) return { ok: false, erro: { mensagem: "Formato de imagem inválido." } };
+    if (!["webp", "jpg", "png"].includes(formato)) return { ok: false, erro: { mensagem: "Formato de imagem inválido." } };
     const fmt = formato;
     const v = await minhaVitrineCompleta(true);
     if (v?.tipo !== "loja" || v.dono_id !== userId || v.status === "suspensa") return { ok: false, erro: { mensagem: "Só lojas podem mudar a logo." } };

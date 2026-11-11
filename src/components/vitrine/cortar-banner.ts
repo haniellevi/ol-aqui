@@ -2,9 +2,9 @@
 // Só roda no navegador. Sai em WebP (ou JPEG quando o navegador não faz WebP), 1500 x 500.
 
 import { MAX_FOTO_ORIGINAL } from "@/lib/fotos";
+import { BANNER_LARGURA, BANNER_ALTURA } from "@/lib/tamanhos-imagem";
 
-export const BANNER_LARGURA = 1500;
-export const BANNER_ALTURA = 500;
+export { BANNER_LARGURA, BANNER_ALTURA };
 export const BANNER_PROPORCAO = BANNER_LARGURA / BANNER_ALTURA; // 3
 
 export type FotoAberta = { url: string; largura: number; altura: number; liberar: () => void };
