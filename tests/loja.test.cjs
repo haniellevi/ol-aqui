@@ -4,7 +4,7 @@ const {loja,produto}=require('./fixtures/loja.cjs');
 const caminho='src/app/(publico)/loja/[slug]/';
 const nav={notFound(){throw Error('404');},useRouter(){return {push(){},refresh(){}};}};
 function dados(op={}) {let chamadas=[]; const banco={rpc:async(n,p)=>{chamadas.push([n,p]);if(op.rede)throw Error('offline');return {data:op.data,error:op.error??null};},from:()=>({select(){return this;},eq:async()=>({data:op.config??[],error:op.error??null})})};return {chamadas,...carregar('src/lib/dados/vitrine-completa.ts',{'@/lib/supabase/server':{createClient:async()=>banco},'@clerk/nextjs/server':{}})};}
-function tela(op={}) {return carregar(caminho+'page.tsx',{'next/navigation':nav,'@/lib/dados/vitrine-completa':{vitrinePublica:async()=>{if(op.erroLoja)throw Error('interno');return op.v===null?null:{...loja,...op.v};},anunciosVitrine:async()=>{if(op.erroProdutos)throw Error('interno');return op.anuncios??[produto(1),produto(2),produto(3)];},anunciosPorPaginaVitrine:async()=>{if(op.erroConfig)throw Error('interno');return op.tamanho??2;},vitrineNovaAtiva:async()=>!!op.nova},'@clerk/nextjs/server':{auth:async()=>({userId:op.usuario??null})},'@/lib/dados/favoritos':{favoritosEntre:async()=>op.favoritos===undefined?new Set():op.favoritos},'@/app/(conta)/minha-conta/favoritos/actions':{definirFavorito:async()=>({ok:true,dados:{favorito:true}})}});}
+function tela(op={}) {return carregar(caminho+'page.tsx',{'next/navigation':nav,'@/lib/dados/vitrine-completa':{vitrinePublica:async()=>{if(op.erroLoja)throw Error('interno');return op.v===null?null:{...loja,...op.v};},anunciosVitrine:async()=>{if(op.erroProdutos)throw Error('interno');return op.anuncios??[produto(1),produto(2),produto(3)];},anunciosPorPaginaVitrine:async()=>{if(op.erroConfig)throw Error('interno');return op.tamanho??2;},vitrineNovaAtiva:async()=>!!op.nova},'@clerk/nextjs/server':{auth:async()=>({userId:op.usuario??null})},'@/lib/dados/favoritos':{favoritosEntre:async(ids)=>{op.idsFavoritos=ids;return op.favoritos===undefined?new Set():op.favoritos;}},'@/app/(conta)/minha-conta/favoritos/actions':{definirFavorito:async()=>({ok:true,dados:{favorito:true}})}});}
 async function html(op={}) {return render(await tela(op).default({params:Promise.resolve({slug:'loja-teste'}),searchParams:Promise.resolve(op.sp??{})}));}
 test('loja: leitura distingue inexistente de falha e rejeita resposta malformada',async()=>{
  assert.equal(await dados({data:null}).vitrinePublica('loja-teste'),null);
@@ -80,6 +80,10 @@ test('loja nova: favoritos marcados, falha desliga o coração e loja sem pino u
  const marcado=await html({nova:true,usuario:'user_1',anuncios:a,favoritos:new Set([a[0].id]),v:{lat:null,lng:null}});
  assert.match(marcado,/aria-pressed="true"/);assert.match(marcado,/aria-pressed="false"/);assert.doesNotMatch(marcado,/openstreetmap|href="#mapa-loja"/);
  const falha=await html({nova:true,usuario:'user_1',anuncios:a,favoritos:null});assert.equal((falha.match(/Favorito indisponível/g)??[]).length,2);
+});
+test('loja nova: produto de seção fora desta página também vem com o coração certo',async()=>{
+ const a=[produto(1),produto(2),produto(3,{na_pagina:false})];const op={nova:true,usuario:'user_1',anuncios:a,favoritos:new Set([a[2].id]),v:{secoes:[{id:'secao',nome:'Escolhas da loja',anuncios:[a[2].id]}]}};
+ const h=await html(op);assert.deepEqual([...op.idsFavoritos].sort(),a.map(x=>x.id).sort());assert.match(h,/aria-pressed="true"/);
 });
 test('loja nova: prévia só para o dono com ?nova=1, preservada nos links; inativa não favorita',async()=>{
  assert.doesNotMatch(await html({sp:{nova:'1'}}),/Categorias desta loja/);

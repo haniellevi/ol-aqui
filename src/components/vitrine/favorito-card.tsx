@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 import { definirFavorito } from "@/app/(conta)/minha-conta/favoritos/actions";
@@ -9,6 +9,10 @@ import { definirFavorito } from "@/app/(conta)/minha-conta/favoritos/actions";
 // Coração no canto da foto do card da vitrine (vitrine com IA, etapa 2).
 // Mesma ação da página do anúncio: mostra na hora e volta se o banco recusar.
 // Sem login vira link para entrar e voltar à loja.
+// O mesmo produto pode aparecer em uma seção e na categoria: os corações conversam por um aviso na janela.
+
+const EVENTO = "olaki-favorito";
+type Aviso = { anuncioId: string; favorito: boolean };
 
 const CORACAO =
   "grid size-10 place-items-center rounded-full bg-cartao/90 text-beringela shadow-1 hover:bg-cartao active:brightness-90 " +
@@ -34,6 +38,21 @@ export function FavoritoCard({
   const [pendente, iniciar] = useTransition();
   const trava = useRef(false);
 
+  useEffect(() => {
+    const ouvir = (e: Event) => {
+      const d = (e as CustomEvent<Aviso>).detail;
+      if (d?.anuncioId === anuncioId) setFavorito(d.favorito);
+    };
+    window.addEventListener(EVENTO, ouvir);
+    return () => window.removeEventListener(EVENTO, ouvir);
+  }, [anuncioId]);
+
+  /** Muda este coração e os outros do mesmo produto na página. */
+  function aplicar(valor: boolean) {
+    setFavorito(valor);
+    window.dispatchEvent(new CustomEvent<Aviso>(EVENTO, { detail: { anuncioId, favorito: valor } }));
+  }
+
   if (!logado) {
     return (
       <Link href={entrarHref} aria-label={`Entre para salvar ${titulo} nos favoritos`} className={CORACAO}>
@@ -46,17 +65,17 @@ export function FavoritoCard({
     if (trava.current || favorito === null) return;
     trava.current = true;
     const novo = !favorito;
-    setFavorito(novo);
+    aplicar(novo);
     setErro(null);
     iniciar(async () => {
       try {
         const r = await definirFavorito(anuncioId, novo);
         if (r.ok && r.dados.favorito === novo) return;
-        setFavorito(!novo);
+        aplicar(!novo);
         if (!r.ok && r.erro.codigo === "28000") router.push(entrarHref);
         else setErro(!r.ok ? r.erro.mensagem : "Não conseguimos confirmar. Atualize a página.");
       } catch {
-        setFavorito(!novo);
+        aplicar(!novo);
         setErro("Não foi possível atualizar o favorito. Tente novamente.");
       } finally {
         trava.current = false;

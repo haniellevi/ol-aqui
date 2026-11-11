@@ -153,7 +153,8 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const previa = v.e_dono && (Array.isArray(sp.nova) ? sp.nova[0] : sp.nova) === "1";
   const nova = previa || (v.status === "ativa" && (await vitrineNovaAtiva(v.microrregiao_id)));
   const { userId } = nova ? await auth() : { userId: null };
-  const favoritos = nova && v.status === "ativa" && userId ? await favoritosEntre(anuncios.map((a) => a.id), userId) : new Set<string>();
+  // Todos os produtos mostrados (inclusive os de seções fora desta página).
+  const favoritos = nova && v.status === "ativa" && userId ? await favoritosEntre(todos.map((a) => a.id), userId) : new Set<string>();
   const entrarHref = `/entrar?redirect_url=${encodeURIComponent(linkPagina(base, ordem, pagina, previa))}`;
   const acao = nova && v.status === "ativa"
     ? (a: CardAnuncioProps["anuncio"]) => (
