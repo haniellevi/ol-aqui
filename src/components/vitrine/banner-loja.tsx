@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
 import { corDoTextoSobre, corSegura } from "@/components/vitrine/regras";
+import { BANNER_LARGURA, BANNER_ALTURA } from "@/lib/tamanhos-imagem";
 import type { BannerModelo, BannerTipo } from "@/lib/tipos-vitrine";
 
 // Banner da vitrine (3:1). Foto da fachada, ou o modelo pronto: cor + desenho + logo + nome.
@@ -22,6 +23,7 @@ export function BannerLoja({
   cor,
   nome,
   logo,
+  posicaoAki = null,
   prioridade = false,
   className = "",
 }: {
@@ -33,6 +35,7 @@ export function BannerLoja({
   logo: string | null;
   /** Carrega a foto já (topo da página). */
   prioridade?: boolean;
+  posicaoAki?: number | null;
   className?: string;
 }) {
   const [falhou, setFalhou] = useState<string | null>(null);
@@ -44,13 +47,18 @@ export function BannerLoja({
           src={url}
           ref={(img) => { if (img?.complete && img.naturalWidth === 0) setFalhou(url); }}
           onError={() => setFalhou(url)}
-          alt={`Fachada da loja ${nome}`}
-          width={1500}
-          height={500}
+          alt={`${posicaoAki === null ? "Fachada" : "Banner"} da loja ${nome}`}
+          width={BANNER_LARGURA}
+          height={BANNER_ALTURA}
           fetchPriority={prioridade ? "high" : undefined}
           decoding="async"
           className="absolute inset-0 size-full object-cover"
         />
+        {posicaoAki !== null && logo && (
+          // eslint-disable-next-line @next/next/no-img-element -- logo do Storage ou prévia local
+          <img src={logo} alt={`Logo de ${nome}`} className="absolute top-1/2 h-[62%] w-1/4 -translate-x-1/2 -translate-y-1/2 object-contain"
+            style={{ left: `${12.5 + posicaoAki * 0.75}%` }} />
+        )}
       </div>
     );
   }

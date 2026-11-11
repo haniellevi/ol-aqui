@@ -153,7 +153,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
 
       {/* Topo */}
       <header className="overflow-hidden bg-cartao shadow-1 md:rounded-card">
-        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={v.nome} logo={v.logo_url} prioridade className="max-h-72" />
+        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={v.nome} logo={v.logo_url} posicaoAki={v.banner_aki_posicao ?? null} prioridade className={v.banner_aki_posicao == null ? "max-h-72" : undefined} />
         <div className="flex flex-col gap-3 px-4 pb-4">
           <div className="relative z-10 -mt-9 flex items-end gap-3">
             <span className="rounded-full border-3 border-cartao bg-cartao">
@@ -161,7 +161,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
             </span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-legenda text-texto-suave">Loja</span>
+            <span className="text-legenda text-texto-suave">{v.categoria_loja ?? "Loja"}</span>
             <h1 className="text-titulo font-semibold text-balance break-words">{v.nome}</h1>
             {v.selo && (
               <span>

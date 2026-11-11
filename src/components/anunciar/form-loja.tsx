@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle2, ChevronDown, Loader2, MessageCircle, Plus, Store, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
+import { CadastroLojaAki } from "@/components/aki/cadastro-loja-aki";
 import { Campo } from "@/components/ui/campo";
 import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import { criarLoja, verificarSlug, type EstadoLoja } from "@/app/(conta)/quero-vender/actions";
@@ -53,6 +54,8 @@ export function FormLoja({
   const [situacao, setSituacao] = useState<Situacao>("vazio");
   const fone = useCampoTelefone(whatsappInicial, { aceitaFixo: true });
   const [cidade, setCidade] = useState(cidadeInicial);
+  const [categoria, setCategoria] = useState("");
+  const [sobre, setSobre] = useState("");
   const rodada = useRef(0);
 
   // Confere o endereço 0,4 s depois que a pessoa para de digitar.
@@ -103,6 +106,9 @@ export function FormLoja({
           <Botao href="/anunciar" larguraTotal icone={<Plus />}>
             Criar primeiro anúncio
           </Botao>
+          <Botao href="/minha-conta/loja/banner" variante="secundario" larguraTotal>
+            Criar banner com o Aki
+          </Botao>
           <Botao href={compartilhar} variante="whatsapp" larguraTotal icone={<MessageCircle />} target="_blank" rel="noopener noreferrer">
             Compartilhar no WhatsApp
           </Botao>
@@ -143,6 +149,15 @@ export function FormLoja({
         placeholder="Ex.: João Moto Peças"
         erro={erroDe("nome_loja")}
       />
+
+      <CadastroLojaAki nome={nome} aplicar={(dados) => {
+        setCategoria(dados.categoria);
+        setSobre(dados.descricao);
+      }} />
+      <Campo rotulo="Categoria da loja" name="categoria_loja" maxLength={80} opcional
+        value={categoria} onChange={(e) => setCategoria(e.target.value)} erro={erroDe("categoria_loja")} />
+      <Campo multilinha rotulo="Descrição da loja" name="sobre" rows={4} maxLength={1500} opcional
+        value={sobre} onChange={(e) => setSobre(e.target.value)} erro={erroDe("sobre")} />
 
       <div className="flex flex-col gap-2">
         <Campo
