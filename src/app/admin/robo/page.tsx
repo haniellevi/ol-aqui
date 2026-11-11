@@ -18,7 +18,11 @@ const NOME_CHAVE: Record<ProvedorIA, string> = {
   openai: "OPENAI_API_KEY",
 };
 
-function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+function Secao({ titulo, children, recolhida = false }: { titulo: string; children: React.ReactNode; recolhida?: boolean }) {
+  if (recolhida) return <details className="mt-5 rounded-card border border-borda bg-cartao p-4">
+    <summary className="cursor-pointer font-semibold text-beringela">{titulo}</summary>
+    <div className="mt-4">{children}</div>
+  </details>;
   return (
     <>
       <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">{titulo}</h2>
@@ -167,7 +171,7 @@ export default async function RoboPage() {
         </Cartao>
       </Secao>
 
-      <Secao titulo="Textos do Aki">
+      <Secao titulo="Textos do Aki" recolhida>
         <Cartao>
           <FormTextos
             boasVindas={texto(geral.get("robo.boas_vindas"))}
@@ -185,7 +189,7 @@ export default async function RoboPage() {
         </p>
       </Secao>
 
-      <Secao titulo="Gasto por provedor e modelo (mês)">
+      <Secao titulo="Gasto por provedor e modelo (mês)" recolhida>
         <Cartao>
           {porProvedor.size ? (
             <div className="space-y-4">
@@ -229,7 +233,7 @@ export default async function RoboPage() {
         </Cartao>
       </Secao>
 
-      <Secao titulo="Conversas por dia (14 dias)">
+      <Secao titulo="Conversas por dia (14 dias)" recolhida>
         <Cartao>
           <ol className="flex h-40 items-end gap-1" aria-label="Conversas por dia">
             {dias.map((d) => (
@@ -301,7 +305,7 @@ export default async function RoboPage() {
         </Cartao>
       </Secao>
 
-      <Secao titulo="Catálogo de modelos">
+      <Secao titulo="Catálogo de modelos" recolhida>
         <p className="mb-3 text-legenda text-texto-suave">
           Preços em dólar por milhão de tokens, copiados da página do provedor. O custo de cada mensagem é calculado com eles e com a cotação do dólar.
         </p>

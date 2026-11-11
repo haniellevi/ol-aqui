@@ -80,7 +80,7 @@ export default async function FunilPage({ searchParams }: { searchParams: Params
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <Titulo>Funil de lojistas</Titulo>
+        <Titulo>Captação de lojas</Titulo>
         <Botao href="/admin/funil/novo" icone={<Plus className="size-4" aria-hidden />}>Novo contato</Botao>
       </div>
 
@@ -114,7 +114,6 @@ export default async function FunilPage({ searchParams }: { searchParams: Params
 
       {!error && linhas.length === 0 ? (
         <Vazio titulo={total === 0 ? "O funil está vazio" : "Nada nesta etapa"} texto={total === 0 ? "Anote a primeira loja que você visitou ou traga as que já se cadastraram no site." : undefined}>
-          <Botao href="/admin/funil/novo" variante="secundario" tamanho="pequeno">Novo contato</Botao>
           {total === 0 && <BotaoImportar />}
         </Vazio>
       ) : (
@@ -154,17 +153,15 @@ export default async function FunilPage({ searchParams }: { searchParams: Params
       )}
       {linhas.length === 200 && <p className="mt-2 text-legenda text-texto-suave">Mostrando os 200 primeiros. Use a busca para achar os outros.</p>}
 
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_2fr]">
-        <Cartao>
-          <h2 className="text-xl font-semibold text-beringela">Lojas do site</h2>
-          <p className="mb-3 mt-1 text-sm text-texto-suave">Loja que se cadastra no site entra sozinha no funil, e vai para Pagando quando paga. Use o botão para trazer as que já existiam.</p>
-          <BotaoImportar />
-        </Cartao>
-        <Cartao>
-          <h2 className="text-xl font-semibold text-beringela">Etapas do funil</h2>
-          <EditarEtapas etapas={etapas} />
-        </Cartao>
-      </div>
+      <details className="mt-6 rounded-card border border-borda bg-cartao p-4">
+        <summary className="cursor-pointer font-semibold text-beringela">Configurar etapas da captação</summary>
+        <EditarEtapas etapas={etapas} />
+      </details>
+      {total > 0 && <Cartao className="mt-4">
+        <h2 className="text-lg font-semibold text-beringela">Trazer lojas do site</h2>
+        <p className="mb-3 mt-1 text-sm text-texto-suave">As novas lojas entram automaticamente. Importe aqui as que já existiam.</p>
+        <BotaoImportar />
+      </Cartao>}
     </>
   );
 }

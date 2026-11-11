@@ -35,7 +35,7 @@ function Situacao({ modelo }: { modelo: ModeloMensagem }) {
 export default async function MensagensPage() {
   const { supabase } = await exigirAdmin();
   const { data, error } = await supabase.from("modelos_mensagem").select(COLUNAS).order("ordem").order("canal");
-  const modelos = (data ?? []) as ModeloMensagem[];
+  const modelos = ((data ?? []) as ModeloMensagem[]).filter(m => CANAIS_ATIVOS.includes(m.canal));
 
   // Agrupa por mensagem, na ordem do banco
   const grupos: { chave: string; nome: string; quando: string; itens: ModeloMensagem[] }[] = [];
@@ -47,7 +47,7 @@ export default async function MensagensPage() {
 
   return (
     <>
-      <Titulo sub="Textos que o Mercado da Região manda sozinho. Hoje só o aviso dentro do site é mandado; WhatsApp e e-mail ficam prontos para quando o envio começar. Toda mudança fica no histórico.">
+      <Titulo sub="Textos dos avisos enviados dentro do site.">
         Mensagens automáticas
       </Titulo>
 

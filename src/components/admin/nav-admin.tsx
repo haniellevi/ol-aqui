@@ -5,35 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@clerk/nextjs";
-import { Activity, BarChart3, Bot, CalendarCheck, FileText, FolderTree, Handshake, LayoutDashboard, LogOut, MapPinned, Megaphone, MessageSquareText, Receipt, Scale, ShieldAlert, SlidersHorizontal, Sparkles, Store, Tags, UsersRound } from "lucide-react";
+import { BarChart3, CalendarCheck, LogOut, Megaphone, Receipt, ShieldAlert, SlidersHorizontal, Store } from "lucide-react";
 import { podeVerLink, type Papel } from "@/lib/tipos-equipe";
-import { LINK_ADMIN_ANUNCIOS } from "@/lib/rotas";
+import { ENTRADAS_ADMIN, entradaAdminAtiva } from "@/lib/admin/navegacao";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-const ITENS = [
-  { href: "/admin/hoje", rotulo: "Hoje", icone: CalendarCheck },
-  { href: "/admin", rotulo: "Resumo", icone: LayoutDashboard },
-  { href: "/admin/funil", rotulo: "Funil de lojistas", curto: "Funil", icone: Handshake },
-  { href: "/admin/visitas", rotulo: "Visitas e origem", curto: "Visitas", icone: Activity },
-  { href: LINK_ADMIN_ANUNCIOS, rotulo: "Anúncios", icone: Megaphone },
-  { href: "/admin/planos", rotulo: "Planos", icone: Tags },
-  { href: "/admin/configuracoes", rotulo: "Configurações", curto: "Config.", icone: SlidersHorizontal },
-  { href: "/admin/moderacao", rotulo: "Moderação", icone: ShieldAlert },
-  { href: "/admin/usuarios", rotulo: "Usuários", icone: UsersRound },
-  { href: "/admin/lojas", rotulo: "Lojas", icone: Store },
-  { href: "/admin/pagamentos", rotulo: "Pagamentos", curto: "Pagtos.", icone: Receipt },
-  { href: "/admin/destaques", rotulo: "Destaques", icone: Sparkles },
-  { href: "/admin/robo", rotulo: "Robô Aki", curto: "Aki", icone: Bot },
-  { href: "/admin/textos", rotulo: "Página inicial e textos", curto: "Textos", icone: FileText },
-  { href: "/admin/regioes", rotulo: "Regiões e cidades", curto: "Regiões", icone: MapPinned },
-  { href: "/admin/categorias", rotulo: "Categorias e campos", curto: "Categ.", icone: FolderTree },
-  { href: "/admin/equipe", rotulo: "Equipe e permissões", curto: "Equipe", icone: UsersRound },
-  { href: "/admin/compliance", rotulo: "Compliance jurídico", curto: "Jurídico", icone: Scale },
-  { href: "/admin/mensagens", rotulo: "Mensagens automáticas", curto: "Mensagens", icone: MessageSquareText },
-  { href: "/admin/relatorios", rotulo: "Relatórios", icone: BarChart3 },
-];
+const ICONES = { "/admin/hoje": CalendarCheck, "/admin/lojas": Store, "/admin/anuncios": Megaphone,
+  "/admin/moderacao": ShieldAlert, "/admin/pagamentos": Receipt, "/admin": BarChart3, "/admin/configuracoes": SlidersHorizontal };
+const ITENS = ENTRADAS_ADMIN.map(item => ({ ...item, icone: ICONES[item.href] }));
 
 /**
  * Menu do painel. No computador é a barra lateral (peça Sidebar), que recolhe para só ícones
@@ -49,7 +30,7 @@ export function NavAdmin({ pendencias, papel, inicio, aberta = true }: { pendenc
     if (window.matchMedia("(min-width: 768px)").matches) return;
     barra.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [atual]);
-  const ehAtivo = (href: string) => (href === "/admin" ? atual === href : atual.startsWith(href));
+  const ehAtivo = (href: string) => entradaAdminAtiva(atual) === href;
   return (
     <>
     <SidebarProvider defaultOpen={aberta} className="contents" style={{ "--sidebar-width": "14rem" } as React.CSSProperties}>

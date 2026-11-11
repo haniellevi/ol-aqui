@@ -68,6 +68,11 @@ export function valorParaForm(tipo: TipoValor, valor: unknown): string {
 }
 
 export const NOMES_GRUPO: Record<string, string> = {
+  anuncios: "Catálogo e fotos",
+  busca: "Busca",
+  funil: "Captação",
+  hoje: "Tarefas de hoje",
+  visitas: "Medição de visitas",
   planos: "Planos e avulsos",
   radar: "Radar de Negócios",
   moderacao: "Moderação",

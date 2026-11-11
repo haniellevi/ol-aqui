@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { Aviso, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { paraReaisInput } from "@/lib/admin/formato";
 import { criarPlano, salvarPlano } from "./actions";
@@ -46,10 +47,13 @@ export function FormPlano({ plano }: { plano?: Plano }) {
         Preço (R$/período)
         <input name="preco" inputMode="decimal" defaultValue={paraReaisInput(plano?.preco_centavos ?? 0)} className={estiloCampo} />
       </label>
-      <label className="text-sm font-medium">
+      {plano?.e_teste ? <div className="text-sm">
+        <input type="hidden" name="periodo_dias" value={plano.periodo_dias} />
+        <Link href="/admin/configuracoes?grupo=planos#teste.dias" className="font-semibold text-laranja-escuro underline">Ajustar duração do teste grátis</Link>
+      </div> : <label className="text-sm font-medium">
         Dias do período
         <input name="periodo_dias" type="number" min={1} defaultValue={plano?.periodo_dias ?? 30} className={estiloCampo} />
-      </label>
+      </label>}
       <label className="text-sm font-medium">
         Limite de anúncios
         <input name="limite_anuncios" type="number" min={0} placeholder="ilimitado" defaultValue={plano?.limite_anuncios ?? ""} className={estiloCampo} />

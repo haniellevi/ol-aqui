@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { telefoneComercialDigitado } from "@/lib/formato";
 import { exigirAdmin } from "@/lib/admin/auth";
-import { CHAVES_DE_MODELO, CHAVES_DE_PLANO, OPCOES_FIXAS, valorDoForm, type TipoValor } from "@/lib/admin/config";
+import { CHAVES_DE_MODELO, CHAVES_DE_PLANO, OPCOES_FIXAS, tipoDe, valorDoForm } from "@/lib/admin/config";
+import { configGenericaEditavel, permiteExcecaoRegional } from "@/lib/admin/config-visibilidade";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EstadoForm } from "@/lib/admin/estado";
 
@@ -11,9 +12,11 @@ export async function salvarConfig(_: EstadoForm, form: FormData): Promise<Estad
   try {
     const { supabase, userId } = await exigirAdmin();
     const id = String(form.get("id"));
-    const { data: atual } = await supabase.from("configuracoes").select("chave").eq("id", id).single();
-    const valor = valorDaConfig(atual?.chave ?? "", form);
-    const recusa = await valorForaDaLista(supabase, atual?.chave ?? "", valor);
+    const { data: atual, error: erroLeitura } = await supabase.from("configuracoes").select("chave, valor, microrregiao_id").eq("id", id).single();
+    if (erroLeitura || !atual) return { erro: "Não foi possível abrir esta configuração." };
+    if (!configGenericaEditavel(atual.chave, atual.microrregiao_id !== null)) return { erro: "Este ajuste não é editado aqui. Abra a área correspondente nas configurações." };
+    const valor = valorDaConfig(atual.chave, atual.valor, form);
+    const recusa = await valorForaDaLista(supabase, atual.chave, valor);
     if (recusa) return { erro: recusa };
     const { error } = await supabase
       .from("configuracoes")
@@ -34,10 +37,12 @@ export async function criarExcecao(_: EstadoForm, form: FormData): Promise<Estad
     const chave = String(form.get("chave"));
     const microrregiao_id = String(form.get("microrregiao_id"));
     if (!microrregiao_id) return { erro: "Escolha a região." };
-    const valor = valorDaConfig(chave, form);
+    if (!permiteExcecaoRegional(chave) || !configGenericaEditavel(chave, true)) return { erro: "Este ajuste não admite uma exceção regional neste formulário." };
+    const { data: base, error: erroBase } = await supabase.from("configuracoes").select("grupo, descricao, publico, valor").eq("chave", chave).is("microrregiao_id", null).single();
+    if (erroBase || !base) return { erro: "Configuração não encontrada." };
+    const valor = valorDaConfig(chave, base.valor, form);
     const recusa = await valorForaDaLista(supabase, chave, valor);
     if (recusa) return { erro: recusa };
-    const { data: base } = await supabase.from("configuracoes").select("grupo, descricao, publico").eq("chave", chave).is("microrregiao_id", null).single();
     const { error } = await supabase
       .from("configuracoes")
       .insert({ chave, microrregiao_id, valor, grupo: base?.grupo, descricao: base?.descricao, publico: base?.publico, atualizado_por: userId });
@@ -55,9 +60,9 @@ export async function removerExcecao(form: FormData) {
   revalidatePath("/", "layout");
 }
 
-function valorDaConfig(chave: string, form: FormData): unknown {
+function valorDaConfig(chave: string, atual: unknown, form: FormData): unknown {
   const texto = String(form.get("valor") ?? "");
-  if (chave !== "contato.whatsapp_suporte") return valorDoForm(String(form.get("tipo")) as TipoValor, texto);
+  if (chave !== "contato.whatsapp_suporte") return valorDoForm(tipoDe(atual), texto);
   if (!texto.trim()) return null;
   const numero = telefoneComercialDigitado(texto);
   if (!numero) throw new Error("Informe o WhatsApp do suporte com DDD.");
