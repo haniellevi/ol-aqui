@@ -11,7 +11,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 // Vitrine com IA, etapa 4: a IA sugere, o lojista confirma com 1 toque.
 
 /** Uma ação por vez; depois atualiza a página com o que o banco guardou. */
-function useAcao() {
+export function useAcao() {
   const router = useRouter();
   const trava = useRef(false);
   const [pendente, iniciar] = useTransition();
@@ -37,7 +37,7 @@ function useAcao() {
   return { pendente, erro, aviso, executar };
 }
 
-function Mensagens({ erro, aviso }: { erro: string | null; aviso: string | null }) {
+export function Mensagens({ erro, aviso }: { erro: string | null; aviso: string | null }) {
   return (
     <>
       <p role="status" className={aviso ? "rounded-campo bg-sucesso-fundo p-3 text-sm font-semibold text-verde-escuro" : "sr-only"}>{aviso}</p>

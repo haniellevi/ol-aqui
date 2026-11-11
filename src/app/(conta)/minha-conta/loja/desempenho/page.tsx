@@ -2,11 +2,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { ChartNoAxesColumn, ChevronRight, Eye, Heart, ImageOff, Lightbulb, MapPin, MessageCircle, Store } from "lucide-react";
-import { minhaVitrineCompleta, vitrineNovaAtiva } from "@/lib/dados/vitrine-completa";
+import { ChartNoAxesColumn, ChevronRight, Eye, Heart, ImageOff, Lightbulb, MapPin, MessageCircle, Sparkles, Store } from "lucide-react";
+import { melhoriaIAAtiva, minhaVitrineCompleta, vitrineNovaAtiva } from "@/lib/dados/vitrine-completa";
 import { meuDesempenhoLoja, minhasDicasLoja, type MotivoDica, type NumerosLoja } from "@/lib/dados/painel-loja";
 import { inteiro } from "@/lib/formato";
-import { LINK_MINHA_LOJA } from "@/lib/rotas";
+import { LINK_MINHA_LOJA, linkMelhorarComIA } from "@/lib/rotas";
 import { urlPasso } from "@/components/anunciar/passos";
 import { Botao } from "@/components/ui/botao";
 import { Chip } from "@/components/ui/chip";
@@ -57,7 +57,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
   if (!(await vitrineNovaAtiva(v.microrregiao_id).catch(() => false))) notFound();
   const sp = await searchParams;
   const dias = (Array.isArray(sp.dias) ? sp.dias[0] : sp.dias) === "30" ? 30 : 7;
-  const [d, dicas] = await Promise.all([meuDesempenhoLoja(v.id, dias), minhasDicasLoja(v.id)]);
+  const [d, dicas, comIA] = await Promise.all([meuDesempenhoLoja(v.id, dias), minhasDicasLoja(v.id), melhoriaIAAtiva(v.microrregiao_id).catch(() => false)]);
 
   return (
     <PaginaConta>
@@ -139,7 +139,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
         ) : (
           <ul className="flex flex-col divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
             {dicas.map((t) => (
-              <li key={t.anuncio_id}>
+              <li key={t.anuncio_id} className="flex flex-col">
                 <Link href={urlPasso(PASSO_DA_DICA[t.motivo], t.anuncio_id, true)} className="flex min-h-14 items-center gap-3 p-3 hover:bg-fundo">
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-semibold">{t.titulo}</span>
@@ -150,6 +150,13 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
                     <ChevronRight className="size-4" aria-hidden />
                   </span>
                 </Link>
+                {comIA && (
+                  <Link href={linkMelhorarComIA(t.anuncio_id)} aria-label={`Melhorar ${t.titulo} com IA`}
+                    className="-mt-2 flex min-h-10 items-center gap-1 px-3 pb-3 text-sm font-semibold text-laranja-escuro underline underline-offset-4">
+                    <Sparkles className="size-4" aria-hidden />
+                    Melhorar com IA
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

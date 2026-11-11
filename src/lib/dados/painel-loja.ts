@@ -56,3 +56,4 @@ export async function minhasDicasLoja(vitrineId: string): Promise<DicaLoja[] | n
     return null;
   }
 }
+
