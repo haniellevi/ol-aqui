@@ -37,6 +37,8 @@ try:
     print('PASS: arquivamento e restauração de lojas, permissões, histórico e pagamentos por ambiente', flush=True)
     checked(sql((root/'supabase/testes/430_gestao_usuarios_lojas.sql').read_text()))
     print('PASS: gestão de usuários e lojas, permissões e exclusão', flush=True)
+    checked(sql((root/'supabase/testes/450_lixeira_contas_lojas.sql').read_text()))
+    print('PASS: lixeira de 30 dias para conta e loja, cancelamento, suspensão em cascata e limpeza com provas preservadas', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

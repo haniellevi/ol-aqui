@@ -96,6 +96,35 @@ Decidido com o Raniel em 10/11/2026. Base para os próximos PRs (um por etapa).
 | 5 | Filtros (3 categorias), carregar ao rolar, cache | Google ainda acha `?pagina=N`. |
 | 6 | Limpeza do histórico (LGPD) + revisar a política de privacidade | A política descreve os 30 dias e o que fica guardado. |
 
+## Etapa 1 — feita na branch `claude/gestao-exclusao` (ainda não está em produção)
+
+**Banco** (`supabase/migrations/20261111000000_lixeira_contas_lojas.sql`, teste `450_lixeira_contas_lojas.sql`):
+- Tabelas `lixeira_contas` e `lixeira_lojas` (prazo de 30 dias, origem, motivo, status anterior).
+- `vitrines_lojas.excluida_em` (situação `excluida`) e `anuncios.excluido_com_loja`.
+- Conta na lixeira: `usuario_id()` fica nulo, igual a uma conta bloqueada.
+- Dono: `excluir_minha_loja`, `restaurar_minha_loja`, `pedir_exclusao_conta`, `minha_exclusao_pendente`, `cancelar_exclusao_conta`.
+- Admin: `admin_lixeira_conta`, `admin_lixeira_loja`, `admin_antecipar_limpeza` (pede o nome exato) e `admin_lixeira` (lista).
+- `admin_bloquear_usuario` agora suspende a loja e pausa os anúncios no ar, e devolve tudo igual ao reativar.
+- Limpeza: `limpeza_pendente`, `purgar_anuncio`, `purgar_loja`, `urls_sem_uso` e pg_cron `olaki-limpeza-lixeira` às 04:00 UTC.
+- Congelados nunca vão para a lixeira nem são apagados. Uma loja com pagamento ou prova fica anonimizada.
+
+**Site:**
+- Excluir conta só pede a exclusão. O Clerk só é apagado depois de 30 dias.
+- Nova página `/conta-em-exclusao` com o botão "Cancelar a exclusão". A área da conta manda para lá.
+- A lógica de apagar conta saiu do webhook e foi para `src/lib/conta-exclusao.ts`. Conteúdo congelado agora não trava a exclusão: a prova fica e o resto sai.
+- Nova rota `/api/interno/limpeza`, protegida por `LIMPEZA_SECRET`.
+
+**Para ligar em produção (precisa do "sim" do Raniel):**
+1. Fazer backup do banco e aplicar a migration.
+2. Criar o segredo `LIMPEZA_SECRET` (32 ou mais caracteres) na Vercel e o mesmo valor no Vault do Supabase com o nome `olaki_limpeza_token`.
+3. Publicar o site **junto** com a migration. Sem o site novo, o botão antigo apagaria a conta na hora.
+4. Conferir se o Clerk deixa o usuário excluir a conta pelo próprio painel do Clerk. Se deixar, desligar essa opção, porque ela pula a lixeira.
+
+**Limites conhecidos:**
+- Quem tem loja com pagamento e apaga só a loja continua com ela anonimizada no nome. Como cada pessoa só pode ter uma loja, essa pessoa não consegue abrir outra. Resolver na etapa 2.
+- Os anúncios voltam ao ar ao restaurar. Os que venceram nesse meio-tempo são expirados pela rotina da noite.
+- A tela do painel (Lixeira, botões Excluir e Suspender) é a etapa 2.
+
 ## Riscos
 
 - **Produção:** as migrations mexem em dados reais. Cada etapa precisa de backup e teste antes de aplicar.

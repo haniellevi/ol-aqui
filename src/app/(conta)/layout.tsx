@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { auth } from "@clerk/nextjs/server";
 import { garantirPerfil } from "@/lib/perfil";
+import { contaEmExclusao } from "@/lib/conta-exclusao";
 import { CabecalhoPublico } from "@/components/ui/cabecalho-publico";
 import { BarraInferior } from "@/components/ui/barra-inferior";
 import { BalaoAki } from "@/components/aki/balao-aki";
@@ -14,7 +15,8 @@ export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false } };
 
 export default async function LayoutConta({ children }: { children: React.ReactNode }) {
-  await auth.protect();
+  const { userId } = await auth.protect();
+  if (await contaEmExclusao(userId)) redirect("/conta-em-exclusao");
   await garantirPerfil(); // 1º acesso: cria o perfil se o webhook do Clerk ainda não chegou
   const conta = await meuPerfilEVitrine(true);
   if (!conta?.perfil.whatsapp || !conta.perfil.whatsapp_verificado_em) redirect("/confirmar-celular");

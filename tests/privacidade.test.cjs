@@ -131,6 +131,8 @@ function webhook(op = {}) {
         neq(...f) { c.filtros.push(['neq', ...f]); return q; },
         limit(n) { c.limite = n; return q; },
         or(filtro) { c.ou = filtro; return q; },
+        is(...f) { c.filtros.push(['is', ...f]); return q; },
+        not(...f) { c.filtros.push(['not', ...f]); return q; },
         then(resolve, reject) {
           chamadas.push(c);
           let error = null;
@@ -185,16 +187,22 @@ test('exclusão: falha parcial ou do Storage não confirma sucesso ao provedor',
   for (const op of [{ storageErro: true }, { excluirErro: erroFinanceiro, falha: 'robo_conversas' }]) assert.equal((await webhook(op).post()).status, 500);
 });
 
-test('exclusão: conteúdo congelado ou verificação indisponível bloqueia antes do Storage, inclusive sem cobrança', async (t) => {
+test('exclusão: conteúdo congelado não trava a conta; a prova fica e o resto sai', async () => {
+  const a = webhook({ excluirErro: { code: '55000', message: 'Conteúdo congelado exige revisão' } });
+  assert.equal((await a.post()).status, 200);
+  const anuncios = a.chamadas.find(c => c.tabela === 'anuncios' && c.acao === 'delete');
+  assert.deepEqual(anuncios.filtros.filter(f => f[0] === 'neq'), [['neq', 'status', 'congelado']]);
+  assert.ok(anuncios.filtros.some(f => f[0] === 'is' && f[1] === 'congelado_motivo'));
+  const pedidos = a.chamadas.find(c => c.tabela === 'radar_pedidos' && c.acao === 'delete');
+  assert.ok(pedidos.filtros.some(f => f[0] === 'neq' && f[2] === 'congelado'));
+  assert.ok(a.chamadas.some(c => c.tabela === 'perfis' && c.acao === 'update'));
+  assert.ok(a.chamadas.some(c => c.tabela === 'lixeira_contas' && c.acao === 'delete'));
+});
+test('exclusão: falha ao conferir provas exige nova tentativa e não apaga arquivos', async (t) => {
   t.mock.method(console, 'error', () => {});
-  for (const tabela of ['anuncios', 'radar_pedidos', 'radar_propostas']) {
-    for (const op of [{ congelado: tabela }, { falhaRetencao: tabela }]) {
-      const a = webhook(op); assert.equal((await a.post()).status, 500);
-      assert.equal(a.exclusoes, 0);
-      assert.ok(a.chamadas.every(c => c.acao === 'select' || c.tabela === 'contas_revogadas'));
-      assert.equal(a.chamadas[0].tabela, 'contas_revogadas');
-    }
-  }
+  const a = webhook({ excluirErro: { code: '55000', message: 'congelado' }, falhaRetencao: 'radar_pedidos' });
+  assert.equal((await a.post()).status, 500);
+  assert.equal(a.chamadas.some(c => c.acao === 'storage-list' || c.acao === 'update'), false);
 });
 
 test('exclusão: arquivos só são removidos após confirmação do banco, inclusive em retry', async (t) => {
@@ -204,7 +212,7 @@ test('exclusão: arquivos só são removidos após confirmação do banco, inclu
     const armazenamento = a.chamadas.findIndex(c => c.acao === 'storage-list');
     assert.ok(armazenamento > 0); assert.ok(a.chamadas.slice(armazenamento).every(c => c.acao === 'storage-list'));
   }
-  for (const op of [{ excluirErro: { code: '55000', message: 'Congelado após consulta' } }, { excluirErro: erroFinanceiro, falha: 'radar_propostas' }]) {
+  for (const op of [{ excluirErro: erroFinanceiro, falha: 'radar_propostas' }, { excluirErro: erroFinanceiro, falha: 'anuncios' }]) {
     const a = webhook(op); assert.equal((await a.post()).status, 500);
     assert.equal(a.chamadas.some(c => c.acao === 'storage-list'), false);
   }
