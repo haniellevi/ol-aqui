@@ -54,6 +54,9 @@ as $$
     select 1 from public.anuncios a join public.vitrines_lojas v on v.id = a.vitrine_id
      where a.status = 'ativo' and a.categoria_sugerida_em is null and a.categoria_sugestao_estado is null
        and v.tipo = 'loja' and v.status = 'ativa')
+  -- Lote travado também é trabalho: a reserva seguinte devolve os anúncios dele para a fila.
+  or exists (select 1 from public.categorizacao_ia c
+              where c.estado = 'processando' and c.criado_em < now() - interval '10 minutes')
 $$;
 
 -- ---------------------------------------------------------------------
@@ -102,6 +105,8 @@ begin
   orc := public.numero_ou_nulo(public.config('robo.orcamento_mensal_centavos', null, 'null'));
   -- US$ 0,05 cobre com folga 20 anúncios curtos e a lista de categorias no modelo barato.
   reserva_custo := 0.05 * cot * 100;
+  -- Mesma trava do orçamento da moderação e do Aki: duas reservas ao mesmo tempo não passam do limite do mês.
+  perform pg_advisory_xact_lock(hashtext('robo_uso:orcamento'));
   select coalesce(sum(custo_centavos), 0) into gasto from public.robo_uso where criado_em >= public.robo_inicio('mes');
   if cot is null or cot <= 0 or orc is null or orc < 0 or gasto + reserva_custo > orc then
     return null;
@@ -181,12 +186,13 @@ begin
     end if;
   end loop;
 
-  -- Nicho: loja sem nicho e sem sugestão ainda recebe a categoria principal mais comum dos produtos.
+  -- Nicho: loja do lote, sem nicho e sem sugestão ainda, recebe a categoria principal mais comum
+  -- de TODOS os produtos no ar dela (não só os deste lote).
   update public.vitrines_lojas v
      set nicho_sugerido_id = s.raiz, nicho_sugerido_em = now()
     from (select distinct on (a.vitrine_id) a.vitrine_id, coalesce(c.pai_id, c.id) as raiz
             from public.anuncios a join public.categorias c on c.id = coalesce(a.categoria_sugerida_id, a.categoria_id)
-           where a.id = any(j.anuncios) and a.status = 'ativo'
+           where a.vitrine_id in (select b.vitrine_id from public.anuncios b where b.id = any(j.anuncios)) and a.status = 'ativo'
            group by a.vitrine_id, coalesce(c.pai_id, c.id)
            order by a.vitrine_id, count(*) desc, coalesce(c.pai_id, c.id)) s
    where v.id = s.vitrine_id and v.nicho_id is null and v.nicho_sugerido_id is null and v.nicho_sugerido_em is null
