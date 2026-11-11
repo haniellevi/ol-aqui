@@ -37,11 +37,11 @@ async function modeloConfigurado(db: Admin, chave: keyof typeof MODELOS_LOJISTA)
 
 async function sugerirCadastro(db: Admin, uid: string, chave: string, corpo: Record<string, unknown>) {
   const contexto = texto(corpo.contexto, 1500);
-  if (!contexto) return falha("Conte ao Aki o que a loja vende.");
+  if (!contexto) return falha("Conte ao Merc o que a loja vende.");
   const modelo = await modeloConfigurado(db, "robo.lojista_modelo_texto");
-  if (!modelo) return falha("O modelo do Aki está indisponível agora.", 503);
+  if (!modelo) return falha("O modelo do Merc está indisponível agora.", 503);
   const { data: reserva, error } = await db.rpc("aki_reservar_cadastro", { p_usuario: uid, p_modelo: modelo });
-  if (error || !reserva) return falha("As sugestões do Aki estão indisponíveis agora. Você pode preencher os dados da loja.", 503);
+  if (error || !reserva) return falha("As sugestões do Merc estão indisponíveis agora. Você pode preencher os dados da loja.", 503);
 
   let uso: { prompt_tokens?: number; completion_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } } = {};
   let erro: string | null = null;
@@ -52,7 +52,7 @@ async function sugerirCadastro(db: Admin, uid: string, chave: string, corpo: Rec
       reasoning_effort: "low",
       response_format: { type: "json_object" },
       messages: [
-        { role: "developer", content: 'Você é o Aki, assistente de lojistas da Mercado da Região. Retorne JSON {"categoria":"","descricao":"","pergunta":""}. Se faltar saber o que a loja vende ou faz, preencha só pergunta, com uma pergunta curta. Caso contrário preencha categoria comercial curta e descricao em português do Brasil, até 450 caracteres, como texto público da loja. Use apenas os fatos que o lojista informou. Nunca invente marcas, localização, prazo, contatos, garantias, preços ou serviços. Sem Markdown e sem dados de contato.' },
+        { role: "developer", content: 'Você é o Merc, assistente de lojistas da Mercado da Região. Retorne JSON {"categoria":"","descricao":"","pergunta":""}. Se faltar saber o que a loja vende ou faz, preencha só pergunta, com uma pergunta curta. Caso contrário preencha categoria comercial curta e descricao em português do Brasil, até 450 caracteres, como texto público da loja. Use apenas os fatos que o lojista informou. Nunca invente marcas, localização, prazo, contatos, garantias, preços ou serviços. Sem Markdown e sem dados de contato.' },
         { role: "user", content: JSON.stringify({ nome: texto(corpo.nome, 80), contexto }) },
       ],
     }, 20_000);
@@ -68,7 +68,7 @@ async function sugerirCadastro(db: Admin, uid: string, chave: string, corpo: Rec
     return json(resultado);
   } catch (e) {
     erro = e instanceof Error ? e.message : "Falha na sugestão";
-    return falha("O Aki não conseguiu preparar a sugestão. Tente de novo ou preencha os dados.", 502);
+    return falha("O Merc não conseguiu preparar a sugestão. Tente de novo ou preencha os dados.", 502);
   } finally {
     const entrada = uso.prompt_tokens ?? 0;
     const cache = Math.min(entrada, uso.prompt_tokens_details?.cached_tokens ?? 0);
@@ -154,14 +154,14 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
     modeloConfigurado(db, "robo.lojista_modelo_imagem"),
     original ? modeloConfigurado(db, "robo.lojista_modelo_texto") : null,
   ]);
-  if (!modeloImagem || (original && !modeloTexto)) return falha("Os modelos de imagem do Aki estão indisponíveis agora.", 503);
+  if (!modeloImagem || (original && !modeloTexto)) return falha("Os modelos de imagem do Merc estão indisponíveis agora.", 503);
 
   const { data: reserva, error } = await db.rpc("aki_reservar_imagem", {
     p_usuario: uid, p_id: id, p_tipo: tipo, p_anuncio: anuncio, p_foto: foto,
   });
   if (error || !reserva) return falha("Não foi possível conferir seus créditos.", 503, true);
   if (reserva.estado === "pronta") return json({ id, url: reserva.url, restantes: reserva.restantes });
-  if (reserva.estado === "reservada") return falha("O Aki ainda está preparando esta imagem. Confira novamente em instantes.", 409, true);
+  if (reserva.estado === "reservada") return falha("O Merc ainda está preparando esta imagem. Confira novamente em instantes.", 409, true);
   if (reserva.estado === "limite_diario") return falha("Você atingiu o limite de tentativas de imagem de hoje.", 429);
   if (reserva.estado === "sem_credito") return falha("Você usou todos os seus créditos de imagem.", 409);
   if (reserva.estado === "invalida") return falha("Escolha uma foto salva neste anúncio.");
@@ -244,11 +244,11 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
       const detalhe = e.detalhe ? ` Detalhe observado: ${e.detalhe}` : "";
       return falha(`${motivo}${detalhe} Seu crédito está disponível para outra tentativa.`, 502);
     }
-    return falha("O Aki não conseguiu preparar a imagem. Nenhum crédito foi descontado.", 502);
+    return falha("O Merc não conseguiu preparar a imagem. Nenhum crédito foi descontado.", 502);
   }
 }
 
-/** Conta excluída ou bloqueada no painel não usa o Aki, mesmo com sessão do Clerk aberta. */
+/** Conta excluída ou bloqueada no painel não usa o Merc, mesmo com sessão do Clerk aberta. */
 async function contaAtiva(db: ReturnType<typeof supabaseAdmin>, uid: string): Promise<boolean> {
   const [revogada, bloqueada] = await Promise.all([
     db.from("contas_revogadas").select("usuario_id").eq("usuario_id", uid).maybeSingle(),
@@ -260,10 +260,10 @@ async function contaAtiva(db: ReturnType<typeof supabaseAdmin>, uid: string): Pr
 
 export async function GET(req: Request) {
   const { userId } = await auth();
-  if (!userId) return falha("Entre na sua conta para usar o Aki.", 401);
+  if (!userId) return falha("Entre na sua conta para usar o Merc.", 401);
   try {
     const db = supabaseAdmin();
-    if (!(await contaAtiva(db, userId))) return falha("Sua conta não pode usar o Aki.", 403);
+    if (!(await contaAtiva(db, userId))) return falha("Sua conta não pode usar o Merc.", 403);
     const { data, error } = await db.rpc("aki_creditos_imagem", { p_usuario: userId }).single();
     if (error || !data) return falha("Não foi possível consultar o saldo.", 503);
     const saldo = data as { restantes: number; ligado: boolean };
@@ -287,24 +287,24 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const { userId } = await auth();
-  if (!userId) return falha("Entre na sua conta para usar o Aki.", 401);
+  if (!userId) return falha("Entre na sua conta para usar o Merc.", 401);
   if (req.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() !== "application/json") {
     return falha("Envie o pedido em JSON.", 415);
   }
   if (Number(req.headers.get("content-length")) > 6000) return falha("O pedido está muito grande.", 413);
   const chave = process.env.OPENAI_API_KEY?.trim();
-  if (!chave) return falha("O Aki está indisponível agora.", 503);
+  if (!chave) return falha("O Merc está indisponível agora.", 503);
   try {
     const bruto = await req.text();
     if (bruto.length > 6000) return falha("O pedido está muito grande.", 413);
     const corpo = JSON.parse(bruto);
-    if (!corpo || typeof corpo !== "object") return falha("Confira o pedido ao Aki.");
+    if (!corpo || typeof corpo !== "object") return falha("Confira o pedido ao Merc.");
     const db = supabaseAdmin();
-    if (!(await contaAtiva(db, userId))) return falha("Sua conta não pode usar o Aki.", 403);
+    if (!(await contaAtiva(db, userId))) return falha("Sua conta não pode usar o Merc.", 403);
     if (corpo.tipo === "cadastro") return await sugerirCadastro(db, userId, chave, corpo);
     if (corpo.tipo === "banner" || corpo.tipo === "produto") return await gerarImagem(db, userId, chave, corpo);
-    return falha("Confira o pedido ao Aki.");
+    return falha("Confira o pedido ao Merc.");
   } catch {
-    return falha("Não foi possível completar o pedido ao Aki. Tente novamente.", 503, true);
+    return falha("Não foi possível completar o pedido ao Merc. Tente novamente.", 503, true);
   }
 }

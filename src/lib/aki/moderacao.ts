@@ -1,4 +1,4 @@
-// Moderação do texto do Aki: a mesma lista de palavras bloqueadas dos anúncios
+// Moderação do texto do Merc: a mesma lista de palavras bloqueadas dos anúncios
 // (configuracoes "moderacao.palavras_bloqueadas"), comparada do mesmo jeito que o banco
 // (sem acento, minúsculas, palavra inteira). Serve no servidor; não guarda estado global.
 

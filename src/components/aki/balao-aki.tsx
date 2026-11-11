@@ -28,10 +28,10 @@ import { RespostaAki } from "./resposta-aki";
 import { classesCampo } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 
-// Balão flutuante do Aki + folha de conversa (DESIGN-SYSTEM.md: folha rounded-t-folha, shadow-2,
+// Balão flutuante do Merc + folha de conversa (DESIGN-SYSTEM.md: folha rounded-t-folha, shadow-2,
 // 48px de toque, texto mínimo 13px, campo 16px, um botão laranja por tela = "Enviar").
 // modo="pagina": a mesma conversa ocupando a tela toda (T39, /aki), sem o balão flutuante.
-// Mesma API (/api/aki) e mesmas regras: nada muda no que o Aki pode fazer.
+// Mesma API (/api/aki) e mesmas regras: nada muda no que o Merc pode fazer.
 
 type FotoPronta = { base64: string; tipo: "image/webp" | "image/jpeg"; previa: string; blob: Blob; formato: "webp" | "jpg" };
 
@@ -95,7 +95,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
   const caixa = useRef<HTMLTextAreaElement>(null);
   const completoCarregado = useRef(false);
 
-  // estado leve ao montar: o Aki existe nesta região? (desligado no painel = sem balão)
+  // estado leve ao montar: o Merc existe nesta região? (desligado no painel = sem balão)
   // Na tela cheia a conversa abre direto (estado completo, logo abaixo).
   useEffect(() => {
     if (pagina) return;
@@ -125,8 +125,8 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
     try {
       const r = await fetch(`${API}?completo=1`, { cache: "no-store" });
       const e = (await r.json()) as EstadoAki;
-      // falha no servidor (a rota responde motivo "erro") não é "Aki desligado": mostra "Tentar de novo"
-      if (!r.ok || e.motivo === "erro") throw new Error("estado do Aki falhou");
+      // falha no servidor (a rota responde motivo "erro") não é "Merc desligado": mostra "Tentar de novo"
+      if (!r.ok || e.motivo === "erro") throw new Error("estado do Merc falhou");
       setEstado(e);
       setMensagens(e.mensagens ?? []);
       setConversaId(e.conversaId);
@@ -155,7 +155,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
       if (pedido?.rascunhoId) setRascunhoId(pedido.rascunhoId);
       // cadastro pela foto: a foto vai para o anúncio também (a pessoa pode desmarcar antes de enviar)
       if (pedido?.foto) setUsarNoAnuncio(!!pedido.rascunhoId);
-      // seletor de foto só se o Aki pode responder; senão a folha abre mostrando o motivo
+      // seletor de foto só se o Merc pode responder; senão a folha abre mostrando o motivo
       if (pedido?.foto && podeAgora) inputFoto.current?.click(); // dentro do toque da pessoa
       void carregarCompleto();
     },
@@ -241,7 +241,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
     tirarFoto();
 
     // primeiro guarda a foto no rascunho (a pessoa marcou "Usar esta foto no anúncio"):
-    // assim o card do rascunho que o Aki mostra já vem com ela
+    // assim o card do rascunho que o Merc mostra já vem com ela
     if (fotoAnuncio && rascunhoId) {
       setPensando("Guardando a foto no anúncio…");
       const falhou = await guardarFotoNoAnuncio(fotoAnuncio, rascunhoId);
@@ -348,13 +348,13 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
 
   if (!estado?.ligado) {
     if (!pagina) return null;
-    // tela cheia: carregando, sem conexão ou Aki desligado nesta região (sempre com saída)
+    // tela cheia: carregando, sem conexão ou Merc desligado nesta região (sempre com saída)
     const carregandoPagina = !estado && !falhouEstado;
     return (
       <section aria-labelledby="aki-titulo" className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-4 px-4 text-center">
         <MascoteAki tamanho={64} />
         <h1 id="aki-titulo" className="text-titulo font-semibold">
-          {carregandoPagina ? "Abrindo o Aki…" : falhouEstado ? "Não deu para abrir o Aki" : "O Aki está descansando"}
+          {carregandoPagina ? "Abrindo o Merc…" : falhouEstado ? "Não deu para abrir o Merc" : "O Merc está descansando"}
         </h1>
         {carregandoPagina ? (
           <Loader2 className="size-6 animate-spin text-texto-suave motion-reduce:animate-none" aria-hidden />
@@ -429,7 +429,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           >
             {dica.texto}
           </button>
-          <button type="button" onClick={fecharDica} aria-label="Fechar o convite do Aki" className="grid size-10 shrink-0 place-items-center text-texto-suave">
+          <button type="button" onClick={fecharDica} aria-label="Fechar o convite do Merc" className="grid size-10 shrink-0 place-items-center text-texto-suave">
             <X className="size-5" aria-hidden />
           </button>
         </div>
@@ -443,14 +443,14 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           aria-haspopup="dialog"
         >
           <MascoteAki tamanho={30} />
-          Aki
+          Merc
         </button>
       )}
 
       {aberto && (
         <div className={pagina ? "contents" : "fixed inset-0 z-50"} role="presentation">
           {!pagina && (
-            <button type="button" aria-label="Fechar o Aki" className="absolute inset-0 bg-beringela/40" onClick={() => setAberto(false)} />
+            <button type="button" aria-label="Fechar o Merc" className="absolute inset-0 bg-beringela/40" onClick={() => setAberto(false)} />
           )}
           <section
             role={pagina ? undefined : "dialog"}
@@ -472,11 +472,11 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
               <div className="min-w-0 flex-1">
                 {pagina ? (
                   <h1 id="aki-titulo" className="text-lg leading-6 font-semibold">
-                    Aki
+                    Merc
                   </h1>
                 ) : (
                   <h2 id="aki-titulo" className="text-lg leading-6 font-semibold">
-                    Aki
+                    Merc
                   </h2>
                 )}
                 <p className="text-legenda leading-[18px] text-texto-suave">Ajudante do Mercado da Região</p>
@@ -486,7 +486,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   type="button"
                   onClick={() => setConfirmarApagar(true)}
                   disabled={enviando}
-                  title={enviando ? "Espere o Aki terminar de responder" : undefined}
+                  title={enviando ? "Espere o Merc terminar de responder" : undefined}
                   className="flex h-10 items-center gap-1 px-3 text-legenda font-semibold text-perigo disabled:opacity-50"
                 >
                   <Trash2 className="size-4" aria-hidden />
@@ -509,15 +509,15 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
 
             {voltarDaAjuda && (
               <div className="border-b border-borda bg-fundo px-4 py-3 text-sm text-texto-suave">
-                <p>Conte ao Aki o que aconteceu com a confirmação do WhatsApp. Nunca envie o código pelo bate-papo.</p>
-                <p>Ao tocar em <strong>Não ajudou</strong>, a equipe recebe sua pergunta e a resposta do Aki.</p>
+                <p>Conte ao Merc o que aconteceu com a confirmação do WhatsApp. Nunca envie o código pelo bate-papo.</p>
+                <p>Ao tocar em <strong>Não ajudou</strong>, a equipe recebe sua pergunta e a resposta do Merc.</p>
                 {atendimentoAberto && <Botao href={atendimentoHref} variante="texto">Ver atendimento com a equipe</Botao>}
               </div>
             )}
 
             {confirmarApagar && (
               <div role="alertdialog" aria-label="Apagar conversa" className="space-y-2 bg-perigo-fundo px-4 py-3">
-                <p className="text-sm text-perigo">Apagar toda a sua conversa com o Aki? Não dá para desfazer.</p>
+                <p className="text-sm text-perigo">Apagar toda a sua conversa com o Merc? Não dá para desfazer.</p>
                 <div className="flex gap-2">
                   <Botao variante="perigo" carregando={apagando} textoCarregando="Apagando…" disabled={enviando} onClick={() => void apagarConversa()}>
                     Apagar
@@ -541,7 +541,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   <div className="flex items-start gap-2">
                     <MascoteAki tamanho={28} className="mt-1 shrink-0" />
                     <p className="rounded-card rounded-tl-none bg-fundo px-3 py-2 text-base leading-6">
-                      {estado.boasVindas ?? "Oi! Eu sou o Aki. Posso ajudar a achar coisas à venda e a anunciar."}
+                      {estado.boasVindas ?? "Oi! Eu sou o Merc. Posso ajudar a achar coisas à venda e a anunciar."}
                     </p>
                   </div>
                   {!estado.logado && (
@@ -610,7 +610,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   <img src={foto.previa} alt="Foto escolhida" className="size-16 rounded-campo object-cover" />
                   <span className="flex-1 text-sm text-texto-suave">
                     {usarNoAnuncio && rascunhoId
-                      ? "A foto vai para o Aki e fica no seu anúncio."
+                      ? "A foto vai para o Merc e fica no seu anúncio."
                       : "A foto vai junto com a mensagem e não fica guardada."}
                   </span>
                   <button type="button" onClick={tirarFoto} aria-label="Tirar a foto" className="grid size-10 place-items-center text-perigo">
@@ -643,7 +643,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     Foto
                   </button>
                   <label htmlFor="aki-texto" className="sr-only">
-                    Mensagem para o Aki
+                    Mensagem para o Merc
                   </label>
                   <textarea
                     id="aki-texto"
@@ -659,7 +659,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     maxLength={estado.maxCaracteres}
                     rows={1}
                     disabled={!podeEscrever}
-                    placeholder={podeEscrever ? "Escreva para o Aki" : DESCANSANDO}
+                    placeholder={podeEscrever ? "Escreva para o Merc" : DESCANSANDO}
                     className={`${classesCampo} max-h-32 min-h-10 flex-1 resize-none py-2 leading-6`}
                   />
                   <Botao
@@ -674,7 +674,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   </Botao>
                 </form>
               ) : (
-                <p className="text-center text-legenda text-texto-suave">Entre na sua conta para conversar com o Aki.</p>
+                <p className="text-center text-legenda text-texto-suave">Entre na sua conta para conversar com o Merc.</p>
               )}
             </footer>
           </section>

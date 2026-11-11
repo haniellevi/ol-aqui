@@ -28,7 +28,7 @@ export default function NaoEncontrado() {
             Pedir no Radar
           </Botao>
           <Botao href={LINK_AKI} variante="texto">
-            Perguntar ao Aki
+            Perguntar ao Merc
           </Botao>
           <Botao href={LINK_AJUDA} variante="texto">
             Ver a Ajuda

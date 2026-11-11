@@ -73,7 +73,7 @@ function ambiente(t, { fiel = true, detalhe = '', logado = true, contaBloqueada 
   };
 }
 
-test('Aki guarda um banner e reapresenta a mesma arte sem chamar o provedor novamente', async (t) => {
+test('Merc guarda um banner e reapresenta a mesma arte sem chamar o provedor novamente', async (t) => {
   const a = ambiente(t);
   const primeira = await a.gerar({ tipo: 'banner' });
   assert.equal(primeira.status, 200);
@@ -86,7 +86,7 @@ test('Aki guarda um banner e reapresenta a mesma arte sem chamar o provedor nova
   assert.deepEqual([width, height], [1500, 500]);
 });
 
-test('Aki libera a reserva se a foto tratada mudar detalhes do produto', async (t) => {
+test('Merc libera a reserva se a foto tratada mudar detalhes do produto', async (t) => {
   const detalhe = "A inscrição 18V da bateria ficou ilegível.";
   const a = ambiente(t, { fiel: false, detalhe });
   const resposta = await a.gerar({ tipo: 'produto', anuncio, foto: origem + uid + '/' + anuncio + '/original.webp' });
@@ -99,7 +99,7 @@ test('Aki libera a reserva se a foto tratada mudar detalhes do produto', async (
   assert.equal(a.uploads(), 0);
 });
 
-test('Aki exige sessão antes de reservar créditos ou chamar o provedor', async (t) => {
+test('Merc exige sessão antes de reservar créditos ou chamar o provedor', async (t) => {
   const a = ambiente(t, { logado: false });
   const resposta = await a.gerar({ tipo: 'banner' });
   assert.equal(resposta.status, 401);
@@ -108,7 +108,7 @@ test('Aki exige sessão antes de reservar créditos ou chamar o provedor', async
 });
 
 for (const tabela of ['contas_revogadas', 'contas_bloqueadas']) {
-  test(`Aki recusa conta em ${tabela} antes de reservar créditos ou chamar o provedor`, async (t) => {
+  test(`Merc recusa conta em ${tabela} antes de reservar créditos ou chamar o provedor`, async (t) => {
     const a = ambiente(t, { contaBloqueada: tabela });
     const resposta = await a.gerar({ tipo: 'banner' });
     assert.equal(resposta.status, 403);
@@ -117,7 +117,7 @@ for (const tabela of ['contas_revogadas', 'contas_bloqueadas']) {
   });
 }
 
-test('foto de produto do Aki fica na pasta do anúncio e passa na moderação automática', async (t) => {
+test('foto de produto do Merc fica na pasta do anúncio e passa na moderação automática', async (t) => {
   const a = ambiente(t);
   const resposta = await a.gerar({ tipo: 'produto', anuncio, foto: origem + uid + '/' + anuncio + '/original.webp' });
   assert.equal(resposta.status, 200);

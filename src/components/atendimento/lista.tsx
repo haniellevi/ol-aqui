@@ -14,7 +14,7 @@ export function ListaAtendimentos({ dados, caminho, link, pagina, total, equipe 
         <div className="min-w-0 [overflow-wrap:anywhere]">
           <p className="text-sm font-semibold text-beringela">{c.anuncio_id ? c.anuncios?.titulo?.trim() || "Anúncio sem título" : "Confirmação do WhatsApp"}</p>
           <p className="mt-1 text-legenda text-texto-suave">Atualizado em {quando(c.atualizado_em)}</p>
-          <p className="mt-1 text-sm text-texto-suave">{c.aguarda_equipe ? "Aguardando equipe" : c.aki_ativo ? "Atendimento com Aki" : "Atendimento da equipe"}</p>
+          <p className="mt-1 text-sm text-texto-suave">{c.aguarda_equipe ? "Aguardando equipe" : c.aki_ativo ? "Atendimento com Merc" : "Atendimento da equipe"}</p>
         </div>
         <Botao href={link(c)} variante="secundario" prefetch={false}>{equipe ? "Gerenciar conversa" : "Ler conversa"}</Botao>
       </li>)}

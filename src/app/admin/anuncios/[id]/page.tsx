@@ -87,14 +87,14 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
         {/^[1-9]\d{9,14}$/.test(whatsapp) && <Botao href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" variante="whatsapp">Abrir WhatsApp</Botao>}
         {conversaR.error ? <Aviso tipo="erro">Não foi possível carregar a conversa. Atualize a página.</Aviso> : conversa ?
           <form action={delegarAtendimento.bind(null, id, conversa.id, !conversa.aki_ativo, conversa.aki_versao)}>
-            <Botao type="submit" variante="secundario">{conversa.aki_ativo ? "Retomar atendimento" : "Delegar ao Aki"}</Botao>
+            <Botao type="submit" variante="secundario">{conversa.aki_ativo ? "Retomar atendimento" : "Delegar ao Merc"}</Botao>
           </form> : <form action={abrirAtendimento.bind(null, id)}>
             <Botao type="submit" variante="secundario">Abrir conversa privada</Botao>
           </form>}
       </div>
       {contatoR.error && <p className="text-sm text-perigo">Não foi possível consultar o WhatsApp do anunciante.</p>}
       {conversa && <p className="text-sm text-texto-suave">
-        {conversa.aki_ativo ? "O Aki pode responder perguntas de suporte enviadas a ele nesta conversa." : "A equipe está responsável por esta conversa."}
+        {conversa.aki_ativo ? "O Merc pode responder perguntas de suporte enviadas a ele nesta conversa." : "A equipe está responsável por esta conversa."}
         {conversa.aguarda_equipe && " Há mensagem aguardando atendimento."}
       </p>}
     </Cartao>}

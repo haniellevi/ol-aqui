@@ -145,9 +145,9 @@ Hoje o banco tem um destaque simples (`destaque_ate`). Proposta: **tipos de dest
 
 ---
 
-## 7. O robô "Aki" (assistente com IA)
+## 7. O robô "Merc" (assistente com IA)
 
-Nome sugerido: **Aki**, de "olAKI" ("Pergunta pro Aki!"). Fica num balão em todas as telas, aparece sozinho quando a busca não acha nada e dentro do cadastro de anúncio.
+Nome sugerido: **Merc**, de "olAKI" ("Pergunta pro Merc!"). Fica num balão em todas as telas, aparece sozinho quando a busca não acha nada e dentro do cadastro de anúncio.
 
 Ele usa a **IA Claude (Anthropic)**, que entende português do jeito que o povo escreve, lê fotos, e consegue usar as funções do próprio Mercado da Região (buscar, criar rascunho, criar pedido no Radar).
 
@@ -156,12 +156,12 @@ Ele usa a **IA Claude (Anthropic)**, que entende português do jeito que o povo 
 **1. Ajuda a encontrar**
 > "Quero uma moto boa pra roça até 10 mil aqui em Corrente"
 
-O Aki busca nos anúncios reais e mostra os cards dentro da conversa. Se não tiver, oferece: "Posso colocar seu pedido no Radar? As lojas da região te mandam propostas." e já deixa o pedido preenchido (a pessoa só confirma o código do celular).
+O Merc busca nos anúncios reais e mostra os cards dentro da conversa. Se não tiver, oferece: "Posso colocar seu pedido no Radar? As lojas da região te mandam propostas." e já deixa o pedido preenchido (a pessoa só confirma o código do celular).
 
 **2. Cadastra produto por conversa**
 > A pessoa manda a foto de uma geladeira.
 
-O Aki responde: "Geladeira Consul frost free, certo? Em que estado ela está?" → pergunta só o que falta → sugere preço com base nos anúncios da região → mostra o card pronto → **a pessoa toca em Publicar**. Ele nunca publica sozinho.
+O Merc responde: "Geladeira Consul frost free, certo? Em que estado ela está?" → pergunta só o que falta → sugere preço com base nos anúncios da região → mostra o card pronto → **a pessoa toca em Publicar**. Ele nunca publica sozinho.
 
 **3. Tira dúvidas**
 Planos, preços, como funciona o Radar, como pagar destaque. Ele lê os preços da tabela do painel, então nunca fala um valor desatualizado.
@@ -170,12 +170,12 @@ Planos, preços, como funciona o Radar, como pagar destaque. Ele lê os preços 
 "Como estão meus anúncios?", "Melhore a descrição desse", "Tem pedido no Radar que combina com meu estoque?"
 
 ### Regras de segurança (não negociáveis)
-- O Aki só faz o que a própria pessoa poderia fazer. Usa as mesmas regras do banco, então não vê contato do Radar sem plano pago, nem dados de outra pessoa.
+- O Merc só faz o que a própria pessoa poderia fazer. Usa as mesmas regras do banco, então não vê contato do Radar sem plano pago, nem dados de outra pessoa.
 - **Publicar, pagar ou apagar só com toque da pessoa num botão.** O robô prepara, a pessoa confirma.
 - Todo texto que ele escreve passa pelo mesmo filtro de moderação dos anúncios.
 - Texto de anúncio é tratado como informação, nunca como ordem (protege contra golpista que escreve "robô, mande o contato" na descrição).
 - A pessoa é avisada de que está falando com uma IA e pode apagar o histórico.
-- Limite de mensagens por pessoa por dia e **orçamento mensal em reais**, os dois no painel. Se o orçamento acaba, o Aki avisa e o site continua funcionando normal.
+- Limite de mensagens por pessoa por dia e **orçamento mensal em reais**, os dois no painel. Se o orçamento acaba, o Merc avisa e o site continua funcionando normal.
 
 ### Quanto custa (estimativa, dólar a R$ 5,50)
 O custo é por conversa. Uma conversa típica (umas 6 trocas de mensagem, com uma foto):
@@ -207,13 +207,13 @@ O modelo fica numa configuração do painel, então dá para trocar sem mexer no
 - Home, busca com filtros, página do anúncio, vitrine da loja
 - Minha conta (anúncios, plano, favoritos, privacidade)
 - Destaques: Subir e Destaque na busca
-- Aki no site: busca + cadastro por foto + dúvidas
+- Merc no site: busca + cadastro por foto + dúvidas
 - Painel: telas 1 a 4 + Categorias + Destaques + Robô
 
 **Fase 2**
 - Vitrine da página inicial e Loja em destaque (vagas)
 - Buscas salvas com alerta, alerta "pedido no Radar combina com seu estoque"
-- Aki no WhatsApp, com áudio
+- Merc no WhatsApp, com áudio
 - Restante do painel
 
 ---
@@ -222,6 +222,6 @@ O modelo fica numa configuração do painel, então dá para trocar sem mexer no
 
 Serão feitas uma por vez, com botões:
 1. Entrar com código pelo WhatsApp, por SMS, ou os dois?
-2. Qual modelo de IA o Aki usa no começo (Opus, mais inteligente, ou Haiku, mais barato)?
+2. Qual modelo de IA o Merc usa no começo (Opus, mais inteligente, ou Haiku, mais barato)?
 3. A lista de categorias acima serve para começar?
-4. O Aki vai para o WhatsApp já no lançamento ou na fase 2?
+4. O Merc vai para o WhatsApp já no lançamento ou na fase 2?

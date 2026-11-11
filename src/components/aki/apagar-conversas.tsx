@@ -8,7 +8,7 @@ import { apagarMinhasConversas } from "@/lib/aki/acoes";
 import { Alert } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-// Privacidade (LGPD): apagar o histórico com o Aki, com confirmação antes.
+// Privacidade (LGPD): apagar o histórico com o Merc, com confirmação antes.
 export function ApagarConversasAki() {
   const router = useRouter();
   const [confirmar, setConfirmar] = useState(false);
@@ -25,12 +25,12 @@ export function ApagarConversasAki() {
   return (
     <>
       <Botao variante="perigo" larguraTotal icone={<Trash2 />} onClick={() => { setResultado(null); setConfirmar(true); }}>
-        Apagar minhas conversas com o Aki
+        Apagar minhas conversas com o Merc
       </Botao>
       <AlertDialog open={confirmar} onOpenChange={(abrir) => { if (!abrir && !apagando) setConfirmar(false); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Apagar todas as conversas com o Aki?</AlertDialogTitle>
+            <AlertDialogTitle>Apagar todas as conversas com o Merc?</AlertDialogTitle>
             <AlertDialogDescription>Não dá para desfazer.</AlertDialogDescription>
           </AlertDialogHeader>
           {resultado && !resultado.ok && <Alert variant="destructive">{resultado.texto}</Alert>}

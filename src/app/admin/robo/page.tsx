@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export const metadata = { title: "Robô Aki" };
+export const metadata = { title: "Robô Merc" };
 
 const NOME_PROVEDOR: Record<ProvedorIA, string> = { anthropic: "Anthropic", openrouter: "OpenRouter", openai: "OpenAI" };
 const NOME_CHAVE: Record<ProvedorIA, string> = {
@@ -82,7 +82,7 @@ export default async function RoboPage() {
   return (
     <>
       <Titulo sub="O ajudante com IA do site. Chaves dos provedores ficam só nas variáveis de ambiente da Vercel. Toda mudança fica no histórico.">
-        Robô Aki
+        Robô Merc
       </Titulo>
 
       {painelR.error && (
@@ -96,7 +96,7 @@ export default async function RoboPage() {
           className={`mb-4 rounded-card px-4 py-3 text-sm font-semibold ${estourou ? "bg-perigo-fundo text-perigo" : "bg-aviso-fundo text-aviso"}`}
         >
           {estourou
-            ? `O gasto do mês (${reais(custoMes)}) chegou no orçamento (${reais(orcamento)}). O Aki está descansando até o mês que vem, ou até você aumentar o orçamento.`
+            ? `O gasto do mês (${reais(custoMes)}) chegou no orçamento (${reais(orcamento)}). O Merc está descansando até o mês que vem, ou até você aumentar o orçamento.`
             : `O gasto do mês já está em ${usoPct}% do orçamento (${reais(custoMes)} de ${reais(orcamento)}).`}
         </p>
       )}
@@ -171,7 +171,7 @@ export default async function RoboPage() {
         </Cartao>
       </Secao>
 
-      <Secao titulo="Textos do Aki" recolhida>
+      <Secao titulo="Textos do Merc" recolhida>
         <Cartao>
           <FormTextos
             boasVindas={texto(geral.get("robo.boas_vindas"))}
@@ -183,7 +183,7 @@ export default async function RoboPage() {
         <p className="mt-2 text-legenda text-texto-suave">
           Outros ajustes (tamanho das respostas, histórico, foto, esforço) ficam em{" "}
           <Link href="/admin/configuracoes?grupo=robo" className="font-semibold text-laranja-escuro underline">
-            Configurações › Robô Aki
+            Configurações › Robô Merc
           </Link>
           .
         </p>
@@ -300,7 +300,7 @@ export default async function RoboPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-texto-suave">Nenhuma busca sem resultado. Quando o Aki não achar algo, aparece aqui.</p>
+            <p className="text-sm text-texto-suave">Nenhuma busca sem resultado. Quando o Merc não achar algo, aparece aqui.</p>
           )}
         </Cartao>
       </Secao>

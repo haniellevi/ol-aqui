@@ -40,8 +40,8 @@ export default async function ConfirmarCelular({ searchParams }: { searchParams:
     {siteKey ? <ConfirmarWhatsapp siteKey={siteKey} destino={destino} numero={conta?.perfil.whatsapp ?? ""} /> : <div role="status" className="rounded-card bg-cartao p-5 shadow-1"><h2 className="font-bold">Confirmação temporariamente indisponível</h2><p className="mt-2">Não conseguimos enviar códigos agora. Seus dados continuam guardados. Tente novamente mais tarde.</p></div>}
     <section aria-labelledby="titulo-ajuda-codigo" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
       <h2 id="titulo-ajuda-codigo" className="text-lg font-semibold">Precisa de ajuda com o código?</h2>
-      <p>O Aki pode orientar você pelo bate-papo, mesmo antes de confirmar seu WhatsApp.</p>
-      <Botao href={`${LINK_AKI}?${ajuda}`} larguraTotal>Abrir bate-papo com o Aki</Botao>
+      <p>O Merc pode orientar você pelo bate-papo, mesmo antes de confirmar seu WhatsApp.</p>
+      <Botao href={`${LINK_AKI}?${ajuda}`} larguraTotal>Abrir bate-papo com o Merc</Botao>
       <p className="text-sm text-texto-suave">Digite o código somente na tela de confirmação.</p>
     </section>
     <Botao href="/ajuda" variante="texto">Abrir a Central de ajuda</Botao>

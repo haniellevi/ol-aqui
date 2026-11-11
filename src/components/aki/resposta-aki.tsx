@@ -82,7 +82,7 @@ function BotaoRadar({
   );
 }
 
-/** Card pronto do rascunho que o Aki guardou: a pessoa confere e toca em "Revisar e publicar". */
+/** Card pronto do rascunho que o Merc guardou: a pessoa confere e toca em "Revisar e publicar". */
 function CardRascunho({ acao }: { acao: Extract<AcaoAki, { tipo: "rascunho" }> }) {
   return (
     <div className="overflow-hidden rounded-card border border-borda bg-cartao">
@@ -193,7 +193,7 @@ function Avaliacao({ mensagem, aoAvaliar, atendimentoHref }: {
           </Botao>
         </form>
       )}
-      {agradecido && <p className="text-legenda text-verde-escuro">Obrigado! Isso ajuda o Aki a melhorar.</p>}
+      {agradecido && <p className="text-legenda text-verde-escuro">Obrigado! Isso ajuda o Merc a melhorar.</p>}
     </div>
   );
 }

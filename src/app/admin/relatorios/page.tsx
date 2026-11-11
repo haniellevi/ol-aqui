@@ -27,13 +27,13 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 export const metadata = { title: "Relatórios" };
 
 // Tela 15 · Relatórios: funil, anúncios por categoria e cidade, teste grátis → plano pago,
-// receita por tipo e custo do Aki. Só números somados (funções relatorio_* do banco, que conferem
+// receita por tipo e custo do Merc. Só números somados (funções relatorio_* do banco, que conferem
 // e_admin), filtro por período (até 12 meses) e região, e CSV de cada bloco.
 
 type Params = Promise<Record<string, string | string[] | undefined>>;
 
 const pct = (parte: number, todo: number) => (todo > 0 ? `${((parte / todo) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` : "—");
-/** Custo do Aki vem em centavos com fração: mostra em reais com 2 casas. */
+/** Custo do Merc vem em centavos com fração: mostra em reais com 2 casas. */
 const reaisFracao = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 
 function BaixarCsv({ id, filtros }: { id: RelatorioId; filtros: Filtros }) {
@@ -293,8 +293,8 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
           )}
         </Bloco>
 
-        {/* 5. Custo do Aki */}
-        <Bloco id="aki" filtros={filtros} titulo="Custo do robô Aki" sub="Custo gravado em cada resposta do Aki (inclui os testes do painel).">
+        {/* 5. Custo do Merc */}
+        <Bloco id="aki" filtros={filtros} titulo="Custo do robô Merc" sub="Custo gravado em cada resposta do Merc (inclui os testes do painel).">
           {!rel.aki ? (
             <Falhou />
           ) : aki.length === 0 ? (
@@ -310,7 +310,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
               <Cartao>
                 <h3 className="mb-3 text-base font-semibold text-beringela">Custo por mês</h3>
                 <Barras
-                  rotulo="Custo do Aki por mês"
+                  rotulo="Custo do Merc por mês"
                   cor="beringela"
                   itens={aki.map((m) => ({
                     rotulo: nomeMes(m.mes),

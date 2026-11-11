@@ -1,4 +1,4 @@
-// Mascote do Aki: balão de conversa laranja com dois olhinhos (DESIGN-SYSTEM.md, seção 4).
+// Mascote do Merc: balão de conversa laranja com dois olhinhos (DESIGN-SYSTEM.md, seção 4).
 // É só o robô; nunca substitui o logo do Mercado da Região. Fica bom a partir de 24px.
 export function MascoteAki({ tamanho = 28, className = "" }: { tamanho?: number; className?: string }) {
   return (

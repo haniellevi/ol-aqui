@@ -23,7 +23,7 @@ export const NOME_RELATORIO: Record<RelatorioId, string> = {
   anuncios: "Anúncios por categoria e cidade",
   conversao: "Teste grátis para plano pago",
   receita: "Receita por tipo",
-  aki: "Custo do robô Aki",
+  aki: "Custo do robô Merc",
 };
 
 export const NOME_TIPO_RECEITA: Record<TipoReceita, string> = { assinatura: "Plano", anuncio_avulso: "Anúncio avulso", destaque: "Destaque" };

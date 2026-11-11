@@ -5,7 +5,7 @@ import { Botao, type VarianteBotao } from "@/components/ui/botao";
 import { MascoteAki } from "./mascote";
 import { abrirAki, akiLigado, EVENTO_ESTADO_AKI, type PedidoAbrirAki } from "./abrir";
 
-// Botão que abre o Aki (busca vazia, passo Fotos do anúncio). Some quando o Aki está desligado.
+// Botão que abre o Merc (busca vazia, passo Fotos do anúncio). Some quando o Merc está desligado.
 export function BotaoAbrirAki({
   children,
   pedido,

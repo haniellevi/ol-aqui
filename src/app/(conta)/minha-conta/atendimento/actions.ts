@@ -31,10 +31,10 @@ export async function enviarMensagemAtendimento(conversa: string, chave: string,
       resposta = "indisponivel";
     }
     return { ok: true, dados: resposta === "respondido"
-      ? { destino: "aki", mensagem: "O Aki respondeu na conversa." }
+      ? { destino: "aki", mensagem: "O Merc respondeu na conversa." }
       : { destino: "equipe", mensagem: resposta === "equipe"
         ? "Sua mensagem foi encaminhada à equipe."
-        : "O Aki não conseguiu responder agora. Sua mensagem ficou para a equipe." } };
+        : "O Merc não conseguiu responder agora. Sua mensagem ficou para a equipe." } };
   } catch {
     return { ok: false, erro: { mensagem: "Não foi possível confirmar o envio. Tente novamente." } };
   }

@@ -62,7 +62,7 @@ export async function responderAtendimento(db: SupabaseClient, userId: string, m
       }
     }
     // Sem medição do provedor, mantém o custo estimado. O modo teste do registrador fecha só
-    // a reserva de custo, sem copiar as mensagens para o histórico do balão do Aki.
+    // a reserva de custo, sem copiar as mensagens para o histórico do balão do Merc.
     if (!uso) return "indisponivel";
     const custo = await admin.rpc("robo_registrar_resposta", {
       p_usuario: userId, p_conversa: null, p_tipo: "teste", p_uso_id: reserva.uso_id,

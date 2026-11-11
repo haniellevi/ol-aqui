@@ -42,7 +42,7 @@ const num = (v: unknown, padrao: number, min: number, max: number) => {
 const lista = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "") : []);
 const textoOuNull = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
-/** Tem a chave do servidor que grava o custo? Sem ela o Aki não responde (nada de uso sem registro). */
+/** Tem a chave do servidor que grava o custo? Sem ela o Merc não responde (nada de uso sem registro). */
 export const temChaveServidor = () => !!(process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 export async function lerAjustes(db: SupabaseClient): Promise<Ajustes> {
@@ -142,7 +142,7 @@ async function mensagensDaConversa(db: SupabaseClient, conversaId: string, limit
   );
 }
 
-/** Rascunhos que o Aki guardou numa resposta (prévia do rascunho ou link com ?rascunho=). */
+/** Rascunhos que o Merc guardou numa resposta (prévia do rascunho ou link com ?rascunho=). */
 function rascunhosDaResposta(c: ConteudoAssistente): string[] {
   const ids: string[] = [];
   for (const a of c.acoes ?? []) {

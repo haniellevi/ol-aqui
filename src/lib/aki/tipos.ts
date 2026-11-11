@@ -1,4 +1,4 @@
-// Tipos do Robô Aki (migração 20261107031000_robo_aki.sql). Servem no servidor e no navegador.
+// Tipos do Robô Merc (migração 20261107031000_robo_aki.sql). Servem no servidor e no navegador.
 // Dinheiro em centavos de real; preço de modelo em US$ por milhão de tokens.
 
 export type ProvedorIA = "anthropic" | "openrouter" | "openai";
@@ -7,7 +7,7 @@ export const PROVEDORES: readonly ProvedorIA[] = ["anthropic", "openrouter", "op
 /** Conversa normal ou cadastro por foto (cada um pode ter provedor e modelo próprios). */
 export type TipoUso = "conversa" | "foto";
 
-/** Por que o Aki não pode responder agora (robo_pode_enviar + checagens do servidor). */
+/** Por que o Merc não pode responder agora (robo_pode_enviar + checagens do servidor). */
 export type MotivoBloqueio =
   | "sem_login"
   | "sem_perfil"
@@ -45,7 +45,7 @@ export type CartaoAki = {
   aceita_troca?: boolean;
 };
 
-/** Pedido do Radar preparado pelo Aki. Só vira pedido quando a pessoa toca em "Confirmar". */
+/** Pedido do Radar preparado pelo Merc. Só vira pedido quando a pessoa toca em "Confirmar". */
 export type DadosPedidoRadar = {
   titulo: string;
   detalhes: string | null;
@@ -60,7 +60,7 @@ export type AcaoAki =
   | { tipo: "link"; rotulo: string; href: string; icone?: "revisar" | "planos" | "destacar" | "radar" | "vender" | "celular" }
   /** usada = a pessoa já confirmou (marcado no banco por robo_marcar_acao; o botão não volta). */
   | { tipo: "pedido_radar"; rotulo: string; dados: DadosPedidoRadar; usada?: boolean }
-  /** Prévia do rascunho que o Aki guardou (foto, título, preço) com o botão para revisar e publicar. */
+  /** Prévia do rascunho que o Merc guardou (foto, título, preço) com o botão para revisar e publicar. */
   | { tipo: "rascunho"; id: string; titulo: string | null; preco_centavos: number | null; capa: string | null; fotos: number; href: string };
 
 export type ConteudoUsuario = { texto: string; foto?: boolean };
@@ -71,7 +71,7 @@ export type ConteudoAssistente = {
   ferramentas?: string[];
 };
 
-/** Mensagem como a folha do Aki mostra. */
+/** Mensagem como a folha do Merc mostra. */
 export type MensagemAki =
   | { id: number | null; papel: "usuario"; conteudo: ConteudoUsuario; criado_em: string }
   | { id: number | null; papel: "assistente"; conteudo: ConteudoAssistente; criado_em: string; nota?: -1 | 1 | null };
@@ -79,7 +79,7 @@ export type MensagemAki =
 /** Resposta do GET /api/aki: o que o balão precisa saber ao abrir. */
 export type EstadoAki = {
   logado: boolean;
-  /** O Aki existe nesta região (robo.ativo)? Desligado no painel = o balão nem aparece. */
+  /** O Merc existe nesta região (robo.ativo)? Desligado no painel = o balão nem aparece. */
   ligado: boolean;
   pode: boolean;
   motivo: MotivoBloqueio | null;
@@ -110,7 +110,7 @@ export type PedidoAki = {
   conversaId?: string | null;
   texto: string;
   foto?: { base64: string; tipo: "image/webp" | "image/jpeg" | "image/png" } | null;
-  /** Rascunho aberto no cadastro (passo Fotos): o Aki guarda nele em vez de criar outro. */
+  /** Rascunho aberto no cadastro (passo Fotos): o Merc guarda nele em vez de criar outro. */
   rascunhoId?: string | null;
 };
 
