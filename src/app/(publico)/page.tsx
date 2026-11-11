@@ -14,8 +14,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { LojasDaRegiao } from "@/components/vitrine/lojas-da-regiao";
 import { LojasEmDestaque } from "@/components/destaques/lojas-em-destaque";
 import { linkCategoria } from "@/lib/formato";
-import { blocosHome } from "@/lib/dados/paginas";
-import { lerConfigNumero } from "@/lib/dados/config";
+import { blocosHome, minimoAnunciosInicio } from "@/lib/dados/paginas";
 import { PortasInicio } from "@/components/paginas/portas-inicio";
 import { RodapeInicio } from "@/components/paginas/rodape-inicio";
 import { linkPedirRadar } from "@/lib/rotas";
@@ -30,7 +29,7 @@ import estilos from "./inicio.module.css";
 
 const POR_VEZ = 24;
 /** Abaixo deste total de anúncios a home fica "no começo" (duas portas no lugar da prateleira vazia).
- *  O painel pode mudar pela configuração "home.comeco_min_anuncios". */
+ *  Pode mudar pela configuração pública "home.comeco_min_anuncios" (lida pela tabela: vale também para visitante). */
 const MIN_ANUNCIOS_PADRAO = 8;
 
 /** Texto do painel (ou o de sempre, se vazio). "{lugar}" vira o nome da cidade/região. */
@@ -59,7 +58,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     anunciosCatalogo(regiao, "feed", POR_VEZ, null, (pagina - 1) * POR_VEZ),
     anunciosCatalogo(regiao, "patrocinados", 12),
   ]) : [[], []];
-  const minimo = (regiao ? await lerConfigNumero("home.comeco_min_anuncios", regiao.id) : null) ?? MIN_ANUNCIOS_PADRAO;
+  const minimo = (regiao ? await minimoAnunciosInicio(regiao.id) : null) ?? MIN_ANUNCIOS_PADRAO;
   const comeco = pagina === 1 && Number(normais[0]?.total ?? 0) < minimo;
   const cidade = regiao ? regiao.cidade ?? regiao.cidadeSede : null;
   const blocoRadar = blocosAtivos.find((bloco) => bloco.chave === "radar");

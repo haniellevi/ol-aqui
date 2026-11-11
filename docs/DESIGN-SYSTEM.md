@@ -319,7 +319,7 @@ Página para conferir tudo num lugar só: `/admin/pecas`.
 
 ## Início "no começo" (10/11/2026)
 
-Enquanto a região tem menos de 8 anúncios (configuração `home.comeco_min_anuncios`), a primeira página do Início troca a prateleira vazia por duas portas: "Procurando alguma coisa?" (Radar, fundo beringela, botão laranja) e "Tem algo para vender?" (cartão branco, botão secundário). As categorias descem para baixo das portas com o título "Veja por categoria". Os textos e a ordem das portas seguem os blocos `radar` e `recentes` do painel; com o Radar desligado, sobra só a porta de vender, com o botão laranja.
+Enquanto a região tem menos de 8 anúncios (configuração `home.comeco_min_anuncios`, que precisa estar marcada como pública em `configuracoes` para valer também para o visitante), a primeira página do Início troca a prateleira vazia por duas portas: "Procurando alguma coisa?" (Radar, fundo beringela, botão laranja) e "Tem algo para vender?" (cartão branco, botão secundário). As categorias descem para baixo das portas com o título "Veja por categoria". Os textos e a ordem das portas seguem os blocos `radar` e `recentes` do painel; com o Radar desligado, sobra só a porta de vender, com o botão laranja.
 
 Os quadros dentro das portas são ilustração: levam sempre a etiqueta "Exemplo" (fundo `selecao`, texto beringela) e ficam fora do leitor de tela. Nunca mostrar anúncio ou pedido inventado sem essa etiqueta. Com 8 anúncios ou mais, o Início volta ao formato normal sozinho.
 

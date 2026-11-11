@@ -24,8 +24,7 @@ function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul
         return anuncios.map(a => ({ ...a, total }));
       },
     },
-    '@/lib/dados/config': { lerConfigNumero: async () => minimo },
-    '@/lib/dados/paginas': { blocosHome: async () => blocos ?? ['destaques', 'radar', 'recentes'].map(chave => ({ chave, ativo: true })) },
+    '@/lib/dados/paginas': { minimoAnunciosInicio: async () => minimo, blocosHome: async () => blocos ?? ['destaques', 'radar', 'recentes'].map(chave => ({ chave, ativo: true })) },
     '@/components/anuncio/card-anuncio': { CardAnuncio: ({ anuncio }) => React.createElement('article', null, anuncio.titulo) },
     '@/components/destaques/lojas-em-destaque': { LojasEmDestaque: () => null },
   });
@@ -228,6 +227,27 @@ test('falha na consulta de termos não equivale a aceite concluído',async()=>{
     '@/lib/supabase/server':{createClient:async()=>({rpc:async()=>({data:null,error:{message:'offline'}})})},
   });
   await assert.rejects(paginas.termosPendentes(),/consultar os termos/);
+});
+test('limite do início "no começo" é lido pela tabela pública, sem a função config()',async()=>{
+  const paginasCom=(linhas,erro=null)=>carregar('src/lib/dados/paginas.ts',{
+    '@clerk/nextjs/server':{},
+    '@/lib/dados/seguro':{seguro:async(ler,padrao)=>{try{return await ler();}catch{return padrao;}}},
+    '@/lib/supabase/server':{createClient:async()=>({
+      rpc:async()=>{throw new Error('visitante não chama config()');},
+      from:(tabela)=>({select:()=>({in:async(coluna,chaves)=>{
+        assert.equal(tabela,'configuracoes');
+        assert.deepEqual(chaves,['home.comeco_min_anuncios']);
+        return {data:linhas,error:erro};
+      }})}),
+    })},
+  });
+  const linha=(valor,microrregiao_id=null)=>({chave:'home.comeco_min_anuncios',valor,microrregiao_id});
+  assert.equal(await paginasCom([linha(12)]).minimoAnunciosInicio('r'),12);
+  assert.equal(await paginasCom([linha(12),linha('3','r')]).minimoAnunciosInicio('r'),3);
+  assert.equal(await paginasCom([linha(0)]).minimoAnunciosInicio('r'),0);
+  assert.equal(await paginasCom([]).minimoAnunciosInicio('r'),null);
+  assert.equal(await paginasCom([linha('muitos')]).minimoAnunciosInicio('r'),null);
+  assert.equal(await paginasCom(null,{message:'offline'}).minimoAnunciosInicio('r'),null);
 });
 test('login e cadastro preservam destino passando pela conclusão de perfil',async()=>{
   const pagina=carregar('src/app/entrar/[[...entrar]]/page.tsx',{
