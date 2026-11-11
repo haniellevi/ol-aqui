@@ -1,0 +1,1160 @@
+
+> olaki@0.1.0 test
+> node --test tests/*.test.cjs
+
+TAP version 13
+# Subtest: anúncio apresenta preço, detalhes, vendedor, descrição e contato com URL canônica
+ok 1 - anúncio apresenta preço, detalhes, vendedor, descrição e contato com URL canônica
+  ---
+  duration_ms: 53.490862
+  type: 'test'
+  ...
+# Subtest: contato ausente ou inválido não gera link externo: null
+ok 2 - contato ausente ou inválido não gera link externo: null
+  ---
+  duration_ms: 13.23313
+  type: 'test'
+  ...
+# Subtest: contato ausente ou inválido não gera link externo: 
+ok 3 - contato ausente ou inválido não gera link externo: 
+  ---
+  duration_ms: 11.619799
+  type: 'test'
+  ...
+# Subtest: contato ausente ou inválido não gera link externo: abc
+ok 4 - contato ausente ou inválido não gera link externo: abc
+  ---
+  duration_ms: 13.088488
+  type: 'test'
+  ...
+# Subtest: contato ausente ou inválido não gera link externo: 551
+ok 5 - contato ausente ou inválido não gera link externo: 551
+  ---
+  duration_ms: 11.62024
+  type: 'test'
+  ...
+# Subtest: contato ausente ou inválido não gera link externo: https://outro.local
+ok 6 - contato ausente ou inválido não gera link externo: https://outro.local
+  ---
+  duration_ms: 12.674787
+  type: 'test'
+  ...
+# Subtest: vendido e prévia do dono não oferecem contato para uma venda indisponível
+ok 7 - vendido e prévia do dono não oferecem contato para uma venda indisponível
+  ---
+  duration_ms: 51.033029
+  type: 'test'
+  ...
+# Subtest: galeria vazia e descrição curta são legíveis sem controles desnecessários
+ok 8 - galeria vazia e descrição curta são legíveis sem controles desnecessários
+  ---
+  duration_ms: 36.460074
+  type: 'test'
+  ...
+# Subtest: título e descrição maliciosos são escapados no HTML e dados estruturados
+ok 9 - título e descrição maliciosos são escapados no HTML e dados estruturados
+  ---
+  duration_ms: 53.203309
+  type: 'test'
+  ...
+# Subtest: endereço com codificação quebrada é inválido sem lançar URIError
+ok 10 - endereço com codificação quebrada é inválido sem lançar URIError
+  ---
+  duration_ms: 8.889043
+  type: 'test'
+  ...
+# Subtest: falha de dados é recuperável e não se transforma em anúncio inexistente
+ok 11 - falha de dados é recuperável e não se transforma em anúncio inexistente
+  ---
+  duration_ms: 304.377746
+  type: 'test'
+  ...
+# Subtest: falha de recomendações mantém o anúncio e contato principal disponíveis
+ok 12 - falha de recomendações mantém o anúncio e contato principal disponíveis
+  ---
+  duration_ms: 690.215945
+  type: 'test'
+  ...
+# Subtest: favoritos recusam usuário sem sessão e identificador inválido antes de gravar
+ok 13 - favoritos recusam usuário sem sessão e identificador inválido antes de gravar
+  ---
+  duration_ms: 390.349712
+  type: 'test'
+  ...
+# Subtest: falha de autenticação nas ações recebe mensagem recuperável
+ok 14 - falha de autenticação nas ações recebe mensagem recuperável
+  ---
+  duration_ms: 178.394111
+  type: 'test'
+  ...
+# Subtest: compartilhamento copiar respeita sucesso, cancelamento e alternativa manual
+ok 15 - compartilhamento copiar respeita sucesso, cancelamento e alternativa manual
+  ---
+  duration_ms: 73.842067
+  type: 'test'
+  ...
+# Subtest: compartilhamento nativo respeita sucesso, cancelamento e alternativa manual
+ok 16 - compartilhamento nativo respeita sucesso, cancelamento e alternativa manual
+  ---
+  duration_ms: 32.329119
+  type: 'test'
+  ...
+# Subtest: compartilhamento cancelado respeita sucesso, cancelamento e alternativa manual
+ok 17 - compartilhamento cancelado respeita sucesso, cancelamento e alternativa manual
+  ---
+  duration_ms: 36.934188
+  type: 'test'
+  ...
+# Subtest: compartilhamento indisponivel respeita sucesso, cancelamento e alternativa manual
+ok 18 - compartilhamento indisponivel respeita sucesso, cancelamento e alternativa manual
+  ---
+  duration_ms: 30.171122
+  type: 'test'
+  ...
+# Subtest: filtros combinados preservam moeda brasileira, zero, lista e booleano falso
+ok 19 - filtros combinados preservam moeda brasileira, zero, lista e booleano falso
+  ---
+  duration_ms: 4.025526
+  type: 'test'
+  ...
+# Subtest: preço inválido abc exige correção
+ok 20 - preço inválido abc exige correção
+  ---
+  duration_ms: 0.748832
+  type: 'test'
+  ...
+# Subtest: preço inválido -1 exige correção
+ok 21 - preço inválido -1 exige correção
+  ---
+  duration_ms: 0.256213
+  type: 'test'
+  ...
+# Subtest: preço inválido 1e5 exige correção
+ok 22 - preço inválido 1e5 exige correção
+  ---
+  duration_ms: 0.324852
+  type: 'test'
+  ...
+# Subtest: preço inválido 0x10 exige correção
+ok 23 - preço inválido 0x10 exige correção
+  ---
+  duration_ms: 0.179388
+  type: 'test'
+  ...
+# Subtest: preço inválido 9007199254740992 exige correção
+ok 24 - preço inválido 9007199254740992 exige correção
+  ---
+  duration_ms: 0.163027
+  type: 'test'
+  ...
+# Subtest: faixas invertidas e números fora dos limites são recusados
+ok 25 - faixas invertidas e números fora dos limites são recusados
+  ---
+  duration_ms: 6.932755
+  type: 'test'
+  ...
+# Subtest: trocar termo mantém filtros repetidos e remove página e parâmetros estranhos
+ok 26 - trocar termo mantém filtros repetidos e remove página e parâmetros estranhos
+  ---
+  duration_ms: 485.160567
+  type: 'test'
+  ...
+# Subtest: paginação preserva todos os filtros e alterações voltam à página inicial
+ok 27 - paginação preserva todos os filtros e alterações voltam à página inicial
+  ---
+  duration_ms: 15.921887
+  type: 'test'
+  ...
+# Subtest: filtros ativos podem ser removidos individualmente sem apagar os outros
+ok 28 - filtros ativos podem ser removidos individualmente sem apagar os outros
+  ---
+  duration_ms: 719.089281
+  type: 'test'
+  ...
+# Subtest: subcategoria mantém cidade, preço e ordem ao buscar ou trocar de tipo
+ok 29 - subcategoria mantém cidade, preço e ordem ao buscar ou trocar de tipo
+  ---
+  duration_ms: 292.921764
+  type: 'test'
+  ...
+# Subtest: filtros inválidos na URL não consultam o banco nem simulam ausência de anúncios
+ok 30 - filtros inválidos na URL não consultam o banco nem simulam ausência de anúncios
+  ---
+  duration_ms: 419.040794
+  type: 'test'
+  ...
+# Subtest: listagem envia combinação completa e paginação para a consulta real
+ok 31 - listagem envia combinação completa e paginação para a consulta real
+  ---
+  duration_ms: 763.186138
+  type: 'test'
+  ...
+# Subtest: sugestões priorizam a categoria escolhida antes de ampliar para outras
+ok 32 - sugestões priorizam a categoria escolhida antes de ampliar para outras
+  ---
+  duration_ms: 437.084321
+  type: 'test'
+  ...
+# Subtest: cobrança: quatro solicitações simultâneas fazem no máximo um POST
+ok 33 - cobrança: quatro solicitações simultâneas fazem no máximo um POST
+  ---
+  duration_ms: 304.716984
+  type: 'test'
+  ...
+# Subtest: cobrança: timeout preserva reserva e repetição reconcilia sem novo POST
+ok 34 - cobrança: timeout preserva reserva e repetição reconcilia sem novo POST
+  ---
+  duration_ms: 135.868845
+  type: 'test'
+  ...
+# Subtest: cobrança: recusa explícita permite corrigir documento; falha de reserva não cria
+ok 35 - cobrança: recusa explícita permite corrigir documento; falha de reserva não cria
+  ---
+  duration_ms: 271.334299
+  type: 'test'
+  ...
+# Subtest: cobrança: referência, cliente, valor, forma e exclusão divergentes impedem reconciliação
+ok 36 - cobrança: referência, cliente, valor, forma e exclusão divergentes impedem reconciliação
+  ---
+  duration_ms: 736.409854
+  type: 'test'
+  ...
+# Subtest: cobrança: falha ao gravar após criação mantém proteção contra duplicidade
+ok 37 - cobrança: falha ao gravar após criação mantém proteção contra duplicidade
+  ---
+  duration_ms: 166.987062
+  type: 'test'
+  ...
+# Subtest: cobrança: dono diferente e status encerrado nunca criam nem alteram cobrança
+ok 38 - cobrança: dono diferente e status encerrado nunca criam nem alteram cobrança
+  ---
+  duration_ms: 544.933408
+  type: 'test'
+  ...
+# Subtest: cobrança: falha ao confirmar banco não anuncia sucesso
+ok 39 - cobrança: falha ao confirmar banco não anuncia sucesso
+  ---
+  duration_ms: 94.531969
+  type: 'test'
+  ...
+# Subtest: Pix: falha no QR usa checkout seguro ou erro recuperável
+ok 40 - Pix: falha no QR usa checkout seguro ou erro recuperável
+  ---
+  duration_ms: 71.866092
+  type: 'test'
+  ...
+# Subtest: checkout: URLs externas rejeitam domínios imitadores, credenciais e protocolos inseguros
+ok 41 - checkout: URLs externas rejeitam domínios imitadores, credenciais e protocolos inseguros
+  ---
+  duration_ms: 9.112424
+  type: 'test'
+  ...
+# Subtest: datas de vencimento: dia preservado no Brasil e entrada inválida recuperável
+ok 42 - datas de vencimento: dia preservado no Brasil e entrada inválida recuperável
+  ---
+  duration_ms: 13.745445
+  type: 'test'
+  ...
+# Subtest: ações: exigem login, forma válida e preço positivo antes de criar pedido
+ok 43 - ações: exigem login, forma válida e preço positivo antes de criar pedido
+  ---
+  duration_ms: 550.449484
+  type: 'test'
+  ...
+# Subtest: ações: vincula preço apresentado ao pedido e preserva ID na falta de documento ou falha
+ok 44 - ações: vincula preço apresentado ao pedido e preserva ID na falta de documento ou falha
+  ---
+  duration_ms: 378.960538
+  type: 'test'
+  ...
+# Subtest: ações: falha de rede, mudança de preço, resposta vazia e consulta falha são recuperáveis
+ok 45 - ações: falha de rede, mudança de preço, resposta vazia e consulta falha são recuperáveis
+  ---
+  duration_ms: 317.13058
+  type: 'test'
+  ...
+# Subtest: leituras: indisponibilidade não se apresenta como ausência de assinatura ou pagamento
+ok 46 - leituras: indisponibilidade não se apresenta como ausência de assinatura ou pagamento
+  ---
+  duration_ms: 80.008889
+  type: 'test'
+  ...
+# Subtest: favoritos: consulta só a conta atual, pagina 24 e mantém ordem estável
+ok 47 - favoritos: consulta só a conta atual, pagina 24 e mantém ordem estável
+  ---
+  duration_ms: 312.663811
+  type: 'test'
+  ...
+# Subtest: favoritos: sessão ausente e páginas inválidas não consultam o banco
+ok 48 - favoritos: sessão ausente e páginas inválidas não consultam o banco
+  ---
+  duration_ms: 821.697551
+  type: 'test'
+  ...
+# Subtest: favoritos: falha, resposta malformada ou contagem desconhecida não viram lista vazia
+ok 49 - favoritos: falha, resposta malformada ou contagem desconhecida não viram lista vazia
+  ---
+  duration_ms: 509.788483
+  type: 'test'
+  ...
+# Subtest: favoritos: anúncios vendidos ainda abrem; privados não expõem títulos, fotos ou vendedores
+ok 50 - favoritos: anúncios vendidos ainda abrem; privados não expõem títulos, fotos ou vendedores
+  ---
+  duration_ms: 448.11017
+  type: 'test'
+  ...
+# Subtest: favoritos: estado salvo distingue erro de ausência e valida identidade do anúncio
+ok 51 - favoritos: estado salvo distingue erro de ausência e valida identidade do anúncio
+  ---
+  duration_ms: 290.925653
+  type: 'test'
+  ...
+# Subtest: favoritos: ações exigem sessão, UUID e booleano
+ok 52 - favoritos: ações exigem sessão, UUID e booleano
+  ---
+  duration_ms: 315.511068
+  type: 'test'
+  ...
+# Subtest: favoritos: salvar usa identidade da sessão e invalida lista e detalhe
+ok 53 - favoritos: salvar usa identidade da sessão e invalida lista e detalhe
+  ---
+  duration_ms: 37.328681
+  type: 'test'
+  ...
+# Subtest: favoritos: salvar repetido aceita conflito apenas depois de confirmar o registro
+ok 54 - favoritos: salvar repetido aceita conflito apenas depois de confirmar o registro
+  ---
+  duration_ms: 124.441779
+  type: 'test'
+  ...
+# Subtest: favoritos: remover filtra proprietário e anúncio; repetição mantém sucesso
+ok 55 - favoritos: remover filtra proprietário e anúncio; repetição mantém sucesso
+  ---
+  duration_ms: 33.100733
+  type: 'test'
+  ...
+# Subtest: favoritos: sem confirmação ou com falha não mostra sucesso nem detalhes internos
+ok 56 - favoritos: sem confirmação ou com falha não mostra sucesso nem detalhes internos
+  ---
+  duration_ms: 290.762455
+  type: 'test'
+  ...
+# Subtest: favoritos: página exibe erro recuperável diferente do vazio real
+ok 57 - favoritos: página exibe erro recuperável diferente do vazio real
+  ---
+  duration_ms: 720.863145
+  type: 'test'
+  ...
+# Subtest: favoritos: card tem link canônico, remoção separada e paginação
+ok 58 - favoritos: card tem link canônico, remoção separada e paginação
+  ---
+  duration_ms: 199.829779
+  type: 'test'
+  ...
+# Subtest: favoritos: anúncio fora do ar não recebe link de detalhe
+ok 59 - favoritos: anúncio fora do ar não recebe link de detalhe
+  ---
+  duration_ms: 124.999591
+  type: 'test'
+  ...
+# Subtest: anúncio: estado desconhecido bloqueia alteração e oferece consulta novamente
+ok 60 - anúncio: estado desconhecido bloqueia alteração e oferece consulta novamente
+  ---
+  duration_ms: 30.399352
+  type: 'test'
+  ...
+# Subtest: início apresenta região, busca GET acessível e destinos das categorias
+ok 61 - início apresenta região, busca GET acessível e destinos das categorias
+  ---
+  duration_ms: 1001.417529
+  type: 'test'
+  ...
+# Subtest: início vazio oferece anúncio e apenas um acesso ao pedido no Radar
+ok 62 - início vazio oferece anúncio e apenas um acesso ao pedido no Radar
+  ---
+  duration_ms: 475.363272
+  type: 'test'
+  ...
+# Subtest: início com anúncios mantém destaques e paginação sem mostrar estado vazio
+ok 63 - início com anúncios mantém destaques e paginação sem mostrar estado vazio
+  ---
+  duration_ms: 901.775641
+  type: 'test'
+  ...
+# Subtest: início respeita textos, ordem e visibilidade definidos no painel
+ok 64 - início respeita textos, ordem e visibilidade definidos no painel
+  ---
+  duration_ms: 657.34245
+  type: 'test'
+  ...
+# Subtest: início sem região mantém busca e não inventa localização
+ok 65 - início sem região mantém busca e não inventa localização
+  ---
+  duration_ms: 209.342357
+  type: 'test'
+  ...
+# Subtest: falha ao consultar anúncios não vira página inicial falsamente vazia
+ok 66 - falha ao consultar anúncios não vira página inicial falsamente vazia
+  ---
+  duration_ms: 233.906392
+  type: 'test'
+  ...
+# Subtest: preço "1.500,50"
+ok 67 - preço "1.500,50"
+  ---
+  duration_ms: 0.440631
+  type: 'test'
+  ...
+# Subtest: preço "1500.50"
+ok 68 - preço "1500.50"
+  ---
+  duration_ms: 0.246244
+  type: 'test'
+  ...
+# Subtest: preço "1.500"
+ok 69 - preço "1.500"
+  ---
+  duration_ms: 0.33933
+  type: 'test'
+  ...
+# Subtest: preço "49,90"
+ok 70 - preço "49,90"
+  ---
+  duration_ms: 0.380277
+  type: 'test'
+  ...
+# Subtest: preço "0"
+ok 71 - preço "0"
+  ---
+  duration_ms: 0.160492
+  type: 'test'
+  ...
+# Subtest: preço "R$ 12,90"
+ok 72 - preço "R$ 12,90"
+  ---
+  duration_ms: 0.080942
+  type: 'test'
+  ...
+# Subtest: preço ""
+ok 73 - preço ""
+  ---
+  duration_ms: 0.062408
+  type: 'test'
+  ...
+# Subtest: preço "abc"
+ok 74 - preço "abc"
+  ---
+  duration_ms: 0.060755
+  type: 'test'
+  ...
+# Subtest: preço "1e5"
+ok 75 - preço "1e5"
+  ---
+  duration_ms: 0.064602
+  type: 'test'
+  ...
+# Subtest: preço "-1"
+ok 76 - preço "-1"
+  ---
+  duration_ms: 0.060183
+  type: 'test'
+  ...
+# Subtest: preço "0x10"
+ok 77 - preço "0x10"
+  ---
+  duration_ms: 0.067357
+  type: 'test'
+  ...
+# Subtest: preço "12,345"
+ok 78 - preço "12,345"
+  ---
+  duration_ms: 0.066516
+  type: 'test'
+  ...
+# Subtest: busca mantém texto, cidade, categoria e orçamento no pedido
+ok 79 - busca mantém texto, cidade, categoria e orçamento no pedido
+  ---
+  duration_ms: 10.348263
+  type: 'test'
+  ...
+# Subtest: telefone removido revoga número e confirmação
+ok 80 - telefone removido revoga número e confirmação
+  ---
+  duration_ms: 9.972555
+  type: 'test'
+  ...
+# Subtest: telefone digitado permitido pelo painel não é apagado por ausência de confirmação
+ok 81 - telefone digitado permitido pelo painel não é apagado por ausência de confirmação
+  ---
+  duration_ms: 12.975775
+  type: 'test'
+  ...
+# Subtest: troca confirmada sincroniza novo telefone
+ok 82 - troca confirmada sincroniza novo telefone
+  ---
+  duration_ms: 12.302917
+  type: 'test'
+  ...
+# Subtest: erro ao revogar telefone propaga falha para repetir webhook
+ok 83 - erro ao revogar telefone propaga falha para repetir webhook
+  ---
+  duration_ms: 13.754432
+  type: 'test'
+  ...
+# Subtest: erro de leitura não tenta criar ou atualizar perfil
+ok 84 - erro de leitura não tenta criar ou atualizar perfil
+  ---
+  duration_ms: 7.642713
+  type: 'test'
+  ...
+# Subtest: pedido, propostas e cota indisponíveis produzem erro recuperável
+ok 85 - pedido, propostas e cota indisponíveis produzem erro recuperável
+  ---
+  duration_ms: 68.321593
+  type: 'test'
+  ...
+# Subtest: criação recusa confirmação indisponível sem gravar pedido
+ok 86 - criação recusa confirmação indisponível sem gravar pedido
+  ---
+  duration_ms: 80.724838
+  type: 'test'
+  ...
+# Subtest: compartilhamento usa o endereço do site e respeita domínio configurado
+ok 87 - compartilhamento usa o endereço do site e respeita domínio configurado
+  ---
+  duration_ms: 35.56119
+  type: 'test'
+  ...
+# Subtest: falha na consulta de termos não equivale a aceite concluído
+ok 88 - falha na consulta de termos não equivale a aceite concluído
+  ---
+  duration_ms: 30.412036
+  type: 'test'
+  ...
+# Subtest: login e cadastro preservam destino passando pela conclusão de perfil
+ok 89 - login e cadastro preservam destino passando pela conclusão de perfil
+  ---
+  duration_ms: 20.377515
+  type: 'test'
+  ...
+# Subtest: perfil sem sessão mantém o destino original ao pedir login
+ok 90 - perfil sem sessão mantém o destino original ao pedir login
+  ---
+  duration_ms: 152.156982
+  type: 'test'
+  ...
+# Subtest: pedido usa cidade da busca, cidade escolhida ou sede e nunca a primeira alfabética
+ok 91 - pedido usa cidade da busca, cidade escolhida ou sede e nunca a primeira alfabética
+  ---
+  duration_ms: 162.156539
+  type: 'test'
+  ...
+# Subtest: loja: leitura distingue inexistente de falha e rejeita resposta malformada
+ok 92 - loja: leitura distingue inexistente de falha e rejeita resposta malformada
+  ---
+  duration_ms: 1782.887375
+  type: 'test'
+  ...
+# Subtest: loja: produtos validam identificador, ordem e página; erro não vira vazio
+ok 93 - loja: produtos validam identificador, ordem e página; erro não vira vazio
+  ---
+  duration_ms: 914.908682
+  type: 'test'
+  ...
+# Subtest: loja: paginação usa configuração regional e não disfarça falha
+ok 94 - loja: paginação usa configuração regional e não disfarça falha
+  ---
+  duration_ms: 312.641881
+  type: 'test'
+  ...
+# Subtest: loja: contato tem destino e texto corretos, copiar link e atalhos acessíveis
+ok 95 - loja: contato tem destino e texto corretos, copiar link e atalhos acessíveis
+  ---
+  duration_ms: 604.617211
+  type: 'test'
+  ...
+# Subtest: loja: contato inválido e vitrine inativa não têm WhatsApp; prévia não oferece divulgação
+ok 96 - loja: contato inválido e vitrine inativa não têm WhatsApp; prévia não oferece divulgação
+  ---
+  duration_ms: 1128.370875
+  type: 'test'
+  ...
+# Subtest: loja: erro dos produtos mantém informações e contato, sem simular lista vazia
+ok 97 - loja: erro dos produtos mantém informações e contato, sem simular lista vazia
+  ---
+  duration_ms: 551.119578
+  type: 'test'
+  ...
+# Subtest: loja: estado vazio e página fora da faixa têm saídas úteis
+ok 98 - loja: estado vazio e página fora da faixa têm saídas úteis
+  ---
+  duration_ms: 214.351828
+  type: 'test'
+  ...
+# Subtest: loja: menor preço preserva sequência global sem duplicar produtos das seções
+ok 99 - loja: menor preço preserva sequência global sem duplicar produtos das seções
+  ---
+  duration_ms: 101.567339
+  type: 'test'
+  ...
+# Subtest: loja: vitrine padrão preserva fixados, seções fora da página e categorias
+ok 100 - loja: vitrine padrão preserva fixados, seções fora da página e categorias
+  ---
+  duration_ms: 257.917775
+  type: 'test'
+  ...
+# Subtest: loja: metadados privados omitem nome, imagem e contato
+ok 101 - loja: metadados privados omitem nome, imagem e contato
+  ---
+  duration_ms: 222.479456
+  type: 'test'
+  ...
+# Subtest: loja: imagem nunca usa cache público; inativa/ausente é 404 e falha é 503
+ok 102 - loja: imagem nunca usa cache público; inativa/ausente é 404 e falha é 503
+  ---
+  duration_ms: 81.618092
+  type: 'test'
+  ...
+# Subtest: loja: horários, mapas e Instagram usam destinos seguros e limites válidos
+ok 103 - loja: horários, mapas e Instagram usam destinos seguros e limites válidos
+  ---
+  duration_ms: 6.515219
+  type: 'test'
+  ...
+# Subtest: ações rejeitam UUID inválido, sessão expirada e anúncio de outro dono antes da escrita
+ok 104 - ações rejeitam UUID inválido, sessão expirada e anúncio de outro dono antes da escrita
+  ---
+  duration_ms: 635.436113
+  type: 'test'
+  ...
+# Subtest: reativação não transforma retorno nulo ou inesperado em sucesso
+ok 105 - reativação não transforma retorno nulo ou inesperado em sucesso
+  ---
+  duration_ms: 682.255352
+  type: 'test'
+  ...
+# Subtest: falha de conexão e erro de banco permitem nova tentativa sem falso sucesso
+ok 106 - falha de conexão e erro de banco permitem nova tentativa sem falso sucesso
+  ---
+  duration_ms: 156.849446
+  type: 'test'
+  ...
+# Subtest: pausar repetidamente e marcar venda repetidamente preservam estado sem novas escritas
+ok 107 - pausar repetidamente e marcar venda repetidamente preservam estado sem novas escritas
+  ---
+  duration_ms: 175.911081
+  type: 'test'
+  ...
+# Subtest: pausa não confirma escrita vazia e rejeita estado desatualizado
+ok 108 - pausa não confirma escrita vazia e rejeita estado desatualizado
+  ---
+  duration_ms: 270.462107
+  type: 'test'
+  ...
+# Subtest: lixeira chama RPC reversível e atualiza conta, busca, anúncio e loja
+ok 109 - lixeira chama RPC reversível e atualiza conta, busca, anúncio e loja
+  ---
+  duration_ms: 75.344799
+  type: 'test'
+  ...
+# Subtest: restauração aceita estados preservados e não anuncia reativação automática
+ok 110 - restauração aceita estados preservados e não anuncia reativação automática
+  ---
+  duration_ms: 658.603175
+  type: 'test'
+  ...
+# Subtest: todos exclui lixeira e cada estado possui destino e rótulo
+ok 111 - todos exclui lixeira e cada estado possui destino e rótulo
+  ---
+  duration_ms: 9.6521
+  type: 'test'
+  ...
+# Subtest: Minha loja: salvar dados, capa e informações exige a identidade proprietária
+ok 112 - Minha loja: salvar dados, capa e informações exige a identidade proprietária
+  ---
+  duration_ms: 2438.720751
+  type: 'test'
+  ...
+# Subtest: Minha loja: zero linhas, outra linha, banco e rede não confirmam sucesso nem removem imagem
+ok 113 - Minha loja: zero linhas, outra linha, banco e rede não confirmam sucesso nem removem imagem
+  ---
+  duration_ms: 866.756332
+  type: 'test'
+  ...
+# Subtest: Minha loja: salva somente campos permitidos, confirma linha e atualiza contato público
+ok 114 - Minha loja: salva somente campos permitidos, confirma linha e atualiza contato público
+  ---
+  duration_ms: 175.228554
+  type: 'test'
+  ...
+# Subtest: Minha loja: valida nome, telefone, região, uploads alheios e entradas não textuais
+ok 115 - Minha loja: valida nome, telefone, região, uploads alheios e entradas não textuais
+  ---
+  duration_ms: 1010.704204
+  type: 'test'
+  ...
+# Subtest: Minha loja: envio de logo/capa limita formato, dono, suspensão e plano
+ok 116 - Minha loja: envio de logo/capa limita formato, dono, suspensão e plano
+  ---
+  duration_ms: 623.820103
+  type: 'test'
+  ...
+# Subtest: Capa: bloqueia enum, cor, URL e foto ausente; conserva foto no plano menor
+ok 117 - Capa: bloqueia enum, cor, URL e foto ausente; conserva foto no plano menor
+  ---
+  duration_ms: 445.31829
+  type: 'test'
+  ...
+# Subtest: Informações: horários válidos incluem meia-noite sem modificar o fechamento
+ok 118 - Informações: horários válidos incluem meia-noite sem modificar o fechamento
+  ---
+  duration_ms: 48.78379
+  type: 'test'
+  ...
+# Subtest: Informações: recusa sobreposição, horário invertido, dia desconhecido e contato inválido
+ok 119 - Informações: recusa sobreposição, horário invertido, dia desconhecido e contato inválido
+  ---
+  duration_ms: 573.601058
+  type: 'test'
+  ...
+# Subtest: Minha loja: leitura estrita distingue ausência, erro de serviço e loja alheia
+ok 120 - Minha loja: leitura estrita distingue ausência, erro de serviço e loja alheia
+  ---
+  duration_ms: 121.41747
+  type: 'test'
+  ...
+# Subtest: Capa: recusa arquivo vazio ou maior que 20 MB antes de decodificar
+ok 121 - Capa: recusa arquivo vazio ou maior que 20 MB antes de decodificar
+  ---
+  duration_ms: 29.868973
+  type: 'test'
+  ...
+# Subtest: notificações exigem sessão e ID válido antes de acessar o banco
+ok 122 - notificações exigem sessão e ID válido antes de acessar o banco
+  ---
+  duration_ms: 600.974355
+  type: 'test'
+  ...
+# Subtest: abrir aviso usa destino do banco e exige dono e canal app
+ok 123 - abrir aviso usa destino do banco e exige dono e canal app
+  ---
+  duration_ms: 232.30878
+  type: 'test'
+  ...
+# Subtest: aviso ausente, alheio ou com destino inseguro não é marcado nem aberto
+ok 124 - aviso ausente, alheio ou com destino inseguro não é marcado nem aberto
+  ---
+  duration_ms: 801.330958
+  type: 'test'
+  ...
+# Subtest: abrir sem link confirma leitura e repetição idempotente é aceita
+ok 125 - abrir sem link confirma leitura e repetição idempotente é aceita
+  ---
+  duration_ms: 82.507467
+  type: 'test'
+  ...
+# Subtest: falha ou retorno incerto nunca confirma leitura e não invalida a tela
+ok 126 - falha ou retorno incerto nunca confirma leitura e não invalida a tela
+  ---
+  duration_ms: 376.109916
+  type: 'test'
+  ...
+# Subtest: preferência desligada retorna sucesso e entradas malformadas são recusadas
+ok 127 - preferência desligada retorna sucesso e entradas malformadas são recusadas
+  ---
+  duration_ms: 298.766169
+  type: 'test'
+  ...
+# Subtest: lista pagina sem perder avisos antigos e filtra não lidos no servidor
+ok 128 - lista pagina sem perder avisos antigos e filtra não lidos no servidor
+  ---
+  duration_ms: 295.441213
+  type: 'test'
+  ...
+# Subtest: falhas na lista, contagem e preferências não viram caixa vazia ou opções ligadas
+ok 129 - falhas na lista, contagem e preferências não viram caixa vazia ou opções ligadas
+  ---
+  duration_ms: 800.948858
+  type: 'test'
+  ...
+# Subtest: resumo exige login, não usa cache público e distingue falha de zero
+ok 130 - resumo exige login, não usa cache público e distingue falha de zero
+  ---
+  duration_ms: 41.488892
+  type: 'test'
+  ...
+# Subtest: perfil: ações exigem sessão e a sincronização exige o mesmo usuário Clerk
+ok 131 - perfil: ações exigem sessão e a sincronização exige o mesmo usuário Clerk
+  ---
+  duration_ms: 650.176674
+  type: 'test'
+  ...
+# Subtest: perfil: valida nome, bairro, cidade indisponível e tipo de entrada antes de gravar
+ok 132 - perfil: valida nome, bairro, cidade indisponível e tipo de entrada antes de gravar
+  ---
+  duration_ms: 1025.854746
+  type: 'test'
+  ...
+# Subtest: perfil: salva apenas campos permitidos na identidade da sessão, normaliza espaços e limpa opcionais
+ok 133 - perfil: salva apenas campos permitidos na identidade da sessão, normaliza espaços e limpa opcionais
+  ---
+  duration_ms: 38.670881
+  type: 'test'
+  ...
+# Subtest: perfil: zero linhas, retorno de outra pessoa, erro de banco ou rede não confirmam sucesso
+ok 134 - perfil: zero linhas, retorno de outra pessoa, erro de banco ou rede não confirmam sucesso
+  ---
+  duration_ms: 247.75934
+  type: 'test'
+  ...
+# Subtest: WhatsApp: nenhum formato pode salvar um contato sem o código
+ok 135 - WhatsApp: nenhum formato pode salvar um contato sem o código
+  ---
+  duration_ms: 161.143959
+  type: 'test'
+  ...
+# Subtest: WhatsApp: recusa inválidos, telefone fixo, texto e número estrangeiro
+ok 136 - WhatsApp: recusa inválidos, telefone fixo, texto e número estrangeiro
+  ---
+  duration_ms: 378.937915
+  type: 'test'
+  ...
+# Subtest: WhatsApp: confirmação, política regional, conta alheia e falhas de sincronização bloqueiam a troca direta
+ok 137 - WhatsApp: confirmação, política regional, conta alheia e falhas de sincronização bloqueiam a troca direta
+  ---
+  duration_ms: 278.669795
+  type: 'test'
+  ...
+# Subtest: WhatsApp: confirmação concorrente ou ausência do perfil não gera falso sucesso
+ok 138 - WhatsApp: confirmação concorrente ou ausência do perfil não gera falso sucesso
+  ---
+  duration_ms: 222.288737
+  type: 'test'
+  ...
+# Subtest: perfil: sincronização falha com mensagem recuperável e usa só dados do Clerk
+ok 139 - perfil: sincronização falha com mensagem recuperável e usa só dados do Clerk
+  ---
+  duration_ms: 67.830717
+  type: 'test'
+  ...
+# Subtest: foto: sincroniza mudança sem exigir troca do telefone e preserva nome e confirmação
+ok 140 - foto: sincroniza mudança sem exigir troca do telefone e preserva nome e confirmação
+  ---
+  duration_ms: 16.971856
+  type: 'test'
+  ...
+# Subtest: foto: remoção apaga avatar salvo mesmo que Clerk forneça imagem padrão
+ok 141 - foto: remoção apaga avatar salvo mesmo que Clerk forneça imagem padrão
+  ---
+  duration_ms: 13.24411
+  type: 'test'
+  ...
+# Subtest: sincronização: não regrava quando não há mudanças e propaga falha do banco
+ok 142 - sincronização: não regrava quando não há mudanças e propaga falha do banco
+  ---
+  duration_ms: 85.637287
+  type: 'test'
+  ...
+# Subtest: sincronização: número principal não confirmado não usa um secundário antigo
+ok 143 - sincronização: número principal não confirmado não usa um secundário antigo
+  ---
+  duration_ms: 10.547078
+  type: 'test'
+  ...
+# Subtest: sincronização: mantém WhatsApp digitado sem código e atualiza foto
+ok 144 - sincronização: mantém WhatsApp digitado sem código e atualiza foto
+  ---
+  duration_ms: 23.994933
+  type: 'test'
+  ...
+# Subtest: sincronização: novo principal confirmado troca telefone e confirmação
+ok 145 - sincronização: novo principal confirmado troca telefone e confirmação
+  ---
+  duration_ms: 11.389115
+  type: 'test'
+  ...
+# Subtest: salvar preço 1500.50 mantém o valor exato
+ok 146 - salvar preço 1500.50 mantém o valor exato
+  ---
+  duration_ms: 884.119564
+  type: 'test'
+  ...
+# Subtest: salvar preço 1.500,50 mantém o valor exato
+ok 147 - salvar preço 1.500,50 mantém o valor exato
+  ---
+  duration_ms: 541.958431
+  type: 'test'
+  ...
+# Subtest: salvar preço 1.500 mantém o valor exato
+ok 148 - salvar preço 1.500 mantém o valor exato
+  ---
+  duration_ms: 238.19306
+  type: 'test'
+  ...
+# Subtest: salvar preço 49,90 mantém o valor exato
+ok 149 - salvar preço 49,90 mantém o valor exato
+  ---
+  duration_ms: 214.737154
+  type: 'test'
+  ...
+# Subtest: preço inválido  não grava
+ok 150 - preço inválido  não grava
+  ---
+  duration_ms: 144.906107
+  type: 'test'
+  ...
+# Subtest: preço inválido 0 não grava
+ok 151 - preço inválido 0 não grava
+  ---
+  duration_ms: 181.566098
+  type: 'test'
+  ...
+# Subtest: preço inválido -1 não grava
+ok 152 - preço inválido -1 não grava
+  ---
+  duration_ms: 134.556151
+  type: 'test'
+  ...
+# Subtest: preço inválido abc não grava
+ok 153 - preço inválido abc não grava
+  ---
+  duration_ms: 225.62834
+  type: 'test'
+  ...
+# Subtest: preço inválido 12,345 não grava
+ok 154 - preço inválido 12,345 não grava
+  ---
+  duration_ms: 167.430508
+  type: 'test'
+  ...
+# Subtest: preço inválido 1e5 não grava
+ok 155 - preço inválido 1e5 não grava
+  ---
+  duration_ms: 142.612885
+  type: 'test'
+  ...
+# Subtest: preço inválido 1000000001 não grava
+ok 156 - preço inválido 1000000001 não grava
+  ---
+  duration_ms: 159.124814
+  type: 'test'
+  ...
+# Subtest: a combinar e troca são escolhas explícitas e salvar e sair mantém destino
+ok 157 - a combinar e troca são escolhas explícitas e salvar e sair mantém destino
+  ---
+  duration_ms: 122.188332
+  type: 'test'
+  ...
+# Subtest: cidade fora da lista ou lista indisponível não grava
+ok 158 - cidade fora da lista ou lista indisponível não grava
+  ---
+  duration_ms: 114.372622
+  type: 'test'
+  ...
+# Subtest: cidade fora da lista ou lista indisponível não grava
+ok 159 - cidade fora da lista ou lista indisponível não grava
+  ---
+  duration_ms: 96.987568
+  type: 'test'
+  ...
+# Subtest: local válido normaliza bairro e leva à revisão
+ok 160 - local válido normaliza bairro e leva à revisão
+  ---
+  duration_ms: 91.628598
+  type: 'test'
+  ...
+# Subtest: rascunho repetido retoma a mesma chave somente se pertencer ao usuário
+ok 161 - rascunho repetido retoma a mesma chave somente se pertencer ao usuário
+  ---
+  duration_ms: 253.656383
+  type: 'test'
+  ...
+# Subtest: abrir a página de anunciar não cria rascunho
+ok 162 - abrir a página de anunciar não cria rascunho
+  ---
+  duration_ms: 568.472783
+  type: 'test'
+  ...
+# Subtest: falha de rede mantém erro recuperável e sinais de redirect continuam funcionando
+ok 163 - falha de rede mantém erro recuperável e sinais de redirect continuam funcionando
+  ---
+  duration_ms: 89.934324
+  type: 'test'
+  ...
+# Subtest: fotos rejeitam origem, dono, duplicata e limite regional antes da gravação
+ok 164 - fotos rejeitam origem, dono, duplicata e limite regional antes da gravação
+  ---
+  duration_ms: 327.929983
+  type: 'test'
+  ...
+# Subtest: fotos concorrentes retornam a lista atual e resposta perdida pode ser repetida
+ok 165 - fotos concorrentes retornam a lista atual e resposta perdida pode ser repetida
+  ---
+  duration_ms: 129.001883
+  type: 'test'
+  ...
+# Subtest: publicação usa status retornado pelo banco e preserva erros de validação
+ok 166 - publicação usa status retornado pelo banco e preserva erros de validação
+  ---
+  duration_ms: 154.263443
+  type: 'test'
+  ...
+# Subtest: publicação não permite editar anúncio de outro usuário
+ok 167 - publicação não permite editar anúncio de outro usuário
+  ---
+  duration_ms: 49.789255
+  type: 'test'
+  ...
+# Subtest: foto vazia ou acima de 20 MB é recusada antes da decodificação
+ok 168 - foto vazia ou acima de 20 MB é recusada antes da decodificação
+  ---
+  duration_ms: 6.353374
+  type: 'test'
+  ...
+# Subtest: formulários renderizam ação segura, preço legível e localização sem entrada livre
+ok 169 - formulários renderizam ação segura, preço legível e localização sem entrada livre
+  ---
+  duration_ms: 100.434705
+  type: 'test'
+  ...
+# Subtest: foto ainda referenciada ou consulta indisponível nunca é apagada do Storage
+ok 170 - foto ainda referenciada ou consulta indisponível nunca é apagada do Storage
+  ---
+  duration_ms: 58.958487
+  type: 'test'
+  ...
+# Subtest: orçamento mantém centavos e recusa limites invertidos antes de enviar
+ok 171 - orçamento mantém centavos e recusa limites invertidos antes de enviar
+  ---
+  duration_ms: 2.505823
+  type: 'test'
+  ...
+# Subtest: pedido rejeita payloads malformados, texto excessivo, cidade e prazo ausentes
+ok 172 - pedido rejeita payloads malformados, texto excessivo, cidade e prazo ausentes
+  ---
+  duration_ms: 0.666326
+  type: 'test'
+  ...
+# Subtest: proposta preserva formato decimal e rejeita referência ambígua ou inválida
+ok 173 - proposta preserva formato decimal e rejeita referência ambígua ou inválida
+  ---
+  duration_ms: 327.011632
+  type: 'test'
+  ...
+# Subtest: ações negam sessão e IDs inválidos sem chamar o banco
+ok 174 - ações negam sessão e IDs inválidos sem chamar o banco
+  ---
+  duration_ms: 959.494901
+  type: 'test'
+  ...
+# Subtest: criação só confirma identificador e estado conhecidos
+ok 175 - criação só confirma identificador e estado conhecidos
+  ---
+  duration_ms: 967.805524
+  type: 'test'
+  ...
+# Subtest: contato só produz link wa.me com número e resposta válidos
+ok 176 - contato só produz link wa.me com número e resposta válidos
+  ---
+  duration_ms: 735.968553
+  type: 'test'
+  ...
+# Subtest: envio diferencia proposta privada de contato direto e não aceita modo desconhecido
+ok 177 - envio diferencia proposta privada de contato direto e não aceita modo desconhecido
+  ---
+  duration_ms: 217.643301
+  type: 'test'
+  ...
+# Subtest: encerramento exige retorno confirmado e atualiza as duas visões do pedido
+ok 178 - encerramento exige retorno confirmado e atualiza as duas visões do pedido
+  ---
+  duration_ms: 269.703316
+  type: 'test'
+  ...
+# Subtest: leitura nula ou inválida de propostas não simula caixa vazia
+ok 179 - leitura nula ou inválida de propostas não simula caixa vazia
+  ---
+  duration_ms: 175.725501
+  type: 'test'
+  ...
+# Subtest: WhatsApp normaliza celular brasileiro e rejeita telefone fixo ou entrada arbitrária
+ok 180 - WhatsApp normaliza celular brasileiro e rejeita telefone fixo ou entrada arbitrária
+  ---
+  duration_ms: 411.234252
+  type: 'test'
+  ...
+# Subtest: segredo HMAC vincula código à conta e ao desafio, sem armazenar código puro
+ok 181 - segredo HMAC vincula código à conta e ao desafio, sem armazenar código puro
+  ---
+  duration_ms: 284.694659
+  type: 'test'
+  ...
+# Subtest: configuração exige HTTPS, destino fixo, segredo forte e CAPTCHA
+ok 182 - configuração exige HTTPS, destino fixo, segredo forte e CAPTCHA
+  ---
+  duration_ms: 149.122092
+  type: 'test'
+  ...
+# Subtest: Turnstile rejeita falhas, replay, origem e ação diferentes antes de qualquer envio
+ok 183 - Turnstile rejeita falhas, replay, origem e ação diferentes antes de qualquer envio
+  ---
+  duration_ms: 142.145644
+  type: 'test'
+  ...
+# Subtest: sessão desconectada não envia; timeout não causa repetição automática
+ok 184 - sessão desconectada não envia; timeout não causa repetição automática
+  ---
+  duration_ms: 87.785836
+  type: 'test'
+  ...
+# Subtest: retorno HTTP sozinho não confirma envio, API deve devolver mensagem de saída
+ok 185 - retorno HTTP sozinho não confirma envio, API deve devolver mensagem de saída
+  ---
+  duration_ms: 91.563325
+  type: 'test'
+  ...
+# Subtest: envio exige sessão, identidade, telefone válido, CAPTCHA e reserva de cota
+ok 186 - envio exige sessão, identidade, telefone válido, CAPTCHA e reserva de cota
+  ---
+  duration_ms: 1123.783066
+  type: 'test'
+  ...
+# Subtest: envio reserva antes de sair, grava só resumo e nunca retorna código ao navegador
+ok 187 - envio reserva antes de sair, grava só resumo e nunca retorna código ao navegador
+  ---
+  duration_ms: 144.021611
+  type: 'test'
+  ...
+# Subtest: envio incerto mantém desafio para código atrasado; falha explícita não anuncia sucesso
+ok 188 - envio incerto mantém desafio para código atrasado; falha explícita não anuncia sucesso
+  ---
+  duration_ms: 211.509541
+  type: 'test'
+  ...
+# Subtest: validação usa conta da sessão e somente confirmação atômica permite sucesso
+ok 189 - validação usa conta da sessão e somente confirmação atômica permite sucesso
+  ---
+  duration_ms: 593.051424
+  type: 'test'
+  ...
+# Subtest: sincronização Clerk preserva número confirmado pela Evolution e protege concorrência
+ok 190 - sincronização Clerk preserva número confirmado pela Evolution e protege concorrência
+  ---
+  duration_ms: 12.40546
+  type: 'test'
+  ...
+# Subtest: domínios extras só vêm das variáveis da Vercel em preview
+ok 191 - domínios extras só vêm das variáveis da Vercel em preview
+  ---
+  duration_ms: 58.852477
+  type: 'test'
+  ...
+1..191
+# tests 191
+# suites 0
+# pass 191
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6797.463536

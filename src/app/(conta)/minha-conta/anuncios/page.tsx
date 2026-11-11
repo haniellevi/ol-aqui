@@ -33,7 +33,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
     return (
       <PaginaConta>
         <TopoConta titulo="Meus anúncios" />
-        <Vazio titulo="Você ainda não vende no OLAKI" texto="Comece agora: leva poucos minutos.">
+        <Vazio titulo="Você ainda não vende no Mercado da Região" texto="Comece agora: leva poucos minutos.">
           <Botao href="/quero-vender" larguraTotal>Quero vender</Botao>
         </Vazio>
       </PaginaConta>

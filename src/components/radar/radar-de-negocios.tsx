@@ -1,5 +1,5 @@
 // components/radar/radar-de-negocios.tsx
-// Radar de Negócios: a "lista quente" invertida do OLAKI.
+// Radar de Negócios: a "lista quente" invertida do Mercado da Região.
 // "Propor" abre a tela do pedido (/radar/[id]) com a folha de proposta: anúncio ou foto, preço e mensagem.
 import type { ReactNode } from "react";
 import Link from "next/link";

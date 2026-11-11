@@ -22,7 +22,7 @@ export function ConcluirDadosClerk() {
           if (!r?.ok) { setErro(r?.erro ?? "Não conseguimos atualizar seus dados. Tente novamente."); return; }
           router.push(r.whatsappVinculado ? "/confirmar-celular?aviso=numero_vinculado" : "/minha-conta/dados");
           router.refresh();
-        } catch { setErro("A conexão falhou. Tente concluir novamente para atualizar o OL-AKI."); }
+        } catch { setErro("A conexão falhou. Tente concluir novamente para atualizar o Mercado da Região."); }
         finally { trava.current = false; }
       });
     }}>Concluir e voltar ao perfil</Botao>

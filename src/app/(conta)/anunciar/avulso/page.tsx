@@ -57,7 +57,7 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
     return (
       <PaginaConta>
         <TopoConta titulo="Anúncio avulso" voltar={revisar} textoVoltar="Voltar" />
-        <Vazio titulo="Sua conta de vendedor está suspensa" texto="Fale com o suporte do OLAKI para saber o que aconteceu." icone={<ShieldAlert />}>
+        <Vazio titulo="Sua conta de vendedor está suspensa" texto="Fale com o suporte do Mercado da Região para saber o que aconteceu." icone={<ShieldAlert />}>
           <Botao href="/" variante="secundario" larguraTotal>Voltar ao início</Botao>
         </Vazio>
       </PaginaConta>

@@ -37,7 +37,7 @@ Cada linha precisa de responsável, data e evidência. Use `pendente`, `aprovado
 | A2 | Operador, documentos e ajuda | Identificação real e canais aplicáveis publicados; sem campos por preencher; ajuda acessível no erro de confirmação e testada no celular | Depende dos dados públicos fornecidos pelo responsável |
 | A3 | Dependências e uploads | Auditoria atual analisada, correções compatíveis verificadas, foto válida publica e entrada inválida é recusada | Correções locais: sharp 0.35.5 e PostCSS 8.5.32, auditoria de produção sem alertas; ensaio de publicação de foto ainda pendente |
 | A4.1 | Banco e rotinas | Histórico comparado com manifesto final; jobs necessários presentes e com execução concluída; rotinas exercitadas em cópia isolada | 30 migrações registradas, três novas com conteúdo conferido; quatro jobs ativos. Teste com pg_cron real passou; primeira execução real dos jobs novos ainda pendente |
-| A4.2 | Backup e recuperação | Backup protegido e restauração isolada de banco e arquivo concluída; procedimento, tempo e perdas possíveis registrados | Ainda não demonstrado nesta preparação |
+| A4.2 | Backup e recuperação | Backup protegido e restauração isolada de banco e arquivo concluída; procedimento, tempo e perdas possíveis registrados | Ensaio real concluído em 5,05 s. Rotina da VPS ativa a cada 6 h com 14 dias de retenção local e no Drive. Responsável de incidente pendente |
 | A4.3 | Confirmação de WhatsApp | Estado `open`, entrega real autorizada, uso único, erro/expiração recuperáveis e responsável por reconectar | Há QA histórico; ensaio da versão alvo pendente |
 | A4.4 | Comprador e loja | Percursos do quadro de ensaio concluídos, sem perda de vínculo, exposição de contato privado ou duplicação | Testes locais e ensaio publicado devem ser registrados separadamente |
 | A4.5 | Privacidade | Exportação completa ou erro explícito; exclusão e retenção verificadas com e sem referência financeira | Migrações de proteção e revogação aplicadas; guardas e permissões conferidas. Testes locais passaram; publicação do aplicativo e ensaio real do webhook pendentes |
@@ -121,6 +121,62 @@ Ensaiar em destino isolado, sem sobrescrever produção e com acesso restrito ao
 
 O aceite é restaurar a estrutura e registros selecionados, conferir contagens e vínculos, autenticar uma conta de ensaio na configuração apropriada, abrir um arquivo restaurado e executar um percurso sem alterar o original. Registrar tempo total, faltas encontradas e localização privada das instruções/credenciais. O documento público guarda apenas os resultados, nunca o backup ou seus segredos.
 
+#### Ensaio isolado de 10/11/2026
+
+As 43 migrações do commit `3ad74f86104640faf8b75eee934df733c93392da`, identificado na implantação ativa da Vercel na hora da conferência, foram aplicadas na origem local. O ensaio usou PostgreSQL 17 e Supabase Storage API 1.80.2 com armazenamento em disco. Origem e destino tinham rede desativada, sem portas publicadas, e dados descartáveis em memória. Foram usados somente registros, credenciais e foto fictícios. As consultas do aplicativo foram exercitadas com os papéis de visitante e comprador, com sessão simulada.
+
+1. Copiar o banco com `pg_dump` em formato customizado, incluindo os metadados do Storage. Exportar os papéis sem senhas. Copiar os arquivos e os atributos estendidos `user.supabase.*` em separado, com a origem sem gravações. Gerar SHA-256 dos quatro itens e cifrar o pacote. No ensaio, o pacote usou `age` e levou 0,48 s para ser gerado.
+2. Decifrar o pacote e conferir os quatro hashes. Recriar os papéis no destino vazio e restaurar o banco com `pg_restore --exit-on-error --single-transaction`. A estrutura, as contagens e as consultas selecionadas coincidiram. O anúncio ativo de Corrente voltou vinculado à loja aprovada, a proposta do Radar preservou o preço de R$ 1.500,50 e o visitante ficou sem acesso aos desafios de WhatsApp.
+3. Consultar a foto pelo caminho retornado por `anuncio_publico`. Com apenas o banco restaurado, o Storage local devolveu HTTP 500 e registrou arquivo ausente. A primeira cópia dos arquivos recuperou os bytes, mas serviu a foto como `application/octet-stream`. Com os atributos estendidos incluídos na cópia e reaplicados, o mesmo caminho devolveu HTTP 200 com `image/png`, 21.908 bytes, SHA-256, ETag e cache iguais aos da origem.
+
+A restauração final com as verificações levou 3,11 s no cenário reduzido. Para fechar A4.2, falta confirmar a origem, cobertura e retenção dos backups reais, restaurar uma cópia autorizada em destino isolado e medir o tempo de recuperação e a janela possível de perda. A recuperação de documentos privados e das integrações externas ficou fora deste ensaio. Os convites seguem suspensos.
+
+#### Restauração das fotos reais de 10/11/2026
+
+O bucket `anuncios` do projeto OLAKI continha seis imagens WebP, totalizando 102.282 bytes. A cópia foi extraída de produção entre 10h45min30s e 10h45min32s, horário de Brasília, e cifrada com `age`. Os objetos foram lidos sem alterações na origem e conferidos por tamanho, tipo e ETag. O backup também incluiu um manifesto com SHA-256 e cinco caminhos de imagens referenciadas por anúncios fora da vitrine. Não havia anúncio ativo ou vendido com foto no momento.
+
+Em um bucket vazio do Supabase Storage local, sem rede externa nem portas publicadas, o tempo da abertura do pacote cifrado até a última conferência foi de **2,96 s**. Os seis arquivos retornaram HTTP 200 com `image/webp`, foram decodificados como imagens e tinham o mesmo SHA-256 da origem. Os cinco caminhos do inventário de anúncios resolveram para os arquivos restaurados. Esse cruzamento usou o inventário de produção, pois o banco real ainda não foi restaurado.
+
+As seis imagens continuavam iguais na comparação dos inventários de 10h43min58s e 10h47min27s, sem perda observada nessa janela de 3 min e 28 s. Isso mede apenas a diferença observada no bucket entre as duas conferências. A janela de perda em um incidente depende do último backup completo de banco e arquivos que seja recuperável. O projeto estava no plano Free, e a conexão SQL direta ou um arquivo de backup do banco não estavam disponíveis para este ensaio.
+
+Na conferência autenticada do painel às 10h50, o projeto OLAKI exibiu `No backups` e informou que o plano Free não inclui backups programados. A tela de conexão por Session Pooler apresentou a string com a senha por preencher. Não havia credencial PostgreSQL local identificada para o projeto. A consulta de inventário da produção confirmou oito anúncios, cinco referências de foto e seis objetos, sem anúncio ativo ou vendido com foto. Sem um dump datado, continuam indeterminados o tempo de recuperação do banco e a janela possível de perda de dados. A etapa A4.2 segue pendente.
+
+#### Restauração conjunta do banco e das fotos reais de 10/11/2026
+
+O banco de produção foi copiado às **11h03min25s**, horário de Brasília, em uma transação somente de leitura com snapshot compartilhado. A cópia cifrada inclui os esquemas `public`, `auth`, `storage`, `extensions` e `supabase_migrations`. O destino usou PostgreSQL 17.11 e Supabase Storage 1.88 em contêineres descartáveis, com dados em memória, sem portas publicadas ou acesso externo. Os papéis e extensões foram preparados localmente. Segredos gerenciados, agendamentos de produção e serviços externos não foram restaurados.
+
+As seis imagens foram copiadas entre 11h07min31s e 11h07min34s. O tamanho e o ETag de cada arquivo coincidiam com os metadados do snapshot do banco. Todos os arquivos foram decodificados como WebP e cifrados em pacote separado. Depois da restauração, as seis imagens e as cinco referências registradas nos anúncios voltaram a responder no Storage isolado, com HTTP 200, `image/webp` e SHA-256 idêntico. Uma referência também foi obtida pela consulta pública do anúncio no banco restaurado e validada contra o Storage local. As contagens de origem e destino coincidiram, incluindo oito anúncios, cinco perfis, um pedido e uma proposta do Radar.
+
+O ensaio completo levou **5,05 s**, da verificação da cópia à última checagem de conteúdo, incluindo a criação do ambiente local a partir de imagens Docker já disponíveis. A etapa de decifrar e restaurar o PostgreSQL levou **0,48 s**. A captura da produção e o download de imagens Docker ficaram fora do cronômetro.
+
+Em uma comparação às 11h07, 48 das 52 tabelas selecionadas tinham o mesmo conteúdo, incluindo anúncios, arquivos e perfis. A conferência por registro das quatro tabelas divergentes, às **11h08min26s**, encontrou uma nova mensagem de atendimento, uma nova notificação, uma alteração em um atendimento e uma migração posterior. Essas mudanças ficariam fora da cópia se o incidente fosse nesse momento, cerca de **5 minutos** depois do snapshot. Nenhum anúncio ou foto ficou faltando na comparação. Esse intervalo foi observado no ensaio. O limite de perda em incidentes futuros depende da frequência com que banco e arquivos são copiados e validados. A rotina e a retenção ainda precisam ser definidas. Os convites seguem suspensos.
+
+#### Rotina de backup preparada em 10/11/2026
+
+O timer do usuário foi instalado para rodar às **00h, 06h, 12h e 18h**, no horário de Brasília. A retenção é de **14 dias**. A limpeza só ocorre depois que um novo pacote completo foi publicado. O timer recupera uma execução perdida quando volta a ficar disponível. O computador precisa estar ligado e o chaveiro do usuário, acessível. A janela nominal de perda é de até seis horas entre execuções bem-sucedidas e pode crescer se a máquina ou a conexão estiverem indisponíveis.
+
+Cada execução abre um snapshot PostgreSQL somente para leitura, exporta o banco e copia os objetos do bucket `anuncios` com o ETag registrado nesse snapshot. O banco e o pacote das fotos são cifrados com `age` antes de ir para a pasta permanente. O pacote de fotos inclui os caminhos, tipos de arquivo e hashes usados na restauração. Os demais buckets, caso sejam criados, aparecem como fora do escopo no resumo da execução. Os arquivos ficam em `~/.local/share/olaki-backup/archives` neste computador. A chave de restauração fica em `~/.config/olaki-backup/restore.key`, em arquivo restrito. O backup do ensaio já está na pasta permanente com hashes conferidos.
+
+Para ativar, rodar `bash ~/.local/libexec/olaki-backup/ativar.sh` e digitar a senha no terminal. A senha é guardada no chaveiro do Linux. O timer é habilitado após a primeira cópia bem-sucedida. Conferir o próximo horário com `systemctl --user list-timers olaki-backup.timer`, a última execução com `journalctl --user -u olaki-backup.service -n 12 --no-pager` e a integridade do pacote com `sha256sum -c SHA256SUMS` dentro da pasta do backup. A rotina local não cobre a perda física deste computador.
+
+#### Transferência da rotina para a VPS
+
+A pasta dedicada `OLAKI Backups` foi criada no Google Drive escolhido pelo responsável. Os pacotes reais das **11h03** e **11h18**, horário de Brasília, foram enviados com o banco e as fotos cifrados. Cada arquivo foi baixado novamente e comparado por SHA-256 antes da publicação do índice de integridade. A chave de restauração ficou fora do Drive.
+
+O serviço e o timer da VPS estão preparados em `infra/backup` para executar às **00h, 06h, 12h e 18h**, com retenção de **14 dias** no servidor e no destino externo. A rotina externa verifica os hashes antes de considerar uma nova cópia publicada. A limpeza só alcança pastas de backup datadas com os nomes de arquivo esperados, e a política de retenção foi exercitada em destino de teste.
+
+A implantação segue pendente. O hPanel confirmou a VPS `srv2031318.hstgr.cloud`, mas a autenticação com a chave SSH disponível foi recusada e o console web abriu sem prompt utilizável. A instalação exige uma sessão administrativa na VPS, a credencial PostgreSQL entregue ao serviço e uma autorização do Drive dedicada aos backups. O timer local continua ativo até a execução e a entrega externa serem verificadas a partir da VPS. Os convites seguem suspensos.
+
+Na tentativa seguinte, o console administrativo confirmou que a VPS está configurada com `PermitRootLogin no`. A entrada SSH temporária foi removida. Pelo console, foram instalados o cliente PostgreSQL 17.11 e o rclone, sem reiniciar serviços ou contêineres existentes. O serviço e o timer da VPS ainda não foram ativados. A entrada oculta do PostgreSQL foi aberta no console, e a autorização limitada do Drive precisa ser concluída na conta que contém a pasta `OLAKI Backups`. As autorizações de outra conta não foram copiadas para a VPS.
+
+Em 10/11/2026, a rotina da VPS foi instalada e habilitada para gerar cópias locais cifradas com retenção de 14 dias. A primeira cópia, das **12h58min57s** de Brasília, contém oito fotos e passou na conferência de SHA-256. O serviço definitivo também terminou com código zero e gerou uma segunda cópia às **13h06min14s**. O systemd mostrou o timer ativo e habilitado, com próximo disparo às **18h** de Brasília.
+
+O envio recorrente ao Drive segue desligado. A credencial limitada recebida pertencia a uma conta diferente da que contém a pasta dedicada. A tentativa de envio avulso a partir da VPS recebeu `rateLimitExceeded` na API do Google Drive. As cópias ficaram na VPS em `/var/lib/olaki-backup/archives`, e o timer do computador também segue ativo. Os convites continuam suspensos.
+
+Ainda em 10/11/2026, a conta proprietária da pasta OLAKI Backups foi confirmada pelo identificador do Google, e a credencial `drive.file` foi instalada na VPS. O primeiro pacote da VPS, das **12h58min57s** de Brasília, foi publicado no Drive com o banco, oito fotos e o índice SHA-256. A VPS baixou e conferiu os dois arquivos cifrados. A verificação passou após mover o arquivo temporário de conferência para o diretório autorizado pelo serviço.
+
+O serviço definitivo ficou configurado para enviar ao Drive e concluiu uma execução completa às **15h34min44s**, incluindo a conferência SHA-256 do segundo pacote. O timer estava ativo para as **00h, 06h, 12h e 18h** de Brasília, com **14 dias de retenção** na VPS e no Drive. O próximo disparo era às **18h**. A cota do cliente compartilhado do rclone atrasou o primeiro envio. A documentação do rclone informa que esse cliente está sendo descontinuado e orienta usar um identificador próprio. Os convites seguem suspensos. [Documentação do rclone](https://rclone.org/drive/#making-your-own-client_id)
+
 ## 4. Ensaio comprador e loja
 
 Usar contas próprias autorizadas, identificadas como teste, sem misturar os resultados com negócios reais. Para falhas de banco/provedor, preferir ambiente isolado. Registrar aparelho, navegador, versão, IDs internos e resultado; limpar ou reter os registros de teste conforme o procedimento acordado.
@@ -171,7 +227,7 @@ Ao final da janela, ampliar apenas se houver respostas úteis repetidas por loja
 | Versão e ambiente conferidos | Pendente |
 | Evidências locais da versão preparada | 209 testes Node, SQL com concorrência e build aprovados; dez avisos preexistentes |
 | Evidências do ensaio publicado | Pendente |
-| Backup/restauração e responsável de incidente | Pendente |
+| Backup/restauração e responsável de incidente | Banco e fotos reais restaurados em isolamento em 5,05 s. Backup da VPS a cada 6 h e 14 dias de retenção verificados. Responsável de incidente pendente |
 | Condições A1 a A5 e P1 aprovadas por | Pendente |
 | Pendências aceitas fora do fluxo oferecido | Pendente; registrar justificativa e contenção |
 | Data e tamanho do lote liberado | Pendente |

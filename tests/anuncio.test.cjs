@@ -18,7 +18,7 @@ test('anúncio apresenta preço, detalhes, vendedor, descrição e contato com U
   const url = new URL(href);
   assert.equal(url.pathname, '/5589999990000');
   assert.ok(url.searchParams.get('text').includes(anuncio.titulo));
-  assert.ok(url.searchParams.get('text').includes('https://ol-aqui.vercel.app' + linkAnuncio(anuncio.id, anuncio.titulo)));
+  assert.ok(url.searchParams.get('text').includes('https://mercadodaregiao.com.br' + linkAnuncio(anuncio.id, anuncio.titulo)));
   assert.match(html, /target="_blank" rel="noopener noreferrer"/);
   assert.match(html, /Entre para salvar nos favoritos/);
   assert.doesNotMatch(html, /Vendedor Fictício/); // Pessoa física: somente primeiro nome.
@@ -86,7 +86,7 @@ test('falha de autenticação nas ações recebe mensagem recuperável', async (
 for (const caso of ['copiar', 'nativo', 'cancelado', 'indisponivel']) {
   test(`compartilhamento ${caso} respeita sucesso, cancelamento e alternativa manual`, async () => {
     const estados = []; let evento = 0; let recebido;
-    const url = 'https://ol-aqui.vercel.app' + linkAnuncio(anuncio.id, anuncio.titulo);
+    const url = 'https://mercadodaregiao.com.br' + linkAnuncio(anuncio.id, anuncio.titulo);
     const anterior = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
     const nav = caso === 'copiar' ? { clipboard: { writeText: async valor => { recebido = valor; } } } : caso === 'indisponivel' ? {} : { share: async valor => { recebido = valor; if (caso === 'cancelado') throw new DOMException('Cancelado', 'AbortError'); } };
     Object.defineProperty(globalThis, 'navigator', { configurable: true, value: nav });

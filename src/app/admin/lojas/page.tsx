@@ -174,12 +174,15 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
       <Titulo
         sub={
           franqueado
-            ? "Lojas e vendedores da sua região. Só para ver: mudanças são feitas pela equipe OLAKI."
+            ? "Lojas e vendedores da sua região. Só para ver: mudanças são feitas pela equipe Mercado da Região."
             : "Lojas e vendedores pessoa física. Toda ação pede o motivo e fica no histórico."
         }
       >
         Lojas
       </Titulo>
+
+      {um(sp.excluida) === "1" && <div className="mb-4"><Aviso tipo="ok">Loja excluída. A conta do titular foi mantida.</Aviso></div>}
+      {papel === "administrador" && <Link href="/admin/lojas/nova" className={`${estiloBotao} mb-4`}>Criar loja</Link>}
 
       <Cartao className="mb-6">
         <form method="get" className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -331,7 +334,11 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                         {!franqueado && l.whatsapp ? ` · ${telefone(l.whatsapp)}` : ""} · {l.cidade ?? nomeRegiao.get(l.microrregiao_id) ?? ""}
                       </p>
                     </div>
-                    {sit && <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${sit.cor}`}>{sit.nome}</span>}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {sit && <span className={`rounded-full px-2 py-0.5 text-[13px] font-bold ${sit.cor}`}>{sit.nome}</span>}
+                      {papel === "administrador" && <Link href={`/admin/lojas/${l.id}`} className={estiloBotaoSec}>Gerenciar loja</Link>}
+                      {l.tipo === "loja" && <Link href={urlVitrine} className={estiloBotaoSec}>Ver loja</Link>}
+                    </div>
                   </div>
                   <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-4">
                     <div>

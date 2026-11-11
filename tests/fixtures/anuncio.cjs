@@ -1,7 +1,7 @@
 // Dados fictícios, usados apenas nos testes. Nenhum anúncio é publicado.
 module.exports = {
   id: '50000000-0000-4000-a000-000000000001', titulo: 'Bicicleta de passeio, anúncio de teste',
-  descricao: 'Anúncio fictício para conferir a página do OL-AKI.\nNão é uma oferta comercial.\n\nBicicleta de passeio com marchas.\nFotos ilustrativas de teste.\nA retirada seria combinada com o vendedor.\nConfira todos os detalhes antes de negociar.\nEste texto longo serve para testar a expansão e o recolhimento da descrição no celular e no computador.',
+  descricao: 'Anúncio fictício para conferir a página do Mercado da Região.\nNão é uma oferta comercial.\n\nBicicleta de passeio com marchas.\nFotos ilustrativas de teste.\nA retirada seria combinada com o vendedor.\nConfira todos os detalhes antes de negociar.\nEste texto longo serve para testar a expansão e o recolhimento da descrição no celular e no computador.',
   preco_centavos: 85000, aceita_troca: true, cidade: 'Corrente', bairro: 'Centro',
   fotos: ['/logo/olaki-marca.svg', '/logo/olaki-opcao1-pin.svg', '/qa-foto-inexistente.png'],
   atributos: { estado: 'Usado', marchas: 18 }, status: 'ativo', criado_em: '2026-11-01T12:00:00Z', vendido_em: null,

@@ -55,7 +55,7 @@ export async function enviarCodigo(numero: string, codigo: string, config: Retur
   try {
     const r = await fetch(`${config.url}/message/sendText/${config.instancia}`, {
       method: "POST", headers: { apikey: config.chave, Origin: new URL(config.url).origin, "Content-Type": "application/json" }, cache: "no-store", redirect: "error",
-      signal: AbortSignal.timeout(15000), body: JSON.stringify({ number: numero, text: `Seu código de verificação para o OL-AKI é: ${codigo}. Válido por 5 minutos. Não compartilhe este código. Se você não solicitou, ignore esta mensagem.`, linkPreview: false }),
+      signal: AbortSignal.timeout(15000), body: JSON.stringify({ number: numero, text: `Seu código de verificação para o Mercado da Região é: ${codigo}. Válido por 5 minutos. Não compartilhe este código. Se você não solicitou, ignore esta mensagem.`, linkPreview: false }),
     });
     // Uma falha de rede/servidor pode ocorrer depois de a mensagem sair. Nunca repetir automaticamente.
     if (!r.ok) return r.status >= 400 && r.status < 500 ? "falha" : "incerto";

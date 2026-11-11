@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { exigirAdmin } from "@/lib/admin/auth";
-import { CHAVES_DE_MODELO, CHAVES_DE_PLANO, OPCOES_FIXAS, valorDoForm, type TipoValor } from "@/lib/admin/config";
+import { CHAVES_DE_MODELO, CHAVES_DE_PLANO, OPCOES_FIXAS, akiLojistaGlobal, maximoAkiLojista, valorDoForm, type TipoValor } from "@/lib/admin/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EstadoForm } from "@/lib/admin/estado";
 
@@ -31,6 +31,7 @@ export async function criarExcecao(_: EstadoForm, form: FormData): Promise<Estad
   try {
     const { supabase, userId } = await exigirAdmin();
     const chave = String(form.get("chave"));
+    if (akiLojistaGlobal(chave)) return { erro: "Esta configuração vale para todas as regiões." };
     const microrregiao_id = String(form.get("microrregiao_id"));
     if (!microrregiao_id) return { erro: "Escolha a região." };
     const valor = valorDoForm(String(form.get("tipo")) as TipoValor, String(form.get("valor") ?? ""));
@@ -56,6 +57,15 @@ export async function removerExcecao(form: FormData) {
 
 /** Recusa valores fora das opções permitidas (a tela usa lista de escolha, mas o servidor confere de novo). */
 async function valorForaDaLista(supabase: SupabaseClient, chave: string, valor: unknown): Promise<string | null> {
+  const maximo = maximoAkiLojista(chave);
+  if (maximo !== undefined && (typeof valor !== "number" || !Number.isInteger(valor) || valor < 0 || valor > maximo)) {
+    return `Digite um número inteiro de 0 a ${maximo}.`;
+  }
+  if (chave === "robo.lojista_modelo_texto") {
+    const { data } = await supabase.from("robo_modelos").select("modelo")
+      .eq("provedor", "openai").eq("modelo", String(valor)).eq("ativo", true).eq("le_imagem", true).maybeSingle();
+    if (!data) return "Ative um modelo compatível no catálogo do Aki.";
+  }
   const fixas = OPCOES_FIXAS[chave];
   if (fixas) return fixas.some((o) => o.valor === valor) ? null : "Escolha uma das opções da lista.";
   if (CHAVES_DE_PLANO.has(chave)) {

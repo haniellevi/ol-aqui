@@ -13,14 +13,15 @@ export type CardAnuncioProps = {
   prioridade?: boolean;
   /** Botão no canto da foto (ex.: favoritar). Fica fora do link para não aninhar. */
   acao?: ReactNode;
+  vitrine?: boolean;
 };
 
 // Card do anúncio: foto 4:3, preço grande, título em 2 linhas, cidade e "há 2 dias",
 // selo da loja e "Patrocinado" quando é destaque pago. O card inteiro é tocável.
-export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnuncioProps) {
+export function CardAnuncio({ anuncio: a, prioridade = false, acao, vitrine = false }: CardAnuncioProps) {
   const quando = tempoRelativo(a.criado_em);
   return (
-    <article className="relative flex flex-col overflow-hidden rounded-card bg-cartao shadow-1">
+    <article className={`relative flex flex-col overflow-hidden rounded-card bg-cartao shadow-1 ${vitrine ? "ring-1 ring-borda" : ""}`}>
       <Link
         href={linkAnuncio(a.id, a.titulo)}
         className="flex flex-1 flex-col focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
@@ -49,9 +50,9 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
             </span>
           )}
         </div>
-        <div className="flex flex-1 flex-col gap-0.5 p-2.5">
-          <span className="text-lg font-bold leading-5 tabular-nums">{preco(a.preco_centavos)}</span>
-          <h3 className="line-clamp-2 text-sm leading-5">{a.titulo}</h3>
+        <div className={`flex flex-1 flex-col ${vitrine ? "gap-1 border-t border-borda bg-fundo p-3" : "gap-0.5 p-2.5"}`}>
+          <span className={`font-bold leading-5 tabular-nums ${vitrine ? "text-xl text-beringela" : "text-lg"}`}>{preco(a.preco_centavos)}</span>
+          <h3 className={`line-clamp-2 text-sm leading-5 ${vitrine ? "font-medium" : ""}`}>{a.titulo}</h3>
           <span className="mt-auto pt-1 text-[13px] leading-[18px] text-texto-suave">
             {a.cidade}
             {quando && (

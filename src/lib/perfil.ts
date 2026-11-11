@@ -27,15 +27,15 @@ function whatsappDe(e164?: string) {
  * A confirmação externa tem precedência; telefones do Clerk só mudam enquanto ele for a fonte.
  * Roda com a chave secreta porque grava campos que o usuário não pode alterar.
  */
-export async function sincronizarPerfil(u: UsuarioClerk) {
+export async function sincronizarPerfil(u: UsuarioClerk, atualizarFoto = false) {
   const db = supabaseAdmin();
   const tel = u.phoneNumbers.find((p) => p.id === u.primaryPhoneNumberId && p.verification?.status === "verified");
   const whatsapp = whatsappDe(tel?.phoneNumber);
   const avatar = u.hasImage === false ? null : u.imageUrl;
-  const nome = [u.firstName, u.lastName].filter(Boolean).join(" ").trim() || "Usuário OLAKI";
+  const nome = [u.firstName, u.lastName].filter(Boolean).join(" ").trim() || "Usuário Mercado da Região";
 
   async function lerPerfil() {
-    const { data, error } = await db.from("perfis").select("id, whatsapp, whatsapp_verificado_em, whatsapp_origem, avatar_url").eq("id", u.id).maybeSingle();
+    const { data, error } = await db.from("perfis").select("id, whatsapp, whatsapp_verificado_em, whatsapp_origem, avatar_url, avatar_personalizado").eq("id", u.id).maybeSingle();
     if (error) throw new Error("Não foi possível consultar o perfil.");
     return data;
   }
@@ -66,8 +66,9 @@ export async function sincronizarPerfil(u: UsuarioClerk) {
   }
 
   // Atualiza só o que vem do Clerk; nome e cidade editados no site são do usuário.
-  const alteracoes: Record<string, string | null> = {};
-  if (avatar !== existente.avatar_url) alteracoes.avatar_url = avatar;
+  const alteracoes: Record<string, string | boolean | null> = {};
+  if ((!existente.avatar_personalizado || atualizarFoto) && avatar !== existente.avatar_url) alteracoes.avatar_url = avatar;
+  if (atualizarFoto && existente.avatar_personalizado) alteracoes.avatar_personalizado = false;
   if (existente.whatsapp_origem !== "evolution" && whatsapp && (whatsapp !== existente.whatsapp || !existente.whatsapp_verificado_em)) {
     alteracoes.whatsapp = whatsapp;
     alteracoes.whatsapp_verificado_em = new Date().toISOString();
@@ -94,7 +95,9 @@ export async function sincronizarPerfil(u: UsuarioClerk) {
       delete alteracoes.whatsapp; delete alteracoes.whatsapp_verificado_em;
     }
     if (Object.keys(alteracoes).length) {
-      const { data, error } = await db.from("perfis").update(alteracoes).eq("id", u.id).select("id").maybeSingle();
+      let consulta = db.from("perfis").update(alteracoes).eq("id", u.id);
+      if (!atualizarFoto) consulta = consulta.eq("avatar_personalizado", false);
+      const { data, error } = await consulta.select("id").maybeSingle();
       if (error || data?.id !== u.id) throw new Error("Não foi possível atualizar a foto da conta.");
     }
   }

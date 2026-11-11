@@ -19,7 +19,7 @@ const BUCKET = "anuncios";
 export type EstadoLojaConta = { ok?: boolean; erro?: string; campos?: Record<string, string> } | null;
 export type EnvioImagemLoja = { urlEnvio: string; urlPublica: string };
 
-/** Endereço público aceito para a logo: só arquivo da pasta <usuario>/loja/ no Storage do OLAKI. */
+/** Endereço público aceito para a logo: só arquivo da pasta <usuario>/loja/ no Storage do Mercado da Região. */
 function imagemValida(url: string, userId: string): boolean {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, "");
   if (!base) return false;
@@ -30,12 +30,12 @@ function imagemValida(url: string, userId: string): boolean {
 }
 
 /** Prepara o envio da logo direto do navegador para o Storage (endereço assinado). */
-export async function prepararEnvioImagemLoja(qual: "logo", formato: "webp" | "jpg"): Promise<Resultado<EnvioImagemLoja>> {
+export async function prepararEnvioImagemLoja(qual: "logo", formato: "webp" | "jpg" | "png"): Promise<Resultado<EnvioImagemLoja>> {
   try {
     const { userId } = await auth();
     if (!userId) return { ok: false, erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
     if (qual !== "logo") return { ok: false, erro: { mensagem: "Imagem inválida." } };
-    if (!["webp", "jpg"].includes(formato)) return { ok: false, erro: { mensagem: "Formato de imagem inválido." } };
+    if (!["webp", "jpg", "png"].includes(formato)) return { ok: false, erro: { mensagem: "Formato de imagem inválido." } };
     const fmt = formato;
     const v = await minhaVitrineCompleta(true);
     if (v?.tipo !== "loja" || v.dono_id !== userId || v.status === "suspensa") return { ok: false, erro: { mensagem: "Só lojas podem mudar a logo." } };
@@ -73,7 +73,7 @@ export async function salvarLoja(_antes: EstadoLojaConta, form: FormData): Promi
     if (!cidade) campos.cidade = "Escolha a cidade da loja.";
     else if (cidade !== v.cidade && !cidades.some((c) => c.nome === cidade)) campos.cidade = "Escolha uma cidade da lista.";
     if (bairro.length > 80) campos.bairro = "Bairro muito longo (até 80 letras).";
-    // Imagem nova precisa ser do Storage do OLAKI; a atual (mesmo endereço) pode ficar.
+    // Imagem nova precisa ser do Storage do Mercado da Região; a atual (mesmo endereço) pode ficar.
     if (logo && logo !== v.logo_url && !imagemValida(logo, userId)) campos.logo_url = "Envie a logo pelo botão.";
     if (Object.keys(campos).length) return { erro: "Confira os campos marcados.", campos };
 

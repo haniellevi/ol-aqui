@@ -34,7 +34,7 @@ function atualizar(slug: string) {
   revalidatePath(linkLoja(slug));
 }
 
-/** Endereço público de uma foto do banner: só arquivo da pasta <usuario>/vitrine/ no Storage do OLAKI. */
+/** Endereço público de uma foto do banner: só arquivo da pasta <usuario>/vitrine/ no Storage do Mercado da Região. */
 function bannerValido(url: string, userId: string): boolean {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, "");
   if (!base) return false;
@@ -87,7 +87,7 @@ export async function salvarBanner(_antes: EstadoVitrine, form: FormData): Promi
     let url = String(form.get("banner_url") ?? "").trim();
     // Plano sem foto da fachada (plano menor): a tela só mostra o modelo, mas a foto guardada fica
     // como está para voltar quando o plano tiver foto de novo. Aqui só mudam a cor e o desenho.
-    if (v.banner_tipo === "foto" && v.banner_url && !(await meusRecursosVitrine(true)).foto_fachada) {
+    if (v.banner_tipo === "foto" && v.banner_url && v.banner_aki_posicao == null && !(await meusRecursosVitrine(true)).foto_fachada) {
       tipo = "foto";
       url = v.banner_url;
     }
@@ -99,7 +99,7 @@ export async function salvarBanner(_antes: EstadoVitrine, form: FormData): Promi
     if (!/^#[0-9A-F]{6}$/.test(cor) || (opcoes.cores.length > 0 && !opcoes.cores.includes(cor) && cor !== v.banner_cor)) {
       return { erro: "Escolha uma das cores da lista.", campos: { banner_cor: "Escolha uma das cores da lista." } };
     }
-    // Foto nova precisa ser do Storage do OLAKI; a atual (mesmo endereço) pode ficar.
+    // Foto nova precisa ser do Storage do Mercado da Região; a atual (mesmo endereço) pode ficar.
     if (url && url !== v.banner_url && !bannerValido(url, userId)) {
       return { erro: "Envie a foto pelo botão.", campos: { banner: "Envie a foto pelo botão." } };
     }
@@ -127,6 +127,27 @@ export async function salvarBanner(_antes: EstadoVitrine, form: FormData): Promi
     return { ok: true };
   } catch {
     return { erro: "Não foi possível confirmar o salvamento da capa. Tente novamente." };
+  }
+}
+
+export async function aplicarBannerAki(id: string, posicao: number, logo: string | null): Promise<Resultado> {
+  try {
+    const { userId, v } = await minhaLoja(true);
+    if (!userId) return SEM_LOGIN;
+    if (!v) return SO_LOJA;
+    if (!ehUuid(id) || !Number.isInteger(posicao) || posicao < 0 || posicao > 100) {
+      return { ok: false, erro: { mensagem: "Confira a arte e a posição do logo." } };
+    }
+    const db = await createClient();
+    const { error } = await db.rpc("aki_aplicar_banner", { p_id: id, p_posicao: posicao, p_logo: logo });
+    if (error) return { ok: false, erro: traduzirErro(error) };
+    if (logo && v.logo_url && v.logo_url !== logo && arquivoMeu(v.logo_url, userId)) {
+      await Promise.allSettled([apagarFoto(v.logo_url)]);
+    }
+    atualizar(v.slug);
+    return { ok: true, dados: undefined };
+  } catch {
+    return { ok: false, erro: { mensagem: "Não foi possível salvar o banner do Aki. Tente novamente." } };
   }
 }
 

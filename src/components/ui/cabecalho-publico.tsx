@@ -1,7 +1,9 @@
-import Image from "next/image";
+import { Marca } from "@/components/ui/marca";
 import { SinoAvisos } from "@/components/conta/sino-avisos";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 import { ChevronDown, MapPin, Plus, Radar, Search, UserRound } from "lucide-react";
 import { regiaoAtual } from "@/lib/dados/regiao";
 import { classesBotao } from "@/components/ui/botao";
@@ -14,8 +16,19 @@ export const HREF_ESCOLHER_CIDADE = "/cidades";
 
 const LINK = "inline-flex h-12 items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
+async function sessaoAdmin(): Promise<boolean> {
+  try {
+    if (!(await auth()).userId) return false;
+    const db = await createClient();
+    const { data } = await db.rpc("e_admin");
+    return data === true;
+  } catch {
+    return false;
+  }
+}
+
 export async function CabecalhoPublico() {
-  const regiao = await regiaoAtual();
+  const [regiao, admin] = await Promise.all([regiaoAtual(), sessaoAdmin()]);
   const cidade = regiao?.cidade ?? regiao?.cidadeSede ?? regiao?.nome ?? null;
 
   return (
@@ -24,8 +37,8 @@ export async function CabecalhoPublico() {
         Pular para o conteúdo
       </a>
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4">
-        <Link href="/" className="flex h-12 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="OLAKI, página inicial">
-          <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={88} height={36} priority className="h-8 w-auto sm:h-9" />
+        <Link href="/" className="flex h-12 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="Mercado da Região, página inicial">
+          <Marca />
         </Link>
 
         {cidade && (
@@ -59,6 +72,11 @@ export async function CabecalhoPublico() {
             </Link>
           </SignedOut>
           <SignedIn>
+            {admin && (
+              <Link href="/admin" className="inline-flex min-h-11 shrink-0 items-center rounded-campo border border-borda px-2 text-xs font-bold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro">
+                ADMIN
+              </Link>
+            )}
             <SinoAvisos />
             <Link href="/minha-conta" aria-label="Minha conta" className={LINK}>
               <UserRound className="size-5" aria-hidden /> <span className="hidden sm:inline">Conta</span>

@@ -73,7 +73,7 @@ function AvisoIp() {
   return (
     <p className="mt-3 rounded-card border border-aviso bg-aviso-fundo p-3 text-sm text-beringela">
       <span className="font-semibold">* Sobre os IPs e o navegador:</span> quase todo cadastro e mudança passa pelo servidor do site do
-      OLAKI antes de chegar ao banco. Por isso o IP e o navegador gravados costumam ser os do servidor do OLAKI, e não os da pessoa.
+      Mercado da Região antes de chegar ao banco. Por isso o IP e o navegador gravados costumam ser os do servidor do Mercado da Região, e não os da pessoa.
       Não use estes dados para dizer de onde a pessoa acessou.
     </p>
   );
@@ -117,7 +117,7 @@ export function DadosConta({ d, relatorio = false, emails }: { d: DadosComplianc
               </Linha>
             )}
             {d.equipe && (
-              <Linha rotulo="Equipe OLAKI">
+              <Linha rotulo="Equipe Mercado da Região">
                 {NOME_PAPEL[d.equipe.papel]}
                 {d.equipe.ativo ? "" : " (saiu)"}
               </Linha>

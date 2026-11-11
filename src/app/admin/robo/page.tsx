@@ -152,6 +152,15 @@ export default async function RoboPage() {
         </div>
       </Secao>
 
+      <Secao titulo="Aki para lojistas">
+        <Cartao>
+          <p className="mb-2 text-sm text-texto-suave">Controle as cotas por plano, os limites de tentativas e os modelos usados no cadastro e nas imagens.</p>
+          <Link href="/admin/configuracoes?grupo=aki_lojistas" className="font-semibold text-laranja-escuro underline">
+            Configurar Aki para lojistas
+          </Link>
+        </Cartao>
+      </Secao>
+
       <Secao titulo="Limites e orçamento">
         <Cartao>
           <FormLimites

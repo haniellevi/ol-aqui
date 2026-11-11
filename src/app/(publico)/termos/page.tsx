@@ -3,7 +3,7 @@ import { PaginaDocumento, versaoPedida } from "@/components/paginas/pagina-docum
 
 export const metadata: Metadata = {
   title: "Termos de uso",
-  description: "As regras para usar o OLAKI: anúncios, Radar, destaques, pagamentos e o robô Aki.",
+  description: "As regras para usar o Mercado da Região: anúncios, Radar, destaques, pagamentos e o robô Aki.",
   alternates: { canonical: "/termos" },
 };
 

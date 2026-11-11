@@ -95,7 +95,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
     return (
       <PaginaConta>
         <TopoConta titulo="Meu plano" />
-        <Vazio titulo="Você ainda não vende no OLAKI" texto="Escolha como quer vender e o plano aparece aqui.">
+        <Vazio titulo="Você ainda não vende no Mercado da Região" texto="Escolha como quer vender e o plano aparece aqui.">
           <Botao href="/quero-vender" larguraTotal>Quero vender</Botao>
         </Vazio>
       </PaginaConta>
@@ -146,7 +146,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
 
         {suspensa && (
           <Aviso tipo="erro">
-            <span>Sua conta de vendedor está suspensa. Fale com o suporte do OLAKI para saber o que aconteceu.</span>
+            <span>Sua conta de vendedor está suspensa. Fale com o suporte do Mercado da Região para saber o que aconteceu.</span>
           </Aviso>
         )}
         {!suspensa && assinatura?.renovar_agora && assinatura.situacao !== "vencida" && assinatura.situacao !== "teste_vencido" && assinatura.vence_em && (

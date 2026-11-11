@@ -226,7 +226,7 @@ export function FluxoCobranca({
       return (
         <CaixaResultado icone="erro" titulo="Recebemos seu pagamento, mas não deu para aplicar">
           <p className="max-w-sm text-base text-texto-suave">
-            {pagamento.devolver_motivo} A equipe OLAKI vai devolver o seu dinheiro. Se tiver dúvida, fale com a gente.
+            {pagamento.devolver_motivo} A equipe Mercado da Região vai devolver o seu dinheiro. Se tiver dúvida, fale com a gente.
           </p>
         </CaixaResultado>
       );
@@ -341,7 +341,7 @@ export function FluxoCobranca({
             setErroDoc(null);
           }}
           erro={erroDoc}
-          dica="O banco pede para gerar o pagamento. O OLAKI não guarda esse número."
+          dica="O banco pede para gerar o pagamento. O Mercado da Região não guarda esse número."
         />
       )}
       <Botao

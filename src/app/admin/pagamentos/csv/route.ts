@@ -95,7 +95,7 @@ export async function GET(req: Request) {
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="olaki-pagamentos-${hoje}.csv"`,
+      "Content-Disposition": `attachment; filename="mercado-da-regiao-pagamentos-${hoje}.csv"`,
       "Cache-Control": "no-store",
     },
   });

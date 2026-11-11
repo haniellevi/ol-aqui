@@ -1,0 +1,12 @@
+[Unit]
+Description=Backup cifrado do banco e das fotos do OLAKI
+
+[Service]
+Type=oneshot
+UMask=0077
+ExecStart=/usr/bin/python3 %h/.local/libexec/olaki-backup/olaki-backup.py
+TimeoutStartSec=20min
+Restart=on-failure
+RestartSec=15min
+RestartPreventExitStatus=3
+NoNewPrivileges=yes

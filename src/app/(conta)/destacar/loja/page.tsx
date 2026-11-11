@@ -23,7 +23,7 @@ export default async function PaginaDestacarLoja({ searchParams }: { searchParam
     return (
       <PaginaConta>
         {topo}
-        <Vazio titulo="Você ainda não tem uma loja" texto="Loja em destaque é para quem tem loja no OLAKI." icone={<Store />}>
+        <Vazio titulo="Você ainda não tem uma loja" texto="Loja em destaque é para quem tem loja no Mercado da Região." icone={<Store />}>
           <Botao href="/quero-vender/loja" larguraTotal>
             Abrir minha loja
           </Botao>

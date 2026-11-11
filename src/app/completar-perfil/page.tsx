@@ -1,5 +1,5 @@
+import { Marca } from "@/components/ui/marca";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
@@ -38,11 +38,11 @@ export default async function CompletarPerfil({ searchParams }: { searchParams: 
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-4 py-10">
-      <Image src="/logo/olaki-marca.svg" alt="OLAKI" width={110} height={45} priority className="self-center" />
+      <Marca />
       <header className="flex flex-col gap-2">
         <h1 className="text-titulo font-semibold text-beringela">Falta só um passo</h1>
         <p className="text-base text-texto-suave">
-          Para usar o OLAKI, leia as regras e como cuidamos dos seus dados. Depois toque em <strong className="font-semibold text-texto">Aceitar e continuar</strong>.
+          Para usar o Mercado da Região, leia as regras e como cuidamos dos seus dados. Depois toque em <strong className="font-semibold text-texto">Aceitar e continuar</strong>.
         </p>
       </header>
 

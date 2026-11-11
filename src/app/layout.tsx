@@ -15,7 +15,8 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
-  title: { default: "OLAKI · olha aqui o que você procura", template: "%s · OLAKI" },
+  icons: { icon: "/icone-mercado.svg", apple: "/mercado-apple-icon.png" },
+  title: { default: "Mercado da Região · olha aqui o que você procura", template: "%s · Mercado da Região" },
   description: "Shopping digital e classificados da sua região. Compre, venda e peça no Radar de Negócios.",
 };
 

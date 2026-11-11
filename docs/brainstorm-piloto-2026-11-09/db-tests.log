@@ -1,0 +1,26 @@
+
+> olaki@0.1.0 test:db
+> python3 supabase/testes/automatizados.py
+
+PASS: texto do Radar atualizado sem sobrescrever personalização do painel
+PASS: criação, repetição, RLS, regiões, proposta, escolha, encerramento e contato
+PASS: busca combina filtros, ordena, pagina e isola região e status
+PASS: anúncio público protege contato, rascunho, vendido e pessoa sem confirmação
+PASS: rascunho, fotos concorrentes, preço, localização, publicação idempotente e contato público
+PASS: lixeira, restauração, fotos, venda, moderação, idempotência e isolamento entre usuários
+PASS: Radar completo preserva centavos, valida fotos, entrega avisos e protege contato e prazo
+PASS: notificações isolam contas, canais, leitura, preferências e repetição
+PASS: Minha conta protege identidade, perfil, confirmação e privilégios
+PASS: favoritos protegem contas e anúncios privados, mantêm contagem e repetição
+PASS: vitrine preserva contato permitido, seções, fixados, preços e paginação sem expor prévias privadas
+PASS: Minha loja protege edição e uploads, salva contato, fotos e horários até meia-noite
+PASS: Meu plano protege preço, histórico, reserva e confirmação repetida
+PASS: OTP privado, três erros, prazo, consumo único, cotas, troca segura e contadores públicos
+PASS: aluguel não herda piso de venda, preserva limites e conteúdo e reavalia mudança de finalidade
+PASS: quatro envios simultâneos reservam um único código
+PASS: quatro confirmações simultâneas consomem o código uma única vez
+PASS: quatro conexões simultâneas reservam uma única criação de cobrança
+PASS: migração de avisos repetida preserva textos personalizados e protetor
+PASS: quatro respostas simultâneas respeitam a cota de três
+PASS: três publicações simultâneas respeitam a única vaga do plano
+PASS: quatro envios simultâneos criam um único pedido

@@ -110,6 +110,11 @@ const erroFinanceiro = { code: '23503', message: 'update or delete violates fore
 function webhook(op = {}) {
   const chamadas = []; let exclusoes = 0;
   const db = {
+    async rpc(nome, args) {
+      assert.equal(nome, 'revogar_conta_definitivamente');
+      chamadas.push({ tabela: 'contas_revogadas', acao: 'revogar', usuario: args.p_id });
+      return { error: op.falha === 'contas_revogadas' ? { message: 'falha parcial' } : null };
+    },
     storage: { from(bucket) { return {
       async list(pasta, pag) { chamadas.push({ tabela: bucket, acao: 'storage-list', pasta, ...pag }); return { data: [], error: op.storageErro ? { message: 'storage falhou' } : null }; },
       async remove() { return { error: null }; },
@@ -208,7 +213,7 @@ test('exclusão: arquivos só são removidos após confirmação do banco, inclu
 test('exclusão: revoga JWT antes da limpeza sem renovar data; falha no marcador impede remover arquivos ou dados', async (t) => {
   t.mock.method(console, 'error', () => {});
   const a = webhook(); assert.equal((await a.post()).status, 200);
-  assert.deepEqual(a.chamadas[0], { tabela: 'contas_revogadas', filtros: [], acao: 'upsert', valores: { usuario_id: usuario }, opcoes: { onConflict: 'usuario_id', ignoreDuplicates: true } });
+  assert.deepEqual(a.chamadas[0], { tabela: 'contas_revogadas', acao: 'revogar', usuario });
   const b = webhook({ falha: 'contas_revogadas' }); assert.equal((await b.post()).status, 500);
   assert.equal(b.chamadas.length, 1);
 });

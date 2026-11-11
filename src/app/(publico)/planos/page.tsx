@@ -17,7 +17,7 @@ import { Vazio } from "@/components/ui/vazio";
 
 export const metadata: Metadata = {
   title: "Planos",
-  description: "Veja os planos do OLAKI para vender na sua região: anúncios, Radar de Negócios e vitrine da loja.",
+  description: "Veja os planos do Mercado da Região para vender na sua região: anúncios, Radar de Negócios e vitrine da loja.",
   alternates: { canonical: "/planos" },
 };
 
@@ -59,7 +59,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-titulo font-semibold text-beringela">Planos do OLAKI</h1>
+        <h1 className="text-titulo font-semibold text-beringela">Planos do Mercado da Região</h1>
         <p className="text-base text-texto-suave">
           Escolha como quer vender na sua região. Você pode mudar de plano quando quiser.
         </p>
@@ -76,7 +76,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
       </header>
 
       {planos.length === 0 ? (
-        <Vazio titulo="Os planos estão sendo atualizados" texto="Volte daqui a pouco ou fale com o suporte do OLAKI.">
+        <Vazio titulo="Os planos estão sendo atualizados" texto="Volte daqui a pouco ou fale com o suporte do Mercado da Região.">
           <Botao href="/" larguraTotal>
             Voltar ao início
           </Botao>

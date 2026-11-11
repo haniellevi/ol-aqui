@@ -35,7 +35,7 @@ async function lerArquivo(arquivo: FormDataEntryValue | null) {
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return resposta(401, "Entre na sua conta para enviar os arquivos.");
-  if (req.headers.get("origin") !== new URL(req.url).origin) return resposta(403, "Abra a página de verificação no OLAKI.");
+  if (req.headers.get("origin") !== new URL(req.url).origin) return resposta(403, "Abra a página de verificação no Mercado da Região.");
   const tipo = req.headers.get("content-type") ?? "";
   if (!tipo.startsWith("multipart/form-data;")) return resposta(400, "Selecione os dois arquivos pelo formulário.");
   if (Number(req.headers.get("content-length")) > MAX_PEDIDO) return resposta(413, "Cada arquivo pode ter até 2 MB.");

@@ -43,7 +43,7 @@ export function FormDados({ nome, cidade, bairro, cidades }: {
     }} className="flex flex-col gap-4 rounded-card bg-cartao p-5 shadow-1" noValidate aria-label="Editar perfil" aria-busy={enviando}>
       <div>
         <h2 className="text-lg font-bold">Seu perfil</h2>
-        <p className="mt-1 text-sm text-texto-suave">Use o nome pelo qual você quer ser conhecido no OL-AKI.</p>
+        <p className="mt-1 text-sm text-texto-suave">Use o nome pelo qual você quer ser conhecido no Mercado da Região.</p>
       </div>
       {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
       {estado?.ok && <Aviso tipo="ok">Perfil salvo.</Aviso>}
