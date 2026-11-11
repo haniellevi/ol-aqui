@@ -107,6 +107,7 @@ begin
                 from public.anuncios a join public.eventos_anuncio e on e.anuncio_id = a.id
                where a.vitrine_id = p_vitrine and a.status = 'ativo' and e.criado_em >= inicio and e.criado_em < fim
                group by a.id
+              having count(*) filter (where e.tipo = 'visualizacao') > 0
                order by 4 desc, 5 desc, a.id
                limit 5) t), '[]'::jsonb));
 end $$;
