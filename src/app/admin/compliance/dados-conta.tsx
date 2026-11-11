@@ -255,7 +255,7 @@ export function DadosConta({ d, relatorio = false, emails }: { d: DadosComplianc
                     <Campos campos={h.campos} />
                   ) : (
                     <details className="mt-1" open={h.acao !== "INSERT"}>
-                      <summary className="flex min-h-10 cursor-pointer items-center text-sm font-semibold text-laranja-escuro">
+                      <summary className="flex min-h-10 cursor-pointer items-center text-sm font-semibold text-beringela">
                         Ver campos ({Object.keys(h.campos).length})
                       </summary>
                       <Campos campos={h.campos} />

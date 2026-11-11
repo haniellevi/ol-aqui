@@ -241,7 +241,7 @@ export function BotaoRemoverPrecoRegiao({ id }: { id: string }) {
   return (
     <form action={acao} className="flex flex-col items-end gap-1">
       <input type="hidden" name="id" value={id} />
-      <Botao type="submit" variante="texto" className="text-perigo" carregando={pendente} textoCarregando="Removendo...">
+      <Botao type="submit" variante="discreto" className="text-perigo" carregando={pendente} textoCarregando="Removendo...">
         Remover
       </Botao>
       {estado?.erro && <Retorno estado={estado} />}
@@ -254,7 +254,7 @@ export function BotaoCancelarDestaque({ id, texto = "Cancelar destaque" }: { id:
   const [aberto, setAberto] = useState(false);
   if (!aberto) {
     return (
-      <Botao variante="texto" className="text-perigo" onClick={() => setAberto(true)}>
+      <Botao variante="discreto" className="text-perigo" onClick={() => setAberto(true)}>
         {texto}
       </Botao>
     );

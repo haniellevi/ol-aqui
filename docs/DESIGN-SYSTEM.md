@@ -314,3 +314,14 @@ Página para conferir tudo num lugar só: `/admin/pecas`.
 - Outras peças já instaladas e prontas para as próximas fases: `card`, `tabs`, `dropdown-menu`, `dialog`, `drawer`, `sheet`, `field`, `input`, `select`, `textarea`, `label`, `toggle-group`, `table`, `tooltip`, `switch`, `checkbox`, `radio-group`. Ao usar uma delas pela primeira vez, conferir altura (40/36), letra e escrever `border-border` onde houver `border` (o projeto não define cor de borda padrão).
 - Larguras de página: só três. `max-w-md` (entrar e telas de uma ação), `max-w-xl` (formulários e leitura) e `max-w-6xl` (vitrines e listas). Espaço entre blocos da página: `gap-5`.
 - Na nuvem o endereço `ui.shadcn.com` é bloqueado. As peças foram trazidas do código-fonte oficial no GitHub (`apps/v4/registry/bases/base/ui` + `styles/style-nova.css`).
+
+## Hierarquia no painel admin (11/11/2026)
+
+O Raniel achou o painel confuso: botão que parece texto, negrito espalhado e títulos de seção cada um de um jeito. Regras que valem a partir daqui:
+
+1. **Ação tem cara de botão.** Voltar, abrir, tentar de novo, ver pagamento, limpar filtro: `<Botao variante="discreto" tamanho="pequeno">` ou `estiloBotaoDiscreto` (fundo lilás claro `selecao`, texto beringela). Texto laranja solto só para link **dentro de uma frase**.
+2. **Link dentro de frase:** `text-laranja-escuro underline`, sem negrito.
+3. **Negrito só em três lugares:** título (tela, seção, card), valor-chave (preço, total) e botão. Valores de listas (`<dd>`) ficam em peso normal; o rótulo em cima, em `legenda`, já separa.
+4. **Um só estilo de título de seção:** `text-lg font-semibold text-beringela`. Nada de caixa alta cinza nem `text-xl font-bold` misturados.
+5. **Abre-e-fecha (`<summary>`):** seta à esquerda e fundo ao passar o mouse (regra em `painel.css`), texto beringela. Nunca laranja.
+6. A variante `texto` do `<Botao>` não é usada no painel.

@@ -4,7 +4,8 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { exigirAdmin } from "@/lib/admin/auth";
 import { localidadesGestao } from "@/lib/admin/gestao-dados";
 import { idUsuarioValido, type UsuarioAdmin } from "@/lib/admin/gestao";
-import { Aviso, Cartao, Titulo, estiloBotaoSec } from "@/components/admin/ui";
+import { ChevronLeft } from "lucide-react";
+import { Aviso, Cartao, Titulo, estiloBotaoDiscreto, estiloBotaoSec } from "@/components/admin/ui";
 import { HistoricoGestao } from "@/components/admin/historico-gestao";
 import { FormAcessoUsuario, FormBloqueioUsuario, FormUsuario } from "../formularios";
 
@@ -24,7 +25,7 @@ export default async function Usuario({ params }: { params: Promise<{ id: string
     acessoDisponivel = true;
   } catch { /* A edição do cadastro funciona mesmo se o provedor de login estiver indisponível. */ }
   return <>
-    <Link href="/admin/usuarios" className="mb-4 inline-block text-sm font-semibold text-laranja-escuro">Voltar aos usuários</Link>
+    <Link href="/admin/usuarios" className={`${estiloBotaoDiscreto} mb-4`}><ChevronLeft className="size-4" aria-hidden />Voltar aos usuários</Link>
     <Titulo sub={<span className="break-all">{u.id} · {u.bloqueado ? "Acesso bloqueado" : "Acesso liberado"}</span>}>{u.nome}</Titulo>
     <div className="mb-5 flex flex-wrap gap-2">
       {u.loja_id && <Link href={`/admin/lojas/${u.loja_id}`} className={estiloBotaoSec}>Gerenciar {u.loja_nome || "loja"}</Link>}

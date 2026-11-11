@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { Copy, Download } from "lucide-react";
 import { Cartao, estiloCampo } from "@/components/admin/ui";
 import { CampoBusca, type OpcaoBusca } from "@/components/admin/campo-busca";
-import { Botao } from "@/components/ui/botao";
+import { Botao, classesBotao } from "@/components/ui/botao";
 
 // Monta o link com a origem marcada (ex.: para o post do Instagram, o anúncio na rádio
 // ou o QR colado no balcão da loja) e o QR code pronto para baixar.
@@ -100,7 +100,7 @@ export function GeradorLink({ site, origens, destinos, lojas }: { site: string; 
               </Botao>
               {qr && (
                 <a href={qr} download={`qr-${origem}${campanhaDe(campanha) ? `-${campanhaDe(campanha)}` : ""}.png`}
-                   className="olaki-acao olaki-controle-pequeno inline-flex min-h-8 items-center gap-1.5 rounded-campo px-2.5 text-legenda font-semibold text-laranja-escuro hover:underline">
+                   className={classesBotao("secundario", false, "", "pequeno")}>
                   <Download className="size-4" aria-hidden /> Baixar QR code
                 </a>
               )}

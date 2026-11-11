@@ -6,7 +6,7 @@ import { lerCategorias } from "@/lib/admin/cadastros";
 import { inteiro } from "@/lib/admin/formato";
 import { ehUuid } from "@/lib/formato";
 import { LINK_ADMIN_CATEGORIAS, linkAdminCategoria } from "@/lib/rotas";
-import { Cartao, Titulo } from "@/components/admin/ui";
+import { Cartao, Titulo, estiloBotaoDiscreto } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { BotaoApagarCategoria, FormCategoria } from "../formularios";
@@ -28,7 +28,7 @@ export default async function CategoriaPage({ params }: { params: Promise<{ id: 
         <Botao href={linkAdminCategoria(id)} variante="secundario" larguraTotal>
           Tentar de novo
         </Botao>
-        <Botao href={LINK_ADMIN_CATEGORIAS} variante="texto">
+        <Botao href={LINK_ADMIN_CATEGORIAS} variante="discreto">
           Voltar para as categorias
         </Botao>
       </Vazio>
@@ -48,7 +48,7 @@ export default async function CategoriaPage({ params }: { params: Promise<{ id: 
 
   return (
     <>
-      <Link href={LINK_ADMIN_CATEGORIAS} className="mb-3 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-laranja-escuro">
+      <Link href={LINK_ADMIN_CATEGORIAS} className={`${estiloBotaoDiscreto} mb-3`}>
         <ArrowLeft className="size-5" aria-hidden />
         Todas as categorias
       </Link>

@@ -21,7 +21,7 @@ export default async function HojePage() {
   return (
     <>
       <Titulo sub={<span className="first-letter:uppercase">{dataLonga.format(agora)}</span>}>Hoje</Titulo>
-      {erro && <div className="mb-3"><Aviso tipo="erro">Não foi possível conferir: {falhas.join(", ")}.{tarefas.length > 0 && " As tarefas carregadas continuam abaixo."} <a href="/admin/hoje" className="font-semibold underline">Tentar novamente</a></Aviso></div>}
+      {erro && <div className="mb-3"><Aviso tipo="erro">Não foi possível conferir: {falhas.join(", ")}.{tarefas.length > 0 && " As tarefas carregadas continuam abaixo."} <a href="/admin/hoje" className="text-laranja-escuro underline underline-offset-2">Tentar novamente</a></Aviso></div>}
 
       {tarefas.length === 0 && !erro ? (
         <Vazio
@@ -52,7 +52,7 @@ export default async function HojePage() {
                   {t.acao.rotulo}
                 </Botao>
                 {t.apoio && (
-                  <Botao href={t.apoio.href} variante="texto" tamanho="pequeno"
+                  <Botao href={t.apoio.href} variante="discreto" tamanho="pequeno"
                     {...(t.apoio.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
                     {t.apoio.rotulo}
                   </Botao>

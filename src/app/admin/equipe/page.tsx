@@ -50,7 +50,7 @@ function Membro({ m, eu, regioes }: { m: MembroEquipe; eu: boolean; regioes: Reg
       {!eu && (
         <div className="mt-3 flex flex-col border-t border-borda">
           <details className="pt-1">
-            <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-laranja-escuro">
+            <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-beringela">
               {m.ativo ? "Trocar o papel" : "Pôr de volta na equipe"}
             </summary>
             <div className="pb-2 pt-2">
@@ -95,7 +95,7 @@ export default async function EquipePage() {
       </Cartao>
 
       <section aria-labelledby="na-equipe" className="mb-6">
-        <h2 id="na-equipe" className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">
+        <h2 id="na-equipe" className="mb-3 text-lg font-semibold text-beringela">
           Na equipe agora ({ativos.length})
         </h2>
         {membros === null ? (
@@ -114,7 +114,7 @@ export default async function EquipePage() {
 
       {sairam.length > 0 && (
         <details className="mb-6">
-          <summary className="flex min-h-10 cursor-pointer items-center text-sm font-semibold uppercase tracking-wide text-texto-suave">
+          <summary className="flex min-h-10 cursor-pointer items-center text-lg font-semibold text-beringela">
             Saíram da equipe ({sairam.length})
           </summary>
           <ul className="mt-2 flex flex-col gap-3">

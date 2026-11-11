@@ -122,7 +122,7 @@ async function AbaAjuda({ supabase }: { supabase: Db }) {
       </Cartao>
       <p className="text-legenda text-texto-suave">
         O WhatsApp e o e-mail da equipe que aparecem na Ajuda ficam em{" "}
-        <Link href="/admin/configuracoes?grupo=geral" className="font-semibold text-laranja-escuro underline">
+        <Link href="/admin/configuracoes?grupo=geral" className="text-laranja-escuro underline underline-offset-2">
           Configurações &gt; Geral
         </Link>
         .
@@ -182,7 +182,7 @@ async function AbaTermos({ supabase, tipo }: { supabase: Db; tipo: TipoDocumento
           )}
           <p className="text-sm text-texto-suave">
             {aceitaram ?? 0} {aceitaram === 1 ? "pessoa aceitou" : "pessoas aceitaram"} esta versão ·{" "}
-            <Link href={linkDocumentoLegal(tipo)} target="_blank" className="font-semibold text-laranja-escuro underline">
+            <Link href={linkDocumentoLegal(tipo)} target="_blank" className="text-laranja-escuro underline underline-offset-2">
               ver no site
             </Link>
           </p>
@@ -205,7 +205,7 @@ async function AbaTermos({ supabase, tipo }: { supabase: Db; tipo: TipoDocumento
             <ul>
               {versoes.map((v) => (
                 <li key={v.id} className="flex min-h-10 flex-wrap items-center gap-x-3 gap-y-1 border-b border-borda px-4 py-2 last:border-0">
-                  <Link href={linkDocumentoLegal(tipo, v.ativo ? null : v.versao)} target="_blank" className="font-semibold text-laranja-escuro underline">
+                  <Link href={linkDocumentoLegal(tipo, v.ativo ? null : v.versao)} target="_blank" className="text-laranja-escuro underline underline-offset-2">
                     Versão {v.versao}
                   </Link>
                   <span className="text-legenda text-texto-suave">

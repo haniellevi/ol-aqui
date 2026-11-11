@@ -7,7 +7,7 @@ import { inteiro } from "@/lib/admin/formato";
 import { textoUso } from "@/lib/admin/regras-cadastros";
 import { ehUuid } from "@/lib/formato";
 import { LINK_ADMIN_REGIOES, linkAdminRegiao } from "@/lib/rotas";
-import { Cartao, Titulo } from "@/components/admin/ui";
+import { Cartao, Titulo, estiloBotaoDiscreto } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { AcoesCidade, BotaoApagarRegiao, FormAdicionarCidade, FormRegiao } from "../formularios";
@@ -29,7 +29,7 @@ export default async function RegiaoPage({ params }: { params: Promise<{ id: str
         <Botao href={linkAdminRegiao(id)} variante="secundario" larguraTotal>
           Tentar de novo
         </Botao>
-        <Botao href={LINK_ADMIN_REGIOES} variante="texto">
+        <Botao href={LINK_ADMIN_REGIOES} variante="discreto">
           Voltar para as regiões
         </Botao>
       </Vazio>
@@ -44,7 +44,7 @@ export default async function RegiaoPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <Link href={LINK_ADMIN_REGIOES} className="mb-3 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-laranja-escuro">
+      <Link href={LINK_ADMIN_REGIOES} className={`${estiloBotaoDiscreto} mb-3`}>
         <ArrowLeft className="size-5" aria-hidden />
         Todas as regiões
       </Link>

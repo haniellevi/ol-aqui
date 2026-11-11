@@ -53,8 +53,7 @@ export default async function RegioesPage() {
                       {r.pessoas === 1 ? "conta" : "contas"}
                     </span>
                   </span>
-                  <span className="hidden text-sm font-semibold text-laranja-escuro md:inline">Abrir</span>
-                  <ChevronRight className="size-5 shrink-0 text-texto-suave" aria-hidden />
+                                    <ChevronRight className="size-5 shrink-0 text-texto-suave" aria-hidden />
                 </Link>
               </li>
             ))}

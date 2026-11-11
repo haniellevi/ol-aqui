@@ -109,7 +109,7 @@ export function FormLojista({ lojista, opcoes, regiaoPadrao }: { lojista?: Lojis
           {ATALHOS.map((a) => (
             <Botao key={a.nome} type="button" variante="secundario" tamanho="pequeno" onClick={() => setProximo(diaDaqui(a.dias))}>{a.nome}</Botao>
           ))}
-          {proximo && <Botao type="button" variante="texto" tamanho="pequeno" onClick={() => setProximo("")}>Limpar</Botao>}
+          {proximo && <Botao type="button" variante="discreto" tamanho="pequeno" onClick={() => setProximo("")}>Limpar</Botao>}
         </div>
       </div>
       {perdido && (
@@ -160,7 +160,7 @@ export function AgendarRapido({ id }: { id: string }) {
     <form action={acao} className="flex flex-wrap items-center gap-1">
       <input type="hidden" name="id" value={id} />
       {ATALHOS.slice(1).map((a) => (
-        <Botao key={a.nome} type="submit" name="dia" value={diaDaqui(a.dias)} variante="texto" tamanho="pequeno" disabled={pendente}>{a.nome}</Botao>
+        <Botao key={a.nome} type="submit" name="dia" value={diaDaqui(a.dias)} variante="discreto" tamanho="pequeno" disabled={pendente}>{a.nome}</Botao>
       ))}
       {estado?.erro && <span role="alert" className="text-legenda text-perigo">{estado.erro}</span>}
     </form>
@@ -193,7 +193,7 @@ export function BotaoApagarNota({ id, nota }: { id: string; nota: string }) {
     <form action={acao} onSubmit={confirmarAntes(confirmar, { titulo: "Apagar esta anotação?", acao: "Apagar", perigo: true })}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="nota" value={nota} />
-      <Botao type="submit" variante="texto" tamanho="pequeno" carregando={pendente}>Apagar</Botao>
+      <Botao type="submit" variante="discreto" tamanho="pequeno" carregando={pendente}>Apagar</Botao>
       {estado?.erro && <span role="alert" className="text-legenda text-perigo">{estado.erro}</span>}
     </form>
   );

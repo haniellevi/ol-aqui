@@ -32,6 +32,8 @@ export const estiloCampo = `${classesCampo} admin-campo mt-1 h-10`;
 export const estiloBotao = classesBotao("primario");
 export const estiloBotaoSec = classesBotao("secundario");
 export const estiloBotaoPerigo = classesBotao("perigo");
+// Ação de apoio dentro de listas e cartões (voltar, abrir, tentar de novo, ver pagamento).
+export const estiloBotaoDiscreto = classesBotao("discreto", false, "", "pequeno");
 // "Aprovar" na moderação: verde-escuro com texto branco (5,4:1). Nunca o verde claro atrás de texto.
 export const estiloBotaoAprovar =
   "olaki-acao inline-flex min-h-10 select-none items-center justify-center gap-2 rounded-campo bg-verde-escuro px-4 text-base font-semibold leading-5 text-white " +

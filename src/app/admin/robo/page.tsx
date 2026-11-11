@@ -25,7 +25,7 @@ function Secao({ titulo, children, recolhida = false }: { titulo: string; childr
   </details>;
   return (
     <>
-      <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">{titulo}</h2>
+      <h2 className="mb-3 mt-8 text-lg font-semibold text-beringela">{titulo}</h2>
       {children}
     </>
   );
@@ -182,7 +182,7 @@ export default async function RoboPage() {
         </Cartao>
         <p className="mt-2 text-legenda text-texto-suave">
           Outros ajustes (tamanho das respostas, histórico, foto, esforço) ficam em{" "}
-          <Link href="/admin/configuracoes?grupo=robo" className="font-semibold text-laranja-escuro underline">
+          <Link href="/admin/configuracoes?grupo=robo" className="text-laranja-escuro underline underline-offset-2">
             Configurações › Robô Aki
           </Link>
           .

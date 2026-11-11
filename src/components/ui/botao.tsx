@@ -8,7 +8,7 @@ import type { ComponentProps, ReactNode } from "react";
 // Largura total só no celular: do tablet para cima o botão para em 320px.
 // Principal = laranja com texto beringela (nunca branco no laranja).
 
-export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | "texto";
+export type VarianteBotao = "primario" | "secundario" | "discreto" | "perigo" | "whatsapp" | "texto";
 export type TamanhoBotao = "normal" | "pequeno";
 
 const TAMANHOS: Record<TamanhoBotao, string> = {
@@ -24,6 +24,9 @@ const BASE =
 const VARIANTES: Record<VarianteBotao, string> = {
   primario: "bg-laranja text-beringela hover:brightness-95",
   secundario: "border border-beringela bg-cartao text-beringela hover:bg-fundo",
+  // Ação de apoio com cara de botão: fundo lilás claro, sem borda. Use no lugar de "texto"
+  // sempre que for uma ação (texto laranja solto parece link ou frase).
+  discreto: "bg-selecao text-beringela hover:brightness-95",
   perigo: "border border-perigo bg-cartao text-perigo hover:bg-perigo-fundo",
   whatsapp: "bg-verde-escuro text-white hover:brightness-95",
   texto: "text-laranja-escuro underline-offset-4 hover:underline",

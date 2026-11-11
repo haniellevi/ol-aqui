@@ -43,14 +43,14 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
   const fotos = a.fotos.filter(src => /^https:\/\//i.test(src));
 
   return <div className="space-y-4">
-    <Botao href={LINK_ADMIN_ANUNCIOS} variante="texto" prefetch={false}>Voltar aos anúncios</Botao>
+    <Botao href={LINK_ADMIN_ANUNCIOS} variante="discreto" prefetch={false}>Voltar aos anúncios</Botao>
     <Titulo sub={[vendedor?.nome, a.cidade].filter(Boolean).join(" · ")}>{titulo}</Titulo>
     {(erro || ok) && <Aviso tipo={erro ? "erro" : "ok"}>{erro || ok}</Aviso>}
     <Cartao className="space-y-3 [overflow-wrap:anywhere]">
       <div className="flex flex-wrap items-center gap-3">
         <Badge variant={situacao.cor}>{situacao.texto}</Badge>
         <p className="font-semibold">{preco(a.preco_centavos)}</p>
-        {(a.status === "ativo" || a.status === "vendido") && <Botao href={linkAnuncio(id, a.titulo)} variante="texto" prefetch={false}>Ver no site</Botao>}
+        {(a.status === "ativo" || a.status === "vendido") && <Botao href={linkAnuncio(id, a.titulo)} variante="discreto" prefetch={false}>Ver no site</Botao>}
       </div>
       {a.descricao && <p className="whitespace-pre-wrap text-sm">{a.descricao}</p>}
       {fotos.length > 0 && <ul aria-label="Fotos do anúncio" className="grid grid-cols-2 gap-2 sm:grid-cols-4">

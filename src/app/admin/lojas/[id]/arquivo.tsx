@@ -46,12 +46,12 @@ export function FormArquivoLoja({ id, nome, arquivada, atualizado, ativos, geren
             <input type="hidden" name="atualizado" value={atualizado} />
             {!arquivada && (
               <dl className="grid grid-cols-2 gap-2 text-legenda text-texto-suave">
-                <div><dt>Anúncios ativos</dt><dd className="font-semibold">{ativos}</dd></div>
-                <div><dt>Gerentes</dt><dd className="font-semibold">{gerentes}</dd></div>
-                <div><dt>Convites pendentes</dt><dd className="font-semibold">{convites}</dd></div>
-                <div><dt>Cobranças pendentes</dt><dd className="font-semibold">{pendentes}</dd></div>
-                <div><dt>Pagamentos de destaque</dt><dd className="font-semibold">{destaques}</dd></div>
-                <div><dt>Anúncios congelados</dt><dd className="font-semibold">{congelados}</dd></div>
+                <div><dt>Anúncios ativos</dt><dd>{ativos}</dd></div>
+                <div><dt>Gerentes</dt><dd>{gerentes}</dd></div>
+                <div><dt>Convites pendentes</dt><dd>{convites}</dd></div>
+                <div><dt>Cobranças pendentes</dt><dd>{pendentes}</dd></div>
+                <div><dt>Pagamentos de destaque</dt><dd>{destaques}</dd></div>
+                <div><dt>Anúncios congelados</dt><dd>{congelados}</dd></div>
               </dl>
             )}
             <label className="min-w-0 text-sm font-medium">
