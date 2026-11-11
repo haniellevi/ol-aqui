@@ -3,10 +3,12 @@ import type { ReactNode } from "react";
 import { Clock, CreditCard, Instagram, MapPin, Navigation, Store, Truck } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
 import { DIAS_EM_ORDEM, NOME_DIA, agoraNaRegiao, faixasDoDia, linkComoChegar, linkInstagram, linkSiteLoja, situacaoAgora, temHorarios, textoDoDia } from "@/components/vitrine/regras";
+import { MapaLoja, coordenadasValidas } from "@/components/vitrine/mapa-loja";
 import type { VitrinePublica } from "@/lib/tipos-vitrine";
 
 // Bloco "Informações da loja" da vitrine pública: só aparece o que a loja preencheu.
-export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }) {
+export function InformacoesLoja({ v, agora, mapa = false }: { v: VitrinePublica; agora: Date; /** Vitrine nova: mapa com o pino. */ mapa?: boolean }) {
+  const pino = mapa ? coordenadasValidas(v.lat, v.lng) : null;
   const comoChegar = linkComoChegar({ lat: v.lat, lng: v.lng, endereco: v.endereco, cidade: v.cidade });
   const insta = linkInstagram(v.instagram);
   const situacao = situacaoAgora(v.horarios, agora);
@@ -31,6 +33,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
       {(v.endereco || comoChegar) && (
         <Bloco icone={<MapPin />} titulo="Endereço">
           <p className="text-base break-words">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>
+          {pino && <MapaLoja lat={pino.lat} lng={pino.lng} nome={v.nome} />}
           {comoChegar && (
             <a href={comoChegar} target="_blank" rel="noopener noreferrer" aria-label="Como chegar à loja (abre em nova aba)" className={classesBotao("secundario", false, "mt-1 w-full sm:w-fit")}>
               <Navigation className="size-5" aria-hidden />

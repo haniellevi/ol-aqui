@@ -49,6 +49,20 @@ export async function meusFavoritos(pagina = 1): Promise<{ itens: Favorito[]; to
   return { itens, total: count! };
 }
 
+/** Quais destes anúncios a pessoa salvou (cards da vitrine). null = falha de leitura, nunca "nenhum". */
+export async function favoritosEntre(ids: string[], userId: string | null): Promise<Set<string> | null> {
+  const validos = [...new Set(ids.filter(ehUuid))].slice(0, 500);
+  if (!userId || validos.length === 0) return new Set();
+  try {
+    const db = await createClient();
+    const { data, error } = await db.from("favoritos").select("anuncio_id").eq("usuario_id", userId).in("anuncio_id", validos);
+    if (error || !Array.isArray(data)) return null;
+    return new Set(data.map((f) => f.anuncio_id as string));
+  } catch {
+    return null;
+  }
+}
+
 /** Falha de leitura é diferente de anúncio não salvo. */
 export async function ehFavorito(anuncioId: string, userId: string | null): Promise<boolean> {
   if (!userId) return false;

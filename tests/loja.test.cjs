@@ -2,9 +2,9 @@ const {test}=require('node:test');const assert=require('node:assert/strict');
 const React=require('react');const {renderToStaticMarkup:render}=require('react-dom/server');const {carregar}=require('./carregar.cjs');
 const {loja,produto}=require('./fixtures/loja.cjs');
 const caminho='src/app/(publico)/loja/[slug]/';
-const nav={notFound(){throw Error('404');}};
+const nav={notFound(){throw Error('404');},useRouter(){return {push(){},refresh(){}};}};
 function dados(op={}) {let chamadas=[]; const banco={rpc:async(n,p)=>{chamadas.push([n,p]);if(op.rede)throw Error('offline');return {data:op.data,error:op.error??null};},from:()=>({select(){return this;},eq:async()=>({data:op.config??[],error:op.error??null})})};return {chamadas,...carregar('src/lib/dados/vitrine-completa.ts',{'@/lib/supabase/server':{createClient:async()=>banco},'@clerk/nextjs/server':{}})};}
-function tela(op={}) {return carregar(caminho+'page.tsx',{'next/navigation':nav,'@/lib/dados/vitrine-completa':{vitrinePublica:async()=>{if(op.erroLoja)throw Error('interno');return op.v===null?null:{...loja,...op.v};},anunciosVitrine:async()=>{if(op.erroProdutos)throw Error('interno');return op.anuncios??[produto(1),produto(2),produto(3)];},anunciosPorPaginaVitrine:async()=>{if(op.erroConfig)throw Error('interno');return op.tamanho??2;}}});}
+function tela(op={}) {return carregar(caminho+'page.tsx',{'next/navigation':nav,'@/lib/dados/vitrine-completa':{vitrinePublica:async()=>{if(op.erroLoja)throw Error('interno');return op.v===null?null:{...loja,...op.v};},anunciosVitrine:async()=>{if(op.erroProdutos)throw Error('interno');return op.anuncios??[produto(1),produto(2),produto(3)];},anunciosPorPaginaVitrine:async()=>{if(op.erroConfig)throw Error('interno');return op.tamanho??2;},vitrineNovaAtiva:async()=>!!op.nova},'@clerk/nextjs/server':{auth:async()=>({userId:op.usuario??null})},'@/lib/dados/favoritos':{favoritosEntre:async()=>op.favoritos===undefined?new Set():op.favoritos},'@/app/(conta)/minha-conta/favoritos/actions':{definirFavorito:async()=>({ok:true,dados:{favorito:true}})}});}
 async function html(op={}) {return render(await tela(op).default({params:Promise.resolve({slug:'loja-teste'}),searchParams:Promise.resolve(op.sp??{})}));}
 test('loja: leitura distingue inexistente de falha e rejeita resposta malformada',async()=>{
  assert.equal(await dados({data:null}).vitrinePublica('loja-teste'),null);
@@ -62,4 +62,27 @@ test('loja: imagem nunca usa cache público; inativa/ausente é 404 e falha é 5
 test('loja: horários, mapas e Instagram usam destinos seguros e limites válidos',()=>{
  const r=carregar('src/components/vitrine/regras.ts');assert.equal(r.situacaoAgora(loja.horarios,new Date('2026-11-09T14:00:00Z')).aberto,true);assert.equal(r.situacaoAgora(loja.horarios,new Date('2026-11-09T16:00:00Z')).aberto,false);
  assert.equal(r.linkComoChegar({lat:91,lng:0,endereco:null}),null);assert.match(r.linkComoChegar({lat:0,lng:0,endereco:null}),/destination=0,0$/);assert.equal(r.linkInstagram('javascript:alert(1)'),null);
+});
+test('loja nova: desligada mantém a página antiga, sem abas, coração, barra ou mapa',async()=>{
+ const h=await html();assert.match(h,/Ver anúncios/);assert.doesNotMatch(h,/Categorias desta loja|Salvar .* nos favoritos|openstreetmap|href="#mapa-loja"/);
+});
+test('loja nova: abas fixas, coração por produto, barra com WhatsApp e mapa com o pino',async()=>{
+ const a=[produto(1,{fixado:1}),produto(2,{categoria_pai_nome:'Casa'})];
+ const h=await html({nova:true,anuncios:a,v:{lat:-10.4,lng:-45.16}});
+ assert.match(h,/aria-label="Categorias desta loja"/);for(const t of ['href="#destaques-loja"','href="#grupo-0"','href="#informacoes-loja"'])assert.ok(h.includes(t),t);
+ assert.doesNotMatch(h,/Ver anúncios \(/);
+ assert.equal((h.match(/Entre para salvar/g)??[]).length,2);assert.match(h,/redirect_url=%2Floja%2Floja-teste/);
+ assert.equal((h.match(/https:\/\/tile.openstreetmap.org\/16\//g)??[]).length,9);assert.match(h,/mlat=-10.400000&amp;mlon=-45.160000/);assert.match(h,/href="#mapa-loja"/);assert.match(h,/colaboradores do OpenStreetMap/);
+ assert.equal((h.match(/https:\/\/wa.me\//g)??[]).length,2,'WhatsApp no topo e na barra');
+});
+test('loja nova: favoritos marcados, falha desliga o coração e loja sem pino usa Como chegar',async()=>{
+ const a=[produto(1),produto(2)];
+ const marcado=await html({nova:true,usuario:'user_1',anuncios:a,favoritos:new Set([a[0].id]),v:{lat:null,lng:null}});
+ assert.match(marcado,/aria-pressed="true"/);assert.match(marcado,/aria-pressed="false"/);assert.doesNotMatch(marcado,/openstreetmap|href="#mapa-loja"/);
+ const falha=await html({nova:true,usuario:'user_1',anuncios:a,favoritos:null});assert.equal((falha.match(/Favorito indisponível/g)??[]).length,2);
+});
+test('loja nova: prévia só para o dono com ?nova=1, preservada nos links; inativa não favorita',async()=>{
+ assert.doesNotMatch(await html({sp:{nova:'1'}}),/Categorias desta loja/);
+ const dono=await html({sp:{nova:'1',ordem:'menor_preco'},v:{e_dono:true}});assert.match(dono,/Categorias desta loja/);assert.match(dono,/nova=1&amp;ordem=menor_preco/);
+ const inativa=await html({sp:{nova:'1'},v:{e_dono:true,status:'suspensa'}});assert.doesNotMatch(inativa,/favoritos|wa.me|openstreetmap/);
 });

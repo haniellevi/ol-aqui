@@ -156,8 +156,15 @@ test('sugestões priorizam a categoria escolhida antes de ampliar para outras', 
       return consultas.length === 1 ? { anuncios: [], total: 0 } : { anuncios: [{ id: 'a', titulo: 'Carro parecido' }], total: 1 };
     } },
     '@/components/busca/vazio-busca': { VazioBusca: () => null },
+    'next/server': { after: f => depois.push(f) },
+    '@/lib/dados/buscas': { registrarBusca: async (...args) => { buscas.push(args); } },
   });
+  const depois = [], buscas = [];
   await Listagem({ caminho: '/busca', sp: { ...sp, pagina: '1' }, categoria: encontrada, categoriaPeloEndereco: false, topo: null });
   assert.equal(consultas.length, 2);
   assert.deepEqual(consultas[1], { q: 'fiat', categoria: 'carros', limite: 10 });
+  // A busca digitada é contada depois da resposta, com o total da consulta principal (0 = sem resultado).
+  assert.equal(depois.length, 1); assert.equal(buscas.length, 0);
+  await depois[0]();
+  assert.deepEqual(buscas, [['fiat', 'r', 'carros', 0]]);
 });

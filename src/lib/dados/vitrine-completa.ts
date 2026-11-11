@@ -215,6 +215,14 @@ async function lerConfigPublica<T>(chave: string, microrregiaoId: string | null,
   }, padrao);
 }
 
+/**
+ * Vitrine nova com IA (docs/PLANO-VITRINE-IA.md): ligada pela chave pública vitrine_ia.ativa
+ * (região primeiro, depois a global). Falha de leitura = desligada, e a página antiga continua.
+ */
+export async function vitrineNovaAtiva(microrregiaoId: string | null): Promise<boolean> {
+  return (await lerConfigPublica<boolean>("vitrine_ia.ativa", microrregiaoId, false)) === true;
+}
+
 /** Produtos por página na vitrine (painel → configurações: vitrine.anuncios_por_pagina). Mesmo padrão do banco. */
 export async function anunciosPorPaginaVitrine(microrregiaoId: string | null): Promise<number> {
   const db = await createClient();
