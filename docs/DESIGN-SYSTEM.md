@@ -1,5 +1,7 @@
 # Mercado da Região · Sistema visual (design system) · 10/11/2026
 
+> **Resumo para quem desenha telas:** [`DESIGN.md`](../DESIGN.md) na raiz (tokens, componentes e regras em um lugar só). A marca está em [MARCA.md](MARCA.md). Este documento guarda o detalhe e o histórico das passadas.
+
 Tudo aqui sai da marca **Mercado da Região** (nome novo do projeto desde 10/11/2026, antes OLAKI). O guia completo da marca, com regras do logo, frase, tom de voz e franquias, está em [MARCA.md](MARCA.md). Resumo: símbolo = **M beringela segurando o pin laranja**; "Mercado" em beringela + "da Região" em laranja, Poppins Bold; frase "aqui a sua cidade aparece". Arquivos: `public/logo/mercado-da-regiao-logo.svg` (com a frase, fundo claro), `public/logo/mercado-da-regiao-logo-fundo-escuro.svg`, `public/logo/mercado-da-regiao-marca.svg` (sem a frase, para cabeçalho do site e do painel e tamanhos pequenos), `public/logo/mercado-da-regiao-linha.svg` (uma linha), `public/logo/mercado-da-regiao-simbolo.svg`, `public/logo/mercado-da-regiao-icone-app.svg` (M branco com pin laranja no quadrado beringela) e `src/app/icon.svg` (ícone do site). O gerador fica em `docs/marca/gerar-logos.mjs`; os logos antigos do OLAKI ficam em `docs/logo-opcoes/` só como histórico.
 
 > **Atualizado em 07/11/2026:** o Raniel trocou o azul-marinho pelo **roxo beringela `#4B1248`**, para provocar o OLX sem copiar o roxo violeta dele (`#6E0AD6`). O beringela puxa para o vinho, é outra família de cor. Não usar nenhum roxo violeta vivo no app.

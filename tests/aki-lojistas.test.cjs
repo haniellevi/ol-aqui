@@ -9,11 +9,12 @@ const uid = 'user_akiloja';
 const origem = 'https://abc.supabase.co/storage/v1/object/public/anuncios/';
 const webp = sharp({ create: { width: 320, height: 240, channels: 3, background: "#ddd" } }).webp().toBuffer();
 
-function ambiente(t, { fiel = true, detalhe = '', logado = true, fotoOriginal = Buffer.from('foto indisponível para recorte local'), imagemProvedor = webp } = {}) {
+function ambiente(t, { fiel = true, detalhe = '', logado = true, contaBloqueada = null, fotoOriginal = Buffer.from('foto indisponível para recorte local'), imagemProvedor = webp } = {}) {
   const chamadas = [];
   let reserva = null;
   let uploads = 0;
   let imagemSalva = null;
+  let caminhoSalvo = null;
   const chaveAnterior = process.env.OPENAI_API_KEY;
   process.env.OPENAI_API_KEY = 'chave-de-teste-sem-rede';
   t.after(() => {
@@ -36,7 +37,7 @@ function ambiente(t, { fiel = true, detalhe = '', logado = true, fotoOriginal = 
     storage: { from: () => ({
       getPublicUrl: (path) => ({ data: { publicUrl: origem + path } }),
       download: async () => ({ data: new Blob([fotoOriginal], { type: 'image/webp' }) }),
-      upload: async (_path, bytes) => { uploads++; imagemSalva = bytes; return { error: null }; },
+      upload: async (path, bytes) => { uploads++; imagemSalva = bytes; caminhoSalvo = path; return { error: null }; },
     }) },
     rpc: async (nome, args) => {
       if (nome === 'config') return { data: args.p_padrao };
@@ -50,7 +51,12 @@ function ambiente(t, { fiel = true, detalhe = '', logado = true, fotoOriginal = 
       const consulta = {
         eq: () => consulta, gt: () => consulta, select: () => consulta,
         single: async () => ({ data: { nome: 'Loja teste' } }),
-        maybeSingle: async () => ({ data: { id } }),
+        maybeSingle: async () => {
+          if (['contas_revogadas', 'contas_bloqueadas', 'lixeira_contas'].includes(tabela)) {
+            return { data: contaBloqueada === tabela ? { usuario_id: uid } : null, error: null };
+          }
+          return { data: { id } };
+        },
         update: (dados) => { assert.equal(tabela, 'aki_imagens'); reserva = dados; return consulta; },
       };
       return consulta;
@@ -62,7 +68,7 @@ function ambiente(t, { fiel = true, detalhe = '', logado = true, fotoOriginal = 
     '@/lib/supabase/admin': { supabaseAdmin: () => db },
   });
   return {
-    chamadas, reserva: () => reserva, uploads: () => uploads, imagemSalva: () => imagemSalva,
+    chamadas, reserva: () => reserva, uploads: () => uploads, imagemSalva: () => imagemSalva, caminhoSalvo: () => caminhoSalvo,
     gerar: (pedido) => POST(new Request('https://olaki.test/api/aki/lojista', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, ...pedido }) })),
   };
 }
@@ -99,6 +105,28 @@ test('Aki exige sessão antes de reservar créditos ou chamar o provedor', async
   assert.equal(resposta.status, 401);
   assert.equal(a.reserva(), null);
   assert.deepEqual(a.chamadas, []);
+});
+
+for (const tabela of ['contas_revogadas', 'contas_bloqueadas', 'lixeira_contas']) {
+  test(`Aki recusa conta em ${tabela} antes de reservar créditos ou chamar o provedor`, async (t) => {
+    const a = ambiente(t, { contaBloqueada: tabela });
+    const resposta = await a.gerar({ tipo: 'banner' });
+    assert.equal(resposta.status, 403);
+    assert.equal(a.reserva(), null);
+    assert.deepEqual(a.chamadas, []);
+  });
+}
+
+test('foto de produto do Aki fica na pasta do anúncio e passa na moderação automática', async (t) => {
+  const a = ambiente(t);
+  const resposta = await a.gerar({ tipo: 'produto', anuncio, foto: origem + uid + '/' + anuncio + '/original.webp' });
+  assert.equal(resposta.status, 200);
+  assert.equal(a.caminhoSalvo(), `${uid}/${anuncio}/aki-${id}.webp`);
+  const anterior = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://abc.supabase.co';
+  t.after(() => { if (anterior === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL; else process.env.NEXT_PUBLIC_SUPABASE_URL = anterior; });
+  const { fotoModeracaoPermitida } = carregar('src/lib/moderacao-ia.ts');
+  assert.equal(fotoModeracaoPermitida(origem + a.caminhoSalvo(), { dono_id: uid, anuncio_id: anuncio }), true);
 });
 
 test('fundo liso clareia sem redesenhar marca, risco ou pixels do produto', async (t) => {
