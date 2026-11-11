@@ -111,10 +111,22 @@ begin
   assert melhoria_ia_concluir((r->>'id')::uuid, (r->>'reserva')::uuid, null) = 'falhou', 'Falha';
   assert (select erro='custo_indeterminado' from robo_uso where id=(select uso_id from melhorias_ia where id=(r->>'id')::uuid)), 'Sem custo mantém a reserva';
   r := melhoria_ia_reservar('50100000-0000-4000-a000-000000000003','user_loja500');
-  assert melhoria_ia_concluir((r->>'id')::uuid, (r->>'reserva')::uuid, jsonb_build_object('titulo','Rack 500','fotos','[]'::jsonb), 0.001) = 'pronta', 'Já está bom';
-  update configuracoes set valor='{"slim": 4}' where chave='vitrine_ia.melhorias_mes' and microrregiao_id is null;
+  assert melhoria_ia_concluir((r->>'id')::uuid, (r->>'reserva')::uuid, jsonb_build_object('titulo','Rack 500','descricao','rack','fotos','[]'::jsonb), 0.001) = 'pronta', 'Já está bom';
+  assert (select usadas = 4 from (select (melhoria_ia_cota(v)->>'usadas')::int usadas from vitrines_lojas v where v.id='50000000-0000-4000-a000-000000000001') x), 'Já está bom conta';
+  -- Tudo recusado (telefone, descrição vazia, dica inválida) é falha, não "já está bom", e não conta.
+  r := melhoria_ia_reservar('50100000-0000-4000-a000-000000000001','user_loja500');
+  assert melhoria_ia_concluir((r->>'id')::uuid, (r->>'reserva')::uuid, jsonb_build_object('titulo','Sofá ligue 89 99999-0000','descricao','',
+    'fotos', jsonb_build_array(jsonb_build_object('indice', 9, 'problema', 'escura', 'dica', 'Foto que não existe.'))), 0.001) = 'falhou', 'Tudo recusado é falha';
+  -- Pedido travado some da tela depois de 3 minutos e o próximo pedido o encerra.
+  r := melhoria_ia_reservar('50100000-0000-4000-a000-000000000001','user_loja500');
+  update melhorias_ia set criado_em = now() - interval '5 minutes' where id = (r->>'id')::uuid;
+  perform set_config('request.jwt.claim.sub', 'user_loja500', true);
+  assert minha_melhoria_ia('50100000-0000-4000-a000-000000000001')->'melhoria' = 'null'::jsonb, 'Travado não prende a tela';
+  assert melhoria_ia_reservar('50100000-0000-4000-a000-000000000001','user_loja500')->>'erro' is null, 'Pode pedir de novo';
+  assert (select estado='falhou' from melhorias_ia where id=(r->>'id')::uuid), 'Travado encerrado';
+  update configuracoes set valor='{"slim": 5}' where chave='vitrine_ia.melhorias_mes' and microrregiao_id is null;
   r := melhoria_ia_reservar('50100000-0000-4000-a000-000000000002','user_loja500');
-  assert r->>'erro' = 'limite' and (r->>'limite')::int = 4 and (r->>'usadas')::int = 4, 'Limite do mês: '||r::text;
+  assert r->>'erro' = 'limite' and (r->>'limite')::int = 5 and (r->>'usadas')::int = 5, 'Limite do mês: '||r::text;
   update configuracoes set valor='{"slim": 20}' where chave='vitrine_ia.melhorias_mes' and microrregiao_id is null;
   update configuracoes set valor='0' where chave='robo.orcamento_mensal_centavos' and microrregiao_id is null;
   assert melhoria_ia_reservar('50100000-0000-4000-a000-000000000002','user_loja500')->>'erro' = 'orcamento', 'Sem orçamento';

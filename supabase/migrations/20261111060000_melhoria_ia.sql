@@ -143,6 +143,8 @@ declare
   t text; d text; e jsonb; dica text; idx integer;
   dicas jsonb := '[]'::jsonb;
   n_fotos integer;
+  -- A IA propôs algo que o banco recusou (texto inseguro, vazio ou dica inválida).
+  recusou boolean := false;
 begin
   if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
     raise exception 'Acesso restrito.' using errcode = '42501';
@@ -159,14 +161,20 @@ begin
   if p_resultado is not null and jsonb_typeof(p_resultado) = 'object' then
     t := nullif(btrim(regexp_replace(coalesce(p_resultado->>'titulo', ''), '\s+', ' ', 'g')), '');
     d := nullif(btrim(coalesce(p_resultado->>'descricao', '')), '');
+    if t is null or (t <> m.titulo_antes and (char_length(t) not between 5 and 90 or not public.melhoria_texto_seguro(t))) then recusou := true; end if;
+    if (d is null and coalesce(btrim(m.descricao_antes), '') <> '')
+       or (d is not null and d <> coalesce(m.descricao_antes, '') and (char_length(d) > 1500 or not public.melhoria_texto_seguro(d))) then recusou := true; end if;
     if t is null or char_length(t) not between 5 and 90 or not public.melhoria_texto_seguro(t) or t = m.titulo_antes then t := null; end if;
     if d is null or char_length(d) > 1500 or not public.melhoria_texto_seguro(d) or d = coalesce(m.descricao_antes, '') then d := null; end if;
     select coalesce(cardinality(fotos), 0) into n_fotos from public.anuncios where id = m.anuncio_id;
     if jsonb_typeof(p_resultado->'fotos') = 'array' then
       for e in select value from jsonb_array_elements(p_resultado->'fotos') limit 3 loop
-        continue when jsonb_typeof(e) <> 'object' or jsonb_typeof(e->'indice') <> 'number';
+        if jsonb_typeof(e) <> 'object' or jsonb_typeof(e->'indice') <> 'number' then recusou := true; continue; end if;
         idx := (e->>'indice')::numeric::integer;
         dica := btrim(coalesce(e->>'dica', ''));
+        if idx < 1 or idx > least(n_fotos, 3) or dicas @> jsonb_build_array(jsonb_build_object('indice', idx))
+          or coalesce(e->>'problema', '') not in ('escura', 'tremida', 'fundo', 'pequeno', 'cortado')
+          or char_length(dica) not between 10 and 200 or not public.melhoria_texto_seguro(dica) then recusou := true; end if;
         continue when idx < 1 or idx > least(n_fotos, 3) or dicas @> jsonb_build_array(jsonb_build_object('indice', idx))
           or coalesce(e->>'problema', '') not in ('escura', 'tremida', 'fundo', 'pequeno', 'cortado')
           or char_length(dica) not between 10 and 200 or not public.melhoria_texto_seguro(dica);
@@ -175,12 +183,13 @@ begin
     end if;
   end if;
 
-  if t is null and d is null and jsonb_array_length(dicas) = 0 and p_resultado is not null and jsonb_typeof(p_resultado) = 'object'
-     and jsonb_typeof(p_resultado->'fotos') = 'array' then
-    -- A IA respondeu e não achou nada a melhorar: conta como pronta (o lojista vê "já está bom").
+  if t is null and d is null and jsonb_array_length(dicas) = 0 and not recusou and p_resultado is not null
+     and jsonb_typeof(p_resultado) = 'object' and jsonb_typeof(p_resultado->'fotos') = 'array' then
+    -- A IA repetiu o texto atual e não apontou foto: nada a melhorar: conta como pronta (o lojista vê "já está bom").
     update public.melhorias_ia set estado = 'pronta', concluido_em = now() where id = m.id;
     return 'pronta';
   end if;
+  -- Tudo o que a IA propôs foi recusado: falha, não conta na cota e o lojista pode pedir de novo.
   if t is null and d is null and jsonb_array_length(dicas) = 0 then
     update public.melhorias_ia set estado = 'falhou', concluido_em = now() where id = m.id;
     return 'falhou';
@@ -237,7 +246,9 @@ begin
     raise exception using errcode = '42501', message = 'Produto não encontrado.';
   end if;
   select * into m from public.melhorias_ia
-   where anuncio_id = a.id and estado in ('processando', 'pronta') and criado_em > now() - interval '30 days'
+   where anuncio_id = a.id and criado_em > now() - interval '30 days'
+     -- Pedido parado há mais de 3 minutos (o servidor caiu) some daqui: o botão volta e o próximo pedido o encerra.
+     and (estado = 'pronta' or (estado = 'processando' and criado_em > now() - interval '3 minutes'))
    order by criado_em desc limit 1;
   return jsonb_build_object(
     'ativa', public.config('vitrine_ia.melhoria_ativa', v.microrregiao_id, 'false') = 'true'::jsonb,
