@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { BANNER_ALTURA, BANNER_LARGURA, FOTO_FEED_ALTURA, FOTO_FEED_LARGURA } from "@/lib/tamanhos-imagem";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { clarearFundoLiso } from "@/lib/aki/fundo-foto";
+import { promptBanner } from "@/lib/aki/padrao-banner";
 import { ehUuid } from "@/lib/formato";
 import { MODELOS_LOJISTA, type RespostaCadastroAki } from "@/lib/aki/lojista";
 
@@ -199,14 +200,13 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
       const { data: loja, error: erroLoja } = await db.from("vitrines_lojas").select("nome, categoria_loja, sobre").eq("dono_id", uid).eq("tipo", "loja").single();
       if (erroLoja || !loja) throw new Error("Loja indisponível");
       const cor = texto(corpo.cor, 7);
-      const contexto = {
-        loja: loja.nome, categoria: loja.categoria_loja, descricao: loja.sobre,
-        cor: /^#[0-9a-f]{6}$/i.test(cor) ? cor : "", estilo: texto(corpo.estilo, 400),
-      };
       resposta = await chamarOpenAI("/images/generations", chave, {
         ...opcoes,
         size: "1536x1024",
-        prompt: `Crie uma arte de fundo para o banner de uma loja brasileira. Use a categoria, a cor e o estilo dos dados abaixo como referência visual. A arte será cortada na faixa central horizontal, na proporção 3:1. Mantenha a composição principal nessa faixa e deixe espaço para posicionar um logo por cima. Gere só a arte, sem letras, slogans, preços, marcas, marcas d'água ou logotipos. Dados da loja: ${JSON.stringify(contexto)}`,
+        prompt: promptBanner({
+          loja: loja.nome, categoria: loja.categoria_loja, descricao: loja.sobre,
+          cor: /^#[0-9a-f]{6}$/i.test(cor) ? cor : "", estilo: texto(corpo.estilo, 400),
+        }),
       }, 125_000);
     }
     if (!bytes) {
