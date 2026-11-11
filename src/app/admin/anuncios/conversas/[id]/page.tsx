@@ -21,7 +21,7 @@ export default async function ConversaCadastroAdmin({ params, searchParams }: {
   const { antes } = await searchParams;
 
   return <div className="space-y-4">
-    <Botao href={LINK_ADMIN_ATENDIMENTOS} variante="texto" prefetch={false}>Voltar aos atendimentos</Botao>
+    <Botao href={LINK_ADMIN_ATENDIMENTOS} variante="discreto" prefetch={false}>Voltar aos atendimentos</Botao>
     <Titulo sub={data.aguarda_equipe ? "Aguardando resposta da equipe." : "A equipe já respondeu."}>Confirmação do WhatsApp</Titulo>
     <ConversaAtendimento id={id} caminho={`${LINK_ADMIN_ATENDIMENTOS}/${id}`} antes={antes} equipe aki={false} cadastro />
   </div>;

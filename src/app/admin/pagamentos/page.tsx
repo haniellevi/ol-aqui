@@ -15,7 +15,7 @@ import {
   linkSeguro,
   listarPagamentos,
 } from "@/lib/admin/pagamentos";
-import { Aviso, Cartao, Numero, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
+import { Aviso, Cartao, Numero, Titulo, estiloBotao, estiloBotaoSec, estiloCampo, estiloBotaoDiscreto } from "@/components/admin/ui";
 import { CopiarLink } from "./copiar-link";
 import type { PagamentoAdmin, ResumoPagamentos, StatusPagamento } from "@/lib/tipos-cobranca";
 import { Badge, type TomSelo } from "@/components/ui/badge";
@@ -141,7 +141,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
               Exportar CSV
             </a>
           </div>
-          {filtros.loja && <p className="col-span-full text-sm text-texto-suave">Pagamentos da {papel === "administrador" ? <Link href={`/admin/lojas/${filtros.loja}`} className="font-semibold underline">loja selecionada</Link> : "loja selecionada"}.</p>}
+          {filtros.loja && <p className="col-span-full text-sm text-texto-suave">Pagamentos da {papel === "administrador" ? <Link href={`/admin/lojas/${filtros.loja}`} className="text-laranja-escuro underline underline-offset-2">loja selecionada</Link> : "loja selecionada"}.</p>}
           <p className="col-span-full text-legenda text-texto-suave ">
             O período usa a data em que foi pago (ou, se não foi pago, a data do pedido), no horário de Fortaleza.
           </p>
@@ -150,7 +150,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
 
       {/* Totais */}
       {resumoR.error ? (
-        <div className="mb-6"><Aviso tipo="erro">Resumo indisponível. <a href={recarregar} className="underline">Tentar novamente</a></Aviso></div>
+        <div className="mb-6"><Aviso tipo="erro">Resumo indisponível. <a href={recarregar} className="font-semibold underline underline-offset-2">Tentar novamente</a></Aviso></div>
       ) : (
         <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
           <Numero rotulo="Marcados como pagos" valor={reais(somar("pago"))} detalhe={`${inteiro(contar("pago"))} pagamentos`} />
@@ -165,7 +165,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
       )}
       {!resumoR.error && resumo.length > 0 && (
         <Cartao className="mb-6 px-0 pb-0">
-          <h2 className="mb-1 px-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Por tipo</h2>
+          <h2 className="mb-1 px-3 text-lg font-semibold text-beringela">Por tipo</h2>
           <Table rotulo="Resumo de pagamentos por tipo" className="min-w-[420px]">
             <TableCaption className="sr-only">Totais de pagamentos por tipo e situação</TableCaption>
             <TableHeader>
@@ -192,10 +192,10 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
 
       {/* Devoluções a fazer */}
       {devolver === null ? (
-        <div className="mb-6"><Aviso tipo="erro">Fila de devoluções indisponível. <a href={recarregar} className="underline">Tentar novamente</a></Aviso></div>
+        <div className="mb-6"><Aviso tipo="erro">Fila de devoluções indisponível. <a href={recarregar} className="font-semibold underline underline-offset-2">Tentar novamente</a></Aviso></div>
       ) : devolver.length > 0 && (
         <section aria-labelledby="devolver" className="mb-6">
-          <h2 id="devolver" className="mb-3 text-sm font-semibold uppercase tracking-wide text-perigo">
+          <h2 id="devolver" className="mb-3 text-lg font-semibold text-perigo">
             Devoluções a fazer ({devolver.length})
           </h2>
           <p className="mb-3 text-sm text-texto-suave">
@@ -211,16 +211,16 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
 
       {/* Lista */}
       <section aria-labelledby="lista">
-        <h2 id="lista" className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">
+        <h2 id="lista" className="mb-3 text-lg font-semibold text-beringela">
           {lista && lista.length >= LIMITE ? `Os ${LIMITE} mais recentes` : "Pagamentos"}
         </h2>
         {lista === null ? (
-          <Aviso tipo="erro">Lista de pagamentos indisponível. <a href={recarregar} className="underline">Tentar novamente</a></Aviso>
+          <Aviso tipo="erro">Lista de pagamentos indisponível. <a href={recarregar} className="font-semibold underline underline-offset-2">Tentar novamente</a></Aviso>
         ) : lista.length === 0 ? (
           <Cartao>
             <p className="text-base text-texto-suave">Nenhum pagamento com estes filtros.</p>
             {filtrando && (
-              <Link href={LINK_ADMIN_PAGAMENTOS} className="mt-2 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+              <Link href={LINK_ADMIN_PAGAMENTOS} className={`${estiloBotaoDiscreto} mt-2`}>
                 Ver todos
               </Link>
             )}
@@ -288,14 +288,14 @@ function LinhaPagamento({ p, nomePlano, nomeRegiao }: { p: PagamentoAdmin; nomeP
       {p.observacao && <p className="mt-1 text-sm text-texto-suave">Nota: {p.observacao}</p>}
       {link && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center gap-1 px-3 font-semibold text-laranja-escuro underline-offset-4 hover:underline">
+          <a href={link} target="_blank" rel="noopener noreferrer" className={`${estiloBotaoDiscreto}`}>
             <ExternalLink className="size-4" aria-hidden />
             Abrir fatura
           </a>
           {p.status === "pendente" && (() => {
             const wa = reenviarNoWhatsApp(p.vitrine_whatsapp, link, oQue);
             return wa ? (
-              <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center gap-1 px-3 font-semibold text-laranja-escuro underline-offset-4 hover:underline">
+              <a href={wa} target="_blank" rel="noopener noreferrer" className={`${estiloBotaoDiscreto}`}>
                 <MessageCircle className="size-4" aria-hidden />
                 Reenviar no WhatsApp
               </a>

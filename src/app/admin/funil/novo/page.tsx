@@ -11,7 +11,7 @@ export default async function NovoContatoPage() {
   const opcoes = await carregarOpcoes(supabase);
   return (
     <>
-      <Botao href="/admin/funil" variante="texto" tamanho="pequeno">← Funil de lojistas</Botao>
+      <Botao href="/admin/funil" variante="discreto" tamanho="pequeno">← Funil de lojistas</Botao>
       <Titulo>Novo contato</Titulo>
       <Cartao><FormLojista opcoes={opcoes} /></Cartao>
     </>

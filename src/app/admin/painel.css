@@ -39,3 +39,35 @@
 @media (min-width: 64rem) {
   .painel-admin .admin-abas { flex-wrap: wrap; }
 }
+
+/* Abre-e-fecha (<summary>): seta à esquerda e fundo ao passar o mouse, para não parecer
+   texto solto. Fica em @layer components para as classes de cor de cada tela valerem. */
+@layer components {
+  .painel-admin summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    margin-inline: -0.5rem;
+    padding-inline: 0.5rem;
+    border-radius: var(--radius-campo);
+    cursor: pointer;
+    list-style: none;
+  }
+  .painel-admin summary::-webkit-details-marker { display: none; }
+  .painel-admin summary::before {
+    content: "";
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 150ms ease;
+  }
+  .painel-admin details[open] > summary::before { transform: rotate(45deg); }
+  .painel-admin summary:hover { background: var(--color-selecao); }
+  @media (prefers-reduced-motion: reduce) {
+    .painel-admin summary::before { transition: none; }
+  }
+}

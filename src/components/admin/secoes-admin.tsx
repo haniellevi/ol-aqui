@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { estiloBotaoDiscreto } from "@/components/admin/ui";
 import { usePathname } from "next/navigation";
 import { entradaAdminAtiva } from "@/lib/admin/navegacao";
 
@@ -18,7 +19,7 @@ export function SecoesAdmin() {
   const caminho = usePathname();
   const entrada = entradaAdminAtiva(caminho);
   if (entrada === "/admin/configuracoes") {
-    return caminho !== entrada ? <Link href={entrada} className="mb-4 inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro hover:underline">Voltar às configurações</Link> : null;
+    return caminho !== entrada ? <Link href={entrada} className={`${estiloBotaoDiscreto} mb-4`}>Voltar às configurações</Link> : null;
   }
   const secoes = SECOES[entrada];
   if (!secoes) return null;

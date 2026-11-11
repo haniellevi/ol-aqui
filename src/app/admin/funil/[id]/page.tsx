@@ -30,7 +30,7 @@ export default async function ContatoPage({ params }: { params: Promise<{ id: st
 
   return (
     <>
-      <Botao href="/admin/funil" variante="texto" tamanho="pequeno">← Funil de lojistas</Botao>
+      <Botao href="/admin/funil" variante="discreto" tamanho="pequeno">← Funil de lojistas</Botao>
       <Titulo sub={loja ? <>Tem loja no site: <a className="text-laranja-escuro underline-offset-4 hover:underline" href={`/loja/${loja.slug}`} target="_blank" rel="noopener noreferrer">{loja.nome}</a> (plano {loja.plano}{loja.status !== "ativa" ? `, ${loja.status}` : ""}).</> : "Ainda não tem loja no site. Quando se cadastrar com este WhatsApp, a ficha se liga sozinha."}>
         {lojista.nome_loja}
       </Titulo>

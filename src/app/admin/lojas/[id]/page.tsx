@@ -150,5 +150,5 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
 }
 
 function Dado({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
-  return <div><dt className="text-texto-suave">{rotulo}</dt><dd className="font-semibold">{children}</dd></div>;
+  return <div><dt className="text-texto-suave">{rotulo}</dt><dd>{children}</dd></div>;
 }

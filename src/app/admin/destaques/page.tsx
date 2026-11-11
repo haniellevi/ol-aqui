@@ -4,7 +4,7 @@ import { inteiro, quando, reais } from "@/lib/admin/formato";
 import { tipoDe } from "@/lib/admin/config";
 import { asaasConfigurado, webhookConfigurado } from "@/lib/asaas";
 import { linkAnuncio } from "@/lib/formato";
-import { Cartao, Numero, Titulo } from "@/components/admin/ui";
+import { Cartao, Numero, Titulo, estiloBotaoDiscreto } from "@/components/admin/ui";
 import { FormConfig } from "../configuracoes/form-config";
 import {
   BotaoCancelarDestaque,
@@ -145,7 +145,7 @@ export default async function DestaquesAdminPage() {
             </li>
           </ul>
           <details className="mt-2 text-legenda text-texto-suave">
-            <summary className="flex min-h-10 cursor-pointer items-center font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-laranja-escuro">Detalhes da integração</summary>
+            <summary className="flex min-h-10 cursor-pointer items-center font-semibold focus-visible:outline-2 focus-visible:outline-laranja-escuro">Detalhes da integração</summary>
             <p className="max-w-[70ch] pb-2">Chaves na Vercel: ASAAS_API_KEY e ASAAS_WEBHOOK_TOKEN. Ambiente: <strong>{String(ambiente ?? "sandbox")}</strong>. Mude em &quot;asaas.ambiente&quot; abaixo: sandbox para testes, producao para valer.</p>
           </details>
           {!temAsaas && (
@@ -154,7 +154,7 @@ export default async function DestaquesAdminPage() {
         </Cartao>
 
         <section id="tipos" className="scroll-mt-6 space-y-4">
-          <h2 className="text-xl font-bold text-beringela">Tipos de destaque</h2>
+          <h2 className="text-lg font-semibold text-beringela">Tipos de destaque</h2>
           {tipos.map((t) => (
             <details key={t.slug} className="rounded-card border border-borda bg-cartao p-4">
               <summary className="min-h-10 cursor-pointer font-semibold text-beringela">
@@ -213,7 +213,7 @@ export default async function DestaquesAdminPage() {
         </Cartao></section>
 
         <section id="ativos" className="scroll-mt-6 space-y-3">
-          <h2 className="text-xl font-bold text-beringela">Destaques ativos</h2>
+          <h2 className="text-lg font-semibold text-beringela">Destaques ativos</h2>
           {ativos.length === 0 ? (
             <Cartao>
               <p className="text-sm text-texto-suave">Nenhum destaque ativo agora. Dê uma cortesia acima para testar.</p>
@@ -251,7 +251,7 @@ export default async function DestaquesAdminPage() {
         </section>
 
         <section id="cobranca" className="scroll-mt-6 space-y-3">
-          <h2 className="text-xl font-bold text-beringela">Pagamentos esperando</h2>
+          <h2 className="text-lg font-semibold text-beringela">Pagamentos esperando</h2>
           {pendentes.length === 0 ? (
             <Cartao>
               <p className="text-sm text-texto-suave">Nenhum pagamento de destaque esperando.</p>
@@ -273,7 +273,7 @@ export default async function DestaquesAdminPage() {
                         {!p.asaas_cobranca_id ? " · sem cobrança no Asaas" : ""}
                       </span>
                       {p.link_pagamento && (
-                        <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline">
+                        <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className={`${estiloBotaoDiscreto} ml-auto`}>
                           Ver no Asaas
                         </a>
                       )}
@@ -292,7 +292,7 @@ export default async function DestaquesAdminPage() {
 
         {devolver.length > 0 && (
           <section className="space-y-3">
-            <h2 className="text-xl font-bold text-beringela">Pagos sem destaque: devolver o dinheiro</h2>
+            <h2 className="text-lg font-semibold text-beringela">Pagos sem destaque: devolver o dinheiro</h2>
             <p className="text-sm text-texto-suave">
               O dinheiro chegou, mas o destaque não pôde ser ligado. Faça a devolução no Asaas: quando o Asaas avisar, o pagamento sai desta lista.
             </p>
@@ -307,7 +307,7 @@ export default async function DestaquesAdminPage() {
                       {p.pago_em ? ` · pago em ${quando(p.pago_em)}` : ""}
                     </span>
                     {p.link_pagamento && (
-                      <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline">
+                      <a href={p.link_pagamento} target="_blank" rel="noopener noreferrer" className={`${estiloBotaoDiscreto} ml-auto`}>
                         Ver no Asaas
                       </a>
                     )}
@@ -332,7 +332,7 @@ export default async function DestaquesAdminPage() {
           ))}
           <p className="text-sm text-texto-suave">
             Exceções destes prazos por região ficam em{" "}
-            <Link href="/admin/configuracoes?grupo=planos" className="font-semibold text-laranja-escuro underline">
+            <Link href="/admin/configuracoes?grupo=planos" className="text-laranja-escuro underline underline-offset-2">
               Configurações
             </Link>
             . Preço e dias por região ficam no cartão &quot;Preço e dias por região&quot; acima.
@@ -342,7 +342,7 @@ export default async function DestaquesAdminPage() {
 
         {todos.some((r) => r.status !== "ativo") && (
           <section className="space-y-3">
-            <h2 className="text-xl font-bold text-beringela">Últimos encerrados e cancelados</h2>
+            <h2 className="text-lg font-semibold text-beringela">Últimos encerrados e cancelados</h2>
             <Cartao className="p-0">
               <ul className="divide-y divide-borda">
                 {todos

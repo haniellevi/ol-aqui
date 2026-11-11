@@ -22,7 +22,7 @@ export function FormGestaoLoja({ loja: l, locais }: { loja: LojaGestao | null; l
           <CampoGestao rotulo="Endereço público da loja" name="slug" required pattern="[a-z0-9-]{3,60}" maxLength={60} defaultValue={l?.slug} />
           <CampoGestao rotulo="ID do usuário titular" name="dono_id" required pattern="user_[A-Za-z0-9]+" defaultValue={l?.dono_id} />
           <label className="block text-sm font-semibold">Tipo<select name="tipo" defaultValue={l?.tipo ?? "loja"} className={estiloCampo}><option value="loja">Loja</option><option value="pf">Vendedor individual</option></select></label>
-          <p className="text-sm text-texto-suave sm:col-span-2">Encontre o ID em <Link href="/admin/usuarios" className="font-semibold underline" target="_blank">Usuários</Link>. Cada titular pode ter uma loja ou cadastro de vendedor. Alterar o endereço público invalida os links antigos.</p>
+          <p className="text-sm text-texto-suave sm:col-span-2">Encontre o ID em <Link href="/admin/usuarios" className="text-laranja-escuro underline underline-offset-2" target="_blank">Usuários</Link>. Cada titular pode ter uma loja ou cadastro de vendedor. Alterar o endereço público invalida os links antigos.</p>
           <LocalidadeGestao locais={locais} regiao={l?.microrregiao_id} cidade={l?.cidade} obrigatoria />
           <CampoGestao rotulo="Bairro" name="bairro" maxLength={80} defaultValue={l?.bairro ?? ""} />
           <CampoGestao rotulo="CNPJ" name="cnpj" maxLength={18} defaultValue={l?.cnpj ?? ""} />

@@ -55,7 +55,7 @@ export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string 
 
   return (
     <section id="radar" className="mt-8 scroll-mt-20">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Radar: pedidos mais novos</h2>
+      <h2 className="mb-3 text-lg font-semibold text-beringela">Radar: pedidos mais novos</h2>
       {(erro || ok) && (
         <div className="mb-3">
           <Aviso tipo={erro ? "erro" : "ok"}>{erro ?? ok}</Aviso>
@@ -80,7 +80,7 @@ export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string 
         })}
       </div>
 
-      <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Radar: propostas mais novas</h2>
+      <h2 className="mb-3 mt-8 text-lg font-semibold text-beringela">Radar: propostas mais novas</h2>
       {propostasR.error && <Aviso tipo="erro">Não foi possível carregar as propostas. Recarregue para tentar novamente.</Aviso>}
       {!propostasR.error && propostas.length === 0 && <Cartao className="text-sm text-texto-suave">Nenhuma proposta ainda.</Cartao>}
       <div className="space-y-4">

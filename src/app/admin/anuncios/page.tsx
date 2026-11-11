@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
+import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoDiscreto, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { ROTULO_ANUNCIO } from "@/components/conta/situacao-anuncios";
 import { Chip } from "@/components/ui/chip";
 import { exigirTela } from "@/lib/admin/equipe";
@@ -99,11 +99,11 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
           {regioes.error && <p className="text-legenda text-perigo sm:col-span-full">Não foi possível carregar as regiões.</p>}
           {loja && (
             <div className="flex flex-wrap items-center gap-2 text-sm sm:col-span-full">
-              <Link href={`/admin/lojas/${loja}`} className="font-semibold underline">{lojaR.data?.nome ?? "Loja selecionada"}</Link>
+              <Link href={`/admin/lojas/${loja}`} className="text-laranja-escuro underline underline-offset-2">{lojaR.data?.nome ?? "Loja selecionada"}</Link>
               <Link href={endereco(filtro.status, busca, regiao, "")} className={estiloBotaoSec}>Remover filtro de loja</Link>
             </div>
           )}
-          {(busca || regiao) && <Link href={endereco(filtro.status, "", "", loja)} className="text-sm font-semibold text-laranja-escuro underline sm:col-span-full">Limpar busca e região</Link>}
+          {(busca || regiao) && <Link href={endereco(filtro.status, "", "", loja)} className={`${estiloBotaoDiscreto} justify-self-start sm:col-span-full`}>Limpar busca e região</Link>}
         </form>
       </Cartao>
       <nav aria-label="Filtrar anúncios por situação" className="mb-6 flex flex-wrap gap-2">

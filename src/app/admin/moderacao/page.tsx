@@ -97,7 +97,7 @@ export default async function ModeracaoPage({
       {erroFila && <Aviso tipo="erro">Não foi possível carregar toda a fila. Recarregue a página para conferir as pendências.</Aviso>}
       {vazio && <Cartao className="text-sm text-texto-suave">Nada esperando revisão. Tudo em dia.</Cartao>}
 
-      {anuncios.length > 0 && <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Anúncios em análise</h2>}
+      {anuncios.length > 0 && <h2 className="mb-3 text-lg font-semibold text-beringela">Anúncios em análise</h2>}
       <div className="space-y-4">
         {anuncios.map((a) => {
           const loja = Array.isArray(a.vitrines_lojas) ? a.vitrines_lojas[0] : a.vitrines_lojas;
@@ -150,7 +150,7 @@ export default async function ModeracaoPage({
         })}
       </div>
 
-      {pedidos.length > 0 && <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Pedidos do Radar em análise</h2>}
+      {pedidos.length > 0 && <h2 className="mb-3 mt-8 text-lg font-semibold text-beringela">Pedidos do Radar em análise</h2>}
       <div className="space-y-4">
         {pedidos.map((p) => (
           <Cartao key={p.id}>
@@ -173,7 +173,7 @@ export default async function ModeracaoPage({
       <RadarModeracao erro={erro} ok={ok} />
 
       {banners.length > 0 && (
-        <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Fotos de banner das lojas (mais novas)</h2>
+        <h2 className="mb-3 mt-8 text-lg font-semibold text-beringela">Fotos de banner das lojas (mais novas)</h2>
       )}
       <div className="space-y-4">
         {banners.map((b) => (
@@ -198,7 +198,7 @@ export default async function ModeracaoPage({
       </div>
 
       {denunciasSoltas.length > 0 && (
-        <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Denúncias de itens ainda no ar</h2>
+        <h2 className="mb-3 mt-8 text-lg font-semibold text-beringela">Denúncias de itens ainda no ar</h2>
       )}
       <div className="space-y-3">
         {denunciasSoltas.map((d) => (

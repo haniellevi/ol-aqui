@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { inteiro, quando } from "@/lib/admin/formato";
 import { ehUuid, linkLoja, telefone } from "@/lib/formato";
 import { LINK_ADMIN_LOJAS } from "@/lib/rotas";
-import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
+import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo, estiloBotaoDiscreto } from "@/components/admin/ui";
 import { linkInstagram } from "@/components/vitrine/regras";
 import { FormAcaoLoja, FormRevisaoLoja, FormVerificacao, FormRevogarVendedorPf, FormDecidirVerificacaoPf } from "./formularios";
 import type { AcaoLoja, LojaAdmin } from "@/lib/tipos-cobranca";
@@ -238,7 +238,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
 
       {!franqueado && (
         <section aria-labelledby="fila-pf" className="mb-6 space-y-3">
-          <h2 id="fila-pf" className="text-sm font-semibold uppercase tracking-wide text-texto-suave">Documentos de vendedores individuais</h2>
+          <h2 id="fila-pf" className="text-lg font-semibold text-beringela">Documentos de vendedores individuais</h2>
           {filaPf.error ? <Aviso tipo="erro">Não foi possível carregar a fila de documentos.</Aviso>
             : !filaPf.data?.length ? <p className="text-sm text-texto-suave">Nenhum envio aguardando conferência.</p>
               : <ul className="grid gap-3 md:grid-cols-2">
@@ -261,7 +261,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
 
       {verificacoes.length > 0 && (
         <section aria-labelledby="verificacoes" className="mb-6">
-          <h2 id="verificacoes" className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">
+          <h2 id="verificacoes" className="mb-3 text-lg font-semibold text-beringela">
             Verificações pendentes ({verificacoes.length})
           </h2>
           <ul className="grid gap-3 md:grid-cols-2">
@@ -277,7 +277,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                       href={links.get(v.id)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mb-3 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                      className={`${estiloBotaoDiscreto} mb-3`}
                     >
                       Ver o arquivo enviado (o link vale 2 minutos)
                     </a>
@@ -295,7 +295,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
       )}
 
       <section aria-labelledby="lista-lojas">
-        <h2 id="lista-lojas" className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">
+        <h2 id="lista-lojas" className="mb-3 text-lg font-semibold text-beringela">
           {inteiro(total)} {total === 1 ? "vendedor" : "vendedores"}
         </h2>
         {revisoesR.error && <Aviso tipo="erro">Não deu para carregar a verificação das lojas. Atualize a página.</Aviso>}
@@ -305,7 +305,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
           <Cartao>
             <p className="text-base text-texto-suave">Nenhuma loja com estes filtros.</p>
             {filtrando && (
-              <Link href={LINK_ADMIN_LOJAS} className="mt-2 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+              <Link href={LINK_ADMIN_LOJAS} className={`${estiloBotaoDiscreto} mt-2`}>
                 Ver todas
               </Link>
             )}
@@ -339,25 +339,25 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                   <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-4">
                     <div>
                       <dt className="text-texto-suave">Plano</dt>
-                      <dd className="font-semibold">
+                      <dd>
                         {l.plano_nome ?? l.plano ?? "—"}
                         {l.plano_efetivo_nome && l.plano_efetivo_nome !== l.plano_nome ? ` (vale: ${l.plano_efetivo_nome})` : ""}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-texto-suave">Vence</dt>
-                      <dd className="font-semibold">{vence ? quando(vence) : "Não vence"}</dd>
+                      <dd>{vence ? quando(vence) : "Não vence"}</dd>
                     </div>
                     <div>
                       <dt className="text-texto-suave">Anúncios no ar</dt>
-                      <dd className="font-semibold tabular-nums">
+                      <dd className="tabular-nums">
                         {inteiro(l.anuncios_ativos)}
                         {l.limite_anuncios !== null ? ` de ${inteiro(l.limite_anuncios)}` : ""}
                       </dd>
                     </div>
                     <div>
                       <dt className="text-texto-suave">Propostas do Radar no mês</dt>
-                      <dd className="font-semibold tabular-nums">
+                      <dd className="tabular-nums">
                         {inteiro(l.propostas_mes)}
                         {l.propostas_limite !== null ? ` de ${inteiro(l.propostas_limite)}` : ""}
                       </dd>
@@ -377,13 +377,13 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                   )}
                   {l.tipo === "pf" && !franqueado && l.dono_nome && (
                     <details className="mt-3 border-t border-borda pt-3">
-                      <summary className="cursor-pointer font-semibold text-laranja-escuro">Verificação do vendedor individual</summary>
+                      <summary className="cursor-pointer font-semibold text-beringela">Verificação do vendedor individual</summary>
                       <FormRevogarVendedorPf vitrine={l.id} nome={l.dono_nome} />
                     </details>
                   )}
                   {l.tipo === "pf" && (acoesDoPapel === null || acoesDoPapel.length > 0) && (
                     <details className="mt-3 border-t border-borda pt-3">
-                      <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-laranja-escuro">Ações</summary>
+                      <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-beringela">Ações</summary>
                       <div className="pt-2">
                         <FormAcaoLoja loja={l} planos={planos} permitidas={acoesDoPapel} />
                       </div>
@@ -425,37 +425,37 @@ function PainelRevisaoLoja({ revisao }: { revisao: RevisaoLoja }) {
   const site = linkSiteLoja(revisao.site_url);
   const urlInstagram = linkInstagram(revisao.instagram);
   const motivo = MOTIVOS_REVISAO.find((opcao) => opcao.valor === revisao.motivo);
-  const estiloLink = "inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4";
+  const estiloLink = estiloBotaoDiscreto;
 
   return (
     <details className="mt-3 border-t border-borda pt-3">
-      <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-laranja-escuro">Revisar dados da loja</summary>
+      <summary className="flex min-h-10 cursor-pointer items-center font-semibold text-beringela">Revisar dados da loja</summary>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-4">
         <div className="min-w-0">
           <dt className="text-texto-suave">Nome comercial</dt>
-          <dd className="break-words font-semibold">{revisao.nome || "Não informado"}</dd>
+          <dd className="break-words">{revisao.nome || "Não informado"}</dd>
         </div>
         <div className="min-w-0">
           <dt className="text-texto-suave">Endereço cadastrado</dt>
-          <dd className="break-words font-semibold">
+          <dd className="break-words">
             {[revisao.endereco, revisao.bairro, revisao.cidade].filter(Boolean).join(", ") || "Não informado"}
           </dd>
         </div>
         <div className="min-w-0">
           <dt className="text-texto-suave">Responsável</dt>
-          <dd className="break-words font-semibold">{revisao.responsavel || "Não informado"}</dd>
+          <dd className="break-words">{revisao.responsavel || "Não informado"}</dd>
         </div>
         <div>
           <dt className="text-texto-suave">CNPJ cadastrado</dt>
-          <dd className="break-words font-semibold">{revisao.cnpj || "Não informado"}</dd>
+          <dd className="break-words">{revisao.cnpj || "Não informado"}</dd>
         </div>
         <div>
           <dt className="text-texto-suave">WhatsApp comercial</dt>
-          <dd className="font-semibold">{revisao.whatsapp_comercial ? telefone(revisao.whatsapp_comercial) : "Não informado"}</dd>
+          <dd>{revisao.whatsapp_comercial ? telefone(revisao.whatsapp_comercial) : "Não informado"}</dd>
         </div>
         <div>
           <dt className="text-texto-suave">WhatsApp confirmado da conta</dt>
-          <dd className="font-semibold">{revisao.whatsapp_conta ? telefone(revisao.whatsapp_conta) : "Aguardando confirmação"}</dd>
+          <dd>{revisao.whatsapp_conta ? telefone(revisao.whatsapp_conta) : "Aguardando confirmação"}</dd>
         </div>
       </dl>
       <div className="mt-2 flex flex-wrap items-center gap-x-4 text-sm">

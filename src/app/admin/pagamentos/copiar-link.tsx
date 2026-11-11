@@ -18,7 +18,7 @@ export function CopiarLink({ link }: { link: string }) {
     }
   }
   return (
-    <Botao type="button" variante="texto" icone={copiado ? <Check /> : <Copy />} onClick={copiar} aria-live="polite">
+    <Botao type="button" variante="discreto" icone={copiado ? <Check /> : <Copy />} onClick={copiar} aria-live="polite">
       {copiado ? "Link copiado" : "Copiar link"}
     </Botao>
   );

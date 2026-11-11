@@ -8,7 +8,7 @@ import { emailsDaConta } from "@/lib/dados/equipe";
 import { ehUuid } from "@/lib/formato";
 import { LINK_ADMIN_COMPLIANCE } from "@/lib/rotas";
 import type { ResultadoCompliance } from "@/lib/tipos-equipe";
-import { Aviso, Cartao, Titulo } from "@/components/admin/ui";
+import { Aviso, Cartao, Titulo, estiloBotaoDiscreto } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { DadosConta } from "./dados-conta";
@@ -89,7 +89,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
       <Cartao className="mb-6">
         <p className="text-sm text-texto-suave">Consulta aberta · vale até {quando(consulta.vence_em)}</p>
         <p className="mt-1 break-words text-base font-semibold text-beringela">Motivo: {consulta.motivo}</p>
-        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="mt-2 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className={`${estiloBotaoDiscreto} mt-2`}>
           Começar outra consulta (outro motivo)
         </Link>
       </Cartao>
@@ -114,7 +114,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
       )}
       {resultados?.ok && resultados.dados.length > 0 && (
         <section aria-labelledby="resultados" className="mb-6">
-          <h2 id="resultados" className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">
+          <h2 id="resultados" className="mb-3 text-lg font-semibold text-beringela">
             Encontrados ({resultados.dados.length})
           </h2>
           <ul className="flex flex-col gap-3">
@@ -128,7 +128,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
                   <Link
                     href={linkConta(r.usuario_id)}
                     prefetch={false}
-                    className="mt-2 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                    className={`${estiloBotaoDiscreto} mt-2`}
                   >
                     {r.tipo === "conta" || r.tipo === "conta_apagada" ? "Ver dados da conta" : "Ver dados de quem anunciou"}
                   </Link>
@@ -164,7 +164,7 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
           titulo="Busque a pessoa ou o anúncio"
           texto="Use o celular com DDD, o e-mail, o nome, o CNPJ da loja, o título ou o código do anúncio."
         >
-          <Botao href={LINK_ADMIN_COMPLIANCE} variante="texto" prefetch={false}>
+          <Botao href={LINK_ADMIN_COMPLIANCE} variante="discreto" prefetch={false}>
             Trocar o motivo
           </Botao>
         </Vazio>
