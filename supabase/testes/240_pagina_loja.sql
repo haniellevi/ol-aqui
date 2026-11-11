@@ -8,7 +8,7 @@ reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 select id as reg from microrregioes where slug='corrente-pi' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into perfis(id,microrregiao_id,nome,cidade,whatsapp) values ('user_vitrine240',:'reg','Loja 240','Corrente','5589999990240');
 insert into vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo,plano,plano_expira_em) values
  ('86000000-0000-4000-a000-000000000001','user_vitrine240',:'reg','loja-240','Loja 240','Corrente','5589999990240','loja','full',now()+interval '30 days');

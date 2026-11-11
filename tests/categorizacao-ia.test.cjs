@@ -109,9 +109,13 @@ async function tela(op = {}) {
   return render(await Page());
 }
 
-test('revise categorias: some com a vitrine nova desligada', async () => {
-  await assert.rejects(tela({ ativa: false }), /NOT_FOUND/);
-  assert.match(await tela({ v: null, ativa: false }), /Você ainda não tem uma loja/);
+test('revise categorias: sem a vitrine nova e sem sugestão, some; com sugestão pendente, aparece sem a IA', async () => {
+  await assert.rejects(tela({ ativa: false, sugestoes: [] }), /NOT_FOUND/);
+  assert.match(await tela({ v: null, ativa: false }), /Você ainda não tem anúncios/);
+  const semIA = await tela({ ativa: false });
+  assert.match(semIA, /Categorias dos anúncios/); assert.match(semIA, /Aceitar todas/); assert.doesNotMatch(semIA, /Nicho da loja/);
+  const pf = await tela({ ativa: false, v: { ...loja, tipo: 'pf' } });
+  assert.match(pf, /Revise suas categorias/); assert.match(pf, /Aceitar todas/); assert.doesNotMatch(pf, /Nicho da loja/);
 });
 
 test('revise categorias: nicho sugerido, lista com aceitar e manter, e aceitar todas', async () => {

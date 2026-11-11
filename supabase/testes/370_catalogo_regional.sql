@@ -2,7 +2,7 @@
 \set QUIET on
 begin;
 select id as regiao from microrregioes where slug='corrente-pi' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 select set_config('teste.regiao370', :'regiao', true);
 
 insert into perfis(id,microrregiao_id,nome,whatsapp,whatsapp_verificado_em,e_admin)
@@ -22,7 +22,7 @@ set local role anon;
 do $$
 declare reg uuid := current_setting('teste.regiao370')::uuid;
 begin
-  assert (select slug='loja-regional-370' from catalogo_lojas(reg,'Bom Jesus','casa-e-moveis',1,0)),
+  assert (select slug='loja-regional-370' from catalogo_lojas(reg,'Bom Jesus','moveis',1,0)),
     'Loja da cidade passa na frente e nicho pai inclui produtos da subcategoria';
   assert (select (item->>'id')::uuid = '37000000-0000-4000-a000-000000000011'
           from catalogo_anuncios(reg,'Bom Jesus',null,'feed',1,0) item),

@@ -9,9 +9,9 @@ const campos = [
   { chave: 'estado', rotulo: 'Estado', tipo: 'lista', filtro: true, opcoes: ['Novo', 'Usado'] },
   { chave: 'troca', rotulo: 'Aceita troca', tipo: 'sim_nao', filtro: true },
 ];
-const carro = { id: 'carros', slug: 'carros', nome: 'Carros', campos };
+const carro = { id: 'carros', slug: 'carros', nome: 'Carros', campos, filhas: [] };
 const pai = { id: 'veiculos', slug: 'veiculos', nome: 'Veículos', campos: [], filhas: [carro] };
-const encontrada = { categoria: carro, pai, filhas: [] };
+const encontrada = { categoria: carro, pai, caminho: [pai, carro], filhas: [] };
 const sp = { q: 'fiat', categoria: 'carros', cidade: 'Corrente', preco_min: '1.500,50', preco_max: '30.000', ordem: 'menor_preco', c_ano_min: '2015', c_ano_max: '2020', c_estado: ['Novo', 'Usado'], c_troca: 'nao', pagina: '2' };
 const cards = { CardAnuncio: ({ anuncio }) => React.createElement('article', null, anuncio.titulo) };
 function parametrosDoLink(tag) {

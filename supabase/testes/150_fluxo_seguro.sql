@@ -90,7 +90,7 @@ reset role;
 update configuracoes set valor='true' where chave='radar.exigir_celular_confirmado' and microrregiao_id is null;
 -- Três anúncios em rascunho para disputar a única vaga de publicação.
 select id as vit_cota from vitrines_lojas where dono_id='user_cota' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into anuncios (id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,atributos,fotos,status) select
  ('30000000-0000-4000-a000-00000000000'||n)::uuid,:'vit_cota',:'cat','Mesa de madeira número '||n,'Corrente',10000,'{"estado":"novo"}',
  array['https://abc.supabase.co/storage/v1/object/public/anuncios/user_cota/x/1.webp'],'rascunho' from generate_series(1,3) n;

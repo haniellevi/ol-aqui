@@ -53,8 +53,8 @@ export type CategoriaAdmin = {
   filhas: number;
 };
 
-/** Categoria principal com as subcategorias, na ordem do painel. */
-export type CategoriaAdminArvore = CategoriaAdmin & { subcategorias: CategoriaAdmin[] };
+/** Categoria em árvore (até 3 níveis): nivel 1 = grande, 2 = sub, 3 = tipo. Filhas na ordem do painel. */
+export type CategoriaAdminArvore = CategoriaAdmin & { nivel: number; subcategorias: CategoriaAdminArvore[] };
 
 /**
  * Campo como o editor do painel manda para o servidor (JSON). `chave` vazia = campo novo

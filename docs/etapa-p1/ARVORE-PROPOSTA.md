@@ -1,7 +1,9 @@
 # Etapa P1 — Proposta da árvore de categorias (para revisão)
 
-Status: **proposta**. Nada foi carregado no banco. Base: OLX (Anexo A de
-`docs/PLANO-PRODUTOS.md`) + o que já existe no Mercado da Região + o regional.
+Status: **aprovada em 11/11/2026 e programada** na migração
+`supabase/migrations/20261112010000_categorias_3_niveis.sql` (ainda não aplicada em produção).
+Base: OLX (Anexo A de `docs/PLANO-PRODUTOS.md`) + o que já existe no Mercado da Região + o regional.
+As diferenças entre esta proposta e o que foi programado estão em "O que mudou na programação", no fim.
 
 Como ler:
 - **Grande › Sub › Tipo**.
@@ -190,3 +192,19 @@ O campo "Estado" continua igual para todos. Campos novos obrigatórios **não** 
 1. Os nomes das 21 categorias grandes estão bons? (Ex.: "Pet" ou "Animais e pet"?)
 2. Falta alguma categoria forte em Corrente e no sul do Piauí?
 3. Os campos obrigatórios (\*) estão poucos o bastante?
+
+## O que mudou na programação
+- **Pet** usa o slug já existente `animais-de-estimacao` (não muda o endereço dos anúncios de hoje). "Outros animais" usa `outros-animais`.
+- Categorias que já existiam **mantêm os campos que tinham**; a migração só põe campos nas novas.
+- O campo de **doação** é opcional em todas.
+- **TV e som** virou subcategoria "TV e som" (dentro de TV, áudio e foto), com os tipos TVs, Som e caixas e Outros.
+- A antiga **Eletrônicos** (`eletronicos`) foi desligada: suas filhas mudaram de mãe e ela some do menu.
+- No **Radar**, pedido antigo do tipo "móvel" agora aponta para **Móveis** (`moveis`).
+- Toda categoria que tem filhas fica sem campos e sem faixa de preço: os campos ficam no último nível.
+- Anúncio que estava numa categoria que ganhou filhas continua no ar e recebe uma sugestão de folha (pela palavra do título), que o dono confirma em "Revise suas categorias".
+- Categoria que já existe **continua ligada ou desligada** como o admin deixou; a carga não religa nada.
+- Depois da troca, quando o admin cria uma subcategoria dentro de uma categoria que já tem anúncios,
+  esses anúncios ganham a subcategoria nova como sugestão em "Revise suas categorias".
+- A sugestão automática só usa **palavra inteira** do título (aceita plural simples): "hd" não casa com "hdmi".
+- **Antes de aplicar em produção:** conferir se há subcategoria ligada dentro de "Eletrônicos" ou de outra
+  categoria desligada que não está nesta árvore. Se houver, a migração para no fim e nada muda.

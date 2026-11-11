@@ -51,6 +51,8 @@ try:
     print('PASS: painel da loja: eventos, números, dicas por regra e resumo semanal', flush=True)
     checked(sql((root/'supabase/testes/500_melhoria_ia.sql').read_text()))
     print('PASS: melhoria com IA: cota por plano, texto seguro, dicas de foto e decisão do dono', flush=True)
+    checked(sql((root/'supabase/testes/510_categorias_3_niveis.sql').read_text()))
+    print('PASS: categorias em 3 níveis: travas, caminho, busca, Radar, nicho e sugestão da troca', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

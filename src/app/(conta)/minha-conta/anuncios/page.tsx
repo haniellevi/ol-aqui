@@ -17,7 +17,7 @@ import { AcoesAnuncio } from "@/components/conta/acoes-anuncio";
 import { Aviso } from "@/components/conta/aviso";
 import { resumoPlano } from "@/components/conta/resumo-plano";
 import { BotaoFixar } from "@/components/vitrine/botao-fixar";
-import { meusFixados, meusRecursosVitrine, planosPublicos, vitrineNovaAtiva } from "@/lib/dados/vitrine-completa";
+import { meusFixados, meusRecursosVitrine, planosPublicos } from "@/lib/dados/vitrine-completa";
 import { minhasSugestoesCategoria } from "@/lib/dados/categorias-ia";
 import { textoDisponivelEm } from "@/components/vitrine/regras";
 
@@ -76,8 +76,8 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
   const podeFixar = !!recursos && recursos.fixados_max !== 0;
   // Plano sem "fixar no topo": avisa uma vez, com os planos que têm (lidos da tabela de planos)
   const disponivelFixar = loja && !podeFixar ? textoDisponivelEm(await planosPublicos(), "fixados") : null;
-  // Vitrine com IA (etapa 4): sugestões de categoria esperando o lojista.
-  const sugestoesIA = loja && (await vitrineNovaAtiva(conta.perfil?.microrregiao_id ?? null).catch(() => false)) ? (await minhasSugestoesCategoria(conta.vitrine.id))?.length ?? 0 : 0;
+  // Categorias sugeridas esperando o dono (da migração de categorias ou da IA): loja e pessoa física, com ou sem a IA ligada.
+  const sugestoesIA = (await minhasSugestoesCategoria(conta.vitrine.id))?.length ?? 0;
 
   return (
     <PaginaConta larga>
@@ -91,7 +91,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
 
       {sugestoesIA > 0 && (
         <Aviso tipo="info">
-          <span>{sugestoesIA === 1 ? "A IA sugeriu uma categoria melhor para 1 produto." : `A IA sugeriu categorias melhores para ${sugestoesIA} produtos.`}</span>
+          <span>{sugestoesIA === 1 ? "Sugerimos uma categoria melhor para 1 anúncio." : `Sugerimos categorias melhores para ${sugestoesIA} anúncios.`} Confira e confirme.</span>
           <Link href={LINK_LOJA_CATEGORIAS} className="inline-flex min-h-10 items-center underline underline-offset-4">
             Revisar categorias
           </Link>

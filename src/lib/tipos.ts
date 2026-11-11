@@ -33,8 +33,11 @@ export type Categoria = {
   tipo_legado: TipoLegado;
 };
 
-/** Categoria pai com as subcategorias (folhas) dentro, já ordenadas. */
-export type CategoriaComFilhas = Categoria & { filhas: Categoria[] };
+/**
+ * Categoria com as filhas dentro, em qualquer nível (Grande › Sub › Tipo, até 3 níveis).
+ * Já vem ordenada. Filhas vazias = folha: só a folha recebe anúncio.
+ */
+export type CategoriaComFilhas = Categoria & { filhas: CategoriaComFilhas[] };
 
 /** Valores dos campos extras do anúncio. */
 export type Atributos = Record<string, string | number | boolean>;

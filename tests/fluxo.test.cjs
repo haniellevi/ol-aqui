@@ -10,8 +10,8 @@ function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul
     './inicio.module.css': { default: { fundo: 'inicio-fundo', categoria: 'inicio-categoria', vazio: 'inicio-vazio' } },
     '@/lib/dados/regiao': { regiaoAtual: async () => regiao },
     '@/lib/dados/categorias': { listarCategorias: async () => [
-      { id: 'c1', slug: 'veiculos', nome: 'Veículos', icone: 'car' },
-      { id: 'c2', slug: 'casa-e-moveis', nome: 'Casa e móveis', icone: 'sofa' },
+      { id: 'c1', slug: 'veiculos', nome: 'Veículos', icone: 'car', filhas: [] },
+      { id: 'c2', slug: 'casa-e-moveis', nome: 'Casa e decoração', icone: 'sofa', filhas: [] },
     ] },
     '@/lib/dados/catalogo': {
       lojasCatalogo: async () => lojas,

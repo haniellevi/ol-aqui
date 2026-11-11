@@ -6,7 +6,7 @@ reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 select id as reg from microrregioes where slug='corrente-pi' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em) values
  ('user_loja490',:'reg','Loja 490','Corrente','5589999990490',now()),
  ('user_pf490',:'reg','Pessoa 490','Corrente','5589999990491',now()),

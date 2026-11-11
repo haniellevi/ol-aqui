@@ -8,6 +8,7 @@ import { conferirCampos, limpo, slugDe } from "@/lib/admin/regras-cadastros";
 import { NOMES_ICONES } from "@/components/ui/icone-categoria";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
+import { NIVEIS_MAXIMOS } from "@/lib/categorias-arvore";
 import { LINK_ADMIN_CATEGORIAS, linkAdminCategoria } from "@/lib/rotas";
 
 // Tela 9 · Categorias e campos. Tudo pelo token do admin: a RLS (e_admin) barra quem não é.
@@ -22,6 +23,33 @@ function atualizarTelas(id?: string) {
 }
 
 type Linha = { id: string; slug: string; pai_id: string | null; ordem: number; tipo_legado: string };
+
+const MSG_NIVEIS = "Não dá para colocar aqui: uma categoria pode ter no máximo 3 níveis (grande › sub › tipo). Escolha uma categoria de nível 1 ou 2.";
+
+/** Nível de uma categoria na lista (1 = grande). */
+function nivelEm(linhas: { id: string; pai_id: string | null }[], id: string): number {
+  let nivel = 1;
+  let pai = linhas.find((c) => c.id === id)?.pai_id ?? null;
+  while (pai && nivel < 5) {
+    nivel++;
+    pai = linhas.find((c) => c.id === pai)?.pai_id ?? null;
+  }
+  return nivel;
+}
+
+/** Quantos níveis abaixo da categoria (0 = sem filhas). */
+function alturaEm(linhas: { id: string; pai_id: string | null }[], id: string): number {
+  const filhas = linhas.filter((c) => c.pai_id === id);
+  return filhas.length ? 1 + Math.max(...filhas.map((f) => alturaEm(linhas, f.id))) : 0;
+}
+
+/** Ids dentro da categoria (filhas, netas...). Não pode virar mãe de si mesma. */
+function descendentesEm(linhas: { id: string; pai_id: string | null }[], id: string): Set<string> {
+  const r = new Set<string>();
+  const andar = (pai: string) => linhas.filter((c) => c.pai_id === pai).forEach((c) => { r.add(c.id); andar(c.id); });
+  andar(id);
+  return r;
+}
 
 export async function criarCategoria(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   let novoId: string | null = null;
@@ -38,7 +66,8 @@ export async function criarCategoria(_: EstadoForm, form: FormData): Promise<Est
     if (erroLer) return { erro: traduzirErro(erroLer).mensagem };
     const linhas = (todas ?? []) as Linha[];
     const pai = paiId ? linhas.find((c) => c.id === paiId) : null;
-    if (paiId && (!pai || pai.pai_id)) return { erro: "Escolha uma categoria principal para colocar a subcategoria." };
+    if (paiId && !pai) return { erro: "Escolha uma categoria da lista para colocar a nova dentro dela." };
+    if (pai && nivelEm(linhas, pai.id) >= NIVEIS_MAXIMOS) return { erro: MSG_NIVEIS };
 
     // endereço único: "outros" já existe? tenta "outros-<mãe>", depois "outros-2"...
     const usados = new Set(linhas.map((c) => c.slug));
@@ -83,26 +112,37 @@ export async function salvarCategoria(_: EstadoForm, form: FormData): Promise<Es
     if (erroLer) return { erro: traduzirErro(erroLer).mensagem };
     if (!atual) return { erro: "Categoria não encontrada. Recarregue a página." };
 
+    const { data: todasData, error: erroTodas } = await supabase.from("categorias").select("id, pai_id, ordem");
+    if (erroTodas) return { erro: traduzirErro(erroTodas).mensagem };
+    const todas = (todasData ?? []) as { id: string; pai_id: string | null; ordem: number }[];
+    const temFilhas = todas.some((c) => c.pai_id === id);
+
     const dados: Record<string, unknown> = { nome, icone: icone || null, ativa: form.get("ativa") === "on" };
 
-    // Subcategoria: pode mudar de mãe e editar os campos.
+    // Sub ou tipo: pode mudar de mãe (sem passar de 3 níveis) e, se não tem filhas, editar os campos.
     if (atual.pai_id) {
       const paiId = String(form.get("pai_id") ?? "");
-      if (!ehUuid(paiId)) return { erro: "Escolha em qual categoria principal ela fica." };
+      if (!ehUuid(paiId)) return { erro: "Escolha em qual categoria ela fica." };
       if (paiId !== atual.pai_id) {
-        const { data: irmas } = await supabase.from("categorias").select("ordem").eq("pai_id", paiId);
+        if (!todas.some((c) => c.id === paiId)) return { erro: "Escolha uma categoria da lista." };
+        if (descendentesEm(todas, id).has(paiId) || paiId === id) return { erro: "Uma categoria não pode ficar dentro dela mesma ou das suas filhas." };
+        if (nivelEm(todas, paiId) + 1 + alturaEm(todas, id) > NIVEIS_MAXIMOS) return { erro: MSG_NIVEIS };
+        const irmas = todas.filter((c) => c.pai_id === paiId);
         dados.pai_id = paiId;
-        dados.ordem = (irmas ?? []).reduce((m, c) => Math.max(m, c.ordem as number), 0) + 10; // vai para o fim da nova mãe
+        dados.ordem = irmas.reduce((m, c) => Math.max(m, c.ordem), 0) + 10; // vai para o fim da nova mãe
       }
-      let editados: unknown;
-      try {
-        editados = JSON.parse(String(form.get("campos") ?? "[]"));
-      } catch {
-        return { erro: "Os campos chegaram num formato inválido. Recarregue a página." };
+      // Campos só valem na categoria sem filhas (a que recebe anúncio).
+      if (!temFilhas) {
+        let editados: unknown;
+        try {
+          editados = JSON.parse(String(form.get("campos") ?? "[]"));
+        } catch {
+          return { erro: "Os campos chegaram num formato inválido. Recarregue a página." };
+        }
+        const conferidos = conferirCampos(editados);
+        if (!conferidos.ok) return { erro: conferidos.erro };
+        dados.campos = conferidos.campos;
       }
-      const conferidos = conferirCampos(editados);
-      if (!conferidos.ok) return { erro: conferidos.erro };
-      dados.campos = conferidos.campos;
     }
 
     const { data, error } = await supabase.from("categorias").update(dados).eq("id", id).select("id");

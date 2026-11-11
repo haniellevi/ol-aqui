@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buscarAnuncios, faixaPreco, meuAnuncio, meusAnuncios } from "@/lib/dados/anuncios";
 import { categoriaPorSlug, listarCategorias } from "@/lib/dados/categorias";
+import { ehFolha, nomeCaminho, percorrer } from "@/lib/categorias-arvore";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { traduzirErro } from "@/lib/erros";
 import { linkAnuncio, preco as precoTexto } from "@/lib/formato";
@@ -74,7 +75,7 @@ export const FERRAMENTAS: FerramentaIA[] = [
   },
   {
     nome: "listar_categorias",
-    descricao: "Lista as categorias e subcategorias do site (nome e slug). Anúncio precisa de subcategoria.",
+    descricao: "Lista as categorias do site em até 3 níveis (nome com o caminho e slug). Anúncio precisa de uma categoria folha (folha = true).",
     parametros: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -304,10 +305,11 @@ async function buscar(args: Record<string, unknown>, ctx: ContextoFerramentas): 
 async function categorias(): Promise<Resultado> {
   const arvore = await listarCategorias();
   return ok({
-    categorias: arvore.map((p) => ({
-      nome: p.nome,
-      slug: p.slug,
-      subcategorias: p.filhas.map((f) => ({ nome: f.nome, slug: f.slug })),
+    // todas as categorias (grande › sub › tipo); folha = recebe anúncio
+    categorias: percorrer(arvore).map(({ no, caminho }) => ({
+      nome: nomeCaminho(caminho),
+      slug: no.slug,
+      folha: ehFolha(no),
     })),
   });
 }
@@ -316,8 +318,8 @@ async function campos(args: Record<string, unknown>): Promise<Resultado> {
   const slug = texto(args.categoria_slug, 60);
   const achada = slug ? await categoriaPorSlug(slug) : null;
   if (!achada) return falha("Categoria não encontrada. Use listar_categorias.");
-  if (!achada.pai) {
-    return ok({ aviso: "É categoria-mãe: escolha uma subcategoria.", subcategorias: achada.filhas.map((f) => ({ nome: f.nome, slug: f.slug })) });
+  if (achada.filhas.length) {
+    return ok({ aviso: "É categoria com itens dentro: escolha um dos itens.", subcategorias: achada.filhas.map((f) => ({ nome: f.nome, slug: f.slug })) });
   }
   return ok({
     categoria: achada.categoria.nome,
@@ -382,12 +384,12 @@ async function salvarRascunho(args: Record<string, unknown>, ctx: ContextoFerram
   if (slug) {
     const achada = await categoriaPorSlug(slug);
     if (!achada) return falha("Categoria não encontrada. Use listar_categorias.");
-    if (!achada.pai) return falha(`"${achada.categoria.nome}" é categoria-mãe: escolha uma subcategoria.`);
+    if (achada.filhas.length) return falha(`"${achada.categoria.nome}" tem itens dentro: escolha um dos itens.`);
     colunas.categoria_id = achada.categoria.id;
     camposCategoria = achada.categoria.campos;
   } else if (categoriaAtual) {
     const lista = await listarCategorias();
-    camposCategoria = lista.flatMap((p) => p.filhas).find((f) => f.id === categoriaAtual)?.campos ?? null;
+    camposCategoria = percorrer(lista).find((x) => x.no.id === categoriaAtual)?.no.campos ?? null;
   }
 
   if (args.titulo !== undefined) {

@@ -2,7 +2,7 @@
 \set QUIET on
 begin;
 select id as loja from vitrines_lojas where dono_id='user_loja' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into anuncios(id,vitrine_id,status,categoria_id,titulo,descricao,atributos,preco_centavos,cidade,fotos)
 values ('70000000-0000-4000-a000-000000000001',:'loja','rascunho',:'cat','Mesa de teste da lixeira','Item fictício apenas para os testes.', '{"estado":"novo"}',10000,'Corrente',array['https://abc.supabase.co/storage/v1/object/public/anuncios/user_loja/70000000-0000-4000-a000-000000000001/1.webp']);
 set local role authenticated;

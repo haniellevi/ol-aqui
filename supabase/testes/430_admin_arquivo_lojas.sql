@@ -3,7 +3,7 @@
 begin;
 
 select id as reg from microrregioes where slug = 'corrente-pi' \gset
-select id as cat from categorias where slug = 'moveis' \gset
+select id as cat from categorias where slug = 'sofas-e-poltronas' \gset
 insert into perfis(id,microrregiao_id,nome,e_admin,whatsapp,whatsapp_verificado_em) values
   ('user_admin430', :'reg', 'Admin arquivo', true, null, null),
   ('user_loja430', :'reg', 'Dono arquivo', false, '5589999990431', now()),

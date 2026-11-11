@@ -12,7 +12,7 @@ begin
  raise exception 'Comando aceito indevidamente: %',comando;
 end $$;
 select id as loja from vitrines_lojas where dono_id='user_loja' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,status) values
  ('85000000-0000-4000-a000-000000000001',:'loja',:'cat','Mesa favorita teste','Corrente',85000,'ativo'),
  ('85000000-0000-4000-a000-000000000002',:'loja',:'cat','Cadeira favorita teste','Corrente',12000,'ativo'),

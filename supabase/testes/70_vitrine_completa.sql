@@ -16,7 +16,7 @@ update perfis set e_admin=true where id='user_ad70';
 update configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 update configuracoes set valor='1' where chave='anuncio.fotos_minimo' and microrregiao_id is null;
 select id as cat_motos from categorias where slug='motos' \gset
-select id as cat_moveis from categorias where slug='moveis' \gset
+select id as cat_moveis from categorias where slug='sofas-e-poltronas' \gset
 select id as cat_celulares from categorias where slug='celulares' \gset
 \set f70 '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_lj70/x/1.webp}'
 \set f71 '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_lj71/x/1.webp}'

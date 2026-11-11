@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { AlertTriangle, Info } from "lucide-react";
 import { anuncioPublico } from "@/lib/dados/anuncios";
 import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
+import { nomeCaminho } from "@/lib/categorias-arvore";
 import { lerConfigNumero } from "@/lib/dados/config";
 import { avulsoParaMim } from "@/lib/dados/cobranca";
 import { preco, valorDoCampo } from "@/lib/formato";
@@ -52,8 +53,8 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
       rotulo: "Categoria",
       valor: categoriaSumiu
         ? "Não está mais disponível. Escolha outra"
-        : achada?.pai
-          ? `${achada.pai.nome} › ${achada.categoria.nome}`
+        : achada
+          ? nomeCaminho(achada.caminho)
           : publico?.categoria_nome ?? "Falta escolher",
       passo: "categoria",
       falta: !anuncio.categoria_id || categoriaSumiu,

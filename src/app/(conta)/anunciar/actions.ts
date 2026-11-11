@@ -187,8 +187,9 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
   if (categoriaId === anuncio.categoria_id && anuncio.publicado_em) redirect(destino("categoria", c));
   const achada = ehUuid(categoriaId) ? await categoriaPorId(categoriaId) : null;
   if (!achada) return { erro: { mensagem: "Essa categoria não está mais disponível. Escolha outra.", campo: "categoria" } };
-  if (!achada.pai) {
-    return { erro: { mensagem: `Escolha uma subcategoria de "${achada.categoria.nome}".`, campo: "categoria" } };
+  // só a folha recebe anúncio: se tem filhas, escolhe uma dentro dela
+  if (achada.filhas.length) {
+    return { erro: { mensagem: `Escolha uma categoria dentro de "${achada.categoria.nome}".`, campo: "categoria" } };
   }
 
   if (categoriaId !== anuncio.categoria_id) {

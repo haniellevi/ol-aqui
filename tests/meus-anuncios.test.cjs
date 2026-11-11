@@ -86,10 +86,10 @@ test('todos exclui lixeira e cada estado possui destino e rótulo', () => {
   for(const status of Object.keys(ROTULO_ANUNCIO)) assert.notEqual(abaDoStatus(status),'todos');
 });
 
-test('loja vê o aviso das sugestões de categoria só com a vitrine nova ligada', async () => {
-  const pagina = (ativa, total) => carregar('src/app/(conta)/minha-conta/anuncios/page.tsx', {
+test('dono vê o aviso das categorias sugeridas (loja ou pessoa física), com ou sem a vitrine nova', async () => {
+  const pagina = (ativa, total, tipo = 'loja') => carregar('src/app/(conta)/minha-conta/anuncios/page.tsx', {
     'next/navigation': { redirect: destino => { throw Error(`redirect:${destino}`); } },
-    '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ perfil: { microrregiao_id: 'regiao-1' }, vitrine: { tipo: 'loja', id: '70000000-0000-4000-a000-000000000009' }, podePublicar: true }) },
+    '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ perfil: { microrregiao_id: 'regiao-1' }, vitrine: { tipo, id: '70000000-0000-4000-a000-000000000009' }, podePublicar: true }) },
     '@/lib/dados/anuncios': { meusAnuncios: async () => [] },
     '@/lib/dados/destaques': { resultadosDestaques: async () => [] },
     '@/lib/dados/vitrine-completa': { meusFixados: async () => new Set(), meusRecursosVitrine: async () => ({ fixados_max: 3 }), planosPublicos: async () => [], vitrineNovaAtiva: async (r) => ativa && r === 'regiao-1' },
@@ -101,8 +101,11 @@ test('loja vê o aviso das sugestões de categoria só com a vitrine nova ligada
     '@/components/vitrine/botao-fixar': { BotaoFixar: () => null },
   }).default({ searchParams: Promise.resolve({}) });
   const ligada = render(await pagina(true, 3));
-  assert.match(ligada, /A IA sugeriu categorias melhores para 3 produtos/); assert.match(ligada, /href="\/minha-conta\/loja\/categorias"/);
-  assert.match(render(await pagina(true, 1)), /uma categoria melhor para 1 produto/);
+  assert.match(ligada, /Sugerimos categorias melhores para 3 anúncios/); assert.match(ligada, /href="\/minha-conta\/loja\/categorias"/);
+  assert.match(render(await pagina(true, 1)), /uma categoria melhor para 1 anúncio/);
   assert.doesNotMatch(render(await pagina(true, 0)), /Revisar categorias/);
-  assert.doesNotMatch(render(await pagina(false, 3)), /Revisar categorias/);
+  assert.match(render(await pagina(false, 3)), /Revisar categorias/);
+  assert.doesNotMatch(render(await pagina(false, 0)), /Revisar categorias/);
+  const pf = render(await pagina(false, 2, 'pf'));
+  assert.match(pf, /Sugerimos categorias melhores para 2 anúncios/); assert.match(pf, /href="\/minha-conta\/loja\/categorias"/);
 });

@@ -3,7 +3,7 @@
 -- Fluxo de publicação com dados fictícios, somente no PostgreSQL descartável.
 begin;
 select id as loja from vitrines_lojas where dono_id='user_loja' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_loja';

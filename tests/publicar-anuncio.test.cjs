@@ -194,8 +194,8 @@ test('troca de Casas para Fazendas mantém finalidade e pede área na unidade no
   const finalidade = { chave: 'finalidade', tipo: 'lista', opcoes: ['Venda', 'Aluguel'] };
   const area = { chave: 'area', tipo: 'numero' };
   const categorias = {
-    [casa]: { pai: {}, categoria: { campos: [finalidade, { ...area, unidade: 'm²' }] } },
-    [fazenda]: { pai: {}, categoria: { campos: [finalidade, { ...area, unidade: 'ha' }] } },
+    [casa]: { pai: {}, filhas: [], categoria: { campos: [finalidade, { ...area, unidade: 'm²' }] } },
+    [fazenda]: { pai: {}, filhas: [], categoria: { campos: [finalidade, { ...area, unidade: 'ha' }] } },
   };
   const { a, gravacoes } = fronteiras({ categorias, anuncio: { categoria_id: casa, atributos: { finalidade: 'Venda', area: 95 } } });
   await assert.rejects(a.salvarCategoria(null, form({ categoria_id: fazenda })), /redirect:\/anunciar\/detalhes/);

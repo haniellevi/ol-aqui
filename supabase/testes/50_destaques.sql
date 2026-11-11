@@ -17,7 +17,7 @@ update perfis set whatsapp_verificado_em=now() where id in ('user_pf50','user_lj
 update perfis set e_admin=true where id='user_ad50';
 update configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 update configuracoes set valor='1' where chave='anuncio.fotos_minimo' and microrregiao_id is null;
-select id as cat_moveis from categorias where slug='moveis' \gset
+select id as cat_moveis from categorias where slug='sofas-e-poltronas' \gset
 \set foto_pf '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_pf50/x/1.webp}'
 \set foto_lj '{https://abc.supabase.co/storage/v1/object/public/anuncios/user_lj50/x/1.webp}'
 

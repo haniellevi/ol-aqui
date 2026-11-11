@@ -7,7 +7,7 @@ create or replace function pg_temp.recusa(comando text, codigo text) returns voi
 begin execute comando; raise exception 'Aceitou comando proibido: %',comando;
 exception when others then if sqlstate<>codigo then raise; end if; end $$;
 select id as reg from microrregioes where slug='corrente-pi' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into perfis(id,microrregiao_id,nome,whatsapp,whatsapp_verificado_em,e_admin) values
  ('user_lixAdmin',:'reg','Admin lixeira','5589999920101',now(),true),
  ('user_lixDono',:'reg','Dono lixeira','5589999920102',now(),false),

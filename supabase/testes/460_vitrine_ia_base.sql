@@ -6,9 +6,9 @@ reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 select id as reg from microrregioes where slug='corrente-pi' \gset
-select id as raiz_casa from categorias where slug='casa-e-moveis' \gset
+select id as raiz_casa from categorias where slug='moveis' \gset
 select id as raiz_veic from categorias where slug='veiculos' \gset
-select id as sub_moveis from categorias where slug='moveis' \gset
+select id as sub_moveis from categorias where slug='sofas-e-poltronas' \gset
 select id as sub_carros from categorias where slug='carros' \gset
 insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em) values
  ('user_vitrine460',:'reg','Loja 460','Corrente','5589999990460',now()),
@@ -43,7 +43,7 @@ set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_vitrine460';
 do $$
-declare raiz_casa uuid := (select id from categorias where slug='casa-e-moveis');
+declare raiz_casa uuid := (select id from categorias where slug='moveis');
         sub_carros uuid := (select id from categorias where slug='carros');
 begin
   assert (select sugerido_id=raiz_casa from minha_sugestao_nicho('46000000-0000-4000-a000-000000000001')), 'Dono vê a sugestão';
@@ -85,14 +85,14 @@ reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 do $$ begin
-  assert (select nicho_id=(select id from categorias where slug='casa-e-moveis') from vitrines_lojas where id='46000000-0000-4000-a000-000000000001'), 'Nicho salvo';
+  assert (select nicho_id=(select id from categorias where slug='moveis') from vitrines_lojas where id='46000000-0000-4000-a000-000000000001'), 'Nicho salvo';
   assert (select categoria_sugestao_estado='recusada' from anuncios where id='46100000-0000-4000-a000-000000000001'), 'Recusa gravada';
   assert (select categoria_sugestao_estado='recusada' from anuncios where id='46100000-0000-4000-a000-000000000002'), 'Troca própria recusa a sugestão';
   assert (select categoria_sugestao_estado='pendente' from anuncios where id='46100000-0000-4000-a000-000000000003'), 'Outra loja intacta';
 end $$;
 
 -- [3] Aceitar troca a categoria.
-update anuncios set categoria_sugerida_id=(select id from categorias where slug='moveis'), categoria_sugestao_estado='pendente'
+update anuncios set categoria_sugerida_id=(select id from categorias where slug='sofas-e-poltronas'), categoria_sugestao_estado='pendente'
  where id='46100000-0000-4000-a000-000000000003';
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
@@ -100,7 +100,7 @@ set local request.jwt.claim.sub='user_outro460';
 select decidir_categoria_sugerida('46100000-0000-4000-a000-000000000003', true);
 reset role;
 do $$ begin
-  assert (select categoria_sugestao_estado='aceita' and categoria_id=(select id from categorias where slug='moveis')
+  assert (select categoria_sugestao_estado='aceita' and categoria_id=(select id from categorias where slug='sofas-e-poltronas')
            from anuncios where id='46100000-0000-4000-a000-000000000003'), 'Aceite troca a categoria';
 end $$;
 
@@ -137,7 +137,7 @@ reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 do $$ begin
-  assert (select categoria_id=(select id from categorias where slug='moveis') and categoria_sugestao_estado='pendente'
+  assert (select categoria_id=(select id from categorias where slug='sofas-e-poltronas') and categoria_sugestao_estado='pendente'
            from anuncios where id='46100000-0000-4000-a000-000000000004'), 'Congelado intacto';
 end $$;
 

@@ -4,7 +4,7 @@
 begin;
 select id as loja from vitrines_lojas where dono_id='user_loja' \gset
 select id as reg from microrregioes where slug='corrente-pi' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into vitrines_lojas(dono_id,microrregiao_id,slug,nome,cidade,tipo,plano) values
  ('user_semcodigo',:'reg','pf-sem-confirmacao','Pessoa Sem Confirmação','Corrente','pf','pf_gratis') returning id as pf \gset
 insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,status) values

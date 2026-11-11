@@ -14,7 +14,7 @@ end $$;
 
 select id as reg from microrregioes where slug='corrente-pi' \gset
 select id as loja from vitrines_lojas where dono_id='user_loja' \gset
-select id as cat from categorias where slug='moveis' \gset
+select id as cat from categorias where slug='sofas-e-poltronas' \gset
 insert into perfis(id,microrregiao_id,nome,e_admin,whatsapp,whatsapp_verificado_em)
 values ('user_mod390',:'reg','Moderação de teste',true,'5589999990390',now());
 update configuracoes set valor='["sexo","sexual","violência","matar","arma de fogo","a+b"]'
@@ -36,7 +36,7 @@ select ('89000000-0000-4000-a000-00000000000'||n)::uuid,:'loja',:'cat',
  'rascunho'::status_anuncio from generate_series(1,8) n;
 update anuncios set categoria_id=(select id from categorias where slug='celulares'), atributos='{"marca":"sexual"}'
 where id='89000000-0000-4000-a000-000000000007';
-update anuncios set categoria_id=(select id from categorias where slug='gado-e-animais'), atributos='{"quantidade":1,"sexo":"Machos"}'
+update anuncios set categoria_id=(select id from categorias where slug='bovinos'), atributos='{"quantidade":1,"sexo":"Machos"}'
 where id='89000000-0000-4000-a000-000000000008';
 
 set local role authenticated;

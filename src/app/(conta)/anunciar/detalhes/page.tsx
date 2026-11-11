@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
+import { nomeCaminho } from "@/lib/categorias-arvore";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
 import { FormDetalhes } from "@/components/anunciar/form-detalhes";
@@ -23,7 +24,7 @@ export default async function PassoDetalhes({ searchParams }: { searchParams: Pa
   if (!achada && nuncaNoAr) redirect(urlPasso("categoria", anuncio.id, editar));
 
   const campos = achada?.pai ? achada.categoria.campos : [];
-  const nome = achada?.pai ? `${achada.pai.nome} › ${achada.categoria.nome}` : null;
+  const nome = achada ? nomeCaminho(achada.caminho) : null;
 
   return (
     <CorpoPasso>

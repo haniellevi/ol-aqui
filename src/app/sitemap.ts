@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { anunciosCatalogo, lojasCatalogo } from "@/lib/dados/catalogo";
+import { linkCanonico, percorrer } from "@/lib/categorias-arvore";
 import { listarCategorias } from "@/lib/dados/categorias";
 import { regiaoAtual } from "@/lib/dados/regiao";
-import { linkAnuncio, linkCategoria, linkLoja, urlAbsoluta } from "@/lib/formato";
+import { linkAnuncio, linkLoja, urlAbsoluta } from "@/lib/formato";
 import { LINK_AJUDA, LINK_PLANOS, LINK_PRIVACIDADE, LINK_TERMOS } from "@/lib/rotas";
 
 // Mapa do site para o Google: páginas fixas, categorias, lojas e anúncios no ar.
@@ -45,11 +46,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const categorias = await tentar(listarCategorias);
-  for (const pai of categorias) {
-    itens.push({ url: urlAbsoluta(linkCategoria(pai.slug)), changeFrequency: "daily", priority: 0.7 });
-    for (const filha of pai.filhas) {
-      itens.push({ url: urlAbsoluta(linkCategoria(pai.slug, filha.slug)), changeFrequency: "daily", priority: 0.6 });
-    }
+  for (const { caminho } of percorrer(categorias)) {
+    itens.push({ url: urlAbsoluta(linkCanonico(caminho)), changeFrequency: "daily", priority: caminho.length === 1 ? 0.7 : 0.6 });
   }
 
   const regiao = await regiaoAtual().catch(() => null);
