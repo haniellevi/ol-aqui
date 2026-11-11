@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { Clock, MapPin, MessageCircle, Pencil } from "lucide-react";
+import { Clock, MapPin, MessageCircle, Pencil, Plus } from "lucide-react";
 import { anunciosPorPaginaVitrine, anunciosVitrine, vitrineNovaAtiva, vitrinePublica } from "@/lib/dados/vitrine-completa";
 import { favoritosEntre } from "@/lib/dados/favoritos";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
@@ -273,6 +273,15 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
               </Botao>
             </Vazio>
           ) : anuncios.length === 0 ? (
+            v.e_dono && v.status === "ativa" ? (
+              // O dono vê o caminho para pôr o primeiro produto (o mesmo do "Anunciar" no cabeçalho do site).
+              // Loja suspensa não ganha o botão: /anunciar só diria que a conta está suspensa.
+              <Vazio titulo="Sua loja ainda não tem anúncio no ar." texto="Cada anúncio que você criar aparece aqui e na busca da região.">
+                <Botao href="/anunciar" larguraTotal icone={<Plus />}>
+                  Adicionar produto
+                </Botao>
+              </Vazio>
+            ) : (
             <Vazio titulo="Esta loja ainda não tem anúncio no ar." texto="Volte daqui a pouco ou veja outros anúncios da região.">
               {whatsapp && (
                 <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" className={classesBotao("whatsapp", true)}>
@@ -284,6 +293,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                 Ver anúncios da região
               </Botao>
             </Vazio>
+            )
           ) : (
             <>
               {fixados.length > 0 && (
