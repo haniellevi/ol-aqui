@@ -9,7 +9,9 @@ import { LINK_AJUDA, LINK_PLANOS, LINK_PRIVACIDADE, LINK_TERMOS } from "@/lib/ro
 // O robô chega sem cidade escolhida, então vale a região-piloto (a mesma da página inicial).
 // Se o banco falhar, o mapa sai só com o que já foi lido; nunca devolve erro.
 
-const POR_VEZ = 100;
+// Igual ao teto das funções catalogo_lojas e catalogo_anuncios no banco (48 por chamada).
+// Maior que isso, a primeira página nunca viria "cheia" e a leitura pararia nela.
+const POR_VEZ = 48;
 const MAX_ANUNCIOS = 1000;
 const MAX_LOJAS = 500;
 
