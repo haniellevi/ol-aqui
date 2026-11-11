@@ -84,7 +84,7 @@ export async function bloquearUsuario(_: EstadoForm, form: FormData): Promise<Es
     const { error } = await supabase.rpc("admin_bloquear_usuario", { p_id: id, p_bloquear: acao === "bloquear", p_motivo: motivo });
     if (error) return { erro: traduzirErro(error).mensagem };
     atualizar();
-    return { ok: acao === "bloquear" ? "Acesso ao site bloqueado. As lojas e os anúncios continuam com a situação atual; gerencie-os na ficha da loja." : "Acesso ao site liberado." };
+    return { ok: acao === "bloquear" ? "Conta suspensa. A loja e os anúncios saíram do ar." : "Conta reativada. A loja e os anúncios que estavam no ar voltaram." };
   } catch (e) {
     unstable_rethrow(e);
     return { erro: e instanceof Error ? e.message : "Não foi possível alterar o acesso." };

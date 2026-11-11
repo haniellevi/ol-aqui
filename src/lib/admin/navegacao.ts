@@ -10,6 +10,6 @@ export const ENTRADAS_ADMIN = [
 
 export function entradaAdminAtiva(caminho: string): string {
   if (caminho === "/admin" || /^\/admin\/(visitas|relatorios)(\/|$)/.test(caminho)) return "/admin";
-  if (/^\/admin\/(funil|usuarios)(\/|$)/.test(caminho)) return "/admin/lojas";
+  if (/^\/admin\/(funil|usuarios|lixeira)(\/|$)/.test(caminho)) return "/admin/lojas";
   return ENTRADAS_ADMIN.find(({ href }) => href !== "/admin" && (caminho === href || caminho.startsWith(`${href}/`)))?.href ?? "/admin/configuracoes";
 }
