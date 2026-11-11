@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { PackageX } from "lucide-react";
+import { PackageX, Radar } from "lucide-react";
 import type { Favorito } from "@/lib/dados/favoritos";
 import { CardAnuncio } from "@/components/anuncio/card-anuncio";
 import { BotaoRemoverFavorito } from "./botao-remover-favorito";
 import { Badge } from "@/components/ui/badge";
+import { Botao } from "@/components/ui/botao";
 
-export function ListaFavoritos({ itens }: { itens: Favorito[] }) {
+/** radar: mostra "Pedir no Radar" (vitrine nova ligada). */
+export function ListaFavoritos({ itens, radar = false }: { itens: Favorito[]; radar?: boolean }) {
   const [removido, setRemovido] = useState<string | null>(null);
   return <div className="flex flex-col gap-3">
     <p role="status" className={removido ? "rounded-campo bg-sucesso-fundo p-3 text-sm font-semibold text-verde-escuro" : "sr-only"}>
@@ -24,9 +26,11 @@ export function ListaFavoritos({ itens }: { itens: Favorito[] }) {
             <div className="flex flex-1 flex-col gap-3 px-1 py-3">
               <PackageX className="size-8 text-texto-suave" aria-hidden />
               <h2 className="text-base font-semibold break-words">Anúncio indisponível</h2>
-              <p className="text-sm text-texto-suave">Ele saiu do ar. Você pode removê-lo da lista.</p>
+              <p className="text-sm text-texto-suave">{radar ? "Ele saiu do ar. Peça parecido no Radar e as lojas da região mandam ofertas." : "Ele saiu do ar. Você pode removê-lo da lista."}</p>
             </div>}
           <p className="px-1 text-legenda text-texto-suave">Salvo em <time dateTime={f.salvoEm}>{new Date(f.salvoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time></p>
+          {radar && <div className="px-1"><Botao href={f.radar} tamanho="pequeno" variante={f.situacao === "ativo" ? "texto" : "primario"} icone={<Radar />}
+            aria-label={f.anuncio ? `Pedir parecido com ${titulo} no Radar` : "Pedir parecido no Radar"}>Pedir no Radar</Botao></div>}
           <div className="border-t border-borda pt-1"><BotaoRemoverFavorito anuncioId={f.id} titulo={titulo} comTexto onRemovido={() => setRemovido(titulo)} /></div>
         </li>;
       })}

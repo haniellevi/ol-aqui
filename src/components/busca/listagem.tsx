@@ -1,7 +1,9 @@
 import "server-only";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { buscarAnuncios } from "@/lib/dados/anuncios";
+import { registrarBusca } from "@/lib/dados/buscas";
 import { listarCategorias, type CategoriaEncontrada } from "@/lib/dados/categorias";
 import { listarCidades, regiaoAtual } from "@/lib/dados/regiao";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
@@ -55,6 +57,12 @@ export async function Listagem({
 
   // Página além da última (link antigo, anúncios vendidos): volta para a 1ª página.
   if (!temErro && !anuncios.length && estado.pagina > 1) redirect(comParametros(caminho, sp));
+
+  // Conta a busca digitada (só a 1ª página), depois de responder: alimenta o alerta de demanda.
+  if (!temErro && estado.q && estado.pagina === 1) {
+    const termo = estado.q;
+    after(() => registrarBusca(termo, regiao?.id ?? null, slugCategoria, total));
+  }
 
   // Nada achado: procura algo parecido (sem filtros; depois em outras regiões).
   let parecidos: AnuncioCard[] = [];
