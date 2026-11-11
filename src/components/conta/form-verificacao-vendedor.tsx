@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Botao } from "@/components/ui/botao";
+import { CampoArquivo } from "@/components/ui/campo-arquivo";
 import { API_VERIFICACAO_VENDEDOR, MAX_ARQUIVO_VERIFICACAO } from "@/lib/verificacao-vendedor";
 
 export function FormVerificacaoVendedor() {
@@ -45,14 +46,8 @@ export function FormVerificacaoVendedor() {
     <form action={API_VERIFICACAO_VENDEDOR} method="post" encType="multipart/form-data" onSubmit={enviar} className="flex flex-col gap-4">
       <p className="text-sm text-texto-suave">Envie os dois arquivos em PDF, JPG ou PNG, com até 2 MB por arquivo.</p>
       <fieldset disabled={enviando || enviado} className="flex min-w-0 flex-col gap-4">
-        <label className="flex min-w-0 flex-col gap-1 text-sm font-semibold">
-          Documento oficial com foto
-          <input type="file" required name="documento" accept="application/pdf,image/jpeg,image/png" className="w-full rounded-campo border border-borda-campo p-2" />
-        </label>
-        <label className="flex min-w-0 flex-col gap-1 text-sm font-semibold">
-          Comprovante de endereço
-          <input type="file" required name="comprovante" accept="application/pdf,image/jpeg,image/png" className="w-full rounded-campo border border-borda-campo p-2" />
-        </label>
+        <CampoArquivo rotulo="Documento oficial com foto" name="documento" required accept="application/pdf,image/jpeg,image/png" textoBotao="Escolher documento" textoTrocar="Trocar documento" />
+        <CampoArquivo rotulo="Comprovante de endereço" name="comprovante" required accept="application/pdf,image/jpeg,image/png" textoBotao="Escolher comprovante" textoTrocar="Trocar comprovante" />
         <Botao type="submit" carregando={enviando} textoCarregando="Enviando..." disabled={enviado}>Enviar para conferência</Botao>
       </fieldset>
       {enviado && <p role="status" className="text-sm font-semibold text-verde-escuro">Arquivos enviados para conferência.</p>}

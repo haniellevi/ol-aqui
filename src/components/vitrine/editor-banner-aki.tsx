@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
+import { CampoArquivo } from "@/components/ui/campo-arquivo";
 import { BannerLoja } from "@/components/vitrine/banner-loja";
 import { TextoSaldoAki, useImagemAki } from "@/components/aki/imagem-aki";
 import { aplicarBannerAki } from "@/app/(conta)/minha-conta/loja/vitrine-actions";
@@ -97,14 +98,14 @@ export function EditorBannerAki({
           disabled={ocupado || aki.pendente} className="size-12 rounded-campo" />
         Cor da arte
       </label>
-      <label className="flex flex-col gap-1 font-semibold">
-        {logo ? "Trocar logo (opcional)" : "Enviar logo (opcional)"}
-        <input type="file" accept="image/png,image/webp,image/jpeg" disabled={ocupado} className="block w-full text-sm font-normal"
-          onChange={(e) => { void escolherLogo(e.target.files?.[0]); e.target.value = ""; }} />
-      </label>
-      {arquivo && <Botao type="button" variante="texto" disabled={ocupado} onClick={() => { setArquivo(null); setLogoEnviada(null); }}>
-        {logo ? "Voltar ao logo atual" : "Retirar o logo escolhido"}
-      </Botao>}
+      <CampoArquivo
+        rotulo="Logo da loja" opcional accept="image/png,image/webp,image/jpeg" disabled={ocupado}
+        textoBotao="Escolher logo" textoTrocar="Trocar logo" textoRemover={logo ? "Voltar ao logo atual" : "Tirar o logo"}
+        nome={arquivo ? (arquivo.blob as File).name || "logo escolhido" : logo ? "logo atual da loja" : null}
+        previa={arquivo?.previa ?? logo}
+        dica="PNG, WebP ou JPEG, até 5 MB."
+        onEscolher={(f) => { void escolherLogo(f); }}
+        onRemover={arquivo ? () => { setArquivo(null); setLogoEnviada(null); } : undefined} />
       <Botao type="button" variante="secundario"
         disabled={ocupado || (!aki.pendente && (aki.saldo?.disponivel === false || aki.saldo?.restantes === 0))}
         carregando={aki.ocupado} textoCarregando="O Merc está criando a arte..."
