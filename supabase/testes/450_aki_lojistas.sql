@@ -99,4 +99,11 @@ begin
   assert v->>'banner_tipo' = 'foto' and v->>'banner_aki_posicao' = '30';
   assert v->>'categoria_loja' = 'Eletrodomésticos';
 end $$;
+-- A rota do Aki confere bloqueio e exclusão com a chave de serviço.
+do $$
+begin
+  assert has_table_privilege('service_role', 'public.contas_bloqueadas', 'select');
+  assert has_table_privilege('service_role', 'public.contas_revogadas', 'select');
+  assert not has_table_privilege('authenticated', 'public.contas_bloqueadas', 'select');
+end $$;
 rollback;
