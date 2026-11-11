@@ -10,6 +10,7 @@ import { TextoSaldoAki, useImagemAki } from "@/components/aki/imagem-aki";
 import { aplicarBannerAki } from "@/app/(conta)/minha-conta/loja/vitrine-actions";
 import { prepararEnvioImagemLoja } from "@/app/(conta)/minha-conta/loja/actions";
 import { enviarFoto } from "@/lib/fotos";
+import { corDaLogo } from "@/lib/cor-logo";
 
 export function EditorBannerAki({
   lojaId, nome, logo, corInicial, atual,
@@ -27,6 +28,7 @@ export function EditorBannerAki({
   const [posicao, setPosicao] = useState(atual?.posicao ?? 50);
   const [arquivo, setArquivo] = useState<{ blob: Blob; formato: "webp" | "jpg" | "png"; previa: string } | null>(null);
   const [logoEnviada, setLogoEnviada] = useState<string | null>(null);
+  const [corVeioDaLogo, setCorVeioDaLogo] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [preparandoLogo, setPreparandoLogo] = useState(false);
   const [mensagem, setMensagem] = useState("");
@@ -54,6 +56,9 @@ export function EditorBannerAki({
       await imagem.decode();
       setArquivo({ blob: novo, formato, previa });
       setLogoEnviada(null);
+      // A cor da arte nasce da logo; a pessoa pode trocar em seguida.
+      const daLogo = await corDaLogo(previa).catch(() => null);
+      if (daLogo) { setCor(daLogo); setCorVeioDaLogo(true); }
     } catch {
       URL.revokeObjectURL(previa);
       setErro("Não foi possível abrir esse logo. Escolha outra imagem.");
@@ -91,13 +96,8 @@ export function EditorBannerAki({
     <section aria-labelledby="banner-aki-titulo" className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
       <h2 id="banner-aki-titulo" className="text-lg font-semibold text-beringela">Criar banner com o Merc</h2>
       <TextoSaldoAki saldo={aki.saldo} />
-      <Campo name="estilo_aki" rotulo="Estilo do banner" placeholder="Ex.: cores quentes e visual esportivo"
+      <Campo name="estilo_aki" rotulo="Pedido extra para o Merc" opcional placeholder="Ex.: mais alegre, com cara de feira"
         value={estilo} onChange={(e) => setEstilo(e.target.value)} maxLength={400} disabled={ocupado || aki.pendente} />
-      <label className="flex items-center gap-3 font-semibold">
-        <input type="color" value={cor} onChange={(e) => setCor(e.target.value)}
-          disabled={ocupado || aki.pendente} className="size-12 rounded-campo" />
-        Cor da arte
-      </label>
       <CampoArquivo
         rotulo="Logo da loja" opcional accept="image/png,image/webp,image/jpeg" disabled={ocupado}
         textoBotao="Escolher logo" textoTrocar="Trocar logo" textoRemover={logo ? "Voltar ao logo atual" : "Tirar o logo"}
@@ -106,6 +106,13 @@ export function EditorBannerAki({
         dica="PNG, WebP ou JPEG, até 5 MB."
         onEscolher={(f) => { void escolherLogo(f); }}
         onRemover={arquivo ? () => { setArquivo(null); setLogoEnviada(null); } : undefined} />
+      <label className="flex items-center gap-3 font-semibold">
+        <input type="color" value={cor} onChange={(e) => { setCor(e.target.value); setCorVeioDaLogo(false); }}
+          disabled={ocupado || aki.pendente} className="size-12 rounded-campo" />
+        <span className="flex flex-col">Cor da arte
+          <span className="text-sm font-normal text-texto-suave">{corVeioDaLogo ? `Tirada da sua logo (${cor}). Pode mudar.` : cor}</span>
+        </span>
+      </label>
       <Botao type="button" variante="secundario"
         disabled={ocupado || (!aki.pendente && (aki.saldo?.disponivel === false || aki.saldo?.restantes === 0))}
         carregando={aki.ocupado} textoCarregando="O Merc está criando a arte..."
