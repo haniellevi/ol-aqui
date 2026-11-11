@@ -35,7 +35,7 @@ export function InformacoesLoja({ v, agora, mapa = false }: { v: VitrinePublica;
           <p className="text-base break-words">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>
           {pino && <MapaLoja lat={pino.lat} lng={pino.lng} nome={v.nome} />}
           {comoChegar && (
-            <a href={comoChegar} target="_blank" rel="noopener noreferrer" aria-label="Como chegar à loja (abre em nova aba)" className={classesBotao("secundario", false, "mt-1 w-full sm:w-fit")}>
+            <a href={comoChegar} data-medir="mapa" target="_blank" rel="noopener noreferrer" aria-label="Como chegar à loja (abre em nova aba)" className={classesBotao("secundario", false, "mt-1 w-full sm:w-fit")}>
               <Navigation className="size-5" aria-hidden />
               Como chegar
             </a>

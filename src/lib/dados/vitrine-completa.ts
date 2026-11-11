@@ -223,6 +223,11 @@ export async function vitrineNovaAtiva(microrregiaoId: string | null): Promise<b
   return (await lerConfigPublica<boolean>("vitrine_ia.ativa", microrregiaoId, false)) === true;
 }
 
+/** Melhoria com IA (etapa 5b) ligada na região da loja: mostra o atalho "Melhorar com IA" nas dicas. */
+export async function melhoriaIAAtiva(microrregiaoId: string | null): Promise<boolean> {
+  return (await lerConfigPublica<boolean>("vitrine_ia.melhoria_ativa", microrregiaoId, false)) === true;
+}
+
 /** Produtos por página na vitrine (painel → configurações: vitrine.anuncios_por_pagina). Mesmo padrão do banco. */
 export async function anunciosPorPaginaVitrine(microrregiaoId: string | null): Promise<number> {
   const db = await createClient();
