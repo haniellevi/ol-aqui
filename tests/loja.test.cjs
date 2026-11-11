@@ -74,6 +74,7 @@ test('loja nova: abas fixas, coração por produto, barra com WhatsApp e mapa co
  assert.equal((h.match(/Entre para salvar/g)??[]).length,2);assert.match(h,/redirect_url=%2Floja%2Floja-teste/);
  assert.equal((h.match(/https:\/\/tile.openstreetmap.org\/16\//g)??[]).length,9);assert.match(h,/mlat=-10.400000&amp;mlon=-45.160000/);assert.match(h,/href="#mapa-loja"/);assert.match(h,/colaboradores do OpenStreetMap/);
  assert.equal((h.match(/https:\/\/wa.me\//g)??[]).length,2,'WhatsApp no topo e na barra');
+ assert.equal((h.match(/data-medir="whatsapp"/g)??[]).length,2,'cliques no WhatsApp contados');assert.match(h,/data-medir="mapa"/);
 });
 test('loja nova: favoritos marcados, falha desliga o coração e loja sem pino usa Como chegar',async()=>{
  const a=[produto(1),produto(2)];

@@ -15,6 +15,7 @@ export function BarraLoja({ whatsappHref, mapaHref }: { whatsappHref: string | n
         {whatsappHref && (
           <a
             href={whatsappHref}
+            data-medir="whatsapp"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Chamar a loja no WhatsApp (abre em nova aba)"
@@ -27,6 +28,7 @@ export function BarraLoja({ whatsappHref, mapaHref }: { whatsappHref: string | n
         {mapaHref && (
           <a
             href={mapaHref}
+            data-medir="mapa"
             {...(externo ? { target: "_blank", rel: "noopener noreferrer", "aria-label": "Ver a loja no mapa (abre em nova aba)" } : {})}
             className={classesBotao("secundario", false, whatsappHref ? "shrink-0 px-3" : "min-w-0 flex-1 px-3")}
           >

@@ -6,7 +6,7 @@ import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { meusAnuncios } from "@/lib/dados/anuncios";
 import { fraseResultado, resultadosDestaques } from "@/lib/dados/destaques";
 import type { ResultadoDestaque } from "@/lib/tipos-destaques";
-import { LINK_PLANOS, linkDestacar } from "@/lib/rotas";
+import { LINK_LOJA_CATEGORIAS, LINK_PLANOS, linkDestacar } from "@/lib/rotas";
 import { ehUuid, inteiro, linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
 import type { MeuAnuncio, StatusAnuncio } from "@/lib/tipos";
 import { Botao } from "@/components/ui/botao";
@@ -17,7 +17,8 @@ import { AcoesAnuncio } from "@/components/conta/acoes-anuncio";
 import { Aviso } from "@/components/conta/aviso";
 import { resumoPlano } from "@/components/conta/resumo-plano";
 import { BotaoFixar } from "@/components/vitrine/botao-fixar";
-import { meusFixados, meusRecursosVitrine, planosPublicos } from "@/lib/dados/vitrine-completa";
+import { meusFixados, meusRecursosVitrine, planosPublicos, vitrineNovaAtiva } from "@/lib/dados/vitrine-completa";
+import { minhasSugestoesCategoria } from "@/lib/dados/categorias-ia";
 import { textoDisponivelEm } from "@/components/vitrine/regras";
 
 import { ABAS_ANUNCIOS as ABAS, ROTULO_ANUNCIO as ROTULO, RESULTADOS_ANUNCIO, abaDoStatus } from "@/components/conta/situacao-anuncios";
@@ -75,6 +76,8 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
   const podeFixar = !!recursos && recursos.fixados_max !== 0;
   // Plano sem "fixar no topo": avisa uma vez, com os planos que têm (lidos da tabela de planos)
   const disponivelFixar = loja && !podeFixar ? textoDisponivelEm(await planosPublicos(), "fixados") : null;
+  // Vitrine com IA (etapa 4): sugestões de categoria esperando o lojista.
+  const sugestoesIA = loja && (await vitrineNovaAtiva(conta.perfil?.microrregiao_id ?? null).catch(() => false)) ? (await minhasSugestoesCategoria(conta.vitrine.id))?.length ?? 0 : 0;
 
   return (
     <PaginaConta larga>
@@ -85,6 +88,15 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
       </TopoConta>
 
       {aviso && <Aviso tipo="ok">{aviso}</Aviso>}
+
+      {sugestoesIA > 0 && (
+        <Aviso tipo="info">
+          <span>{sugestoesIA === 1 ? "A IA sugeriu uma categoria melhor para 1 produto." : `A IA sugeriu categorias melhores para ${sugestoesIA} produtos.`}</span>
+          <Link href={LINK_LOJA_CATEGORIAS} className="inline-flex min-h-10 items-center underline underline-offset-4">
+            Revisar categorias
+          </Link>
+        </Aviso>
+      )}
 
       {!conta.podePublicar && (
         <Aviso tipo="atencao">

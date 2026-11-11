@@ -80,6 +80,40 @@ estiverem prontas, controlada por uma chave em `configuracoes`.
   limitar por plano (ex.: N melhorias por mês no Slim).
 - Todo custo passa pelo registro que já existe (`robo_uso`).
 
+## Como ligar a categorização com IA (etapa 4)
+
+1. Aplicar a migração `20261111040000_categorizacao_ia.sql`.
+2. Conferir `robo.cotacao_dolar` e `robo.orcamento_mensal_centavos` (o lote para quando o orçamento do mês acaba).
+3. Medir: pôr `vitrine_ia.categorizacao_por_dia` = 20 e ligar `vitrine_ia.categorizacao_ativa`.
+   No dia seguinte, ver o custo em `robo_uso` (tipo `categorizacao`) e a qualidade em `categorizacao_ia`.
+4. Se estiver bom, subir o limite por dia (padrão 300).
+
+A rotina `olaki-categorizacao-ia` roda a cada 5 minutos e usa o mesmo segredo interno da moderação
+(`MODERACAO_IA_SECRET` na Vercel e `olaki_moderacao_ia_token` no cofre do Supabase).
+A tela "Revise suas categorias" e o aviso no sino só aparecem com `vitrine_ia.ativa` ligada.
+
+## Painel da loja (etapa 5a, sem IA)
+
+- Conta visita na loja e cliques no WhatsApp e no mapa (`eventos_loja`), só com a vitrine nova ligada na região. Guarda um resumo embaralhado, nunca o IP. Visitas do dono não contam; o mesmo visitante só conta de novo depois de `eventos.repetir_apos_minutos`.
+- Tela `/minha-conta/loja/desempenho`: números de 7 ou 30 dias comparados ao período anterior, 5 produtos mais vistos e dicas por regra (sem foto, sem preço, poucas fotos, descrição ou título curtos, muito visto sem clique).
+- Resumo semanal no sino toda segunda, 9h de Fortaleza (`olaki-resumo-semanal-loja`); a loja pode desligar em Avisos. Pula loja sem visita e sem dica.
+
+## Melhoria com IA (etapa 5b)
+
+- Na tela "Desempenho da loja", cada dica ganha o atalho "Melhorar com IA" (`/minha-conta/loja/melhorar/<id>`).
+- A IA (`openai/gpt-4.1-mini`, com as fotos em baixa resolução) sugere título e descrição e aponta problemas nas fotos
+  (escura, tremida, fundo, pequeno, cortado), com uma dica de como tirar outra. **A IA não altera nenhuma foto.**
+- O lojista vê o antes e o depois e escolhe "Usar o texto novo" ou "Manter o meu". O texto novo entra por um UPDATE
+  comum do anúncio, então os filtros de moderação continuam valendo. Se o anúncio mudou depois do pedido, nada é trocado.
+- O banco recusa texto com link, e-mail ou telefone e só aceita dica de foto que existe no anúncio.
+- Limite por mês (`vitrine_ia.melhorias_mes`): Teste 20, Slim 20, Full 100. Falha da IA não conta.
+- Reserva de US$ 0,02 por pedido em `robo_uso` (tipo `melhoria`), com a mesma trava do orçamento mensal.
+
+### Como ligar
+1. Aplicar as migrações `20261111050000_painel_loja.sql` e `20261111060000_melhoria_ia.sql`.
+2. Ligar `vitrine_ia.melhoria_ativa` (região ou global) com `vitrine_ia.ativa` já ligada.
+3. Medir: pedir 10 sugestões em produtos reais e ver o custo em `robo_uso` (tipo `melhoria`) e a qualidade em `melhorias_ia`.
+
 ## Riscos e pontos em aberto
 
 - **Tamanho:** lançar tudo junto é o caminho mais longo. A chave em `configuracoes` permite ligar por partes se for preciso.
