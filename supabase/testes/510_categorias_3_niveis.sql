@@ -147,5 +147,21 @@ begin
 end $$;
 reset role;
 
+-- [11] Folha = sem filhas ligadas: filha desligada não impede o anúncio.
+set local request.jwt.claim.role='';
+insert into categorias(slug,nome) values ('grupo-510','Grupo 510');
+insert into categorias(slug,nome,pai_id,ativa) values ('filho-510','Filho 510',(select id from categorias where slug='grupo-510'),false);
+insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,status,publicado_em) values
+ ('51100000-0000-4000-a000-000000000004','51000000-0000-4000-a000-000000000001',(select id from categorias where slug='grupo-510'),'Coisa 510 C','Corrente',1000,'ativo',now());
+
+-- [12] Galho movido para dentro de uma categoria: a sugestão é a folha do galho, não o galho.
+insert into categorias(slug,nome) values ('galho-510','Galho 510');
+insert into categorias(slug,nome,pai_id) values ('folha-510','Folha 510',(select id from categorias where slug='galho-510'));
+update categorias set pai_id = (select id from categorias where slug='grupo-510') where slug = 'galho-510';
+do $$ begin
+  assert (select categoria_sugerida_id = (select id from categorias where slug='folha-510') and categoria_sugestao_estado = 'pendente'
+            from anuncios where id = '51100000-0000-4000-a000-000000000004'), 'Sugestão vai para a folha do galho';
+end $$;
+
 select 'ok' as categorias_3_niveis;
 rollback;

@@ -1085,12 +1085,14 @@ drop table p1_reserva;
 -- 5. Depois da troca: categoria que ganha filha, sugestão que deixou de ser folha.
 -- ---------------------------------------------------------------------
 -- Quando o admin põe uma filha ligada numa categoria, os anúncios que estão nela (ou com sugestão
--- apontando para ela) passam a ter essa filha como sugestão pendente. Sugestão pendente que já
+-- apontando para ela) passam a ter essa filha (ou a primeira folha dela) como sugestão pendente. Sugestão pendente que já
 -- aponta para outra folha fica como está.
 create function public.categoria_ganhou_filha()
 returns trigger language plpgsql security definer
 set search_path = public
 as $$
+declare
+  folha uuid;
 begin
   if new.pai_id is null or not new.ativa then
     return null;
@@ -1098,8 +1100,18 @@ begin
   if tg_op = 'UPDATE' and new.pai_id is not distinct from old.pai_id and old.ativa then
     return null;
   end if;
+  -- A categoria que entrou pode já ter filhas (o admin moveu um galho): sugere a primeira folha ligada dela.
+  select f.id into folha
+    from public.categorias f
+   where f.id in (select public.categoria_e_descendentes(new.id)) and f.ativa
+     and not exists (select 1 from public.categorias g where g.pai_id = f.id and g.ativa)
+   order by public.categoria_nivel(f.id), f.ordem, f.nome
+   limit 1;
+  if folha is null or not public.categoria_disponivel(folha) then
+    return null;
+  end if;
   update public.anuncios a
-     set categoria_sugerida_id = new.id, categoria_sugestao_estado = 'pendente', categoria_sugerida_em = now()
+     set categoria_sugerida_id = folha, categoria_sugestao_estado = 'pendente', categoria_sugerida_em = now()
    where a.status <> 'excluido'
      and ((a.categoria_id = new.pai_id
            and (a.categoria_sugestao_estado is distinct from 'pendente' or a.categoria_sugerida_id = new.pai_id))
@@ -1110,6 +1122,83 @@ revoke all on function public.categoria_ganhou_filha() from public, anon, authen
 create trigger categorias_ganhou_filha
   after insert or update of pai_id, ativa on public.categorias
   for each row execute function public.categoria_ganhou_filha();
+
+-- Folha = sem filhas LIGADAS (a mesma regra do site). Antes, uma filha desligada já impedia
+-- escolher a categoria. Mesma função de 20261107020000, só essa linha muda.
+create or replace function public.validar_anuncio()
+returns trigger language plpgsql security definer
+set search_path = public
+as $$
+declare
+  cat       public.categorias;
+  rigido    boolean := new.status in ('ativo', 'em_analise', 'vendido');
+  entrando  boolean;
+  pelo_sist boolean := tg_op = 'UPDATE' and coalesce(current_setting('olaki.sistema', true), '') = '1';
+  erro      text;
+  campo     text;
+begin
+  if new.categoria_id is not null then
+    select * into cat from public.categorias where id = new.categoria_id;
+    if cat.id is null then
+      raise exception using errcode = '23503', message = 'Categoria não encontrada.', detail = 'campo:categoria';
+    end if;
+    if tg_op = 'INSERT' or new.categoria_id is distinct from old.categoria_id then
+      if not cat.ativa then
+        raise exception using errcode = '23514', message = 'Esta categoria não está disponível. Escolha outra.', detail = 'campo:categoria';
+      end if;
+      if exists (select 1 from public.categorias f where f.pai_id = cat.id and f.ativa) then
+        raise exception using errcode = '23514', message = format('Escolha uma subcategoria de "%s".', cat.nome), detail = 'campo:categoria';
+      end if;
+    end if;
+    new.categoria := cat.tipo_legado;
+    new.subcategoria := cat.nome;
+  end if;
+
+  -- Entrando no ar (inserção já pública ou saindo de rascunho/pausado/expirado)
+  entrando := rigido and (tg_op = 'INSERT' or old.status not in ('ativo', 'em_analise', 'vendido'));
+  if entrando then
+    if coalesce(char_length(btrim(new.titulo)), 0) < 5 then
+      erro := 'Escreva um título com pelo menos 5 letras.'; campo := 'titulo';
+    elsif nullif(btrim(new.cidade), '') is null then
+      erro := 'Informe a cidade onde está o produto.'; campo := 'cidade';
+    elsif new.categoria is null then
+      erro := 'Escolha a categoria do anúncio.'; campo := 'categoria';
+    end if;
+    if erro is not null then
+      if pelo_sist then
+        -- Ex.: pagamento de anúncio avulso confirmado para um rascunho incompleto.
+        -- Não derruba o webhook: continua rascunho e o dono termina e publica.
+        new.status := old.status; rigido := false; entrando := false;
+      else
+        raise exception using errcode = '23514', message = erro, detail = 'campo:' || campo;
+      end if;
+    end if;
+  end if;
+
+  if tg_op = 'INSERT' or entrando or new.atributos is distinct from old.atributos
+     or new.categoria_id is distinct from old.categoria_id then
+    if jsonb_typeof(new.atributos) is distinct from 'object' then
+      raise exception 'Os detalhes do anúncio estão num formato inválido.' using errcode = '22023';
+    end if;
+    if octet_length(new.atributos::text) > 8000 then
+      raise exception 'Os detalhes do anúncio estão grandes demais.' using errcode = '22023';
+    end if;
+    if cat.id is not null then
+      if rigido and entrando and pelo_sist then
+        begin
+          new.atributos := public.normalizar_atributos(cat.campos, new.atributos, true);
+        exception when sqlstate '23514' then
+          new.status := old.status;
+          new.atributos := public.normalizar_atributos(cat.campos, new.atributos, false);
+        end;
+      else
+        new.atributos := public.normalizar_atributos(cat.campos, new.atributos, rigido);
+      end if;
+    end if;
+  end if;
+
+  return new;
+end $$;
 
 -- Aceitar só leva o anúncio para categoria sem filhas (a de baixo de tudo).
 create or replace function public.decidir_categoria_sugerida(p_anuncio uuid, p_aceitar boolean)
