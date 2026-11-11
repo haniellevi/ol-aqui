@@ -158,10 +158,10 @@ export default async function DestaquesAdminPage() {
           {tipos.map((t) => (
             <details key={t.slug} className="rounded-card border border-borda bg-cartao p-4">
               <summary className="min-h-10 cursor-pointer font-semibold text-beringela">
-                <h3 className="text-lg font-semibold text-beringela">{t.nome}</h3>
+                <h3 className="mr-3 inline text-lg font-semibold text-beringela">{t.nome}</h3>
                 <span className="text-legenda text-texto-suave">{t.alvo === "loja" ? "para lojas" : "para anúncios"}</span>
                 {!t.ativo && <Badge variant="secondary">desligado</Badge>}
-                <span className="ml-auto text-sm font-semibold text-beringela">
+                <span className="ml-3 inline-block text-sm font-semibold text-beringela">
                   {t.preco_centavos ? reais(t.preco_centavos) : "Grátis"}
                   {t.dias ? ` / ${t.dias} dias` : ""}
                   {t.vagas_por_regiao ? ` · ${t.vagas_por_regiao} vagas por região` : ""}

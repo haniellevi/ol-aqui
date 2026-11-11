@@ -6,7 +6,7 @@ import { Chip } from "@/components/ui/chip";
 import { exigirTela } from "@/lib/admin/equipe";
 import { inteiro, quando } from "@/lib/admin/formato";
 import { ehUuid, preco } from "@/lib/formato";
-import { LINK_ADMIN_ANUNCIOS, LINK_ADMIN_ATENDIMENTOS, linkAdminAnuncio } from "@/lib/rotas";
+import { LINK_ADMIN_ANUNCIOS, linkAdminAnuncio } from "@/lib/rotas";
 import type { MeuAnuncio } from "@/lib/tipos";
 import { Badge } from "@/components/ui/badge";
 
@@ -79,9 +79,6 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
       <Titulo sub="Consulte os anúncios de todos os vendedores e confira a situação de cada um.">
         Anúncios
       </Titulo>
-      <Link href={LINK_ADMIN_ATENDIMENTOS} prefetch={false} className={`${estiloBotaoSec} mb-4`}>
-        Conversas de atendimento
-      </Link>
       <Cartao className="mb-4">
         <form method="get" action={LINK_ADMIN_ANUNCIOS} className="grid items-end gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
           {filtro.status && <input type="hidden" name="status" value={filtro.status} />}

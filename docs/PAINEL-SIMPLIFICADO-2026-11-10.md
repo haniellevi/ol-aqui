@@ -37,9 +37,14 @@ As rotas existentes e a restrição por papel foram preservadas. Nenhum dado, hi
 | Duração duplicada do teste grátis | O plano de teste aponta para o ajuste efetivo `teste.dias`. Os planos pagos mantêm o período próprio. |
 | Bloco obrigatório da página inicial | Substitui caixa desabilitada por explicação. Os blocos opcionais continuam editáveis. |
 | Formulários extensos | Planos, tipos de destaque, preços regionais, créditos, detalhes do Aki, etapas de captação e dados de utilização ficam recolhidos. As operações continuam acessíveis. |
+| Atalhos repetidos após reorganizar o menu | As abas de Catálogo e Atendimentos substituem os dois links avulsos que levavam aos mesmos destinos. Captação mantém um único botão Novo contato. |
 
 ## Verificação
 
 O teste de Hoje reproduz a recusa de leitura dos contatos privados e verifica carregamento parcial, origem de cobranças e permanência dos atendimentos. Os testes de navegação e configuração verificam as sete entradas, permissões existentes, exceções regionais efetivas e recusa de formulários antigos. A suíte completa passou com 301 testes; tipos, lint e build também passaram. O lint mantém dez avisos anteriores em arquivos de demonstração e kit.
+
+Conferência autenticada na prévia `e602256`: as sete entradas carregaram; Usuários e Captação permaneceram acessíveis em Lojas; Atendimentos abriu em Anúncios; Resultados mostrou os quatro indicadores; Planos abriu recolhido e o link do teste levou a `teste.dias`. Mensagens mostrou apenas avisos no site, e os ajustes avançados não ofereceram os editores duplicados do Aki, as mensagens manuais antigas de Hoje nem os limites de preço obsoletos. Hoje e Configurações também foram conferidos com viewport de 390 × 844, sem rolagem horizontal da página. Nenhum cadastro, cobrança ou configuração foi alterado nessa conferência.
+
+A revisão visual identificou os atalhos repetidos entre Catálogo e Atendimentos e um espaçamento inadequado nos resumos de Destaques. Esses ajustes finais tiveram a validação automatizada repetida; o novo endereço de implantação exige uma sessão própria para uma nova conferência visual.
 
 Não houve migração de banco nem publicação em produção nesta alteração.

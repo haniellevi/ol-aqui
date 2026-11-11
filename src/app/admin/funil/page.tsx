@@ -114,7 +114,6 @@ export default async function FunilPage({ searchParams }: { searchParams: Params
 
       {!error && linhas.length === 0 ? (
         <Vazio titulo={total === 0 ? "O funil está vazio" : "Nada nesta etapa"} texto={total === 0 ? "Anote a primeira loja que você visitou ou traga as que já se cadastraram no site." : undefined}>
-          <Botao href="/admin/funil/novo" variante="secundario" tamanho="pequeno">Novo contato</Botao>
           {total === 0 && <BotaoImportar />}
         </Vazio>
       ) : (
