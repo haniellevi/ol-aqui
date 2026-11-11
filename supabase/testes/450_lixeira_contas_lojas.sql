@@ -117,6 +117,42 @@ select admin_lixeira_conta('user_lixDono',false,'Engano');
 reset role;
 select pg_temp.confere((select status='ativo' from anuncios where id=:'ativo'),'restaurar pelo admin devolve tudo');
 
+-- Reserva da limpeza: depois de reservada, a conta não volta mais
+set local role authenticated;
+set local request.jwt.claim.sub='user_lixDono';
+select pedir_exclusao_conta('EXCLUIR');
+reset role;
+update lixeira_contas set apagar_apos=now() where usuario_id='user_lixDono';
+select pg_temp.confere(limpeza_reservar_conta('user_lixDono'),'limpeza reserva a conta vencida');
+select pg_temp.confere(not limpeza_reservar_conta('user_lixOutro'),'conta fora da lixeira nao e reservada');
+set local role authenticated;
+set local request.jwt.claim.sub='user_lixDono';
+select pg_temp.confere(not (minha_exclusao_pendente()->>'pode_cancelar')::boolean,'reservada nao pode cancelar');
+select pg_temp.recusa($q$select cancelar_exclusao_conta()$q$,'23514');
+set local request.jwt.claim.sub='user_lixAdmin';
+select pg_temp.recusa($q$select admin_lixeira_conta('user_lixDono',false,'Engano')$q$,'23514');
+reset role;
+update lixeira_contas set reservada_em=null, apagar_apos=now()+interval '30 days' where usuario_id='user_lixDono';
+set local role authenticated;
+set local request.jwt.claim.sub='user_lixDono';
+select cancelar_exclusao_conta();
+
+-- Loja tirada pela equipe continua fora do ar se o dono pedir e cancelar a exclusão da conta
+set local request.jwt.claim.sub='user_lixAdmin';
+select admin_lixeira_loja(:'loja',true,'Denuncia de golpe');
+set local request.jwt.claim.sub='user_lixDono';
+select pedir_exclusao_conta('EXCLUIR');
+select cancelar_exclusao_conta();
+reset role;
+select pg_temp.confere((select origem='admin' from lixeira_lojas where vitrine_id=:'loja'),'exclusao da equipe continua da equipe');
+select pg_temp.confere((select excluida_em is not null from vitrines_lojas where id=:'loja'),'loja continua fora do ar');
+select pg_temp.confere((select status='excluido' from anuncios where id=:'ativo'),'anuncios continuam fora do ar');
+set local role authenticated;
+set local request.jwt.claim.sub='user_lixAdmin';
+select admin_lixeira_loja(:'loja',false,'Revisado');
+reset role;
+select pg_temp.confere((select status='ativo' from anuncios where id=:'ativo'),'equipe restaura a loja');
+
 -- Suspensão: tira loja e anúncios do ar e devolve igual
 set local role authenticated;
 set local request.jwt.claim.sub='user_lixAdmin';
@@ -141,13 +177,30 @@ select set_config('olaki.lixeira','',true);
 select pg_temp.confere((limpeza_pendente()->'anuncios') ? :'antes','anuncio vencido na fila');
 select pg_temp.confere(purgar_anuncio(:'antes')=array['https://x.supabase.co/storage/v1/object/public/anuncios/user_lixDono/a/1.webp'],'devolve foto sem uso');
 select pg_temp.confere(not exists(select 1 from anuncios where id=:'antes'),'anuncio apagado');
+select pg_temp.confere(exists(select 1 from limpeza_arquivos where url like '%/user_lixDono/a/1.webp'),'foto do anuncio na fila');
+-- Anúncio citado em pedido congelado é prova; foto de proposta comum sai do Storage
+select set_config('olaki.sistema','1',true);
+insert into anuncios(vitrine_id,categoria_id,titulo,cidade,status,atributos,preco_centavos,descricao)
+ values (:'loja',:'cat','Casa citada','Corrente','ativo','{"estado":"novo"}',10000,'Item de teste.');
+select id as citada from anuncios where titulo='Casa citada' \gset
+insert into radar_pedidos(id,comprador_id,microrregiao_id,titulo,cidade,status) values
+ ('45000000-0000-4000-a000-000000000001','user_lixOutro',:'reg','Pedido congelado de teste','Corrente','congelado'),
+ ('45000000-0000-4000-a000-000000000002','user_lixOutro',:'reg','Pedido aberto de teste','Corrente','aberto');
+insert into radar_propostas(pedido_id,vitrine_id,anuncio_id,mensagem,foto_url) values
+ ('45000000-0000-4000-a000-000000000001',:'loja',:'citada','Tenho este',null),
+ ('45000000-0000-4000-a000-000000000002',:'loja',null,'Tenho na foto','https://x.supabase.co/storage/v1/object/public/anuncios/user_lixDono/p/1.webp');
+select set_config('olaki.sistema','',true);
 set local role authenticated;
 set local request.jwt.claim.sub='user_lixAdmin';
 select admin_lixeira_loja(:'loja',true,'Loja abandonada');
 select admin_antecipar_limpeza('loja',:'loja','Loja Lixeira','Apagar agora');
 reset role;
 select pg_temp.confere((limpeza_pendente()->'lojas') ? :'loja','loja na fila');
-select purgar_loja(:'loja');
+select purgar_loja(:'loja') as purgadas \gset
+select pg_temp.confere(:'purgadas'::text[] @> array['https://x.supabase.co/storage/v1/object/public/anuncios/user_lixDono/p/1.webp'],'foto da proposta volta para o Storage');
+select pg_temp.confere(exists(select 1 from limpeza_arquivos where url='https://x.supabase.co/storage/v1/object/public/anuncios/user_lixDono/p/1.webp'),'foto entra na fila de arquivos');
+select pg_temp.confere(exists(select 1 from anuncios where id=:'citada'),'anuncio citado em pedido congelado fica');
+select pg_temp.confere(exists(select 1 from radar_propostas where pedido_id='45000000-0000-4000-a000-000000000001'),'proposta do pedido congelado fica');
 select pg_temp.confere((select nome like 'Loja encerrada%' from vitrines_lojas where id=:'loja'),'loja com prova fica anonimizada');
 select pg_temp.confere(exists(select 1 from anuncios where id=:'prova'),'prova preservada');
 select pg_temp.confere(not exists(select 1 from anuncios where id in (:'ativo',:'pausado')),'demais anuncios apagados');

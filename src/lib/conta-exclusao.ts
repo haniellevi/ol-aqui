@@ -27,11 +27,15 @@ export async function apagarConta(id: string) {
   // A conta já não existe no Clerk. Revoga também JWT emitido antes da exclusão,
   // sem depender de manter o perfil e sem renovar a data quando o evento se repete.
   ok(await db.rpc("revogar_conta_definitivamente", { p_id: id }));
+  // A pasta entra na fila antes de apagar o perfil: se o Storage falhar, a limpeza tenta de novo.
+  if (/^[A-Za-z0-9_]+$/.test(id)) {
+    ok(await db.from("limpeza_arquivos").upsert({ pasta: id }, { onConflict: "pasta", ignoreDuplicates: true }));
+  }
 
   const apagou = await db.from("perfis").delete().eq("id", id);
   if (!apagou.error) {
-    // O banco já confirmou a cascata. Se o Storage falhar, o mesmo evento pode tentar de novo.
-    await apagarArquivos(db, id);
+    // O banco já confirmou a cascata. Se o Storage falhar, a pasta continua na fila.
+    await apagarPasta(db, id);
     return;
   }
 
@@ -50,11 +54,18 @@ export async function apagarConta(id: string) {
   ok(pedidosCongelados);
   const congelados = (pedidosCongelados.data ?? []).map((p) => p.id as string);
   if (ids.length) {
-    ok(
-      await db.from("anuncios").delete().in("vitrine_id", ids)
-        .neq("status", "congelado").is("congelado_motivo", null)
-        .or("status_antes_exclusao.is.null,status_antes_exclusao.neq.congelado"),
-    );
+    // Anúncio citado numa proposta de pedido congelado também é prova.
+    let presos: string[] = [];
+    if (congelados.length) {
+      const ligados = await db.from("radar_propostas").select("anuncio_id").in("pedido_id", congelados).not("anuncio_id", "is", null);
+      ok(ligados);
+      presos = [...new Set((ligados.data ?? []).map((p) => p.anuncio_id as string))];
+    }
+    let anuncios = db.from("anuncios").delete().in("vitrine_id", ids)
+      .neq("status", "congelado").is("congelado_motivo", null)
+      .or("status_antes_exclusao.is.null,status_antes_exclusao.neq.congelado");
+    if (presos.length) anuncios = anuncios.not("id", "in", `(${presos.join(",")})`);
+    ok(await anuncios);
     let propostas = db.from("radar_propostas").delete().in("vitrine_id", ids);
     if (congelados.length) propostas = propostas.not("pedido_id", "in", `(${congelados.join(",")})`);
     ok(await propostas);
@@ -119,7 +130,42 @@ export async function apagarConta(id: string) {
       .eq("id", id),
   );
   // As fotos das provas ficam: só sai o que nenhum registro usa mais.
+  await apagarPasta(db, id);
+}
+
+/** Apaga a pasta da pessoa (só o que ninguém usa mais) e tira da fila. */
+async function apagarPasta(db: Db, id: string) {
   await apagarArquivos(db, id, true);
+  ok(await db.from("limpeza_arquivos").delete().eq("pasta", id));
+}
+
+/**
+ * Esvazia a fila de arquivos do Storage (fotos de anúncios e lojas apagados e pastas de
+ * contas apagadas). O que falhar fica na fila para a próxima limpeza.
+ */
+export async function limparFilaArquivos(db: Db) {
+  let removidos = 0;
+  const fila = await db.from("limpeza_arquivos").select("id, url, pasta").order("id").limit(LOTE);
+  ok(fila);
+  const itens = (fila.data ?? []) as { id: number; url: string | null; pasta: string | null }[];
+  const urls = itens.filter((i) => i.url);
+  if (urls.length) {
+    // Confere de novo: a URL pode ter voltado a ser usada.
+    const livres = await db.rpc("urls_sem_uso", { p_urls: urls.map((i) => i.url) });
+    ok(livres);
+    await removerUrls(db, (livres.data as string[] | null) ?? []);
+    ok(await db.from("limpeza_arquivos").delete().in("id", urls.map((i) => i.id)));
+    removidos += urls.length;
+  }
+  for (const item of itens.filter((i) => i.pasta)) {
+    try {
+      await apagarPasta(db, item.pasta!);
+      removidos++;
+    } catch (e) {
+      console.error("limpeza pasta", item.pasta, e);
+    }
+  }
+  return removidos;
 }
 
 /** Apaga os arquivos da pasta <id>/ do bucket. Com `soSemUso`, mantém os que ainda são usados. */

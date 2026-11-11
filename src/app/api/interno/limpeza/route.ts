@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { apagarConta, removerUrls } from "@/lib/conta-exclusao";
+import { apagarConta, limparFilaArquivos } from "@/lib/conta-exclusao";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -23,6 +23,10 @@ export async function POST(req: Request) {
 
   for (const id of contas) {
     try {
+      // Reserva no banco antes de apagar no Clerk: quem cancelou depois da fila não é apagado.
+      const reserva = await db.rpc("limpeza_reservar_conta", { p_id: id });
+      if (reserva.error) throw new Error(reserva.error.message);
+      if (!reserva.data) continue;
       try {
         await (await clerkClient()).users.deleteUser(id);
       } catch (e) {
@@ -37,9 +41,9 @@ export async function POST(req: Request) {
   }
   for (const id of lojas) {
     try {
+      // As fotos ficam na fila do banco e saem do Storage no fim.
       const r = await db.rpc("purgar_loja", { p_loja: id });
       if (r.error) throw new Error(r.error.message);
-      await removerUrls(db, (r.data as string[] | null) ?? []);
       resultado.lojas++;
     } catch (e) {
       resultado.falhas++;
@@ -50,12 +54,17 @@ export async function POST(req: Request) {
     try {
       const r = await db.rpc("purgar_anuncio", { p_id: id });
       if (r.error) throw new Error(r.error.message);
-      await removerUrls(db, (r.data as string[] | null) ?? []);
       resultado.anuncios++;
     } catch (e) {
       resultado.falhas++;
       console.error("limpeza anuncio", id, e);
     }
+  }
+  try {
+    await limparFilaArquivos(db);
+  } catch (e) {
+    resultado.falhas++;
+    console.error("limpeza arquivos", e);
   }
   return NextResponse.json({ ok: true, ...resultado });
 }

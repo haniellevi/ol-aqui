@@ -210,7 +210,12 @@ test('exclusão: arquivos só são removidos após confirmação do banco, inclu
   for (const op of [{}, { excluirErro: erroFinanceiro }]) {
     const a = webhook(op); assert.equal((await a.post()).status, 200);
     const armazenamento = a.chamadas.findIndex(c => c.acao === 'storage-list');
-    assert.ok(armazenamento > 0); assert.ok(a.chamadas.slice(armazenamento).every(c => c.acao === 'storage-list'));
+    assert.ok(armazenamento > 0);
+    // Depois do Storage, só sai a pasta da fila de arquivos.
+    assert.ok(a.chamadas.slice(armazenamento).every(c => c.acao === 'storage-list' || (c.tabela === 'limpeza_arquivos' && c.acao === 'delete')));
+    // A pasta entra na fila antes de apagar o perfil, para a limpeza tentar de novo se o Storage falhar.
+    const fila = a.chamadas.findIndex(c => c.tabela === 'limpeza_arquivos' && c.acao === 'upsert');
+    assert.ok(fila >= 0 && fila < a.chamadas.findIndex(c => c.tabela === 'perfis' && c.acao === 'delete'));
   }
   for (const op of [{ excluirErro: erroFinanceiro, falha: 'radar_propostas' }, { excluirErro: erroFinanceiro, falha: 'anuncios' }]) {
     const a = webhook(op); assert.equal((await a.post()).status, 500);

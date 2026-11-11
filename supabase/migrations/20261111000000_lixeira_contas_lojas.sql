@@ -28,13 +28,29 @@ create table public.lixeira_contas (
   apagar_apos timestamptz not null,
   origem      text not null check (origem in ('usuario', 'admin')),
   motivo      text check (motivo is null or char_length(motivo) <= 300),
-  autor       text
+  autor       text,
+  -- A limpeza reserva a conta antes de apagar no Clerk: depois disso não dá mais para cancelar.
+  reservada_em timestamptz
 );
 alter table public.lixeira_lojas enable row level security;
 alter table public.lixeira_contas enable row level security;
 revoke all on public.lixeira_lojas, public.lixeira_contas from public, anon, authenticated;
 -- O servidor do site confere a conta em exclusão e a limpeza remove as linhas.
 grant select, delete on public.lixeira_lojas, public.lixeira_contas to service_role;
+
+-- Fila de arquivos do Storage a apagar. Fica gravada no banco junto com a remoção do
+-- registro: se o Storage falhar, a próxima limpeza tenta de novo.
+create table public.limpeza_arquivos (
+  id        bigserial primary key,
+  url       text unique,
+  pasta     text unique check (pasta is null or pasta ~ '^[A-Za-z0-9_]+$'),
+  criado_em timestamptz not null default now(),
+  check (num_nonnulls(url, pasta) = 1)
+);
+alter table public.limpeza_arquivos enable row level security;
+revoke all on public.limpeza_arquivos from public, anon, authenticated;
+grant select, insert, delete on public.limpeza_arquivos to service_role;
+grant usage on sequence public.limpeza_arquivos_id_seq to service_role;
 
 -- Suspensão: guarda o que estava no ar para devolver igual ao reativar.
 alter table public.contas_bloqueadas
@@ -177,7 +193,9 @@ begin
   select id into loja from public.vitrines_lojas where dono_id = p_id;
   if loja is not null then
     -- Loja que o dono já tinha excluído passa a acompanhar a conta.
-    update public.lixeira_lojas set origem = 'conta', apagar_apos = greatest(apagar_apos, prazo) where vitrine_id = loja;
+    -- Exclusão feita pela equipe continua da equipe: cancelar a conta não a desfaz.
+    update public.lixeira_lojas set origem = 'conta', apagar_apos = greatest(apagar_apos, prazo)
+     where vitrine_id = loja and origem = 'dono';
     perform public.lixeira_mover_loja(loja, 'conta', p_motivo, p_autor);
   end if;
   return prazo;
@@ -188,6 +206,9 @@ returns void language plpgsql security definer set search_path = public, pg_temp
 declare loja uuid;
 begin
   perform 1 from public.perfis where id = p_id for update;
+  if exists(select 1 from public.lixeira_contas where usuario_id = p_id and reservada_em is not null) then
+    raise exception 'A exclusão desta conta já está em andamento e não pode ser desfeita.' using errcode = '23514';
+  end if;
   select l.vitrine_id into loja from public.lixeira_lojas l join public.vitrines_lojas v on v.id = l.vitrine_id
    where v.dono_id = p_id and l.origem = 'conta';
   -- Sai da lixeira antes: as regras dos anúncios conferem a conta de quem restaura.
@@ -209,7 +230,7 @@ end $$;
 -- Lê o JWT direto: usuario_id() já é nulo para quem está na lixeira.
 create function public.minha_exclusao_pendente()
 returns jsonb language sql stable security definer set search_path = public, pg_temp as $$
-  select jsonb_build_object('apagar_apos', l.apagar_apos, 'pode_cancelar', l.origem = 'usuario')
+  select jsonb_build_object('apagar_apos', l.apagar_apos, 'pode_cancelar', l.origem = 'usuario' and l.reservada_em is null)
     from public.lixeira_contas l
    where l.usuario_id = nullif(auth.jwt()->>'sub', '')
      and not exists(select 1 from public.contas_revogadas r where r.usuario_id = l.usuario_id)
@@ -388,16 +409,44 @@ begin
     values('usuario',p_id,public.usuario_id(),case when p_bloquear then 'bloquear' else 'desbloquear' end,p_motivo);
 end $$;
 
+-- Anúncio que a limpeza não pode apagar: congelado, sob retenção ou ligado a pedido congelado.
+create function public.anuncio_retido(a public.anuncios)
+returns boolean language sql stable security definer set search_path = public, pg_temp as $$
+  select a.status = 'congelado' or a.congelado_motivo is not null
+      or coalesce(a.status_antes_exclusao::text, '') = 'congelado'
+      or exists(select 1 from public.radar_propostas rp join public.radar_pedidos p on p.id = rp.pedido_id
+                 where rp.anuncio_id = a.id and p.status = 'congelado')
+$$;
+
 -- Fila da limpeza diária (só o sistema). Congelados e itens ligados a eles ficam de fora.
 create function public.limpeza_pendente()
 returns jsonb language sql stable security definer set search_path = public, pg_temp as $$
   select jsonb_build_object(
     'contas', coalesce((select jsonb_agg(usuario_id) from public.lixeira_contas where apagar_apos <= now()), '[]'),
     'lojas', coalesce((select jsonb_agg(vitrine_id) from public.lixeira_lojas where apagar_apos <= now() and origem <> 'conta'), '[]'),
-    'anuncios', coalesce((select jsonb_agg(id) from public.anuncios
-       where status = 'excluido' and not excluido_com_loja and excluido_em <= now() - interval '30 days'
-         and status_antes_exclusao <> 'congelado' and congelado_motivo is null), '[]'))
+    'anuncios', coalesce((select jsonb_agg(a.id) from public.anuncios a
+       where a.status = 'excluido' and not a.excluido_com_loja and a.excluido_em <= now() - interval '30 days'
+         and not public.anuncio_retido(a)), '[]'))
 $$;
+
+-- Reserva uma conta vencida para a limpeza. Depois disso, cancelar ou restaurar é recusado.
+create function public.limpeza_reservar_conta(p_id text)
+returns boolean language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  perform 1 from public.perfis where id = p_id for update;
+  update public.lixeira_contas set reservada_em = coalesce(reservada_em, now())
+   where usuario_id = p_id and apagar_apos <= now();
+  return found;
+end $$;
+
+-- Guarda na fila as URLs sem uso e as devolve.
+create function public.limpeza_enfileirar(p_urls text[])
+returns text[] language plpgsql security definer set search_path = public, pg_temp as $$
+declare livres text[] := public.urls_sem_uso(p_urls);
+begin
+  insert into public.limpeza_arquivos(url) select unnest(livres) on conflict do nothing;
+  return livres;
+end $$;
 
 -- URLs que nenhum outro registro usa (anúncio, loja ou proposta). Para apagar do Storage.
 create function public.urls_sem_uso(p_urls text[])
@@ -414,9 +463,10 @@ create function public.purgar_anuncio(p_id uuid)
 returns text[] language plpgsql security definer set search_path = public, pg_temp as $$
 declare fotos text[];
 begin
-  delete from public.anuncios where id = p_id and status = 'excluido' and excluido_em <= now() - interval '30 days'
-    returning anuncios.fotos into fotos;
-  return public.urls_sem_uso(coalesce(fotos, '{}'));
+  delete from public.anuncios a where a.id = p_id and a.status = 'excluido' and a.excluido_em <= now() - interval '30 days'
+    and not public.anuncio_retido(a)
+    returning a.fotos into fotos;
+  return public.limpeza_enfileirar(coalesce(fotos, '{}'));
 end $$;
 
 -- Apaga uma loja da lixeira. Com pagamento ou conteúdo congelado, a loja fica anonimizada
@@ -430,13 +480,19 @@ declare
 begin
   select * into loja from public.vitrines_lojas where id = p_loja for update;
   if not found or loja.excluida_em is null then return '{}'; end if;
+  -- Só apaga se ainda estiver vencida na lixeira (pode ter sido restaurada depois da fila).
+  if not exists(select 1 from public.lixeira_lojas where vitrine_id = p_loja and apagar_apos <= now() and origem <> 'conta') then
+    return '{}';
+  end if;
   select coalesce(array_agg(f), '{}') into urls from public.anuncios a, unnest(a.fotos) f
-   where a.vitrine_id = p_loja and a.status <> 'congelado' and a.congelado_motivo is null;
+   where a.vitrine_id = p_loja and not public.anuncio_retido(a);
   urls := urls || array[loja.logo_url, loja.capa_url, loja.banner_url];
-  delete from public.anuncios where vitrine_id = p_loja and status <> 'congelado' and congelado_motivo is null
-    and coalesce(status_antes_exclusao::text, '') <> 'congelado';
-  delete from public.radar_propostas rp where rp.vitrine_id = p_loja
-    and not exists(select 1 from public.radar_pedidos p where p.id = rp.pedido_id and p.status = 'congelado');
+  delete from public.anuncios a where a.vitrine_id = p_loja and not public.anuncio_retido(a);
+  with d as (
+    delete from public.radar_propostas rp where rp.vitrine_id = p_loja
+      and not exists(select 1 from public.radar_pedidos p where p.id = rp.pedido_id and p.status = 'congelado')
+    returning rp.foto_url)
+  select urls || coalesce(array_agg(foto_url) filter (where foto_url is not null), '{}') into urls from d;
   if exists(select 1 from public.pagamentos where vitrine_id = p_loja) or loja.gateway_assinatura_id is not null
      or exists(select 1 from public.anuncios where vitrine_id = p_loja)
      or exists(select 1 from public.radar_propostas where vitrine_id = p_loja) then
@@ -458,20 +514,22 @@ begin
   else
     delete from public.vitrines_lojas where id = p_loja;
   end if;
-  return public.urls_sem_uso(urls);
+  return public.limpeza_enfileirar(urls);
 end $$;
 
 revoke all on function
   public.lixeira_mover_loja(uuid,text,text,text), public.lixeira_restaurar_loja(uuid),
   public.lixeira_mover_conta(text,text,text,text), public.lixeira_restaurar_conta(text),
   public.limpeza_pendente(), public.urls_sem_uso(text[]), public.purgar_anuncio(uuid), public.purgar_loja(uuid),
+  public.limpeza_reservar_conta(text), public.anuncio_retido(public.anuncios), public.limpeza_enfileirar(text[]),
   public.excluir_minha_loja(text), public.restaurar_minha_loja(), public.pedir_exclusao_conta(text),
   public.minha_exclusao_pendente(), public.cancelar_exclusao_conta(),
   public.admin_lixeira_conta(text,boolean,text), public.admin_lixeira_loja(uuid,boolean,text),
   public.admin_antecipar_limpeza(text,text,text,text), public.admin_lixeira()
   from public, anon, authenticated;
 grant execute on function public.limpeza_pendente(), public.urls_sem_uso(text[]),
-  public.purgar_anuncio(uuid), public.purgar_loja(uuid) to service_role;
+  public.purgar_anuncio(uuid), public.purgar_loja(uuid), public.limpeza_reservar_conta(text),
+  public.anuncio_retido(public.anuncios), public.limpeza_enfileirar(text[]) to service_role;
 grant execute on function public.excluir_minha_loja(text), public.restaurar_minha_loja(),
   public.pedir_exclusao_conta(text), public.minha_exclusao_pendente(), public.cancelar_exclusao_conta(),
   public.admin_lixeira_conta(text,boolean,text), public.admin_lixeira_loja(uuid,boolean,text),
