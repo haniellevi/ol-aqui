@@ -23,6 +23,11 @@ insert into anuncios(id,vitrine_id,categoria_id,titulo,descricao,cidade,preco_ce
  ('48100000-0000-4000-a000-000000000003','48000000-0000-4000-a000-000000000001',:'moveis','Mesa pausada 480',null,'Corrente',30000,'pausado',now()+interval '1 day'),
  ('48100000-0000-4000-a000-000000000004','48000000-0000-4000-a000-000000000002',:'carros','Cadeira da pessoa 480',null,'Corrente',9000,'ativo',now()+interval '1 day'),
  ('48100000-0000-4000-a000-000000000005','48000000-0000-4000-a000-000000000001',:'moveis','Rack 480',null,'Corrente',40000,'ativo',now()+interval '1 day');
+-- Catálogo antigo da loja (já avaliado, fora do lote): a maioria é de Agro.
+select id as sementes from categorias where slug='sementes-e-insumos' \gset
+insert into anuncios(vitrine_id,categoria_id,titulo,cidade,preco_centavos,status,publicado_em,categoria_sugerida_em)
+ select '48000000-0000-4000-a000-000000000001',:'sementes','Semente antiga 480 '||g,'Corrente',1000,'ativo',now()-interval '30 days',now()-interval '1 day'
+   from generate_series(1,4) g;
 update configuracoes set valor='10000' where chave='robo.orcamento_mensal_centavos' and microrregiao_id is null;
 
 do $$ begin
@@ -69,7 +74,7 @@ begin
   assert (select categoria_sugestao_estado is null and categoria_sugerida_em is not null from anuncios where id='48100000-0000-4000-a000-000000000002'), 'Mesma categoria: avaliado, sem sugestão';
   assert (select categoria_sugerida_em is null from anuncios where id='48100000-0000-4000-a000-000000000004'), 'Anúncio de fora do lote não muda';
   assert (select erro is null and custo_centavos > 0 and tokens_entrada=900 from robo_uso where id=(select uso_id from categorizacao_ia where id=(r->>'id')::uuid)), 'Custo real registrado';
-  assert (select nicho_sugerido_id=(select id from categorias where slug='casa-e-moveis') from vitrines_lojas where id='48000000-0000-4000-a000-000000000001'), 'Nicho sugerido pela maioria';
+  assert (select nicho_sugerido_id=(select id from categorias where slug='agro') from vitrines_lojas where id='48000000-0000-4000-a000-000000000001'), 'Nicho pela maioria do catálogo, não só do lote';
   assert (select count(*)=1 from notificacoes where usuario_id='user_loja480' and tipo='categorias_revisar' and link='/minha-conta/loja/categorias'), 'Lojista avisado';
   -- [4] Lote fechado não aceita de novo.
   assert categorizacao_ia_concluir((r->>'id')::uuid, (r->>'reserva')::uuid, '[]'::jsonb) is null, 'Não conclui duas vezes';
@@ -93,6 +98,17 @@ begin
   update configuracoes set valor='0' where chave='robo.orcamento_mensal_centavos' and microrregiao_id is null;
   assert categorizacao_ia_reservar() is null, 'Sem orçamento';
   assert (select categoria_sugerida_em is null from anuncios where id='48100000-0000-4000-a000-000000000006'), 'Sem orçamento não marca';
+end $$;
+
+-- [5b] Lote travado conta como trabalho para a rotina, e a reserva seguinte o recupera.
+do $$ begin
+  update configuracoes set valor='10000' where chave='robo.orcamento_mensal_centavos' and microrregiao_id is null;
+  update anuncios set categoria_sugerida_em = now() where categoria_sugerida_em is null;
+  assert not categorizacao_ia_tem_trabalho(), 'Sem fila, sem trabalho';
+  insert into categorizacao_ia(anuncios, estado, criado_em) values (array['48100000-0000-4000-a000-000000000006'::uuid], 'processando', now() - interval '11 minutes');
+  assert categorizacao_ia_tem_trabalho(), 'Lote travado é trabalho';
+  perform categorizacao_ia_reservar();
+  assert not exists(select 1 from categorizacao_ia where estado='processando' and criado_em < now() - interval '10 minutes'), 'Lote travado recuperado';
 end $$;
 
 -- [6] O dono decide; outra pessoa não.
@@ -119,7 +135,7 @@ do $$ begin
   assert (select count(*)=1 from minhas_sugestoes_categoria('48000000-0000-4000-a000-000000000001')), 'Fila do dono';
   assert decidir_todas_categorias('48000000-0000-4000-a000-000000000001', true) = 1, 'Aceitou todas';
   assert (select count(*)=0 from minhas_sugestoes_categoria('48000000-0000-4000-a000-000000000001')), 'Fila vazia';
-  assert (select sugerido_id=(select id from categorias where slug='casa-e-moveis') from minha_sugestao_nicho('48000000-0000-4000-a000-000000000001')), 'Dono vê o nicho sugerido';
+  assert (select sugerido_id=(select id from categorias where slug='agro') from minha_sugestao_nicho('48000000-0000-4000-a000-000000000001')), 'Dono vê o nicho sugerido';
   assert not exists(select 1 from nichos_disponiveis() n join categorias c on c.id=n.id where c.pai_id is not null), 'Só categorias principais';
   begin
     perform definir_nicho_loja('48000000-0000-4000-a000-000000000001', (select id from categorias where slug='moveis'));
