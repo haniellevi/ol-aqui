@@ -1,0 +1,381 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T22:48:30-03:00",
+  "title": "Design System: Mercado da Região",
+  "extensions": {
+    "colorMeta": {
+      "beringela": {
+        "role": "primary",
+        "displayName": "Beringela Vinho",
+        "canonical": "#4b1248",
+        "tonalRamp": [
+          "#3e0f3b",
+          "#671963",
+          "#90238a",
+          "#b92cb2",
+          "#d652cf",
+          "#e38cdf",
+          "#f0c1ee",
+          "#faeaf9"
+        ]
+      },
+      "laranja": {
+        "role": "secondary",
+        "displayName": "Laranja Feira",
+        "canonical": "#ff6a13",
+        "tonalRamp": [
+          "#4c1c00",
+          "#802f00",
+          "#b24200",
+          "#e65500",
+          "#ff7829",
+          "#ffa570",
+          "#ffcfb2",
+          "#ffefe5"
+        ]
+      },
+      "laranja-escuro": {
+        "role": "secondary",
+        "displayName": "Laranja Tijolo",
+        "canonical": "#c2410c",
+        "tonalRamp": [
+          "#481804",
+          "#782807",
+          "#a8380a",
+          "#d8480d",
+          "#f36c35",
+          "#f79d79",
+          "#fbcbb7",
+          "#feeee7"
+        ]
+      },
+      "verde-escuro": {
+        "role": "tertiary",
+        "displayName": "Verde Conversa",
+        "canonical": "#0e7a3d",
+        "tonalRamp": [
+          "#084522",
+          "#0d7239",
+          "#12a050",
+          "#18ce67",
+          "#3fe989",
+          "#7ff0b0",
+          "#baf7d5",
+          "#e8fcf1"
+        ]
+      },
+      "verde": {
+        "role": "tertiary",
+        "displayName": "Verde Selo",
+        "canonical": "#12a150",
+        "tonalRamp": [
+          "#084522",
+          "#0d7339",
+          "#12a150",
+          "#17ce67",
+          "#3ee989",
+          "#7ff1b0",
+          "#baf7d5",
+          "#e8fcf1"
+        ]
+      },
+      "fundo": {
+        "role": "neutral",
+        "displayName": "Cinza Manhã",
+        "canonical": "#f7f8fa",
+        "tonalRamp": [
+          "#1d232f",
+          "#313b4e",
+          "#45526e",
+          "#586a8d",
+          "#7b8cad",
+          "#a7b2c8",
+          "#d0d6e2",
+          "#eff1f5"
+        ]
+      },
+      "cartao": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#737373",
+          "#949494",
+          "#b8b8b8",
+          "#d9d9d9",
+          "#f2f2f2"
+        ]
+      },
+      "texto": {
+        "role": "neutral",
+        "displayName": "Tinta Ameixa",
+        "canonical": "#342b3b",
+        "tonalRamp": [
+          "#27202c",
+          "#41364a",
+          "#5b4b67",
+          "#756185",
+          "#9683a5",
+          "#b9acc3",
+          "#dad3df",
+          "#f2f0f4"
+        ]
+      },
+      "texto-suave": {
+        "role": "neutral",
+        "displayName": "Ameixa Suave",
+        "canonical": "#5e5266",
+        "tonalRamp": [
+          "#27222a",
+          "#413947",
+          "#5b5063",
+          "#75667f",
+          "#9688a0",
+          "#b9b0bf",
+          "#dad5dd",
+          "#f3f1f4"
+        ]
+      },
+      "borda": {
+        "role": "neutral",
+        "displayName": "Linha Lavanda",
+        "canonical": "#e6e0e9",
+        "tonalRamp": [
+          "#28202d",
+          "#43354b",
+          "#5e4a68",
+          "#795f86",
+          "#9a82a6",
+          "#bcabc4",
+          "#dbd2df",
+          "#f3f0f4"
+        ]
+      },
+      "borda-campo": {
+        "role": "neutral",
+        "displayName": "Contorno de Campo",
+        "canonical": "#968b9e",
+        "tonalRamp": [
+          "#27232a",
+          "#413a45",
+          "#5b5161",
+          "#74697d",
+          "#958a9d",
+          "#b9b1be",
+          "#d9d5dc",
+          "#f2f1f3"
+        ]
+      },
+      "selecao": {
+        "role": "neutral",
+        "displayName": "Lavanda Seleção",
+        "canonical": "#f0eaf5",
+        "tonalRamp": [
+          "#271934",
+          "#422956",
+          "#5c3a79",
+          "#764a9b",
+          "#976eba",
+          "#ba9ed1",
+          "#dacbe6",
+          "#f3eef7"
+        ]
+      },
+      "perigo": {
+        "role": "error",
+        "displayName": "Vermelho Alerta",
+        "canonical": "#b91c1c",
+        "tonalRamp": [
+          "#420a0a",
+          "#6f1111",
+          "#9b1717",
+          "#c71e1e",
+          "#e34545",
+          "#ec8383",
+          "#f5bdbd",
+          "#fce9e9"
+        ]
+      },
+      "aviso": {
+        "role": "warning",
+        "displayName": "Âmbar Aviso",
+        "canonical": "#b45309",
+        "tonalRamp": [
+          "#492204",
+          "#793806",
+          "#aa4e08",
+          "#db650b",
+          "#f58733",
+          "#f8af77",
+          "#fbd4b6",
+          "#fef1e7"
+        ]
+      }
+    },
+    "shadows": [
+      {
+        "name": "sombra-rasa",
+        "value": "0 1px 2px rgb(75 18 72 / 0.08)",
+        "purpose": "Cards públicos de anúncio que precisam se separar do fundo."
+      },
+      {
+        "name": "sombra-base",
+        "value": "0 -2px 12px rgb(75 18 72 / 0.12)",
+        "purpose": "Barra de baixo, folhas que sobem e o + Anunciar."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Deslocamento de 1 px em 120 ms ao apertar (olaki-acao)."
+      },
+      {
+        "name": "cor",
+        "value": "150ms ease",
+        "purpose": "Transição de cor de fundo, borda e texto."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "O único botão laranja da tela: a ação principal.",
+      "html": "<button class=\"ds-btn-primario\">Publicar anúncio</button>",
+      "css": ".ds-btn-primario{font-family:Poppins,system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 12px;border:0;border-radius:8px;background:#ff6a13;color:#4b1248;font-size:14px;font-weight:600;line-height:20px;cursor:pointer;transition:transform 120ms cubic-bezier(.23,1,.32,1),filter 150ms ease}.ds-btn-primario:hover{filter:brightness(.95)}.ds-btn-primario:active{transform:translateY(1px)}.ds-btn-primario:focus-visible{outline:3px solid var(--color-laranja-escuro,#c2410c);outline-offset:2px}"
+    },
+    {
+      "name": "Botão WhatsApp",
+      "kind": "button",
+      "refersTo": "button-whatsapp",
+      "description": "Só para chamar o vendedor ou o comprador.",
+      "html": "<button class=\"ds-btn-whats\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/></svg>Chamar no WhatsApp</button>",
+      "css": ".ds-btn-whats{font-family:Poppins,system-ui,sans-serif;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:0;border-radius:8px;background:#0e7a3d;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:filter 150ms ease}.ds-btn-whats:hover{filter:brightness(.95)}.ds-btn-whats:active{transform:translateY(1px)}.ds-btn-whats:focus-visible{outline:3px solid var(--color-laranja-escuro,#c2410c);outline-offset:2px}"
+    },
+    {
+      "name": "Botão secundário",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ações de apoio como Salvar rascunho e Compartilhar.",
+      "html": "<button class=\"ds-btn-sec\">Salvar rascunho</button>",
+      "css": ".ds-btn-sec{font-family:Poppins,system-ui,sans-serif;min-height:44px;padding:0 12px;border:1px solid #4b1248;border-radius:8px;background:#fff;color:#4b1248;font-size:14px;font-weight:600;cursor:pointer;transition:background-color 150ms ease}.ds-btn-sec:hover{background:#f7f8fa}.ds-btn-sec:focus-visible{outline:3px solid var(--color-laranja-escuro,#c2410c);outline-offset:2px}"
+    },
+    {
+      "name": "Campo",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Rótulo sempre visível, 16 px no toque, erro escrito embaixo.",
+      "html": "<label class=\"ds-campo\"><span>Preço</span><input placeholder=\"R$ 8.500\" inputmode=\"numeric\"></label>",
+      "css": ".ds-campo{font-family:Poppins,system-ui,sans-serif;display:flex;flex-direction:column;gap:4px;color:#342b3b}.ds-campo span{font-size:14px;font-weight:600}.ds-campo input{font-family:Poppins,system-ui,sans-serif;height:44px;padding:0 12px;border:1px solid #968b9e;border-radius:8px;background:#fff;color:#342b3b;font-size:16px}.ds-campo input::placeholder{color:#5e5266}.ds-campo input:focus-visible{outline:none;border-color:#c2410c;box-shadow:0 0 0 2px rgb(194 65 12 / .3)}"
+    },
+    {
+      "name": "Chip de filtro",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Filtros e escolhas; selecionado com lavanda, borda beringela e ✓.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">✓ Corrente</button><button class=\"ds-chip\" aria-pressed=\"false\">Até R$ 10 mil</button></div>",
+      "css": ".ds-chips{display:flex;gap:8px}.ds-chip{font-family:Poppins,system-ui,sans-serif;min-height:44px;padding:0 12px;border:1px solid #968b9e;border-radius:8px;background:#fff;color:#4b1248;font-size:14px;font-weight:600;cursor:pointer;transition:background-color 150ms ease}.ds-chip:hover{background:#f7f8fa}.ds-chip[aria-pressed=\"true\"]{background:#f0eaf5;border-color:#4b1248}.ds-chip:focus-visible{outline:3px solid var(--color-laranja-escuro,#c2410c);outline-offset:2px}"
+    },
+    {
+      "name": "Card de anúncio",
+      "kind": "card",
+      "refersTo": "card-anuncio",
+      "description": "Foto 4:3, preço em destaque, título em até 2 linhas, cidade e data.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-foto\"></div><div class=\"ds-card-corpo\"><strong>R$ 8.500</strong><p>Moto Honda CG 160 Fan 2021, revisada</p><small>Corrente · há 2 dias</small></div></article>",
+      "css": ".ds-card{font-family:Poppins,system-ui,sans-serif;width:180px;overflow:hidden;border-radius:10px;background:#fff;box-shadow:0 1px 2px rgb(75 18 72 / .08)}.ds-card-foto{aspect-ratio:4/3;background:#e6e0e9}.ds-card-corpo{padding:10px;display:flex;flex-direction:column;gap:2px}.ds-card-corpo strong{font-size:16px;font-weight:700;color:#4b1248}.ds-card-corpo p{margin:0;font-size:14px;line-height:20px;color:#342b3b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ds-card-corpo small{font-size:13px;color:#5e5266}"
+    },
+    {
+      "name": "Barra de baixo",
+      "kind": "nav",
+      "refersTo": "nav-bottom",
+      "description": "Navegação principal no celular, com o + Anunciar laranja no meio.",
+      "html": "<nav class=\"ds-nav\"><a aria-current=\"page\">Início</a><a>Buscar</a><a class=\"ds-nav-mais\"><span>+</span>Anunciar</a><a>Radar</a><a>Conta</a></nav>",
+      "css": ".ds-nav{font-family:Poppins,system-ui,sans-serif;display:grid;grid-template-columns:repeat(5,1fr);height:64px;max-width:420px;background:#fff;border-top:1px solid #e6e0e9;box-shadow:0 -2px 12px rgb(75 18 72 / .12)}.ds-nav a{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:10px;font-size:13px;font-weight:600;color:#5e5266;cursor:pointer}.ds-nav a[aria-current]{color:#4b1248;text-decoration:underline 2px;text-underline-offset:4px}.ds-nav-mais{color:#4b1248!important}.ds-nav-mais span{display:grid;place-items:center;width:48px;height:48px;margin-top:-20px;margin-bottom:2px;border-radius:10px;background:#ff6a13;color:#4b1248;font-size:24px;font-weight:700;box-shadow:0 -2px 12px rgb(75 18 72 / .12)}"
+    },
+    {
+      "name": "Marca",
+      "kind": "custom",
+      "refersTo": "marca-selo",
+      "description": "Logo do Mercado da Região: selo M laranja e o nome em duas linhas.",
+      "html": "<span class=\"ds-marca\"><span class=\"ds-marca-m\">M</span><span class=\"ds-marca-nome\">Mercado<small>da Região</small></span></span>",
+      "css": ".ds-marca{font-family:Poppins,system-ui,sans-serif;display:inline-flex;align-items:center;gap:8px;color:#4b1248}.ds-marca-m{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:12px;background:#ff6a13;font-size:18px;font-weight:700}.ds-marca-nome{display:flex;flex-direction:column;font-size:15px;font-weight:700;line-height:1.1;letter-spacing:-.01em}.ds-marca-nome small{font-size:13px;font-weight:600}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A feira da cidade",
+    "overview": "**Creative North Star: \"A feira da cidade\"**\n\nO Mercado da Região deve parecer a feira da cidade: tudo perto, conhecido e direto. Cada anúncio é uma barraca organizada, com a foto do produto de verdade, o preço à vista e o vendedor a um toque, no WhatsApp. Nada de vitrine de shopping nacional, nada de brilho de startup. Quem abre tem que reconhecer o comércio da própria cidade e saber na hora o que fazer.\n\nA interface é compacta e calma. Uma família de letra só (Poppins), duas cores da marca (beringela e laranja), superfícies brancas sobre um fundo cinza bem claro e frio. A hierarquia vem do tamanho, do peso e do espaço, não de enfeite. Cada tela tem um botão principal laranja; o resto fica em beringela, borda ou texto. O movimento só responde ao toque.\n\nO sistema é feito para o pior caso: celular Android de entrada, 360 px de largura, sol do meio-dia, internet fraca e quem lê devagar. Contraste forte, áreas de toque generosas e texto escrito ao lado de cada ícone importante.",
+    "keyCharacteristics": [
+      "Beringela para marca, títulos e texto de ação; laranja para o único botão principal e o selo da marca.",
+      "Fundo frio `fundo` com cartões brancos; bege e laranja-claro saíram da interface.",
+      "Poppins em três pesos (400, 600, 700); preço é o único texto em 700 fora do logo.",
+      "Controles de 44 px no toque e 40 px com mouse a partir de 768 px.",
+      "Profundidade mínima: borda discreta e duas sombras com tom de beringela.",
+      "Navegação de baixo com cinco itens e o \"+ Anunciar\" laranja no meio."
+    ],
+    "rules": [
+      {
+        "name": "The Laranja Calado Rule",
+        "body": "Texto branco nunca vai sobre o laranja (2,9:1, reprova até em letra grande). Sobre laranja, o texto é beringela. Onde precisar de branco, o fundo é `laranja-escuro` ou beringela.",
+        "section": "colors"
+      },
+      {
+        "name": "The Um Laranja Rule",
+        "body": "Um botão laranja por tela. Dois laranjas brigando é erro, não destaque.",
+        "section": "colors"
+      },
+      {
+        "name": "The Lavanda Calada Rule",
+        "body": "Sobre `selecao`, o texto é beringela; laranja-escuro ali não passa 4,5:1 em letra pequena.",
+        "section": "colors"
+      },
+      {
+        "name": "The Três Pesos Rule",
+        "body": "Só 400, 600 e 700. O peso 700 é do preço e da marca; título e botão usam 600; valor de formulário e `<dd>` ficam em 400.",
+        "section": "typography"
+      },
+      {
+        "name": "The Zoom Livre Rule",
+        "body": "Tamanhos em rem e zoom nunca travado. Muita gente da região usa letra grande no celular, e a tela tem que crescer junto.",
+        "section": "typography"
+      },
+      {
+        "name": "The Borda Antes Rule",
+        "body": "Primeiro tente separar com `borda` ou com o contraste fundo/cartão. Sombra só nos dois casos acima.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do usar um único botão laranja com texto beringela por tela.",
+      "Do escrever o nome ao lado de todo ícone importante; ícone sozinho só para lupa, coração, X e voltar.",
+      "Do manter 44 px de área de toque no celular e 8 px de espaço entre alvos vizinhos.",
+      "Do mostrar o preço sempre, com \"a combinar\" claro quando não houver valor.",
+      "Do escrever \"Patrocinado\" em todo anúncio pago.",
+      "Do usar fotos reais do produto anunciado.",
+      "Do dar uma saída em toda tela vazia (\"Pedir no Radar\", \"Perguntar ao Aki\")."
+    ],
+    "donts": [
+      "Don't colocar texto branco sobre o laranja `#ff6a13`.",
+      "Don't usar roxo violeta vivo (como o `#6E0AD6` do OLX); o roxo da marca é só o beringela.",
+      "Don't voltar com bege ou `laranja-claro` como superfície.",
+      "Don't usar negrito fora de título, valor-chave, preço e botão.",
+      "Don't usar imagem de banco de imagens na home.",
+      "Don't criar animação de entrada, movimento contínuo ou vídeo tocando sozinho.",
+      "Don't usar o logo antigo OLAKI em tela nova."
+    ]
+  }
+}

@@ -1,6 +1,8 @@
-# OLAKI · Sistema visual (design system) · 10/11/2026
+# Mercado da Região · Sistema visual (design system) · 10/11/2026
 
-Tudo aqui sai do logo oficial, **OLAKI em caixa alta** (opção A, decidida pelo Raniel em 07/11/2026): Poppins Bold, **"OL" em roxo beringela + "AKI" em laranja forte**, com o pin laranja sobre o I. O logo anterior, em minúsculas ("ol" fino + "aki"), saiu porque "ol" se confundia com "oi". Arquivos: `public/logo/olaki-opcao1-pin.svg` (fundo claro, com a tagline "olha aqui o que você procura"), `public/logo/olaki-opcao1-pin-fundo-escuro.svg` (fundo escuro), `public/logo/olaki-icone-app.svg` (ícone: "AKI" branco com o pin beringela num quadrado laranja arredondado; nunca "O" + "I", que se lê "OI") e `src/app/icon.svg` (ícone do site, cópia idêntica). Em tamanho pequeno (cabeçalho do site e do painel, até uns 60 px de altura) usa `public/logo/olaki-marca.svg`, o mesmo logo sem a tagline, porque a tagline fica ilegível nesse tamanho. Alternativas e o gerador ficam em `docs/logo-opcoes/`.
+> **Referência principal:** o [`DESIGN.md`](../DESIGN.md) na raiz do projeto (atualizado em 10/11/2026). Este documento continua valendo como detalhe e histórico.
+
+A marca é **Mercado da Região** (decidida pelo Raniel em 10/11/2026; o nome OLAKI saiu e o robô continua se chamando Aki). O logo é o **selo "M"**: quadrado laranja com cantos arredondados e a letra "M" em beringela, seguido do nome "Mercado / da Região" em beringela (componente `src/components/ui/marca.tsx`). Ícones: `public/icone-mercado.svg` (site), `public/mercado-192.png` e `mercado-512.png` (app), `public/mercado-maskable-512.png` (Android, laranja até a borda), `public/mercado-apple-icon.png` (iPhone) e a imagem de compartilhamento gerada em `src/app/opengraph-image.tsx` com a Poppins Bold de `src/app/fontes/`. O logo antigo OLAKI foi guardado em `_lixeira/logo-olaki-2026-11-10/`; o gerador antigo fica em `docs/logo-opcoes/` só como histórico.
 
 > **Atualizado em 07/11/2026:** o Raniel trocou o azul-marinho pelo **roxo beringela `#4B1248`**, para provocar o OLX sem copiar o roxo violeta dele (`#6E0AD6`). O beringela puxa para o vinho, é outra família de cor. Não usar nenhum roxo violeta vivo no app.
 Objetivo: o app parecer **simples, confiável e da região**, legível no sol, num celular barato, por quem lê pouco.
@@ -155,7 +157,7 @@ Preferências usam uma lista branca com nome e estado Ligado/Desligado. Explica�
 - **Tela vazia** sempre com uma saída: "Nenhuma moto até R$ 5 mil aqui. **Pedir no Radar** · **Perguntar ao Aki**".
 - **Esqueleto de carregamento** (caixas cinzas piscando) em vez de tela em branco.
 - **Balão do Aki** flutuante no canto, acima da barra de baixo.
-- **Cartão do vendedor:** foto, nome, selo, "no OLAKI desde 2026", cidade, tempo de resposta.
+- **Cartão do vendedor:** foto, nome, selo, "no Mercado da Região desde 2026", cidade, tempo de resposta.
 
 ---
 
@@ -232,7 +234,7 @@ Se o shadcn/ui entrar, apontar as variáveis dele para estes tokens: `--primary`
 
 ## 8. Refinamento do sistema, 10/11/2026
 
-Direção: preservar a marca OL-AKI com telas mais compactas e menos informação simultânea. Poppins continua a família única; a hierarquia vem do tamanho, peso e espaço. Usar peso normal nos valores dos formulários.
+Direção: preservar a marca com telas mais compactas e menos informação simultânea. Poppins continua a família única; a hierarquia vem do tamanho, peso e espaço. Usar peso normal nos valores dos formulários.
 
 O painel acompanha os títulos de 20, 18 e 16 px, com corpo de 14 px e metadados de 13 px. A base pública usa 15 px. Os tamanhos são definidos em rem nos tokens globais e em `src/app/admin/painel.css`. O menu lateral tem rolagem própria e permite que nomes longos quebrem linha.
 
