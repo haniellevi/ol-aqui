@@ -1,0 +1,2 @@
+2026-11-10 | pending-review | surface: sistema | axis: typography | choice: corpo de texto em 13 px e legenda em 11 px (escala da main) | reason: o público lê pouco e usa letra grande; confirmar com o Raniel no celular real antes de manter
+2026-11-10 | pending-review | surface: home | axis: structure | choice: "modo começo" trocando blocos vazios por demonstração visual enquanto houver poucos anúncios | reason: proposta do plano de otimização, ainda não construída nem aprovada
