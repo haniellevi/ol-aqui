@@ -35,21 +35,26 @@ export async function criarLoja(_antes: EstadoLoja, form: FormData): Promise<Est
   const whatsapp = String(form.get("whatsapp") ?? "").trim();
   const fone = telefoneComercialDigitado(whatsapp);
   const cidade = String(form.get("cidade") ?? "").trim();
+  const categoria = String(form.get("categoria_loja") ?? "").trim();
+  const sobre = String(form.get("sobre") ?? "").trim();
 
   const campos: Record<string, string> = {};
   if (nome.length < 2 || nome.length > 80) campos.nome_loja = "Escreva o nome da loja (de 2 a 80 letras).";
   if (!SLUG.test(slug)) campos.slug = "Use de 3 a 60 letras minúsculas, números ou hífen, sem espaço nem acento.";
   if (whatsapp && !fone) campos.whatsapp = "WhatsApp inválido. Use o DDD e o número, ex.: (89) 99999-0000.";
   if (!cidade) campos.cidade = "Escolha a cidade da loja.";
+  if (categoria.length > 80) campos.categoria_loja = "Use até 80 caracteres.";
+  if (sobre.length > 1500) campos.sobre = "Use até 1500 caracteres.";
   if (Object.keys(campos).length) return { erro: { mensagem: "Confira os campos marcados." }, campos };
 
   const db = await createClient();
-  const { data, error } = await db.rpc("quero_vender", {
-    tipo: "loja",
-    nome_loja: nome,
-    slug,
-    whatsapp: fone,
-    cidade,
+  const { data, error } = await db.rpc("quero_vender_com_descricao", {
+    p_nome: nome,
+    p_slug: slug,
+    p_whatsapp: fone,
+    p_cidade: cidade,
+    p_categoria: categoria || null,
+    p_sobre: sobre || null,
   });
   if (error) {
     const erro = traduzirErro(error);

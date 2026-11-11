@@ -50,6 +50,10 @@
   --text-titulo: 1rem;
   --text-titulo--line-height: 1.25;
   --text-titulo--letter-spacing: -0.015em;
+  /* Título da vitrine (h1 do Início): 22px no celular, cresce até 32px no computador. */
+  --text-vitrine: clamp(1.375rem, 1.1rem + 1.6vw, 2rem);
+  --text-vitrine--line-height: 1.15;
+  --text-vitrine--letter-spacing: -0.02em;
   --text-rotulo: 0.75rem;
   --text-rotulo--line-height: 1.45;
   --text-legenda: 0.6875rem;

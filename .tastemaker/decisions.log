@@ -1,2 +1,5 @@
 2026-11-10 | pending-review | surface: sistema | axis: typography | choice: corpo de texto em 13 px e legenda em 11 px (escala da main) | reason: o público lê pouco e usa letra grande; confirmar com o Raniel no celular real antes de manter
 2026-11-10 | pending-review | surface: home | axis: structure | choice: "modo começo" trocando blocos vazios por demonstração visual enquanto houver poucos anúncios | reason: proposta do plano de otimização, ainda não construída nem aprovada
+2026-11-10 | pending-review | surface: home no começo | axis: structure | choice: protótipo com 2 variações (1 "Três passos", 2 "Duas portas") em docs/prototipos/home-fase1 | reason: aguardando o Raniel escolher; nada foi para a home real
+2026-11-10 | kept | surface: home no começo | axis: structure | choice: variação 2 "Duas portas" (Radar e anunciar dividem a primeira tela; categorias descem) | reason: escolha do Raniel no chat
+2026-11-10 | rejected | surface: home no começo | axis: structure | choice: variação 1 "Três passos" (bloco de 3 quadros no lugar de "Mais recentes") | reason: Raniel escolheu a 2
