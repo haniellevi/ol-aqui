@@ -20,6 +20,7 @@ test('páginas existentes e fichas continuam pertencendo à área correta', () =
   assert.equal(entradaAdminAtiva('/admin/relatorios'), '/admin');
   assert.equal(entradaAdminAtiva('/admin/visitas'), '/admin');
   assert.equal(entradaAdminAtiva('/admin/funil/123'), '/admin/lojas');
+  assert.equal(entradaAdminAtiva('/admin/lixeira'), '/admin/lojas');
   assert.equal(entradaAdminAtiva('/admin/usuarios/123'), '/admin/lojas');
   assert.equal(entradaAdminAtiva('/admin/lojas/123'), '/admin/lojas');
   assert.equal(entradaAdminAtiva('/admin/anuncios/conversas/123'), '/admin/anuncios');

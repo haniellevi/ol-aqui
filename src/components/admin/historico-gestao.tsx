@@ -3,7 +3,8 @@ import { Aviso, Cartao } from "./ui";
 import { quando } from "@/lib/admin/formato";
 
 const rotulos: Record<string, string> = {
-  editar: "Cadastro alterado", criar: "Cadastro criado", excluir: "Loja excluída", bloquear: "Acesso bloqueado", desbloquear: "Acesso liberado",
+  editar: "Cadastro alterado", criar: "Cadastro criado", excluir: "Loja excluída", bloquear: "Conta suspensa", desbloquear: "Conta reativada",
+  lixeira: "Movido para a lixeira", restaurar: "Restaurado da lixeira", apagar_definitivo: "Apagado de vez",
   email_solicitado: "Troca de e-mail solicitada", email_concluido: "E-mail alterado", senha_solicitada: "Troca de senha solicitada",
   senha_concluida: "Senha alterada", acesso_falhou: "Alteração de acesso não concluída",
 };

@@ -29,7 +29,7 @@ export default async function Usuarios({ searchParams }: { searchParams: Promise
       {!dados?.itens.length ? <Cartao>Nenhum usuário encontrado para esta busca.</Cartao> : <ul className="grid gap-3">
         {dados.itens.map(u => <li key={u.id}><Cartao className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0"><h2 className="font-semibold">{u.nome}</h2>
-            <p className="text-sm text-texto-suave">{u.cidade || "Cidade não informada"} · {telefone(u.whatsapp) || "Sem WhatsApp"} · {u.bloqueado ? "Bloqueado" : "Acesso liberado"}</p>
+            <p className="text-sm text-texto-suave">{u.cidade || "Cidade não informada"} · {telefone(u.whatsapp) || "Sem WhatsApp"} · {u.bloqueado ? "Suspensa" : "Acesso liberado"}</p>
           </div><Link href={`/admin/usuarios/${u.id}`} className={estiloBotaoSec}>Gerenciar usuário</Link>
         </Cartao></li>)}
       </ul>}

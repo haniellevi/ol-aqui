@@ -17,6 +17,9 @@ import { BannerLoja } from "@/components/vitrine/banner-loja";
 import { textoDisponivelEm } from "@/components/vitrine/regras";
 import { createClient } from "@/lib/supabase/server";
 import { Alert } from "@/components/ui/alert";
+import { ExcluirLoja, LojaNaLixeira } from "@/components/conta/excluir-loja";
+
+type ExclusaoLoja = { na_lixeira: boolean; apagar_apos: string | null; pode_restaurar: boolean | null; tem_pagamentos: boolean };
 
 export const metadata: Metadata = { title: "Minha loja" };
 
@@ -47,13 +50,23 @@ export default async function PaginaMinhaLoja() {
       </PaginaConta>
     );
   }
-  const [cidades, recursos, planos, destaques, verificacaoR] = await Promise.all([
+  const [cidades, recursos, planos, destaques, verificacaoR, exclusaoR] = await Promise.all([
     listarCidades(v.microrregiao_id),
     meusRecursosVitrine(true),
     planosPublicos(),
     resultadosDestaques(),
     createClient().then((db) => db.rpc("minha_verificacao_loja")),
+    createClient().then((db) => db.rpc("minha_loja_exclusao")),
   ]);
+  const exclusao = exclusaoR.error ? null : (exclusaoR.data as ExclusaoLoja | null);
+  if (exclusao?.na_lixeira) {
+    return (
+      <PaginaConta>
+        <TopoConta titulo="Minha loja" />
+        <LojaNaLixeira apagarApos={exclusao.apagar_apos} podeRestaurar={exclusao.pode_restaurar === true} />
+      </PaginaConta>
+    );
+  }
   const verificacao = !verificacaoR.error && Array.isArray(verificacaoR.data)
     ? verificacaoR.data[0] as { estado: string; motivo: string | null } | undefined
     : undefined;
@@ -185,6 +198,15 @@ export default async function PaginaMinhaLoja() {
         </section>
       )}
       <DestaquesAtivos lista={destaquesLoja} titulo="Destaques da loja" />
+      {exclusao && v.status === "ativa" && (
+        <section aria-labelledby="titulo-excluir-loja" className="flex flex-col gap-3">
+          <h2 id="titulo-excluir-loja" className="text-lg font-bold">
+            Excluir loja
+          </h2>
+          <p className="text-base text-texto-suave">Tira a vitrine e os anúncios da loja do ar. Você tem 30 dias para desistir.</p>
+          <ExcluirLoja temPagamentos={exclusao.tem_pagamentos} />
+        </section>
+      )}
     </PaginaConta>
   );
 }

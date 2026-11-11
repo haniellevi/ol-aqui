@@ -10,7 +10,7 @@ const SECOES: Record<string, { href: string; nome: string }[]> = {
     { href: "/admin/visitas", nome: "Visitas e origem" },
     { href: "/admin/relatorios", nome: "Detalhamento" },
   ],
-  "/admin/lojas": [{ href: "/admin/lojas", nome: "Vendedores cadastrados" }, { href: "/admin/funil", nome: "Captação" }, { href: "/admin/usuarios", nome: "Usuários" }],
+  "/admin/lojas": [{ href: "/admin/lojas", nome: "Vendedores cadastrados" }, { href: "/admin/funil", nome: "Captação" }, { href: "/admin/usuarios", nome: "Usuários" }, { href: "/admin/lixeira", nome: "Lixeira" }],
   "/admin/anuncios": [{ href: "/admin/anuncios", nome: "Catálogo" }, { href: "/admin/anuncios/conversas", nome: "Atendimentos" }],
 };
 
