@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { DESTINO_SAIR, PASSOS, TOTAL_PASSOS, numeroPasso, passoAnterior, urlPasso, type SlugPasso } from "./passos";
 
-// Topo de cada passo: "Voltar", "Passo N de 6 · Nome", barra de progresso e "Salvar e sair".
+// Topo de cada passo: "Voltar", "Passo N de 6 · Nome", etapas tocáveis e "Salvar e sair".
+// Etapas: ao editar, todas tocáveis; no anúncio novo, só as já feitas (antes da atual).
+// Com formulário, tocar numa etapa salva o passo atual e vai direto para ela (acao="ir:<etapa>").
 // "Salvar e sair" envia o formulário do passo (atributo form) para não perder o que foi digitado.
 // Sem formulário (revisão, que não tem campos editáveis), vira um link.
 
@@ -31,6 +33,8 @@ export function CabecalhoPasso({
   const nome = PASSOS[n - 1].titulo;
   const anterior = passoAnterior(passo);
   const voltar = anterior ? urlPasso(anterior, id, editar) : editar ? DESTINO_SAIR : "/";
+  // Fotos salvam sozinhas ao enviar e a revisão não tem campos: lá a etapa é só um link.
+  const salvaAoIr = Boolean(formId) && passo !== "fotos" && passo !== "revisar";
 
   return (
     <div className="flex flex-col gap-3">
@@ -54,22 +58,53 @@ export function CabecalhoPasso({
           Passo {n} de {TOTAL_PASSOS} · {nome}
           {editar && <span className="ml-1 font-normal">(editando)</span>}
         </p>
-        <div
-          className="h-2 overflow-hidden rounded-full bg-borda"
-          role="progressbar"
-          aria-label="Progresso do anúncio"
-          aria-valuemin={1}
-          aria-valuemax={TOTAL_PASSOS}
-          aria-valuenow={n}
-          aria-valuetext={`Passo ${n} de ${TOTAL_PASSOS}`}
-        >
-          <div className="h-full rounded-full bg-laranja" style={{ width: `${(n / TOTAL_PASSOS) * 100}%` }} />
-        </div>
+        <EtapasTocaveis passo={passo} id={id} editar={editar} formId={salvaAoIr ? formId : undefined} />
       </div>
       <div className="flex flex-col gap-1">
         <h1 className="text-titulo font-semibold text-beringela">{titulo}</h1>
         {subtitulo && <p className="text-base text-texto-suave">{subtitulo}</p>}
       </div>
     </div>
+  );
+}
+
+const ETAPA =
+  "flex min-h-10 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-campo px-1 py-1 text-legenda leading-tight " +
+  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
+
+function EtapasTocaveis({ passo, id, editar, formId }: { passo: SlugPasso; id: string; editar: boolean; formId?: string }) {
+  const atual = numeroPasso(passo);
+  return (
+    <nav aria-label="Etapas do anúncio">
+      <ol className="flex gap-1">
+        {PASSOS.map((p, i) => {
+          const n = i + 1;
+          const ehAtual = n === atual;
+          const feita = n < atual;
+          const liberada = !ehAtual && (editar || feita);
+          const marca = (
+            <>
+              <span aria-hidden className={`h-1.5 w-full rounded-full ${ehAtual || feita ? "bg-laranja" : "bg-borda"}`} />
+              <span className={ehAtual ? "font-semibold text-beringela" : liberada ? "font-semibold text-laranja-escuro" : "text-texto-suave"}>{p.titulo}</span>
+            </>
+          );
+          return (
+            <li key={p.slug} className="flex min-w-0 flex-1">
+              {ehAtual ? (
+                <span aria-current="step" className={ETAPA}>{marca}</span>
+              ) : !liberada ? (
+                <span aria-disabled="true" className={ETAPA}>{marca}</span>
+              ) : formId ? (
+                <button type="submit" form={formId} name="acao" value={`ir:${p.slug}`} className={`${ETAPA} hover:bg-fundo`}>
+                  {marca}
+                </button>
+              ) : (
+                <Link href={urlPasso(p.slug, id, editar)} className={`${ETAPA} hover:bg-fundo`}>{marca}</Link>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
