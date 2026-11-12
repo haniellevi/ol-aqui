@@ -42,8 +42,9 @@ export default async function PaginaBannerLoja() {
           <span className="font-normal">Motivo: {recursos.banner_moderado_motivo}</span>
         </Aviso>
       )}
-      <EditorBannerAki lojaId={v.id} nome={v.nome} logo={v.logo_url} corInicial={v.banner_cor}
-        atual={v.banner_aki_posicao != null && v.banner_url ? { url: v.banner_url, posicao: v.banner_aki_posicao } : null} />
+      {/* P5b-2b: a capa feita pelo Merc gasta a IA do plano; fica com o dono. */}
+      {!v.ajudante && <EditorBannerAki lojaId={v.id} nome={v.nome} logo={v.logo_url} corInicial={v.banner_cor}
+        atual={v.banner_aki_posicao != null && v.banner_url ? { url: v.banner_url, posicao: v.banner_aki_posicao } : null} />}
       <FormBanner
         key={v.banner_url ?? "modelo"}
         inicial={{ tipo: v.banner_aki_posicao != null ? "modelo" : v.banner_tipo,

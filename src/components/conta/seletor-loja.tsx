@@ -8,7 +8,7 @@ import type { LojaOpcao } from "@/lib/dados/loja-ativa";
  * Etapa P5b: "Trabalhando na loja X" com troca de loja. Só aparece para quem cuida de mais de uma
  * loja (a própria e as que ajuda). Funciona sem JavaScript (formulário comum).
  */
-export function SeletorLoja({ lojas, atual, voltar }: { lojas: LojaOpcao[]; atual: LojaOpcao | null; voltar: "/minha-conta/anuncios" | "/anunciar" }) {
+export function SeletorLoja({ lojas, atual, voltar }: { lojas: LojaOpcao[]; atual: LojaOpcao | null; voltar: "/minha-conta/anuncios" | "/anunciar" | "/minha-conta/loja" }) {
   if (lojas.length < 2 || !atual) return null;
   return (
     <form action={escolherLoja} className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-3 sm:flex-row sm:items-end">

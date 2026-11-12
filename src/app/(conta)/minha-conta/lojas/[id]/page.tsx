@@ -44,7 +44,7 @@ export default async function GerenciarLoja({ params }: { params: Promise<{ id: 
   return (
     <PaginaConta>
       <TopoConta titulo={`Equipe de ${loja.nome}`} voltar={voltar} textoVoltar="Minhas lojas"
-        texto="Gerentes cuidam dos anúncios da loja (criar, editar, publicar, pausar e lixeira) e editam endereço, horários, descrição e entrega. Nome e WhatsApp da loja, acessos, plano, cobrança e Destacar ficam com o dono." />
+        texto="Gerentes cuidam dos anúncios da loja (criar, editar, publicar, pausar e lixeira) e da Minha loja: capa, logo, cidade, endereço, horários, seções, produtos no topo e desempenho. Nome e WhatsApp da loja, acessos, plano, cobrança, Destacar, excluir a loja e o que usa IA ficam com o dono." />
       <FormConvidarGerente loja={id} />
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Gerentes e convites</h2>

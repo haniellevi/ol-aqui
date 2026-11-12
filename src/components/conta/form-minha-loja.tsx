@@ -21,7 +21,8 @@ export type DadosLoja = {
   logo_url: string | null;
 };
 
-export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { nome: string; uf: string }[] }) {
+/** `ajudante` (P5b-2b): nome e WhatsApp aparecem só para leitura, porque só o dono muda. */
+export function FormMinhaLoja({ loja, cidades, ajudante = false }: { loja: DadosLoja; cidades: { nome: string; uf: string }[]; ajudante?: boolean }) {
   const [mostrarSucesso, setMostrarSucesso] = useState(false);
   const [estado, acao, enviando] = useActionState<EstadoLojaConta, FormData>(async (anterior, form) => {
     setMostrarSucesso(true);
@@ -76,14 +77,24 @@ export function FormMinhaLoja({ loja, cidades }: { loja: DadosLoja; cidades: { n
       </section>
 
       <section aria-label="Dados da loja" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
-        <Campo rotulo="Nome da loja" name="nome" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={80} erro={campos.nome} />
-        <Campo
-          rotulo="WhatsApp da loja"
-          name="whatsapp"
-          {...fone.campo}
-          dica="Se deixar vazio, a vitrine usa o WhatsApp confirmado da sua conta. Um número comercial diferente só aparece após conferência da equipe. Até lá, a vitrine usa o número confirmado."
-          erro={fone.erro ?? campos.whatsapp}
-        />
+        {ajudante ? (
+          <p className="text-base break-words">
+            <strong>{loja.nome}</strong>
+            {loja.whatsapp && <span className="block text-texto-suave">WhatsApp: {fone.campo.value}</span>}
+            <span className="block text-sm text-texto-suave">Só o dono da loja muda o nome e o WhatsApp.</span>
+          </p>
+        ) : (
+          <>
+            <Campo rotulo="Nome da loja" name="nome" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={80} erro={campos.nome} />
+            <Campo
+              rotulo="WhatsApp da loja"
+              name="whatsapp"
+              {...fone.campo}
+              dica="Se deixar vazio, a vitrine usa o WhatsApp confirmado da sua conta. Um número comercial diferente só aparece após conferência da equipe. Até lá, a vitrine usa o número confirmado."
+              erro={fone.erro ?? campos.whatsapp}
+            />
+          </>
+        )}
         {cidades.length > 0 ? (
           <Seletor rotulo="Cidade" name="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} erro={campos.cidade}>
             {cidadeFora && <option value={loja.cidade}>{loja.cidade}</option>}

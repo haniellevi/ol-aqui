@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { COOKIE_LOJA, lojasQueCuido } from "@/lib/dados/loja-ativa";
 
-const DESTINOS = ["/minha-conta/anuncios", "/anunciar"] as const;
+const DESTINOS = ["/minha-conta/anuncios", "/anunciar", "/minha-conta/loja"] as const;
 
 export async function escolherLoja(form: FormData): Promise<void> {
   const id = String(form.get("loja") ?? "");

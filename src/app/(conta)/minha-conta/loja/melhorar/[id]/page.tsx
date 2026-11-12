@@ -21,6 +21,8 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function PaginaMelhorarComIA({ params }: Props) {
   const v = await minhaVitrineCompleta();
+  // P5b-2b: o que usa a IA do plano fica com o dono da loja.
+  if (v?.ajudante) notFound();
   if (!v || v.tipo !== "loja") {
     return (
       <PaginaConta>

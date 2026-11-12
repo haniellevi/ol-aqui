@@ -63,13 +63,17 @@ begin
   assert (select count(*) from ultimas_alteracoes_anuncios(array['56100000-0000-4000-a000-000000000001'::uuid])) = 1, 'Ajudante vê a última mudança';
   assert (select e_dono from anuncio_publico('56100000-0000-4000-a000-000000000002')), 'Ajudante vê a prévia do rascunho';
   assert public.pode_enviar_foto('user_dono560/56100000-0000-4000-a000-000000000002/a.webp'), 'Ajudante envia foto na pasta do anúncio';
-  assert not public.pode_enviar_foto('user_dono560/loja/a.webp'), 'Ajudante não envia logo da loja';
-  assert not public.pode_enviar_foto('user_dono560/vitrine/a.webp'), 'Ajudante não envia fachada';
+  -- P5b-2b: o ajudante também troca o logo da loja (pasta do dono).
+  assert public.pode_enviar_foto('user_dono560/loja/a.webp'), 'Ajudante envia logo da loja';
+  assert public.pode_enviar_foto('user_dono560/vitrine/a.webp')
+         = (select foto_fachada from recursos_da_loja('56000000-0000-4000-a000-000000000001')), 'Fachada segue o plano da loja';
   assert public.pasta_foto_que_cuido('user_dono560/56100000-0000-4000-a000-000000000002/a.webp'), 'Ajudante apaga foto do anúncio';
   assert not public.pasta_foto_que_cuido('user_estranho560/56100000-0000-4000-a000-000000000002/a.webp'), 'Pasta de outra pessoa não';
   -- Nome e WhatsApp da loja seguem só do dono.
-  update vitrines_lojas set nome = 'Tomada 560' where id = '56000000-0000-4000-a000-000000000001';
-  get diagnostics n = row_count; assert n = 0, 'Ajudante mudou o nome da loja';
+  begin
+    update vitrines_lojas set nome = 'Tomada 560' where id = '56000000-0000-4000-a000-000000000001';
+    get diagnostics n = row_count; assert n = 0, 'Ajudante mudou o nome da loja';
+  exception when sqlstate '42501' then null; end;
 end $$;
 reset role;
 do $$ begin

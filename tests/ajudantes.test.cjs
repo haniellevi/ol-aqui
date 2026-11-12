@@ -189,3 +189,39 @@ test('super admin sem loja própria abre o passo do anúncio com a edição aber
   assert.deepEqual(r.equipe, edicao);
   await assert.rejects(montar(null), /redirect:\/quero-vender/);
 });
+
+// Etapa P5b-2b: a Minha loja vista pelo ajudante.
+test('Minha loja do ajudante: sem verificação, Destacar, exclusão nem IA; nome e WhatsApp só leitura', async () => {
+  const props = [];
+  const pagina = (ajudante) => carregar('src/app/(conta)/minha-conta/loja/page.tsx', {
+    '@/lib/dados/regiao': { listarCidades: async () => [] },
+    '@/lib/dados/vitrine-completa': {
+      minhaVitrineCompleta: async () => ({ id: ajudada.id, dono_id: 'user_dono', ajudante, tipo: 'loja', status: 'ativa', slug: 'loja-do-ze', nome: 'Loja do Zé', whatsapp: '5589999990001', cidade: 'Corrente', bairro: null, logo_url: null, microrregiao_id: 'r', banner_tipo: 'modelo', banner_url: null, banner_modelo: 'liso', banner_cor: '#4B1248' }),
+      meusRecursosVitrine: async () => ({ foto_fachada: true, secoes_max: 3, fixados_max: 3, secoes_total: 0, fixados_total: 0, banner_moderado_motivo: null }),
+      planosPublicos: async () => [],
+      vitrineNovaAtiva: async () => true,
+    },
+    '@/lib/dados/categorias-ia': { minhasSugestoesCategoria: async () => { if (ajudante) throw Error('ajudante não lê sugestões da IA'); return []; } },
+    '@/lib/dados/historico': { lerHistorico: async () => [] },
+    '@/lib/dados/destaques': { resultadosDestaques: async () => { if (ajudante) throw Error('ajudante não lê destaques'); return []; } },
+    '@/lib/supabase/server': { createClient: async () => ({ rpc: async (n) => { if (ajudante) throw Error('ajudante não chama ' + n); return { data: n === 'minha_loja_exclusao' ? { na_lixeira: false, tem_pagamentos: false } : [{ estado: 'aprovada', motivo: null }], error: null }; } }) },
+    '@/lib/dados/loja-ativa': { lojasQueCuido: async () => [propria, ajudada], lojaEscolhida: async () => ajudada },
+    '@/components/conta/seletor-loja': { SeletorLoja: ({ atual, voltar }) => `SELETOR:${atual.nome}:${voltar}` },
+    '@/components/conta/form-minha-loja': { FormMinhaLoja: (p) => { props.push(p); return null; } },
+    '@/components/destaques/destaques-ativos': { DestaquesAtivos: () => null },
+    '@/components/vitrine/banner-loja': { BannerLoja: () => null },
+    '@/components/conta/excluir-loja': { ExcluirLoja: () => 'EXCLUIR LOJA', LojaNaLixeira: () => null },
+  }).default();
+  const html = render(await pagina(true));
+  assert.match(html, /SELETOR:Loja do Zé:\/minha-conta\/loja/);
+  assert.match(html, /Você ajuda nesta loja/);
+  assert.doesNotMatch(html, /Destacar minha loja|EXCLUIR LOJA|Loja verificada|Revise suas categorias/);
+  assert.match(html, /Seções próprias/);
+  assert.match(html, /Desempenho da loja/);
+  assert.equal(props[0].ajudante, true);
+  const dono = render(await pagina(false));
+  assert.match(dono, /Destacar minha loja/);
+  assert.match(dono, /EXCLUIR LOJA/);
+  assert.match(dono, /Revise suas categorias/);
+  assert.equal(props[1].ajudante, false);
+});

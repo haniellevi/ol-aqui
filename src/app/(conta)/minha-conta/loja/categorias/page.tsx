@@ -18,6 +18,8 @@ export const dynamic = "force-dynamic";
 // O nicho da loja é da vitrine com IA e só aparece para loja.
 export default async function PaginaCategoriasLoja() {
   const v = await minhaVitrineCompleta();
+  // P5b-2b: o que usa a IA do plano fica com o dono da loja.
+  if (v?.ajudante) notFound();
   if (!v) {
     return (
       <PaginaConta>
