@@ -75,6 +75,8 @@ try:
     print('PASS: selo da loja só cai com CNPJ, endereço, cidade ou WhatsApp; nome e Instagram deixam aviso para a equipe', flush=True)
     checked(sql((root/'supabase/testes/710_verificacao_loja_nucleo.sql').read_text()))
     print('PASS: núcleo da verificação da loja: envio com limite e arquivos privados, decisão única, situação da loja e permissões', flush=True)
+    checked(sql((root/'supabase/testes/720_verificacao_loja_fila.sql').read_text()))
+    print('PASS: fila da IA da verificação da loja: reserva com orçamento, decisão final, nova tentativa da Receita, 3ª recusa, cadastro que muda e permissões', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
