@@ -7,7 +7,7 @@ import { exigirTela } from "@/lib/admin/equipe";
 import { ehUuid, linkAnuncio, preco } from "@/lib/formato";
 import { LINK_ADMIN_ANUNCIOS, linkAdminAnuncio } from "@/lib/rotas";
 import type { MeuAnuncio } from "@/lib/tipos";
-import { abrirAtendimento, administrarAnuncio, delegarAtendimento } from "./actions";
+import { abrirAtendimento, administrarAnuncio, delegarAtendimento, editarComoEquipe } from "./actions";
 import { Badge } from "@/components/ui/badge";
 import { eSuperAdmin } from "@/lib/admin/auth";
 import { lerHistorico } from "@/lib/dados/historico";
@@ -47,6 +47,7 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
   const situacao = ROTULO_ANUNCIO[a.status];
   const emAnalise = a.status === "em_analise";
   const podeRevisar = a.status === "ativo" || a.status === "pausado";
+  const podeEditar = a.status !== "excluido" && a.status !== "congelado" && a.status !== "rascunho";
   const fotos = a.fotos.filter(src => /^https:\/\//i.test(src));
 
   return <div className="space-y-4">
@@ -107,6 +108,14 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
     </Cartao>}
     {superAdmin && !a.excluido_com_loja && <Cartao aria-labelledby="acoes-super-admin" className="space-y-3">
       <h2 id="acoes-super-admin" className="text-lg text-beringela">Ações do super admin</h2>
+      {/* P5b-2a: editar o anúncio de outra pessoa abre 2 horas de edição, avisa o dono e vai para o histórico. */}
+      {outro && podeEditar && <form action={editarComoEquipe.bind(null, id)} className="space-y-2">
+        <label htmlFor="motivo-edicao" className="block text-rotulo font-medium">Motivo da edição</label>
+        <textarea id="motivo-edicao" name="motivo" rows={2} required minLength={3} maxLength={300}
+          className={`${estiloCampo} h-auto min-h-20 py-2`} aria-describedby="ajuda-motivo-edicao" />
+        <p id="ajuda-motivo-edicao" className="text-sm text-texto-suave">O dono recebe um aviso com o motivo. A edição vale por 2 horas e cada mudança vai para o histórico.</p>
+        <Botao type="submit" variante="secundario">Editar anúncio</Botao>
+      </form>}
       {a.status === "excluido"
         ? <FormApagarDeVez tipo="anuncio" id={id} nome={titulo} />
         : <FormLixeiraAnuncio id={id} />}

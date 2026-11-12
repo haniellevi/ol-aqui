@@ -1,5 +1,6 @@
 import "server-only";
 import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
+import { edicaoAdmin } from "@/lib/dados/edicao-admin";
 import { cache } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
@@ -186,10 +187,14 @@ export const meuAnuncio = cache(async (id: string): Promise<MeuAnuncio | null> =
  * Usado em Meus anúncios e Anunciar. A RLS confere de novo quem pode ver.
  */
 export const anuncioDaLoja = cache(async (id: string): Promise<MeuAnuncio | null> => {
+  if (!ehUuid(id)) return null;
   const lojas = (await lojasQueCuido()).map((l) => l.id);
-  if (!lojas.length || !ehUuid(id)) return null;
   const db = await createClient();
-  const { data, error } = await db.from("anuncios").select(COLUNAS_LOJA).eq("id", id).in("vitrine_id", lojas).maybeSingle();
+  let { data, error } = lojas.length
+    ? await db.from("anuncios").select(COLUNAS_LOJA).eq("id", id).in("vitrine_id", lojas).maybeSingle()
+    : { data: null, error: null };
+  // P5b-2a: super admin com a edição aberta (motivo e prazo) abre o anúncio de outra pessoa.
+  if (!error && !data && (await edicaoAdmin(id))) ({ data, error } = await db.from("anuncios").select(COLUNAS_LOJA).eq("id", id).maybeSingle());
   if (error) throw new Error("Não foi possível carregar seu rascunho. Tente de novo.");
   return data ? semDono(data as unknown as MeuAnuncio) : null;
 });

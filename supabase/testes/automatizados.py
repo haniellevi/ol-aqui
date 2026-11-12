@@ -63,6 +63,8 @@ try:
     print('PASS: super admin só pelo banco, histórico do dono, lixeira e apagar de vez pela equipe', flush=True)
     checked(sql((root/'supabase/testes/560_ajudantes_anuncios.sql').read_text()))
     print('PASS: ajudante da loja cuida dos anúncios; estranho, revogado e sem WhatsApp não mexem', flush=True)
+    checked(sql((root/'supabase/testes/570_super_admin_edita_anuncio.sql').read_text()))
+    print('PASS: super admin edita anúncio dos outros só com motivo, prazo de 2 horas e um aviso ao dono', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

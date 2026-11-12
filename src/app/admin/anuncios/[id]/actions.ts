@@ -7,6 +7,7 @@ import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import { LINK_ADMIN_ANUNCIOS, linkAdminAnuncio } from "@/lib/rotas";
 import type { StatusAnuncio } from "@/lib/tipos";
+import { urlPasso } from "@/components/anunciar/passos";
 
 function aviso(id: string, chave: "erro" | "ok", texto: string, conversa = false): never {
   redirect(`${linkAdminAnuncio(id)}?${new URLSearchParams({ [chave]: texto })}${conversa ? "#conversa" : ""}`);
@@ -46,4 +47,15 @@ export async function delegarAtendimento(id: string, conversa: string, ativo: bo
   const { error } = await supabase.rpc("delegar_atendimento_aki", { p_conversa: conversa, p_ativo: ativo, p_versao: versao });
   if (error) aviso(id, "erro", traduzirErro(error).mensagem, true);
   aviso(id, "ok", ativo ? "O Merc pode responder nesta conversa." : "A equipe retomou o atendimento.", true);
+}
+
+/** P5b-2a: super admin abre a edição do anúncio de outra pessoa (motivo, 2 horas, aviso ao dono). O banco confere tudo. */
+export async function editarComoEquipe(id: string, form: FormData) {
+  const { supabase } = await exigirTela("anuncios");
+  if (!ehUuid(id)) notFound();
+  const motivo = String(form.get("motivo") ?? "").replace(/\s+/g, " ").trim();
+  if (motivo.length < 3 || motivo.length > 300) aviso(id, "erro", "Informe um motivo entre 3 e 300 caracteres.");
+  const { error } = await supabase.rpc("admin_abrir_edicao_anuncio", { p_anuncio: id, p_motivo: motivo });
+  if (error) aviso(id, "erro", traduzirErro(error).mensagem);
+  redirect(urlPasso("fotos", id, true));
 }

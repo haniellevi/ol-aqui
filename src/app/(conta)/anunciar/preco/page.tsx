@@ -12,7 +12,7 @@ const FORM = "form-preco";
 
 // T20 · Passo 4: preço, "A combinar", "Aceito troca" e a faixa dos parecidos na região.
 export default async function PassoPreco({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, conta, editar } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, equipe } = await carregarPasso(searchParams);
   const faixa = anuncio.categoria_id ? await faixaPreco(anuncio.categoria_id, conta.vitrine.microrregiao_id) : null;
   const dica =
     faixa && faixa.minimo != null && faixa.maximo != null
@@ -25,7 +25,7 @@ export default async function PassoPreco({ searchParams }: { searchParams: Param
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso passo="preco" id={anuncio.id} editar={editar} formId={FORM} titulo="Quanto você quer?" />
+      <CabecalhoPasso equipe={equipe} passo="preco" id={anuncio.id} editar={editar} formId={FORM} titulo="Quanto você quer?" />
       <FormPreco
         id={anuncio.id}
         editar={editar}

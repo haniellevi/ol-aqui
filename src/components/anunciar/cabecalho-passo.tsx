@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { MARCA_EQUIPE } from "@/lib/historico";
+import { linkAdminAnuncio } from "@/lib/rotas";
 import { DESTINO_SAIR, PASSOS, TOTAL_PASSOS, numeroPasso, passoAnterior, urlPasso, type SlugPasso } from "./passos";
 
 // Topo de cada passo: "Voltar", "Passo N de 6 · Nome", etapas tocáveis e "Salvar e sair".
@@ -7,6 +9,12 @@ import { DESTINO_SAIR, PASSOS, TOTAL_PASSOS, numeroPasso, passoAnterior, urlPass
 // Com formulário, tocar numa etapa salva o passo atual e vai direto para ela (acao="ir:<etapa>").
 // "Salvar e sair" envia o formulário do passo (atributo form) para não perder o que foi digitado.
 // Sem formulário (revisão, que não tem campos editáveis), vira um link.
+
+const HORA = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Fortaleza" });
+function horaCurta(iso: string) {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "" : HORA.format(d);
+}
 
 const LINK_TOPO =
   "inline-flex min-h-10 items-center gap-1 rounded-card px-2 text-base font-semibold text-laranja-escuro " +
@@ -19,6 +27,7 @@ export function CabecalhoPasso({
   formId,
   titulo,
   subtitulo,
+  equipe,
 }: {
   passo: SlugPasso;
   id: string;
@@ -28,16 +37,26 @@ export function CabecalhoPasso({
   /** Frase grande da tela, ex.: "Tire fotos do que você quer vender". */
   titulo: string;
   subtitulo?: string;
+  /** P5b-2a: super admin editando anúncio de outra pessoa (faixa de aviso com motivo e prazo). */
+  equipe?: { motivo: string; expira_em: string } | null;
 }) {
   const n = numeroPasso(passo);
   const nome = PASSOS[n - 1].titulo;
   const anterior = passoAnterior(passo);
-  const voltar = anterior ? urlPasso(anterior, id, editar) : editar ? DESTINO_SAIR : "/";
+  // P5b-2a: a equipe volta para a ficha do anúncio no painel.
+  const sair = equipe ? linkAdminAnuncio(id) : DESTINO_SAIR;
+  const voltar = anterior ? urlPasso(anterior, id, editar) : editar ? sair : "/";
   // Fotos salvam sozinhas ao enviar e a revisão não tem campos: lá a etapa é só um link.
   const salvaAoIr = Boolean(formId) && passo !== "fotos" && passo !== "revisar";
 
   return (
     <div className="flex flex-col gap-3">
+      {equipe && (
+        <p role="note" className="rounded-card border border-aviso bg-aviso-fundo p-3 text-sm break-words">
+          <strong>Este anúncio é de outra pessoa.</strong> Você está editando como {MARCA_EQUIPE}. Motivo: {equipe.motivo}.
+          {" "}Vale até {horaCurta(equipe.expira_em)}. Cada mudança vai para o histórico do anúncio.
+        </p>
+      )}
       <div className="flex items-center justify-between gap-2">
         <Link href={voltar} className={`${LINK_TOPO} -ml-2`}>
           <ArrowLeft className="size-5" aria-hidden />
@@ -48,7 +67,7 @@ export function CabecalhoPasso({
             Salvar e sair
           </button>
         ) : (
-          <Link href={DESTINO_SAIR} className={`${LINK_TOPO} -mr-2`}>
+          <Link href={sair} className={`${LINK_TOPO} -mr-2`}>
             Salvar e sair
           </Link>
         )}

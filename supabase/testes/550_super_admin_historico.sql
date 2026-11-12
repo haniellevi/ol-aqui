@@ -90,6 +90,8 @@ set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_adm550';
 update anuncios set titulo = 'Mexido pelo admin' where id = '55100000-0000-4000-a000-000000000001';
 set local request.jwt.claim.sub='user_super550';
+-- P5b-2a: o super admin abre a edição com motivo antes de mexer.
+select admin_abrir_edicao_anuncio('55100000-0000-4000-a000-000000000001', 'Ajuste de preço') is not null as aberta \gset
 update anuncios set preco_centavos = 4500 where id = '55100000-0000-4000-a000-000000000001';
 reset role;
 do $$ begin

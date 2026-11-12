@@ -233,6 +233,7 @@ export type MinhaConta = {
   rascunhos: number;
   podePublicar: boolean; // limite null ou ativos < limite
   ajudante?: boolean; // P5b: true quando a loja é de outra pessoa (a pessoa ajuda)
+  equipe?: boolean; // P5b-2a: super admin editando anúncio de outra pessoa
 };
 
 /** Retorno de quero_vender(). */

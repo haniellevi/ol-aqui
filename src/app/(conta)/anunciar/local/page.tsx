@@ -11,7 +11,7 @@ const FORM = "form-local";
 
 // T21 · Passo 5: onde está (cidade da região + bairro), preenchido do perfil.
 export default async function PassoLocal({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, conta, editar } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, equipe } = await carregarPasso(searchParams);
   const cidades = await listarCidades(conta.vitrine.microrregiao_id);
   const sugerida = anuncio.cidade ?? conta.perfil.cidade ?? conta.vitrine.cidade ?? "";
   const cidadeInicial = !cidades.length ? anuncio.cidade ?? "" : cidades.some((c) => c.nome === sugerida) ? sugerida : "";
@@ -19,7 +19,7 @@ export default async function PassoLocal({ searchParams }: { searchParams: Param
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso passo="local" id={anuncio.id} editar={editar} formId={FORM} titulo="Onde está?" subtitulo="Ajuda quem mora perto a achar seu anúncio." />
+      <CabecalhoPasso equipe={equipe} passo="local" id={anuncio.id} editar={editar} formId={FORM} titulo="Onde está?" subtitulo="Ajuda quem mora perto a achar seu anúncio." />
       <FormLocal
         id={anuncio.id}
         editar={editar}

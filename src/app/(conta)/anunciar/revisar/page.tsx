@@ -24,7 +24,7 @@ type Linha = { rotulo: string; valor: string; passo: SlugPasso; falta?: boolean 
 
 // T22 · Passo 6: o card exatamente como vai aparecer, o resumo com "Alterar" em cada item e Publicar.
 export default async function PassoRevisar({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, conta, editar } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, equipe } = await carregarPasso(searchParams);
   const jaPublicado = (STATUS_PUBLICADO as readonly string[]).includes(anuncio.status);
   const pagoAte = anuncio.pago_ate && new Date(anuncio.pago_ate).getTime() > Date.now() ? anuncio.pago_ate : null;
   // nunca esteve no ar: só vale categoria visível (o banco recusa publicar em categoria escondida)
@@ -82,7 +82,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso
+      <CabecalhoPasso equipe={equipe}
         passo="revisar"
         id={anuncio.id}
         editar={editar}

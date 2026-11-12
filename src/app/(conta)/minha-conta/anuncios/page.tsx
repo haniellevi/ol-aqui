@@ -10,7 +10,8 @@ import { ultimasMudancas } from "@/lib/dados/historico";
 import { fraseHistorico, type LinhaHistorico } from "@/lib/historico";
 import { fraseResultado, resultadosDestaques } from "@/lib/dados/destaques";
 import type { ResultadoDestaque } from "@/lib/tipos-destaques";
-import { LINK_LOJA_CATEGORIAS, LINK_PLANOS, linkDestacar, linkHistoricoAnuncio } from "@/lib/rotas";
+import { LINK_LOJA_CATEGORIAS, LINK_PLANOS, linkAdminAnuncio, linkDestacar, linkHistoricoAnuncio } from "@/lib/rotas";
+import { edicaoAdmin } from "@/lib/dados/edicao-admin";
 import { ehUuid, inteiro, linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
 import type { MeuAnuncio, StatusAnuncio } from "@/lib/tipos";
 import { Botao } from "@/components/ui/botao";
@@ -36,6 +37,10 @@ export const metadata: Metadata = { title: "Meus anúncios" };
 export default async function PaginaMeusAnuncios({ searchParams }: { searchParams: Promise<{ aba?: string | string[]; resultado?: string; anuncio?: string; salvo?: string }> }) {
   const [sp, conta, anuncios, destaquesDono, lojas, lojaAtual] = await Promise.all([searchParams, contaDaLoja(), anunciosDaLoja(), resultadosDestaques(), lojasQueCuido(), lojaEscolhida()]);
 
+  // P5b-2a: super admin que salvou o anúncio de outra pessoa volta para a ficha do anúncio no painel.
+  if (typeof sp.salvo === "string" && ehUuid(sp.salvo) && !anuncios.some((a) => a.id === sp.salvo) && (await edicaoAdmin(sp.salvo))) {
+    redirect(`${linkAdminAnuncio(sp.salvo)}?${new URLSearchParams({ ok: "Anúncio salvo. A mudança foi para o histórico." })}`);
+  }
   if (!conta) throw new Error("Não foi possível carregar sua conta. Tente novamente.");
   if (!conta.vitrine) {
     return (

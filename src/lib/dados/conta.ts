@@ -21,7 +21,13 @@ export const meuPerfilEVitrine = cache((exigirLeitura = false): Promise<MinhaCon
  */
 export const contaDaLoja = cache(async (exigirLeitura = false, lojaId?: string): Promise<MinhaConta | null> => {
   const loja = lojaId ? (await lojasQueCuido()).find((l) => l.id === lojaId) ?? null : await lojaEscolhida();
-  if (lojaId && !loja) return null;
+  if (lojaId && !loja) {
+    // P5b-2a: super admin editando anúncio de outra pessoa vê a loja como ajudante (sem plano nem pagamento).
+    const { data: superAdmin } = await (await createClient()).rpc("e_super_admin");
+    if (superAdmin !== true) return null;
+    const ler = async () => { const c = await lerConta(exigirLeitura, lojaId); return c && { ...c, ajudante: true, equipe: true }; };
+    return exigirLeitura ? ler() : seguro(ler, null);
+  }
   const ler = () => lerConta(exigirLeitura, loja && !loja.dono ? loja.id : undefined);
   return exigirLeitura ? ler() : seguro(ler, null);
 });
