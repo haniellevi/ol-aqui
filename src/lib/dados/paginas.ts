@@ -83,17 +83,6 @@ async function configsPublicas(chaves: string[], microrregiaoId: string | null):
 
 const texto = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
-/**
- * Com quantos anúncios o Início deixa o modo "no começo" (config "home.comeco_min_anuncios").
- * Lida pela tabela porque o visitante não chama config(); a linha precisa estar marcada como pública.
- * Sem linha, ou com valor inválido, devolve null e a página usa o padrão dela.
- */
-export async function minimoAnunciosInicio(microrregiaoId: string | null): Promise<number | null> {
-  const v = (await configsPublicas(["home.comeco_min_anuncios"], microrregiaoId)).get("home.comeco_min_anuncios");
-  const n = typeof v === "number" ? v : typeof v === "string" && v.trim() ? Number(v) : NaN;
-  return Number.isFinite(n) && n >= 0 ? n : null;
-}
-
 /** Faixa "Atualizamos os termos": textos do painel + o que falta aceitar. Nada pendente = null. */
 export async function avisoTermos(): Promise<AvisoTermos | null> {
   const pendentes = await termosPendentes();
