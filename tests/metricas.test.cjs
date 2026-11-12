@@ -3,8 +3,8 @@ const assert = require('node:assert/strict');
 const { carregar } = require('./carregar.cjs');
 const termos = carregar('src/lib/metricas/termos.ts');
 const aparicoes = carregar('src/lib/metricas/aparicoes.ts');
-const { normalizarTermo, termoDaBusca, montarBuscaAberta, termoDaAberturaRecente, TEMPO_ABERTURA_MS } = termos;
-const { validarAparicoes, ehBot, MAXIMO_APARICOES_POR_ENVIO } = aparicoes;
+const { normalizarTermo, termoDaBusca, montarBuscaAberta, termoDaAberturaRecente, TEMPO_ABERTURA_MS, primeiraPaginaDaAba } = termos;
+const { validarAparicoes, ehBot, MAXIMO_APARICOES_POR_ENVIO, lotesDeAparicoes } = aparicoes;
 const SITE = 'https://mercadodaregiao.com.br';
 const ID1 = '54100000-0000-4000-a000-000000000001';
 const ID2 = '54100000-0000-4000-a000-000000000002';
@@ -96,4 +96,23 @@ test('bot ou navegador sem identificação não conta', () => {
   assert.equal(ehBot(null), true);
   assert.equal(ehBot(''), true);
   assert.equal(ehBot('Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124.0 Mobile Safari/537.36'), false);
+});
+
+test('lista grande vai em partes de 60 sem perder a posição', () => {
+  const ids = Array.from({ length: 125 }, (_, i) => `00000000-0000-4000-a000-${String(i).padStart(12, '0')}`);
+  const lotes = lotesDeAparicoes(ids);
+  assert.deepEqual(lotes.map((l) => [l.inicio, l.ids.length]), [[0, 60], [60, 60], [120, 5]]);
+  const terceiro = validarAparicoes('loja', lotes[2].ids, lotes[2].inicio);
+  assert.equal(terceiro.itens[0].posicao, 121);
+  assert.equal(terceiro.itens[4].posicao, 125);
+  assert.equal(validarAparicoes('loja', lotes[0].ids, -5).itens[0].posicao, 1, 'início inválido volta a 0');
+  assert.equal(validarAparicoes('loja', lotes[0].ids, 'x').itens[0].posicao, 1);
+});
+
+test('endereço de origem só vale na primeira página da aba', () => {
+  const SITE2 = 'https://ol-aqui.vercel.app';
+  assert.equal(primeiraPaginaDaAba(`${SITE2}/anuncio/a-abcd`, `${SITE2}/anuncio/a-abcd?x=1`), true);
+  assert.equal(primeiraPaginaDaAba(`${SITE2}/anuncio/a-abcd`, `${SITE2}/anuncio/outro-wxyz`), false);
+  assert.equal(primeiraPaginaDaAba(`${SITE2}/`, `${SITE2}/anuncio/a-abcd`), false);
+  assert.equal(primeiraPaginaDaAba(undefined, `${SITE2}/anuncio/a-abcd`), false);
 });

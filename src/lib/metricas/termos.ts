@@ -60,3 +60,19 @@ export function termoDaAberturaRecente(marca: string | null | undefined, caminho
     return null;
   }
 }
+
+/**
+ * O endereço de origem (document.referrer) só vale para a primeira página aberta nesta aba.
+ * Depois de navegar dentro do site ele continua o mesmo e levaria a palavra da busca para outros anúncios.
+ * `inicial` é o endereço do documento carregado (performance navigation); `atual`, o de agora.
+ */
+export function primeiraPaginaDaAba(inicial: string | null | undefined, atual: string): boolean {
+  if (!inicial) return false;
+  try {
+    const a = new URL(inicial);
+    const b = new URL(atual);
+    return a.origin === b.origin && a.pathname === b.pathname;
+  } catch {
+    return false;
+  }
+}

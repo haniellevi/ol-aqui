@@ -9,11 +9,11 @@ import { ehBot, validarAparicoes, type PaginaAparicao } from "@/lib/metricas/apa
 // (registrar_aparicoes): só o servidor chama, ignora o dono do anúncio e soma no dia.
 // Nunca lança erro: a tela não espera nem mostra nada.
 
-export async function registrarAparicoes(pagina: PaginaAparicao, ids: string[]): Promise<boolean> {
+export async function registrarAparicoes(pagina: PaginaAparicao, ids: string[], inicio = 0): Promise<boolean> {
   try {
     const h = await headers();
     if (ehBot(h.get("user-agent"))) return false;
-    const valido = validarAparicoes(pagina, ids);
+    const valido = validarAparicoes(pagina, ids, inicio);
     if (!valido) return false;
     const { userId } = await auth();
     const { data, error } = await supabaseAdmin().rpc("registrar_aparicoes", {

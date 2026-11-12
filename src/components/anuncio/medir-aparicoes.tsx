@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { registrarAparicoes } from "@/lib/metricas/acoes";
-import type { PaginaAparicao } from "@/lib/metricas/aparicoes";
+import { lotesDeAparicoes, type PaginaAparicao } from "@/lib/metricas/aparicoes";
 
 // Conta as aparições da lista uma vez por visita à página, só com a aba visível.
 // Não renderiza nada, não atrasa a tela e ignora erros.
@@ -15,7 +15,8 @@ export function MedirAparicoes({ pagina, ids }: { pagina: PaginaAparicao; ids: s
     const enviar = () => {
       if (enviado.current === chave) return;
       enviado.current = chave;
-      void registrarAparicoes(pagina, lista).catch(() => undefined);
+      // Lista com mais de 60 cards (ex.: loja com 120) vai em partes, cada uma com sua posição inicial.
+      for (const lote of lotesDeAparicoes(lista)) void registrarAparicoes(pagina, lote.ids, lote.inicio).catch(() => undefined);
     };
     if (document.visibilityState === "visible") {
       enviar();
