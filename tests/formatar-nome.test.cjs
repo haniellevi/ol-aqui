@@ -24,7 +24,7 @@ const casos = [
   ['MOTO HONDA CG 160CC 2015', 'Moto Honda CG 160CC 2015'],
   ['MOTO TITAN 160cc', 'Moto Titan 160cc'],
   ['RAÇÃO 15KG', 'Ração 15KG'],
-  ['PS5 COM 2 CONTROLES', 'PS5 Com 2 Controles'],
+  ['PS5 COM 2 CONTROLES', 'PS5 com 2 Controles'],
   ['IPHONE 11 PRO MAX 128GB', 'Iphone 11 Pro Max 128GB'],
   // "Quase todo" em caixa alta (80% ou mais das letras)
   ['GELADEIRA BRASTEMP FROST FREe', 'Geladeira Brastemp Frost Free'],
@@ -47,6 +47,9 @@ const casos = [
   ['123', '123'],
   ['2015', '2015'],
   ['A', 'A'],
+  ['PIZZA NA BRASA', 'Pizza na Brasa'],
+  ['CASA NO CAMPO COM PISCINA EM CORRENTE', 'Casa no Campo com Piscina em Corrente'],
+  ['EM CASA COM VOCÊ', 'Em Casa com Você'], // 1ª palavra sempre maiúscula
   // Siglas de empresa e abreviações
   ['LOJA JOÃO LTDA', 'Loja João LTDA'],
   ['MERCADO DO ZÉ ME', 'Mercado do Zé Me'], // "ME" também é pronome: não vira sigla

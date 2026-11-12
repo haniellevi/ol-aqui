@@ -1,8 +1,8 @@
 // Padrão de exibição de nomes (loja, pessoa) e títulos de anúncio. Só muda o que aparece na tela:
 // o texto original continua guardado no banco do jeito que a pessoa digitou.
 
-/** Palavras que ficam minúsculas no meio do nome: "Casa da Ana", "Pães e Doces". */
-const LIGACOES = new Set(["de", "da", "do", "das", "dos", "e"]);
+/** Palavras que ficam minúsculas no meio do nome: "Casa da Ana", "Pães e Doces", "Pizza na Brasa". */
+const LIGACOES = new Set(["de", "da", "do", "das", "dos", "e", "na", "no", "com", "em"]);
 
 /** Algarismos romanos comuns em nome de produto ("Parte II", "Copa IV"). */
 const ROMANO = /^(?:II|III|IV|VI|VII|VIII|IX|XI|XII|XIII|XIV|XV)$/;
@@ -46,7 +46,7 @@ function palavraPadrao(palavra: string, primeira: boolean): string {
  * Padrão de exibição para nome de loja, nome de pessoa e título de anúncio.
  *
  * - Todo (ou quase todo, 80% das letras) em CAIXA ALTA → Cada Palavra com a Primeira Maiúscula,
- *   com "de, da, do, das, dos, e" minúsculas no meio: "CASA DA ANA" → "Casa da Ana".
+ *   com "de, da, do, das, dos, e, na, no, com, em" minúsculas no meio: "CASA DA ANA" → "Casa da Ana".
  *   Siglas sem vogal ou conhecidas continuam maiúsculas ("RVS", "TV LG", "LTDA", "S.A."); palavras com número ficam como foram
  *   digitadas ("15KG", "160cc", "PS5").
  * - Todo em minúscula → só a primeira letra maiúscula: "geladeira usada" → "Geladeira usada".
