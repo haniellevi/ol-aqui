@@ -226,6 +226,25 @@ update whatsapp_fila set estado = 'enviando', enviar_apos = now() - interval '11
 select count(*) as nada from whatsapp_fila_pegar() where texto = 'Mensagem 4' \gset
 select pg_temp.confere(:'nada' = '0' and (select estado = 'incerta' from whatsapp_fila where texto = 'Mensagem 4'), 'enviando esquecida vira incerta');
 
+-- pegar nunca pega incerta nem falha.
+select count(*) as pegou_ruins from whatsapp_fila_pegar() where texto in ('Mensagem 2', 'Mensagem 3', 'Mensagem 4') \gset
+select pg_temp.confere(:'pegou_ruins' = '0', 'pegar ignora incerta e falha');
+select pg_temp.confere((select estado = 'incerta' from whatsapp_fila where texto = 'Mensagem 2')
+  and (select estado = 'falha' from whatsapp_fila where texto = 'Mensagem 3')
+  and (select estado = 'incerta' from whatsapp_fila where texto = 'Mensagem 4'), 'incerta e falha seguem como estavam');
+
+-- devolver: só "enviando" volta a pendente, e a tentativa contada ao pegar é desfeita.
+select pg_temp.confere((select estado = 'enviando' and tentativas = 1 from whatsapp_fila where texto = 'Mensagem 5')
+  and (select estado = 'enviando' and tentativas = 1 from whatsapp_fila where texto = 'Mensagem 6'), 'antes de devolver: 5 e 6 estão enviando com 1 tentativa');
+select whatsapp_fila_devolver(array(select id from whatsapp_fila where texto in ('Mensagem 1', 'Mensagem 2', 'Mensagem 3', 'Mensagem 5', 'Mensagem 6'))) as devolvidas \gset
+select pg_temp.confere(:'devolvidas' = '2', 'devolver conta só as que estavam enviando');
+select pg_temp.confere((select count(*) = 2 and bool_and(estado = 'pendente' and tentativas = 0) from whatsapp_fila where texto in ('Mensagem 5', 'Mensagem 6')), 'devolvidas voltam a pendente sem tentativa gasta');
+select pg_temp.confere((select estado = 'enviada' from whatsapp_fila where texto = 'Mensagem 1')
+  and (select estado = 'incerta' from whatsapp_fila where texto = 'Mensagem 2')
+  and (select estado = 'falha' from whatsapp_fila where texto = 'Mensagem 3'), 'devolver ignora enviada, incerta e falha');
+select whatsapp_fila_devolver(null) as nenhuma \gset
+select pg_temp.confere(:'nenhuma' = '0', 'devolver sem lista não faz nada');
+
 -- [9] Permissões.
 set local role authenticated;
 select set_config('request.jwt.claim.role','authenticated',false), set_config('request.jwt.claim.sub','user_730conf',false) \g /dev/null
@@ -244,6 +263,9 @@ begin
   assert not has_function_privilege('verificacao_loja_destinatarios_equipe()','execute'), 'destinatários fechada';
   assert not has_function_privilege('whatsapp_fila_pegar(integer)','execute'), 'pegar fechada';
   assert not has_function_privilege('whatsapp_fila_resultado(uuid,text)','execute'), 'resultado fechada';
+  assert not has_function_privilege('whatsapp_fila_devolver(uuid[])','execute'), 'devolver fechada';
+  begin perform whatsapp_fila_devolver(array[gen_random_uuid()]); ok := false; exception when insufficient_privilege then ok := true; end;
+  assert ok, 'authenticated não devolve';
   begin perform whatsapp_enfileirar('user_730conf','oi tudo','/x','chave-730-z'); ok := false; exception when insufficient_privilege then ok := true; end;
   assert ok, 'authenticated não enfileira';
 end $$;
@@ -251,12 +273,14 @@ set local role anon;
 do $$ begin
   assert not has_table_privilege('whatsapp_fila','select'), 'anon não lê a fila';
   assert not has_function_privilege('whatsapp_fila_pegar(integer)','execute'), 'anon não pega';
+  assert not has_function_privilege('whatsapp_fila_devolver(uuid[])','execute'), 'anon não devolve';
   assert not has_function_privilege('verificacao_loja_destinatarios_equipe()','execute'), 'anon não vê destinatários';
 end $$;
 set local role service_role;
 do $$ begin
   assert has_function_privilege('whatsapp_fila_pegar(integer)','execute');
   assert has_function_privilege('whatsapp_fila_resultado(uuid,text)','execute');
+  assert has_function_privilege('whatsapp_fila_devolver(uuid[])','execute');
   assert has_function_privilege('verificacao_loja_destinatarios_equipe()','execute');
   assert not has_function_privilege('whatsapp_enfileirar(text,text,text,text)','execute'), 'enfileirar é interna até para o servidor';
   assert not has_function_privilege('verificacao_loja_lembrar()','execute'), 'lembrar é do agendador';

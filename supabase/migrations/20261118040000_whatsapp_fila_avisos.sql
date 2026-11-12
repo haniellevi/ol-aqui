@@ -240,9 +240,14 @@ begin
      order by v.prazo_em
      for update of v skip locked
   loop
-    perform public.verificacao_avisar_equipe('verificacao_equipe_atrasada', jsonb_build_object('loja', r.nome),
-      'atraso:' || r.id || ':' || to_char(now() at time zone 'America/Fortaleza', 'YYYY-MM-DD'));
-    update public.verificacoes_loja set lembrete_em = now() where id = r.id;
+    begin
+      perform public.verificacao_avisar_equipe('verificacao_equipe_atrasada', jsonb_build_object('loja', r.nome),
+        'atraso:' || r.id || ':' || to_char(now() at time zone 'America/Fortaleza', 'YYYY-MM-DD'));
+      update public.verificacoes_loja set lembrete_em = now() where id = r.id;
+    exception when others then
+      -- Um pedido com problema não pode parar o lembrete dos outros.
+      raise warning 'Lembrete da verificação não saiu: %', sqlerrm;
+    end;
   end loop;
 end $$;
 
@@ -300,6 +305,23 @@ begin
   return 'incerta';
 end $$;
 
+-- Devolve à fila as mensagens que a rota pegou mas não chegou a tentar (acabou o tempo da rodada).
+-- Só as que ainda estão "enviando"; desfaz a tentativa contada ao pegar.
+create function public.whatsapp_fila_devolver(p_ids uuid[])
+returns integer language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare n integer;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
+    raise exception 'Acesso restrito.' using errcode = '42501';
+  end if;
+  update public.whatsapp_fila f set estado = 'pendente', tentativas = greatest(f.tentativas - 1, 0)
+   where f.id = any(coalesce(p_ids, '{}')) and f.estado = 'enviando';
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
 -- ---------------------------------------------------------------------
 -- 9. Agendamento (mesmo desenho da fila da IA)
 -- ---------------------------------------------------------------------
@@ -338,10 +360,10 @@ revoke all on function public.proxima_janela_whatsapp(timestamptz), public.whats
   public.verificacao_loja_avisos_gatilho(), public.verificacao_loja_lembrar(), public.whatsapp_fila_disparar()
   from public, anon, authenticated, service_role;
 revoke all on function public.verificacao_loja_destinatarios_equipe(), public.whatsapp_fila_pegar(integer),
-  public.whatsapp_fila_resultado(uuid, text)
+  public.whatsapp_fila_resultado(uuid, text), public.whatsapp_fila_devolver(uuid[])
   from public, anon, authenticated, service_role;
 grant execute on function public.verificacao_loja_destinatarios_equipe(), public.whatsapp_fila_pegar(integer),
-  public.whatsapp_fila_resultado(uuid, text)
+  public.whatsapp_fila_resultado(uuid, text), public.whatsapp_fila_devolver(uuid[])
   to service_role;
 
 do $$ begin
