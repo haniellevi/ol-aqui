@@ -288,7 +288,7 @@ end $$;
 -- ---------------------------------------------------------------------
 -- 3. Resultado da consulta. Receita fora do ar não chega aqui (nada muda).
 -- ---------------------------------------------------------------------
-create function public.verificacao_loja_reconferir_registrar(p_vitrine uuid, p_resultado text, p_situacao text)
+create function public.verificacao_loja_reconferir_registrar(p_vitrine uuid, p_cnpj text, p_resultado text, p_situacao text)
 returns void language plpgsql security definer
 set search_path = public, extensions
 as $$
@@ -306,6 +306,8 @@ begin
   select * into l from public.vitrines_lojas x where x.id = p_vitrine and x.tipo = 'loja' for update;
   -- Loja sumiu ou já sem selo (a equipe tirou no meio): nada a fazer.
   if not found or not l.selo_loja_verificada then return; end if;
+  -- Resultado de um CNPJ antigo (a loja trocou de CNPJ e foi aprovada de novo no meio da rodada): não vale.
+  if l.cnpj is distinct from p_cnpj then return; end if;
 
   if p_resultado = 'ativa' then
     update public.vitrines_lojas set cnpj_conferido_em = now() where id = l.id;
@@ -352,11 +354,11 @@ end $$;
 
 revoke all on function public.verificacao_loja_concluir(uuid, uuid, text, text, text[], jsonb, numeric, integer, integer),
   public.admin_decidir_verificacao_loja(uuid, text, text, boolean),
-  public.verificacao_loja_reconferir_reservar(integer), public.verificacao_loja_reconferir_registrar(uuid, text, text),
+  public.verificacao_loja_reconferir_reservar(integer), public.verificacao_loja_reconferir_registrar(uuid, text, text, text),
   public.verificacao_loja_reconferir_disparar()
   from public, anon, authenticated, service_role;
 grant execute on function public.verificacao_loja_concluir(uuid, uuid, text, text, text[], jsonb, numeric, integer, integer),
-  public.verificacao_loja_reconferir_reservar(integer), public.verificacao_loja_reconferir_registrar(uuid, text, text),
+  public.verificacao_loja_reconferir_reservar(integer), public.verificacao_loja_reconferir_registrar(uuid, text, text, text),
   public.verificacao_loja_reconferir_disparar() to service_role;
 grant execute on function public.admin_decidir_verificacao_loja(uuid, text, text, boolean) to authenticated;
 

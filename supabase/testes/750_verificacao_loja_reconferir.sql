@@ -53,16 +53,22 @@ select pg_temp.confere((select count(*) = 2 from verificacao_loja_reconferir_res
 select pg_temp.confere((select cnpj = '11222333000001' from verificacao_loja_reconferir_reservar(100) where vitrine_id = pg_temp.vid(1)), 'reserva devolve o CNPJ');
 
 -- [3] Ativa: só atualiza a data, sem avisos.
-select verificacao_loja_reconferir_registrar(pg_temp.vid(1), 'ativa', 'ATIVA');
+select verificacao_loja_reconferir_registrar(pg_temp.vid(1), '11222333000001', 'ativa', 'ATIVA');
 select pg_temp.confere((select selo_loja_verificada and verificacao_estado = 'aprovada' and cnpj_conferido_em > now() - interval '1 minute'
    from vitrines_lojas where id = pg_temp.vid(1)), 'ativa: mantém o selo e atualiza a data');
 select pg_temp.confere(pg_temp.avisos(1, 'verificacao_selo_removido') = 0, 'ativa: nenhum aviso');
 select pg_temp.confere(not (pg_temp.vid(1) = any (pg_temp.reservadas())), 'conferida sai da reserva');
 
+-- [3b] Resultado de outro CNPJ (a loja trocou de CNPJ no meio da rodada): nada muda, o selo fica.
+select verificacao_loja_reconferir_registrar(pg_temp.vid(2), '99999999999999', 'inativa', 'BAIXADA');
+select pg_temp.confere((select selo_loja_verificada and verificacao_estado = 'aprovada' from vitrines_lojas where id = pg_temp.vid(2))
+   and pg_temp.avisos(2, 'verificacao_selo_removido') = 0
+   and not exists (select 1 from verificacao_loja_avisos where vitrine_id = pg_temp.vid(2)), 'CNPJ diferente: nada muda');
+
 -- [4] Inativa: selo sai, motivo, aviso da equipe, ação registrada, aviso à loja (sino) e WhatsApp com as chaves ligadas.
 update configuracoes set valor = 'true'::jsonb where chave in ('verificacao.whatsapp_loja', 'verificacao.whatsapp_equipe') and microrregiao_id is null;
 delete from whatsapp_fila;
-select verificacao_loja_reconferir_registrar(pg_temp.vid(4), 'inativa', 'BAIXADA');
+select verificacao_loja_reconferir_registrar(pg_temp.vid(4), '11222333000004', 'inativa', 'BAIXADA');
 select pg_temp.confere((select not selo_loja_verificada and verificacao_estado = 'recusada' and verificacao_motivo = 'cnpj_inativo'
    from vitrines_lojas where id = pg_temp.vid(4)), 'inativa: selo sai, estado recusada, motivo cnpj_inativo');
 select pg_temp.confere((select count(*) = 1 and bool_and(detalhe->>'resultado' = 'inativa' and detalhe->>'situacao' = 'BAIXADA')
@@ -76,11 +82,11 @@ select pg_temp.confere((select count(*) >= 1 and count(*) = count(distinct usuar
 select pg_temp.confere((select count(*) = 0 from whatsapp_fila where texto ~ '[0-9]{14}'), 'mensagens sem CNPJ');
 
 -- Repetir o resultado numa loja que já perdeu o selo não duplica nada.
-select verificacao_loja_reconferir_registrar(pg_temp.vid(4), 'inativa', 'BAIXADA');
+select verificacao_loja_reconferir_registrar(pg_temp.vid(4), '11222333000004', 'inativa', 'BAIXADA');
 select pg_temp.confere(pg_temp.avisos(4, 'verificacao_selo_removido') = 1 and (select count(*) = 1 from vitrines_acoes_admin where vitrine_id = pg_temp.vid(4) and acao = 'verificacao_selo_removido'), 'repetir não duplica');
 
 -- [5] Não encontrada também tira o selo.
-select verificacao_loja_reconferir_registrar(pg_temp.vid(5), 'nao_encontrada', null);
+select verificacao_loja_reconferir_registrar(pg_temp.vid(5), '11222333000005', 'nao_encontrada', null);
 select pg_temp.confere((select not selo_loja_verificada and verificacao_motivo = 'cnpj_inativo' from vitrines_lojas where id = pg_temp.vid(5)), 'não encontrada: selo sai');
 
 -- [6] A loja pode enviar nova verificação depois.
@@ -89,7 +95,7 @@ select pg_temp.confere((select verificacao_estado = 'pendente' from vitrines_loj
 
 -- [7] Resultado inválido.
 do $$ declare ok boolean := false; begin
-  begin perform verificacao_loja_reconferir_registrar(pg_temp.vid(2), 'talvez', null);
+  begin perform verificacao_loja_reconferir_registrar(pg_temp.vid(2), '11222333000002', 'talvez', null);
   exception when sqlstate '22023' then ok := true; end;
   assert ok, 'resultado inválido deve falhar';
 end $$;
@@ -132,7 +138,7 @@ do $$ declare ok boolean := false; begin
   exception when sqlstate '42501' then ok := true; end;
   assert ok, 'authenticated reservou';
   ok := false;
-  begin perform verificacao_loja_reconferir_registrar(gen_random_uuid(), 'inativa', null);
+  begin perform verificacao_loja_reconferir_registrar(gen_random_uuid(), '1', 'inativa', null);
   exception when sqlstate '42501' then ok := true; end;
   assert ok, 'authenticated registrou';
   ok := false;
@@ -143,13 +149,13 @@ end $$;
 set local role anon;
 do $$ begin
   assert not has_function_privilege('verificacao_loja_reconferir_reservar(integer)','execute');
-  assert not has_function_privilege('verificacao_loja_reconferir_registrar(uuid,text,text)','execute');
+  assert not has_function_privilege('verificacao_loja_reconferir_registrar(uuid,text,text,text)','execute');
   assert not has_function_privilege('verificacao_loja_reconferir_disparar()','execute');
 end $$;
 set local role service_role;
 do $$ begin
   assert has_function_privilege('verificacao_loja_reconferir_reservar(integer)','execute');
-  assert has_function_privilege('verificacao_loja_reconferir_registrar(uuid,text,text)','execute');
+  assert has_function_privilege('verificacao_loja_reconferir_registrar(uuid,text,text,text)','execute');
   assert has_function_privilege('verificacao_loja_reconferir_disparar()','execute');
   assert not has_function_privilege('admin_decidir_verificacao_loja(uuid,text,text,boolean)','execute');
 end $$;

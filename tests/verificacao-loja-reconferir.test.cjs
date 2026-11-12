@@ -43,9 +43,9 @@ test('ativa, inativa e não encontrada chamam registrar com o resultado certo', 
   const r = await mod.reconferirLojas(db, { esperar: async (ms) => { esperas.push(ms); } });
   assert.deepEqual(r, { conferidas: 3, removidas: 2, parouPorReceita: false });
   assert.deepEqual(registros(db), [
-    { p_vitrine: 'v1', p_resultado: 'ativa', p_situacao: 'ATIVA' },
-    { p_vitrine: 'v2', p_resultado: 'inativa', p_situacao: 'BAIXADA' },
-    { p_vitrine: 'v3', p_resultado: 'nao_encontrada', p_situacao: null },
+    { p_vitrine: 'v1', p_cnpj: 'c1', p_resultado: 'ativa', p_situacao: 'ATIVA' },
+    { p_vitrine: 'v2', p_cnpj: 'c2', p_resultado: 'inativa', p_situacao: 'BAIXADA' },
+    { p_vitrine: 'v3', p_cnpj: 'c3', p_resultado: 'nao_encontrada', p_situacao: null },
   ]);
   assert.equal(db.chamadas[0].args.p_limite, 30);
   assert.deepEqual(esperas, [1000, 1000]);
@@ -72,24 +72,37 @@ test('erro em uma loja não impede a seguinte', async () => {
   assert.equal(registros(db).length, 2);
 });
 
-test('banco com erro ou lançando não derruba a rodada', async () => {
+test('resposta com situação vazia para a rodada e não chama registrar', async () => {
   zerar();
-  assert.deepEqual(await mod.reconferirLojas({ rpc: async () => ({ data: null, error: { message: 'x' } }) }), { conferidas: 0, removidas: 0, parouPorReceita: false });
-  assert.deepEqual(await mod.reconferirLojas({ rpc: async () => { throw new Error('rede'); } }), { conferidas: 0, removidas: 0, parouPorReceita: false });
+  estado.respostas = { c1: ok('  '), c2: ok('BAIXADA') };
+  const db = banco(lojas(2));
+  const r = await mod.reconferirLojas(db, { esperar: async () => {} });
+  assert.deepEqual(r, { conferidas: 0, removidas: 0, parouPorReceita: true });
+  assert.deepEqual(estado.consultadas, ['c1']);
+  assert.equal(registros(db).length, 0);
 });
 
-test('rota: 401 sem segredo e 200 com segredo', async () => {
-  let segredoOk = false, rodou = 0;
+test('falha ao reservar lança erro (a rota responde 503)', async () => {
+  zerar();
+  await assert.rejects(mod.reconferirLojas({ rpc: async () => ({ data: null, error: { message: 'x' } }) }));
+  await assert.rejects(mod.reconferirLojas({ rpc: async () => { throw new Error('rede'); } }));
+});
+
+test('rota: 401 sem segredo, 503 se a reserva falhar e 200 com segredo', async () => {
+  let segredoOk = false, rodou = 0, falhar = false;
   const rota = carregar('src/app/api/interno/verificacao-loja-reconferir/route.ts', {
     'next/server': { NextResponse: { json: (corpo, init) => ({ corpo, status: init?.status ?? 200 }) } },
     '@/lib/moderacao-ia': { segredoModeracaoConfere: () => segredoOk },
-    '@/lib/verificacao-loja/reconferir': { reconferirLojas: async () => { rodou++; return { conferidas: 2, removidas: 1, parouPorReceita: false }; } },
+    '@/lib/verificacao-loja/reconferir': { reconferirLojas: async () => { rodou++; if (falhar) throw new Error('reservar_falhou'); return { conferidas: 2, removidas: 1, parouPorReceita: false }; } },
   });
   assert.equal(rota.maxDuration, 300);
   assert.equal(rota.dynamic, 'force-dynamic');
   assert.equal((await rota.POST({ headers: { get: () => null } })).status, 401);
   assert.equal(rodou, 0);
   segredoOk = true;
+  falhar = true;
+  assert.equal((await rota.POST({ headers: { get: () => 'Bearer x' } })).status, 503);
+  falhar = false;
   const com = await rota.POST({ headers: { get: () => 'Bearer x' } });
   assert.equal(com.status, 200);
   assert.deepEqual(com.corpo, { ok: true, conferidas: 2, removidas: 1, parouPorReceita: false });

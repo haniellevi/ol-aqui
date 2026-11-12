@@ -15,37 +15,38 @@ const esperarReal = (ms: number) => new Promise<void>((ok) => setTimeout(ok, ms)
 export async function reconferirLojas(db?: SupabaseClient, opcoes: Opcoes = {}): Promise<ResultadoReconferencia> {
   const resultado: ResultadoReconferencia = { conferidas: 0, removidas: 0, parouPorReceita: false };
   const esperar = opcoes.esperar ?? esperarReal;
-  try {
-    const cliente = db ?? supabaseAdmin();
-    const { data, error } = await cliente.rpc("verificacao_loja_reconferir_reservar", { p_limite: LIMITE });
-    if (error || !Array.isArray(data)) return resultado;
-    const lojas = (data as Loja[]).slice(0, LIMITE);
-    let primeira = true;
-    for (const loja of lojas) {
-      try {
-        if (!primeira) await esperar(INTERVALO_MS);
-        primeira = false;
-        const r = await consultarCnpj(loja.cnpj);
-        if (r.estado === "fora_do_ar") { resultado.parouPorReceita = true; break; }
-        let veredito: "ativa" | "inativa" | "nao_encontrada";
-        let situacao: string | null = null;
-        if (r.estado === "nao_encontrada") veredito = "nao_encontrada";
-        else {
-          situacao = r.dados.situacao;
-          veredito = situacao.trim().toUpperCase() === "ATIVA" ? "ativa" : "inativa";
-        }
-        const { error: erroRegistro } = await cliente.rpc("verificacao_loja_reconferir_registrar", {
-          p_vitrine: loja.vitrine_id, p_resultado: veredito, p_situacao: situacao,
-        });
-        if (erroRegistro) continue;
-        resultado.conferidas++;
-        if (veredito !== "ativa") resultado.removidas++;
-      } catch {
-        // Uma loja com problema não impede as seguintes.
+  const cliente = db ?? supabaseAdmin();
+  const { data, error } = await cliente.rpc("verificacao_loja_reconferir_reservar", { p_limite: LIMITE });
+  if (error || !Array.isArray(data)) {
+    console.error("[reconferir] não foi possível reservar as lojas");
+    throw new Error("reservar_falhou");
+  }
+  const lojas = (data as Loja[]).slice(0, LIMITE);
+  let primeira = true;
+  for (const loja of lojas) {
+    try {
+      if (!primeira) await esperar(INTERVALO_MS);
+      primeira = false;
+      const r = await consultarCnpj(loja.cnpj);
+      if (r.estado === "fora_do_ar") { resultado.parouPorReceita = true; break; }
+      let veredito: "ativa" | "inativa" | "nao_encontrada";
+      let situacao: string | null = null;
+      if (r.estado === "nao_encontrada") veredito = "nao_encontrada";
+      else {
+        situacao = r.dados.situacao.trim();
+        // Resposta sem situação é resposta estranha da Receita, não CNPJ inativo: trata como fora do ar.
+        if (!situacao) { resultado.parouPorReceita = true; break; }
+        veredito = situacao.toUpperCase() === "ATIVA" ? "ativa" : "inativa";
       }
+      const { error: erroRegistro } = await cliente.rpc("verificacao_loja_reconferir_registrar", {
+        p_vitrine: loja.vitrine_id, p_cnpj: loja.cnpj, p_resultado: veredito, p_situacao: situacao,
+      });
+      if (erroRegistro) continue;
+      resultado.conferidas++;
+      if (veredito !== "ativa") resultado.removidas++;
+    } catch {
+      // Uma loja com problema não impede as seguintes.
     }
-  } catch {
-    // Sem banco, nada a fazer nesta rodada.
   }
   return resultado;
 }
