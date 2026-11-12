@@ -2,7 +2,7 @@
 import { preco } from "@/lib/formato";
 import type { MotivoFechamento, SituacaoPedido } from "@/lib/tipos-radar";
 import type { MinhaConta } from "@/lib/tipos";
-import { LINK_MINHA_LOJA } from "@/lib/rotas";
+import { LINK_LOJA_VERIFICAR } from "@/lib/rotas";
 import { LINK_VERIFICACAO_VENDEDOR } from "@/lib/verificacao-vendedor";
 import type { TomSelo } from "@/components/ui/badge";
 
@@ -82,5 +82,5 @@ export function linkVerificarParaRadar(conta: Pick<MinhaConta, "vitrine" | "plan
   const p = conta?.plano;
   if (temAcesso || !v || v.status !== "ativa" || !p) return null;
   if (!p.acesso_radar || p.e_teste || p.preco_centavos <= 0) return null;
-  return v.tipo === "pf" ? LINK_VERIFICACAO_VENDEDOR : LINK_MINHA_LOJA;
+  return v.tipo === "pf" ? LINK_VERIFICACAO_VENDEDOR : LINK_LOJA_VERIFICAR;
 }

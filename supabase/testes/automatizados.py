@@ -99,6 +99,8 @@ try:
     print('PASS: reconferência mensal do CNPJ: reserva das lojas vencidas, ativa só atualiza a data, inativa e não encontrada tiram o selo com um aviso da loja e da equipe, nova verificação depois, aprovações gravam a data e permissões', flush=True)
     checked(sql((root/'supabase/testes/760_verificacao_loja_ajustes.sql').read_text()))
     print('PASS: ajustes da revisão final da verificação: reconferência desligada de fábrica, dono não escreve cnpj_conferido_em, revisão manual fecha o pedido aberto sem aviso errado, selo removido fecha a revisão por amostra e pedido parado há mais de 30 minutos vai para a equipe', flush=True)
+    checked(sql((root/'supabase/testes/770_cortesia_lancamento.sql').read_text()))
+    print('PASS: cortesia de lançamento do Radar: 30 dias só para loja e PF pagas sem selo, uma vez só, aviso ao dono, vale até o prazo, aviso de fim uma vez e permissões', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin
