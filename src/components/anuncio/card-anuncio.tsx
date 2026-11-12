@@ -18,7 +18,7 @@ export type CardAnuncioProps = {
   acao?: ReactNode;
 };
 
-// Card do anúncio: foto 4:3, preço grande, título em 2 linhas, cidade e "há 2 dias",
+// Card do anúncio: foto quadrada (1:1), preço grande, título em 2 linhas, cidade e "há 2 dias",
 // selo da loja e "Patrocinado" quando é destaque pago. O card inteiro é tocável.
 export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnuncioProps) {
   const quando = tempoRelativo(a.criado_em);
@@ -28,7 +28,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
         href={linkAnuncio(a.id, a.titulo)}
         className="flex flex-1 flex-col focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
       >
-        <div className={`relative aspect-[4/3] w-full ${a.capa ? "bg-white" : "bg-borda"}`}>
+        <div className={`relative aspect-square w-full ${a.capa ? "bg-white" : "bg-borda"}`}>
           {a.capa ? (
             // Foto inteira (sem cortar) sobre fundo branco. Foto do Storage sai otimizada (AVIF/WebP, só o tamanho que a tela precisa); outras vão como estão.
             <Image

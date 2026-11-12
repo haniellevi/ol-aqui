@@ -84,7 +84,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
 
   if (total === 0) {
     return (
-      <div className="grid aspect-[4/3] w-full place-items-center bg-borda text-texto-suave md:rounded-card">
+      <div className="grid aspect-square w-full place-items-center bg-borda text-texto-suave md:rounded-card">
         <span className="flex flex-col items-center gap-2">
           <ImageOff className="size-10" aria-hidden />
           Anúncio sem foto
@@ -98,7 +98,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
       <ul
         ref={trilho}
         onScroll={(e) => aoRolar(e.currentTarget)}
-        className="flex aspect-[4/3] w-full snap-x snap-mandatory overflow-x-auto bg-white [scrollbar-width:none] md:rounded-card"
+        className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto bg-white [scrollbar-width:none] md:rounded-card"
       >
         {fotos.map((f, i) => (
           <li key={f + i} className="relative h-full w-full shrink-0 snap-center">
@@ -191,5 +191,5 @@ function Foto({ src, alt, principal = false }: { src: string; alt: string; princ
   if (erro) return <span role="img" aria-label={`${alt}: indisponível`} className="flex size-full flex-col items-center justify-center gap-2 bg-fundo p-6 text-center text-texto-suave"><ImageOff className="size-10" aria-hidden />Não foi possível carregar esta foto.</span>;
   // Fotos públicas do Storage, com alternativa explícita quando o arquivo não responde.
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={alt} width={800} height={600} loading={principal ? "eager" : "lazy"} fetchPriority={principal ? "high" : undefined} decoding="async" onError={() => setErro(true)} className="size-full object-contain" />;
+  return <img src={src} alt={alt} width={1080} height={1080} loading={principal ? "eager" : "lazy"} fetchPriority={principal ? "high" : undefined} decoding="async" onError={() => setErro(true)} className="size-full object-contain" />;
 }
