@@ -18,7 +18,7 @@ test('anúncio apresenta preço, detalhes, vendedor, descrição e contato com U
   const url = new URL(href);
   assert.equal(url.pathname, '/5589999990000');
   assert.ok(url.searchParams.get('text').includes(anuncio.titulo));
-  assert.ok(url.searchParams.get('text').includes('https://mercadodaregiao.com.br' + linkAnuncio(anuncio.id, anuncio.titulo)));
+  assert.ok(url.searchParams.get('text').includes('https://mercadodaregiao.com.br' + linkAnuncio(anuncio.id, anuncio.titulo, null)));
   assert.match(html, /target="_blank" rel="noopener noreferrer"/);
   assert.match(html, /Entre para salvar nos favoritos/);
   assert.doesNotMatch(html, /Vendedor Fictício/); // Pessoa física: somente primeiro nome.
@@ -52,7 +52,7 @@ test('título e descrição maliciosos são escapados no HTML e dados estruturad
 test('endereço com codificação quebrada é inválido sem lançar URIError', () => {
   assert.equal(idDoLinkAnuncio('%E0%A4%A'), null);
   assert.equal(idDoLinkAnuncio('inexistente'), null);
-  assert.equal(idDoLinkAnuncio(linkAnuncio(anuncio.id, anuncio.titulo).split('/').pop()), anuncio.id);
+  assert.equal(idDoLinkAnuncio(linkAnuncio(anuncio.id, anuncio.titulo, null).split('/').pop()), anuncio.id);
 });
 test('falha de dados é recuperável e não se transforma em anúncio inexistente', async () => {
   for (const resposta of [{ error: { message: 'falha' }, data: null }, { error: null, data: null }]) {
@@ -64,7 +64,7 @@ test('falha de dados é recuperável e não se transforma em anúncio inexistent
 });
 test('falha de recomendações mantém o anúncio e contato principal disponíveis', async () => {
   const { default: Pagina } = carregar(caminho + 'page.tsx', { ...mocks, '@clerk/nextjs/server': { auth: async () => ({ userId: null }) }, '@/lib/supabase/server': {}, '@/lib/dados/paginas': {}, '@/lib/dados/anuncios': { anuncioPublico: async () => anuncio, buscarAnuncios: async () => { throw Error('offline'); } } });
-  const html = render(await Pagina({ params: Promise.resolve({ idslug: linkAnuncio(anuncio.id, anuncio.titulo).split('/').pop() }) }));
+  const html = render(await Pagina({ params: Promise.resolve({ idslug: linkAnuncio(anuncio.id, anuncio.titulo, null).split('/').pop() }) }));
   assert.match(html, /https:\/\/wa.me\//); assert.doesNotMatch(html, /Parecidos na região/);
 });
 test('favoritos recusam usuário sem sessão e identificador inválido antes de gravar', async () => {
@@ -86,7 +86,7 @@ test('falha de autenticação nas ações recebe mensagem recuperável', async (
 for (const caso of ['copiar', 'nativo', 'cancelado', 'indisponivel']) {
   test(`compartilhamento ${caso} respeita sucesso, cancelamento e alternativa manual`, async () => {
     const estados = []; let evento = 0; let recebido;
-    const url = 'https://mercadodaregiao.com.br' + linkAnuncio(anuncio.id, anuncio.titulo);
+    const url = 'https://mercadodaregiao.com.br' + linkAnuncio(anuncio.id, anuncio.titulo, null);
     const anterior = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
     const nav = caso === 'copiar' ? { clipboard: { writeText: async valor => { recebido = valor; } } } : caso === 'indisponivel' ? {} : { share: async valor => { recebido = valor; if (caso === 'cancelado') throw new DOMException('Cancelado', 'AbortError'); } };
     Object.defineProperty(globalThis, 'navigator', { configurable: true, value: nav });

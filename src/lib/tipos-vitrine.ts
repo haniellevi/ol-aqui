@@ -65,6 +65,7 @@ export type OrdemVitrine = "recentes" | "menor_preco";
 /** Linha de public.anuncios_vitrine(): o que o card e os grupos precisam. */
 export type AnuncioVitrine = {
   id: string;
+  slug: string | null;
   titulo: string;
   preco_centavos: number | null;
   aceita_troca: boolean;

@@ -95,6 +95,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
           prioridade
           anuncio={{
             id: anuncio.id,
+            slug: null, // rascunho: o endereço só nasce ao publicar
             titulo: titulo || "Seu anúncio",
             preco_centavos: anuncio.preco_centavos,
             cidade: anuncio.cidade ?? v.cidade,

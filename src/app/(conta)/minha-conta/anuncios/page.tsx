@@ -188,7 +188,7 @@ function LinhaAnuncio({
     <article aria-label={titulo} className="flex min-w-0 flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
       <div className="flex gap-3">
         {publico ? (
-          <Link href={linkAnuncio(a.id, a.titulo)} aria-hidden tabIndex={-1}>
+          <Link href={linkAnuncio(a.id, a.titulo, a.slug)} aria-hidden tabIndex={-1}>
             {foto}
           </Link>
         ) : (
@@ -203,7 +203,7 @@ function LinhaAnuncio({
           </div>
           <h2 className="line-clamp-2 text-base leading-5 font-semibold break-words">
             {publico ? (
-              <Link href={linkAnuncio(a.id, a.titulo)} className="hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
+              <Link href={linkAnuncio(a.id, a.titulo, a.slug)} className="hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
                 {titulo}
               </Link>
             ) : (

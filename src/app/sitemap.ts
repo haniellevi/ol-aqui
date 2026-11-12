@@ -62,7 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     itens.push({ url: urlAbsoluta(linkLoja(loja.slug)), changeFrequency: "daily", priority: 0.6 });
   }
   for (const a of anuncios) {
-    itens.push({ url: urlAbsoluta(linkAnuncio(a.id, a.titulo)), lastModified: a.criado_em, changeFrequency: "weekly", priority: 0.8 });
+    itens.push({ url: urlAbsoluta(linkAnuncio(a.id, a.titulo, a.slug)), lastModified: a.criado_em, changeFrequency: "weekly", priority: 0.8 });
   }
   return itens;
 }
