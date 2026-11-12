@@ -97,10 +97,10 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
         <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
           <Dado rotulo="Responsável">{montagem ? "Equipe Mercado da Região, até o dono aceitar" : loja.dono_nome ?? "Indisponível"}</Dado>
           {loja.whatsapp && <Dado rotulo="WhatsApp">{telefone(loja.whatsapp)}</Dado>}
-          <Dado rotulo="Plano">{loja.plano_efetivo_nome ?? loja.plano_nome ?? "Sem plano"}</Dado>
+          <Dado rotulo="Plano">{montagem ? "Teste grátis começa quando o dono aceitar" : loja.plano_efetivo_nome ?? loja.plano_nome ?? "Sem plano"}</Dado>
           {vencimento && <Dado rotulo="Vencimento">{quando(vencimento)}</Dado>}
           <Dado rotulo="Anúncios no ar">
-            {inteiro(loja.anuncios_ativos)}{loja.limite_anuncios !== null ? ` de ${inteiro(loja.limite_anuncios)}` : ""}
+            {inteiro(loja.anuncios_ativos)}{loja.limite_anuncios !== null && !montagem ? ` de ${inteiro(loja.limite_anuncios)}` : ""}
           </Dado>
           <Dado rotulo="Total de anúncios">{inteiro(ficha.anuncios)}</Dado>
           {loja.tipo === "loja" && <Dado rotulo="Verificação">{VERIFICACAO[ficha.verificacao] ?? "Indisponível"}</Dado>}

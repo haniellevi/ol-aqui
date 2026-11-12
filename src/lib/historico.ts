@@ -3,6 +3,8 @@
 
 export type PapelHistorico = "dono" | "ajudante" | "equipe" | "sistema";
 export type AcaoHistorico = "criou" | "editou" | "status" | "lixeira" | "restaurou";
+/** De quem é o histórico: "criou" de anúncio é a publicação; de loja, a loja montada pela equipe (P5c). */
+export type AlvoHistorico = "anuncio" | "loja";
 
 export type LinhaHistorico = {
   quando: string;
@@ -42,9 +44,9 @@ const SITUACAO: Record<string, string> = {
 };
 
 /** O que aconteceu, sem quem: "Editado", "Pausado", "Enviado para a lixeira". */
-export function oQueAconteceu(l: Pick<LinhaHistorico, "acao" | "de" | "para">): string {
+export function oQueAconteceu(l: Pick<LinhaHistorico, "acao" | "de" | "para">, alvo: AlvoHistorico = "anuncio"): string {
   switch (l.acao) {
-    case "criou": return "Publicado";
+    case "criou": return alvo === "loja" ? "Loja criada" : "Publicado";
     case "editou": return "Editado";
     case "lixeira": return "Enviado para a lixeira";
     case "restaurou": return "Restaurado da lixeira";
@@ -67,8 +69,8 @@ export function dataHistorico(iso: string, agora = new Date()): string {
 }
 
 /** Frase completa: "Editado por Ana (Equipe Mercado da Região) em 12/11 às 14:30". "Expirou" não diz "por o sistema". */
-export function fraseHistorico(l: LinhaHistorico, agora = new Date()): string {
-  const oque = oQueAconteceu(l);
+export function fraseHistorico(l: LinhaHistorico, agora = new Date(), alvo: AlvoHistorico = "anuncio"): string {
+  const oque = oQueAconteceu(l, alvo);
   const data = dataHistorico(l.quando, agora);
   const quem = l.papel === "sistema" && !l.e_voce ? "" : ` por ${quemFez(l)}`;
   return `${oque}${quem}${data ? ` em ${data}` : ""}`;

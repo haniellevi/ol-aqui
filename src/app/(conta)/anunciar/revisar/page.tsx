@@ -168,7 +168,9 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
 
       {!jaPublicado && (
         <p className="text-sm text-texto-suave">
-          Ao publicar, seu anúncio entra no ar. Se forem encontrados termos sexuais ou violentos, ele aguarda conferência da equipe.
+          {conta.vitrine.status === "montagem"
+            ? "A loja ainda está em montagem. Ao publicar, o produto fica pronto e vai ao ar quando o dono aceitar a loja, depois da conferência de sempre."
+            : "Ao publicar, seu anúncio entra no ar. Se forem encontrados termos sexuais ou violentos, ele aguarda conferência da equipe."}
         </p>
       )}
 

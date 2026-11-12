@@ -35,6 +35,16 @@ test('o que aconteceu: publicar, pausar, vender, restaurar e situação desconhe
   assert.equal(H.dataHistorico('não é data'), '');
 });
 
+test('P5c: no histórico da loja, "criou" é a loja montada pela equipe, não uma publicação', () => {
+  assert.equal(H.oQueAconteceu({ acao: 'criou' }, 'loja'), 'Loja criada');
+  assert.equal(H.oQueAconteceu({ acao: 'criou' }, 'anuncio'), 'Publicado');
+  assert.equal(H.fraseHistorico(linha({ acao: 'criou', e_voce: true }), AGORA, 'loja'), 'Loja criada por você em 12/11 às 14:30');
+  const { ListaHistorico } = carregar('src/components/conta/lista-historico.tsx');
+  const html = render(React.createElement(ListaHistorico, { alvo: 'loja', vazio: 'Nada ainda.', linhas: [linha({ acao: 'criou', papel: 'equipe', nome: 'Ana' })] }));
+  assert.match(html, /Loja criada por Ana \(Equipe Mercado da Região\)/);
+  assert.doesNotMatch(html, /Publicado/);
+});
+
 test('lista do histórico: uma linha por mudança, com motivo; vazia mostra o aviso', () => {
   const { ListaHistorico } = carregar('src/components/conta/lista-historico.tsx');
   const html = render(React.createElement(ListaHistorico, { vazio: 'Nada ainda.', linhas: [

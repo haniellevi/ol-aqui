@@ -192,7 +192,7 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
             <ItemMenu href={LINK_LOJA_SECOES} icone={<LayoutList />} titulo="Seções próprias" detalhe={usoSecoes} />
             <ItemMenu href={LINK_LOJA_FIXADOS} icone={<Pin />} titulo="Produtos no topo" detalhe={usoFixados} />
             <ItemMenu href={LINK_LOJA_HISTORICO} icone={<History />} titulo="Histórico da loja"
-              detalhe={ultimaMudanca ? `Última mudança: ${fraseHistorico(ultimaMudanca)}` : "Quem mudou os dados da loja e quando"} />
+              detalhe={ultimaMudanca ? `Última mudança: ${fraseHistorico(ultimaMudanca, new Date(), "loja")}` : "Quem mudou os dados da loja e quando"} />
             {vitrineNova && (
               <ItemMenu href={LINK_LOJA_DESEMPENHO} icone={<ChartNoAxesColumn />} titulo="Desempenho da loja" detalhe="Visitas, cliques no WhatsApp e dicas" />
             )}
