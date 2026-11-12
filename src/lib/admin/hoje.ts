@@ -5,7 +5,7 @@ import { reais } from "@/lib/admin/formato";
 // Tela "Hoje": as tarefas do dia, montadas na hora a partir do banco.
 // Os limites (dias, horas, quantas tarefas) vêm de Configurações (grupo "hoje").
 
-export type TipoTarefa = "moderacao" | "atendimento" | "verificacao" | "cobranca_vencida" | "teste_acabando" | "funil" | "radar_sem_proposta" | "loja_sem_anuncio";
+export type TipoTarefa = "moderacao" | "atendimento" | "verificacao" | "verificacao_loja" | "cobranca_vencida" | "teste_acabando" | "funil" | "radar_sem_proposta" | "loja_sem_anuncio";
 
 export type Tarefa = {
   tipo: TipoTarefa;
@@ -25,6 +25,7 @@ export const NOME_TIPO: Record<TipoTarefa, string> = {
   moderacao: "Moderação",
   atendimento: "Atendimento",
   verificacao: "Documentos",
+  verificacao_loja: "Lojas",
   cobranca_vencida: "Cobrança vencida",
   teste_acabando: "Teste acabando",
   funil: "Funil",
@@ -96,7 +97,7 @@ export async function tarefasDeHoje(supabase: SupabaseClient, agora = new Date()
   const vencidasDesde = new Date(agora.getTime() - cfg.vencidasDias * 86_400_000).toISOString().slice(0, 10);
   const LIM = 50;
 
-  const [feitasR, anunciosFila, pedidosFila, denuncias, vencidasR, testesR, funilR, radarR, lojasR, atendimentosR, documentosR] = await Promise.all([
+  const [feitasR, anunciosFila, pedidosFila, denuncias, vencidasR, testesR, funilR, radarR, lojasR, atendimentosR, documentosR, lojasVerifR] = await Promise.all([
     supabase.from("hoje_feitas").select("tipo, alvo_id").eq("dia", dia),
     supabase.from("anuncios").select("id", { count: "exact", head: true }).eq("status", "em_analise"),
     supabase.from("radar_pedidos").select("id", { count: "exact", head: true }).eq("status", "em_analise"),
@@ -116,6 +117,7 @@ export async function tarefasDeHoje(supabase: SupabaseClient, agora = new Date()
       .order("criado_em", { ascending: true }).limit(LIM),
     supabase.from("atendimentos_anuncio").select("id", { count: "exact", head: true }).eq("aguarda_equipe", true),
     supabase.rpc("admin_fila_verificacao_pf"),
+    supabase.rpc("admin_fila_verificacao_loja"),
   ]);
 
   const fontes = [
@@ -123,6 +125,7 @@ export async function tarefasDeHoje(supabase: SupabaseClient, agora = new Date()
     ["Anúncios em análise", anunciosFila.error], ["Pedidos em análise", pedidosFila.error], ["Denúncias", denuncias.error],
     ["Cobranças", vencidasR.error], ["Testes grátis", testesR.error], ["Captação", funilR.error],
     ["Radar", radarR.error], ["Lojas", lojasR.error], ["Atendimentos", atendimentosR.error], ["Documentos", documentosR.error],
+    ["Lojas em verificação", lojasVerifR.error],
   ] as const;
   const falhas = fontes.filter(([, error]) => error).map(([nome]) => nome);
   const feitas = new Set((feitasR.data ?? []).map((f) => `${f.tipo}:${f.alvo_id}`));
@@ -152,6 +155,19 @@ export async function tarefasDeHoje(supabase: SupabaseClient, agora = new Date()
     detalhe: "Verificação de vendedores individuais.", acao: { rotulo: "Conferir documentos", href: "/admin/lojas#fila-pf" },
     adiavel: false,
   });
+  const lojasVerif = (lojasVerifR.data ?? []) as { atrasada: boolean }[];
+  if (lojasVerif.length) {
+    const n = lojasVerif.length;
+    const atrasadas = lojasVerif.filter((l) => l.atrasada).length;
+    tarefas.push({
+      tipo: "verificacao_loja", alvo: dia, titulo: `${n} ${n === 1 ? "loja espera" : "lojas esperam"} conferência`,
+      detalhe: atrasadas > 0
+        ? `${atrasadas} ${atrasadas === 1 ? "atrasada" : "atrasadas"}: passou do prazo de resposta.`
+        : "Verificação de lojas encaminhada à equipe ou sorteada para revisão.",
+      acao: { rotulo: "Conferir lojas", href: "/admin/lojas#fila-lojas" },
+      urgente: atrasadas > 0, adiavel: false,
+    });
+  }
 
   // 2. Cobranças vencidas
   for (const p of vencidasR.data ?? []) {

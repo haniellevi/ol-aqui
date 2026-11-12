@@ -23,3 +23,42 @@ export function textoMotivoVerificacaoLoja(motivo: string | null | undefined): s
   if (!m) return null;
   return Object.hasOwn(MOTIVOS_VERIFICACAO_LOJA, m) ? MOTIVOS_VERIFICACAO_LOJA[m] : MOTIVOS_VERIFICACAO_LOJA.outro;
 }
+
+/** Por que o pedido foi para a equipe (como fica em verificacoes_loja.motivos_equipe) -> texto para a equipe. */
+export const MOTIVOS_EQUIPE_VERIFICACAO_LOJA: Record<string, string> = {
+  ia_duvida: "A IA ficou em dúvida",
+  ia_falhou: "A IA não conseguiu analisar",
+  ia_desligada: "Conferência automática desligada",
+  ia_sem_orcamento: "Sem orçamento da IA",
+  nome_diferente: "Nome diferente do cadastro",
+  endereco_diferente: "Endereço diferente do cadastro",
+  cnpj_duplicado: "CNPJ já está em outra loja",
+  cidade_fora_da_regiao: "Cidade fora da região",
+  receita_fora_do_ar: "Receita fora do ar",
+  fachada_estranha: "Fachada estranha",
+  terceira_recusa: "Terceira recusa em 24 horas",
+};
+
+/** Item do parecer (verificacoes_loja.parecer[].item) -> o que foi conferido, em palavras da equipe. */
+export const ITENS_PARECER_VERIFICACAO_LOJA: Record<string, string> = {
+  receita: "Consulta na Receita",
+  situacao_cnpj: "CNPJ ativo",
+  comprovante: "Comprovante legível",
+  leitura: "Leitura do documento",
+  titular: "Nome do titular",
+  endereco: "Endereço",
+  cnpj_unico: "CNPJ só nesta loja",
+  regiao: "Cidade na região",
+  fachada: "Fachada",
+  revisao_humana: "Revisão da equipe",
+};
+
+/** Texto do motivo para a equipe; código novo e desconhecido cai numa frase neutra. */
+export function textoMotivoEquipeVerificacaoLoja(motivo: string): string {
+  return Object.hasOwn(MOTIVOS_EQUIPE_VERIFICACAO_LOJA, motivo) ? MOTIVOS_EQUIPE_VERIFICACAO_LOJA[motivo] : "Conferir o pedido";
+}
+
+/** Nome do item do parecer; item novo e desconhecido cai numa frase neutra. */
+export function textoItemParecerVerificacaoLoja(item: string): string {
+  return Object.hasOwn(ITENS_PARECER_VERIFICACAO_LOJA, item) ? ITENS_PARECER_VERIFICACAO_LOJA[item] : "Outra conferência";
+}

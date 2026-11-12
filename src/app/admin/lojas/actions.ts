@@ -8,6 +8,7 @@ import type { EstadoForm } from "@/lib/admin/estado";
 import { ehUuid } from "@/lib/formato";
 import { traduzirErro } from "@/lib/erros";
 import type { AcaoLoja } from "@/lib/tipos-cobranca";
+import { MOTIVOS_VERIFICACAO_LOJA } from "@/lib/verificacao-loja/constantes";
 
 // Tela 5 · Lojistas e vitrines. Tudo pelo token do admin; quem confere admin, motivo, dias e plano
 // é o banco, que grava o motivo em vitrines_acoes_admin
@@ -24,6 +25,15 @@ const OK: Record<AcaoOperacional, string> = {
 };
 
 const MOTIVOS_REVISAO = new Set(["dados_inconsistentes", "link_invalido", "contato_nao_confirmado", "titularidade", "outro"]);
+
+const MOTIVOS_VERIFICACAO_LOJA_VALIDOS = new Set(Object.keys(MOTIVOS_VERIFICACAO_LOJA));
+const DECISOES_VERIFICACAO_LOJA = {
+  aprovar: { ok: "Loja aprovada.", motivo: false },
+  correcao: { ok: "Correção solicitada.", motivo: true },
+  recusar: { ok: "Verificação recusada.", motivo: true },
+  confirmar: { ok: "Aprovação confirmada.", motivo: false },
+  tirar_selo: { ok: "Selo retirado. A loja foi avisada.", motivo: true },
+} as const;
 
 function atualizar() {
   revalidatePath("/admin/lojas");
@@ -166,4 +176,51 @@ export async function alterarArquivoLoja(_: EstadoForm, form: FormData): Promise
   atualizar();
   revalidatePath(`/admin/lojas/${loja}`);
   return { ok: acao === "arquivar" ? "Loja arquivada." : "Loja restaurada como suspensa." };
+}
+
+/** Decisão da equipe sobre um pedido de verificação de loja (fila `#fila-lojas`). O banco confere papel, status e dados. */
+export async function decidirVerificacaoLoja(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  try {
+    const { supabase, papel } = await exigirTela("lojas");
+    if (papel !== "administrador" && papel !== "suporte") return { erro: "Seu papel não pode revisar pedidos de verificação." };
+    const id = String(form.get("id") ?? "");
+    if (!ehUuid(id)) return { erro: "Pedido não encontrado. Atualize a página." };
+    const decisao = String(form.get("decisao") ?? "");
+    if (!Object.hasOwn(DECISOES_VERIFICACAO_LOJA, decisao)) return { erro: "Escolha uma decisão." };
+    const regra = DECISOES_VERIFICACAO_LOJA[decisao as keyof typeof DECISOES_VERIFICACAO_LOJA];
+    const conferido = form.get("conferido") === "on";
+    if (decisao === "aprovar" && !conferido) return { erro: "Confirme que conferiu o comprovante antes de aprovar." };
+    const motivo = String(form.get("motivo") ?? "");
+    if (regra.motivo && !MOTIVOS_VERIFICACAO_LOJA_VALIDOS.has(motivo)) return { erro: "Selecione o motivo da decisão." };
+
+    const { error } = await supabase.rpc("admin_decidir_verificacao_loja", {
+      p_id: id,
+      p_decisao: decisao,
+      p_motivo: regra.motivo ? motivo : null,
+      p_conferido: decisao === "aprovar" && conferido,
+    });
+    if (error) return { erro: traduzirErro(error).mensagem };
+    atualizar();
+    return { ok: regra.ok };
+  } catch (e) {
+    unstable_rethrow(e);
+    return { erro: e instanceof Error ? e.message : "Não deu para salvar a decisão." };
+  }
+}
+
+/** "Visto" num aviso da equipe sobre verificação de loja. */
+export async function resolverAvisoVerificacaoLoja(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  try {
+    const { supabase, papel } = await exigirTela("lojas");
+    if (papel !== "administrador" && papel !== "suporte") return { erro: "Seu papel não pode resolver avisos de verificação." };
+    const id = String(form.get("id") ?? "");
+    if (!ehUuid(id)) return { erro: "Aviso não encontrado. Atualize a página." };
+    const { error } = await supabase.rpc("admin_resolver_aviso_verificacao", { p_id: id });
+    if (error) return { erro: traduzirErro(error).mensagem };
+    atualizar();
+    return { ok: "Aviso marcado como visto." };
+  } catch (e) {
+    unstable_rethrow(e);
+    return { erro: e instanceof Error ? e.message : "Não deu para marcar o aviso." };
+  }
 }

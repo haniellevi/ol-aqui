@@ -10,6 +10,7 @@ import { ehUuid, linkLoja, telefone } from "@/lib/formato";
 import { LINK_ADMIN_LOJAS } from "@/lib/rotas";
 import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { linkInstagram } from "@/components/vitrine/regras";
+import { FilaLojas, AvisosLojas, type AvisoVerificacaoLoja, type PedidoVerificacaoLoja } from "./fila-lojas";
 import { FormAcaoLoja, FormRevisaoLoja, FormVerificacao, FormRevogarVendedorPf, FormDecidirVerificacaoPf } from "./formularios";
 import type { AcaoLoja, LojaAdmin } from "@/lib/tipos-cobranca";
 import { Badge, type TomSelo } from "@/components/ui/badge";
@@ -167,12 +168,14 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
   };
   if (paginaVazia) redirect(linkPagina(1));
   const idsLojas = lojas.filter((loja) => loja.tipo === "loja").map((loja) => loja.id);
-  const [links, revisoesR, filaPf] = await Promise.all([
+  const [links, revisoesR, filaPf, filaLojas, avisosLojas] = await Promise.all([
     linksDosArquivos(verificacoes),
     idsLojas.length
       ? supabase.rpc("admin_verificacoes_lojas", { p_ids: idsLojas })
       : Promise.resolve({ data: [], error: null }),
     franqueado ? Promise.resolve({ data: [], error: null }) : supabase.rpc("admin_fila_verificacao_pf"),
+    franqueado ? Promise.resolve({ data: [], error: null }) : supabase.rpc("admin_fila_verificacao_loja"),
+    franqueado ? Promise.resolve({ data: [], error: null }) : supabase.rpc("admin_avisos_verificacao_loja"),
   ]);
   const revisoes = new Map(((revisoesR.data ?? []) as RevisaoLoja[]).map((revisao) => [revisao.id, revisao]));
 
@@ -267,6 +270,13 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
                 ))}
               </ul>}
         </section>
+      )}
+
+      {!franqueado && (
+        <>
+          <FilaLojas pedidos={(filaLojas.data ?? []) as PedidoVerificacaoLoja[]} erro={!!filaLojas.error} />
+          <AvisosLojas avisos={(avisosLojas.data ?? []) as AvisoVerificacaoLoja[]} erro={!!avisosLojas.error} />
+        </>
       )}
 
       {verificacoes.length > 0 && (
