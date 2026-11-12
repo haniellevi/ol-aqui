@@ -43,6 +43,12 @@ test('categorias: pelo nome e pelas palavras de exemplo, com caminho e link can�
   assert.deepEqual(s.sugerirCategorias(arvore, 'eletro'), []);
 });
 
+test('vários começos de palavra também perguntam ao banco só pela maior palavra', () => {
+  assert.deepEqual(s.consultasAnuncios(' gela '), ['gela']);
+  assert.deepEqual(s.consultasAnuncios('ge bras'), ['ge bras', 'bras']);
+  assert.deepEqual(s.consultasAnuncios('Gelá-Br'), ['Gelá-Br', 'gela']);
+});
+
 test('anúncios: só os que têm o título combinando (o banco também acha pela descrição)', () => {
   const r = s.filtrarAnuncios([{ titulo: 'Fogão 4 bocas' }, { titulo: 'GELADEIRA usada' }, { titulo: 'Geladeira nova' }], 'gela', 1);
   assert.deepEqual(r, [{ titulo: 'GELADEIRA usada' }]);
@@ -94,6 +100,27 @@ test('sugestões juntam categorias com anúncio, lojas e anúncios da região es
   assert.match(r.anuncios[0].detalhe, /^R\$\s?800 · Corrente$/);
   assert.deepEqual(chamadas.anuncios, [{ q: 'gel', regiao: 'corrente-pi', limite: 15 }]);
   assert.deepEqual(chamadas.lojas, [0]);
+});
+
+test('"ge br" acha "Geladeira Brastemp" mesmo quando a busca do banco com as duas não acha', async () => {
+  const pedidos = [];
+  const mod = carregar('src/lib/dados/sugestoes-busca.ts', {
+    '@/lib/dados/regiao': { regiaoAtual: async () => ({ id: 'r1', slug: 'corrente-pi' }) },
+    '@/lib/dados/seguro': { seguro: async (f, padrao) => { try { return await f(); } catch { return padrao; } } },
+    '@/lib/dados/categorias': { listarCategorias: async () => [], totaisCategorias: async () => null },
+    '@/lib/dados/catalogo': { lojasCatalogo: async () => [] },
+    '@/lib/dados/anuncios': {
+      buscarAnuncios: async (p) => {
+        pedidos.push(p.q);
+        const a = { id: 'a1', slug: 'g', titulo: 'Geladeira Brastemp', preco_centavos: null, cidade: 'Corrente' };
+        // o banco só acha pela palavra sozinha; o mesmo anúncio nas duas respostas aparece uma vez
+        return { anuncios: p.q === 'ge br' ? [] : [a, a], total: 1 };
+      },
+    },
+  });
+  const r = await mod.sugestoesBusca('ge br');
+  assert.deepEqual(pedidos, ['ge br', 'ge']);
+  assert.deepEqual(r.anuncios.map((a) => a.nome), ['Geladeira Brastemp']);
 });
 
 test('categoria sem anúncio na região não aparece', async () => {

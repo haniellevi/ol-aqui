@@ -67,6 +67,19 @@ export function filtrarLojas<T extends { nome: string; cidade?: string | null; h
     .map((l) => ({ tipo: "loja", nome: l.nome, detalhe: l.cidade || undefined, href: l.href }));
 }
 
+/**
+ * O que perguntar ao banco para achar anúncios. A busca do banco não garante achar vários
+ * começos de palavra juntos ("ge br" → "Geladeira Brastemp"); com mais de uma palavra, pergunta
+ * também só pela maior delas (um começo de palavra sozinho o banco acha) e o filtro daqui confere o resto.
+ */
+export function consultasAnuncios(texto: string): string[] {
+  const t = texto.trim();
+  const partes = pedacos(t);
+  if (partes.length < 2) return [t];
+  const maior = partes.reduce((a, b) => (b.length > a.length ? b : a));
+  return [t, maior];
+}
+
 /** Anúncios cujo título combina com o texto (a busca do banco também olha a descrição). */
 export function filtrarAnuncios<T extends { titulo: string }>(anuncios: T[], texto: string, limite = LIMITE_ANUNCIOS): T[] {
   return anuncios.filter((a) => combina(a.titulo, texto)).slice(0, limite);

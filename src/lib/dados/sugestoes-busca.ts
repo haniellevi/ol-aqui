@@ -8,6 +8,7 @@ import { arvoreComAnuncios, enxugarArvore } from "@/lib/categorias-arvore";
 import { linkAnuncio, linkLoja, preco } from "@/lib/formato";
 import {
   SEM_SUGESTOES,
+  consultasAnuncios,
   filtrarAnuncios,
   filtrarLojas,
   sugerirCategorias,
@@ -47,8 +48,11 @@ export async function sugestoesBusca(texto: string): Promise<SugestoesBusca> {
       return filtrarLojas([primeira, ...resto].flat().map((l) => ({ nome: l.nome, cidade: l.cidade, href: linkLoja(l.slug) })), q);
     }, []),
     seguro(async () => {
-      const { anuncios } = await buscarAnuncios({ q, regiao: regiao.slug, limite: ANUNCIOS_CANDIDATOS });
-      return filtrarAnuncios(anuncios, q).map((a) => ({
+      const respostas = await Promise.all(
+        consultasAnuncios(q).map((c) => buscarAnuncios({ q: c, regiao: regiao.slug, limite: ANUNCIOS_CANDIDATOS })),
+      );
+      const porId = new Map(respostas.flatMap((r) => r.anuncios).map((a) => [a.id, a]));
+      return filtrarAnuncios([...porId.values()], q).map((a) => ({
         tipo: "anuncio" as const,
         nome: a.titulo,
         detalhe: [preco(a.preco_centavos), a.cidade].filter(Boolean).join(" · "),
