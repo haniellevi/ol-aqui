@@ -1,0 +1,45 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { alternarFavorito } from "@/app/(publico)/anuncio/[idslug]/actions";
+import { ehUuid } from "@/lib/formato";
+
+// Volta do "Entrar para salvar": o Início chega com ?salvar=<id>. Salva o anúncio uma vez,
+// tira o parâmetro do endereço e avisa o resultado. Sem login, não faz nada.
+export function SalvarAoVoltar({ logado }: { logado: boolean }) {
+  const params = useSearchParams();
+  const router = useRouter();
+  const caminho = usePathname();
+  const feito = useRef(false);
+  const [aviso, setAviso] = useState<{ texto: string; erro: boolean } | null>(null);
+  const id = params.get("salvar");
+
+  useEffect(() => {
+    if (!logado || !id || feito.current) return;
+    feito.current = true;
+    const limpar = () => {
+      const resto = new URLSearchParams(params.toString());
+      resto.delete("salvar");
+      router.replace(resto.size ? `${caminho}?${resto}` : caminho, { scroll: false });
+    };
+    if (!ehUuid(id)) return limpar();
+    alternarFavorito(id, true)
+      .then((r) => setAviso(r.ok ? { texto: "Pronto: o anúncio ficou salvo nos seus favoritos.", erro: false } : { texto: r.erro.mensagem, erro: true }))
+      .catch(() => setAviso({ texto: "Não conseguimos salvar o favorito. Tente pelo coração do anúncio.", erro: true }))
+      .finally(limpar);
+  }, [logado, id, params, router, caminho]);
+
+  useEffect(() => {
+    if (!aviso || aviso.erro) return;
+    const t = setTimeout(() => setAviso(null), 6000);
+    return () => clearTimeout(t);
+  }, [aviso]);
+
+  if (!aviso) return null;
+  return (
+    <p role={aviso.erro ? "alert" : "status"} className={`rounded-card px-4 py-3 text-sm font-semibold ${aviso.erro ? "bg-perigo-fundo text-perigo" : "bg-sucesso-fundo text-verde-escuro"}`}>
+      {aviso.texto}
+    </p>
+  );
+}

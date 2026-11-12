@@ -4,12 +4,14 @@ import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
-import { ChevronDown, MapPin, Plus, Radar, Search, UserRound } from "lucide-react";
+import { ChevronDown, MapPin, Plus, Radar, UserRound } from "lucide-react";
+import { CampoBusca } from "@/components/busca/campo-busca";
 import { regiaoAtual } from "@/lib/dados/regiao";
 import { classesBotao } from "@/components/ui/botao";
 
 // Cabeçalho das páginas públicas e da conta: logo, cidade ("Corrente ▾") e Entrar/Conta.
-// No computador mostra também Buscar, Radar e Anunciar (a barra de baixo some).
+// No computador mostra também a busca sempre à vista, Radar e Anunciar (a barra de baixo some).
+// Altura fixa de 64px em toda tela: outras barras grudam logo abaixo (top-16).
 
 /** Para onde vai o toque na cidade (a tela T1 "Escolher cidade" vem depois). */
 export const HREF_ESCOLHER_CIDADE = "/cidades";
@@ -36,7 +38,7 @@ export async function CabecalhoPublico() {
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-card focus:bg-laranja focus:px-4 focus:py-3 focus:font-bold focus:text-beringela">
         Pular para o conteúdo
       </a>
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4">
         <Link href="/" className="flex h-12 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="Mercado da Região, página inicial">
           <Marca />
         </Link>
@@ -53,10 +55,11 @@ export async function CabecalhoPublico() {
           </Link>
         )}
 
+        <div className="ml-2 hidden min-w-0 max-w-xl flex-1 md:flex">
+          <CampoBusca id="busca-topo" compacto />
+        </div>
+
         <nav aria-label="Principal" className="ml-auto hidden items-center gap-1 md:flex">
-          <Link href="/busca" className={LINK}>
-            <Search className="size-5" aria-hidden /> Buscar
-          </Link>
           <Link href="/radar" className={LINK}>
             <Radar className="size-5" aria-hidden /> Radar
           </Link>

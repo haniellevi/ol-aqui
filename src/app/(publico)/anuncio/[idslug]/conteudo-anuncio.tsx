@@ -61,7 +61,16 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
       {jsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       )}
-      {ativo && !a.e_dono && <RegistrarVisita anuncioId={a.id} />}
+      {ativo && !a.e_dono && (
+        <RegistrarVisita
+          anuncioId={a.id}
+          visto={{
+            id: a.id, titulo, preco_centavos: a.preco_centavos, cidade: a.cidade ?? "", capa: a.fotos[0] ?? null,
+            criado_em: a.criado_em, destaque: a.destaque, vitrine_nome: a.vitrine_tipo === "pf" ? a.vitrine_nome.trim().split(/\s+/)[0] : a.vitrine_nome,
+            vitrine_selo: a.vitrine_selo, vitrine_tipo: a.vitrine_tipo,
+          }}
+        />
+      )}
 
       {a.categoria_pai_slug && a.categoria_slug && (
         <nav aria-label="Você está em" className="px-4 text-[15px] text-texto-suave md:px-0">
