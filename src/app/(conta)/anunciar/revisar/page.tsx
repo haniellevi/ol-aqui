@@ -6,6 +6,7 @@ import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
 import { nomeCaminho } from "@/lib/categorias-arvore";
 import { lerConfigNumero } from "@/lib/dados/config";
 import { avulsoParaMim } from "@/lib/dados/cobranca";
+import { resultadosDestaques } from "@/lib/dados/destaques";
 import { preco, valorDoCampo } from "@/lib/formato";
 import { CardAnuncio } from "@/components/anuncio/card-anuncio";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
@@ -30,12 +31,18 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
   const pagoAte = anuncio.pago_ate && new Date(anuncio.pago_ate).getTime() > Date.now() ? anuncio.pago_ate : null;
   // nunca esteve no ar: só vale categoria visível (o banco recusa publicar em categoria escondida)
   const nuncaNoAr = !anuncio.publicado_em;
-  const [publico, achada, minimoFotos, avulso] = await Promise.all([
+  const [publico, achada, minimoFotos, avulso, destaques] = await Promise.all([
     anuncioPublico(anuncio.id),
     anuncio.categoria_id ? (nuncaNoAr ? categoriaPorId : categoriaDoAnuncio)(anuncio.categoria_id) : Promise.resolve(null),
     lerConfigNumero("anuncio.fotos_minimo", conta.vitrine.microrregiao_id),
     !jaPublicado && !conta.podePublicar && !pagoAte && !conta.ajudante ? avulsoParaMim(conta.vitrine) : Promise.resolve(null),
+    equipe ? Promise.resolve([]) : resultadosDestaques(anuncio.id),
   ]);
+  // P6: aviso de pagamento ao descartar, com o mesmo critério de Meus anúncios:
+  // avulso pago, destaque no ar ou destaque esperando pagamento.
+  const destaqueAtivo = Boolean(anuncio.destaque_ate) && new Date(anuncio.destaque_ate as string).getTime() > Date.now();
+  const destaquePendente = destaques.some((d) => d.status === "aguardando_pagamento" && d.pagamento_status === "pendente");
+  const temPagamento = Boolean(pagoAte) || destaqueAtivo || destaquePendente;
   const hrefAvulso = avulso ? linkAvulso(anuncio.id) : null;
 
   const modo = jaPublicado ? "salvar" : anuncio.status === "rascunho" ? "publicar" : "republicar";
@@ -199,7 +206,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
       </section>
 
       {/* P6: rascunho → "Descartar rascunho"; publicado (fim da edição) → "Excluir anúncio". A equipe usa a lixeira do painel. */}
-      {!equipe && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho={anuncio.status === "rascunho"} temPagamento={Boolean(pagoAte)} />}
+      {!equipe && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho={anuncio.status === "rascunho"} temPagamento={temPagamento} />}
 
       <BotaoPublicar id={anuncio.id} editar={editar} formId={FORM} modo={modo} linkAvulso={hrefAvulso} />
     </CorpoPasso>

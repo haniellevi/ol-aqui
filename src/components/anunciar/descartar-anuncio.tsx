@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Alert } from "@/components/ui/alert";
-import { moverParaLixeira } from "@/app/(conta)/minha-conta/anuncios/actions";
+import { descartarAnuncio } from "@/app/(conta)/minha-conta/anuncios/actions";
 
 // Etapa P6: no fim de cada passo do Anunciar, "Descartar rascunho"; no fim da edição de um
 // anúncio publicado, "Excluir anúncio". Os dois mandam para a lixeira (30 dias, com restauração),
@@ -42,7 +42,7 @@ export function DescartarAnuncio({ id, titulo, rascunho, temPagamento = false }:
     setRecarregar(false);
     iniciar(async () => {
       try {
-        const r = await moverParaLixeira(id);
+        const r = await descartarAnuncio(id);
         if (!r.ok) {
           setErro(r.erro.mensagem);
           setSessaoExpirada(r.erro.codigo === "28000");

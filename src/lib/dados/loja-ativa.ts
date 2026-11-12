@@ -33,3 +33,13 @@ export const lojaEscolhida = cache(async (): Promise<LojaOpcao | null> => {
   const guardada = (await cookies()).get(COOKIE_LOJA)?.value;
   return lista.find((l) => l.id === guardada) ?? lista[0];
 });
+
+/**
+ * Etapa P6: passa a trabalhar na loja `id` (mesmo cookie do seletor), só se a pessoa cuida dela.
+ * Usado depois de descartar um anúncio, para a aba Lixeira abrir na loja do anúncio.
+ */
+export async function guardarLojaEscolhida(id: string): Promise<boolean> {
+  if (!(await lojasQueCuido()).some((l) => l.id === id)) return false;
+  (await cookies()).set(COOKIE_LOJA, id, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 365 });
+  return true;
+}

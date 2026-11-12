@@ -7,7 +7,7 @@ const { carregar } = require('./carregar.cjs');
 // Etapa P6: "Descartar rascunho" no fim de cada passo do Anunciar e "Excluir anúncio" no fim da edição.
 const id = '60000000-0000-4000-a000-000000000001';
 const acoes = {
-  '@/app/(conta)/minha-conta/anuncios/actions': { moverParaLixeira: async () => ({ ok: true, dados: 'excluido' }) },
+  '@/app/(conta)/minha-conta/anuncios/actions': { descartarAnuncio: async () => ({ ok: true, dados: 'excluido' }) },
   'next/navigation': { useRouter: () => ({ replace() {} }) },
 };
 const { DescartarAnuncio } = carregar('src/components/anunciar/descartar-anuncio.tsx', acoes);
@@ -68,12 +68,14 @@ test('passos Fotos, Categoria, Preço e Local: "Descartar rascunho" só no rascu
   }
 });
 
+let destaquesDoAnuncio = [];
 const revisar = {
   '@/lib/dados/anuncios': { anuncioPublico: async () => null },
   '@/lib/dados/categorias': { categoriaDoAnuncio: async () => null, categoriaPorId: async () => null },
   '@/lib/categorias-arvore': { nomeCaminho: () => '' },
   '@/lib/dados/config': { lerConfigNumero: async () => 0 },
   '@/lib/dados/cobranca': { avulsoParaMim: async () => null },
+  '@/lib/dados/destaques': { resultadosDestaques: async () => destaquesDoAnuncio },
   '@/components/anuncio/card-anuncio': { CardAnuncio: () => null },
   '@/components/anunciar/botao-publicar': { BotaoPublicar: () => null },
 };
@@ -89,4 +91,39 @@ test('passo Revisar: rascunho descarta; publicado exclui (com aviso de pagamento
   assert.match(publicado, /data-descartar="excluir" data-pagamento="true"/);
   assert.match(await abrirRevisar({ status: 'pausado', publicado_em: '2026-11-01T10:00:00Z' }), /data-descartar="excluir" data-pagamento="false"/);
   assert.doesNotMatch(await abrirRevisar({ status: 'ativo', publicado_em: '2026-11-01T10:00:00Z' }, { motivo: 'Preço errado', expira_em: futuro }), /data-descartar/);
+});
+
+test('passo Revisar: destaque no ar ou destaque esperando pagamento também mostram o aviso de pagamento', async () => {
+  const futuro = new Date(Date.now() + 86400000).toISOString();
+  const passado = new Date(Date.now() - 86400000).toISOString();
+  const publicado = { status: 'ativo', publicado_em: '2026-11-01T10:00:00Z' };
+  assert.match(await abrirRevisar({ ...publicado, destaque_ate: futuro }), /data-pagamento="true"/);
+  assert.match(await abrirRevisar({ ...publicado, destaque_ate: passado }), /data-pagamento="false"/);
+  destaquesDoAnuncio = [{ anuncio_id: id, status: 'aguardando_pagamento', pagamento_status: 'pendente' }];
+  try {
+    assert.match(await abrirRevisar(publicado), /data-pagamento="true"/);
+    destaquesDoAnuncio = [{ anuncio_id: id, status: 'aguardando_pagamento', pagamento_status: 'expirado' }, { anuncio_id: id, status: 'encerrado', pagamento_status: 'pago' }];
+    assert.match(await abrirRevisar(publicado), /data-pagamento="false"/);
+  } finally {
+    destaquesDoAnuncio = [];
+  }
+});
+
+test('guardarLojaEscolhida: só grava o cookie do seletor para loja que a pessoa cuida', async () => {
+  const propria = '61000000-0000-4000-a000-000000000001';
+  const ajudada = '61000000-0000-4000-a000-000000000002';
+  const gravados = [];
+  const q = { select() { return q; }, eq() { return q; }, maybeSingle: async () => ({ data: { id: propria, nome: 'Minha loja' }, error: null }) };
+  const { guardarLojaEscolhida } = carregar('src/lib/dados/loja-ativa.ts', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_dono' }) },
+    '@/lib/supabase/server': { createClient: async () => ({ from: () => q, rpc: async () => ({ data: [{ id: ajudada, nome: 'Loja ajudada', dono: false }], error: null }) }) },
+    'next/headers': { cookies: async () => ({ set: (...a) => gravados.push(a), get: () => undefined }) },
+  });
+  assert.equal(await guardarLojaEscolhida(ajudada), true);
+  assert.equal(gravados.length, 1);
+  assert.equal(gravados[0][0], 'loja_ativa');
+  assert.equal(gravados[0][1], ajudada);
+  assert.equal(gravados[0][2].httpOnly, true);
+  assert.equal(await guardarLojaEscolhida('61000000-0000-4000-a000-000000000099'), false);
+  assert.equal(gravados.length, 1, 'loja estranha não vira cookie');
 });
