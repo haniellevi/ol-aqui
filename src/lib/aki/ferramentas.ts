@@ -126,7 +126,7 @@ export const FERRAMENTAS: FerramentaIA[] = [
   {
     nome: "preparar_pedido_radar",
     descricao:
-      "Prepara um pedido no Radar (as lojas da região mandam propostas). NÃO cria o pedido: aparece um botão para a pessoa confirmar.",
+      "Prepara um pedido no Radar (as lojas da região respondem). Use quando a pessoa não achou o que procura: pergunte antes \"Quer que eu peça para as lojas?\". NÃO cria o pedido: aparece um botão para a pessoa confirmar e outro que abre o pedido já preenchido (área Toda a região, quem vê Só lojas).",
     parametros: {
       type: "object",
       properties: {
@@ -503,7 +503,7 @@ async function prepararRadar(args: Record<string, unknown>, ctx: ContextoFerrame
   }
   addAcao(ctx, { tipo: "pedido_radar", rotulo: "Confirmar pedido no Radar", dados: v.dados });
   // quem prefere escolher prazo e faixa de preço abre o formulário com o texto já preenchido
-  addAcao(ctx, { tipo: "link", rotulo: "Mudar detalhes ou prazo", href: linkPedirRadar(v.dados.titulo), icone: "radar" });
+  addAcao(ctx, { tipo: "link", rotulo: "Escolher área e quem vê", href: linkPedirRadar(v.dados.titulo), icone: "radar" });
   return ok({ preparado: true, criado: false, aviso: 'O pedido só vai para o Radar quando a pessoa tocar em "Confirmar pedido no Radar".', pedido: v.dados });
 }
 

@@ -199,7 +199,7 @@ export async function opcoesVitrine(microrregiaoId: string | null): Promise<Opco
 }
 
 const COLUNAS_PLANO_PUBLICO =
-  "codigo, nome, descricao, publico, preco_centavos, periodo_dias, limite_anuncios, acesso_radar, propostas_radar_mes, e_teste, ordem, " +
+  "codigo, nome, descricao, publico, preco_centavos, periodo_dias, limite_anuncios, acesso_radar, propostas_radar_mes, aviso_radar_na_hora, e_teste, ordem, " +
   "vitrine_foto_fachada, vitrine_secoes_max, vitrine_fixados_max, recomendado";
 
 /** Planos à venda (tabela planos, só os ativos), na ordem do painel. */

@@ -73,6 +73,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
             Para ver os pedidos do Radar e mandar propostas, escolha um plano com Radar.
           </p>
         )}
+        <p className="text-base text-texto-suave">Para responder no Radar, a loja precisa ser verificada.</p>
       </header>
 
       {planos.length === 0 ? (
@@ -121,6 +122,9 @@ export default async function PaginaPlanos({ searchParams }: Props) {
                         : `Radar de Negócios: ${p.propostas_radar_mes} ${p.propostas_radar_mes === 1 ? "proposta" : "propostas"}${p.e_teste ? "" : " por mês"}`
                       : "Sem Radar de Negócios"}
                   </Item>
+                  {p.acesso_radar && !p.e_teste && p.preco_centavos > 0 && (
+                    <Item sim>{p.aviso_radar_na_hora ? "Aviso na hora de pedido novo no Radar" : "Vê e responde pedidos do Radar"}</Item>
+                  )}
                   {p.publico !== "pf" && (
                     <>
                       <Item sim>Vitrine da loja com banner modelo e informações</Item>

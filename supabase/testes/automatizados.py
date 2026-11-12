@@ -79,15 +79,20 @@ try:
     print('PASS: pedido do Radar avisa 2 dias antes de vencer e o comprador estende com Ainda preciso até 2 vezes', flush=True)
     checked(sql((root/'supabase/testes/640_radar_resolver_indicar.sql').read_text()))
     print('PASS: Radar pergunta com quem resolveu, guarda a nota 👍/👎 e aceita indicação de anúncio (Eu sei onde tem)', flush=True)
-    migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
+    migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin
-        assert (select texto = 'Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.' from home_blocos where chave = 'radar'), 'Texto padrão do Radar incorreto';
+        assert (select texto = 'Diga o que precisa. As lojas da região te respondem.' and botao = 'Estou procurando…' from home_blocos where chave = 'radar'), 'Texto padrão do Radar incorreto';
       end $$;
-      update home_blocos set texto = 'Texto personalizado da equipe' where chave = 'radar';
+      update home_blocos set texto = 'Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.', botao = 'Pedir no Radar' where chave = 'radar';
+    """ + migracao_home + """
+      do $$ begin
+        assert (select texto = 'Diga o que precisa. As lojas da região te respondem.' and botao = 'Estou procurando…' from home_blocos where chave = 'radar'), 'Migração não trocou o texto antigo';
+      end $$;
+      update home_blocos set texto = 'Texto personalizado da equipe', botao = 'Botão da equipe' where chave = 'radar';
     """ + migracao_home + migracao_home + """
       do $$ begin
-        assert (select texto = 'Texto personalizado da equipe' from home_blocos where chave = 'radar'), 'Migração sobrescreveu texto personalizado';
+        assert (select texto = 'Texto personalizado da equipe' and botao = 'Botão da equipe' from home_blocos where chave = 'radar'), 'Migração sobrescreveu texto personalizado';
       end $$;
       rollback;
     """))

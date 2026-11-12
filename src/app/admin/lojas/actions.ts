@@ -168,7 +168,7 @@ export async function alterarArquivoLoja(_: EstadoForm, form: FormData): Promise
   return { ok: acao === "arquivar" ? "Loja arquivada." : "Loja restaurada como suspensa." };
 }
 
-/** Cortesia do Radar: a loja recebe os pedidos sem plano Full até a data. O banco confere admin, data e motivo. */
+/** Cortesia do Radar: a cortesia libera tudo do Radar até a data, mesmo sem verificação e sem plano pago. O banco confere admin, data e motivo. */
 export async function darCortesiaRadar(vitrineId: string, ate: string, motivo: string): Promise<EstadoForm> {
   try {
     const { supabase } = await exigirTela("lojas");

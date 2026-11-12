@@ -295,10 +295,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                             <Vazio
                               className={estilos.vazio}
                               titulo="Nada com esses filtros"
-                              texto="Tire um filtro ou peça no Radar: as lojas da região podem responder com oferta."
+                              texto="Tire um filtro. Não achou? Diga o que procura e as lojas da região te respondem."
                             >
                               <Botao href="/" variante="secundario" larguraTotal>Limpar filtros</Botao>
-                              <Botao href={linkPedirRadar()} larguraTotal>Pedir no Radar</Botao>
+                              <Botao href={linkPedirRadar()} tamanho="grande" larguraTotal>Estou procurando…</Botao>
                             </Vazio>
                           ) : (
                             <Vazio
