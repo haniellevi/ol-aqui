@@ -188,7 +188,9 @@ export default async function PaginaMinhaLoja() {
         <h2 id="titulo-dados" className="text-lg font-bold">
           Dados da loja
         </h2>
+        {/* key: ao trocar de loja no seletor, o formulário recomeça com os dados da loja nova. */}
         <FormMinhaLoja
+          key={v.id}
           loja={{
             nome: v.nome,
             whatsapp: v.whatsapp,
