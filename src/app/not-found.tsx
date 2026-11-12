@@ -25,7 +25,7 @@ export default function NaoEncontrado() {
             Voltar ao início
           </Botao>
           <Botao href={linkPedirRadar()} variante="secundario" larguraTotal>
-            Pedir no Radar
+            Estou procurando…
           </Botao>
           <Botao href={LINK_AKI} variante="texto">
             Perguntar ao Merc

@@ -17,7 +17,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { FormPedido } from "@/components/radar/form-pedido";
 import { Alert } from "@/components/ui/alert";
 
-export const metadata = { title: "Pedir no Radar" };
+export const metadata = { title: "Estou procurando…" };
 
 export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; categoria_id?: string; cidade?: string; preco_min?: string; preco_max?: string; detalhes?: string; cidades?: string; quem?: string }> }) {
   const params = await searchParams;

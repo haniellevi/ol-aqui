@@ -85,11 +85,11 @@ test('favoritos: link do Radar leva título e categoria; fora do ar vai sem tít
  const l=leitura();await l.a.meusFavoritos();assert.match(l.chamadas.find(c=>c[0]==='select')[1],/categorias!anuncios_categoria_id_fkey\(slug\)/);
 });
 test('favoritos: botão do Radar só com a vitrine nova ligada',async()=>{
- const desligada=await pagina();assert.doesNotMatch(desligada,/radar\/pedir|Pedir no Radar/);
- assert.doesNotMatch(await pagina({radar:'erro'}),/radar\/pedir|Pedir no Radar/);
- assert.doesNotMatch(await pagina({radar:true,semConta:true}),/radar\/pedir|Pedir no Radar/);
- const ligada=await pagina({radar:true});assert.match(ligada,/>Pedir no Radar</);assert.match(ligada,/aria-label="Pedir parecido com Mesa de teste no Radar"/);assert.match(ligada,/href="\/radar\/pedir\?q=Mesa%20de%20teste"/);
- const fora=await pagina({radar:true,data:[{...linha,anuncios:null}]});assert.match(fora,/href="\/radar\/pedir"/);assert.match(fora,/aria-label="Pedir parecido no Radar"/);assert.match(fora,/Peça parecido no Radar/);
+ const desligada=await pagina();assert.doesNotMatch(desligada,/radar\/pedir|Estou procurando/);
+ assert.doesNotMatch(await pagina({radar:'erro'}),/radar\/pedir|Estou procurando/);
+ assert.doesNotMatch(await pagina({radar:true,semConta:true}),/radar\/pedir|Estou procurando/);
+ const ligada=await pagina({radar:true});assert.match(ligada,/>Estou procurando…</);assert.match(ligada,/aria-label="Estou procurando algo parecido com Mesa de teste"/);assert.match(ligada,/href="\/radar\/pedir\?q=Mesa%20de%20teste"/);
+ const fora=await pagina({radar:true,data:[{...linha,anuncios:null}]});assert.match(fora,/href="\/radar\/pedir"/);assert.match(fora,/aria-label="Estou procurando algo parecido"/);assert.match(fora,/Peça parecido no Radar/);
 });
 test('anúncio: estado desconhecido bloqueia alteração e oferece consulta novamente',()=>{
  const {BarraContato}=carregar('src/app/(publico)/anuncio/[idslug]/barra-contato.tsx',{'next/navigation':nav,'./actions':{}});

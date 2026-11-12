@@ -8,7 +8,7 @@ import { BotaoRemoverFavorito } from "./botao-remover-favorito";
 import { Badge } from "@/components/ui/badge";
 import { Botao } from "@/components/ui/botao";
 
-/** radar: mostra "Pedir no Radar" (vitrine nova ligada). */
+/** radar: mostra "Estou procurando…" (vitrine nova ligada). */
 export function ListaFavoritos({ itens, radar = false }: { itens: Favorito[]; radar?: boolean }) {
   const [removido, setRemovido] = useState<string | null>(null);
   return <div className="flex flex-col gap-3">
@@ -30,7 +30,7 @@ export function ListaFavoritos({ itens, radar = false }: { itens: Favorito[]; ra
             </div>}
           <p className="px-1 text-legenda text-texto-suave">Salvo em <time dateTime={f.salvoEm}>{new Date(f.salvoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time></p>
           {radar && <div className="px-1"><Botao href={f.radar} tamanho="pequeno" variante={f.situacao === "ativo" ? "texto" : "primario"} icone={<Radar />}
-            aria-label={f.anuncio ? `Pedir parecido com ${titulo} no Radar` : "Pedir parecido no Radar"}>Pedir no Radar</Botao></div>}
+            aria-label={f.anuncio ? `Estou procurando algo parecido com ${titulo}` : "Estou procurando algo parecido"}>Estou procurando…</Botao></div>}
           <div className="border-t border-borda pt-1"><BotaoRemoverFavorito anuncioId={f.id} titulo={titulo} comTexto onRemovido={() => setRemovido(titulo)} /></div>
         </li>;
       })}

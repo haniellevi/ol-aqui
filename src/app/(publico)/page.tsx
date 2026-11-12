@@ -211,7 +211,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
               radar={radar ? {
                 titulo: textoDe(radar.titulo, "Procurando alguma coisa?", lugar),
                 texto: textoDe(radar.texto, "Peça no Radar. As lojas da região respondem e você escolhe com quem conversar.", lugar),
-                botao: textoDe(radar.botao, "Pedir no Radar", lugar),
+                botao: textoDe(radar.botao, "Estou procurando…", lugar),
               } : null}
               textoVender={textoDe(recentes?.texto ?? null, "Seu anúncio aparece para quem mora perto, e a conversa chega no seu WhatsApp.", lugar)}
               cidade={cidade}
@@ -263,7 +263,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                       </div>
                     </div>
                     <Botao href={linkPedirRadar()} className="focus-visible:outline-white sm:w-auto sm:shrink-0" larguraTotal>
-                      {textoDe(bloco.botao, "Pedir no Radar", lugar)}
+                      {textoDe(bloco.botao, "Estou procurando…", lugar)}
                     </Botao>
                   </section>
                 );
@@ -348,7 +348,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                 <h2 id="titulo-radar-lado" className="text-base font-semibold text-beringela">{textoDe(radar.titulo, "Não achou o que queria?", lugar)}</h2>
               </div>
               <p className="text-sm text-texto-suave">{textoDe(radar.texto, "Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.", lugar)}</p>
-              <Botao href={linkPedirRadar()} variante="secundario" larguraTotal className="mt-1">{textoDe(radar.botao, "Pedir no Radar", lugar)}</Botao>
+              <Botao href={linkPedirRadar()} variante="secundario" larguraTotal className="mt-1">{textoDe(radar.botao, "Estou procurando…", lugar)}</Botao>
             </section>
           )}
 
