@@ -17,6 +17,7 @@ import { centavosDoTexto, ehUuid } from "@/lib/formato";
 import { filtrarAtributos, lerAtributos } from "@/components/anunciar/atributos";
 import {
   DESTINO_SAIR,
+  PASSOS,
   STATUS_PUBLICADO,
   proximoPasso,
   urlPasso,
@@ -31,21 +32,30 @@ const MAX_DESCRICAO = 4000; // check de anuncios.descricao no banco
 const MAX_BAIRRO = 80;
 const MAX_PRECO_CENTAVOS = 100_000_000_000; // R$ 1 bilhão: acima disso é erro de digitação
 
-type Comum = { id: string; editar: boolean; sair: boolean };
+/** `ir`: etapa tocada no topo ("ir:preco"); salva o passo atual e vai direto para ela.
+ *  `parcial`: rascunho pode ficar incompleto (Salvar e sair, ou pular para outra etapa). */
+type Comum = { id: string; editar: boolean; sair: boolean; ir: SlugPasso | null; parcial: boolean };
 
 function lerComum(form: FormData): Comum {
+  const acao = String(form.get("acao") ?? "");
+  const alvo = acao.startsWith("ir:") ? acao.slice(3) : "";
+  const ir = PASSOS.some((p) => p.slug === alvo) ? (alvo as SlugPasso) : null;
+  const sair = acao === "sair";
   return {
     id: String(form.get("id") ?? ""),
     editar: form.get("editar") === "1",
-    sair: form.get("acao") === "sair",
+    sair,
+    ir,
+    parcial: sair || ir !== null,
   };
 }
 
 const publicado = (a: MeuAnuncio) => (STATUS_PUBLICADO as readonly string[]).includes(a.status);
 
-/** Para onde ir depois de salvar: "Salvar e sair" → Meus anúncios; senão → próximo passo. */
+/** Para onde ir depois de salvar: "Salvar e sair" → Meus anúncios; etapa tocada → ela; senão → próximo passo. */
 function destino(passo: SlugPasso, c: Comum): string {
   if (c.sair) return `${DESTINO_SAIR}?salvo=${encodeURIComponent(c.id)}`;
+  if (c.ir) return urlPasso(c.ir, c.id, c.editar);
   const prox = proximoPasso(passo);
   return prox ? urlPasso(prox, c.id, c.editar) : DESTINO_SAIR;
 }
@@ -197,7 +207,7 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
 
   const categoriaId = String(form.get("categoria_id") ?? "");
   if (!categoriaId) {
-    if (c.sair && !publicado(anuncio)) redirect(DESTINO_SAIR);
+    if (c.parcial && !publicado(anuncio)) redirect(c.ir ? destino("categoria", c) : DESTINO_SAIR);
     return { erro: { mensagem: "Escolha a categoria do anúncio.", campo: "categoria" } };
   }
   // anúncio que já esteve no ar (no ar, pausado...) e continua na mesma categoria (mesmo escondida no painel): segue sem mudar nada
@@ -259,7 +269,7 @@ export async function salvarDetalhes(_antes: EstadoForm, form: FormData): Promis
   if (categoriaDoForm != null && categoriaDoForm !== (anuncio.categoria_id ?? "")) {
     return { erro: { mensagem: "A categoria mudou. Recarregue esta página para ver os campos atuais." } };
   }
-  const exigir = !c.sair || publicado(anuncio); // rascunho pode sair incompleto
+  const exigir = !c.parcial || publicado(anuncio); // rascunho pode sair incompleto
 
   const campos: Record<string, string> = {};
   const titulo = String(form.get("titulo") ?? "").replace(/\s+/g, " ").trim();
@@ -309,7 +319,7 @@ export async function salvarPreco(_antes: EstadoForm, form: FormData): Promise<E
   if (!anuncio) return { erro: { mensagem: NAO_ACHOU } };
 
   const aCombinar = form.get("a_combinar") === "on";
-  const exigir = !c.sair || publicado(anuncio); // anúncio no ar não fica sem preço por engano
+  const exigir = !c.parcial || publicado(anuncio); // anúncio no ar não fica sem preço por engano
   const aceitaTroca = form.get("aceita_troca") === "on";
   const texto = String(form.get("preco") ?? "").trim();
   let centavos: number | null = null;
@@ -340,7 +350,7 @@ export async function salvarLocal(_antes: EstadoForm, form: FormData): Promise<E
 
   const cidade = String(form.get("cidade") ?? "").trim();
   const bairro = String(form.get("bairro") ?? "").replace(/\s+/g, " ").trim();
-  const exigir = !c.sair || publicado(anuncio);
+  const exigir = !c.parcial || publicado(anuncio);
 
   if (!cidade && exigir) return { erro: { mensagem: "Escolha a cidade." }, campos: { cidade: "Escolha a cidade." } };
   if (cidade) {

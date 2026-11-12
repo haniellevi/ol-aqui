@@ -319,8 +319,19 @@ export function EnvioFotos({
       />
 
       <p className="text-base text-texto-suave">
-        {itens.length} de {maximo} fotos. A primeira é a capa. Use fotos nítidas, de até 20 MB cada. Você pode mudar a ordem abaixo.
+        {itens.length} de {maximo} fotos. A primeira é a capa. Você pode mudar a ordem abaixo.
       </p>
+
+      {/* Mesmo formato em todo o site: card, loja e galeria mostram a foto quadrada (1:1), inteira, sobre branco. */}
+      <div className="flex flex-col gap-1 rounded-card bg-fundo p-3 text-sm text-texto-suave">
+        <p className="font-semibold text-beringela">Dica para a foto ficar boa em todo lugar</p>
+        <ul className="list-disc pl-5">
+          <li>Foto quadrada, de preferência 1080 × 1080 (no celular, use o modo quadrado da câmera).</li>
+          <li>Produto no centro, com fundo claro e boa luz.</li>
+          <li>Foto em pé ou deitada também vale: ela aparece inteira, com bordas brancas.</li>
+          <li>Até 20 MB por foto.</li>
+        </ul>
+      </div>
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
         {aviso}

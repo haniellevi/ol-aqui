@@ -13,7 +13,13 @@ const host = hostDoSupabase();
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: host ? [{ protocol: "https", hostname: host, pathname: "/storage/v1/object/public/**" }] : [],
+    // AVIF/WebP no tamanho de cada tela: fotos e logos ficam bem mais leves no celular.
+    formats: ["image/avif", "image/webp"],
+    // Guarda a foto otimizada por 31 dias (as fotos do Storage não mudam no mesmo endereço).
+    minimumCacheTTL: 2678400,
+    remotePatterns: host
+      ? [{ protocol: "https", hostname: host, pathname: "/storage/v1/object/public/**" }]
+      : [],
   },
 };
 
