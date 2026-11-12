@@ -34,7 +34,7 @@ export function FotoPerfil({ foto }: { foto: string | null }) {
   async function sincronizar() {
     await user?.reload();
     const r = await atualizarPerfilClerk();
-    if (!r?.ok) throw new Error("Sua foto foi alterada na conta, mas falta atualizar o OL-AKI. Toque em Atualizar foto no site.");
+    if (!r?.ok) throw new Error("Sua foto foi alterada na conta, mas falta atualizar o Mercado da Região. Toque em Atualizar foto no site.");
     setFaltaSincronizar(false);
     setOk(true);
     if (r.whatsappVinculado) router.push("/confirmar-celular?aviso=numero_vinculado");
@@ -55,7 +55,7 @@ export function FotoPerfil({ foto }: { foto: string | null }) {
       dialogo.current?.close();
       await sincronizar();
     } catch {
-      setErro(alterou ? "Sua foto foi alterada na conta, mas falta atualizar o OL-AKI. Toque em Atualizar foto no site."
+      setErro(alterou ? "Sua foto foi alterada na conta, mas falta atualizar o Mercado da Região. Toque em Atualizar foto no site."
         : "Não conseguimos salvar a foto. Tente novamente; a prévia foi mantida.");
     } finally { setEnviando(false); trava.current = false; }
   }

@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Camera, ImagePlus, Loader2, RotateCw, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, ImagePlus, Loader2, RotateCw, Sparkles, X } from "lucide-react";
+import { FotoProdutoAki } from "@/components/aki/foto-produto-aki";
 import { Botao } from "@/components/ui/botao";
 import { reduzirFoto, enviarFoto, MAX_FOTO_ORIGINAL } from "@/lib/fotos";
 import { apagarFoto, criarUrlEnvioFoto } from "@/lib/dados/fotos";
@@ -44,6 +45,7 @@ export function EnvioFotos({
   fotosIniciais,
   maximo,
   minimo,
+  podeEditarComAki = false,
   formId = "form-fotos",
 }: {
   id: string;
@@ -51,6 +53,7 @@ export function EnvioFotos({
   fotosIniciais: string[];
   maximo: number;
   minimo: number;
+  podeEditarComAki?: boolean;
   formId?: string;
 }) {
   const router = useRouter();
@@ -58,6 +61,7 @@ export function EnvioFotos({
   const [aviso, setAviso] = useState(""); // lido pelo leitor de tela (aria-live)
   const [erro, setErro] = useState<string | null>(null);
   const [indo, setIndo] = useState(false);
+  const [fotoAki, setFotoAki] = useState<string | null>(null);
   const itensRef = useRef(itens);
   itensRef.current = itens;
   const confirmadas = useRef(fotosIniciais);
@@ -250,6 +254,26 @@ export function EnvioFotos({
     router.push(sair ? DESTINO_SAIR : urlPasso("categoria", id, editar));
   }
 
+  async function usarFotoAki(url: string) {
+    if (!fotoAki || operacao.current || travado || !itensRef.current.some((i) => i.url === fotoAki && i.estado === "pronta")) return;
+    operacao.current = true;
+    setSalvando(true);
+    setErro(null);
+    try {
+      const lista = itensRef.current.map((i) => i.url === fotoAki ? { ...i, url, previa: undefined } : i);
+      if (await salvar(lista)) {
+        const anterior = itensRef.current.find((i) => i.url === fotoAki);
+        if (anterior?.previa) URL.revokeObjectURL(anterior.previa);
+        mudar(() => lista);
+        setFotoAki(null);
+        setAviso("A versão do Aki foi salva no anúncio.");
+      }
+    } finally {
+      operacao.current = false;
+      setSalvando(false);
+    }
+  }
+
   return (
     <form id={formId} action={async (dados) => continuar(dados.get("acao") === "sair")} onSubmit={(e) => {
       e.preventDefault();
@@ -359,6 +383,13 @@ export function EnvioFotos({
                   >
                     <ArrowRight className="size-5" aria-hidden />
                   </button>
+                  {podeEditarComAki && item.estado === "pronta" && item.url && (
+                    <button type="button" className={`${BOTAO_MINI} col-span-2 flex items-center justify-center gap-1 text-sm font-semibold`}
+                      disabled={travado || (fotoAki !== null && itens.some((f) => f.url === fotoAki))} onClick={() => setFotoAki(item.url ?? null)}
+                      aria-label={`Melhorar ${nome} com o Aki`}>
+                      <Sparkles className="size-4" aria-hidden /> Melhorar com o Aki
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={`${BOTAO_MINI} col-span-2 flex items-center justify-center gap-1 text-perigo`}
@@ -373,6 +404,11 @@ export function EnvioFotos({
             );
           })}
         </ol>
+      )}
+
+      {fotoAki && itens.some((i) => i.url === fotoAki && i.estado === "pronta") && (
+        <FotoProdutoAki key={fotoAki} anuncio={id} original={fotoAki} travado={travado}
+          aplicar={(url) => { void usarFotoAki(url); }} fechar={() => setFotoAki(null)} />
       )}
 
       <BarraContinuar aviso="Fotos confirmadas ficam salvas no seu rascunho.">

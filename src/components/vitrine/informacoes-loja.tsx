@@ -5,19 +5,24 @@ import { classesBotao } from "@/components/ui/botao";
 import { DIAS_EM_ORDEM, NOME_DIA, agoraNaRegiao, faixasDoDia, linkComoChegar, linkInstagram, linkSiteLoja, situacaoAgora, temHorarios, textoDoDia } from "@/components/vitrine/regras";
 import type { VitrinePublica } from "@/lib/tipos-vitrine";
 
-// Bloco "Informações da loja" da vitrine pública: só aparece o que a loja preencheu.
-export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }) {
+export function prepararInformacoesLoja(v: VitrinePublica) {
   const comoChegar = linkComoChegar({ lat: v.lat, lng: v.lng, endereco: v.endereco, cidade: v.cidade });
   const insta = linkInstagram(v.instagram);
-  const situacao = situacaoAgora(v.horarios, agora);
-  const hoje = agoraNaRegiao(agora).dia;
   const site = linkSiteLoja(v.site_url);
   const telefone = /^55[1-9][0-9]9?[0-9]{8}$/.test(v.telefone_publico ?? "") ? v.telefone_publico : null;
-  const temAlgo = site || telefone || v.endereco || comoChegar || temHorarios(v.horarios) || insta || v.sobre || v.formas_pagamento.length || v.faz_entrega !== null;
-  if (!temAlgo) return null;
+  const temHorario = temHorarios(v.horarios);
+  const temAlgo = site || telefone || v.endereco || comoChegar || temHorario || insta || v.sobre || v.formas_pagamento.length || v.faz_entrega !== null;
+  return temAlgo ? { v, comoChegar, insta, site, telefone, temHorario } : null;
+}
+
+// Bloco "Informações da loja" da vitrine pública: só aparece o que a loja preencheu.
+export function InformacoesLoja({ dados, agora }: { dados: NonNullable<ReturnType<typeof prepararInformacoesLoja>>; agora: Date }) {
+  const { v, comoChegar, insta, site, telefone, temHorario } = dados;
+  const situacao = situacaoAgora(v.horarios, agora);
+  const hoje = agoraNaRegiao(agora).dia;
 
   return (
-    <section aria-labelledby="titulo-info-loja" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
+    <aside id="informacoes-loja" aria-labelledby="titulo-info-loja" className="flex min-w-0 scroll-mt-24 flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
       <h2 id="titulo-info-loja" className="text-lg font-semibold">
         Informações da loja
       </h2>
@@ -40,7 +45,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
         </Bloco>
       )}
 
-      {temHorarios(v.horarios) && (
+      {temHorario && (
         <Bloco icone={<Clock />} titulo="Horário de funcionamento">
           {situacao && (
             <p className={`text-base font-semibold ${situacao.aberto ? "text-verde-escuro" : "text-perigo"}`} suppressHydrationWarning>
@@ -97,7 +102,7 @@ export function InformacoesLoja({ v, agora }: { v: VitrinePublica; agora: Date }
           <p className="whitespace-pre-line break-words text-base leading-6">{v.sobre}</p>
         </Bloco>
       )}
-    </section>
+    </aside>
   );
 }
 

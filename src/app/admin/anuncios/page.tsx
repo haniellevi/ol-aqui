@@ -5,7 +5,7 @@ import { ROTULO_ANUNCIO } from "@/components/conta/situacao-anuncios";
 import { Chip } from "@/components/ui/chip";
 import { exigirTela } from "@/lib/admin/equipe";
 import { inteiro, quando } from "@/lib/admin/formato";
-import { preco } from "@/lib/formato";
+import { ehUuid, preco } from "@/lib/formato";
 import { LINK_ADMIN_ANUNCIOS, LINK_ADMIN_ATENDIMENTOS, linkAdminAnuncio } from "@/lib/rotas";
 import type { MeuAnuncio } from "@/lib/tipos";
 
@@ -20,14 +20,15 @@ const FILTROS = [
 ] as const;
 const POR_PAGINA = 30;
 
-type Parametros = { status?: string | string[]; pagina?: string | string[] };
+type Parametros = { vitrine?: string; status?: string | string[]; pagina?: string | string[] };
 type LinhaAnuncio = Pick<MeuAnuncio, "id" | "titulo" | "cidade" | "preco_centavos" | "status" | "atualizado_em"> & {
   vitrines_lojas: { nome: string } | null;
 };
 
-function endereco(status: string, pagina = 1) {
+function endereco(status: string, pagina = 1, vitrine = "") {
   const q = new URLSearchParams();
   if (status) q.set("status", status);
+  if (vitrine) q.set("vitrine", vitrine);
   if (pagina > 1) q.set("pagina", String(pagina));
   return q.size ? `${LINK_ADMIN_ANUNCIOS}?${q}` : LINK_ADMIN_ANUNCIOS;
 }
@@ -35,6 +36,7 @@ function endereco(status: string, pagina = 1) {
 export default async function AnunciosAdminPage({ searchParams }: { searchParams: Promise<Parametros> }) {
   const { supabase } = await exigirTela("anuncios");
   const sp = await searchParams;
+  const vitrine = typeof sp.vitrine === "string" && ehUuid(sp.vitrine) ? sp.vitrine : "";
   const filtro = FILTROS.find(({ status }) => status === sp.status) ?? FILTROS[0];
   const numero = typeof sp.pagina === "string" ? Number(sp.pagina) : 1;
   const pagina = Number.isSafeInteger(numero) && numero > 0 && numero <= 1_000_000 ? numero : 1;
@@ -43,10 +45,11 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
     .select("id, titulo, cidade, preco_centavos, status, atualizado_em, vitrines_lojas(nome)", { count: "exact" })
     .order("atualizado_em", { ascending: false })
     .order("id");
+  if (vitrine) consulta = consulta.eq("vitrine_id", vitrine);
   if (filtro.status) consulta = consulta.eq("status", filtro.status);
   const { data, count, error } = await consulta.range(inicio, inicio + POR_PAGINA - 1);
   if (pagina > 1 && (error?.code === "PGRST103" || (!error && !data?.length))) {
-    redirect(endereco(filtro.status));
+    redirect(endereco(filtro.status, 1, vitrine));
   }
   const anuncios = (data ?? []) as unknown as LinhaAnuncio[];
   const total = count ?? 0;
@@ -62,7 +65,7 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
       </Link>
       <nav aria-label="Filtrar anúncios por situação" className="mb-6 flex flex-wrap gap-2">
         {FILTROS.map(({ status, nome }) => (
-          <Chip key={status} href={endereco(status)} ativo={filtro.status === status} prefetch={false}>
+          <Chip key={status} href={endereco(status, 1, vitrine)} ativo={filtro.status === status} prefetch={false}>
             {nome}
           </Chip>
         ))}
@@ -114,9 +117,9 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
 
       {!error && paginas > 1 && (
         <nav aria-label="Páginas de anúncios" className="mt-5 flex flex-wrap items-center gap-3">
-          {pagina > 1 && <Link href={endereco(filtro.status, pagina - 1)} className={estiloBotaoSec}>Anterior</Link>}
+          {pagina > 1 && <Link href={endereco(filtro.status, pagina - 1, vitrine)} className={estiloBotaoSec}>Anterior</Link>}
           <p className="text-sm text-texto-suave">Página {inteiro(pagina)} de {inteiro(paginas)}</p>
-          {pagina < paginas && <Link href={endereco(filtro.status, pagina + 1)} className={estiloBotaoSec}>Próxima</Link>}
+          {pagina < paginas && <Link href={endereco(filtro.status, pagina + 1, vitrine)} className={estiloBotaoSec}>Próxima</Link>}
         </nav>
       )}
     </>

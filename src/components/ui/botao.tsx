@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
-// Botão do OLAKI: texto 14px, altura 44px no toque e 40px com mouse.
+// Botão do Mercado da Região: texto 14px, altura 44px no toque e 40px com mouse.
 // Principal = laranja com texto beringela (nunca branco no laranja).
 
 export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | "texto";

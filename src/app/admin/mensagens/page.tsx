@@ -46,7 +46,7 @@ export default async function MensagensPage() {
 
   return (
     <>
-      <Titulo sub="Textos que o OLAKI manda sozinho. Hoje só o aviso dentro do site é mandado; WhatsApp e e-mail ficam prontos para quando o envio começar. Toda mudança fica no histórico.">
+      <Titulo sub="Textos que o Mercado da Região manda sozinho. Hoje só o aviso dentro do site é mandado; WhatsApp e e-mail ficam prontos para quando o envio começar. Toda mudança fica no histórico.">
         Mensagens automáticas
       </Titulo>
 

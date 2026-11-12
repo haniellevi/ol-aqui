@@ -47,7 +47,7 @@ export function BotaoRemoverFavorito({ anuncioId, titulo, comTexto = false, onRe
           {pendente ? (
             <Loader2 className="size-5 animate-spin text-texto-suave motion-reduce:animate-none" aria-hidden />
           ) : (
-            <Heart className="size-5 fill-laranja text-laranja-escuro" aria-hidden />
+            <Heart className="size-5 fill-coracao text-coracao" aria-hidden />
           )}
         </span>
         {comTexto && (

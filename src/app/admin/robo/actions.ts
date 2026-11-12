@@ -264,7 +264,7 @@ export async function testarModelo(tipo: "conversa" | "foto", escolhido: string)
     const resp = await prov.conversar(
       {
         modelo,
-        sistemaFixo: "Você é o Aki, ajudante do site OLAKI. Responda em português do Brasil.",
+        sistemaFixo: "Você é o Aki, ajudante do site Mercado da Região. Responda em português do Brasil.",
         mensagens: [{ papel: "usuario", partes }],
         ferramentas: [ferramenta],
         maxTokens: 300,

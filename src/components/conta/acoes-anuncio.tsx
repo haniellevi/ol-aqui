@@ -88,7 +88,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id:
         onClose={() => setConfirmacao(null)} onCancel={(e) => { if (trava.current) e.preventDefault(); }}
         className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%_-_2rem)] max-w-sm overflow-y-auto rounded-folha bg-cartao p-5 text-texto shadow-2 backdrop:bg-beringela/50">
         <h2 id={`confirmar-${id}`} className="text-xl font-bold">
-          {confirmacao === "excluir" ? "Mover para a lixeira?" : confirmacao === "pausar" ? "Pausar este anúncio?" : "Vendeu pelo OLAKI?"}
+          {confirmacao === "excluir" ? "Mover para a lixeira?" : confirmacao === "pausar" ? "Pausar este anúncio?" : "Vendeu pelo Mercado da Região?"}
         </h2>
         <p className="mt-2 break-words font-semibold">{titulo}</p>
         <p id={`explicacao-${id}`} className="mt-2 text-base text-texto-suave">
@@ -100,7 +100,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false }: { id:
         <div className="mt-3">{mensagemErro}</div>
         <div className="mt-4 flex flex-col gap-2">
           {confirmacao === "vendido" ? <>
-            <Botao larguraTotal disabled={ocupado} carregando={emCurso === "vendido-sim"} onClick={() => rodar("vendido-sim", () => marcarVendido(id, true))}>Sim, vendi pelo OLAKI</Botao>
+            <Botao larguraTotal disabled={ocupado} carregando={emCurso === "vendido-sim"} onClick={() => rodar("vendido-sim", () => marcarVendido(id, true))}>Sim, vendi pelo Mercado da Região</Botao>
             <Botao variante="secundario" larguraTotal disabled={ocupado} carregando={emCurso === "vendido-nao"} onClick={() => rodar("vendido-nao", () => marcarVendido(id, false))}>Não, vendi por fora</Botao>
           </> : <Botao variante={confirmacao === "excluir" ? "perigo" : "primario"} larguraTotal disabled={ocupado} carregando={emCurso !== null}
             onClick={() => confirmacao === "excluir" ? rodar("excluir", () => moverParaLixeira(id)) : rodar("pausar", () => pausarAnuncio(id))}>

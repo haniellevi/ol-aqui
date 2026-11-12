@@ -15,7 +15,10 @@ export function numeroDoTexto(t: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://ol-aqui.vercel.app").replace(/\/$/, "");
+const siteConfigurado = (process.env.NEXT_PUBLIC_SITE_URL || "https://mercadodaregiao.com.br").replace(/\/$/, "");
+// Ambientes antigos ainda podem carregar o endereço anterior no build.
+export const SITE = /^https?:\/\/(ol-aqui\.vercel\.app|(?:www\.)?olaki\.com\.br)$/i.test(siteConfigurado)
+  ? "https://mercadodaregiao.com.br" : siteConfigurado;
 
 const moedaInteira = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 const moedaCentavos = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
@@ -105,9 +108,9 @@ export const linkCategoria = (paiSlug: string, subSlug?: string | null) => (subS
 /** Caminho → endereço completo (para compartilhar e WhatsApp). */
 export const urlAbsoluta = (caminho: string) => `${SITE}${caminho.startsWith("/") ? caminho : `/${caminho}`}`;
 
-/** Link do WhatsApp com a mensagem pronta: "Olá! Vi seu anúncio *TÍTULO* no OLAKI: URL". */
+/** Link do WhatsApp com a mensagem pronta: "Olá! Vi seu anúncio *TÍTULO* no Mercado da Região: URL". */
 export function linkWhatsApp(numero: string, titulo: string, url: string): string {
-  const texto = `Olá! Vi seu anúncio *${titulo}* no OLAKI: ${url}`;
+  const texto = `Olá! Vi seu anúncio *${titulo}* no Mercado da Região: ${url}`;
   return `https://wa.me/${numero.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
 }
 

@@ -1,0 +1,524 @@
+<title>Nova Home Mercado da Região</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: barra de controle da maquete em cima; abaixo, a tela simulada (computador = 3 colunas, celular = moldura 390px com 1 coluna). Container queries fazem a troca. */
+:root{
+  --beringela:#4b1248; --laranja:#ff6a13; --laranja-escuro:#c2410c; --verde-escuro:#0e7a3d;
+  --fundo:#f7f8fa; --cartao:#ffffff; --texto:#342b3b; --suave:#5e5266; --borda:#e6e0e9;
+  --selecao:#f0eaf5; --patro:#ffe4d1; --sucesso:#ecf8f1; --mesa:#e9e5ee; --nota:#2563eb;
+  --sombra:0 1px 2px rgb(75 18 72 / .08); --sombra2:0 -2px 12px rgb(75 18 72 / .12);
+  --f:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r-campo:8px; --r-card:10px; --r-folha:20px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --beringela:#f3d9f0; --texto:#ece6f0; --suave:#b9adc2; --fundo:#17121b; --cartao:#221b27; --borda:#3a3041;
+  --selecao:#3a2741; --patro:#5a2c12; --sucesso:#123323; --mesa:#0f0b12; --verde-escuro:#5fd394; --laranja-escuro:#ff8a4c; --nota:#7aa7ff;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --beringela:#f3d9f0; --texto:#ece6f0; --suave:#b9adc2; --fundo:#17121b; --cartao:#221b27; --borda:#3a3041;
+  --selecao:#3a2741; --patro:#5a2c12; --sucesso:#123323; --mesa:#0f0b12; --verde-escuro:#5fd394; --laranja-escuro:#ff8a4c; --nota:#7aa7ff;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--mesa);color:var(--texto);font-family:var(--f);font-size:15px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--laranja-escuro);outline-offset:2px}
+svg.i{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Barra da maquete */
+.controle{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+  padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.controle h1{margin:0;font-size:1rem;font-weight:600;color:var(--beringela)}
+.controle p{margin:0;font-size:.8125rem;color:var(--suave)}
+.grupo{display:flex;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--cartao);border:1px solid var(--borda);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;border-radius:999px;padding:6px 14px;font-size:.875rem;font-weight:600;color:var(--suave)}
+.seg button[aria-pressed="true"]{background:var(--beringela);color:var(--cartao)}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#221b27}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#221b27}}
+
+.palco{padding-bottom:32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tela{margin:0 auto;background:var(--fundo);border-radius:14px;box-shadow:0 10px 40px rgb(30 10 40 / .15);overflow:hidden;
+  container-type:inline-size;container-name:tela;max-width:1320px;position:relative}
+.tela.cel{max-width:390px;height:800px;overflow:auto;border:10px solid #1b1520;border-radius:40px;overscroll-behavior:contain}
+
+/* Topo */
+.topo{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--cartao) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--borda)}
+.topo-in{display:flex;align-items:center;gap:16px;height:64px;padding:0 20px;max-width:1320px;margin:0 auto}
+.marca{display:flex;align-items:center;gap:8px;color:var(--beringela);text-decoration:none;flex:none}
+.marca b{width:36px;height:36px;border-radius:12px;background:var(--laranja);display:grid;place-items:center;font-size:1.1rem;color:#4b1248}
+.marca span{display:flex;flex-direction:column;font-weight:700;font-size:15px;line-height:1.1;letter-spacing:-.01em}
+.marca small{font-size:13px;font-weight:600}
+.busca{flex:1;display:flex;align-items:center;min-width:0;height:44px;background:var(--fundo);border:1px solid var(--borda);border-radius:var(--r-campo);overflow:hidden}
+.busca svg{margin-left:12px;color:var(--suave)}
+.busca input{flex:1;min-width:0;border:0;background:none;padding:0 10px;height:100%;font-size:1rem}
+.busca input:focus{outline:none}
+.busca:focus-within{border-color:var(--beringela)}
+.cidade{display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;border:1px solid var(--borda);border-left:0;background:var(--cartao);color:var(--beringela);font-weight:600;font-size:.875rem;white-space:nowrap;border-radius:0}
+.acoes-topo{display:flex;gap:8px;align-items:center;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 14px;border-radius:var(--r-campo);border:1px solid var(--borda);background:var(--cartao);color:var(--beringela);font-weight:600;font-size:.875rem;white-space:nowrap;text-decoration:none}
+.btn.pri{background:var(--laranja);border-color:var(--laranja);color:#4b1248}
+.btn.zap{background:#0e7a3d;border-color:#0e7a3d;color:#fff}
+.btn.txt{border-color:transparent;background:none;color:var(--laranja-escuro)}
+
+/* Grade principal */
+.miolo{display:grid;grid-template-columns:232px minmax(0,1fr) 296px;gap:24px;padding:20px;max-width:1320px;margin:0 auto;align-items:start}
+.lado{position:sticky;top:84px;display:flex;flex-direction:column;gap:16px}
+.caixa{background:var(--cartao);border:1px solid var(--borda);border-radius:var(--r-card);padding:12px}
+.caixa h2,.sec h2{margin:0;font-size:1.125rem;font-weight:600;color:var(--beringela);line-height:1.4}
+.caixa h2{font-size:.8125rem;text-transform:uppercase;letter-spacing:.06em;color:var(--suave);padding:4px 8px 8px}
+.lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.lista button,.lista a{width:100%;display:flex;align-items:center;gap:10px;min-height:40px;padding:0 8px;border:0;background:none;border-radius:var(--r-campo);text-align:left;font-size:.9375rem;color:var(--texto);text-decoration:none}
+.lista button:hover,.lista a:hover{background:var(--fundo)}
+.lista button[aria-pressed="true"]{background:var(--selecao);color:var(--beringela);font-weight:600}
+.lista .n{margin-left:auto;font-size:.8125rem;color:var(--suave);font-variant-numeric:tabular-nums}
+.lista svg{color:var(--beringela)}
+
+/* Feed */
+.feed{display:flex;flex-direction:column;gap:20px;min-width:0}
+.cab-feed{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+.cab-feed h1{margin:0;font-size:1.25rem;font-weight:600;color:var(--beringela);line-height:1.3;text-wrap:balance}
+.cab-feed p{margin:0;font-size:.8125rem;color:var(--suave)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--borda);background:var(--cartao);color:var(--beringela);font-weight:600;font-size:.875rem;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--beringela);border-color:var(--beringela);color:var(--cartao)}
+.chip svg{width:16px;height:16px}
+.ordem{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.875rem;color:var(--suave)}
+.ordem select{height:40px;border:1px solid var(--borda);border-radius:999px;background:var(--cartao);padding:0 12px;color:var(--beringela);font-weight:600}
+.sec{display:flex;flex-direction:column;gap:12px}
+.sec-cab{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sec-cab a,.sec-cab button{font-size:.875rem;font-weight:600;color:var(--laranja-escuro);text-decoration:none;background:none;border:0}
+.trilho{display:grid;grid-auto-flow:column;grid-auto-columns:200px;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}
+.trilho>*{scroll-snap-align:start}
+.trilho.vistos{grid-auto-columns:150px}
+.grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.patro-faixa{background:linear-gradient(180deg,var(--patro),transparent 85%);border-radius:var(--r-card);padding:12px}
+
+/* Card do anúncio (mesmas regras do card-anuncio.tsx) */
+.card{position:relative;display:flex;flex-direction:column;background:var(--cartao);border-radius:var(--r-card);box-shadow:var(--sombra);overflow:hidden;min-width:0}
+.card>button.abrir{all:unset;display:flex;flex-direction:column;flex:1;cursor:pointer}
+.card>button.abrir:focus-visible{outline:3px solid var(--laranja-escuro);outline-offset:-3px}
+.foto{position:relative;aspect-ratio:4/3;max-width:100%;display:grid;place-items:center;color:rgb(255 255 255 / .9)}
+.foto svg{width:44px;height:44px;stroke-width:1.5}
+.selo-p{position:absolute;left:8px;top:8px;background:var(--patro);color:var(--beringela);font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
+.corpo{display:flex;flex-direction:column;gap:2px;padding:10px;flex:1}
+.preco{font-weight:700;font-size:1.125rem;line-height:1.25;font-variant-numeric:tabular-nums;color:var(--texto)}
+.tit{font-size:.875rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.meta{margin-top:auto;padding-top:4px;font-size:13px;color:var(--suave)}
+.loja{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--suave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loja svg{width:14px;height:14px;color:var(--verde-escuro)}
+.coracao{position:absolute;right:6px;top:6px;width:36px;height:36px;border-radius:999px;border:0;background:rgb(255 255 255 / .92);display:grid;place-items:center;color:#4b1248;box-shadow:var(--sombra)}
+.coracao svg{width:18px;height:18px}
+.coracao[aria-pressed="true"] svg{fill:#e11d48;stroke:#e11d48}
+.mini .corpo{padding:8px}.mini .preco{font-size:.9375rem}.mini .tit{-webkit-line-clamp:1}.mini .meta,.mini .loja{display:none}.mini .foto svg{width:30px;height:30px}
+
+/* Coluna direita */
+.anunciar{background:var(--beringela);color:var(--cartao);border:0}
+:root[data-theme="dark"] .anunciar{background:#4b1248;color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .anunciar{background:#4b1248;color:#fff}}
+.anunciar h3{margin:0 0 4px;font-size:1.125rem;line-height:1.3}
+.anunciar p{margin:0 0 12px;font-size:.875rem}
+.anunciar .btn{width:100%}
+.radar h3{margin:0 0 4px;font-size:1rem;color:var(--beringela)}
+.radar p{margin:0 0 10px;font-size:.875rem;color:var(--suave)}
+.radar .ex{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.radar .ex span{font-size:.8125rem;background:var(--fundo);border-radius:var(--r-campo);padding:6px 10px;color:var(--texto)}
+.radar .ex b{color:var(--verde-escuro);font-weight:600}
+.loja-it{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--r-campo)}
+.loja-it:hover{background:var(--fundo)}
+.loja-it i{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-style:normal;font-weight:700;color:#fff;flex:none}
+.loja-it div{min-width:0}
+.loja-it strong{display:block;font-size:.875rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loja-it small{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--suave)}
+.loja-it small svg{width:13px;height:13px;color:var(--verde-escuro)}
+.vazio{grid-column:1/-1;text-align:center;padding:32px 16px;background:var(--cartao);border-radius:var(--r-card);border:1px dashed var(--borda);color:var(--suave)}
+.vazio strong{display:block;color:var(--beringela);font-size:1rem;margin-bottom:4px}
+.mais{align-self:center}
+
+/* Barra inferior + Aki */
+.barra{display:none}
+.aki{position:absolute;right:20px;bottom:20px;z-index:25;width:56px;height:56px;border-radius:999px;border:0;background:var(--beringela);color:var(--cartao);box-shadow:0 4px 12px rgb(30 10 40 / .28);display:grid;place-items:center;font-weight:700}
+:root[data-theme="dark"] .aki{background:#4b1248;color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .aki{background:#4b1248;color:#fff}}
+.tela:not(.cel) .aki{position:fixed;right:max(24px,env(safe-area-inset-right,0px));bottom:max(24px,env(safe-area-inset-bottom,0px))}
+
+/* ===== Celular / tela estreita ===== */
+@container tela (max-width: 1080px){
+  .miolo{grid-template-columns:200px minmax(0,1fr)}
+  .dir{display:none}
+  .grade{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@container tela (max-width: 760px){
+  .topo-in{flex-wrap:wrap;height:auto;padding:10px 12px;gap:10px}
+  .busca{order:3;flex-basis:100%}
+  .acoes-topo .so-pc{display:none}
+  .marca{margin-right:auto}
+  .miolo{grid-template-columns:minmax(0,1fr);padding:12px 12px 96px;gap:16px}
+  .esq{display:none}
+  .chips{flex-wrap:nowrap;overflow-x:auto;margin:0 -12px;padding:0 12px 4px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .ordem{margin-left:0}.ordem span{display:none}
+  .grade{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .trilho{grid-auto-columns:46%}
+  .trilho.vistos{grid-auto-columns:34%}
+  .preco{font-size:1rem}
+  .cats-cel{display:grid!important}
+  .radar-cel{display:block!important}
+  .barra{display:grid;grid-template-columns:repeat(5,1fr);position:sticky;bottom:0;z-index:20;height:64px;background:var(--cartao);box-shadow:var(--sombra2);margin-top:-64px}
+  .barra button{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:var(--suave)}
+  .barra button[aria-current="page"]{color:var(--beringela)}
+  .barra .mais-b span{width:52px;height:52px;margin-top:-26px;border-radius:999px;background:var(--laranja);color:#4b1248;display:grid;place-items:center;box-shadow:0 2px 6px rgb(30 10 40 / .25)}
+  .aki,.tela:not(.cel) .aki{position:sticky;float:right;bottom:80px;right:auto;margin:-140px 12px 84px auto}
+}
+.cats-cel{display:none;grid-template-columns:repeat(5,1fr);gap:6px}
+.cats-cel button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:500;color:var(--texto);padding:4px 0}
+.cats-cel button span{width:48px;height:48px;border-radius:14px;background:var(--cartao);box-shadow:var(--sombra);display:grid;place-items:center;color:var(--beringela)}
+.cats-cel button[aria-pressed="true"] span{background:var(--selecao);outline:2px solid var(--beringela)}
+.radar-cel{display:none}
+
+/* Notas de design */
+[data-nota]{position:relative}
+.notas [data-nota]{outline:2px dashed var(--nota);outline-offset:3px}
+.notas [data-nota]::before{content:attr(data-nota);position:absolute;z-index:30;left:-6px;top:-10px;width:22px;height:22px;border-radius:999px;background:var(--nota);color:#fff;font:700 12px/22px var(--f);text-align:center}
+.legenda{max-width:1320px;margin:20px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.legenda div{background:var(--cartao);border-radius:var(--r-card);padding:12px 14px;border:1px solid var(--borda);font-size:.875rem}
+.legenda b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:var(--nota);color:#fff;font-size:12px;margin-right:6px}
+.legenda strong{color:var(--beringela)}
+.legenda p{margin:4px 0 0;color:var(--suave)}
+
+/* Folha do anúncio + aviso */
+.veu{position:fixed;inset:0;z-index:50;background:rgb(20 8 24 / .5);display:grid;place-items:center;padding:16px}
+.folha{width:min(440px,100%);max-height:90vh;overflow:auto;background:var(--cartao);border-radius:var(--r-folha);box-shadow:0 20px 60px rgb(0 0 0 / .3)}
+.folha .foto{border-radius:0}
+.folha .det{padding:16px;display:flex;flex-direction:column;gap:8px}
+.folha .preco{font-size:1.5rem}
+.folha h3{margin:0;font-size:1.125rem;font-weight:600}
+.folha .bts{display:flex;gap:8px;margin-top:8px}.folha .bts .btn{flex:1}
+.aviso{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;background:#342b3b;color:#fff;padding:12px 16px;border-radius:12px;font-size:.875rem;display:flex;gap:12px;align-items:center;box-shadow:0 8px 24px rgb(0 0 0 / .25);max-width:calc(100% - 32px)}
+.aviso button{background:none;border:0;color:#ffb38a;font-weight:700}
+@media (prefers-reduced-motion: no-preference){.card{transition:transform .15s ease}.card:hover{transform:translateY(-2px)}}
+</style>
+
+<div class="controle">
+  <div>
+    <h1>Nova página inicial · maquete 1</h1>
+    <p>Anúncios, cidades e lojas são exemplos. Os botões funcionam para você testar.</p>
+  </div>
+  <div class="grupo">
+    <div class="seg" role="group" aria-label="Tamanho da tela">
+      <button type="button" id="b-pc" aria-pressed="true">Computador</button>
+      <button type="button" id="b-cel" aria-pressed="false">Celular</button>
+    </div>
+    <div class="seg" role="group" aria-label="Situação do visitante">
+      <button type="button" id="b-anon" aria-pressed="true">Sem conta</button>
+      <button type="button" id="b-logado" aria-pressed="false">Logado</button>
+    </div>
+    <div class="seg"><button type="button" id="b-notas" aria-pressed="false">Mostrar notas</button></div>
+  </div>
+</div>
+
+<div class="palco">
+  <div class="tela" id="tela">
+    <header class="topo" data-nota="1">
+      <div class="topo-in">
+        <a class="marca" href="#" aria-label="Mercado da Região"><b aria-hidden="true">M</b><span>Mercado<small>da Região</small></span></a>
+        <form class="busca" role="search" id="f-busca">
+          <svg class="i" data-i="busca"></svg>
+          <input id="q" type="search" placeholder="O que você procura?" aria-label="Buscar anúncios" autocomplete="off">
+          <button type="button" class="cidade" id="b-cidade"><svg class="i" data-i="pin" style="width:16px;height:16px"></svg><span id="cid-nome">Formosa do Rio Preto</span></button>
+        </form>
+        <div class="acoes-topo">
+          <button type="button" class="btn pri so-pc" data-acao="anunciar"><svg class="i" data-i="mais"></svg>Anunciar grátis</button>
+          <button type="button" class="btn" id="b-conta"><svg class="i" data-i="user"></svg><span id="conta-txt">Entrar</span></button>
+        </div>
+      </div>
+    </header>
+
+    <div class="miolo">
+      <aside class="lado esq" data-nota="2">
+        <nav class="caixa" aria-label="Categorias">
+          <h2>Categorias</h2>
+          <ul class="lista" id="l-cats"></ul>
+        </nav>
+        <nav class="caixa" aria-label="Atalhos">
+          <h2>Para você</h2>
+          <ul class="lista">
+            <li><button type="button" data-atalho="favoritos"><svg class="i" data-i="coracao"></svg>Favoritos<span class="n" id="n-fav">0</span></button></li>
+            <li><button type="button" data-atalho="vistos"><svg class="i" data-i="olho"></svg>Vistos recentemente</button></li>
+            <li><button type="button" data-atalho="meus"><svg class="i" data-i="tag"></svg>Meus anúncios</button></li>
+            <li><button type="button" data-atalho="cidade"><svg class="i" data-i="pin"></svg>Trocar cidade</button></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="feed">
+        <div class="cats-cel" id="cats-cel" aria-label="Categorias"></div>
+
+        <div class="cab-feed" data-nota="3">
+          <h1 id="titulo-feed">Anúncios perto de você</h1>
+          <p id="contagem"></p>
+        </div>
+
+        <div class="chips" role="group" aria-label="Filtros rápidos" data-nota="4">
+          <button type="button" class="chip" data-f="cidade" aria-pressed="false"><svg class="i" data-i="pin"></svg>Na minha cidade</button>
+          <button type="button" class="chip" data-f="hoje" aria-pressed="false"><svg class="i" data-i="relogio"></svg>Hoje</button>
+          <button type="button" class="chip" data-f="barato" aria-pressed="false">Até R$ 100</button>
+          <button type="button" class="chip" data-f="loja" aria-pressed="false"><svg class="i" data-i="loja"></svg>Só lojas</button>
+          <label class="ordem"><span>Ordenar</span>
+            <select id="ordem" aria-label="Ordenar anúncios"><option value="rec">Mais recentes</option><option value="preco">Menor preço</option></select>
+          </label>
+        </div>
+
+        <section class="sec patro-faixa" aria-labelledby="h-dest" data-nota="5" id="s-dest">
+          <div class="sec-cab"><h2 id="h-dest">Destaques da região</h2><a href="#">Ver todos</a></div>
+          <div class="trilho" id="t-dest"></div>
+        </section>
+
+        <section class="sec" aria-labelledby="h-vistos" data-nota="6" id="s-vistos">
+          <div class="sec-cab"><h2 id="h-vistos">Você viu há pouco</h2><button type="button" id="limpar-vistos">Limpar</button></div>
+          <div class="trilho vistos" id="t-vistos"></div>
+        </section>
+
+        <div class="caixa radar radar-cel">
+          <h3>Não achou o que queria?</h3>
+          <p>Diga o que procura. As lojas da região respondem com oferta.</p>
+          <button type="button" class="btn pri" style="width:100%" data-acao="radar"><svg class="i" data-i="radar"></svg>Pedir no Radar</button>
+        </div>
+
+        <section class="sec" aria-labelledby="h-rec" data-nota="7">
+          <div class="sec-cab"><h2 id="h-rec">Mais recentes</h2></div>
+          <div class="grade" id="g-rec"></div>
+          <button type="button" class="btn mais" id="ver-mais">Ver mais anúncios</button>
+        </section>
+      </main>
+
+      <aside class="lado dir" data-nota="8">
+        <div class="caixa anunciar">
+          <h3>Tem algo parado em casa?</h3>
+          <p>Anuncie grátis em 2 minutos. Quem é da região vê e chama no WhatsApp.</p>
+          <button type="button" class="btn pri" data-acao="anunciar"><svg class="i" data-i="mais"></svg>Anunciar grátis</button>
+        </div>
+        <div class="caixa radar">
+          <h3>Não achou o que queria?</h3>
+          <p>Peça no Radar. As lojas da região respondem com oferta.</p>
+          <div class="ex">
+            <span>“Pneu aro 15 usado” · <b>3 lojas responderam</b></span>
+            <span>“Diarista às sextas” · <b>2 respostas</b></span>
+          </div>
+          <button type="button" class="btn" style="width:100%" data-acao="radar"><svg class="i" data-i="radar"></svg>Pedir no Radar</button>
+        </div>
+        <div class="caixa">
+          <h2>Lojas em destaque</h2>
+          <div id="l-lojas"></div>
+          <a class="btn txt" href="#" style="width:100%">Ver todas as lojas</a>
+        </div>
+      </aside>
+    </div>
+
+    <nav class="barra" aria-label="Navegação">
+      <button type="button" aria-current="page"><svg class="i" data-i="casa"></svg>Início</button>
+      <button type="button" data-foco="busca"><svg class="i" data-i="busca"></svg>Buscar</button>
+      <button type="button" class="mais-b" data-acao="anunciar"><span><svg class="i" data-i="mais"></svg></span>Anunciar</button>
+      <button type="button" data-acao="radar"><svg class="i" data-i="radar"></svg>Radar</button>
+      <button type="button" id="b-conta2"><svg class="i" data-i="user"></svg>Conta</button>
+    </nav>
+    <button type="button" class="aki" aria-label="Conversar com o Aki" data-acao="aki">Aki</button>
+  </div>
+
+  <div class="legenda" id="legenda" hidden>
+    <div><b>1</b><strong>Busca sempre à vista</strong><p>Fica no topo fixo, com a cidade colada nela. No celular desce para uma linha própria, larga para o dedo.</p></div>
+    <div><b>2</b><strong>Categorias + atalhos</strong><p>Coluna da esquerda parada ao rolar. Os números mostram quantos anúncios há em cada categoria.</p></div>
+    <div><b>3</b><strong>Título curto</strong><p>Sai a abertura grande. O comprador vê anúncios logo no primeiro olhar.</p></div>
+    <div><b>4</b><strong>Filtros rápidos</strong><p>Um toque muda o feed sem sair da página. "Na minha cidade" usa a cidade do anúncio, pois o anúncio não tem distância.</p></div>
+    <div><b>5</b><strong>Patrocinados no topo</strong><p>Faixa com fundo de cor própria e selo "Patrocinado". É o espaço que se vende para lojas.</p></div>
+    <div><b>6</b><strong>Vistos recentemente</strong><p>Guardado no aparelho, sem login. Ajuda quem volta para comprar o que já olhou.</p></div>
+    <div><b>7</b><strong>Feed em grade</strong><p>4 por linha no computador, 2 no celular. Coração em cada card; sem conta, pede para entrar.</p></div>
+    <div><b>8</b><strong>Coluna de venda</strong><p>Chama para anunciar, mostra o Radar com respostas reais e as lojas. Some em telas médias e no celular.</p></div>
+  </div>
+</div>
+
+<div class="veu" id="veu" hidden>
+  <div class="folha" role="dialog" aria-modal="true" aria-labelledby="f-tit" id="folha"></div>
+</div>
+<div class="aviso" id="aviso" role="status" hidden></div>
+
+<script>
+const ICONES={
+ busca:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+ pin:'<path d="M20 10c0 5-8 12-8 12s-8-7-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+ mais:'<path d="M12 5v14M5 12h14"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+ coracao:'<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/>',
+ olho:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ tag:'<path d="M12 2H2v10l9.3 9.3a1 1 0 0 0 1.4 0l8.6-8.6a1 1 0 0 0 0-1.4z"/><circle cx="7" cy="7" r="1.5"/>',
+ relogio:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ loja:'<path d="M3 9l2-5h14l2 5"/><path d="M4 9v11h16V9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M10 20v-5h4v5"/>',
+ radar:'<path d="M19.1 4.9A10 10 0 1 0 22 12"/><path d="M16.2 7.8A6 6 0 1 0 18 12"/><circle cx="12" cy="12" r="2"/><path d="m13.4 10.6 6-6"/>',
+ casa:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+ escudo:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
+ carro:'<path d="M5 17H3v-5l2-5h14l2 5v5h-2"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5M3 12h18"/>',
+ trator:'<circle cx="7" cy="16" r="4"/><circle cx="18" cy="18" r="2"/><path d="M11 16h5M4 12V5h7l2 7h6v4"/><path d="M8 5v7"/>',
+ imovel:'<path d="M3 21h18M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/>',
+ sofa:'<path d="M4 11V8a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v3"/><path d="M2 13a2 2 0 0 1 4 0v2h12v-2a2 2 0 0 1 4 0v5H2z"/><path d="M5 18v2M19 18v2"/>',
+ celular:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+ camisa:'<path d="M8 3 3 6l2 5 2-1v11h10V10l2 1 2-5-5-3a4 4 0 0 1-8 0z"/>',
+ servico:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/>',
+ maleta:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+ caixa:'<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+ grade:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+ zap:'<path d="M3 21l1.7-5A9 9 0 1 1 8 19.3z"/>'
+};
+const ic=(n,s='')=>`<svg class="i" ${s} viewBox="0 0 24 24" aria-hidden="true">${ICONES[n]||''}</svg>`;
+function pintarIcones(raiz=document){raiz.querySelectorAll('svg[data-i]').forEach(s=>{s.setAttribute('viewBox','0 0 24 24');s.setAttribute('aria-hidden','true');s.innerHTML=ICONES[s.dataset.i]||'';s.classList.add('i')})}
+
+const CATS=[
+ {s:'veiculos',n:'Veículos',i:'carro',h:12},{s:'agro',n:'Agro',i:'trator',h:95},{s:'imoveis',n:'Imóveis',i:'imovel',h:200},
+ {s:'casa',n:'Casa e móveis',i:'sofa',h:28},{s:'eletronicos',n:'Eletrônicos',i:'celular',h:250},{s:'moda',n:'Moda e beleza',i:'camisa',h:330},
+ {s:'servicos',n:'Serviços',i:'servico',h:170},{s:'empregos',n:'Empregos',i:'maleta',h:45},{s:'outros',n:'Outros',i:'caixa',h:290}];
+const MINHA='Formosa do Rio Preto';
+const A=[
+ {id:1,t:'Hilux SRV 2015 4x4 diesel, revisada',p:15900000,c:'veiculos',cid:'Barreiras',d:1,loja:'Auto Center Oeste',v:true,pat:true},
+ {id:2,t:'Lote de 10 bezerros nelore desmamados',p:2800000,c:'agro',cid:MINHA,d:0,pat:true},
+ {id:3,t:'Casa 3 quartos com garagem no Centro',p:28000000,c:'imoveis',cid:MINHA,d:3,loja:'Imobiliária Rio Preto',v:true,pat:true},
+ {id:4,t:'Geladeira Consul 340 L frost free',p:180000,c:'casa',cid:'Santa Rita de Cássia',d:2,loja:'Casa & Lar Magazine',v:true,pat:true},
+ {id:5,t:'iPhone 12 128 GB, bateria 86%',p:220000,c:'eletronicos',cid:MINHA,d:0},
+ {id:6,t:'Botina de couro nº 40, nunca usada',p:9000,c:'moda',cid:MINHA,d:0},
+ {id:7,t:'Diarista: limpeza completa, com referência',p:12000,c:'servicos',cid:MINHA,d:1},
+ {id:8,t:'Vaga: auxiliar de loja, segunda a sábado',p:0,c:'empregos',cid:'Barreiras',d:0,loja:'Casa & Lar Magazine',v:true},
+ {id:9,t:'Honda CG 160 Fan 2021, 18 mil km',p:1550000,c:'veiculos',cid:'Riachão das Neves',d:4},
+ {id:10,t:'Sofá retrátil 3 lugares cinza',p:95000,c:'casa',cid:MINHA,d:2},
+ {id:11,t:'Terreno 12x30 no Bairro Novo',p:6500000,c:'imoveis',cid:'Barreiras',d:6},
+ {id:12,t:'Bicicleta aro 29, 21 marchas',p:85000,c:'outros',cid:MINHA,d:1},
+ {id:13,t:'Par de pneus aro 15 meia-vida',p:30000,c:'veiculos',cid:MINHA,d:0,loja:'Borracharia do Zé',v:false},
+ {id:14,t:'Kit maquiagem com 12 batons',p:6500,c:'moda',cid:'Santa Rita de Cássia',d:0},
+ {id:15,t:'Saco de milho 60 kg',p:8900,c:'agro',cid:MINHA,d:1,loja:'Agro Formosa',v:true},
+ {id:16,t:'Smart TV 43" Full HD com controle',p:110000,c:'eletronicos',cid:'Barreiras',d:5},
+ {id:17,t:'Fretes e mudanças na região',p:15000,c:'servicos',cid:'Riachão das Neves',d:2},
+ {id:18,t:'Mesa de jantar 6 cadeiras madeira',p:120000,c:'casa',cid:MINHA,d:3,loja:'Casa & Lar Magazine',v:true},
+ {id:19,t:'Caixa de som JBL Flip 5',p:45000,c:'eletronicos',cid:MINHA,d:0},
+ {id:20,t:'Roçadeira a gasolina Stihl FS 55',p:99000,c:'agro',cid:'Barreiras',d:2,loja:'Agro Formosa',v:true}
+];
+const LOJAS=[{n:'Casa & Lar Magazine',c:'Barreiras',h:28,q:42},{n:'Agro Formosa',c:MINHA,h:95,q:31},{n:'Auto Center Oeste',c:'Barreiras',h:12,q:18},{n:'Imobiliária Rio Preto',c:MINHA,h:200,q:24}];
+const cat=s=>CATS.find(c=>c.s===s);
+const reais=c=>c===0?'A combinar':(c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:c%100?2:0});
+const quando=d=>d===0?'hoje':d===1?'ontem':`há ${d} dias`;
+
+const est={f:{cidade:false,hoje:false,barato:false,loja:false},cat:null,q:'',ordem:'rec',logado:false,fav:new Set(),vistos:[6,10],limite:12,pendFav:null};
+try{const g=JSON.parse(localStorage.getItem('mr-vistos')||'null');if(Array.isArray(g))est.vistos=g}catch(e){}
+const salvarVistos=()=>{try{localStorage.setItem('mr-vistos',JSON.stringify(est.vistos))}catch(e){}};
+
+function foto(a){const k=cat(a.c);return `<div class="foto" style="background:linear-gradient(135deg,hsl(${k.h} 45% 52%),hsl(${(k.h+30)%360} 50% 36%))">${ic(k.i)}${a.pat?'<span class="selo-p">Patrocinado</span>':''}</div>`}
+function card(a,mini=false){
+  const fav=est.fav.has(a.id);
+  return `<article class="card${mini?' mini':''}">
+   <button type="button" class="abrir" data-abrir="${a.id}" aria-label="Abrir ${a.t}">
+    ${foto(a)}
+    <div class="corpo"><span class="preco">${reais(a.p)}</span><span class="tit">${a.t}</span>
+     <span class="meta">${a.cid} · ${quando(a.d)}</span>
+     ${a.loja?`<span class="loja">${a.v?ic('escudo'):''}${a.loja}${a.v?' · verificada':''}</span>`:''}
+    </div></button>
+   ${mini?'':`<button type="button" class="coracao" data-fav="${a.id}" aria-pressed="${fav}" aria-label="${fav?'Tirar dos favoritos':'Salvar nos favoritos'}">${ic('coracao')}</button>`}
+  </article>`}
+
+function filtrados(){
+  let l=A.filter(a=>{
+    if(est.cat&&a.c!==est.cat)return false;
+    if(est.f.cidade&&a.cid!==MINHA)return false;
+    if(est.f.hoje&&a.d!==0)return false;
+    if(est.f.barato&&(a.p===0||a.p>10000))return false;
+    if(est.f.loja&&!a.loja)return false;
+    if(est.q&&!a.t.toLowerCase().includes(est.q.toLowerCase()))return false;
+    return true});
+  l.sort(est.ordem==='preco'?(x,y)=>(x.p||9e12)-(y.p||9e12):(x,y)=>x.d-y.d||y.id-x.id);
+  return l}
+
+function render(){
+  const l=filtrados();
+  const filtrando=est.cat||est.q||Object.values(est.f).some(Boolean);
+  const dest=A.filter(a=>a.pat&&(!est.cat||a.c===est.cat));
+  document.getElementById('t-dest').innerHTML=dest.map(a=>card(a)).join('');
+  document.getElementById('s-dest').hidden=!dest.length;
+  const vis=est.vistos.map(id=>A.find(a=>a.id===id)).filter(Boolean);
+  document.getElementById('t-vistos').innerHTML=vis.map(a=>card(a,true)).join('');
+  document.getElementById('s-vistos').hidden=!vis.length||filtrando;
+  const g=document.getElementById('g-rec');
+  g.innerHTML=l.length?l.slice(0,est.limite).map(a=>card(a)).join(''):
+   `<div class="vazio"><strong>Nada com esses filtros</strong>Tire um filtro ou peça no Radar: as lojas da região respondem.<br><br><button type="button" class="btn pri" data-acao="radar">${ic('radar')}Pedir no Radar</button></div>`;
+  document.getElementById('ver-mais').hidden=l.length<=est.limite;
+  const c=est.cat?cat(est.cat).n:null;
+  document.getElementById('titulo-feed').textContent=est.q?`Resultados para “${est.q}”`:c?`${c} na região`:'Anúncios perto de você';
+  document.getElementById('contagem').textContent=`${l.length} anúncio${l.length===1?'':'s'} · Oeste da Bahia (exemplo)`;
+  document.getElementById('h-rec').textContent=est.ordem==='preco'?'Menor preço primeiro':'Mais recentes';
+  document.getElementById('n-fav').textContent=est.fav.size;
+  const cats=CATS.map(k=>({k,n:A.filter(a=>a.c===k.s).length}));
+  document.getElementById('l-cats').innerHTML=`<li><button type="button" data-cat="" aria-pressed="${!est.cat}">${ic('grade')}Todas<span class="n">${A.length}</span></button></li>`+
+   cats.map(({k,n})=>`<li><button type="button" data-cat="${k.s}" aria-pressed="${est.cat===k.s}">${ic(k.i)}${k.n}<span class="n">${n}</span></button></li>`).join('');
+  document.getElementById('cats-cel').innerHTML=CATS.slice(0,9).map(k=>`<button type="button" data-cat="${k.s}" aria-pressed="${est.cat===k.s}"><span>${ic(k.i)}</span>${k.n.split(' ')[0]}</button>`).join('')+`<button type="button" data-cat="" aria-pressed="${!est.cat}"><span>${ic('grade')}</span>Todas</button>`;
+  document.getElementById('l-lojas').innerHTML=LOJAS.map(s=>`<a href="#" class="loja-it" style="text-decoration:none;color:inherit"><i style="background:hsl(${s.h} 50% 34%)">${s.n[0]}</i><div><strong>${s.n}</strong><small>${ic('escudo')}${s.c} · ${s.q} anúncios</small></div></a>`).join('');
+  document.querySelectorAll('.chip[data-f]').forEach(b=>b.setAttribute('aria-pressed',est.f[b.dataset.f]));
+}
+
+let tAviso;
+function aviso(msg,acao){const el=document.getElementById('aviso');el.innerHTML=`<span>${msg}</span>${acao?`<button type="button" id="av-b">${acao.t}</button>`:''}`;el.hidden=false;
+  if(acao)document.getElementById('av-b').onclick=()=>{el.hidden=true;acao.f()};clearTimeout(tAviso);tAviso=setTimeout(()=>el.hidden=true,4500)}
+
+function abrir(id){
+  const a=A.find(x=>x.id===id);if(!a)return;
+  est.vistos=[id,...est.vistos.filter(x=>x!==id)].slice(0,10);salvarVistos();
+  const f=document.getElementById('folha');
+  f.innerHTML=`${foto(a)}<div class="det"><span class="preco">${reais(a.p)}</span><h3 id="f-tit">${a.t}</h3>
+   <span class="meta">${a.cid} · publicado ${quando(a.d)}</span>${a.loja?`<span class="loja">${a.v?ic('escudo'):''}${a.loja}</span>`:''}
+   <p style="margin:4px 0 0;font-size:.875rem;color:var(--suave)">Aqui abriria a página do anúncio, com fotos, descrição e o botão do WhatsApp.</p>
+   <div class="bts"><button type="button" class="btn zap" data-acao="zap">${ic('zap')}Chamar no WhatsApp</button><button type="button" class="btn" id="fechar">Fechar</button></div></div>`;
+  document.getElementById('veu').hidden=false;document.getElementById('fechar').focus();
+  document.getElementById('fechar').onclick=fechar;render()}
+function fechar(){document.getElementById('veu').hidden=true}
+
+function favoritar(id){
+  if(!est.logado){est.pendFav=id;aviso('Entre na conta para salvar. Depois de entrar, o anúncio já fica salvo.',{t:'Entrar',f:()=>{entrar(true)}});return}
+  est.fav.has(id)?est.fav.delete(id):est.fav.add(id);render();
+  aviso(est.fav.has(id)?'Salvo nos favoritos.':'Tirado dos favoritos.')}
+function entrar(v){est.logado=v;
+  document.getElementById('b-anon').setAttribute('aria-pressed',!v);document.getElementById('b-logado').setAttribute('aria-pressed',v);
+  document.getElementById('conta-txt').textContent=v?'Conta':'Entrar';
+  if(v&&est.pendFav){est.fav.add(est.pendFav);est.pendFav=null;render();aviso('Pronto, você entrou e o anúncio ficou salvo.')}
+  if(!v){est.fav.clear();render()}}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,a');if(!t)return;
+  if(t.matches('a[href="#"]'))e.preventDefault();
+  if(t.dataset.abrir)return abrir(+t.dataset.abrir);
+  if(t.dataset.fav)return favoritar(+t.dataset.fav);
+  if(t.dataset.cat!==undefined){est.cat=t.dataset.cat||null;est.limite=12;return render()}
+  if(t.dataset.f){est.f[t.dataset.f]=!est.f[t.dataset.f];est.limite=12;return render()}
+  const ac=t.dataset.acao;
+  if(ac==='anunciar')return aviso('Abriria o formulário "Anunciar grátis".');
+  if(ac==='radar')return aviso('Abriria o pedido no Radar.');
+  if(ac==='aki')return aviso('Abriria a conversa com o Aki.');
+  if(ac==='zap')return aviso('Abriria o WhatsApp do vendedor.');
+  if(t.dataset.atalho==='favoritos')return est.logado?aviso(`Você tem ${est.fav.size} favorito(s).`):aviso('Entre na conta para ver seus favoritos.',{t:'Entrar',f:()=>entrar(true)});
+  if(t.dataset.atalho==='vistos'){document.getElementById('s-vistos').scrollIntoView({behavior:'smooth',block:'center'});return}
+  if(t.dataset.atalho==='meus')return aviso('Abriria a lista dos seus anúncios.');
+  if(t.dataset.atalho==='cidade'||t.id==='b-cidade')return aviso('Abriria a escolha de cidade.');
+  if(t.dataset.foco==='busca')return document.getElementById('q').focus();
+  if(t.id==='b-conta'||t.id==='b-conta2')return est.logado?aviso('Abriria sua conta.'):entrar(true);
+});
+document.getElementById('limpar-vistos').onclick=()=>{est.vistos=[];salvarVistos();render()};
+document.getElementById('ver-mais').onclick=()=>{est.limite+=12;render()};
+document.getElementById('ordem').onchange=e=>{est.ordem=e.target.value;render()};
+document.getElementById('q').oninput=e=>{est.q=e.target.value.trim();render()};
+document.getElementById('f-busca').onsubmit=e=>e.preventDefault();
+document.getElementById('veu').onclick=e=>{if(e.target.id==='veu')fechar()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')fechar()});
+const tela=document.getElementById('tela');
+function modo(cel){tela.classList.toggle('cel',cel);document.getElementById('b-pc').setAttribute('aria-pressed',!cel);document.getElementById('b-cel').setAttribute('aria-pressed',cel)}
+document.getElementById('b-pc').onclick=()=>modo(false);
+document.getElementById('b-cel').onclick=()=>modo(true);
+document.getElementById('b-anon').onclick=()=>entrar(false);
+document.getElementById('b-logado').onclick=()=>entrar(true);
+document.getElementById('b-notas').onclick=e=>{const on=!document.body.classList.contains('notas');document.body.classList.toggle('notas',on);e.currentTarget.setAttribute('aria-pressed',on);document.getElementById('legenda').hidden=!on};
+pintarIcones();render();
+</script>

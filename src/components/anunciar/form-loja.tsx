@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle2, ChevronDown, Loader2, MessageCircle, Plus, Store, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
+import { CadastroLojaAki } from "@/components/aki/cadastro-loja-aki";
 import { Campo } from "@/components/ui/campo";
 import { criarLoja, verificarSlug, type EstadoLoja } from "@/app/(conta)/quero-vender/actions";
 import { linkLoja, slugDoTitulo, urlAbsoluta } from "@/lib/formato";
@@ -64,6 +65,8 @@ export function FormLoja({
   const [situacao, setSituacao] = useState<Situacao>("vazio");
   const [fone, setFone] = useState(mascaraFone(whatsappInicial));
   const [cidade, setCidade] = useState(cidadeInicial);
+  const [categoria, setCategoria] = useState("");
+  const [sobre, setSobre] = useState("");
   const rodada = useRef(0);
 
   // Confere o endereço 0,4 s depois que a pessoa para de digitar.
@@ -94,7 +97,7 @@ export function FormLoja({
   if (feito) {
     const url = urlAbsoluta(linkLoja(feito.slug));
     const enderecoCurto = url.replace(/^https?:\/\//, "");
-    const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Conheça minha loja no OLAKI: *${feito.nome}* ${url}`)}`;
+    const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Conheça minha loja no Mercado da Região: *${feito.nome}* ${url}`)}`;
     return (
       <section aria-labelledby="titulo-pronta" className="flex flex-col items-center gap-4 text-center" aria-live="polite">
         <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
@@ -113,6 +116,9 @@ export function FormLoja({
         <div className="flex w-full max-w-sm flex-col gap-3">
           <Botao href="/anunciar" larguraTotal icone={<Plus />}>
             Criar primeiro anúncio
+          </Botao>
+          <Botao href="/minha-conta/loja/banner" variante="secundario" larguraTotal>
+            Criar banner com o Aki
           </Botao>
           <Botao href={compartilhar} variante="whatsapp" larguraTotal icone={<MessageCircle />} target="_blank" rel="noopener noreferrer">
             Compartilhar no WhatsApp
@@ -154,6 +160,20 @@ export function FormLoja({
         placeholder="Ex.: João Moto Peças"
         erro={erroDe("nome_loja")}
       />
+
+      <CadastroLojaAki nome={nome} aplicar={(dados) => {
+        setCategoria(dados.categoria);
+        setSobre(dados.descricao);
+      }} />
+      <Campo rotulo="Categoria da loja" name="categoria_loja" maxLength={80}
+        value={categoria} onChange={(e) => setCategoria(e.target.value)} erro={erroDe("categoria_loja")} />
+      <label className="flex flex-col gap-1.5 font-semibold">
+        Descrição da loja
+        <textarea name="sobre" rows={4} maxLength={1500} value={sobre} onChange={(e) => setSobre(e.target.value)}
+          aria-invalid={!!erroDe("sobre")} aria-describedby={erroDe("sobre") ? "loja-sobre-erro" : undefined}
+          className="rounded-campo border-2 border-borda bg-cartao p-3 font-normal focus-visible:border-laranja-escuro focus-visible:outline-none" />
+        {erroDe("sobre") && <span id="loja-sobre-erro" role="alert" className="text-sm text-perigo">{erroDe("sobre")}</span>}
+      </label>
 
       <div className="flex flex-col gap-1.5">
         <Campo

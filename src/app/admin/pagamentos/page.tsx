@@ -224,7 +224,7 @@ export default async function PagamentosPage({ searchParams }: { searchParams: P
 function reenviarNoWhatsApp(numero: string | null, link: string, oQue: string): string | null {
   const digitos = (numero ?? "").replace(/\D/g, "");
   if (digitos.length < 12) return null;
-  const texto = `Olá! Aqui é a equipe OLAKI. Segue o link para pagar (${oQue.trim()}): ${link}`;
+  const texto = `Olá! Aqui é a equipe Mercado da Região. Segue o link para pagar (${oQue.trim()}): ${link}`;
   return `https://wa.me/${digitos}?text=${encodeURIComponent(texto)}`;
 }
 

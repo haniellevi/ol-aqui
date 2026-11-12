@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup do OLAKI na VPS a cada 6 horas
+
+[Timer]
+OnCalendar=*-*-* 00,06,12,18:00:00 America/Sao_Paulo
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

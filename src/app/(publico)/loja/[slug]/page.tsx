@@ -10,7 +10,7 @@ import { Chip } from "@/components/ui/chip";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
 import { BannerLoja } from "@/components/vitrine/banner-loja";
 import { CopiarLinkLoja } from "@/components/vitrine/copiar-link-loja";
-import { InformacoesLoja } from "@/components/vitrine/informacoes-loja";
+import { InformacoesLoja, prepararInformacoesLoja } from "@/components/vitrine/informacoes-loja";
 import { SeloLoja } from "@/components/vitrine/selos";
 import { desde } from "@/components/vitrine/util";
 import { situacaoAgora } from "@/components/vitrine/regras";
@@ -27,7 +27,6 @@ import type { AnuncioVitrine, OrdemVitrine, VitrinePublica } from "@/lib/tipos-v
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ ordem?: string | string[]; pagina?: string | string[] }> };
 export const dynamic = "force-dynamic";
-const grade = "lg:grid-cols-3! xl:grid-cols-3!";
 
 function lerOrdem(v: string | string[] | undefined): OrdemVitrine {
   return (Array.isArray(v) ? v[0] : v) === "menor_preco" ? "menor_preco" : "recentes";
@@ -55,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (v.status !== "ativa") return { title: "Prévia da vitrine", robots: { index: false, follow: false } };
   const descricao =
     (v.sobre ?? "").replace(/\s+/g, " ").trim().slice(0, 155) ||
-    `Conheça ${v.nome} em ${v.cidade} e veja os anúncios da loja no OLAKI.`;
+    `Conheça ${v.nome} em ${v.cidade} e veja os anúncios da loja no Mercado da Região.`;
   // Foto da fachada: 1500x500 (cortar-banner.ts). Banner modelo: imagem gerada 1200x630, com a cor
   // no endereço para a mudança de cor chegar logo no WhatsApp/Facebook (a imagem fica em cache).
   const foto = v.banner_tipo === "foto" && v.banner_url ? v.banner_url : null;
@@ -71,9 +70,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: v.nome,
       description: descricao,
       url: linkLoja(v.slug),
-      siteName: "OLAKI",
+      siteName: "Mercado da Região",
       locale: "pt_BR",
-      images: [{ url: imagem, ...tamanho, alt: `Vitrine de ${v.nome} no OLAKI` }],
+      images: [{ url: imagem, ...tamanho, alt: `Vitrine de ${v.nome} no Mercado da Região` }],
     },
     twitter: { card: "summary_large_image", title: v.nome, description: descricao, images: [imagem] },
   };
@@ -123,7 +122,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const situacao = situacaoAgora(v.horarios, agora);
   const numero = (v.whatsapp ?? "").replace(/\D/g, "");
   const whatsapp = v.status === "ativa" && /^55[1-9][0-9]9?[0-9]{8}$/.test(numero)
-    ? `https://wa.me/${numero}?text=${encodeURIComponent(`Olá! Vi sua loja no OLAKI: ${urlAbsoluta(linkLoja(v.slug))}`)}`
+    ? `https://wa.me/${numero}?text=${encodeURIComponent(`Olá! Vi sua loja no Mercado da Região: ${urlAbsoluta(linkLoja(v.slug))}`)}`
     : null;
 
   const porId = new Map(todos.map((a) => [a.id, a]));
@@ -141,69 +140,72 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const temMais = inicio + anuncios.length < v.total_anuncios;
   const desdeTexto = desde(v.criado_em);
   const base = linkLoja(v.slug);
+  const informacoes = prepararInformacoesLoja(v.status === "ativa" ? v : { ...v, instagram: null, endereco: null, lat: null, lng: null });
+  const grade = informacoes ? "lg:grid-cols-3! xl:grid-cols-3!" : "xl:grid-cols-4!";
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 pb-8 md:px-4 md:py-4">
       {v.status !== "ativa" && (
         <p role="status" className="mx-4 mt-3 rounded-card bg-aviso-fundo p-4 text-base font-semibold text-aviso md:mx-0 md:mt-0">
-          Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : "plano vencido"}). Visível apenas para o responsável e a equipe OL-AKI.
+          Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : "plano vencido"}). Visível apenas para o responsável e a equipe Mercado da Região.
         </p>
       )}
 
       {/* Topo */}
       <header className="overflow-hidden bg-cartao shadow-1 md:rounded-card">
-        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={v.nome} logo={v.logo_url} prioridade className="max-h-72" />
-        <div className="flex flex-col gap-3 px-4 pb-4">
-          <div className="-mt-10 flex items-end gap-3">
-            <span className="rounded-full border-4 border-cartao bg-cartao">
-              <AvatarVitrine nome={v.nome} logo={v.logo_url} tamanho="xl" />
+        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={v.nome} logo={v.logo_url} posicaoAki={v.banner_aki_posicao} prioridade className={v.banner_aki_posicao == null ? "max-h-72" : undefined} />
+        <div className="flex flex-col gap-3 p-4">
+          <div className="flex items-start gap-3">
+            <span className="shrink-0 [&>img]:object-contain">
+              <AvatarVitrine nome={v.nome} logo={v.logo_url} tamanho="lg" />
             </span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[13px] text-texto-suave">Loja</span>
-            <h1 className="break-words text-balance text-[22px] font-semibold leading-7">{v.nome}</h1>
-            {v.selo && (
-              <span>
-                <SeloLoja />
-              </span>
-            )}
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-texto-suave">
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="size-4" aria-hidden />
-                {[v.bairro, v.cidade].filter(Boolean).join(", ")}
-              </span>
-              {desdeTexto && <span>{desdeTexto}</span>}
-            </p>
-            {situacao && (
-              <p className={`inline-flex items-center gap-1 text-[15px] font-semibold ${situacao.aberto ? "text-verde-escuro" : "text-perigo"}`} suppressHydrationWarning>
-                <Clock className="size-4" aria-hidden />
-                {situacao.texto}
+            <div className="flex min-w-0 flex-col gap-1">
+              <span className="text-[13px] text-texto-suave">{v.categoria_loja ?? "Loja"}</span>
+              <h1 className="break-words text-balance text-[22px] font-semibold leading-7">{v.nome}</h1>
+              {v.selo && (
+                <span>
+                  <SeloLoja />
+                </span>
+              )}
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-texto-suave">
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="size-4" aria-hidden />
+                  {[v.bairro, v.cidade].filter(Boolean).join(", ")}
+                </span>
+                {desdeTexto && <span>{desdeTexto}</span>}
               </p>
-            )}
+              {situacao && (
+                <p className={`inline-flex items-center gap-1 text-[15px] font-semibold ${situacao.aberto ? "text-verde-escuro" : "text-perigo"}`} suppressHydrationWarning>
+                  <Clock className="size-4" aria-hidden />
+                  {situacao.texto}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-            {whatsapp && (
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", true, "sm:w-auto")}>
-                <MessageCircle className="size-5" aria-hidden />
-                Chamar no WhatsApp
-              </a>
-            )}
-            {!whatsapp && <p className="flex min-h-12 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
-            {v.status === "ativa" && <CopiarLinkLoja url={urlAbsoluta(linkLoja(v.slug))} />}
-            {v.e_dono && (
-              <Botao href={LINK_MINHA_LOJA} variante="secundario" icone={<Pencil />} larguraTotal className="sm:w-auto">
-                Editar minha vitrine
-              </Botao>
-            )}
-          </div>
+          {(v.status === "ativa" || v.e_dono) && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+              {whatsapp && (
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", true, "sm:w-auto")}>
+                  <MessageCircle className="size-5" aria-hidden />
+                  Chamar no WhatsApp
+                </a>
+              )}
+              {v.status === "ativa" && <CopiarLinkLoja url={urlAbsoluta(linkLoja(v.slug))} />}
+              {v.e_dono && (
+                <Botao href={LINK_MINHA_LOJA} variante="secundario" icone={<Pencil />} larguraTotal className="sm:w-auto">
+                  Editar minha vitrine
+                </Botao>
+              )}
+            </div>
+          )}
           <nav aria-label="Nesta loja" className="flex flex-wrap gap-2">
             <Chip href="#produtos-loja">Ver anúncios ({inteiro(v.total_anuncios)})</Chip>
-            <Chip href="#informacoes-loja">Informações da loja</Chip>
+            {informacoes && <Chip href="#informacoes-loja">Informações da loja</Chip>}
           </nav>
         </div>
       </header>
 
-      <div className="flex flex-col gap-6 px-4 md:px-0 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start">
+      <div className={`flex flex-col gap-6 px-4 md:px-0 ${informacoes ? "lg:grid lg:grid-cols-[1fr_20rem] lg:items-start" : ""}`}>
         <div id="produtos-loja" className="flex min-w-0 scroll-mt-24 flex-col gap-6">
           <h2 className="text-xl font-semibold tabular-nums">{inteiro(v.total_anuncios)} {v.total_anuncios === 1 ? "anúncio" : "anúncios"} {v.status === "ativa" ? "no ar" : "nesta vitrine"}</h2>
           {/* Ordem */}
@@ -244,7 +246,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                   <h2 id="destaques-loja" className="text-lg font-semibold">
                     Destaques da loja
                   </h2>
-                  <GradeAnuncios className={grade} anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} />
+                  <GradeAnuncios vitrine className={grade} anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} />
                 </section>
               )}
               {secoes.map((s) => (
@@ -252,15 +254,15 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                   <h2 id={`secao-${s.id}`} className="text-lg font-semibold">
                     {s.nome}
                   </h2>
-                  <GradeAnuncios className={grade} anuncios={s.itens.map((a) => paraCard(a, v))} />
+                  <GradeAnuncios vitrine className={grade} anuncios={s.itens.map((a) => paraCard(a, v))} />
                 </section>
               ))}
-              {ordem === "menor_preco" ? <section aria-labelledby="ordem-preco" className="flex flex-col gap-3"><h2 id="ordem-preco" className="text-lg font-semibold">Do menor para o maior preço</h2><GradeAnuncios className={grade} anuncios={anuncios.map((a) => paraCard(a, v))} /></section> : grupos.map((g, i) => (
+              {ordem === "menor_preco" ? <section aria-labelledby="ordem-preco" className="flex flex-col gap-3"><h2 id="ordem-preco" className="text-lg font-semibold">Do menor para o maior preço</h2><GradeAnuncios vitrine className={grade} anuncios={anuncios.map((a) => paraCard(a, v))} /></section> : grupos.map((g, i) => (
                 <section key={g.nome} aria-labelledby={`grupo-${i}`} className="flex flex-col gap-3">
                   <h2 id={`grupo-${i}`} className="text-lg font-semibold">
                     {g.nome} <span className="text-base font-normal text-texto-suave">({inteiro(g.itens.length)})</span>
                   </h2>
-                  <GradeAnuncios className={grade} anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} />
+                  <GradeAnuncios vitrine className={grade} anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} />
                 </section>
               ))}
               {(temMais || pagina > 1) && (
@@ -286,10 +288,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           )}
         </div>
 
-        <aside id="informacoes-loja" className="flex min-w-0 scroll-mt-24 flex-col gap-4">
-          <InformacoesLoja v={v.status === "ativa" ? v : { ...v, instagram: null, endereco: null, lat: null, lng: null }} agora={agora} />
-          <p className="rounded-card border border-borda p-4 text-sm text-texto-suave">Negocie com cuidado: confira o produto e o vendedor antes de pagar. O contato acontece diretamente com a loja.</p>
-        </aside>
+        {informacoes && <InformacoesLoja dados={informacoes} agora={agora} />}
       </div>
     </main>
   );

@@ -240,7 +240,7 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
           <>
             <h2 className="text-xl font-semibold">Recebemos seu pagamento, mas o destaque não pôde ser ligado</h2>
             <p className="max-w-sm text-base text-texto-suave">
-              A equipe OLAKI vai devolver o seu dinheiro. Se tiver dúvida, fale com a gente.
+              A equipe Mercado da Região vai devolver o seu dinheiro. Se tiver dúvida, fale com a gente.
             </p>
             <Botao href={voltar.href} larguraTotal className="max-w-sm">
               {voltar.texto}
@@ -389,7 +389,7 @@ export function EscolherDestaque({ opcoes, anuncioId, pagamentoLigado, precisaDo
                     setErroDoc(null);
                   }}
                   erro={erroDoc}
-                  dica="O banco pede para gerar o pagamento. O OLAKI não guarda esse número."
+                  dica="O banco pede para gerar o pagamento. O Mercado da Região não guarda esse número."
                 />
               )}
               <Botao

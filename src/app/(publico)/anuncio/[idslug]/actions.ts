@@ -81,7 +81,7 @@ export async function denunciarAnuncio(_anterior: EstadoDenuncia, form: FormData
       .insert({ alvo_tipo: "anuncio", alvo_id: anuncioId, denunciante_id: userId, motivo: m.motivo, detalhes });
     if (error?.code === "23505") return { ok: true, mensagem: "Você já denunciou este anúncio. Obrigado, vamos olhar." };
     if (error) return { ok: false, mensagem: traduzirErro(error).mensagem };
-    return { ok: true, mensagem: "Denúncia enviada. Obrigado! A equipe do OLAKI vai olhar." };
+    return { ok: true, mensagem: "Denúncia enviada. Obrigado! A equipe do Mercado da Região vai olhar." };
   } catch {
     return { ok: false, mensagem: traduzirErro(null).mensagem };
   }

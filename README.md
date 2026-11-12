@@ -1,8 +1,10 @@
-# OLAKI · olha aqui o que você procura
+# Mercado da Região · olha aqui o que você procura
 
 Shopping digital e classificados regionais, com o Radar de Negócios: o comprador descreve uma necessidade e as lojas enviam propostas.
 
-O endereço publicado observado na análise foi `ol-aqui.vercel.app`. O domínio definitivo do piloto ainda precisa ser confirmado; `olaki.com.br` e seu eventual redirecionamento não devem ser tratados como configurados apenas porque aparecem em documentos anteriores.
+A marca definida é **Mercado da Região** e o endereço público configurado no código é `https://mercadodaregiao.com.br`. A configuração de domínio, DNS, login e publicação deve ser conferida no ambiente antes da liberação.
+
+A gestão de usuários fica em `/admin/usuarios`. Em `/admin/lojas`, o botão **Gerenciar loja** abre o cadastro completo e a exclusão. Consulte [gestão e publicação](docs/GESTAO-USUARIOS-LOJAS.md) para escopo, migrações e validação.
 
 O ponto de entrada para a abertura acompanhada é [Liberação do piloto](docs/preparacao-piloto/liberacao.md). O documento distingue verificações locais, inspeção do ambiente publicado e ensaios com contas autorizadas. Os arquivos `QA-*` e `VALIDACAO-*` são registros históricos das respectivas versões.
 

@@ -17,7 +17,7 @@ import { ListaAjuda } from "./lista-ajuda";
 
 export const metadata: Metadata = {
   title: "Ajuda e dicas de segurança",
-  description: "Como não cair em golpe, como vender, como funciona o Radar, os destaques e os planos do OLAKI.",
+  description: "Como não cair em golpe, como vender, como funciona o Radar, os destaques e os planos do Mercado da Região.",
   alternates: { canonical: "/ajuda" },
 };
 
@@ -87,7 +87,7 @@ export default async function PaginaAjuda() {
 
       <ContatoSuporte contato={contato} />
 
-      <nav aria-label="Textos do OLAKI" className="flex flex-col gap-1">
+      <nav aria-label="Textos do Mercado da Região" className="flex flex-col gap-1">
         <Link href={LINK_TERMOS} className="inline-flex min-h-12 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4">
           <FileText className="size-5" aria-hidden /> Termos de uso
         </Link>

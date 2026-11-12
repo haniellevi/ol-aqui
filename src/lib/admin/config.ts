@@ -1,3 +1,5 @@
+import { MODELOS_LOJISTA } from "@/lib/aki/lojista";
+
 // Converte valores das configurações entre o banco (jsonb) e os campos do painel.
 export type TipoValor = "numero" | "texto" | "lista" | "mapa" | "json" | "simnao";
 
@@ -73,6 +75,7 @@ export const NOMES_GRUPO: Record<string, string> = {
   moderacao: "Moderação",
   cobranca: "Cobrança",
   robo: "Robô Aki",
+  aki_lojistas: "Aki para lojistas",
   geral: "Geral",
 };
 
@@ -83,6 +86,7 @@ export type Opcao = { valor: string; nome: string };
 
 /** Configurações de texto que só aceitam valores fixos: aparecem como lista de escolha. */
 export const OPCOES_FIXAS: Record<string, Opcao[]> = {
+  ...MODELOS_LOJISTA,
   "asaas.ambiente": [
     { valor: "sandbox", nome: "Teste (sandbox): não cobra de verdade" },
     { valor: "producao", nome: "Produção: cobra de verdade" },
@@ -108,3 +112,19 @@ function PROVEDORES(): Opcao[] {
 export const CHAVES_DE_PLANO = new Set(["pf.plano_apos_teste", "pf.plano_inicial", "loja.plano_teste"]);
 /** Configurações que guardam um modelo do catálogo do robô. */
 export const CHAVES_DE_MODELO = new Set(["robo.modelo_conversa", "robo.modelo_foto"]);
+
+const LIMITES_AKI_LOJISTA: Record<string, number> = {
+  "robo.lojista_creditos_gratis": 1000,
+  "robo.lojista_creditos_slim": 1000,
+  "robo.lojista_creditos_full": 1000,
+  "robo.lojista_tentativas_dia": 1000,
+  "robo.max_geracoes_imagem_mes": 100000,
+};
+
+export function maximoAkiLojista(chave: string): number | undefined {
+  return Object.hasOwn(LIMITES_AKI_LOJISTA, chave) ? LIMITES_AKI_LOJISTA[chave] : undefined;
+}
+
+export function akiLojistaGlobal(chave: string): boolean {
+  return maximoAkiLojista(chave) !== undefined || Object.hasOwn(MODELOS_LOJISTA, chave);
+}

@@ -5,6 +5,7 @@ import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { Aviso } from "@/components/conta/aviso";
+import { EditorBannerAki } from "@/components/vitrine/editor-banner-aki";
 import { FormBanner } from "@/components/vitrine/form-banner";
 import { textoDisponivelEm } from "@/components/vitrine/regras";
 
@@ -37,12 +38,16 @@ export default async function PaginaBannerLoja() {
       />
       {recursos.banner_moderado_motivo && (
         <Aviso tipo="atencao">
-          <span>A equipe do OLAKI tirou a foto do seu banner.</span>
+          <span>A equipe do Mercado da Região tirou a foto do seu banner.</span>
           <span className="font-normal">Motivo: {recursos.banner_moderado_motivo}</span>
         </Aviso>
       )}
+      <EditorBannerAki lojaId={v.id} nome={v.nome} logo={v.logo_url} corInicial={v.banner_cor}
+        atual={v.banner_aki_posicao != null && v.banner_url ? { url: v.banner_url, posicao: v.banner_aki_posicao } : null} />
       <FormBanner
-        inicial={{ tipo: v.banner_tipo, url: v.banner_url, modelo: v.banner_modelo, cor: v.banner_cor }}
+        key={v.banner_url ?? "modelo"}
+        inicial={{ tipo: v.banner_aki_posicao != null ? "modelo" : v.banner_tipo,
+          url: v.banner_aki_posicao != null ? null : v.banner_url, modelo: v.banner_modelo, cor: v.banner_cor }}
         nome={v.nome}
         logo={v.logo_url}
         cores={opcoes.cores}

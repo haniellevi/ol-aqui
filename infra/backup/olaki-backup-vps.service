@@ -1,0 +1,30 @@
+[Unit]
+Description=Backup cifrado do OLAKI na VPS e no Google Drive
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=olaki-backup
+Group=olaki-backup
+UMask=0077
+StateDirectory=olaki-backup
+StateDirectoryMode=0700
+RuntimeDirectory=olaki-backup
+RuntimeDirectoryMode=0700
+Environment=OLAKI_BACKUP_CONFIG=/etc/olaki-backup
+Environment=OLAKI_BACKUP_ARCHIVES=/var/lib/olaki-backup/archives
+Environment=OLAKI_BACKUP_OFFSITE=olaki-drive:
+Environment=RCLONE_CONFIG=/var/lib/olaki-backup/rclone.conf
+Environment=XDG_RUNTIME_DIR=/run/olaki-backup
+LoadCredential=postgres-password:/etc/olaki-backup/postgres-password
+ExecStart=/usr/bin/python3 /opt/olaki-backup/olaki-backup.py
+TimeoutStartSec=45min
+Restart=on-failure
+RestartSec=30min
+RestartPreventExitStatus=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX

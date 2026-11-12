@@ -16,7 +16,7 @@ import type { FormaPagamento, MeuPagamento, RespostaCobranca } from "@/lib/tipos
 export type ResultadoCobranca = Resultado<RespostaCobranca> & { pagamentoId?: string };
 
 const FORMAS: readonly FormaPagamento[] = ["pix", "cartao"];
-const EM_BREVE = "Pagamento em breve. Fale com a equipe OLAKI se precisar agora.";
+const EM_BREVE = "Pagamento em breve. Fale com a equipe Mercado da Região se precisar agora.";
 
 const falha = (mensagem: string, campo?: string) => ({ ok: false as const, erro: { mensagem, campo } });
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { exigirAdmin } from "@/lib/admin/auth";
-import { CHAVES_DE_MODELO, CHAVES_DE_PLANO, NOMES_GRUPO, OPCOES_FIXAS, tipoDe, valorParaForm, type Opcao } from "@/lib/admin/config";
+import { CHAVES_DE_MODELO, CHAVES_DE_PLANO, NOMES_GRUPO, OPCOES_FIXAS, akiLojistaGlobal, tipoDe, valorParaForm, type Opcao } from "@/lib/admin/config";
 import { quando } from "@/lib/admin/formato";
 import { Cartao, Titulo } from "@/components/admin/ui";
 import { removerExcecao } from "./actions";
@@ -60,6 +60,12 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
         ))}
       </nav>
 
+      {grupoAtual === "aki_lojistas" && (
+        <p className="mb-5 text-sm text-texto-suave">
+          As cotas são compartilhadas entre banners e fotos. As tentativas com erro entram nos limites de uso da API,
+          mas devolvem o crédito de imagem à conta. A chave OpenAI fica nas variáveis do servidor.
+        </p>
+      )}
       <div className="space-y-4">
         {globais.map((c) => {
           const tipo = tipoDe(c.valor);
@@ -88,7 +94,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
                   ))}
                 </ul>
               )}
-              {(regioes ?? []).length > 0 && (
+              {!akiLojistaGlobal(c.chave) && (regioes ?? []).length > 0 && (
                 <div className="mt-3">
                   <FormExcecao chave={c.chave} tipo={tipo} valor={c.valor} regioes={regioes ?? []} opcoes={opcoesDe(c.chave)} />
                 </div>

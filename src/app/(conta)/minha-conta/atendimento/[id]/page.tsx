@@ -23,7 +23,7 @@ export default async function ConversaConta({ params, searchParams }: {
   if (!data.anuncio_id) redirect("/aki?ajuda=whatsapp&atendimento=1");
   return <PaginaConta>
     <TopoConta titulo={data.anuncios?.titulo?.trim() || "Anúncio sem título"}
-      texto={data.aguarda_equipe ? "Aguardando resposta da equipe do OL-AKI." : "Atendimento do OL-AKI"}
+      texto={data.aguarda_equipe ? "Aguardando resposta da equipe do Mercado da Região." : "Atendimento do Mercado da Região"}
       voltar={LINK_ATENDIMENTO} textoVoltar="Atendimento" />
     <ConversaAtendimento id={id} caminho={linkAtendimento(id)} antes={antes} aki={data.aki_ativo} />
   </PaginaConta>;

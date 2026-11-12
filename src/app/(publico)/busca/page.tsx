@@ -18,7 +18,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const q = termo(await searchParams);
   return {
     title: q ? `${q}: anúncios` : "Buscar anúncios",
-    description: q ? `Anúncios de ${q} na sua região no OLAKI.` : "Busque o que você precisa na sua região.",
+    description: q ? `Anúncios de ${q} na sua região no Mercado da Região.` : "Busque o que você precisa na sua região.",
     robots: { index: false, follow: true },
   };
 }

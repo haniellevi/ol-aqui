@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Tokens do OLAKI (docs/DESIGN-SYSTEM.md, seção 6).
+/* Tokens do Mercado da Região (docs/DESIGN-SYSTEM.md, seção 6).
    Botão primário = fundo laranja + texto beringela (4,95:1). Branco sobre laranja reprova (2,87:1). */
 @theme {
   --color-beringela: #4b1248;
@@ -20,6 +20,7 @@
   --color-aviso-fundo: #fffbeb;
   --color-patrocinado-fundo: #ffe4d1;
   --color-perigo-fundo: #fef2f2; /* perigo sobre ele: 5,9:1 */
+  --color-coracao: #e11d48; /* coração de favorito salvo: 4,7:1 sobre branco */
   --color-sucesso-fundo: #ecf8f1; /* verde-escuro sobre ele: 5,0:1 */
 
   --font-sans: var(--font-poppins), system-ui, sans-serif;

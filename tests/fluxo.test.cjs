@@ -81,7 +81,7 @@ test('início sem região mantém busca e não inventa localização', async () 
   assert.match(html, /action="\/busca"/);
   const metadata = await pagina.generateMetadata();
   assert.equal(metadata.alternates.canonical, '/');
-  assert.equal(metadata.title.absolute, 'OLAKI · Compre e venda em sua região');
+  assert.equal(metadata.title.absolute, 'Mercado da Região · Compre e venda em sua região');
 });
 test('falha ao consultar anúncios não vira página inicial falsamente vazia', async () => {
   await assert.rejects(inicio({ erro: true }).default({ searchParams: Promise.resolve({}) }), /Não foi possível consultar os anúncios/);
@@ -160,7 +160,7 @@ test('compartilhamento usa o endereço do site e respeita domínio configurado',
     delete process.env.NEXT_PUBLIC_SITE_URL;
     const f=carregar('src/lib/formato.ts');
     const url=f.urlAbsoluta('/loja/loja-teste');
-    assert.equal(url,'https://ol-aqui.vercel.app/loja/loja-teste');
+    assert.equal(url,'https://mercadodaregiao.com.br/loja/loja-teste');
     assert.ok(new URL(f.linkWhatsApp('55109000000002','Teste',url)).searchParams.get('text').includes(url));
     process.env.NEXT_PUBLIC_SITE_URL='https://mercado.example/';
     assert.equal(carregar('src/lib/formato.ts').urlAbsoluta('loja/teste'),'https://mercado.example/loja/teste');
@@ -181,7 +181,7 @@ test('login e cadastro preservam destino passando pela conclusão de perfil',asy
   const pagina=carregar('src/app/entrar/[[...entrar]]/page.tsx',{
     'next/image':{},'next/link':{},'@clerk/nextjs':{SignIn:'ClerkSignIn'},
   });
-  for (const valor of ['/radar/pedir?q=Bicicleta&preco_max=1500','https://ol-aqui.vercel.app/radar/pedir?q=Bicicleta']) {
+  for (const valor of ['/radar/pedir?q=Bicicleta&preco_max=1500','https://mercadodaregiao.com.br/radar/pedir?q=Bicicleta']) {
     const tela=await pagina.default({searchParams:Promise.resolve({redirect_url:valor})});
     const login=tela.props.children.find(e=>e.type==='ClerkSignIn');
     const destino=new URL(login.props.forceRedirectUrl,'https://teste.local');

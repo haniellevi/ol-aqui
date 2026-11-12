@@ -56,10 +56,10 @@ export async function atualizarPerfilClerk(): Promise<EstadoDados> {
     if (!userId) return { erro: SEM_LOGIN };
     const usuario = await currentUser();
     if (!usuario || usuario.id !== userId) return { erro: SEM_LOGIN };
-    const sincronizacao = await sincronizarPerfil(usuario);
+    const sincronizacao = await sincronizarPerfil(usuario, true);
     atualizarTelas();
     return sincronizacao?.whatsappVinculado ? { ok: true, whatsappVinculado: true } : { ok: true };
-  } catch { return { erro: "Não conseguimos atualizar a foto e a confirmação no OL-AKI. Tente novamente." }; }
+  } catch { return { erro: "Não conseguimos atualizar a foto e a confirmação no Mercado da Região. Tente novamente." }; }
 }
 
 /** Compatibilidade com formulários antigos: nunca salva contato sem comprovar a posse. */

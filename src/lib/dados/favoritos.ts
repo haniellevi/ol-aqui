@@ -58,3 +58,14 @@ export async function ehFavorito(anuncioId: string, userId: string | null): Prom
   if (error || (data && data.anuncio_id !== anuncioId)) throw new Error("Não foi possível consultar seu favorito.");
   return !!data;
 }
+
+/** Quais destes anúncios a pessoa já salvou (para pintar o coração nos cards). Sem login = nenhum. */
+export async function idsFavoritos(anuncioIds: string[]): Promise<Set<string>> {
+  const { userId } = await auth();
+  const ids = [...new Set(anuncioIds.filter(ehUuid))].slice(0, 100);
+  if (!userId || ids.length === 0) return new Set();
+  const db = await createClient();
+  const { data, error } = await db.from("favoritos").select("anuncio_id").eq("usuario_id", userId).in("anuncio_id", ids);
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível consultar seus favoritos.");
+  return new Set(data.map((f) => f.anuncio_id as string));
+}

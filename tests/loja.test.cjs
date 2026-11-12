@@ -23,12 +23,12 @@ test('loja: paginação usa configuração regional e não disfarça falha',asyn
 });
 test('loja: contato tem destino e texto corretos, copiar link e atalhos acessíveis',async()=>{
  const h=await html();const url=new URL(h.match(/href="(https:\/\/wa.me\/[^\"]+)"/)[1].replaceAll('&amp;','&'));
- assert.equal(url.pathname,'/5589999990002');assert.match(url.searchParams.get('text'),/https:\/\/ol-aqui.vercel.app\/loja\/loja-teste/);
+ assert.equal(url.pathname,'/5589999990002');assert.match(url.searchParams.get('text'),/https:\/\/mercadodaregiao.com.br\/loja\/loja-teste/);
  for(const t of ['Copiar link da loja','Informações da loja','Ver anúncios','Formas de pagamento','Como chegar','Instagram','Sobre nós','Faz entrega']) assert.ok(h.includes(t),t);
  assert.doesNotMatch(h,/Editar minha vitrine/);
 });
 test('loja: contato inválido e vitrine inativa não têm WhatsApp; prévia não oferece divulgação',async()=>{
- for(const whatsapp of [null,'','123','javascript:alert(1)']) {const h=await html({v:{whatsapp}});assert.doesNotMatch(h,/https:\/\/wa.me/);assert.match(h,/Contato por WhatsApp indisponível/);}
+ for(const whatsapp of [null,'','123','javascript:alert(1)']) {const h=await html({v:{whatsapp}});assert.doesNotMatch(h,/https:\/\/wa.me|Contato por WhatsApp indisponível/);}
  const h=await html({v:{status:'suspensa',e_dono:true}});assert.match(h,/Editar minha vitrine/);assert.match(h,/Prévia da vitrine fora do ar/);assert.doesNotMatch(h,/https:\/\/wa.me|Copiar link da loja|https:\/\/instagram|google.com\/maps/);
 });
 test('loja: erro dos produtos mantém informações e contato, sem simular lista vazia',async()=>{

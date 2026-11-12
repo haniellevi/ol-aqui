@@ -22,7 +22,7 @@ export default async function VerificacaoVendedorPage() {
 
   return (
     <PaginaConta>
-      <TopoConta titulo="Verificação de vendedor" texto="Envie seus comprovantes de identidade e endereço para a equipe do OLAKI." />
+      <TopoConta titulo="Verificação de vendedor" texto="Envie seus comprovantes de identidade e endereço para a equipe do Mercado da Região." />
       <section className="space-y-3 rounded-card bg-cartao p-5 shadow-1">
         {!pf ? <p>O envio está disponível para vendedores individuais cadastrados.</p>
           : estado?.error || !estado?.data ? <p role="alert">Não foi possível consultar sua verificação. Recarregue a página.</p>
