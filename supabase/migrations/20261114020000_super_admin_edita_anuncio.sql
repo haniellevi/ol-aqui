@@ -132,8 +132,9 @@ begin
     chave_max := 'radar.fotos_max_pasta';
   elsif partes[2] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
     select a.microrregiao_id into regiao from public.anuncios a join public.vitrines_lojas v on v.id = a.vitrine_id
-     where a.id = partes[2]::uuid and v.dono_id = partes[1]
-       and (public.pode_mexer_vitrine(v.id) or public.super_edita_anuncio(a.id)) and a.status not in ('congelado', 'em_analise');
+     where a.id = partes[2]::uuid and v.dono_id = partes[1] and a.status <> 'congelado'
+       -- P5b-2a: em análise só a equipe com edição aberta troca foto.
+       and ((public.pode_mexer_vitrine(v.id) and a.status <> 'em_analise') or public.super_edita_anuncio(a.id));
     if not found then return false; end if;
   else
     return false;

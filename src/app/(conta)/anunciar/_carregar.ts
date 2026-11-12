@@ -29,12 +29,12 @@ export async function carregarPasso(searchParams: ParamsPasso): Promise<DadosPas
 
   const escolhida = await contaDaLoja();
   if (!escolhida) redirect("/entrar?redirect_url=/anunciar");
-  if (!escolhida.vitrine) redirect("/quero-vender");
-
+  // P5b-2a: super admin sem loja própria também abre o anúncio com a edição aberta.
   const anuncio = await anuncioDaLoja(id);
+  if (!escolhida.vitrine && !anuncio) redirect("/quero-vender");
   if (!anuncio || (anuncio.status === "congelado" || anuncio.status === "excluido")) notFound();
   // O anúncio pode ser de outra loja que a pessoa cuida (ex.: rascunho do Merc na loja própria).
-  const conta = anuncio.vitrine_id === escolhida.vitrine.id ? escolhida : await contaDaLoja(false, anuncio.vitrine_id);
+  const conta = anuncio.vitrine_id === escolhida.vitrine?.id ? escolhida : await contaDaLoja(false, anuncio.vitrine_id);
   if (!conta?.vitrine) notFound();
 
   // anúncio já publicado abre sempre no modo edição

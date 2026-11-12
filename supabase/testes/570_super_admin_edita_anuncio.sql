@@ -17,7 +17,8 @@ insert into vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,whatsapp,
  ('57000000-0000-4000-a000-000000000001','user_dono570',:'reg','loja-570','Loja 570','Corrente','5589999990570','loja','full',now()+interval '30 days');
 insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,status,publicado_em) values
  ('57100000-0000-4000-a000-000000000001','57000000-0000-4000-a000-000000000001',:'diversos','Mesa 570','Corrente',5000,'ativo',now()),
- ('57100000-0000-4000-a000-000000000002','57000000-0000-4000-a000-000000000001',:'diversos','Cadeira 570','Corrente',5000,'congelado',now());
+ ('57100000-0000-4000-a000-000000000002','57000000-0000-4000-a000-000000000001',:'diversos','Cadeira 570','Corrente',5000,'congelado',now()),
+ ('57100000-0000-4000-a000-000000000003','57000000-0000-4000-a000-000000000001',:'diversos','Sofá 570','Corrente',5000,'em_analise',now());
 
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
@@ -56,11 +57,20 @@ begin
   assert public.pode_enviar_foto('user_dono570/57100000-0000-4000-a000-000000000001/a.webp'), 'Super envia foto na pasta do dono';
   assert public.pasta_foto_que_cuido('user_dono570/57100000-0000-4000-a000-000000000001/a.webp'), 'Super apaga foto do anúncio';
   assert not public.pode_enviar_foto('user_dono570/loja/a.webp'), 'Super não envia logo';
+  -- Em análise: só a equipe com edição aberta troca foto.
+  assert not public.pode_enviar_foto('user_dono570/57100000-0000-4000-a000-000000000003/a.webp'), 'Foto em análise sem edição';
+  perform admin_abrir_edicao_anuncio('57100000-0000-4000-a000-000000000003', 'Trocar foto com telefone');
+  assert public.pode_enviar_foto('user_dono570/57100000-0000-4000-a000-000000000003/a.webp'), 'Super troca foto em análise';
+end $$;
+set local request.jwt.claim.sub='user_dono570';
+do $$ begin
+  assert not public.pode_enviar_foto('user_dono570/57100000-0000-4000-a000-000000000003/a.webp'), 'Dono troca foto em análise';
+  assert public.pode_enviar_foto('user_dono570/57100000-0000-4000-a000-000000000001/a.webp'), 'Dono envia foto do anúncio ativo';
 end $$;
 reset role;
 do $$ begin
-  assert (select count(*) from notificacoes where usuario_id = 'user_dono570' and tipo = 'anuncio_edicao_equipe') = 1, 'Um aviso só';
-  assert (select texto from notificacoes where usuario_id = 'user_dono570' and tipo = 'anuncio_edicao_equipe') like '%Motivo: Foto com telefone%', 'Aviso com o motivo';
+  assert (select count(*) from notificacoes where usuario_id = 'user_dono570' and tipo = 'anuncio_edicao_equipe' and texto like '%Mesa 570%') = 1, 'Um aviso só';
+  assert (select texto from notificacoes where usuario_id = 'user_dono570' and tipo = 'anuncio_edicao_equipe' and texto like '%Mesa 570%') like '%Motivo: Foto com telefone%', 'Aviso com o motivo';
   assert (select count(*) from admin_gestao_eventos where alvo = '57100000-0000-4000-a000-000000000001' and acao = 'editar') = 1, 'Evento da equipe';
   assert exists (select 1 from historico_alteracoes where anuncio_id = '57100000-0000-4000-a000-000000000001'
     and acao = 'editou' and papel = 'equipe' and quem = 'user_super570' and motivo = 'Foto com telefone'), 'Histórico com motivo';

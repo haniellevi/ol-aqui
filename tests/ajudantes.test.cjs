@@ -176,3 +176,16 @@ test('botão Editar anúncio do painel: motivo obrigatório e abre a edição pe
   await assert.rejects(editarComoEquipe(id, form('  Preço   errado ')), new RegExp(`redirect:/anunciar/fotos\\?rascunho=${id}&editar=1`));
   assert.deepEqual(chamadas, [['admin_abrir_edicao_anuncio', { p_anuncio: id, p_motivo: 'Preço errado' }]]);
 });
+
+test('super admin sem loja própria abre o passo do anúncio com a edição aberta', async () => {
+  const montar = (anuncio) => carregar('src/app/(conta)/anunciar/_carregar.ts', {
+    'next/navigation': { notFound: () => { throw Error('404'); }, redirect: (u) => { throw Error('redirect:' + u); } },
+    '@/lib/dados/conta': { contaDaLoja: async (_e, loja) => loja ? { perfil: {}, vitrine: { id: loja, tipo: 'loja' }, podePublicar: true, ajudante: true, equipe: true } : { perfil: {}, vitrine: null, podePublicar: false } },
+    '@/lib/dados/anuncios': { anuncioDaLoja: async () => anuncio },
+    '@/lib/dados/edicao-admin': { edicaoAdmin: async () => edicao },
+  }).carregarPasso(Promise.resolve({ rascunho: id, editar: '1' }));
+  const r = await montar({ id, status: 'em_analise', vitrine_id: ajudada.id, fotos: [] });
+  assert.equal(r.conta.vitrine.id, ajudada.id);
+  assert.deepEqual(r.equipe, edicao);
+  await assert.rejects(montar(null), /redirect:\/quero-vender/);
+});
