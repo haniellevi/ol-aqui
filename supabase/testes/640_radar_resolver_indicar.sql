@@ -30,7 +30,8 @@ insert into perfis(id, microrregiao_id, nome, whatsapp, whatsapp_verificado_em, 
   ('user_q640slim',  :'regiao', 'Loja Slim 640',   '5589999964003', now(), 'Corrente', 'pj'),
   ('user_q640ind',   :'regiao', 'Indicadora 640',  '5589999964004', now(), 'Corrente', 'pf'),
   ('user_q640ind2',  :'regiao', 'Indicadora 2 640','5589999964005', now(), 'Corrente', 'pf'),
-  ('user_q640adm',   :'regiao', 'Admin 640',       '5589999964006', now(), 'Corrente', 'pf');
+  ('user_q640adm',   :'regiao', 'Admin 640',       '5589999964006', now(), 'Corrente', 'pf'),
+  ('user_q640ajud',  :'regiao', 'Ajudante 640',    '5589999964007', now(), 'Corrente', 'pf');
 update perfis set e_admin = true where id = 'user_q640adm';
 
 insert into vitrines_lojas(dono_id, microrregiao_id, slug, nome, cidade, tipo, plano, plano_expira_em, teste_expira_em, criado_em) values
@@ -39,6 +40,8 @@ insert into vitrines_lojas(dono_id, microrregiao_id, slug, nome, cidade, tipo, p
 update vitrines_lojas set verificacao_estado = 'aprovada', selo_loja_verificada = true where slug = 'q640-loja';
 select id as vit_loja from vitrines_lojas where slug = 'q640-loja' \gset
 select id as vit_slim from vitrines_lojas where slug = 'q640-slim' \gset
+insert into convites_gerente_loja(vitrine_id, token_hash, telefone_hash, final_telefone, aceito_por, aceito_em)
+  values (:'vit_loja', '\x640640'::bytea, '\x640641'::bytea, '4007', 'user_q640ajud', now());
 
 -- 12 anúncios da loja Full (os 2 primeiros com foto) e 1 da Slim
 insert into anuncios(id, vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, status, fotos)
@@ -120,6 +123,8 @@ set local request.jwt.claim.sub='user_q640comp';
 select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-000000000001')$q$, '42501');  -- o próprio comprador
 set local request.jwt.claim.sub='user_q640loja';
 select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-000000000001')$q$, 'P0001', 'Mandar oferta');  -- loja que atende
+set local request.jwt.claim.sub='user_q640ajud';
+select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-000000000001')$q$, 'P0001', 'outra pessoa');  -- ajudante da loja
 set local request.jwt.claim.sub='user_q640slim';
 select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-0000000000a1')$q$, 'P0001', 'outra pessoa');  -- loja que não atende
 select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-000000000001') as ind1 \gset
@@ -142,7 +147,7 @@ select pg_temp.confere((select count(*)=1 from radar_indicacoes),'Autor lê só 
 set local request.jwt.claim.sub='user_q640ind2';
 select pg_temp.confere((select count(*)=0 from radar_indicacoes),'Estranho não lê');
 set local request.jwt.claim.sub='user_q640comp';
-select pg_temp.confere((select count(*)=2 from radar_indicacoes),'Comprador lê as duas');
+select pg_temp.confere((select count(*)=0 from radar_indicacoes),'Comprador não lê a tabela (só pela função, sem autor)');
 
 -- leitura do comprador: sem dados do autor
 select pg_temp.confere((select count(*)=2 from indicacoes_do_pedido('64000000-0000-4000-a000-000000000006')),'Comprador vê as 2 indicações');

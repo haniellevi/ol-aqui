@@ -556,8 +556,7 @@ alter table public.radar_indicacoes enable row level security;
 create policy "indicacoes leitura" on public.radar_indicacoes
   for select using (
     autor_id = public.usuario_id()
-    or exists (select 1 from public.radar_pedidos p where p.id = pedido_id and p.comprador_id = public.usuario_id())
-    or public.e_admin());
+    or public.e_admin());   -- o comprador NÃO lê a tabela: só indicacoes_do_pedido, que esconde o autor
 revoke all on public.radar_indicacoes from anon, authenticated;
 grant select on public.radar_indicacoes to authenticated;   -- ninguém grava pela API: só indicar_anuncio_radar
 
@@ -570,7 +569,6 @@ declare
   regiao  uuid;
   p       public.radar_pedidos;
   a       public.anuncios;
-  dono    text;
   existente uuid;
   lim     integer;
   total   integer;
@@ -598,8 +596,7 @@ begin
   if a.id is null or a.status <> 'ativo' or a.microrregiao_id <> p.microrregiao_id then
     raise exception 'Este anúncio não está disponível.' using errcode = 'P0002';
   end if;
-  select v.dono_id into dono from public.vitrines_lojas v where v.id = a.vitrine_id;
-  if dono = uid then
+  if public.pode_mexer_vitrine(a.vitrine_id) then   -- dono ou ajudante da loja
     if public.pode_atender_radar(uid) then
       raise exception 'Use "Mandar oferta" para os seus anúncios.' using errcode = 'P0001';
     end if;
