@@ -73,6 +73,8 @@ try:
     print('PASS: acertos da IA de categorias: guarda sugestão e escolha, só quem cuida grava, só admin lê, período e erros', flush=True)
     checked(sql((root/'supabase/testes/700_verificacao_reabertura.sql').read_text()))
     print('PASS: selo da loja só cai com CNPJ, endereço, cidade ou WhatsApp; nome e Instagram deixam aviso para a equipe', flush=True)
+    checked(sql((root/'supabase/testes/710_verificacao_loja_nucleo.sql').read_text()))
+    print('PASS: núcleo da verificação da loja: envio com limite e arquivos privados, decisão única, situação da loja e permissões', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
