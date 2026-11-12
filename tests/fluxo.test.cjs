@@ -271,6 +271,29 @@ test('perfil sem sessão mantém o destino original ao pedir login',async()=>{
   });
   await assert.rejects(pagina.default({searchParams:Promise.resolve({redirect_url:'/radar/pedir?q=Bicicleta'})}),e=>e.message==='/entrar?redirect_url=%2Fradar%2Fpedir%3Fq%3DBicicleta');
 });
+test('Pedir de novo leva detalhes, categoria, preço, área e quem vê para o formulário',async()=>{
+  const {linkPedirRadar}=carregar('src/lib/rotas.ts');
+  const link=linkPedirRadar('Procuro mesa',{detalhes:'x'.repeat(1500),categoriaId:'cat1',precoMin:'10',precoMax:'20',cidades:['c1','c2'],visibilidade:'todos'});
+  const u=new URL(link,'https://teste.local');
+  assert.equal(u.searchParams.get('detalhes').length,1000);assert.equal(u.searchParams.get('categoria_id'),'cat1');
+  assert.equal(u.searchParams.get('cidades'),'c1,c2');assert.equal(u.searchParams.get('quem'),'todos');assert.equal(u.searchParams.get('preco_max'),'20');
+  const pagina=carregar('src/app/radar/pedir/page.tsx',{
+    'next/link':{},'lucide-react':{},
+    '@clerk/nextjs/server':{currentUser:async()=>({id:'user_teste'})},
+    '@/lib/perfil':{garantirPerfil:async()=>{},sincronizarPerfil:async()=>{}},
+    '@/lib/dados/conta':{meuPerfilEVitrine:async()=>({perfil:{microrregiao_id:'r',cidade:null}})},
+    '@/lib/dados/categorias':{listarCategorias:async()=>[{id:'cat1',slug:'mesas',nome:'Mesas',filhas:[]}]},
+    '@/lib/dados/regiao':{listarCidades:async()=>['Avelino Lopes','Bom Jesus'].map((nome,i)=>({id:`c${i}`,nome,uf:'PI'})),regiaoAtual:async()=>({id:'r',cidade:null,cidadeSede:'Corrente'})},
+    '@/lib/dados/radar':{exigeCelularConfirmado:async()=>false,regrasRadar:async()=>({})},
+    '@/components/ui/botao':{},'@/components/ui/vazio':{},'@/components/ui/alert':{Alert:'Alert'},'@/components/radar/form-pedido':{FormPedido:'FormPedido'},
+  });
+  const tela=await pagina.default({searchParams:Promise.resolve({q:'Procuro mesa',detalhes:'Madeira',categoria_id:'cat1',cidades:'c1,c9',quem:'todos',preco_min:'10'})});
+  const formulario=tela.props.children.find(e=>typeof e.type==='function');
+  const campos=await formulario.type(formulario.props);
+  const form=campos.props.children.find(e=>e&&e.type==='FormPedido');
+  assert.equal(form.props.detalhesInicial,'Madeira');assert.equal(form.props.categoriaInicial,'cat1');
+  assert.deepEqual(form.props.cidadesIniciais,['c1']);assert.equal(form.props.visibilidadeInicial,'todos');assert.equal(form.props.precoMinInicial,'10');
+});
 test('pedido começa em Toda a região, manda as cidades com id e avisa cidade de fora',async()=>{
   for (const [busca,selecionada,avisa] of [['',null,false],['','Bom Jesus',false],['Corrente','Bom Jesus',false],['Outra região',null,true]]) {
     const pagina=carregar('src/app/radar/pedir/page.tsx',{

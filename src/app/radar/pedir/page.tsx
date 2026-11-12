@@ -19,9 +19,9 @@ import { Alert } from "@/components/ui/alert";
 
 export const metadata = { title: "Pedir no Radar" };
 
-export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; cidade?: string; preco_min?: string; preco_max?: string }> }) {
+export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; categoria_id?: string; cidade?: string; preco_min?: string; preco_max?: string; detalhes?: string; cidades?: string; quem?: string }> }) {
   const params = await searchParams;
-  const textoParametro = (v: unknown) => typeof v === "string" ? v.slice(0, 120) : "";
+  const textoParametro = (v: unknown, max = 120) => typeof v === "string" ? v.slice(0, max) : "";
   await garantirPerfil();
   const u = await currentUser();
   if (!u) throw new Error("Não foi possível confirmar sua sessão.");
@@ -64,6 +64,10 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
           microrregiaoId={conta.perfil.microrregiao_id}
           texto={textoParametro(params.q)}
           categoriaSlug={textoParametro(params.categoria)}
+          categoriaId={textoParametro(params.categoria_id, 36)}
+          detalhes={textoParametro(params.detalhes, 1000)}
+          cidadesIds={textoParametro(params.cidades, 20 * 37).split(",").slice(0, 20)}
+          visibilidade={params.quem === "todos" ? "todos" : "lojas"}
           cidadeBusca={textoParametro(params.cidade)}
           precoMin={textoParametro(params.preco_min)}
           precoMax={textoParametro(params.preco_max)}
@@ -78,19 +82,22 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
 async function Formulario({
   microrregiaoId,
   texto,
-  categoriaSlug, cidadeBusca, precoMin, precoMax,
+  categoriaSlug, categoriaId, detalhes, cidadesIds, visibilidade, cidadeBusca, precoMin, precoMax,
   pedirWhatsapp,
   whatsappInicial,
 }: {
   microrregiaoId: string;
   texto: string;
-  categoriaSlug: string; cidadeBusca: string; precoMin: string; precoMax: string;
+  categoriaSlug: string; categoriaId: string; detalhes: string; cidadesIds: string[]; visibilidade: "lojas" | "todos";
+  cidadeBusca: string; precoMin: string; precoMax: string;
   pedirWhatsapp: boolean;
   whatsappInicial: string;
 }) {
   const [categorias, cidades, regras, regiao] = await Promise.all([listarCategorias(), listarCidades(microrregiaoId), regrasRadar(microrregiaoId), regiaoAtual()]);
   const opcoes = categorias.flatMap((c) => [c, ...c.filhas]);
-  const categoriaInicial = opcoes.find((c) => c.slug === categoriaSlug);
+  const categoriaInicial = opcoes.find((c) => (categoriaId && c.id === categoriaId) || (categoriaSlug && c.slug === categoriaSlug));
+  // "Pedir de novo": só as cidades que ainda estão ativas na região do cadastro.
+  const cidadesIniciais = cidadesIds.filter((id) => cidades.some((c) => c.id === id));
   // Radar v2: "Toda a região" vem marcado (docs/designs/radar-v2.md); a pessoa marca cidades no passo "Onde?".
   const cidadeEscolhida = cidadeBusca || regiao?.cidade;
   const cidadeFora = !!cidadeEscolhida && !cidades.some((c) => c.nome === cidadeEscolhida);
@@ -103,6 +110,9 @@ async function Formulario({
         categoriaInicial={categoriaInicial?.id ?? null}
         precoMinInicial={precoMin}
         precoMaxInicial={precoMax}
+        detalhesInicial={detalhes}
+        visibilidadeInicial={visibilidade}
+        cidadesIniciais={cidadesIniciais.length > 0 ? cidadesIniciais : undefined}
         cidades={cidades.map((c) => ({ id: c.id, nome: c.nome }))}
         regras={regras}
         pedirWhatsapp={pedirWhatsapp}

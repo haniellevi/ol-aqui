@@ -38,6 +38,9 @@ type Props = {
   categoriaInicial?: string | null;
   precoMinInicial?: string;
   precoMaxInicial?: string;
+  /** "Pedir de novo": detalhes e quem vê do pedido antigo. */
+  detalhesInicial?: string;
+  visibilidadeInicial?: Visibilidade;
   categorias: { id: string; nome: string; filhas: { id: string; nome: string }[] }[];
   /** Cidades ativas da região do cadastro. */
   cidades: { id: string; nome: string }[];
@@ -62,7 +65,7 @@ const CAMPOS_COM_ERRO = ["titulo", "detalhes", "categoria", "preco", "preco_min_
 const ROTULO_GRUPO = "text-facil font-semibold text-texto";
 const TEXTO_ERRO = "text-facil font-semibold text-perigo";
 
-export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "" }: Props) {
+export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", detalhesInicial = "", visibilidadeInicial = "lojas", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "" }: Props) {
   const router = useRouter();
   const formulario = useRef<HTMLFormElement>(null);
   const pergunta = useRef<HTMLHeadingElement>(null);
@@ -73,12 +76,12 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   const chaveEnvio = useRef<string | null>(null);
   const [passo, setPasso] = useState<NumeroPasso>(1);
   const [titulo, setTitulo] = useState(textoInicial);
-  const [detalhes, setDetalhes] = useState("");
+  const [detalhes, setDetalhes] = useState(detalhesInicial.slice(0, 1000));
   const [categoriaId, setCategoriaId] = useState<string | null>(categoriaInicial);
   const [precoMin, setPrecoMin] = useState(precoMinInicial);
   const [precoMax, setPrecoMax] = useState(precoMaxInicial);
   const [area, setArea] = useState<string[]>(cidadesIniciais);
-  const [visibilidade, setVisibilidade] = useState<Visibilidade>("lojas");
+  const [visibilidade, setVisibilidade] = useState<Visibilidade>(visibilidadeInicial);
   const whatsapp = useCampoTelefone(whatsappInicial, { obrigatorio: pedirWhatsapp });
   const [modo, setModo] = useState<ModoContato>("whatsapp_direto");
   const [prazo, setPrazo] = useState<number | null>(regras.prazosHoras[1] ?? regras.prazosHoras[0] ?? null);

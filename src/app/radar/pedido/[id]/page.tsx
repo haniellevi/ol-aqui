@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CalendarClock, CheckCircle2, ChevronLeft, Eye, Hourglass, MapPin, MessageCircle, RotateCcw, ShieldAlert, Store } from "lucide-react";
-import { indicacoesDoPedido, pedidoArquivado, pedidoRadar, propostasDoPedido } from "@/lib/dados/radar";
+import { cidadesDoMeuPedido, indicacoesDoPedido, pedidoArquivado, pedidoRadar, propostasDoPedido } from "@/lib/dados/radar";
 import { LINK_RADAR, linkPedidoRadarLoja, linkPedirRadar } from "@/lib/rotas";
 import { linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
 import { CLASSE_TOM, dataHoraCurta, faixaPreco, resumoPropostas, rotuloSituacao, textoPrecoProposta } from "@/components/radar/util";
@@ -31,10 +31,12 @@ export default async function MeuPedidoPage({
   if (!pedido.sou_comprador) redirect(linkPedidoRadarLoja(id));
 
   // Indicações são extra: se a leitura falhar, a página abre sem elas.
-  const [propostas, arquivado, indicacoes] = await Promise.all([
+  const [propostas, arquivado, indicacoes, cidadesPedido] = await Promise.all([
     propostasDoPedido(id),
     pedidoArquivado(id),
     indicacoesDoPedido(id).catch((): IndicacaoRadar[] => []),
+    // Só serve para "Pedir de novo": se falhar, o novo pedido abre com a região toda.
+    cidadesDoMeuPedido(id).catch((): string[] => []),
   ]);
   const s = rotuloSituacao(pedido.situacao, pedido.fechado_motivo);
   const fechado = pedido.situacao === "fechado";
@@ -46,9 +48,14 @@ export default async function MeuPedidoPage({
   const vencimento = textoVencimento(dias);
   const destaque = podeResolver && pedido.pode_estender === true;
   const pedirDeNovo = mostrarPedirDeNovo({ ...pedido, diasRestantes: dias });
+  // "Pedir de novo" leva o pedido inteiro para o formulário: texto, detalhes, categoria, preço, área e quem vê.
   const linkDeNovo = linkPedirRadar(pedido.titulo, {
+    detalhes: pedido.detalhes,
+    categoriaId: pedido.categoria_id,
     precoMin: textoPrecoProposta(pedido.preco_min_centavos),
     precoMax: textoPrecoProposta(pedido.preco_max_centavos),
+    cidades: cidadesPedido,
+    visibilidade: pedido.visibilidade ?? null,
   });
   const lojas = propostas.filter((p) => p.status === "ativa").map((p) => ({ propostaId: p.id, lojaNome: p.loja_nome }));
   const visibilidade = TEXTO_VISIBILIDADE[pedido.visibilidade ?? "lojas"];
