@@ -24,10 +24,10 @@ export function VazioBusca({
   return (
     <Vazio
       titulo={t ? `Não achamos “${t}” por aqui ainda.` : "Ainda não tem anúncio aqui."}
-      texto="Peça no Radar. As lojas podem enviar propostas, e você escolhe com quem conversar."
+      texto="Não achou? Diga o que procura e as lojas da região te respondem."
     >
-      <Botao href={pedido} larguraTotal icone={<Radar />}>
-        Pedir no Radar
+      <Botao href={pedido} tamanho="grande" larguraTotal icone={<Radar />}>
+        Estou procurando…
       </Botao>
       <BotaoAbrirAki pedido={{ texto: t ? `Procuro ${t}` : "" }}>Perguntar ao Merc</BotaoAbrirAki>
       <DicaAki texto="Não achou? Pergunta pro Merc" pedido={{ texto: t ? `Procuro ${t}` : "" }} />

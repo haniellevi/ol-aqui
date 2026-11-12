@@ -103,7 +103,7 @@ export async function confirmarPedidoRadar(mensagemId: number, indice: number): 
   // Mesma função do formulário /radar/pedir: celular, cidade da região, limites e moderação no banco
   const { data, error } = await db.rpc("criar_pedido_radar", {
     p_titulo: v.dados.titulo,
-    p_cidade: v.dados.cidade,
+    p_cidade: v.dados.cidade ?? null, // null = região toda
     p_modo: "whatsapp_direto",
     p_detalhes: v.dados.detalhes,
     p_preco_max_centavos: v.dados.preco_max_centavos,

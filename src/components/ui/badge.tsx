@@ -18,9 +18,15 @@ const badgeVariants = cva(
         solid: "bg-beringela text-white",
         outline: "border-border text-foreground",
       },
+      // grande = Modo fácil do Radar: letra 18px, como o resto das telas do Radar.
+      tamanho: {
+        normal: "",
+        grande: "h-auto min-h-8 px-3 py-0.5 text-facil leading-6 [&>svg]:size-4!",
+      },
     },
     defaultVariants: {
       variant: "default",
+      tamanho: "normal",
     },
   }
 )
@@ -30,6 +36,7 @@ export type TomSelo = NonNullable<VariantProps<typeof badgeVariants>["variant"]>
 function Badge({
   className,
   variant = "default",
+  tamanho = "normal",
   render,
   ...props
 }: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
@@ -37,7 +44,7 @@ function Badge({
     defaultTagName: "span",
     props: mergeProps<"span">(
       {
-        className: cn(badgeVariants({ variant }), className),
+        className: cn(badgeVariants({ variant, tamanho }), className),
       },
       props
     ),

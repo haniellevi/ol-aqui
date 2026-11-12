@@ -16,6 +16,7 @@ export type Plano = {
   limite_anuncios: number | null;
   acesso_radar: boolean;
   propostas_radar_mes: number | null;
+  aviso_radar_na_hora: boolean;
   e_teste: boolean;
   ordem: number;
   ativo: boolean;
@@ -121,6 +122,10 @@ export function FormPlano({ plano }: { plano?: Plano }) {
         <label className="flex h-10 items-center gap-2 text-sm">
           <input type="checkbox" name="acesso_radar" defaultChecked={plano?.acesso_radar ?? true} className="size-5 accent-laranja-escuro" />
           Acessa o Radar
+        </label>
+        <label className="flex h-10 items-center gap-2 text-sm">
+          <input type="checkbox" name="aviso_radar_na_hora" defaultChecked={plano?.aviso_radar_na_hora ?? false} className="size-5 accent-laranja-escuro" />
+          Aviso na hora de pedido novo no Radar
         </label>
         <label className="flex h-10 items-center gap-2 text-sm">
           <input type="checkbox" name="ativo" defaultChecked={plano?.ativo ?? true} className="size-5 accent-laranja-escuro" />

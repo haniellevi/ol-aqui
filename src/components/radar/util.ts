@@ -1,9 +1,19 @@
 // Textos e formatos do Radar (servem no servidor e no navegador).
 import { preco } from "@/lib/formato";
 import type { MotivoFechamento, SituacaoPedido } from "@/lib/tipos-radar";
+import type { MinhaConta } from "@/lib/tipos";
+import { LINK_MINHA_LOJA } from "@/lib/rotas";
+import { LINK_VERIFICACAO_VENDEDOR } from "@/lib/verificacao-vendedor";
 import type { TomSelo } from "@/components/ui/badge";
 
 const FUSO = "America/Fortaleza";
+
+/** Link "voltar" do topo das telas do Radar: 48px, 18px e anel de foco (como o LINK_TOPO do anunciar). */
+export const LINK_VOLTAR =
+  "-ml-2 inline-flex min-h-12 w-fit items-center gap-1 rounded-card px-2 text-facil font-semibold text-laranja-escuro " +
+  "hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
+/** Link dentro do texto: anel de foco no teclado. */
+export const FOCO_LINK = "rounded-card focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 const diaHora = new Intl.DateTimeFormat("pt-BR", { timeZone: FUSO, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 /** "sex., 14/11 às 15:00" */
@@ -62,3 +72,15 @@ export function resumoPropostas(total: number, menor: number | null): string {
 
 /** Valor editável em reais, preservando os centavos. */
 export const textoPrecoProposta = (centavos: number | null) => centavos === null ? "" : (centavos / 100).toFixed(2).replace(".", ",");
+
+/**
+ * Loja (ou PF) ativa com plano pago que tem Radar, mas sem acesso: o que falta é a verificação,
+ * não um plano. Devolve a página de verificação; null quando o caminho é mesmo "Ver planos".
+ */
+export function linkVerificarParaRadar(conta: Pick<MinhaConta, "vitrine" | "plano"> | null | undefined, temAcesso: boolean): string | null {
+  const v = conta?.vitrine;
+  const p = conta?.plano;
+  if (temAcesso || !v || v.status !== "ativa" || !p) return null;
+  if (!p.acesso_radar || p.e_teste || p.preco_centavos <= 0) return null;
+  return v.tipo === "pf" ? LINK_VERIFICACAO_VENDEDOR : LINK_MINHA_LOJA;
+}

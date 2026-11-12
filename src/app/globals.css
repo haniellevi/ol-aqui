@@ -48,6 +48,12 @@
   --text-3xl: 1.25rem;
   --text-3xl--line-height: 1.2;
   --text-3xl--letter-spacing: -0.02em;
+  /* Modo fácil do Radar (docs/designs/radar-v2.md): corpo 18px e título 24px. */
+  --text-facil: 1.125rem;
+  --text-facil--line-height: 1.5;
+  --text-facil-titulo: 1.5rem;
+  --text-facil-titulo--line-height: 1.25;
+  --text-facil-titulo--letter-spacing: -0.015em;
   --text-titulo: 1rem;
   --text-titulo--line-height: 1.25;
   --text-titulo--letter-spacing: -0.015em;

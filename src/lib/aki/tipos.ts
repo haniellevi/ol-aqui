@@ -53,7 +53,8 @@ export type DadosPedidoRadar = {
   titulo: string;
   detalhes: string | null;
   preco_max_centavos: number | null;
-  cidade: string;
+  /** null = região toda (o Aki só manda cidade quando a pessoa disse uma). */
+  cidade: string | null;
   urgencia: "normal" | "esta_semana" | "hoje";
   categoria: "imovel" | "veiculo" | "movel" | "geral";
 };

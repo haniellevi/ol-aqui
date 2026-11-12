@@ -176,6 +176,7 @@ export type PlanoPublico = {
   limite_anuncios: number | null;
   acesso_radar: boolean;
   propostas_radar_mes: number | null;
+  aviso_radar_na_hora: boolean;
   e_teste: boolean;
   ordem: number;
   vitrine_foto_fachada: boolean;

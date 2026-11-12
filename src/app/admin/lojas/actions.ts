@@ -167,3 +167,35 @@ export async function alterarArquivoLoja(_: EstadoForm, form: FormData): Promise
   revalidatePath(`/admin/lojas/${loja}`);
   return { ok: acao === "arquivar" ? "Loja arquivada." : "Loja restaurada como suspensa." };
 }
+
+/** Cortesia do Radar: a cortesia libera tudo do Radar até a data, mesmo sem verificação e sem plano pago. O banco confere admin, data e motivo. */
+export async function darCortesiaRadar(vitrineId: string, ate: string, motivo: string): Promise<EstadoForm> {
+  try {
+    const { supabase } = await exigirTela("lojas");
+    if (!ehUuid(vitrineId)) return { erro: "Loja não encontrada." };
+    if (typeof ate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(ate)) return { erro: "Escolha uma data futura, de no máximo 365 dias." };
+    const m = typeof motivo === "string" ? motivo.trim() : "";
+    if (m.length < 3) return { erro: "Escreva o motivo (fica no histórico)." };
+    const { error } = await supabase.rpc("dar_cortesia_radar", { p_vitrine: vitrineId, p_ate: ate, p_motivo: m.slice(0, 300) });
+    if (error) return { erro: traduzirErro(error).mensagem };
+    atualizar();
+    return { ok: "Cortesia do Radar dada." };
+  } catch (e) {
+    unstable_rethrow(e);
+    return { erro: e instanceof Error ? e.message : "Não deu para salvar." };
+  }
+}
+
+export async function tirarCortesiaRadar(vitrineId: string): Promise<EstadoForm> {
+  try {
+    const { supabase } = await exigirTela("lojas");
+    if (!ehUuid(vitrineId)) return { erro: "Loja não encontrada." };
+    const { error } = await supabase.rpc("tirar_cortesia_radar", { p_vitrine: vitrineId });
+    if (error) return { erro: traduzirErro(error).mensagem };
+    atualizar();
+    return { ok: "Cortesia do Radar retirada." };
+  } catch (e) {
+    unstable_rethrow(e);
+    return { erro: e instanceof Error ? e.message : "Não deu para salvar." };
+  }
+}

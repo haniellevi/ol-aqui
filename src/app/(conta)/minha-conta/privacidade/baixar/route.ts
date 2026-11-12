@@ -32,7 +32,7 @@ export async function GET() {
     const db = await createClient();
     const proprios = (tabela: string, colunas: string, dono = "usuario_id", ordem = "id") =>
       lerPaginas((inicio, fim) => db.from(tabela).select(colunas).eq(dono, userId).order(ordem).range(inicio, fim).returns<Record<string, unknown>[]>());
-    const [perfil, vitrine, contatos, favoritos, pedidos, conversas, mensagens, aceites, notificacoes, preferencias, avaliacoes, verificacoes, atendimentos, mensagensAtendimento] = await Promise.all([
+    const [perfil, vitrine, contatos, favoritos, pedidos, conversas, mensagens, aceites, notificacoes, preferencias, avaliacoes, verificacoes, atendimentos, mensagensAtendimento, indicacoes] = await Promise.all([
       db.rpc("meu_perfil"),
       db.from("vitrines_lojas").select(COLUNAS_VITRINE).eq("dono_id", userId).maybeSingle<{ id: string }>(),
       db.rpc("meus_contatos_vitrine").maybeSingle<{ whatsapp: string | null; instagram: string | null }>(),
@@ -51,6 +51,8 @@ export async function GET() {
       lerPaginas((inicio, fim) => db.from("atendimento_mensagens")
         .select("id, conversa_id, autor, texto, criado_em, atendimentos_anuncio!inner(anunciante_id)")
         .eq("atendimentos_anuncio.anunciante_id", userId).order("id").range(inicio, fim)),
+      // "Eu sei onde tem": os anúncios que a pessoa indicou (só as dela; RLS)
+      proprios("radar_indicacoes", "id, pedido_id, anuncio_id, criado_em", "autor_id"),
     ]);
     const linhaPerfil = Array.isArray(perfil.data) ? perfil.data[0] : perfil.data;
     if (perfil.error || vitrine.error || contatos.error || linhaPerfil?.id !== userId) throw new Error("Falha na exportação");
@@ -83,6 +85,7 @@ export async function GET() {
       pagamentos,
       favoritos,
       pedidos_radar: pedidos,
+      indicacoes_radar: indicacoes,
       conversas_com_o_aki: conversas.map((conversa) => ({
         ...conversa,
         robo_mensagens: mensagens.filter((mensagem) => mensagem.conversa_id === conversa.id),

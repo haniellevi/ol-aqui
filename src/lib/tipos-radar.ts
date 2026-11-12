@@ -3,6 +3,9 @@
 
 export type ModoContato = "whatsapp_direto" | "propostas_prazo";
 
+/** "lojas" = só lojas que atendem; "todos" = qualquer pessoa da região. */
+export type Visibilidade = "lojas" | "todos";
+
 /** Situação calculada pelo banco: aberto, prazo das propostas acabou, fechado ou em análise. */
 export type SituacaoPedido = "aberto" | "prazo_acabou" | "fechado" | "em_analise";
 
@@ -24,6 +27,16 @@ export type MeuPedidoRadar = {
   menor_preco_centavos: number | null;
   fechado_motivo: MotivoFechamento;
   moderado_motivo: string | null;
+  /** Quantas vezes o prazo já foi estendido e se ainda dá. */
+  extensoes?: number;
+  pode_estender?: boolean;
+  /** Onde vale e quem vê (quando o banco devolver). */
+  area_texto: string | null;
+  visibilidade: Visibilidade;
+  /** Como o pedido foi resolvido (quando o banco devolver): loja escolhida, fora do Olaki, nota. */
+  resolvido_proposta_id?: string | null;
+  resolvido_fora?: boolean;
+  avaliacao?: 1 | -1 | null;
 };
 
 /** Linha de radar_pedido(id): o pedido com o mesmo bloqueio do feed. */
@@ -55,7 +68,33 @@ export type PedidoRadarDetalhe = {
   moderado_motivo: string | null;
   /** Só para o dono (e a equipe): por que o pedido fechou. */
   fechado_motivo: MotivoFechamento;
+  /** "lojas" = só lojas que atendem; "todos" = qualquer pessoa da região. */
+  visibilidade?: Visibilidade;
+  /** Onde o pedido vale: "Toda a região" ou os nomes das cidades. */
+  area_texto?: string | null;
+  /** Pedido "só lojas" aberto por quem não atende: vem sem título nem detalhes. */
+  bloqueado?: boolean;
+  extensoes?: number;
+  pode_estender?: boolean;
+  /** Atende o Radar e está na área deste pedido: pode mandar oferta (senão, só "Eu sei onde tem"). */
+  pode_propor?: boolean;
+  resolvido_proposta_id?: string | null;
+  resolvido_fora?: boolean;
+  avaliacao?: 1 | -1 | null;
 };
+
+/** Linha de indicacoes_do_pedido(id): anúncio que alguém indicou ("Eu sei onde tem"), sem dizer quem. */
+export type IndicacaoRadar = {
+  anuncio_id: string;
+  titulo: string;
+  preco_centavos: number | null;
+  foto: string | null;
+  vitrine_nome: string;
+  criado_em: string;
+};
+
+/** Anúncio achado na busca para "Eu sei onde tem". */
+export type AnuncioParaIndicar = { id: string; titulo: string; preco_centavos: number | null; capa: string | null; vitrine_nome: string };
 
 /** Linha de propostas_do_pedido(id): o que o comprador compara (sem contato). */
 export type PropostaRecebida = {
@@ -152,6 +191,9 @@ export type RespostaProposta =
   | { ok: false; erro: string; campo?: string; precisaPlano?: boolean };
 
 export type RespostaEscolher = { ok: true; linkWhatsapp: string } | { ok: false; erro: string };
+
+/** Resposta genérica das ações novas: ok com dados, ou erro com mensagem pronta. */
+export type Resultado<T> = ({ ok: true } & T) | { ok: false; erro: string; campo?: string };
 
 export type RespostaSimples = { ok: true; mensagem: string } | { ok: false; erro: string };
 

@@ -35,7 +35,7 @@ import estilos from "./inicio.module.css";
 
 // T2 · Início em 2 colunas (computador) e 1 coluna (celular), pensado para quem procura.
 // Esquerda: categorias e atalhos. Meio (o feed): lojas da região numa fileira no topo, título curto,
-// filtros rápidos, uma faixa fina com "Pedir no Radar" e "Anunciar", destaques pagos,
+// filtros rápidos, uma faixa fina com "Estou procurando…" e "Anunciar", destaques pagos,
 // "Você viu há pouco" e os anúncios em grade, que são o assunto principal.
 // Filtros vão pelo endereço (?cidade=minha&ate=100&ordem=menor_preco): funcionam sem JavaScript.
 // A ordem, o liga/desliga e os textos dos blocos seguem vindo do painel (tabela home_blocos).
@@ -207,7 +207,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           <AcoesInicio
             radar={radar ? {
               chamada: textoDe(radar.titulo, "Não achou?", lugar),
-              botao: textoDe(radar.botao, "Pedir no Radar", lugar),
+              botao: textoDe(radar.botao, "Estou procurando…", lugar),
             } : null}
             venderPrimeiro={Boolean(radar && recentes && ativos.indexOf(recentes) < ativos.indexOf(radar))}
           />
@@ -266,10 +266,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                             <Vazio
                               className={estilos.vazio}
                               titulo="Nada com esses filtros"
-                              texto="Tire um filtro ou peça no Radar: as lojas da região podem responder com oferta."
+                              texto="Tire um filtro. Não achou? Diga o que procura e as lojas da região te respondem."
                             >
                               <Botao href="/" variante="secundario" larguraTotal>Limpar filtros</Botao>
-                              <Botao href={linkPedirRadar()} larguraTotal>Pedir no Radar</Botao>
+                              <Botao href={linkPedirRadar()} tamanho="grande" larguraTotal>Estou procurando…</Botao>
                             </Vazio>
                           ) : (
                             <Vazio

@@ -22,7 +22,7 @@ export async function AnuncioForaDoAr({ categoriaSlug, categoriaNome }: { catego
           {categoriaNome ? `Ver mais em ${categoriaNome}` : "Buscar parecidos"}
         </Botao>
         <Botao href={linkPedirRadar(categoriaNome)} variante="secundario" larguraTotal>
-          Pedir no Radar
+          Estou procurando…
         </Botao>
       </Vazio>
       {parecidos.length > 0 && (

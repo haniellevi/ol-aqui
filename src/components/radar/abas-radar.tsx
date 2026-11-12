@@ -14,7 +14,7 @@ export function AbasRadar({ atual, abas }: { atual: AbaRadar; abas: AbaRadar[] }
   return (
     <nav aria-label="Partes do Radar" className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
       {abas.map((a) => (
-        <Chip key={a} href={`/radar?aba=${a}`} ativo={a === atual}>
+        <Chip key={a} href={`/radar?aba=${a}`} ativo={a === atual} tamanho="grande">
           {ROTULOS[a]}
         </Chip>
       ))}
