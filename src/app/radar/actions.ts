@@ -244,14 +244,27 @@ export async function indicarAnuncio(pedidoId: string, anuncioId: string): Promi
   return { ok: true, id: data };
 }
 
-/** "Eu sei onde tem": procura anúncios da região (a mesma busca do site) para a pessoa escolher qual indicar. */
-export async function buscarParaIndicar(termo: string): Promise<Resultado<{ anuncios: AnuncioParaIndicar[] }>> {
+/**
+ * "Eu sei onde tem": procura anúncios na região do PEDIDO (a mesma busca do site) para a pessoa escolher qual indicar.
+ * O pedido só aparece para quem é da região dele, então a região vem da conta; o banco confere de novo ao indicar.
+ */
+export async function buscarParaIndicar(pedidoId: string, termo: string): Promise<Resultado<{ anuncios: AnuncioParaIndicar[] }>> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: SEM_LOGIN };
+  if (!ehUuid(pedidoId)) return { ok: false, erro: "Pedido não encontrado." };
   const q = typeof termo === "string" ? termo.trim().slice(0, 80) : "";
   if (q.length < 2) return { ok: true, anuncios: [] };
   try {
-    const { anuncios } = await buscarAnuncios({ q, limite: 8 });
+    const db = await createClient();
+    const { data: linhas, error } = await db.rpc("radar_pedido", { p_id: pedidoId });
+    const pedido = Array.isArray(linhas) ? linhas[0] : null;
+    if (error || !pedido || pedido.bloqueado) return { ok: false, erro: "Este pedido não está mais aberto." };
+    const conta = await meuPerfilEVitrine();
+    const regiaoId = conta?.perfil.microrregiao_id;
+    if (!regiaoId) return { ok: false, erro: "Complete o seu cadastro para indicar." };
+    const { data: regiao } = await db.from("microrregioes").select("slug").eq("id", regiaoId).maybeSingle();
+    if (!regiao?.slug) return { ok: false, erro: "Não deu para buscar agora. Tente novamente." };
+    const { anuncios } = await buscarAnuncios({ q, limite: 8, regiao: regiao.slug });
     return {
       ok: true,
       anuncios: anuncios.map((a) => ({ id: a.id, titulo: a.titulo, preco_centavos: a.preco_centavos, capa: a.capa, vitrine_nome: a.vitrine_nome })),

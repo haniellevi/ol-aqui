@@ -176,7 +176,7 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
         <Cartao>
           <h2 className="mb-2 text-sm font-semibold text-beringela">Cortesia do Radar</h2>
           <p className="mb-3 text-sm text-texto-suave">
-            A loja vê os pedidos &quot;Só lojas&quot; e manda ofertas sem precisar do plano Full, até a data escolhida.
+            Libera tudo do Radar (ver pedidos &quot;Só lojas&quot;, mandar ofertas e receber aviso na hora), mesmo sem selo ou plano pago, até a data escolhida.
           </p>
           {cortesiaR.erro ? (
             <Aviso tipo="erro">Não foi possível ver a cortesia do Radar. Atualize a página.</Aviso>

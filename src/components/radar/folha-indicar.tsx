@@ -41,7 +41,7 @@ export function FolhaIndicar({ pedidoId }: { pedidoId: string }) {
     setErro(null);
     buscar(async () => {
       try {
-        const r = await buscarParaIndicar(termo);
+        const r = await buscarParaIndicar(pedidoId, termo);
         if (!r.ok) setErro(r.erro);
         else setLista(r.anuncios);
       } catch {

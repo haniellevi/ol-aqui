@@ -54,13 +54,13 @@ insert into anuncios(id, vitrine_id, categoria_id, titulo, cidade, preco_centavo
 insert into anuncios(id, vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, status) values
   ('64000000-0000-4000-b000-0000000000a2', :'vit_loja', :'moveis', 'Sofá pausado 640', 'Corrente', 20000, '{"estado":"usado"}', 'pausado');
 
-insert into radar_pedidos(id, comprador_id, microrregiao_id, titulo, cidade, modo_contato, visibilidade, categoria_id) values
-  ('64000000-0000-4000-a000-000000000001','user_q640comp',:'regiao','Procuro sofá 640 A','Corrente','whatsapp_direto','todos',:'moveis'),
-  ('64000000-0000-4000-a000-000000000002','user_q640comp',:'regiao','Procuro sofá 640 B','Corrente','whatsapp_direto','todos',:'moveis'),
-  ('64000000-0000-4000-a000-000000000003','user_q640comp',:'regiao','Procuro sofá 640 C','Corrente','whatsapp_direto','todos',:'moveis'),
-  ('64000000-0000-4000-a000-000000000004','user_q640comp',:'regiao','Procuro sofá 640 D','Corrente','whatsapp_direto','todos',:'moveis'),
-  ('64000000-0000-4000-a000-000000000005','user_q640comp',:'regiao','Procuro sofá 640 E','Corrente','whatsapp_direto','lojas',:'moveis'),
-  ('64000000-0000-4000-a000-000000000006','user_q640comp',:'regiao','Procuro sofá 640 F','Corrente','whatsapp_direto','todos',:'moveis');
+insert into radar_pedidos(id, comprador_id, microrregiao_id, titulo, cidade, modo_contato, visibilidade, categoria_id, detalhes) values
+  ('64000000-0000-4000-a000-000000000001','user_q640comp',:'regiao','Procuro sofá 640 A','Corrente','whatsapp_direto','todos',:'moveis',null),
+  ('64000000-0000-4000-a000-000000000002','user_q640comp',:'regiao','Procuro sofá 640 B','Corrente','whatsapp_direto','todos',:'moveis',null),
+  ('64000000-0000-4000-a000-000000000003','user_q640comp',:'regiao','Procuro sofá 640 C','Corrente','whatsapp_direto','todos',:'moveis',null),
+  ('64000000-0000-4000-a000-000000000004','user_q640comp',:'regiao','Procuro sofá 640 D','Corrente','whatsapp_direto','todos',:'moveis',null),
+  ('64000000-0000-4000-a000-000000000005','user_q640comp',:'regiao','Procuro sofá 640 E','Corrente','whatsapp_direto','lojas',:'moveis',null),
+  ('64000000-0000-4000-a000-000000000006','user_q640comp',:'regiao','Procuro sofá 640 F','Corrente','whatsapp_direto','todos',:'moveis','Detalhe 640F');
 insert into radar_propostas(id, pedido_id, vitrine_id) values
   ('64000000-0000-4000-c000-000000000001','64000000-0000-4000-a000-000000000001',:'vit_loja'),
   ('64000000-0000-4000-c000-000000000002','64000000-0000-4000-a000-000000000002',:'vit_loja'),
@@ -122,7 +122,15 @@ select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-0
 set local request.jwt.claim.sub='user_q640comp';
 select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-000000000001')$q$, '42501');  -- o próprio comprador
 set local request.jwt.claim.sub='user_q640loja';
-select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-000000000001')$q$, 'P0001', 'Mandar oferta');  -- loja que atende
+select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-000000000001')$q$, 'P0001', 'mandar oferta');  -- loja que atende (anúncio próprio)
+select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-0000000000a1')$q$, 'P0001', 'mandar oferta');  -- quem atende nunca indica, nem anúncio de outra pessoa
+set local request.jwt.claim.sub='user_q640ind';
+-- R1: pedido "Todo mundo" mostra os detalhes a quem não atende, mas não o nome do comprador
+select pg_temp.confere((select detalhes = 'Detalhe 640F' and comprador_primeiro_nome is null and not tem_acesso and area_texto = 'Toda a região' from radar_pedido('64000000-0000-4000-a000-000000000006')),'Pedido todos: detalhes sem nome do comprador');
+select pg_temp.confere((select count(*)=1 and bool_and(detalhes = 'Detalhe 640F') and bool_and(comprador_primeiro_nome is null) from radar_feed() where id='64000000-0000-4000-a000-000000000006'),'Feed todos: detalhes sem nome do comprador');
+select pg_temp.confere((select detalhes is null from radar_pedido('64000000-0000-4000-a000-000000000005')),'Pedido só lojas continua sem detalhes para quem não atende');
+set local request.jwt.claim.sub='user_q640comp';
+select pg_temp.confere((select count(*)=1 and bool_and(visibilidade='todos') and bool_and(area_texto='Toda a região') from meus_pedidos_radar(false) where id='64000000-0000-4000-a000-000000000006'),'Meus pedidos devolve visibilidade e área');
 set local request.jwt.claim.sub='user_q640ajud';
 select pg_temp.recusa($q$select indicar_anuncio_radar('64000000-0000-4000-a000-000000000006','64000000-0000-4000-b000-000000000001')$q$, 'P0001', 'outra pessoa');  -- ajudante da loja
 set local request.jwt.claim.sub='user_q640slim';

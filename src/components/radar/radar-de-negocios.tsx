@@ -3,7 +3,7 @@
 // "Propor" abre a tela do pedido (/radar/[id]) com a folha de proposta: anúncio ou foto, preço e mensagem.
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, MessageCircle, Radar, Send, Users } from "lucide-react";
+import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, Lightbulb, MessageCircle, Radar, Send, Users } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import type { CategoriaComFilhas } from "@/lib/tipos";
 import { SeloVisibilidade } from "./selo-visibilidade";
@@ -167,6 +167,8 @@ function CartaoPedido({
   const esgotado = p.totalPropostas >= p.maxPropostas && !propus;
   const liberado = podePropor || propus; // quem já propôs pode voltar a ver e editar sem gastar proposta
   const linkPedido = linkPedidoRadarLoja(p.id);
+  // Pedido "Todo mundo" para quem não atende: mostra os detalhes e convida a indicar (nunca o desbloqueio de plano).
+  const soIndicar = p.visibilidade === "todos" && !temAcesso && !p.souComprador;
 
   return (
     <article className="overflow-hidden rounded-card border border-borda bg-cartao">
@@ -216,13 +218,15 @@ function CartaoPedido({
         </div>
 
         <div className="relative mt-3">
-          {temAcesso ? (
+          {temAcesso || soIndicar ? (
             <div className="rounded-card bg-fundo p-3 text-sm leading-5 text-texto">
               {p.detalhes ? <p className="break-words whitespace-pre-line">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
-              <p className="mt-2 text-legenda text-texto-suave">
-                Comprador: {p.compradorNome}
-                {modoPrazo && " · prefere receber as ofertas e escolher com quem falar"}
-              </p>
+              {temAcesso && (
+                <p className="mt-2 text-legenda text-texto-suave">
+                  Comprador: {p.compradorNome}
+                  {modoPrazo && " · prefere receber as ofertas e escolher com quem falar"}
+                </p>
+              )}
             </div>
           ) : (
             <>
@@ -258,6 +262,14 @@ function CartaoPedido({
         >
           <Users className="size-5 shrink-0" aria-hidden />
           Seu pedido · ver propostas
+        </Link>
+      ) : soIndicar ? (
+        <Link
+          href={linkPedido}
+          className="olaki-acao flex min-h-13 w-full items-center justify-center gap-2 border-t border-borda bg-cartao px-4 py-3 text-center text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro active:brightness-90"
+        >
+          <Lightbulb className="size-5 shrink-0" aria-hidden />
+          Eu sei onde tem
         </Link>
       ) : !temAcesso || !liberado ? (
         <Link

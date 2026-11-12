@@ -216,16 +216,52 @@ test('v2 telas: FolhaResolver — Outro lugar resolve fora e fecha; loja vai par
  dois.log.botoes['Não foi bom']();await dois.log.ultima;
  assert.deepEqual(dois.log.acoes,[['avaliar',id,-1]]);
 });
-test('v2 Eu sei onde tem: busca exige sessão, ignora termo curto e devolve só o que a tela usa',async()=>{
- const monta=({login=true,falha=false}={})=>{const buscas=[];const a=carregar('src/app/radar/actions.ts',{
+test('v2 Eu sei onde tem: busca exige sessão, usa a região do pedido e devolve só o que a tela usa',async()=>{
+ const monta=({login=true,falha=false,pedido={id,bloqueado:false}}={})=>{const buscas=[],leituras=[];const a=carregar('src/app/radar/actions.ts',{
   '@clerk/nextjs/server':{auth:async()=>({userId:login?'user_x':null}),currentUser:async()=>({id:'user_x'})},
-  'next/cache':{revalidatePath(){}},'@/lib/perfil':{sincronizarPerfil:async()=>{}},'@/lib/dados/conta':{meuPerfilEVitrine:async()=>null},
-  '@/lib/dados/radar':{},'@/lib/supabase/admin':{},'@/lib/supabase/server':{createClient:async()=>({})},
-  '@/lib/dados/anuncios':{buscarAnuncios:async p=>{buscas.push(p);if(falha)throw new Error('x');return {anuncios:[{id:'a1',titulo:'Geladeira',preco_centavos:100000,capa:null,vitrine_nome:'Loja',slug:'s',cidade:'C',atributos:{}}],total:1};}}});return {a,buscas};};
- const sem=monta({login:false});assert.equal((await sem.a.buscarParaIndicar('geladeira')).ok,false);assert.equal(sem.buscas.length,0);
- const curto=monta();assert.deepEqual(await curto.a.buscarParaIndicar(' g '),{ok:true,anuncios:[]});assert.equal(curto.buscas.length,0);
- const bom=monta();const r=await bom.a.buscarParaIndicar('geladeira');
- assert.deepEqual(bom.buscas,[{q:'geladeira',limite:8}]);
+  'next/cache':{revalidatePath(){}},'@/lib/perfil':{sincronizarPerfil:async()=>{}},'@/lib/dados/conta':{meuPerfilEVitrine:async()=>({perfil:{microrregiao_id:'reg1'}})},
+  '@/lib/dados/radar':{},'@/lib/supabase/admin':{},'@/lib/supabase/server':{createClient:async()=>({
+    rpc:async(...x)=>{leituras.push(x);return {data:pedido?[pedido]:[],error:null};},
+    from:t=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{slug:'corrente-pi'}})})})})})},
+  '@/lib/dados/anuncios':{buscarAnuncios:async p=>{buscas.push(p);if(falha)throw new Error('x');return {anuncios:[{id:'a1',titulo:'Geladeira',preco_centavos:100000,capa:null,vitrine_nome:'Loja',slug:'s',cidade:'C',atributos:{}}],total:1};}}});return {a,buscas,leituras};};
+ const sem=monta({login:false});assert.equal((await sem.a.buscarParaIndicar(id,'geladeira')).ok,false);assert.equal(sem.buscas.length,0);
+ assert.equal((await monta().a.buscarParaIndicar('x','geladeira')).ok,false);
+ const curto=monta();assert.deepEqual(await curto.a.buscarParaIndicar(id,' g '),{ok:true,anuncios:[]});assert.equal(curto.buscas.length,0);
+ const fora=monta({pedido:null});assert.equal((await fora.a.buscarParaIndicar(id,'geladeira')).ok,false);assert.equal(fora.buscas.length,0);
+ const bloq=monta({pedido:{id,bloqueado:true}});assert.equal((await bloq.a.buscarParaIndicar(id,'geladeira')).ok,false);assert.equal(bloq.buscas.length,0);
+ const bom=monta();const r=await bom.a.buscarParaIndicar(id,'geladeira');
+ assert.deepEqual(bom.leituras,[['radar_pedido',{p_id:id}]]);
+ assert.deepEqual(bom.buscas,[{q:'geladeira',limite:8,regiao:'corrente-pi'}]);
  assert.deepEqual(r.anuncios,[{id:'a1',titulo:'Geladeira',preco_centavos:100000,capa:null,vitrine_nome:'Loja'}]);
- const ruim=await monta({falha:true}).a.buscarParaIndicar('geladeira');assert.equal(ruim.ok,false);assert.match(ruim.erro,/Tente novamente/);
+ const ruim=await monta({falha:true}).a.buscarParaIndicar(id,'geladeira');assert.equal(ruim.ok,false);assert.match(ruim.erro,/Tente novamente/);
+});
+
+// Tela /radar/[id]: bloqueado esconde o pedido; quem não atende num pedido "todos" só indica
+async function telaPedido(pedido,acesso,conta){
+ const React=require('react');const {renderToStaticMarkup}=require('react-dom/server');
+ const pg=carregar('src/app/radar/[id]/page.tsx',{
+  'next/link':{__esModule:true,default:({href,children})=>React.createElement('a',{href:String(href)},children)},
+  'next/navigation':{redirect(u){throw new Error('redirect '+u)},useRouter:()=>({push(){},refresh(){}})},
+  '@/app/radar/actions':{},
+  '@/lib/dados/radar':{pedidoRadar:async()=>pedido,minhaPropostaNoPedido:async()=>null,acessoRadar:async()=>acesso,
+    planosComRadar:async()=>[{codigo:'full',nome:'Full',preco_centavos:9900,periodo_dias:30,propostas_radar_mes:null}],meusAnunciosNoAr:async()=>[],regrasRadar:async()=>({mensagemMax:300})},
+  '@/lib/dados/conta':{meuPerfilEVitrine:async()=>conta}});
+ return renderToStaticMarkup(await pg.default({params:Promise.resolve({id:pedido.id}),searchParams:Promise.resolve({})}));
+}
+const baseTela={id,titulo:'Geladeira secreta',detalhes:'Detalhe',categoria_nome:null,preco_min_centavos:null,preco_max_centavos:100000,cidade:'Corrente',area_texto:'Toda a região',visibilidade:'todos',
+ modo_contato:'whatsapp_direto',propostas_ate:null,criado_em:new Date().toISOString(),expira_em:new Date(Date.now()+864e5).toISOString(),status:'aberto',situacao:'aberto',total_propostas:1,max_propostas:5,
+ comprador_primeiro_nome:null,comprador_certificado:false,sou_comprador:false,ja_propus:false,mesma_regiao:true,tem_acesso:false,bloqueado:false};
+test('v2 tela do pedido: bloqueado esconde o título e mostra a frase e os planos, mesmo para quem é comprador',async()=>{
+ const html=await telaPedido({...baseTela,bloqueado:true,titulo:null,detalhes:null,sou_comprador:true},{temAcesso:false,restantes:0},{perfil:{},vitrine:null});
+ assert.match(html,/Este pedido é só para lojas verificadas\./);assert.match(html,/Quer ver pedidos como este\?/);assert.match(html,/Ver planos/);
+ assert.doesNotMatch(html,/Geladeira secreta/);assert.doesNotMatch(html,/Eu sei onde tem|Mandar oferta/);
+});
+test('v2 tela do pedido: quem não atende num pedido "todos" vê detalhes e "Eu sei onde tem", sem oferta nem propostas restantes',async()=>{
+ const html=await telaPedido(baseTela,{temAcesso:false,restantes:7},{perfil:{microrregiao_id:'m'},vitrine:{id:'v'}});
+ assert.match(html,/Geladeira secreta/);assert.match(html,/Detalhe/);assert.match(html,/Eu sei onde tem/);
+ assert.doesNotMatch(html,/Mandar oferta|Propor|restantes|você chama o comprador/);
+ const prazo=await telaPedido({...baseTela,situacao:'prazo_acabou',modo_contato:'propostas_prazo',propostas_ate:new Date(Date.now()-1e3).toISOString()},{temAcesso:false,restantes:0},{perfil:{},vitrine:null});
+ assert.match(prazo,/Eu sei onde tem/); // R3: indicar vale enquanto o pedido está aberto, mesmo com o prazo das propostas vencido
+ const fechado=await telaPedido({...baseTela,status:'encerrado',situacao:'fechado'},{temAcesso:false,restantes:0},{perfil:{},vitrine:null});
+ assert.doesNotMatch(fechado,/Eu sei onde tem/);
 });

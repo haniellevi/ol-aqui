@@ -64,8 +64,8 @@ end $$;
 
 set local request.jwt.claim.sub='user_semcodigo';
 do $$ begin
-  assert (select detalhes is null and comprador_primeiro_nome is null
+  assert (select detalhes = 'Detalhe do comprador' and comprador_primeiro_nome is null
     from radar_feed_regional('categoria',current_setting('teste.radar330_motos')::uuid,40,0)
-    where id='33000000-0000-4000-a000-000000000001'), 'Filtro mantém dados privados protegidos';
+    where id='33000000-0000-4000-a000-000000000001'), 'Filtro: pedido Todo mundo mostra detalhes e protege o nome do comprador';
 end $$;
 rollback;

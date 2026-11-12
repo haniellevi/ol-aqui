@@ -136,7 +136,8 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
     areaTexto: p.area_texto,
     visibilidade: p.visibilidade,
     // Bloqueio real: o banco já devolve null para quem não tem acesso; aqui reforçamos.
-    detalhes: temAcesso || p.sou_comprador ? p.detalhes : null,
+    // pedido "Todo mundo" mostra os detalhes a qualquer pessoa da região (o nome do comprador, não)
+    detalhes: temAcesso || p.sou_comprador || p.visibilidade === "todos" ? p.detalhes : null,
     compradorNome: temAcesso ? p.comprador_primeiro_nome : null,
   }));
 

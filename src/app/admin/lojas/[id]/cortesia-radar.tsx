@@ -6,7 +6,7 @@ import { Botao } from "@/components/ui/botao";
 import type { EstadoForm } from "@/lib/admin/estado";
 import { darCortesiaRadar, tirarCortesiaRadar } from "../actions";
 
-// Cortesia do Radar: a loja recebe os pedidos "Só lojas" sem plano Full até a data. O banco confere tudo.
+// Cortesia do Radar: libera tudo do Radar (ver pedidos "Só lojas", mandar ofertas e receber aviso na hora), mesmo sem selo ou plano pago, até a data. O banco confere tudo.
 export function FormCortesiaRadar({ vitrineId, ativa }: { vitrineId: string; ativa: boolean }) {
   const [estadoDar, dar, daPendente] = useActionState(
     async (_: EstadoForm, dados: FormData): Promise<EstadoForm> =>

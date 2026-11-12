@@ -59,7 +59,7 @@ export default async function PedidoLojaPage({
           </h1>
           <p className="text-facil text-texto-suave">Loja verificada com plano que tem Radar vê os pedidos e manda ofertas.</p>
         </section>
-        <Planos planos={planosBloqueio} semCredito={false} />
+        <Planos planos={planosBloqueio} titulo="Quer ver pedidos como este?" />
       </main>
     );
   }
@@ -73,11 +73,13 @@ export default async function PedidoLojaPage({
   const temCredito = acesso.temAcesso && (acesso.restantes === null || acesso.restantes > 0);
 
   const indicar = pedido.visibilidade === "todos" && !acesso.temAcesso;
+  // Indicar vale enquanto o pedido está aberto e dentro da validade, mesmo com o prazo das propostas vencido (a regra é do banco).
+  const aceitaIndicacao = pedido.status === "aberto" && new Date(pedido.expira_em).getTime() > Date.now();
 
   let rodape: React.ReactNode;
   if (indicar) {
     // Quem não atende vê o pedido "Todo mundo" e pode dizer onde tem; nunca "Mandar oferta".
-    rodape = aberto ? (
+    rodape = aceitaIndicacao ? (
       <section className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
         <p className="text-facil text-texto">Conhece alguém que vende isso? Indique o anúncio para ajudar o comprador.</p>
         <FolhaIndicar pedidoId={pedido.id} />
@@ -104,7 +106,7 @@ export default async function PedidoLojaPage({
   } else if (!aberto && !minha) {
     rodape = <p className="rounded-card bg-fundo p-4 text-center text-facil text-texto-suave">Este pedido não recebe mais propostas.</p>;
   } else if (!acesso.temAcesso || (!minha && !temCredito)) {
-    rodape = <Planos planos={planos} semCredito={acesso.temAcesso} />;
+    rodape = <Planos planos={planos} titulo={acesso.temAcesso ? "Suas propostas disponíveis acabaram" : "Este cliente já quer comprar"} />;
   } else if (!minha && cheio) {
     rodape = <p className="rounded-card bg-fundo p-4 text-center text-facil text-texto-suave">Este pedido já recebeu todas as propostas.</p>;
   } else {
@@ -197,10 +199,10 @@ export default async function PedidoLojaPage({
   );
 }
 
-function Planos({ planos, semCredito }: { planos: PlanoRadar[]; semCredito: boolean }) {
+function Planos({ planos, titulo }: { planos: PlanoRadar[]; titulo: string }) {
   return (
     <section className="flex flex-col gap-3 rounded-card bg-beringela p-4 text-white">
-      <p className="text-facil font-bold">{semCredito ? "Suas propostas disponíveis acabaram" : "Este cliente já quer comprar"}</p>
+      <p className="text-facil font-bold">{titulo}</p>
       <p className="text-facil text-white/85">Com um plano com Radar você vê os detalhes e manda sua oferta antes da concorrência.</p>
       {planos.length > 0 && (
         <ul className="flex flex-col gap-2">
