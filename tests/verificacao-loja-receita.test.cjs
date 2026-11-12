@@ -18,6 +18,9 @@ test('lê a fixture da BrasilAPI e usa só os 14 dígitos na URL', async () => {
   assert.equal(init.redirect, 'error');
   assert.equal(init.cache, 'no-store');
   assert.ok(init.signal);
+  // Sem identificação, o Cloudflare da BrasilAPI barra o fetch do Node (403/429).
+  assert.match(init.headers['user-agent'], /^OLAKI\//);
+  assert.equal(init.headers.accept, 'application/json');
   assert.equal(r.estado, 'ok');
   assert.equal(r.dados.situacao, 'ATIVA');
   assert.equal(r.dados.razaoSocial, fixture.razao_social);
