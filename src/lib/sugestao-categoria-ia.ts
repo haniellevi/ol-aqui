@@ -103,12 +103,21 @@ export async function arvoreParaIA(ler: () => Promise<CategoriaLeve[]>, agora = 
 
 /** Até 3 categorias finais para o texto, com a chance de cada. Qualquer problema: lista vazia. */
 export async function categoriasMaisProvaveis(arvore: CategoriaLeve[], texto: unknown): Promise<SugestaoCategoria[]> {
+  return (await perguntarCategorias(arvore, texto)) ?? [];
+}
+
+/**
+ * Igual a categoriasMaisProvaveis, mas separa os casos: null = a IA não foi chamada ou falhou
+ * (sem chave, erro, demora, resposta estranha); [] = a IA respondeu e nenhuma categoria passou de 5%.
+ * Só a resposta de verdade (lista, mesmo vazia) é guardada para medir os acertos.
+ */
+export async function perguntarCategorias(arvore: CategoriaLeve[], texto: unknown): Promise<SugestaoCategoria[] | null> {
   const chave = process.env.TYPESAFE_API_KEY;
   const t = limparTextoBusca(texto);
-  if (!chave || !t || !Array.isArray(arvore)) return [];
+  if (!chave || !t || !Array.isArray(arvore)) return null;
   const { criterios, ids } = criteriosCategorias(arvore);
   // A escolha do JEV aceita até 255 opções; hoje são ~140.
-  if (ids.size < 2 || ids.size > 255) return [];
+  if (ids.size < 2 || ids.size > 255) return null;
   try {
     const r = await fetch(ENDERECO, {
       method: "POST", signal: AbortSignal.timeout(PRAZO_MS), cache: "no-store", redirect: "error",
@@ -119,11 +128,13 @@ export async function categoriasMaisProvaveis(arvore: CategoriaLeve[], texto: un
         questions: { categoria: { type: "choice", instructions: INSTRUCAO, criteria: criterios } },
       }),
     });
-    if (!r.ok) return [];
+    if (!r.ok) return null;
     const corpo = await r.text();
-    if (corpo.length > 100_000) return [];
-    return lerChances(JSON.parse(corpo)?.answers?.categoria?.probabilities, ids);
+    if (corpo.length > 100_000) return null;
+    const probabilidades = JSON.parse(corpo)?.answers?.categoria?.probabilities;
+    if (!probabilidades || typeof probabilidades !== "object" || Array.isArray(probabilidades)) return null;
+    return lerChances(probabilidades, ids);
   } catch {
-    return [];
+    return null;
   }
 }

@@ -69,6 +69,8 @@ try:
     print('PASS: ajudante cuida da Minha loja sem mudar nome, WhatsApp nem plano; estranho não mexe', flush=True)
     checked(sql((root/'supabase/testes/590_montar_e_transferir_loja.sql').read_text()))
     print('PASS: super admin monta loja escondida e o dono recebe pelo convite; fotos mudam de pasta e prontos vão ao ar', flush=True)
+    checked(sql((root/'supabase/testes/600_acertos_categoria_ia.sql').read_text()))
+    print('PASS: acertos da IA de categorias: guarda sugestão e escolha, só quem cuida grava, só admin lê, período e erros', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

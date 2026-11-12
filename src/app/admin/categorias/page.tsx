@@ -4,7 +4,7 @@ import { exigirAdmin } from "@/lib/admin/auth";
 import { lerCategorias, lerCategoriasSugeridas, maesPossiveis } from "@/lib/admin/cadastros";
 import { inteiro } from "@/lib/admin/formato";
 import { nomeDoNivel } from "@/lib/categorias-arvore";
-import { LINK_ADMIN_CATEGORIAS, LINK_ADMIN_CATEGORIAS_SUGERIDAS, linkAdminCategoria } from "@/lib/rotas";
+import { LINK_ADMIN_CATEGORIAS, LINK_ADMIN_CATEGORIAS_IA, LINK_ADMIN_CATEGORIAS_SUGERIDAS, linkAdminCategoria } from "@/lib/rotas";
 import type { CategoriaAdminArvore } from "@/lib/tipos-cadastros";
 import { Cartao, Titulo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
@@ -75,11 +75,16 @@ export default async function CategoriasPage() {
       </Titulo>
 
       <div className="space-y-4">
-        {!falhouSugeridas && (
-          <Botao href={LINK_ADMIN_CATEGORIAS_SUGERIDAS} variante="secundario">
-            Categorias sugeridas ({inteiro(pendentes)})
+        <div className="flex flex-wrap gap-2">
+          {!falhouSugeridas && (
+            <Botao href={LINK_ADMIN_CATEGORIAS_SUGERIDAS} variante="secundario">
+              Categorias sugeridas ({inteiro(pendentes)})
+            </Botao>
+          )}
+          <Botao href={LINK_ADMIN_CATEGORIAS_IA} variante="secundario">
+            Acertos da IA
           </Botao>
-        )}
+        </div>
         {falhou && !arvore.length ? (
           <Vazio titulo="Não conseguimos abrir as categorias" texto="Confira a internet e tente de novo.">
             <Botao href={LINK_ADMIN_CATEGORIAS} variante="secundario" larguraTotal>
