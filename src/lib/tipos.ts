@@ -52,6 +52,7 @@ export type AnuncioCard = {
   vendedor_pago?: boolean;
   vendedor_pf_verificado?: boolean;
   id: string;
+  slug: string | null; // endereço curto do anúncio (null = ainda em rascunho ou anúncio antigo sem endereço)
   titulo: string;
   preco_centavos: number | null; // null = "a combinar"
   aceita_troca: boolean;
@@ -97,6 +98,7 @@ export type ResultadoBusca = { anuncios: AnuncioCard[]; total: number; facetas?:
 /** Linha de anuncio_publico(): página do anúncio e prévia "Revisar". */
 export type AnuncioPublico = {
   id: string;
+  slug: string | null;
   titulo: string | null; // rascunho pode estar sem título
   descricao: string | null;
   preco_centavos: number | null;
@@ -134,6 +136,7 @@ export type AnuncioPublico = {
 /** Anúncio do próprio dono (lido direto da tabela, com RLS). */
 export type MeuAnuncio = {
   id: string;
+  slug: string | null;
   vitrine_id: string;
   categoria_id: string | null;
   titulo: string | null;

@@ -1,7 +1,7 @@
 // Regras das telas 7 (Regiões e cidades) e 9 (Categorias e campos) que rodam ANTES de ir ao banco,
 // só para mostrar a mensagem certa no painel. O banco confere tudo de novo (validar_campos_categoria,
 // conferir_categoria, validar_cidade...). Serve no servidor e no navegador (sem acesso a banco).
-import { numeroDoTexto } from "@/lib/formato";
+import { numeroDoTexto, slugTexto } from "@/lib/formato";
 import type { CampoCategoria, TipoCampo } from "@/lib/tipos";
 import type { CampoEditado, CamposConferidos } from "@/lib/tipos-cadastros";
 
@@ -25,13 +25,9 @@ export const comparavel = (t: string) =>
 /** Espaços limpos: "  Santa   Filomena " → "Santa Filomena". */
 export const limpo = (t: unknown) => String(t ?? "").replace(/\s+/g, " ").trim();
 
-/** "Casa e Móveis" → "casa-e-moveis" (endereço da categoria e da região). */
+/** "Casa e Móveis" → "casa-e-moveis" (endereço da categoria e da região). Mesmo resultado de public.slug_texto(). */
 export function slugDe(nome: string, max = 60): string {
-  return comparavel(nome)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, max)
-    .replace(/-+$/g, "");
+  return slugTexto(nome).slice(0, max);
 }
 
 /** "Horas de uso" → "horas_de_uso" (chave do campo; começa com letra, até 40). */

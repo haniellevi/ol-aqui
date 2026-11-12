@@ -225,7 +225,7 @@ export default async function DestaquesAdminPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-beringela">
                       {r.anuncio_id ? (
-                        <Link href={linkAnuncio(r.anuncio_id, r.anuncio_titulo)} className="underline underline-offset-4">
+                        <Link href={linkAnuncio(r.anuncio_id, r.anuncio_titulo, r.anuncio_slug)} className="underline underline-offset-4">
                           {r.anuncio_titulo ?? "Anúncio"}
                         </Link>
                       ) : (

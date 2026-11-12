@@ -55,7 +55,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   }
 
   const titulo = anuncio.titulo ?? "meu anúncio";
-  const url = urlAbsoluta(linkAnuncio(anuncio.id, anuncio.titulo));
+  const url = urlAbsoluta(linkAnuncio(anuncio.id, anuncio.titulo, anuncio.slug));
   const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Olha o que estou vendendo no Mercado da Região: *${titulo}* ${url}`)}`;
 
   return (
@@ -71,7 +71,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
         <Botao href={compartilhar} variante="whatsapp" larguraTotal icone={<MessageCircle />} target="_blank" rel="noopener noreferrer">
           Compartilhar no WhatsApp
         </Botao>
-        <Botao href={linkAnuncio(anuncio.id, anuncio.titulo)} variante="secundario" larguraTotal icone={<Eye />}>
+        <Botao href={linkAnuncio(anuncio.id, anuncio.titulo, anuncio.slug)} variante="secundario" larguraTotal icone={<Eye />}>
           Ver anúncio
         </Botao>
         <BotaoNovoRascunho variante="secundario" texto="Anunciar outro" />

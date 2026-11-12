@@ -90,6 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 function paraCard(a: AnuncioVitrine, v: VitrinePublica): CardAnuncioProps["anuncio"] {
   return {
     id: a.id,
+    slug: a.slug,
     titulo: a.titulo,
     preco_centavos: a.preco_centavos,
     aceita_troca: a.aceita_troca,

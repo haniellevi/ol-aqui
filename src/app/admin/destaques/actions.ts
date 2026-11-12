@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { exigirAdmin } from "@/lib/admin/auth";
 import { centavosDe, inteiroOuNulo } from "@/lib/admin/formato";
 import type { EstadoForm } from "@/lib/admin/estado";
-import { ehUuid, idDoLinkAnuncio } from "@/lib/formato";
+import { ehSlugAnuncio, ehUuid, idDoLinkAnuncio } from "@/lib/formato";
 import { traduzirErro } from "@/lib/erros";
 import { apagarCobrancaDoPedido } from "@/lib/cobranca-destaque";
 import type { SlugDestaque } from "@/lib/tipos-destaques";
@@ -97,7 +97,14 @@ export async function concederCortesia(_: EstadoForm, form: FormData): Promise<E
       if (!data) return { erro: "Loja não encontrada. Use o endereço dela (ex.: /loja/nome)." };
       vitrineId = data.id as string;
     } else {
-      anuncioId = ehUuid(alvo) ? alvo.toLowerCase() : idDoLinkAnuncio(alvo.replace(/^.*\/anuncio\//, ""));
+      // Aceita o link antigo (/anuncio/<id>-<titulo>), o curto (/anuncio/<slug>) ou só o id.
+      const trecho = alvo.replace(/^.*\/anuncio\//, "").replace(/[/?#].*$/, "");
+      if (ehUuid(alvo)) anuncioId = alvo.toLowerCase();
+      else if (idDoLinkAnuncio(trecho)) anuncioId = idDoLinkAnuncio(trecho);
+      else if (ehSlugAnuncio(trecho)) {
+        const { data } = await supabase.rpc("anuncio_id_por_slug", { p_slug: trecho });
+        anuncioId = typeof data === "string" ? data : null;
+      }
       if (!anuncioId) return { erro: "Link do anúncio inválido." };
     }
     const dias = inteiroOuNulo(form.get("dias"));

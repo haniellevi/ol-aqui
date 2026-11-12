@@ -33,6 +33,7 @@ export type PodeEnviar = {
 /** Cartão de anúncio mostrado na conversa (mesmos campos que o CardAnuncio usa). */
 export type CartaoAki = {
   id: string;
+  slug: string | null;
   titulo: string;
   preco_centavos: number | null;
   cidade: string;

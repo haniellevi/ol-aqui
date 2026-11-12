@@ -155,7 +155,7 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
           <span className="text-xl font-bold break-words text-beringela">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</span>
           {p.mensagem && <p className="text-base leading-6 break-words whitespace-pre-line text-texto">{p.mensagem}</p>}
           {p.anuncio_id && p.anuncio_titulo && (
-            <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo)} className="min-h-10 content-center text-base leading-6 font-semibold text-laranja-escuro underline underline-offset-4">
+            <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} className="min-h-10 content-center text-base leading-6 font-semibold text-laranja-escuro underline underline-offset-4">
               Ver anúncio: {p.anuncio_titulo}
             </Link>
           )}

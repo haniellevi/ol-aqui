@@ -55,6 +55,8 @@ try:
     print('PASS: categorias em 3 níveis: travas, caminho, busca, Radar, nicho e sugestão da troca', flush=True)
     checked(sql((root/'supabase/testes/520_categorias_sugeridas.sql').read_text()))
     print('PASS: categorias sugeridas: normalização, grupo, parecidas, aprovar, juntar, recusar e aviso', flush=True)
+    checked(sql((root/'supabase/testes/530_slug_anuncios.sql').read_text()))
+    print('PASS: link curto do anúncio: endereço fixo, formato, resolvedor, busca, backfill e redirecionamento', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { seguro } from "@/lib/dados/seguro";
 import { regiaoAtual } from "@/lib/dados/regiao";
-import { ehUuid } from "@/lib/formato";
+import { ehSlugAnuncio, ehUuid } from "@/lib/formato";
 import type {
   AnuncioCard,
   AnuncioPublico,
@@ -64,6 +64,15 @@ export const anuncioPublico = cache(async (id: string): Promise<AnuncioPublico |
   return { ...a, fotos: a.fotos ?? [], atributos: a.atributos ?? {}, campos: a.campos ?? [] };
 });
 
+/** Acha o anúncio pelo endereço curto (/anuncio/<slug>), com a mesma visibilidade da página. Não achou → null. */
+export const anuncioIdPorSlug = cache(async (slug: string): Promise<string | null> => {
+  if (!ehSlugAnuncio(slug)) return null;
+  const db = await createClient();
+  const { data, error } = await db.rpc("anuncio_id_por_slug", { p_slug: slug });
+  if (error) throw new Error("Não foi possível carregar o anúncio. Tente novamente.");
+  return typeof data === "string" ? data : null;
+});
+
 /** Faixa de preço dos anúncios parecidos na região (25% a 75%). minimo/maximo null = poucos anúncios. */
 export async function faixaPreco(categoriaId: string, microrregiaoId: string | null = null): Promise<FaixaPreco | null> {
   if (!ehUuid(categoriaId)) return null;
@@ -83,10 +92,11 @@ async function lerFaixa(categoriaId: string, microrregiaoId: string | null): Pro
 }
 
 const COLUNAS_CARD =
-  "id, titulo, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, publicado_em, criado_em, destaque_ate, categorias!anuncios_categoria_id_fkey(slug, nome)";
+  "id, slug, titulo, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, publicado_em, criado_em, destaque_ate, categorias!anuncios_categoria_id_fkey(slug, nome)";
 
 type LinhaCard = {
   id: string;
+  slug: string | null;
   titulo: string;
   preco_centavos: number | null;
   aceita_troca: boolean;
@@ -118,6 +128,7 @@ async function lerDaVitrine(v: Vitrine, limite: number): Promise<AnuncioCard[]> 
   const agora = Date.now();
   const cards = (data as unknown as LinhaCard[]).map<AnuncioCard>((a) => ({
     id: a.id,
+    slug: a.slug,
     titulo: a.titulo,
     preco_centavos: a.preco_centavos,
     aceita_troca: a.aceita_troca,
@@ -139,7 +150,7 @@ async function lerDaVitrine(v: Vitrine, limite: number): Promise<AnuncioCard[]> 
 }
 
 const COLUNAS_MEU =
-  "id, vitrine_id, categoria_id, titulo, descricao, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, status, visualizacoes, cliques_whatsapp, total_favoritos, destaque_ate, pago_ate, motivo_analise, excluido_em, status_antes_exclusao, publicado_em, vendido_em, criado_em, atualizado_em, vitrines_lojas!inner(dono_id)";
+  "id, slug, vitrine_id, categoria_id, titulo, descricao, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, status, visualizacoes, cliques_whatsapp, total_favoritos, destaque_ate, pago_ate, motivo_analise, excluido_em, status_antes_exclusao, publicado_em, vendido_em, criado_em, atualizado_em, vitrines_lojas!inner(dono_id)";
 
 function semDono(a: MeuAnuncio & { vitrines_lojas?: unknown }): MeuAnuncio {
   const { vitrines_lojas: _dono, ...resto } = a;

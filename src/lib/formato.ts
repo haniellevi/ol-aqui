@@ -66,23 +66,40 @@ export function tempoRelativo(iso: string | null | undefined, agora: Date = new 
   return anos <= 1 ? "há 1 ano" : `há ${anos} anos`;
 }
 
-/** "Moto Titan 150 – 2015, revisada!" → "moto-titan-150-2015-revisada" (sem acento, até 60 letras). */
-export function slugDoTitulo(titulo: string | null | undefined): string {
-  return (
-    String(titulo ?? "")
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 60)
-      .replace(/-+$/g, "") || "anuncio"
-  );
+// Letras que o unaccent do banco troca por mais de uma letra (ou por outra) e que o NFD não separa.
+const TROCAS_SEM_ACENTO: Record<string, string> = { ß: "ss", æ: "ae", œ: "oe", ø: "o", đ: "d", ð: "d", ł: "l", ı: "i", þ: "th" };
+
+/**
+ * Mesmo resultado de public.slug_texto() no banco: minúsculas, sem acento, hífen no lugar de tudo
+ * que não é letra ou número, sem hífen nas pontas e até 60 caracteres. Qualquer mudança aqui
+ * precisa de mudança no banco (e vice-versa).
+ */
+export function slugTexto(texto: string | null | undefined): string {
+  return String(texto ?? "")
+    .toLowerCase()
+    .replace(/[ßæœøđðłıþ]/g, (c) => TROCAS_SEM_ACENTO[c])
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
 }
 
-/** Caminho da página do anúncio: /anuncio/<id>-<slug>. */
-export function linkAnuncio(id: string, titulo: string | null | undefined): string {
-  return `/anuncio/${id}-${slugDoTitulo(titulo)}`;
+/** "Moto Titan 150 – 2015, revisada!" → "moto-titan-150-2015-revisada". Base do link do anúncio (sem o sufixo aleatório). */
+export function slugDoTitulo(titulo: string | null | undefined): string {
+  const base = slugTexto(titulo).replace(/-+$/, "");
+  return base.length >= 2 ? base : "anuncio";
+}
+
+/** Endereço curto do anúncio: letras, números e hífen simples, até 70 caracteres. */
+export const ehSlugAnuncio = (texto: string | null | undefined) => !!texto && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(texto) && texto.length <= 70;
+
+/**
+ * Caminho da página do anúncio: /anuncio/<slug> (curto e fixo).
+ * Sem slug (rascunho ou anúncio antigo) usa /anuncio/<id>-<titulo>, que a rota redireciona quando houver slug.
+ */
+export function linkAnuncio(id: string, titulo: string | null | undefined, slug: string | null | undefined): string {
+  return slug ? `/anuncio/${slug}` : `/anuncio/${id}-${slugDoTitulo(titulo)}`;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;

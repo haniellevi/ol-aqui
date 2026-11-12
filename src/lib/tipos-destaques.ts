@@ -64,6 +64,7 @@ export type ResultadoDestaque = {
   tipo_nome: string;
   anuncio_id: string | null;
   anuncio_titulo: string | null;
+  anuncio_slug: string | null;
   vitrine_id: string;
   vitrine_nome: string;
   microrregiao_id: string;

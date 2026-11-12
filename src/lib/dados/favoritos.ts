@@ -5,13 +5,13 @@ import { ehUuid } from "@/lib/formato";
 import type { AnuncioCard, StatusAnuncio, TipoVitrine } from "@/lib/tipos";
 
 export const FAVORITOS_POR_PAGINA = 24;
-export type AnuncioFavorito = Pick<AnuncioCard, "id" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo">;
+export type AnuncioFavorito = Pick<AnuncioCard, "id" | "slug" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo">;
 /** radar: link para pedir parecido no Radar (sem título quando o anúncio saiu do ar). */
 export type Favorito = { id: string; salvoEm: string; anuncio: AnuncioFavorito | null; situacao: "ativo" | "vendido" | "indisponivel"; radar: string };
 type Linha = {
   anuncio_id: string; criado_em: string;
   anuncios: {
-    id: string; titulo: string | null; preco_centavos: number | null; cidade: string | null; fotos: string[] | null;
+    id: string; slug: string | null; titulo: string | null; preco_centavos: number | null; cidade: string | null; fotos: string[] | null;
     status: StatusAnuncio; destaque_ate: string | null; publicado_em: string | null; criado_em: string;
     vitrines_lojas: { nome: string; selo_loja_verificada: boolean; tipo: TipoVitrine; status: string } | null;
     categorias?: { slug: string } | null;
@@ -26,7 +26,7 @@ export async function meusFavoritos(pagina = 1): Promise<{ itens: Favorito[]; to
   const db = await createClient();
   const inicio = (pagina - 1) * FAVORITOS_POR_PAGINA;
   const { data, error, count } = await db.from("favoritos")
-    .select("anuncio_id, criado_em, anuncios(id, titulo, preco_centavos, cidade, fotos, status, destaque_ate, publicado_em, criado_em, categorias!anuncios_categoria_id_fkey(slug), vitrines_lojas(nome, selo_loja_verificada, tipo, status))", { count: "exact" })
+    .select("anuncio_id, criado_em, anuncios(id, slug, titulo, preco_centavos, cidade, fotos, status, destaque_ate, publicado_em, criado_em, categorias!anuncios_categoria_id_fkey(slug), vitrines_lojas(nome, selo_loja_verificada, tipo, status))", { count: "exact" })
     .eq("usuario_id", userId).order("criado_em", { ascending: false }).order("anuncio_id", { ascending: false })
     .range(inicio, inicio + FAVORITOS_POR_PAGINA - 1);
   if (error || !Array.isArray(data) || !Number.isSafeInteger(count) || count! < 0) throw new Error("Não foi possível carregar seus favoritos.");
@@ -43,7 +43,7 @@ export async function meusFavoritos(pagina = 1): Promise<{ itens: Favorito[]; to
     return {
       id: f.anuncio_id, salvoEm: f.criado_em, situacao: a.status as "ativo" | "vendido", radar,
       anuncio: {
-        id: a.id, titulo, preco_centavos: a.preco_centavos, cidade: a.cidade ?? "",
+        id: a.id, slug: a.slug, titulo, preco_centavos: a.preco_centavos, cidade: a.cidade ?? "",
         capa: a.fotos?.[0] ?? null, criado_em: a.publicado_em ?? a.criado_em,
         destaque: a.status === "ativo" && !!a.destaque_ate && Date.parse(a.destaque_ate) > Date.now(),
         vitrine_nome: v.tipo === "pf" ? v.nome.trim().split(/\s+/)[0] : v.nome,

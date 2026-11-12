@@ -24,7 +24,7 @@ const STATUS_PREVIA: Partial<Record<StatusAnuncio, string>> = {
 const publico = (a: AnuncioPublico) => a.status === "ativo" || a.status === "vendido";
 
 export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: AnuncioPublico; favorito: boolean | null; logado: boolean; parecidos: AnuncioCard[] }) {
-  const caminho = linkAnuncio(a.id, a.titulo);
+  const caminho = linkAnuncio(a.id, a.titulo, a.slug);
   const titulo = a.titulo || "Anúncio sem título";
   const ativo = a.status === "ativo";
   const vendido = a.status === "vendido";

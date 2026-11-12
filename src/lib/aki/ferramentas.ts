@@ -196,6 +196,7 @@ function addAcao(ctx: ContextoFerramentas, acao: AcaoAki) {
 function paraCartao(a: AnuncioCard): CartaoAki {
   return {
     id: a.id,
+    slug: a.slug,
     titulo: a.titulo,
     preco_centavos: a.preco_centavos,
     cidade: a.cidade,
@@ -295,7 +296,7 @@ async function buscar(args: Record<string, unknown>, ctx: ContextoFerramentas): 
       vendedor: a.vitrine_nome,
       loja_verificada: a.vitrine_selo,
       patrocinado: a.destaque,
-      link: linkAnuncio(a.id, a.titulo),
+      link: linkAnuncio(a.id, a.titulo, a.slug),
     })),
   });
 }

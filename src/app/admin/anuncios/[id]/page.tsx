@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Gerenciar anúncio" };
 
-type AnuncioAdmin = Pick<MeuAnuncio, "id" | "titulo" | "cidade" | "status" | "descricao" | "fotos" | "motivo_analise" | "preco_centavos" | "atualizado_em"> & {
+type AnuncioAdmin = Pick<MeuAnuncio, "id" | "slug" | "titulo" | "cidade" | "status" | "descricao" | "fotos" | "motivo_analise" | "preco_centavos" | "atualizado_em"> & {
   vitrines_lojas: { nome: string; dono_id: string } | null;
 };
 
@@ -24,7 +24,7 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
   if (!ehUuid(id)) notFound();
   const { antes, erro, ok } = await searchParams;
   const { data: a, error } = await supabase.from("anuncios")
-    .select("id, titulo, cidade, status, descricao, fotos, motivo_analise, preco_centavos, atualizado_em, vitrines_lojas(nome, dono_id)")
+    .select("id, slug, titulo, cidade, status, descricao, fotos, motivo_analise, preco_centavos, atualizado_em, vitrines_lojas(nome, dono_id)")
     .eq("id", id).maybeSingle<AnuncioAdmin>();
   if (error) return <Aviso tipo="erro">Não foi possível carregar o anúncio. Atualize a página para tentar novamente.</Aviso>;
   if (!a) notFound();
@@ -50,7 +50,7 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
       <div className="flex flex-wrap items-center gap-3">
         <Badge variant={situacao.cor}>{situacao.texto}</Badge>
         <p className="font-semibold">{preco(a.preco_centavos)}</p>
-        {(a.status === "ativo" || a.status === "vendido") && <Botao href={linkAnuncio(id, a.titulo)} variante="texto" prefetch={false}>Ver no site</Botao>}
+        {(a.status === "ativo" || a.status === "vendido") && <Botao href={linkAnuncio(id, a.titulo, a.slug)} variante="texto" prefetch={false}>Ver no site</Botao>}
       </div>
       {a.descricao && <p className="whitespace-pre-wrap text-sm">{a.descricao}</p>}
       {fotos.length > 0 && <ul aria-label="Fotos do anúncio" className="grid grid-cols-2 gap-2 sm:grid-cols-4">

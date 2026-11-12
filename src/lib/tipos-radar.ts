@@ -71,6 +71,7 @@ export type PropostaRecebida = {
   foto_url: string | null;
   anuncio_id: string | null;
   anuncio_titulo: string | null;
+  anuncio_slug: string | null;
   anuncio_preco_centavos: number | null;
   anuncio_capa: string | null;
   escolhida: boolean;

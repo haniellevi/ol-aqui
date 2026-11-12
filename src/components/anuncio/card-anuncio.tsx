@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 export type CardAnuncioProps = {
   anuncio: Pick<
     AnuncioCard,
-    "id" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo" | "vendedor_pago" | "vendedor_pf_verificado"
+    "id" | "slug" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo" | "vendedor_pago" | "vendedor_pf_verificado"
   > & { aceita_troca?: boolean };
   /** Carrega a foto já (use nos primeiros cards da tela). Padrão: preguiçoso. */
   prioridade?: boolean;
@@ -23,7 +23,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
   return (
     <article className="olaki-toque relative flex flex-col overflow-hidden rounded-card bg-cartao shadow-1">
       <Link
-        href={linkAnuncio(a.id, a.titulo)}
+        href={linkAnuncio(a.id, a.titulo, a.slug)}
         className="flex flex-1 flex-col focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
       >
         <div className="relative aspect-[4/3] w-full bg-borda">
