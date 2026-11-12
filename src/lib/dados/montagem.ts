@@ -12,11 +12,21 @@ export type ResultadoRecebimento = { publicados: number; em_analise: number; ras
 
 type Mudanca = { de: string; para: string; caminhos: string[] | null };
 
+/** Produtos prontos ainda sem publicar numa loja já recebida (o aceite parou antes de publicar). */
+export async function prontosPendentes(lojaId: string): Promise<number> {
+  if (!ehUuid(lojaId)) return 0;
+  const db = await createClient();
+  const { count, error } = await db.from("anuncios").select("id", { count: "exact", head: true })
+    .eq("vitrine_id", lojaId).eq("status", "rascunho").not("pronto_em", "is", null);
+  return error ? 0 : count ?? 0;
+}
+
 /**
  * Copia as fotos para a pasta do dono, troca os endereços no banco, apaga as cópias antigas
  * e publica os produtos prontos (como o dono, com as conferências normais).
  * Pode rodar de novo sem estragar nada: o que já foi copiado é pulado.
- * Devolve null se as fotos não mudaram (a Minha loja mostra o botão para tentar de novo).
+ * Devolve null se algo falhou (a Minha loja mostra "Terminar de receber a loja" enquanto houver
+ * fotos na pasta provisória ou produtos prontos sem publicar).
  */
 export async function concluirMudancaLoja(lojaId: string): Promise<ResultadoRecebimento | null> {
   if (!ehUuid(lojaId)) return null;

@@ -247,7 +247,7 @@ test('super admin sem loja própria abre o passo do anúncio com a edição aber
 test('Minha loja do ajudante: sem verificação, Destacar, exclusão nem IA; nome e WhatsApp só leitura', async () => {
   const props = [];
   const Form = (p) => { props.push(p); return null; };
-  const pagina = (ajudante, extra = {}, sp = {}) => carregar('src/app/(conta)/minha-conta/loja/page.tsx', {
+  const pagina = (ajudante, extra = {}, sp = {}, prontos = 0) => carregar('src/app/(conta)/minha-conta/loja/page.tsx', {
     '@/lib/dados/regiao': { listarCidades: async () => [] },
     '@/lib/dados/vitrine-completa': {
       minhaVitrineCompleta: async () => ({ id: ajudada.id, dono_id: 'user_dono', ajudante, tipo: 'loja', status: 'ativa', slug: 'loja-do-ze', nome: 'Loja do Zé', whatsapp: '5589999990001', cidade: 'Corrente', bairro: null, logo_url: null, microrregiao_id: 'r', banner_tipo: 'modelo', banner_url: null, banner_modelo: 'liso', banner_cor: '#4B1248', ...extra }),
@@ -266,6 +266,7 @@ test('Minha loja do ajudante: sem verificação, Destacar, exclusão nem IA; nom
     '@/components/vitrine/banner-loja': { BannerLoja: () => null },
     '@/components/conta/excluir-loja': { ExcluirLoja: () => 'EXCLUIR LOJA', LojaNaLixeira: () => null },
     '@/app/receber-loja/form-receber': { FormTerminarRecebimento: ({ loja }) => `TERMINAR:${loja}` },
+    '@/lib/dados/montagem': { prontosPendentes: async () => { if (ajudante) throw Error('ajudante não confere prontos'); return prontos; } },
   }).default({ searchParams: Promise.resolve(sp) });
   const arvore = await pagina(true);
   const html = render(arvore);
@@ -295,6 +296,10 @@ test('Minha loja do ajudante: sem verificação, Destacar, exclusão nem IA; nom
   const pendente = render(await pagina(false, { pasta_montagem: 'user_montagem' + 'a'.repeat(32) }));
   assert.match(pendente, /Falta terminar de receber a loja/);
   assert.match(pendente, new RegExp(`TERMINAR:${ajudada.id}`));
+  const soProntos = render(await pagina(false, {}, {}, 2));
+  assert.match(soProntos, /os produtos prontos ainda não foram publicados/);
+  assert.match(soProntos, new RegExp(`TERMINAR:${ajudada.id}`));
+  assert.doesNotMatch(render(await pagina(false)), /Falta terminar/);
   const recebida = render(await pagina(false, {}, { recebida: '3-1-0' }));
   assert.match(recebida, /Loja recebida\. Ela é sua e já está no ar\. 3 produtos foram ao ar, 1 está em análise\./);
   assert.doesNotMatch(render(await pagina(false, {}, { recebida: 'x' })), /Loja recebida/);

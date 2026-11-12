@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ehUuid } from "@/lib/formato";
 import { traduzirErro } from "@/lib/erros";
 import { COOKIE_LOJA } from "@/lib/dados/loja-ativa";
-import { concluirMudancaLoja } from "@/lib/dados/montagem";
+import { concluirMudancaLoja, prontosPendentes } from "@/lib/dados/montagem";
 
 /** Endereço de volta para a Minha loja com o resultado (ex.: recebida=3-1-0 = no ar, em análise, rascunho). */
 function destino(r: Awaited<ReturnType<typeof concluirMudancaLoja>>) {
@@ -32,17 +32,18 @@ export async function aceitarLoja(codigo: string, _: string | null, form: FormDa
   redirect(destino(resultado));
 }
 
-/** Botão da Minha loja quando as fotos não terminaram de mudar no aceite. */
+/** Botão da Minha loja quando o aceite não terminou: fotos ainda na pasta provisória ou prontos sem publicar. */
 export async function terminarRecebimento(loja: string): Promise<string | null> {
   const { userId } = await auth();
   if (!userId || !ehUuid(loja)) return "Loja inválida.";
   const db = await createClient();
   // Só o dono termina (a cópia das fotos usa a chave do servidor).
-  const { data } = await db.from("vitrines_lojas").select("id").eq("id", loja).eq("dono_id", userId).eq("status", "ativa")
-    .not("pasta_montagem", "is", null).maybeSingle<{ id: string }>();
+  const { data } = await db.from("vitrines_lojas").select("id, pasta_montagem").eq("id", loja).eq("dono_id", userId).eq("status", "ativa")
+    .maybeSingle<{ id: string; pasta_montagem: string | null }>();
   if (!data) return "Não foi possível terminar agora. Atualize a página.";
+  if (!data.pasta_montagem && !(await prontosPendentes(loja))) return "A loja já foi recebida. Atualize a página.";
   const resultado = await concluirMudancaLoja(loja);
-  if (!resultado) return "Não foi possível levar as fotos para a sua conta agora. Tente de novo em alguns minutos.";
+  if (!resultado) return "Não foi possível terminar de receber a loja agora. Tente de novo em alguns minutos.";
   revalidatePath("/", "layout");
   redirect(destino(resultado));
 }

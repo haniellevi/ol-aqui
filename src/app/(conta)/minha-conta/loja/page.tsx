@@ -24,6 +24,7 @@ import { ExcluirLoja, LojaNaLixeira } from "@/components/conta/excluir-loja";
 import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
 import { SeletorLoja } from "@/components/conta/seletor-loja";
 import { FormTerminarRecebimento } from "@/app/receber-loja/form-receber";
+import { prontosPendentes } from "@/lib/dados/montagem";
 
 type ExclusaoLoja = { na_lixeira: boolean; apagar_apos: string | null; pode_restaurar: boolean | null; tem_pagamentos: boolean };
 
@@ -59,7 +60,7 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
   }
   // P5b-2b: o ajudante não vê verificação, Destacar, destaques, exclusão nem a revisão de categorias pela IA (são do dono).
   const ajudante = v.ajudante === true;
-  const [cidades, recursos, planos, destaques, verificacaoR, exclusaoR, lojas, lojaAtual] = await Promise.all([
+  const [cidades, recursos, planos, destaques, verificacaoR, exclusaoR, lojas, lojaAtual, prontos] = await Promise.all([
     listarCidades(v.microrregiao_id),
     meusRecursosVitrine(true),
     planosPublicos(),
@@ -68,6 +69,8 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
     ajudante ? Promise.resolve(null) : createClient().then((db) => db.rpc("minha_loja_exclusao")),
     lojasQueCuido(),
     lojaEscolhida(),
+    // P5c: o aceite pode ter parado depois de mudar as fotos e antes de publicar os prontos.
+    ajudante || v.status !== "ativa" || v.pasta_montagem ? Promise.resolve(0) : prontosPendentes(v.id),
   ]);
   const vitrineNova = await vitrineNovaAtiva(v.microrregiao_id).catch(() => false);
   // Vitrine com IA (etapa 4): sugestões de categoria, só com a vitrine nova ligada.
@@ -129,9 +132,13 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
             : "Sua loja está com pagamento atrasado. Veja em Meu plano."}
         </Aviso>
       )}
-      {!ajudante && v.pasta_montagem ? (
+      {!ajudante && (v.pasta_montagem || prontos > 0) ? (
         <>
-          <Aviso tipo="atencao">Falta terminar de receber a loja: as fotos ainda não passaram para a sua conta.</Aviso>
+          <Aviso tipo="atencao">
+            {v.pasta_montagem
+              ? "Falta terminar de receber a loja: as fotos ainda não passaram para a sua conta."
+              : "Falta terminar de receber a loja: os produtos prontos ainda não foram publicados."}
+          </Aviso>
           <FormTerminarRecebimento loja={v.id} />
         </>
       ) : !ajudante && typeof recebida === "string" && fraseRecebida(recebida) && (

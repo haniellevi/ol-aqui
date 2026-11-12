@@ -71,7 +71,7 @@ test('receber a loja: erro ao copiar ou pasta estranha para tudo antes de trocar
   assert.equal(await nada.concluirMudancaLoja('x'), null);
 });
 
-function acoesReceber({ resposta, concluir = async () => ({ publicados: 1, em_analise: 0, rascunhos: 2 }), linhaDono = { id: loja } }) {
+function acoesReceber({ resposta, concluir = async () => ({ publicados: 1, em_analise: 0, rascunhos: 2 }), linhaDono = { id: loja, pasta_montagem: pasta }, prontos = 0 }) {
   const chamadas = [];
   const cookies = [];
   const db = {
@@ -87,7 +87,7 @@ function acoesReceber({ resposta, concluir = async () => ({ publicados: 1, em_an
     'next/cache': { revalidatePath() {} },
     'next/navigation': redirecionar,
     '@/lib/supabase/server': { createClient: async () => db },
-    '@/lib/dados/montagem': { concluirMudancaLoja: async (id) => { chamadas.push(['concluir', id]); return concluir(id); } },
+    '@/lib/dados/montagem': { concluirMudancaLoja: async (id) => { chamadas.push(['concluir', id]); return concluir(id); }, prontosPendentes: async () => prontos },
   });
   return { ...mod, chamadas, cookies };
 }
@@ -126,7 +126,13 @@ test('terminar de receber: só o dono, e só a loja com fotos pendentes', async 
   assert.match(await outro.terminarRecebimento(loja), /Não foi possível/);
   assert.ok(!outro.chamadas.some((c) => c[0] === 'concluir'));
   const falhou = acoesReceber({ resposta: null, concluir: async () => null });
-  assert.match(await falhou.terminarRecebimento(loja), /fotos/);
+  assert.match(await falhou.terminarRecebimento(loja), /Tente de novo/);
+  // Fotos já mudaram, mas a publicação parou: ainda dá para terminar.
+  const soProntos = acoesReceber({ resposta: null, linhaDono: { id: loja, pasta_montagem: null }, prontos: 2 });
+  await assert.rejects(soProntos.terminarRecebimento(loja), /recebida=1-0-2$/);
+  const nadaPendente = acoesReceber({ resposta: null, linhaDono: { id: loja, pasta_montagem: null } });
+  assert.match(await nadaPendente.terminarRecebimento(loja), /já foi recebida/);
+  assert.ok(!nadaPendente.chamadas.some((c) => c[0] === 'concluir'));
 });
 
 function acoesPainel(resposta) {
