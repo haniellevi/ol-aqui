@@ -93,7 +93,7 @@ export default async function PaginaProdutos({ searchParams }: { searchParams: P
         <Cartao className="text-sm text-texto-suave">Nenhum produto teve número neste período.</Cartao>
       ) : grupos ? (
         <Cartao>
-          <Table>
+          <Table rotulo={visao === "categoria" ? "Números por categoria" : "Números por região"} className="min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>{visao === "categoria" ? "Categoria" : "Região"}</TableHead>
@@ -127,7 +127,7 @@ export default async function PaginaProdutos({ searchParams }: { searchParams: P
       ) : (
         <Cartao>
           <p className="mb-2 text-legenda text-texto-suave">Os 30 produtos mais vistos do período.</p>
-          <Table>
+          <Table rotulo="Números dos produtos mais vistos" className="min-w-[1000px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Produto</TableHead>
@@ -145,7 +145,7 @@ export default async function PaginaProdutos({ searchParams }: { searchParams: P
             <TableBody>
               {(produtos ?? []).map((p) => (
                 <TableRow key={p.anuncio_id}>
-                  <TableCell className="[overflow-wrap:anywhere]">
+                  <TableCell className="min-w-44 [overflow-wrap:anywhere]">
                     {p.titulo}
                     <span className="block text-legenda text-texto-suave">{SITUACAO[p.status] ?? p.status}</span>
                   </TableCell>
