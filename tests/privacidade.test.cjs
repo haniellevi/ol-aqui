@@ -10,6 +10,10 @@ function exportacao(op = {}) {
     favoritos: Array.from({ length: 5 }, (_, i) => ({ anuncio_id: `a${i}`, usuario_id: usuario })),
     robo_conversas: [{ id: 'conversa', usuario_id: usuario }],
     robo_mensagens: Array.from({ length: 5 }, (_, i) => ({ id: i, usuario_id: usuario, conversa_id: 'conversa', papel: 'usuario', conteudo: { texto: `mensagem ${i}` } })),
+    radar_indicacoes: [
+      { id: 'minha-indicacao', autor_id: usuario, pedido_id: 'p1', anuncio_id: 'a1' },
+      { id: 'de-outro', autor_id: 'outro', pedido_id: 'p1', anuncio_id: 'a2' },
+    ],
     radar_propostas: [
       { id: 'recebida', vitrine_id: 'outra-loja', status: 'ativa', radar_pedidos: { comprador_id: usuario } },
       { id: 'de-terceiro', vitrine_id: 'outra-loja', status: 'ativa', radar_pedidos: { comprador_id: 'outro' } },
@@ -77,6 +81,8 @@ test('exportação: propostas recebidas são apenas ativas de pedidos próprios 
   assert.deepEqual(dados.propostas_radar_recebidas.map(p => p.id), ['recebida']);
   assert.equal('radar_pedidos' in dados.propostas_radar_recebidas[0], false);
   assert.deepEqual(dados.propostas_radar_enviadas.map(p => p.id), ['enviada']);
+  assert.deepEqual(dados.indicacoes_radar.map(i => i.id), ['minha-indicacao']);
+  assert.ok(a.consultas.some(c => c.tabela === 'radar_indicacoes' && c.filtros.some(([col, v]) => col === 'autor_id' && v === usuario)));
   assert.ok(a.consultas.filter(c => c.tabela === 'radar_propostas').every(c => !c.colunas.includes('*') && !c.colunas.includes('criado_ip')));
 });
 test('exportação: qualquer coleção com erro, inclusive página posterior, falha sem arquivo parcial', async () => {
