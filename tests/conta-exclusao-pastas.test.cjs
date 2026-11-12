@@ -17,7 +17,8 @@ function bancoFalso({ trocas = [], perfisVivos = [], apagarPerfilFalha = null } 
       delete() { q._delete = true; return q; },
       then(res) {
         if (tabela === 'admin_gestao_eventos') {
-          const data = trocas.filter((t) => filtros.acao === 'troca_id_clerk' && t.alvo === filtros.alvo).map((t) => ({ detalhes: t.detalhes }));
+          const alvos = [].concat(filtros.alvo);
+          const data = trocas.filter((t) => filtros.acao === 'troca_id_clerk' && alvos.includes(t.alvo)).map((t) => ({ detalhes: t.detalhes }));
           return res({ data, error: null });
         }
         if (tabela === 'perfis' && q._delete) return res({ error: apagarPerfilFalha });
@@ -68,6 +69,28 @@ test('pastasDaConta: ID antigo que voltou a ser perfil (troca desfeita) não ent
     perfisVivos: ['user_desfeito1'],
   });
   assert.deepEqual(await modulo(db).pastasDaConta(db, 'user_novo1'), ['user_novo1']);
+});
+
+test('pastasDaConta: segue a cadeia de trocas (A → B → C) e para em ciclo', async () => {
+  const { db } = bancoFalso({
+    trocas: [
+      { alvo: 'user_b', detalhes: { id_antigo: 'user_a' } },
+      { alvo: 'user_c', detalhes: { id_antigo: 'user_b' } },
+      { alvo: 'user_a', detalhes: { id_antigo: 'user_c' } },
+    ],
+  });
+  assert.deepEqual(await modulo(db).pastasDaConta(db, 'user_c'), ['user_c', 'user_b', 'user_a']);
+});
+
+test('pastasDaConta: cadeia para num ID antigo que voltou a ser perfil', async () => {
+  const { db } = bancoFalso({
+    trocas: [
+      { alvo: 'user_b', detalhes: { id_antigo: 'user_a' } },
+      { alvo: 'user_c', detalhes: { id_antigo: 'user_b' } },
+    ],
+    perfisVivos: ['user_b'],
+  });
+  assert.deepEqual(await modulo(db).pastasDaConta(db, 'user_c'), ['user_c']);
 });
 
 test('apagarConta: põe as duas pastas na fila e apaga os arquivos das duas', async () => {

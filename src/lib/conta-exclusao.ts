@@ -138,19 +138,29 @@ export async function apagarConta(id: string) {
  * Pastas de arquivos da conta: a do ID atual e as dos IDs antigos do Clerk. Na troca do Clerk de
  * desenvolvimento para o de produção (admin_trocar_id_usuario, docs/PLANO-CLERK-PRODUCAO.md) as
  * fotos ficam na pasta do ID antigo; o par antigo → novo fica em admin_gestao_eventos.
- * Um ID antigo que voltou a ser perfil de alguém (troca desfeita) nunca entra.
+ * Segue a cadeia inteira (A → B → C: excluir C limpa C, B e A), sem repetir nem entrar em ciclo.
+ * Um ID antigo que voltou a ser perfil de alguém (troca desfeita) nunca entra, nem os anteriores a ele.
  */
 export async function pastasDaConta(db: Db, id: string): Promise<string[]> {
   const valido = (p: unknown): p is string => typeof p === "string" && /^user_[A-Za-z0-9]+$/.test(p);
   if (!/^[A-Za-z0-9_]+$/.test(id)) return [];
-  const trocas = await db.from("admin_gestao_eventos").select("detalhes").eq("acao", "troca_id_clerk").eq("alvo", id);
-  ok(trocas);
-  const antigos = [...new Set((trocas.data ?? []).map((t) => (t.detalhes as { id_antigo?: unknown } | null)?.id_antigo).filter(valido))].filter((p) => p !== id);
-  if (!antigos.length) return [id];
-  const vivos = await db.from("perfis").select("id").in("id", antigos);
-  ok(vivos);
-  const emUso = new Set((vivos.data ?? []).map((p) => p.id as string));
-  return [id, ...antigos.filter((p) => !emUso.has(p))];
+  const pastas = [id];
+  const vistos = new Set([id]);
+  let atuais = [id];
+  for (let volta = 0; atuais.length && volta < 20; volta++) {
+    const trocas = await db.from("admin_gestao_eventos").select("detalhes").eq("acao", "troca_id_clerk").in("alvo", atuais);
+    ok(trocas);
+    const antigos = [...new Set((trocas.data ?? []).map((t) => (t.detalhes as { id_antigo?: unknown } | null)?.id_antigo).filter(valido))]
+      .filter((p) => !vistos.has(p));
+    antigos.forEach((p) => vistos.add(p));
+    if (!antigos.length) break;
+    const vivos = await db.from("perfis").select("id").in("id", antigos);
+    ok(vivos);
+    const emUso = new Set((vivos.data ?? []).map((p) => p.id as string));
+    atuais = antigos.filter((p) => !emUso.has(p));
+    pastas.push(...atuais);
+  }
+  return pastas;
 }
 
 /** Apaga a pasta da pessoa (só o que ninguém usa mais) e tira da fila. */
