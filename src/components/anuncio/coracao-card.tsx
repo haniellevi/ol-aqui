@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Heart, Loader2 } from "lucide-react";
 import { alternarFavorito } from "@/app/(publico)/anuncio/[idslug]/actions";
 
@@ -10,11 +10,29 @@ import { alternarFavorito } from "@/app/(publico)/anuncio/[idslug]/actions";
 const ALVO = "grid size-12 place-items-center rounded-full focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:opacity-60";
 const BOLA = "grid size-9 place-items-center rounded-full bg-cartao/95 text-beringela shadow-1";
 
+/** Avisa os outros corações do mesmo anúncio na tela (destaque e feed) que o favorito mudou. */
+const EVENTO = "favorito-mudou";
+type Mudanca = { id: string; favorito: boolean };
+export function avisarFavorito(id: string, favorito: boolean) {
+  window.dispatchEvent(new CustomEvent<Mudanca>(EVENTO, { detail: { id, favorito } }));
+}
+
 export function CoracaoCard({ anuncioId, titulo, logado, inicial }: { anuncioId: string; titulo: string; logado: boolean; inicial: boolean }) {
   const [favorito, setFavorito] = useState(inicial);
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
   const trava = useRef(false);
+
+  // Nova leitura do servidor (ex.: depois de entrar e salvar na volta) vence o valor antigo.
+  useEffect(() => setFavorito(inicial), [inicial]);
+  useEffect(() => {
+    const ouvir = (e: Event) => {
+      const { id, favorito: valor } = (e as CustomEvent<Mudanca>).detail;
+      if (id === anuncioId) setFavorito(valor);
+    };
+    window.addEventListener(EVENTO, ouvir);
+    return () => window.removeEventListener(EVENTO, ouvir);
+  }, [anuncioId]);
 
   if (!logado) {
     const volta = `/?salvar=${anuncioId}`;
@@ -29,17 +47,17 @@ export function CoracaoCard({ anuncioId, titulo, logado, inicial }: { anuncioId:
     if (trava.current) return;
     trava.current = true;
     const novo = !favorito;
-    setFavorito(novo);
+    avisarFavorito(anuncioId, novo);
     setErro(null);
     iniciar(async () => {
       try {
         const r = await alternarFavorito(anuncioId, novo);
         if (!r.ok || r.dados.favorito !== novo) {
-          setFavorito(!novo);
+          avisarFavorito(anuncioId, !novo);
           setErro(!r.ok ? r.erro.mensagem : "Não conseguimos confirmar. Atualize a página.");
         }
       } catch {
-        setFavorito(!novo);
+        avisarFavorito(anuncioId, !novo);
         setErro("A conexão falhou. Tente novamente.");
       } finally {
         trava.current = false;
