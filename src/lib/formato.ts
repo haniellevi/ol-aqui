@@ -66,6 +66,37 @@ export function tempoRelativo(iso: string | null | undefined, agora: Date = new 
   return anos <= 1 ? "há 1 ano" : `há ${anos} anos`;
 }
 
+const FUSO = "America/Fortaleza"; // horário do Piauí (sem horário de verão)
+const diaNoFuso = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: FUSO });
+
+/**
+ * Data do card de anúncio: "Hoje, 18:58", "Ontem, 09:10", "11/11" (ano só quando não é o atual: "11/11/2025").
+ * Sempre no horário do Piauí, para o servidor e o celular mostrarem igual.
+ */
+export function quandoCard(iso: string | null | undefined, agora: Date = new Date()): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const dia = diaNoFuso(d);
+  const hora = () => d.toLocaleTimeString("pt-BR", { timeZone: FUSO, hour: "2-digit", minute: "2-digit" });
+  if (dia === diaNoFuso(agora)) return `Hoje, ${hora()}`;
+  if (dia === diaNoFuso(new Date(agora.getTime() - 86400000))) return `Ontem, ${hora()}`;
+  const mesmoAno = dia.slice(0, 4) === diaNoFuso(agora).slice(0, 4);
+  return d.toLocaleDateString("pt-BR", { timeZone: FUSO, day: "2-digit", month: "2-digit", ...(mesmoAno ? {} : { year: "numeric" }) });
+}
+
+/** "Corrente - PI" (sem UF conhecida, só a cidade). */
+export function cidadeUf(cidade: string | null | undefined, uf: string | null | undefined): string {
+  const c = String(cidade ?? "").trim();
+  const u = String(uf ?? "").trim().toUpperCase();
+  return c && /^[A-Z]{2}$/.test(u) ? `${c} - ${u}` : c;
+}
+
+/** Preço antes, só quando vale riscar: existe, é maior que o atual e o atual não é "a combinar". */
+export function precoAntesValido(antes: number | null | undefined, atual: number | null | undefined): number | null {
+  return antes != null && atual != null && Number.isFinite(antes) && antes > atual ? antes : null;
+}
+
 // Letras que o unaccent do banco troca por mais de uma letra (ou por outra) e que o NFD não separa.
 const TROCAS_SEM_ACENTO: Record<string, string> = { ß: "ss", æ: "ae", œ: "oe", ø: "o", đ: "d", ð: "d", ł: "l", ı: "i", þ: "th" };
 

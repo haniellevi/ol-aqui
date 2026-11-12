@@ -69,6 +69,8 @@ export type AnuncioCard = {
   vitrine_tipo: TipoVitrine;
   destaque: boolean; // pago: mostrar "Patrocinado"
   total: number; // total de resultados da busca (igual em todas as linhas)
+  preco_antes_centavos?: number | null; // preço anterior (riscado no card quando é maior que o atual)
+  uf?: string | null; // UF da cidade ("PI"), para "Corrente - PI"
 };
 
 export type OrdemBusca = "relevancia" | "recentes" | "menor_preco" | "maior_preco";

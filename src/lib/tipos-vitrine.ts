@@ -82,6 +82,8 @@ export type AnuncioVitrine = {
   grupo_ordem: number;
   /** true = entra nos grupos desta página; false = veio só porque está numa seção da loja. */
   na_pagina: boolean;
+  preco_antes_centavos?: number | null; // preço anterior (riscado no card)
+  uf?: string | null; // UF da cidade
 };
 
 /* ------------------------------ Dono -------------------------------- */

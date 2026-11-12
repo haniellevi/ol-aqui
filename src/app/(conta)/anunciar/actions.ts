@@ -397,7 +397,20 @@ export async function salvarPreco(_antes: EstadoForm, form: FormData): Promise<E
     }
   }
 
-  const r = await gravar(c.id, { preco_centavos: centavos, aceita_troca: aceitaTroca }, anuncio);
+  const colunas: Record<string, unknown> = { preco_centavos: centavos, aceita_troca: aceitaTroca };
+  // "Preço antes" só vem quando o campo apareceu (edição, com a coluna no banco). Vazio ou "a combinar" apaga.
+  if (form.get("tem_preco_antes") === "1") {
+    const textoAntes = aCombinar ? "" : String(form.get("preco_antes") ?? "").trim();
+    const antes = textoAntes ? centavosDoTexto(textoAntes) : null;
+    if (textoAntes && antes === null) return { erro: { mensagem: "Use um preço antes como 1.500,50, com no máximo duas casas decimais." }, campos: { preco_antes: "Ex.: 1.500,50. Use no máximo duas casas decimais." } };
+    if (antes !== null && antes > MAX_PRECO_CENTAVOS) return { erro: { mensagem: "Esse preço antes está alto demais. Confira." }, campos: { preco_antes: "Confira o valor." } };
+    if (antes !== null && (centavos === null || antes <= centavos)) {
+      return { erro: { mensagem: "O preço antes precisa ser maior que o preço de agora." }, campos: { preco_antes: "Coloque um valor maior que o preço de agora, ou deixe vazio." } };
+    }
+    colunas.preco_antes_centavos = antes;
+  }
+
+  const r = await gravar(c.id, colunas, anuncio);
   if (r) return r;
   redirect(destino("preco", c));
 }

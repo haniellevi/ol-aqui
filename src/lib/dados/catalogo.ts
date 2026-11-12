@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { completarCards } from "@/lib/dados/cards-extra";
 import type { AnuncioCard, Regiao } from "@/lib/tipos";
 
 export type LojaCatalogo = {
@@ -33,5 +34,5 @@ export async function anunciosCatalogo(
   const db = await createClient();
   const { data, error } = await db.rpc("catalogo_anuncios", { ...recorte(regiao, nicho, limite, offset), p_modo: modo });
   if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar os produtos da região.");
-  return data as AnuncioCard[];
+  return completarCards(data as AnuncioCard[]);
 }
