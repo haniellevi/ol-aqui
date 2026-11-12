@@ -13,7 +13,7 @@ export function ExplicacaoRadar({ textoBusca }: { textoBusca?: string | null }) 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-4">
       <header className="flex flex-col gap-2">
-        <h1 className="flex items-center gap-2 text-facil-titulo font-semibold">
+        <h1 className="flex items-center gap-2 text-facil-titulo font-semibold text-beringela">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
           Estou procurando…
         </h1>

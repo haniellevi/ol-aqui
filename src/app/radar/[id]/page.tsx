@@ -9,7 +9,7 @@ import { LINK_PLANOS, LINK_RADAR, linkMeuPedidoRadar } from "@/lib/rotas";
 import { preco, tempoRelativo } from "@/lib/formato";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
-import { dataHoraCurta, faixaPreco, linkVerificarParaRadar } from "@/components/radar/util";
+import { dataHoraCurta, faixaPreco, LINK_VOLTAR, linkVerificarParaRadar } from "@/components/radar/util";
 import { AvisoVerificar } from "@/components/radar/aviso-verificar";
 import { FolhaPropor } from "@/components/radar/folha-propor";
 import { FolhaIndicar } from "@/components/radar/folha-indicar";
@@ -28,7 +28,7 @@ export default async function PedidoLojaPage({
   const [{ id }, { propor }] = await Promise.all([params, searchParams]);
   const pedido = await pedidoRadar(id);
   const voltar = (
-    <Link href={LINK_RADAR} className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 px-2 text-facil font-semibold text-laranja-escuro">
+    <Link href={LINK_RADAR} className={LINK_VOLTAR}>
       <ChevronLeft className="size-5" aria-hidden />
       Radar
     </Link>
@@ -38,7 +38,7 @@ export default async function PedidoLojaPage({
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
         {voltar}
-        <Vazio titulo="Este pedido não está mais no ar" texto="O comprador já resolveu ou o prazo acabou. Veja outros pedidos da região.">
+        <Vazio tamanho="grande" titulo="Este pedido não está mais no ar" texto="O comprador já resolveu ou o prazo acabou. Veja outros pedidos da região.">
           <Botao href={`${LINK_RADAR}?aba=regiao`} larguraTotal tamanho="grande">
             Ver pedidos na região
           </Botao>
@@ -111,7 +111,7 @@ export default async function PedidoLojaPage({
     );
   } else if (!conta?.vitrine) {
     rodape = (
-      <Vazio icone={<Store />} titulo="Você vende?" texto="Crie sua vitrine grátis para mandar ofertas aos compradores da região.">
+      <Vazio tamanho="grande" icone={<Store />} titulo="Você vende?" texto="Crie sua vitrine grátis para mandar ofertas aos compradores da região.">
         <Botao href="/quero-vender" larguraTotal tamanho="grande">
           Quero vender
         </Botao>
@@ -119,7 +119,7 @@ export default async function PedidoLojaPage({
     );
   } else if (!pedido.mesma_regiao) {
     rodape = (
-      <Vazio icone={<MapPinOff />} titulo="Pedido de outra região" texto="Você só pode mandar proposta para compradores da região da sua loja.">
+      <Vazio tamanho="grande" icone={<MapPinOff />} titulo="Pedido de outra região" texto="Você só pode mandar proposta para compradores da região da sua loja.">
         <Botao href={`${LINK_RADAR}?aba=regiao`} variante="secundario" larguraTotal tamanho="grande">
           Ver pedidos da minha região
         </Botao>
@@ -201,7 +201,7 @@ export default async function PedidoLojaPage({
 
       {minha && (
         <section className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-4">
-          <h2 className="text-3xl font-bold">Sua proposta</h2>
+          <h2 className="text-3xl font-semibold text-beringela">Sua proposta</h2>
           {minha.status === "oculta" ? (
             <p className="inline-flex items-start gap-2 text-facil font-semibold text-perigo">
               <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -232,11 +232,11 @@ function Planos({ planos, titulo }: { planos: PlanoRadar[]; titulo: string }) {
         <ul className="flex flex-col gap-2">
           {planos.map((p) => (
             <li key={p.codigo} className="flex items-center justify-between gap-3 rounded-campo bg-white/10 px-3 py-2">
-              <span className="font-semibold">{p.nome}</span>
+              <span className="text-facil font-semibold">{p.nome}</span>
               <span className="text-right text-facil">
                 {preco(p.preco_centavos)}
                 {p.periodo_dias === 30 ? "/mês" : ` a cada ${p.periodo_dias} dias`}
-                {p.propostas_radar_mes != null && <span className="block text-legenda text-white/80">{p.propostas_radar_mes} propostas por mês</span>}
+                {p.propostas_radar_mes != null && <span className="block text-facil text-white/85">{p.propostas_radar_mes} propostas por mês</span>}
               </span>
             </li>
           ))}

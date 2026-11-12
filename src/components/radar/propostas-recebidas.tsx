@@ -10,6 +10,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { escolherProposta } from "@/app/radar/actions";
 import { linkAnuncio, linkLoja, preco, tempoRelativo } from "@/lib/formato";
 import type { PropostaRecebida } from "@/lib/tipos-radar";
+import { FOCO_LINK } from "./util";
 import { Badge } from "@/components/ui/badge";
 
 type Ordem = "preco" | "novas";
@@ -35,6 +36,7 @@ export function PropostasRecebidas({
   if (propostas.length === 0) {
     return (
       <Vazio
+        tamanho="grande"
         icone={<Inbox />}
         titulo="Nenhuma proposta ainda"
         texto={modoPrazo ? "Quando uma loja mandar oferta, ela aparece aqui e avisamos você." : "As lojas que se interessarem vão te chamar no WhatsApp."}
@@ -49,7 +51,7 @@ export function PropostasRecebidas({
   return (
     <section className="flex flex-col gap-3" aria-labelledby="titulo-propostas">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="titulo-propostas" className="text-facil font-bold">
+        <h2 id="titulo-propostas" className="text-facil font-semibold text-beringela">
           {propostas.length === 1 ? "1 proposta" : `${propostas.length} propostas`}
         </h2>
         {propostas.length > 1 && (
@@ -122,7 +124,7 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
         )}
         <div className="flex min-w-0 flex-1 flex-col">
           {p.loja_slug ? (
-            <Link href={linkLoja(p.loja_slug)} className="text-facil font-semibold break-words underline-offset-4 hover:underline">
+            <Link href={linkLoja(p.loja_slug)} className={`inline-flex min-h-12 items-center text-facil font-semibold break-words text-laranja-escuro underline-offset-4 hover:underline ${FOCO_LINK}`}>
               {p.loja_nome}
             </Link>
           ) : (
@@ -155,7 +157,7 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
           <span className="text-3xl font-bold break-words text-beringela">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</span>
           {p.mensagem && <p className="text-facil leading-6 break-words whitespace-pre-line text-texto">{p.mensagem}</p>}
           {p.anuncio_id && p.anuncio_titulo && (
-            <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} className="min-h-12 content-center text-facil leading-6 font-semibold text-laranja-escuro underline underline-offset-4">
+            <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} className={`min-h-12 content-center text-facil leading-6 font-semibold text-laranja-escuro underline underline-offset-4 ${FOCO_LINK}`}>
               Ver anúncio: {p.anuncio_titulo}
             </Link>
           )}

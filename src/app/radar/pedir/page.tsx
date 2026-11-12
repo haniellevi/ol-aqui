@@ -15,6 +15,7 @@ import { LINK_RADAR } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { FormPedido } from "@/components/radar/form-pedido";
+import { LINK_VOLTAR } from "@/components/radar/util";
 import { Alert } from "@/components/ui/alert";
 
 export const metadata = { title: "Estou procurando…" };
@@ -33,7 +34,7 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
       <header className="flex flex-col gap-1">
-        <Link href={LINK_RADAR} className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 px-2 text-facil font-semibold text-laranja-escuro">
+        <Link href={LINK_RADAR} className={LINK_VOLTAR}>
           <ChevronLeft className="size-5" aria-hidden />
           Radar
         </Link>
@@ -41,13 +42,14 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
         <p className="text-facil text-texto-suave">Diga o que precisa. As lojas da região te respondem.</p>
       </header>
       {!conta ? (
-        <Vazio titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
+        <Vazio tamanho="grande" titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
           <Botao href="/radar/pedir" larguraTotal tamanho="grande">
             Tentar de novo
           </Botao>
         </Vazio>
       ) : exigeCodigo ? (
         <Vazio
+          tamanho="grande"
           icone={<Smartphone />}
           titulo="Confirme seu celular primeiro"
           texto="As lojas falam com você pelo WhatsApp. Para pedir no Radar, seu celular precisa estar confirmado."

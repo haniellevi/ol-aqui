@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Store } from "lucide-react";
 import { Botao, type VarianteBotao } from "@/components/ui/botao";
@@ -27,6 +27,11 @@ export function FolhaResolver({
   const [passo, setPasso] = useState<1 | 2>(1);
   const [loja, setLoja] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  // O erro aparece no fim da folha: o foco vai até ele (o leitor de tela lê e quem enxerga vê).
+  const refErro = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (erro) refErro.current?.focus();
+  }, [erro]);
   const [pendente, iniciar] = useTransition();
   const trava = useRef(false);
   const resolveu = useRef(false);
@@ -124,7 +129,7 @@ export function FolhaResolver({
               </div>
             </>
           )}
-          {erro && <Alert variant="destructive" role="alert" className="text-facil">{erro}</Alert>}
+          {erro && <Alert ref={refErro} tabIndex={-1} variant="destructive" role="alert" className="text-facil">{erro}</Alert>}
         </FolhaContent>
       </Folha>
     </>

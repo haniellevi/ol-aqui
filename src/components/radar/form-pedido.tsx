@@ -15,7 +15,7 @@ import { centavosDoTexto } from "@/lib/formato";
 import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import type { ModoContato, RegrasRadar, Visibilidade } from "@/lib/tipos-radar";
 import type { EntradaPedido } from "./validacao";
-import { dataHoraCurta, faixaPreco, rotuloPrazo } from "./util";
+import { dataHoraCurta, FOCO_LINK, faixaPreco, rotuloPrazo } from "./util";
 import {
   NOMES_PASSOS_PEDIDO,
   TEXTO_VISIBILIDADE,
@@ -339,7 +339,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           <Alert variant="destructive" role="alert" tabIndex={-1} className="flex flex-col gap-2 text-facil">
             <span>{erroGeral.texto}</span>
             {erroGeral.celular && (
-              <Link href="/confirmar-celular?destino=%2Fradar%2Fpedir" className="min-h-12 content-center underline underline-offset-4">
+              <Link href="/confirmar-celular?destino=%2Fradar%2Fpedir" className={`min-h-12 content-center underline underline-offset-4 ${FOCO_LINK}`}>
                 Confirmar meu celular
               </Link>
             )}

@@ -1,24 +1,34 @@
 "use client";
 
-import { useActionState } from "react";
-import { Aviso, estiloCampo } from "@/components/admin/ui";
+import { useActionState, useState } from "react";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Aviso, estiloBotaoPerigo, estiloCampo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
 import type { EstadoForm } from "@/lib/admin/estado";
 import { darCortesiaRadar, tirarCortesiaRadar } from "../actions";
 
 // Cortesia do Radar: libera tudo do Radar (ver pedidos "Só lojas", mandar ofertas e receber aviso na hora), mesmo sem selo ou plano pago, até a data. O banco confere tudo.
 export function FormCortesiaRadar({ vitrineId, ativa }: { vitrineId: string; ativa: boolean }) {
+  // Só a última ação mostra o resultado (um erro antigo de "Dar" não fica na tela depois de "Tirar").
+  const [ultima, setUltima] = useState<"dar" | "tirar" | null>(null);
+  const [confirmar, setConfirmar] = useState(false);
   const [estadoDar, dar, daPendente] = useActionState(
-    async (_: EstadoForm, dados: FormData): Promise<EstadoForm> =>
-      darCortesiaRadar(vitrineId, String(dados.get("ate") ?? ""), String(dados.get("motivo") ?? "")).catch(() => ({ erro: "Não foi possível confirmar a ação. Atualize a ficha antes de tentar novamente." })),
+    async (_: EstadoForm, dados: FormData): Promise<EstadoForm> => {
+      setUltima("dar");
+      return darCortesiaRadar(vitrineId, String(dados.get("ate") ?? ""), String(dados.get("motivo") ?? "")).catch(() => ({ erro: "Não foi possível confirmar a ação. Atualize a ficha antes de tentar novamente." }));
+    },
     null,
   );
   const [estadoTirar, tirar, tiraPendente] = useActionState(
-    async (): Promise<EstadoForm> =>
-      tirarCortesiaRadar(vitrineId).catch(() => ({ erro: "Não foi possível confirmar a ação. Atualize a ficha antes de tentar novamente." })),
+    async (): Promise<EstadoForm> => {
+      setUltima("tirar");
+      const resultado: EstadoForm = await tirarCortesiaRadar(vitrineId).catch(() => ({ erro: "Não foi possível confirmar a ação. Atualize a ficha antes de tentar novamente." }));
+      if (resultado?.ok) setConfirmar(false);
+      return resultado;
+    },
     null,
   );
-  const estado = estadoDar ?? estadoTirar;
+  const estado = ultima === "tirar" ? estadoTirar : ultima === "dar" ? estadoDar : null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -38,11 +48,28 @@ export function FormCortesiaRadar({ vitrineId, ativa }: { vitrineId: string; ati
         </div>
       </form>
       {ativa && (
-        <form action={tirar} className="flex justify-end">
-          <Botao type="submit" variante="perigo" carregando={tiraPendente} textoCarregando="Salvando...">
-            Tirar cortesia
-          </Botao>
-        </form>
+        <div className="flex justify-end">
+          <AlertDialog open={confirmar} onOpenChange={(valor) => { if (!tiraPendente) setConfirmar(valor); }}>
+            <AlertDialogTrigger className={estiloBotaoPerigo}>Tirar cortesia</AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Tirar a cortesia do Radar?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  A loja deixa de ver os pedidos &quot;Só lojas&quot;, de mandar ofertas e de receber aviso na hora, a não ser que tenha selo e plano pago.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <form action={tirar}>
+                {ultima === "tirar" && estadoTirar?.erro && <Aviso tipo="erro">{estadoTirar.erro}</Aviso>}
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={tiraPendente}>Cancelar</AlertDialogCancel>
+                  <Botao type="submit" variante="perigo" carregando={tiraPendente} textoCarregando="Salvando…">
+                    Confirmar
+                  </Botao>
+                </AlertDialogFooter>
+              </form>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       )}
       {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
       {estado?.ok && <Aviso tipo="ok">{estado.ok}</Aviso>}

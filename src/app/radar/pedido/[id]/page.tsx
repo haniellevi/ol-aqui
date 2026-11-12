@@ -6,7 +6,7 @@ import { CalendarClock, CheckCircle2, ChevronLeft, Eye, Hourglass, MapPin, Messa
 import { cidadesDoMeuPedido, indicacoesDoPedido, pedidoArquivado, pedidoRadar, propostasDoPedido } from "@/lib/dados/radar";
 import { LINK_RADAR, linkPedidoRadarLoja, linkPedirRadar } from "@/lib/rotas";
 import { linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
-import { CLASSE_TOM, dataHoraCurta, faixaPreco, resumoPropostas, rotuloSituacao, textoPrecoProposta } from "@/components/radar/util";
+import { CLASSE_TOM, dataHoraCurta, FOCO_LINK, faixaPreco, LINK_VOLTAR, resumoPropostas, rotuloSituacao, textoPrecoProposta } from "@/components/radar/util";
 import { TEXTO_VISIBILIDADE, diasParaVencer, mostrarPedirDeNovo, textoVencimento } from "@/components/radar/passos-pedido";
 import { PropostasRecebidas } from "@/components/radar/propostas-recebidas";
 import { AtualizarRadar } from "@/components/radar/atualizar-radar";
@@ -62,7 +62,7 @@ export default async function MeuPedidoPage({
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
-      <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 px-2 text-facil font-semibold text-laranja-escuro">
+      <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className={LINK_VOLTAR}>
         <ChevronLeft className="size-5" aria-hidden />
         {arquivado ? "Arquivados" : "Meus pedidos"}
       </Link>
@@ -104,7 +104,7 @@ export default async function MeuPedidoPage({
           <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
           {arquivado && <Badge variant="secondary">Arquivado</Badge>}
         </div>
-        <h1 className="text-facil-titulo font-bold break-words">{pedido.titulo}</h1>
+        <h1 className="text-facil-titulo font-semibold break-words text-beringela">{pedido.titulo}</h1>
         {pedido.detalhes && <p className="text-facil break-words whitespace-pre-line text-texto-suave">{pedido.detalhes}</p>}
         <p className="text-facil font-semibold">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
         <p className="flex items-start gap-2 text-facil">
@@ -175,7 +175,7 @@ export default async function MeuPedidoPage({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-3xl font-bold">Ofertas recebidas</h2><AtualizarRadar tamanho="grande" /></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-3xl font-semibold text-beringela">Ofertas recebidas</h2><AtualizarRadar tamanho="grande" /></div>
       <PropostasRecebidas propostas={propostas} podeEscolher={!["em_analise", "congelado"].includes(pedido.status) && !["cancelado", "moderacao"].includes(pedido.fechado_motivo ?? "")} modoPrazo={modoPrazo} />
 
       {indicacoes.length > 0 && <Indicacoes lista={indicacoes} />}
@@ -197,7 +197,7 @@ export default async function MeuPedidoPage({
 function Indicacoes({ lista }: { lista: IndicacaoRadar[] }) {
   return (
     <section aria-labelledby="titulo-indicacoes" className="flex flex-col gap-3">
-      <h2 id="titulo-indicacoes" className="text-3xl font-bold">Indicações</h2>
+      <h2 id="titulo-indicacoes" className="text-3xl font-semibold text-beringela">Indicações</h2>
       <p className="text-facil text-texto-suave">Pessoas da região indicaram onde tem.</p>
       <ul className="flex flex-col gap-3">
         {lista.map((i) => (
@@ -211,7 +211,7 @@ function Indicacoes({ lista }: { lista: IndicacaoRadar[] }) {
               </span>
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <Link href={linkAnuncio(i.anuncio_id, i.titulo, null)} className="min-h-12 content-center text-facil font-semibold break-words text-laranja-escuro underline underline-offset-4">
+              <Link href={linkAnuncio(i.anuncio_id, i.titulo, null)} className={`min-h-12 content-center text-facil font-semibold break-words text-laranja-escuro underline underline-offset-4 ${FOCO_LINK}`}>
                 {i.titulo}
               </Link>
               <span className="text-facil font-bold text-beringela">{i.preco_centavos != null ? preco(i.preco_centavos) : "Preço a combinar"}</span>

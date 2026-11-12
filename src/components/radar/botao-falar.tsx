@@ -75,7 +75,7 @@ export function BotaoFalar({ onTexto }: { onTexto: (t: string) => void }) {
 
   return (
     <div className="flex flex-col gap-1">
-      <Botao variante="secundario" larguraTotal icone={<Mic />} aria-pressed={ouvindo} onClick={alternar} tamanho="grande">
+      <Botao variante="secundario" larguraTotal icone={<Mic />} onClick={alternar} tamanho="grande">
         {ouvindo ? "Ouvindo… toque para parar" : "Falar em vez de digitar"}
       </Botao>
       {falhou && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Lightbulb, Search } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
@@ -19,6 +19,11 @@ export function FolhaIndicar({ pedidoId }: { pedidoId: string }) {
   const [termo, setTermo] = useState("");
   const [lista, setLista] = useState<AnuncioParaIndicar[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  // O erro aparece no fim da folha: o foco vai até ele (o leitor de tela lê e quem enxerga vê).
+  const refErro = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (erro) refErro.current?.focus();
+  }, [erro]);
   const [feito, setFeito] = useState(false);
   const [buscando, buscar] = useTransition();
   const [indicando, indicar] = useTransition();
@@ -84,7 +89,7 @@ export function FolhaIndicar({ pedidoId }: { pedidoId: string }) {
                 <CheckCircle2 className="size-5" aria-hidden />
                 Pronto, já está no pedido.
               </p>
-              <Botao larguraTotal variante="secundario" tamanho="grande" onClick={fechar}>
+              <Botao larguraTotal variante="secundario" tamanho="grande" onClick={fechar} className="sm:max-w-none">
                 Fechar
               </Botao>
             </>
@@ -96,7 +101,7 @@ export function FolhaIndicar({ pedidoId }: { pedidoId: string }) {
               </FolhaHeader>
               <form onSubmit={procurar} className="flex flex-col gap-3" role="search">
                 <Campo rotulo="O que você quer indicar?" name="busca-indicar" tamanho="grande" value={termo} onChange={(e) => setTermo(e.target.value)} maxLength={80} autoComplete="off" enterKeyHint="search" />
-                <Botao type="submit" variante="secundario" larguraTotal icone={<Search />} tamanho="grande" carregando={buscando} textoCarregando="Procurando...">
+                <Botao type="submit" variante="secundario" larguraTotal icone={<Search />} tamanho="grande" carregando={buscando} textoCarregando="Procurando..." className="sm:max-w-none">
                   Procurar
                 </Botao>
               </form>
@@ -118,14 +123,14 @@ export function FolhaIndicar({ pedidoId }: { pedidoId: string }) {
                           <span className="text-facil text-texto-suave break-words">{a.vitrine_nome}</span>
                         </div>
                       </div>
-                      <Botao variante="secundario" larguraTotal tamanho="grande" disabled={indicando} onClick={() => indicarEste(a)}>
+                      <Botao variante="secundario" larguraTotal tamanho="grande" disabled={indicando} onClick={() => indicarEste(a)} className="sm:max-w-none">
                         Indicar este
                       </Botao>
                     </li>
                   ))}
                 </ul>
               )}
-              {erro && <Alert variant="destructive" role="alert" className="text-facil">{erro}</Alert>}
+              {erro && <Alert ref={refErro} tabIndex={-1} variant="destructive" role="alert" className="text-facil">{erro}</Alert>}
             </>
           )}
         </FolhaContent>

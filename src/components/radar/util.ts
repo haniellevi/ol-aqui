@@ -7,6 +7,13 @@ import { LINK_VERIFICACAO_VENDEDOR } from "@/lib/verificacao-vendedor";
 import type { TomSelo } from "@/components/ui/badge";
 
 const FUSO = "America/Fortaleza";
+
+/** Link "voltar" do topo das telas do Radar: 48px, 18px e anel de foco (como o LINK_TOPO do anunciar). */
+export const LINK_VOLTAR =
+  "-ml-2 inline-flex min-h-12 w-fit items-center gap-1 rounded-card px-2 text-facil font-semibold text-laranja-escuro " +
+  "hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
+/** Link dentro do texto: anel de foco no teclado. */
+export const FOCO_LINK = "rounded-card focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 const diaHora = new Intl.DateTimeFormat("pt-BR", { timeZone: FUSO, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 /** "sex., 14/11 às 15:00" */
