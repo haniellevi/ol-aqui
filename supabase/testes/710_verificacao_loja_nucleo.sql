@@ -25,6 +25,8 @@ insert into vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,bairro,en
  ('71000000-0000-4000-a000-000000000a0a','user_m710',:'reg','loja-m-710','Loja M 710','Corrente','Centro','Rua M, 7','5589999992007','loja');
 insert into vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,tipo)
 values ('71000000-0000-4000-a000-000000000b0b','user_pf710',:'reg','pf-710','Vendedor PF 710','Corrente','pf');
+insert into convites_gerente_loja(vitrine_id,token_hash,telefone_hash,final_telefone,aceito_por,aceito_em,revogado_em) values
+ ('71000000-0000-4000-a000-00000000000a','\x01','\x01','1008','user_aj710',now(),null);
 insert into equipe(usuario_id,papel,microrregiao_id) values ('user_sup710','suporte',null);
 
 -- Prepara contas especiais (como dono do banco).
@@ -50,7 +52,7 @@ do $$
 declare cnpj text := '11222333000181';
 begin
   assert enviar_verificacao_loja('user_inexistente710',cnpj,pg_temp.pdf('x'),null) = 'conta', 'perfil inexistente';
-  assert enviar_verificacao_loja('user_aj710',cnpj,pg_temp.pdf('x'),null) = 'conta', 'ajudante sem loja própria';
+  assert enviar_verificacao_loja('user_aj710',cnpj,pg_temp.pdf('x'),null) = 'conta', 'ajudante de outra loja não envia pelo dono';
   assert enviar_verificacao_loja('user_pf710',cnpj,pg_temp.pdf('x'),null) = 'conta', 'vendedor PF não tem loja';
   assert enviar_verificacao_loja('user_d710',cnpj,pg_temp.pdf('x'),null) = 'conta', 'loja suspensa';
   assert enviar_verificacao_loja('user_rev710',cnpj,pg_temp.pdf('x'),null) = 'conta', 'conta revogada';
@@ -72,6 +74,7 @@ begin
   assert enviar_verificacao_loja('user_f710','11222333000181',pg_temp.pdf('x'),encode(convert_to('MZ programa.exe','UTF8'),'base64')) = 'invalido', 'executável como fachada';
   assert enviar_verificacao_loja('user_f710','11222333000181',pg_temp.pdf('x'),pg_temp.pdf('x')) = 'invalido', 'comprovante igual à fachada';
   assert enviar_verificacao_loja('user_f710','11222333000181',grande,null) = 'invalido', 'maior que 2 MiB';
+  assert enviar_verificacao_loja('user_f710','11222333000181',pg_temp.pdf('x'),'') = 'invalido', 'fachada vazia (use null)';
 end $$;
 reset role;
 select pg_temp.confere((select count(*)=0 from verificacoes_loja where perfil_id in ('user_f710','user_b710','user_c710','user_d710','user_rev710','user_aj710')), 'códigos de recusa não gravam pedido');

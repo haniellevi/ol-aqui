@@ -149,7 +149,7 @@ begin
                                           acao, public.usuario_id(), null);
 end $$;
 
--- Envio feito pelo servidor (service_role). Arquivos chegam em base64 e ficam em bytea.
+-- Envio feito pelo servidor (service_role). Sem fachada, passe null: texto vazio devolve 'invalido'. Arquivos chegam em base64 e ficam em bytea.
 create function public.enviar_verificacao_loja(p_usuario text, p_cnpj text, p_comprovante text, p_fachada text)
 returns text language plpgsql security definer
 set search_path = public, extensions
@@ -164,7 +164,7 @@ declare
 begin
   select p.* into perfil from public.perfis p where p.id = p_usuario for update;
   if not found then return 'conta'; end if;
-  select v.* into loja from public.vitrines_lojas v where v.dono_id = p_usuario and v.tipo = 'loja' limit 1;
+  select v.* into loja from public.vitrines_lojas v where v.dono_id = p_usuario and v.tipo = 'loja' limit 1 for update;  -- trava a loja (perfil -> loja, como o definir): uma aprovação da equipe no meio não é desfeita
   if not found or loja.status <> 'ativa'
      or exists (select 1 from public.contas_revogadas r where r.usuario_id = p_usuario) then
     return 'conta';
