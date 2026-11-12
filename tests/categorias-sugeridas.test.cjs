@@ -151,7 +151,7 @@ const navegacaoAdmin = { redirect: (url) => { throw Error(`redirect:${url}`); },
 test('admin decide com os grupos marcados e mostra o resumo na volta', async () => {
   const banco = bancoAdmin();
   const a = carregar('src/app/admin/categorias/sugeridas/actions.ts', {
-    '@/lib/admin/auth': { exigirAdmin: async () => ({ supabase: banco }) },
+    '@/lib/admin/auth': { exigirAdmin: async () => ({ supabase: banco }), eSuperAdmin: async () => true },
     'next/cache': { revalidatePath() {} },
     'next/navigation': navegacaoAdmin,
   });
@@ -167,7 +167,7 @@ test('admin decide com os grupos marcados e mostra o resumo na volta', async () 
 test('juntar manda a categoria escolhida e recusar não manda nome nem lugar', async () => {
   const banco = bancoAdmin({ decidir: { decididas: 1, movidos: 0, revisar: 0 } });
   const a = carregar('src/app/admin/categorias/sugeridas/actions.ts', {
-    '@/lib/admin/auth': { exigirAdmin: async () => ({ supabase: banco }) },
+    '@/lib/admin/auth': { exigirAdmin: async () => ({ supabase: banco }), eSuperAdmin: async () => true },
     'next/cache': { revalidatePath() {} },
     'next/navigation': navegacaoAdmin,
   });
@@ -198,7 +198,7 @@ test('não-admin é barrado na ação: nada é decidido', async () => {
 });
 
 const mocksAdmin = (banco, extra = {}) => ({
-  '@/lib/admin/auth': { exigirAdmin: async () => ({ supabase: banco }) },
+  '@/lib/admin/auth': { exigirAdmin: async () => ({ supabase: banco }), eSuperAdmin: async () => true },
   'next/link': { default: ({ href, children, className }) => React.createElement('a', { href, className }, children) },
   'next/cache': { revalidatePath() {} },
   'next/navigation': navegacaoAdmin,

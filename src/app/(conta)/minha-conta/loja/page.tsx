@@ -1,12 +1,14 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { ChartNoAxesColumn, ChevronRight, Clock, ExternalLink, Image as IconeImagem, LayoutList, Pin, Sparkles, Store, Tags } from "lucide-react";
+import { ChartNoAxesColumn, ChevronRight, Clock, ExternalLink, History, Image as IconeImagem, LayoutList, Pin, Sparkles, Store, Tags } from "lucide-react";
 import { listarCidades } from "@/lib/dados/regiao";
 import { meusRecursosVitrine, minhaVitrineCompleta, planosPublicos, vitrineNovaAtiva } from "@/lib/dados/vitrine-completa";
 import { minhasSugestoesCategoria } from "@/lib/dados/categorias-ia";
+import { lerHistorico } from "@/lib/dados/historico";
+import { fraseHistorico } from "@/lib/historico";
 import { linkLoja, preco, urlAbsoluta } from "@/lib/formato";
-import { LINK_DESTACAR_LOJA, LINK_LOJA_BANNER, LINK_LOJA_CATEGORIAS, LINK_LOJA_DESEMPENHO, LINK_LOJA_FIXADOS, LINK_LOJA_INFORMACOES, LINK_LOJA_SECOES, linkDestacarLoja } from "@/lib/rotas";
+import { LINK_DESTACAR_LOJA, LINK_LOJA_BANNER, LINK_LOJA_CATEGORIAS, LINK_LOJA_DESEMPENHO, LINK_LOJA_FIXADOS, LINK_LOJA_HISTORICO, LINK_LOJA_INFORMACOES, LINK_LOJA_SECOES, linkDestacarLoja } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
@@ -61,6 +63,8 @@ export default async function PaginaMinhaLoja() {
   ]);
   // Vitrine com IA (etapa 4): sugestões de categoria, só com a vitrine nova ligada.
   const sugestoesIA = (await vitrineNovaAtiva(v.microrregiao_id).catch(() => false)) ? await minhasSugestoesCategoria(v.id) : undefined;
+  // Última mudança nos dados da loja (Etapa P5a). Falha → o item mostra só o texto padrão.
+  const ultimaMudanca = (await lerHistorico({ loja: v.id }, 1).catch(() => null))?.[0];
   const exclusao = exclusaoR.error ? null : (exclusaoR.data as ExclusaoLoja | null);
   if (exclusao?.na_lixeira) {
     return (
@@ -157,6 +161,8 @@ export default async function PaginaMinhaLoja() {
             <ItemMenu href={LINK_LOJA_INFORMACOES} icone={<Store />} titulo="Horários e informações" detalhe="Endereço, Instagram, pagamento e entrega" />
             <ItemMenu href={LINK_LOJA_SECOES} icone={<LayoutList />} titulo="Seções próprias" detalhe={usoSecoes} />
             <ItemMenu href={LINK_LOJA_FIXADOS} icone={<Pin />} titulo="Produtos no topo" detalhe={usoFixados} />
+            <ItemMenu href={LINK_LOJA_HISTORICO} icone={<History />} titulo="Histórico da loja"
+              detalhe={ultimaMudanca ? `Última mudança: ${fraseHistorico(ultimaMudanca)}` : "Quem mudou os dados da loja e quando"} />
             {sugestoesIA !== undefined && (
               <ItemMenu href={LINK_LOJA_DESEMPENHO} icone={<ChartNoAxesColumn />} titulo="Desempenho da loja" detalhe="Visitas, cliques no WhatsApp e dicas" />
             )}

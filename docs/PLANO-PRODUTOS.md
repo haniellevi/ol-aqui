@@ -147,6 +147,11 @@ Cada etapa vira um PR próprio, com testes do banco (`supabase/testes`) e da tel
 - Admin: editar e excluir qualquer anúncio. "Apagar de vez agora" com o nome digitado.
 - Criar loja e transferir: a loja nasce com dono provisório e um convite de posse que o dono aceita.
 
+**Divisão do P5 (decidida em 13/11/2026):**
+- **P5a** — papel `super_admin` (coluna `perfis.e_super_admin`, ligada só pelo banco), histórico (`historico_alteracoes`, linha "Última mudança" e página "Histórico" no anúncio e na loja), lixeira de anúncio pela equipe com motivo e aviso ao dono, "Apagar de vez agora" só do super admin e só para o que já está na lixeira (conta, loja e anúncio). Aprovar categoria passa a ser só do super admin.
+- **P5b** — ajudantes (gerente cria, edita, pausa e manda anúncios para a lixeira; nome e WhatsApp da loja só o dono), marca "Equipe Mercado da Região", seletor de loja e **super admin edita o anúncio dos outros na mesma tela do vendedor** (mesma base dos ajudantes).
+- **P5c** — criar loja e transferir para o dono.
+
 ### Etapa P6 — Excluir dentro do cadastro
 - "Descartar rascunho" em todos os passos de `/anunciar`, e "Excluir anúncio" no fim da edição, com o mesmo diálogo de `acoes-anuncio.tsx`.
 

@@ -4,9 +4,11 @@ import type { Metadata } from "next";
 import { BarChart3, Clock, Eye, Heart, MessageCircle, Pin, Plus } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { meusAnuncios } from "@/lib/dados/anuncios";
+import { ultimasMudancas } from "@/lib/dados/historico";
+import { fraseHistorico, type LinhaHistorico } from "@/lib/historico";
 import { fraseResultado, resultadosDestaques } from "@/lib/dados/destaques";
 import type { ResultadoDestaque } from "@/lib/tipos-destaques";
-import { LINK_LOJA_CATEGORIAS, LINK_PLANOS, linkDestacar } from "@/lib/rotas";
+import { LINK_LOJA_CATEGORIAS, LINK_PLANOS, linkDestacar, linkHistoricoAnuncio } from "@/lib/rotas";
 import { ehUuid, inteiro, linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
 import type { MeuAnuncio, StatusAnuncio } from "@/lib/tipos";
 import { Botao } from "@/components/ui/botao";
@@ -78,6 +80,8 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
   const disponivelFixar = loja && !podeFixar ? textoDisponivelEm(await planosPublicos(), "fixados") : null;
   // Categorias sugeridas esperando o dono (da migração de categorias ou da IA): loja e pessoa física, com ou sem a IA ligada.
   const sugestoesIA = (await minhasSugestoesCategoria(conta.vitrine.id))?.length ?? 0;
+  // Última mudança de cada anúncio (dono, ajudante ou equipe). Falha → a linha só não aparece.
+  const mudancas = await ultimasMudancas(lista.map((a) => a.id));
 
   return (
     <PaginaConta larga>
@@ -153,6 +157,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
                 pendente={pagamentoPendente.get(a.id)}
                 fixado={fixados.has(a.id)}
                 mostrarFixar={loja && (podeFixar || fixados.has(a.id))}
+                mudanca={mudancas.get(a.id)}
               />
             </li>
           ))}
@@ -168,12 +173,14 @@ function LinhaAnuncio({
   pendente: p,
   fixado = false,
   mostrarFixar = false,
+  mudanca,
 }: {
   anuncio: MeuAnuncio;
   destaque?: ResultadoDestaque;
   pendente?: ResultadoDestaque;
   fixado?: boolean;
   mostrarFixar?: boolean;
+  mudanca?: LinhaHistorico;
 }) {
   const titulo = a.titulo?.trim() || "Anúncio sem título";
   const rotulo = ROTULO[a.status];
@@ -213,6 +220,14 @@ function LinhaAnuncio({
           <p className="text-lg leading-6 font-bold">{preco(a.preco_centavos)}</p>
           {a.cidade && <p className="text-sm break-words text-texto-suave">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</p>}
           {quando && <p className="text-legenda text-texto-suave">{a.status === "rascunho" ? `Salvo ${quando}` : quando}</p>}
+          {mudanca && (
+            <p className="text-legenda break-words text-texto-suave">
+              Última mudança: {fraseHistorico(mudanca)}.{" "}
+              <Link href={linkHistoricoAnuncio(a.id)} className="font-semibold text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
+                Ver histórico
+              </Link>
+            </p>
+          )}
         </div>
       </div>
 

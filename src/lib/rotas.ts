@@ -11,6 +11,9 @@ export const LINK_LOJA_SECOES = "/minha-conta/loja/secoes";
 export const LINK_LOJA_FIXADOS = "/minha-conta/loja/fixados";
 export const LINK_LOJA_CATEGORIAS = "/minha-conta/loja/categorias";
 export const LINK_LOJA_DESEMPENHO = "/minha-conta/loja/desempenho";
+export const LINK_LOJA_HISTORICO = "/minha-conta/loja/historico";
+/** Histórico de mudanças de um anúncio (Etapa P5a). */
+export const linkHistoricoAnuncio = (anuncioId: string) => `/minha-conta/anuncios/${anuncioId}/historico`;
 /** Melhorar um produto com IA (vitrine com IA, etapa 5b). */
 export const linkMelhorarComIA = (anuncioId: string) => `/minha-conta/loja/melhorar/${anuncioId}`;
 

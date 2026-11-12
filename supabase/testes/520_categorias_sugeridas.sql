@@ -10,7 +10,7 @@ select id as diversos from categorias where slug='diversos' \gset
 insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em) values
  ('user_dono520',:'reg','Dono 520','Corrente','5589999990520',now()),
  ('user_outro520',:'reg','Outro 520','Corrente','5589999990521',now());
-insert into perfis(id,microrregiao_id,nome,cidade,e_admin) values ('user_admin520',:'reg','Admin 520','Corrente',true);
+insert into perfis(id,microrregiao_id,nome,cidade,e_admin,e_super_admin) values ('user_admin520',:'reg','Admin 520','Corrente',true,true);
 insert into vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo,plano,plano_expira_em) values
  ('52000000-0000-4000-a000-000000000001','user_dono520',:'reg','loja-520','Loja 520','Corrente','5589999990520','loja','full',now()+interval '30 days');
 insert into anuncios(id,vitrine_id,categoria_id,titulo,cidade,preco_centavos,status,publicado_em) values

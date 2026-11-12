@@ -53,7 +53,7 @@ export async function apagarDeVez(_: EstadoForm, form: FormData): Promise<Estado
     const { supabase } = await exigirAdmin();
     const tipo = textoForm(form, "tipo"), alvo = textoForm(form, "alvo"), motivo = motivoForm(form);
     if (form.get("confirmar") !== "on") return { erro: "Confirme que leu o efeito da exclusão." };
-    if (!(tipo === "conta" ? idUsuarioValido(alvo) : tipo === "loja" && ehUuid(alvo))) return { erro: "Operação inválida." };
+    if (!(tipo === "conta" ? idUsuarioValido(alvo) : (tipo === "loja" || tipo === "anuncio") && ehUuid(alvo))) return { erro: "Operação inválida." };
     const { error } = await supabase.rpc("admin_antecipar_limpeza", {
       p_tipo: tipo, p_alvo: alvo, p_confirmacao: textoForm(form, "confirmacao"), p_motivo: motivo,
     });
@@ -65,5 +65,22 @@ export async function apagarDeVez(_: EstadoForm, form: FormData): Promise<Estado
   } catch (e) {
     unstable_rethrow(e);
     return { erro: e instanceof Error ? e.message : "Não foi possível apagar." };
+  }
+}
+
+/** Super admin: manda o anúncio de outra pessoa para a lixeira, com motivo. O dono é avisado no sino. */
+export async function lixeiraAnuncioEquipe(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  try {
+    const { supabase } = await exigirAdmin();
+    const id = textoForm(form, "id"), motivo = motivoForm(form);
+    if (!ehUuid(id)) return { erro: "Operação inválida." };
+    if (form.get("confirmar") !== "on") return { erro: "Confirme que leu o efeito." };
+    const { error } = await supabase.rpc("admin_lixeira_anuncio", { p_anuncio: id, p_motivo: motivo });
+    if (error) return { erro: traduzirErro(error).mensagem };
+    atualizar();
+    return { ok: "Anúncio na lixeira. Ele saiu do ar, o dono foi avisado e pode restaurar em até 30 dias." };
+  } catch (e) {
+    unstable_rethrow(e);
+    return { erro: e instanceof Error ? e.message : "Não foi possível mandar o anúncio para a lixeira." };
   }
 }

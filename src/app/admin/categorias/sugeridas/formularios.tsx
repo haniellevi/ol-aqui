@@ -25,7 +25,8 @@ function Retorno({ estado }: { estado: EstadoForm }) {
   return estado.erro ? <Aviso tipo="erro">{estado.erro}</Aviso> : estado.ok ? <Aviso tipo="ok">{estado.ok}</Aviso> : null;
 }
 
-export function CartaoSugestao({ item, maes, finais }: { item: ItemSugestao; maes: Opcao[]; finais: Opcao[] }) {
+/** `podeDecidir`: só o super admin cria, junta ou recusa (Etapa P5a); os outros admins só leem. */
+export function CartaoSugestao({ item, maes, finais, podeDecidir = true }: { item: ItemSugestao; maes: Opcao[]; finais: Opcao[]; podeDecidir?: boolean }) {
   const { grupo } = item;
   const uid = useId();
   const confirmar = useConfirmar();
@@ -75,7 +76,7 @@ export function CartaoSugestao({ item, maes, finais }: { item: ItemSugestao; mae
         </fieldset>
       )}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+      {podeDecidir && <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
         <form onSubmit={enviarSemLimpar(criar)} className="flex flex-col gap-2">
           <input type="hidden" name="acao" value="aprovar" />
           {grupos}
@@ -139,7 +140,7 @@ export function CartaoSugestao({ item, maes, finais }: { item: ItemSugestao; mae
           </Botao>
           <Retorno estado={estadoRecusar} />
         </form>
-      </div>
+      </div>}
     </Cartao>
   );
 }

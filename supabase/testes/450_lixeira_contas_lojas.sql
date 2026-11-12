@@ -13,6 +13,7 @@ insert into perfis(id,microrregiao_id,nome,whatsapp,whatsapp_verificado_em,e_adm
  ('user_lixDono',:'reg','Dono lixeira','5589999920102',now(),false),
  ('user_lixGerente',:'reg','Gerente lixeira','5589999920103',now(),false),
  ('user_lixOutro',:'reg','Outro lixeira','5589999920104',now(),false);
+update perfis set e_super_admin=true where id='user_lixAdmin'; -- apagar de vez é só do super admin (P5a)
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_lixAdmin';
