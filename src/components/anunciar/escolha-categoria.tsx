@@ -54,14 +54,14 @@ export function EscolhaCategoria({
     if (texto.length < MIN_TEXTO_IA) return;
     const t = setTimeout(async () => {
       try {
-        const ids = await categoriasSugeridasIA(texto);
+        const ids = await categoriasSugeridasIA(texto, id);
         if (minha === rodada.current) setIa({ texto, ids });
       } catch {
         // Sem IA agora: fica a busca local.
       }
     }, ESPERA_IA_MS);
     return () => clearTimeout(t);
-  }, [busca]);
+  }, [busca, id]);
 
   const todos = useMemo(() => percorrerLeve(arvore), [arvore]);
   const escolhida = useMemo(() => todos.find((x) => x.no.id === filhaId) ?? null, [filhaId, todos]);
@@ -122,6 +122,8 @@ export function EscolhaCategoria({
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
       <input type="hidden" name="categoria_id" value={filhaId ?? ""} />
       <input type="hidden" name="sugestao_categoria" value={sugestao ?? ""} />
+      {/* Texto cujas sugestões da IA estão na tela: o servidor só mede o acerto quando bate com a resposta guardada. */}
+      <input type="hidden" name="texto_ia" value={ia.texto && ia.texto === textoDaBusca(busca) ? ia.texto : ""} />
       {!temTitulo && <input type="hidden" name="titulo_inicial" value={busca.trim().slice(0, MAX_TITULO)} />}
 
       <AvisoErro mensagem={estado?.erro?.mensagem} />
