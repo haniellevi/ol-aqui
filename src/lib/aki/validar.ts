@@ -38,8 +38,7 @@ export function validarPedidoRadar(d: unknown): { ok: true; dados: DadosPedidoRa
   const o = (d && typeof d === "object" ? d : {}) as Record<string, unknown>;
   const titulo = texto(o.titulo, 120);
   if (!titulo || titulo.length < 8) return { ok: false, erro: "Escreva o que você procura com pelo menos 8 letras." };
-  const cidade = texto(o.cidade, 80);
-  if (!cidade) return { ok: false, erro: "Falta a cidade do pedido." };
+  const cidade = texto(o.cidade, 80); // sem cidade = região toda
   const preco = o.preco_max_centavos;
   const precoOk = preco === null || preco === undefined || (typeof preco === "number" && Number.isInteger(preco) && preco > 0 && preco <= 100_000_000_000);
   if (!precoOk) return { ok: false, erro: "Confira o preço máximo." };
