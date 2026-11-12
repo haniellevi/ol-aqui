@@ -14,6 +14,7 @@ import { guardarRecente, lerRecentes } from "@/lib/categorias-recentes";
 // - "escolher" (anunciar): a categoria final vira um item de escolha (radio), a mãe só abre.
 // - "navegar" (procurar): tudo é link; a mãe aberta mostra "Ver tudo em ...".
 // Com texto na busca, mostra as categorias mais parecidas (busca local, sem IA), com o caminho.
+// Quem usa a árvore pode pôr categorias no topo dessa lista (`primeiras`, ex.: as sugeridas pela IA ao anunciar).
 
 const LINHA =
   "flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-card border border-borda bg-cartao p-3 text-left text-base font-semibold " +
@@ -22,6 +23,9 @@ const LINHA =
 const OPCAO =
   `${LINHA} has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 ` +
   "has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
+
+const NENHUMA: NoLeve[] = [];
+const MAX_ACHADAS = 8;
 
 const VOLTA =
   "flex min-h-10 w-full items-center gap-2 rounded-campo px-2 text-left text-base text-texto-suave hover:bg-fundo " +
@@ -37,11 +41,13 @@ type Props = {
   aoEscolher?: (x: NoLeve) => void;
   /** navegar: chamado ao tocar num link (ex.: fechar a folha). */
   aoNavegar?: () => void;
-  /** O que mostrar quando a busca não acha nada. */
+  /** O que mostrar quando a busca local não acha nada (mesmo com `primeiras` no topo). */
   semResultado?: ReactNode;
+  /** Com texto na busca: categorias finais no topo da lista, na ordem dada. Não se repetem embaixo. */
+  primeiras?: NoLeve[];
 };
 
-export function ArvoreCategorias({ arvore, busca, modo, selecionadaId = null, aoEscolher, aoNavegar, semResultado }: Props) {
+export function ArvoreCategorias({ arvore, busca, modo, selecionadaId = null, aoEscolher, aoNavegar, semResultado, primeiras = NENHUMA }: Props) {
   const todos = useMemo(() => percorrerLeve(arvore), [arvore]);
   // Abre já no nível da escolhida (editar anúncio): as mães dela ficam no caminho.
   const [abertas, setAbertas] = useState<string[]>(
@@ -66,7 +72,12 @@ export function ArvoreCategorias({ arvore, busca, modo, selecionadaId = null, ao
     return caminho;
   }, [abertas, arvore]);
 
-  const achadas = useMemo(() => sugerirPorTexto(arvore, busca), [arvore, busca]);
+  const achadas = useMemo(() => sugerirPorTexto(arvore, busca, MAX_ACHADAS), [arvore, busca]);
+  const parecidas = useMemo(() => {
+    const topo = primeiras.filter((x) => ehFolha(x.no));
+    const ids = new Set(topo.map((x) => x.no.id));
+    return [...topo, ...achadas.filter((x) => !ids.has(x.no.id))].slice(0, MAX_ACHADAS);
+  }, [primeiras, achadas]);
 
   function escolher(x: NoLeve) {
     guardarRecente(x.no.id);
@@ -138,9 +149,10 @@ export function ArvoreCategorias({ arvore, busca, modo, selecionadaId = null, ao
     return (
       <section aria-labelledby="titulo-achadas" className="flex flex-col gap-2">
         <h2 id="titulo-achadas" className="text-base font-semibold" aria-live="polite">
-          {achadas.length ? (achadas.length === 1 ? "1 categoria parecida" : `${achadas.length} categorias parecidas`) : "Nenhuma categoria parecida"}
+          {parecidas.length ? (parecidas.length === 1 ? "1 categoria parecida" : `${parecidas.length} categorias parecidas`) : "Nenhuma categoria parecida"}
         </h2>
-        {achadas.length ? <ul className="flex flex-col gap-2">{achadas.map((x) => item(x, true))}</ul> : semResultado}
+        {parecidas.length > 0 && <ul className="flex flex-col gap-2">{parecidas.map((x) => item(x, true))}</ul>}
+        {!achadas.length && semResultado}
       </section>
     );
   }

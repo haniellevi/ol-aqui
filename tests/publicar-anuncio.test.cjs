@@ -31,7 +31,7 @@ test('busca sem categoria oferece Diversos ativo sem selecionar automaticamente'
   let indice = 0;
   const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
     // 2º useState de EscolhaCategoria = texto digitado em "O que você está anunciando?"
-    react: { ...React, useState: inicial => [indice++ === 1 ? 'Desenho para colorir' : typeof inicial === 'function' ? inicial() : inicial, () => {}], useMemo: fn => fn(), useEffect: () => {} },
+    react: { ...React, useState: inicial => [indice++ === 1 ? 'Desenho para colorir' : typeof inicial === 'function' ? inicial() : inicial, () => {}], useMemo: fn => fn(), useEffect: () => {}, useRef: v => ({ current: v }) },
     './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
     '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
   });
@@ -42,6 +42,27 @@ test('busca sem categoria oferece Diversos ativo sem selecionar automaticamente'
   assert.match(html, /name="escolha-categoria" value="tipo-diversos"/);
   assert.match(html, /name="categoria_id" value=""/);
   assert.doesNotMatch(html, /<input[^>]*\schecked(?:=|\s|>)/);
+});
+
+test('IA sugerindo Diversos: a opção aparece uma vez só, e "Sugerir a categoria" continua', () => {
+  let indice = 0;
+  const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
+    // useState de EscolhaCategoria: escolhida, texto digitado, sugestão, IA
+    react: { ...React, useState: inicial => {
+      const i = indice++;
+      if (i === 1) return ['Desenho para colorir', () => {}];
+      if (i === 3) return [{ texto: 'Desenho para colorir', ids: ['tipo-diversos'] }, () => {}];
+      return [typeof inicial === 'function' ? inicial() : inicial, () => {}];
+    }, useMemo: fn => fn(), useEffect: () => {}, useRef: v => ({ current: v }) },
+    './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
+    '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
+  });
+  const diversos = { id: 'tipo-diversos', slug: 'diversos', nome: 'Diversos' };
+  const arvore = [{ id: 'grupo-outros', slug: 'outros', nome: 'Outros', filhas: [diversos] }];
+  const html = render(EscolhaCategoria({ id, editar: false, formId: 'categoria', arvore, selecionadaId: null, tituloAtual: null }));
+  assert.equal(html.match(/name="escolha-categoria" value="tipo-diversos"/g).length, 1);
+  assert.match(html, /1 categoria parecida/);
+  assert.match(html, /Sugerir a categoria/);
 });
 
 for (const [texto, centavos] of [['1500.50',150050],['1.500,50',150050],['1.500',150000],['49,90',4990]]) {

@@ -37,7 +37,7 @@ A aplicação abre em `http://localhost:3000`. O exemplo de ambiente contém cha
 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ou `NEXT_PUBLIC_SUPABASE_ANON_KEY`), `SUPABASE_SECRET_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY`) |
 | WhatsApp e CAPTCHA | `EVOLUTION_URL`, `EVOLUTION_INSTANCE`, `EVOLUTION_API_KEY`, `WHATSAPP_OTP_SECRET`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `TURNSTILE_HOSTNAMES` |
 | Cobrança, quando utilizada | `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKEN` |
-| IA, quando utilizada | Chave do provedor configurado; para a moderação, `OPENROUTER_API_KEY` e `MODERACAO_IA_SECRET` |
+| IA, quando utilizada | Chave do provedor configurado; para a moderação, `OPENROUTER_API_KEY` e `MODERACAO_IA_SECRET`; para a sugestão de categoria ao anunciar, `TYPESAFE_API_KEY` |
 
 Somente valores públicos usam o prefixo `NEXT_PUBLIC_`. Não colocar segredos, QR de pareamento, códigos de confirmação ou respostas integrais do provedor nos relatórios.
 

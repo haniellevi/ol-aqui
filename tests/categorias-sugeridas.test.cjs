@@ -14,11 +14,11 @@ const ARVORE = [{ id: 'p1', slug: 'pet', nome: 'Pet', icone: 'paw-print', pai_id
 
 // ---------- Escolha de categoria: botão e aviso ----------
 function escolhaSugerida({ busca = '', sugestao = null } = {}) {
-  // Ordem dos useState: EscolhaCategoria (filhaId, busca, sugestão) e depois ArvoreCategorias (abertas, recentes).
-  const valores = [null, busca, sugestao, [], []];
+  // Ordem dos useState: EscolhaCategoria (filhaId, busca, sugestão, ia) e depois ArvoreCategorias (abertas, recentes).
+  const valores = [null, busca, sugestao, { texto: '', ids: [] }, [], []];
   let i = 0;
   const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
-    react: { ...React, useState: (inicial) => [i < valores.length ? valores[i++] : inicial, () => {}], useMemo: (fn) => fn(), useEffect: () => {} },
+    react: { ...React, useState: (inicial) => [i < valores.length ? valores[i++] : inicial, () => {}], useMemo: (fn) => fn(), useEffect: () => {}, useRef: (v) => ({ current: v }) },
     './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
     '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
   });
