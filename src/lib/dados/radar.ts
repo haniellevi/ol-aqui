@@ -7,6 +7,7 @@ import { lerConfig } from "@/lib/dados/config";
 import { ehUuid } from "@/lib/formato";
 import type {
   AnuncioParaProposta,
+  IndicacaoRadar,
   MeuPedidoRadar,
   MinhaPropostaNoPedido,
   MinhaPropostaRadar,
@@ -102,9 +103,19 @@ export const pedidoRadar = cache(async (id: string): Promise<PedidoRadarDetalhe 
   const { data, error } = await db.rpc("radar_pedido", { p_id: id });
   if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar este pedido.");
   const linha = (Array.isArray(data) ? data[0] : data) as PedidoRadarDetalhe | null ?? null;
-  // Pedido "só lojas" de quem não atende vem bloqueado (sem título); a tela nova explica isso (Radar v2).
-  return linha?.bloqueado ? null : linha;
+  // Pedido "só lojas" de quem não atende vem bloqueado (sem título/detalhes): devolvemos a linha
+  // com bloqueado=true para a tela explicar ("Este pedido é só para lojas verificadas.").
+  return linha;
 });
+
+/** "Eu sei onde tem": anúncios que indicaram para o pedido (só o comprador e a equipe veem). */
+export async function indicacoesDoPedido(id: string): Promise<IndicacaoRadar[]> {
+  if (!ehUuid(id)) return [];
+  const db = await createClient();
+  const { data, error } = await db.rpc("indicacoes_do_pedido", { p_pedido: id });
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar as indicações.");
+  return data as IndicacaoRadar[];
+}
 
 export async function propostasDoPedido(id: string): Promise<PropostaRecebida[]> {
   if (!ehUuid(id)) return [];

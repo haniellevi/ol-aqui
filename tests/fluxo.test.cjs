@@ -200,7 +200,7 @@ test('criação recusa confirmação indisponível sem gravar pedido',async()=>{
     '@/lib/supabase/server': {createClient:async()=>{consultas++;throw Error('não deveria consultar');}},
     '@/lib/supabase/admin': {}, '@/lib/perfil': {}, '@/lib/dados/conta': {}, '@/lib/dados/radar': {},
   });
-  const resposta=await actions.criarPedido({chaveEnvio:'10000000-0000-4000-a000-000000000001',titulo:'Procuro bicicleta',cidade:'Corrente',modo:'whatsapp_direto'});
+  const resposta=await actions.criarPedido({chaveEnvio:'10000000-0000-4000-a000-000000000001',titulo:'Procuro bicicleta',cidade:'Corrente',modo:'whatsapp_direto',visibilidade:'lojas'});
   assert.equal(resposta.ok,false); assert.match(resposta.erro,/confirmar seus dados/);assert.equal(consultas,0);
 });
 

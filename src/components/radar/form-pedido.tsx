@@ -68,7 +68,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
     if (trava.current) return;
     setErro(null);
     chaveEnvio.current ??= crypto.randomUUID();
-    const invalida = validarPedido({ chaveEnvio: chaveEnvio.current, titulo, detalhes, categoriaId, precoMin, precoMax, cidade: cidade ?? "", modo, prazoHoras: prazo });
+    const invalida = validarPedido({ chaveEnvio: chaveEnvio.current, titulo, detalhes, categoriaId, precoMin, precoMax, cidade: cidade ?? "", modo, prazoHoras: prazo, visibilidade: "lojas" });
     if (invalida) return setErro({ texto: invalida.erro, campo: invalida.campo });
     if (!cidades.includes(cidade ?? "")) return setErro({ texto: "Escolha uma cidade da lista.", campo: "cidade" });
     if (modo === "propostas_prazo" && !regras.prazosHoras.includes(prazo ?? 0)) return setErro({ texto: "Escolha um prazo da lista.", campo: "prazo" });
@@ -86,6 +86,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           cidade: cidade!,
           modo,
           prazoHoras: prazo,
+          visibilidade: "lojas",
           whatsapp: pedirWhatsapp ? whatsapp.campo.value : undefined,
         });
         if (!r.ok) {
