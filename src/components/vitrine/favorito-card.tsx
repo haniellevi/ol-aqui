@@ -94,7 +94,7 @@ export function FavoritoCard({
         aria-label={favorito === null ? "Favorito indisponível" : favorito ? `Tirar ${titulo} dos favoritos` : `Salvar ${titulo} nos favoritos`}
         className={CORACAO}
       >
-        <Heart className={`size-5 ${favorito ? "fill-laranja-escuro text-laranja-escuro" : ""}`} aria-hidden />
+        <Heart className={`size-5 ${favorito ? "fill-coracao text-coracao" : ""}`} aria-hidden />
       </button>
       <span role="alert" className="sr-only">{erro}</span>
     </>
