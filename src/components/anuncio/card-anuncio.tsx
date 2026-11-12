@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -36,7 +37,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
             // Foto inteira (sem cortar) sobre fundo branco. Foto do Storage sai otimizada (AVIF/WebP, só o tamanho que a tela precisa); outras vão como estão.
             <Image
               src={a.capa}
-              alt={`Foto de ${a.titulo}`}
+              alt={`Foto de ${formatarNome(a.titulo)}`}
               fill
               sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
               priority={prioridade}
@@ -55,7 +56,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
           )}
         </div>
         <div className="flex flex-1 flex-col p-3">
-          <h3 className="line-clamp-2 text-lg leading-5 font-semibold text-texto">{a.titulo}</h3>
+          <h3 className="line-clamp-2 text-lg leading-5 font-semibold text-texto">{formatarNome(a.titulo)}</h3>
           <p className="mt-1.5 flex flex-col">
             {antes != null && (
               <s className="text-legenda leading-4 text-texto-suave tabular-nums">
@@ -77,7 +78,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
                 {" · "}
               </>
             )}
-            {cidadeUf(a.cidade, a.uf)}
+            {cidadeUf(formatarNome(a.cidade), a.uf)}
           </span>
           {pfVerificado ? (
             <span className="flex items-start gap-1 text-legenda leading-[18px] text-texto-suave">
@@ -88,7 +89,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
             <span className="flex items-center gap-1 truncate text-legenda leading-[18px] text-texto-suave">
               {a.vitrine_selo && <ShieldCheck className="size-4 shrink-0 text-verde-escuro" aria-hidden />}
               <span className="truncate">
-                {a.vitrine_nome}
+                {formatarNome(a.vitrine_nome)}
                 {a.vitrine_selo && <span className="sr-only"> · Loja verificada</span>}
               </span>
             </span>
