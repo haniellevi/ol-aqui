@@ -1,5 +1,6 @@
 // /radar/[id]: o pedido visto por quem vende, com a folha "Propor".
 // Quem decide se pode propor é o banco (propor_radar); aqui só escolhemos o que mostrar.
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BadgeCheck, ChevronLeft, Hourglass, Lock, MapPinOff, MessageCircle, ShieldAlert, Star, Store } from "lucide-react";
@@ -101,7 +102,7 @@ export default async function PedidoLojaPage({
           <span>{pedido.cidade} ·</span>
           <span>{tempoRelativo(pedido.criado_em)}</span>
         </p>
-        <h1 className="text-xl leading-7 font-bold break-words">{pedido.titulo}</h1>
+        <h1 className="text-xl leading-7 font-bold break-words">{formatarNome(pedido.titulo)}</h1>
         {pedido.detalhes ? (
           <p className="text-base break-words whitespace-pre-line text-texto">{pedido.detalhes}</p>
         ) : (
@@ -114,7 +115,7 @@ export default async function PedidoLojaPage({
         )}
         <p className="text-lg font-bold text-beringela">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
         <p className="flex flex-wrap items-center gap-x-3 text-sm text-texto-suave">
-          {pedido.comprador_primeiro_nome && <span>Comprador: {pedido.comprador_primeiro_nome}</span>}
+          {pedido.comprador_primeiro_nome && <span>Comprador: {formatarNome(pedido.comprador_primeiro_nome)}</span>}
           {pedido.comprador_certificado && (
             <span className="inline-flex items-center gap-1 font-semibold text-verde-escuro">
               <BadgeCheck className="size-4" aria-hidden />

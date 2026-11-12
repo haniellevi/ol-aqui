@@ -1,7 +1,9 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { ChevronRight, Clock, Eye, MapPin, Repeat, ShieldAlert } from "lucide-react";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { CartaoVendedor } from "@/components/vitrine/cartao-vendedor";
+import { primeiroNome } from "@/components/vitrine/util";
 import { classesBotao } from "@/components/ui/botao";
 import { inteiro, linkAnuncio, linkCategoria, linkWhatsApp, preco, tempoRelativo, urlAbsoluta, valorDoCampo } from "@/lib/formato";
 import type { AnuncioCard, AnuncioPublico, StatusAnuncio } from "@/lib/tipos";
@@ -25,7 +27,7 @@ const publico = (a: AnuncioPublico) => a.status === "ativo" || a.status === "ven
 
 export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: AnuncioPublico; favorito: boolean | null; logado: boolean; parecidos: AnuncioCard[] }) {
   const caminho = linkAnuncio(a.id, a.titulo, a.slug);
-  const titulo = a.titulo || "Anúncio sem título";
+  const titulo = formatarNome(a.titulo) || "Anúncio sem título";
   const ativo = a.status === "ativo";
   const vendido = a.status === "vendido";
   const entrarHref = `/entrar?redirect_url=${encodeURIComponent(caminho)}`;
@@ -67,7 +69,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
           anuncioId={a.id}
           visto={{
             id: a.id, slug: a.slug ?? null, titulo, preco_centavos: a.preco_centavos, cidade: a.cidade ?? "", capa: a.fotos[0] ?? null,
-            criado_em: a.criado_em, destaque: a.destaque, vitrine_nome: a.vitrine_tipo === "pf" ? a.vitrine_nome.trim().split(/\s+/)[0] : a.vitrine_nome,
+            criado_em: a.criado_em, destaque: a.destaque, vitrine_nome: a.vitrine_tipo === "pf" ? primeiroNome(a.vitrine_nome) : formatarNome(a.vitrine_nome),
             vitrine_selo: a.vitrine_selo, vitrine_tipo: a.vitrine_tipo,
           }}
         />

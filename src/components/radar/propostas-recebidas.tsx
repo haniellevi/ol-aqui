@@ -1,5 +1,6 @@
 "use client";
 
+import { formatarNome } from "@/lib/formatar-nome";
 import { useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -123,10 +124,10 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
         <div className="flex min-w-0 flex-1 flex-col">
           {p.loja_slug ? (
             <Link href={linkLoja(p.loja_slug)} className="text-base font-semibold break-words underline-offset-4 hover:underline">
-              {p.loja_nome}
+              {formatarNome(p.loja_nome)}
             </Link>
           ) : (
-            <span className="text-base font-semibold break-words">{p.loja_nome}</span>
+            <span className="text-base font-semibold break-words">{formatarNome(p.loja_nome)}</span>
           )}
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-legenda text-texto-suave">
             {p.loja_selo && (
@@ -149,14 +150,14 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
       <div className="flex flex-wrap gap-3">
         {foto && (
           // eslint-disable-next-line @next/next/no-img-element -- foto da proposta no Storage
-          <img src={foto} alt={p.anuncio_titulo ?? "Foto da oferta"} width={96} height={96} className="size-24 shrink-0 rounded-campo bg-borda object-cover" />
+          <img src={foto} alt={formatarNome(p.anuncio_titulo) || "Foto da oferta"} width={96} height={96} className="size-24 shrink-0 rounded-campo bg-borda object-cover" />
         )}
         <div className="flex min-w-40 flex-1 flex-col gap-1">
           <span className="text-xl font-bold break-words text-beringela">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</span>
           {p.mensagem && <p className="text-base leading-6 break-words whitespace-pre-line text-texto">{p.mensagem}</p>}
           {p.anuncio_id && p.anuncio_titulo && (
             <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} className="min-h-10 content-center text-base leading-6 font-semibold text-laranja-escuro underline underline-offset-4">
-              Ver anúncio: {p.anuncio_titulo}
+              Ver anúncio: {formatarNome(p.anuncio_titulo)}
             </Link>
           )}
         </div>

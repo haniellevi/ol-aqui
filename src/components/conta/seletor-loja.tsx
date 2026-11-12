@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import { Store } from "lucide-react";
 import { escolherLoja } from "@/app/(conta)/_loja/actions";
 import { Botao } from "@/components/ui/botao";
@@ -16,12 +17,12 @@ export function SeletorLoja({ lojas, atual, voltar }: { lojas: LojaOpcao[]; atua
       <label className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="flex items-center gap-1 text-sm text-texto-suave">
           <Store className="size-4 shrink-0" aria-hidden />
-          Trabalhando na loja <strong className="break-words text-texto">{atual.nome}</strong>
+          Trabalhando na loja <strong className="break-words text-texto">{formatarNome(atual.nome)}</strong>
           {!atual.dono && <span>(você ajuda)</span>}
         </span>
         <NativeSelect name="loja" defaultValue={atual.id} aria-label="Escolher a loja">
           {lojas.map((l) => (
-            <NativeSelectOption key={l.id} value={l.id}>{l.dono ? `${l.nome} (sua loja)` : l.nome}</NativeSelectOption>
+            <NativeSelectOption key={l.id} value={l.id}>{l.dono ? `${formatarNome(l.nome)} (sua loja)` : formatarNome(l.nome)}</NativeSelectOption>
           ))}
         </NativeSelect>
       </label>

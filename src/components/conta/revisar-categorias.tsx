@@ -1,5 +1,6 @@
 "use client";
 
+import { formatarNome } from "@/lib/formatar-nome";
 import { useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, ImageOff, Sparkles } from "lucide-react";
@@ -123,7 +124,7 @@ export function RevisarCategorias({ itens }: { itens: SugestaoCategoria[] }) {
                 <span className="grid size-16 shrink-0 place-items-center rounded-campo bg-fundo text-texto-suave" aria-hidden><ImageOff className="size-6" /></span>
               )}
               <div className="flex min-w-0 flex-col gap-1">
-                <h3 className="text-base font-semibold break-words">{s.titulo}</h3>
+                <h3 className="text-base font-semibold break-words">{formatarNome(s.titulo)}</h3>
                 <p className="flex flex-wrap items-center gap-1 text-sm text-texto-suave">
                   <span className="line-through decoration-texto-suave/60">{s.categoria_atual ?? "Sem categoria"}</span>
                   <ArrowRight className="size-4 shrink-0" aria-label="para" />
@@ -132,12 +133,12 @@ export function RevisarCategorias({ itens }: { itens: SugestaoCategoria[] }) {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Botao tamanho="pequeno" icone={<Check />} disabled={pendente} aria-label={`Aceitar ${s.sugerida} para ${s.titulo}`}
-                onClick={() => executar(() => decidirCategoria(s.anuncio_id, true), `${s.titulo} agora está em ${s.sugerida}.`)}>
+              <Botao tamanho="pequeno" icone={<Check />} disabled={pendente} aria-label={`Aceitar ${s.sugerida} para ${formatarNome(s.titulo)}`}
+                onClick={() => executar(() => decidirCategoria(s.anuncio_id, true), `${formatarNome(s.titulo)} agora está em ${s.sugerida}.`)}>
                 Aceitar
               </Botao>
-              <Botao tamanho="pequeno" variante="secundario" disabled={pendente} aria-label={`Manter a categoria atual de ${s.titulo}`}
-                onClick={() => executar(() => decidirCategoria(s.anuncio_id, false), `${s.titulo} continua em ${s.categoria_atual ?? "sua categoria"}.`)}>
+              <Botao tamanho="pequeno" variante="secundario" disabled={pendente} aria-label={`Manter a categoria atual de ${formatarNome(s.titulo)}`}
+                onClick={() => executar(() => decidirCategoria(s.anuncio_id, false), `${formatarNome(s.titulo)} continua em ${s.categoria_atual ?? "sua categoria"}.`)}>
                 Manter atual
               </Botao>
             </div>

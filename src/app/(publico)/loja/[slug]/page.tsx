@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
@@ -63,27 +64,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (v.status !== "ativa") return { title: "Prévia da vitrine", robots: { index: false, follow: false } };
   const descricao =
     (v.sobre ?? "").replace(/\s+/g, " ").trim().slice(0, 155) ||
-    `Conheça ${v.nome} em ${v.cidade} e veja os anúncios da loja no Mercado da Região.`;
+    `Conheça ${formatarNome(v.nome)} em ${v.cidade} e veja os anúncios da loja no Mercado da Região.`;
   // Foto da fachada: 1500x500 (cortar-banner.ts). Banner modelo: imagem gerada 1200x630, com a cor
   // no endereço para a mudança de cor chegar logo no WhatsApp/Facebook (a imagem fica em cache).
   const foto = v.banner_tipo === "foto" && v.banner_url ? v.banner_url : null;
   const imagem = foto ?? `${linkLoja(v.slug)}/imagem?v=${encodeURIComponent(`${v.banner_cor}-${v.banner_modelo}-${v.nome}`.slice(0, 120))}`;
   const tamanho = foto ? { width: 1500, height: 500 } : { width: 1200, height: 630 };
   return {
-    title: `${v.nome} · ${v.cidade}`,
+    title: `${formatarNome(v.nome)} · ${v.cidade}`,
     description: descricao,
     alternates: { canonical: linkLoja(v.slug) },
     robots: v.status === "ativa" ? undefined : { index: false },
     openGraph: {
       type: "website",
-      title: v.nome,
+      title: formatarNome(v.nome),
       description: descricao,
       url: linkLoja(v.slug),
       siteName: "Mercado da Região",
       locale: "pt_BR",
-      images: [{ url: imagem, ...tamanho, alt: `Vitrine de ${v.nome} no Mercado da Região` }],
+      images: [{ url: imagem, ...tamanho, alt: `Vitrine de ${formatarNome(v.nome)} no Mercado da Região` }],
     },
-    twitter: { card: "summary_large_image", title: v.nome, description: descricao, images: [imagem] },
+    twitter: { card: "summary_large_image", title: formatarNome(v.nome), description: descricao, images: [imagem] },
   };
 }
 
@@ -91,14 +92,14 @@ function paraCard(a: AnuncioVitrine, v: VitrinePublica): CardAnuncioProps["anunc
   return {
     id: a.id,
     slug: a.slug,
-    titulo: a.titulo,
+    titulo: formatarNome(a.titulo),
     preco_centavos: a.preco_centavos,
     aceita_troca: a.aceita_troca,
     cidade: a.cidade,
     capa: a.capa,
     criado_em: a.criado_em,
     destaque: a.destaque,
-    vitrine_nome: v.nome,
+    vitrine_nome: formatarNome(v.nome),
     vitrine_selo: v.selo,
     vitrine_tipo: "loja",
   };
@@ -160,7 +161,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const entrarHref = `/entrar?redirect_url=${encodeURIComponent(linkPagina(base, ordem, pagina, previa))}`;
   const acao = nova && v.status === "ativa"
     ? (a: CardAnuncioProps["anuncio"]) => (
-        <FavoritoCard anuncioId={a.id} titulo={a.titulo} inicial={favoritos ? favoritos.has(a.id) : null} logado={!!userId} entrarHref={entrarHref} />
+        <FavoritoCard anuncioId={a.id} titulo={formatarNome(a.titulo)} inicial={favoritos ? favoritos.has(a.id) : null} logado={!!userId} entrarHref={entrarHref} />
       )
     : undefined;
   const pino = coordenadasValidas(v.lat, v.lng);
@@ -183,7 +184,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
 
       {/* Topo */}
       <header className="overflow-hidden bg-cartao shadow-1 md:rounded-card">
-        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={v.nome} logo={v.logo_url} posicaoAki={v.banner_aki_posicao ?? null} prioridade className={v.banner_aki_posicao == null ? "max-h-72" : undefined} />
+        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={formatarNome(v.nome)} logo={v.logo_url} posicaoAki={v.banner_aki_posicao ?? null} prioridade className={v.banner_aki_posicao == null ? "max-h-72" : undefined} />
         <div className="flex flex-col gap-3 px-4 pb-4">
           <div className="relative z-10 -mt-9 flex items-end gap-3">
             <span className="rounded-full border-3 border-cartao bg-cartao">
@@ -192,7 +193,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-legenda text-texto-suave">{v.categoria_loja ?? "Loja"}</span>
-            <h1 className="text-titulo font-semibold text-balance break-words">{v.nome}</h1>
+            <h1 className="text-titulo font-semibold text-balance break-words">{formatarNome(v.nome)}</h1>
             {v.selo && (
               <span>
                 <SeloLoja />

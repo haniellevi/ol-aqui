@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import "server-only";
 import Link from "next/link";
 import { lojasCatalogo } from "@/lib/dados/catalogo";
@@ -36,7 +37,7 @@ export async function LojasDaRegiao({
                 className="flex flex-col items-center gap-2 rounded-card p-1 text-center hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
               >
                 <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="lg" />
-                <span className="line-clamp-2 text-legenda leading-[18px] font-semibold">{l.nome}</span>
+                <span className="line-clamp-2 text-legenda leading-[18px] font-semibold">{formatarNome(l.nome)}</span>
                 {l.verificada && <span className="text-legenda leading-[18px] font-semibold text-verde-escuro">Verificada</span>}
               </Link>
             </li>

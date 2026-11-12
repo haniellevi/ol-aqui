@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import "server-only";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
@@ -26,7 +27,7 @@ export async function LojasEmDestaque({ regiao, titulo = "Lojas em destaque" }: 
               className="flex h-full flex-col items-center gap-2 rounded-card bg-cartao p-3 text-center shadow-1 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
             >
               <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="md" />
-              <span className="line-clamp-2 text-sm leading-4 font-semibold">{l.nome}</span>
+              <span className="line-clamp-2 text-sm leading-4 font-semibold">{formatarNome(l.nome)}</span>
               <span className="text-legenda leading-[18px] text-texto-suave">{l.cidade}</span>
               {l.verificada && (
                 <span className="flex items-center gap-1 text-legenda leading-[18px] font-semibold text-verde-escuro">

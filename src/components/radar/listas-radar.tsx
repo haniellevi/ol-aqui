@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { ChevronRight, Hourglass, MessageCircle, Radar, ShieldAlert, Star } from "lucide-react";
 import { preco, tempoRelativo } from "@/lib/formato";
@@ -38,7 +39,7 @@ export function ListaMeusPedidos({ pedidos, linkPedir, arquivados = false }: {
             <Link href={linkMeuPedidoRadar(p.id)} className={CARTAO}>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
-                <span className="text-base leading-snug font-semibold break-words">{p.titulo}</span>
+                <span className="text-base leading-snug font-semibold break-words">{formatarNome(p.titulo)}</span>
                 <span className="text-base font-semibold text-laranja-escuro">{resumoPropostas(p.total_propostas, p.menor_preco_centavos)}</span>
                 <span className="flex flex-wrap items-center gap-x-2 text-legenda text-texto-suave">
                   {p.modo_contato === "propostas_prazo" && p.propostas_ate && p.situacao === "aberto" ? (
@@ -98,7 +99,7 @@ export function ListaMinhasPropostas({ propostas }: { propostas: MinhaPropostaRa
                   {p.situacao === "aberto" ? "Pedido no ar" : p.situacao === "prazo_acabou" ? "Prazo acabou" : "Pedido encerrado"}
                 </Badge>
               )}
-              <span className="text-base leading-snug font-semibold break-words">{p.pedido_titulo}</span>
+              <span className="text-base leading-snug font-semibold break-words">{formatarNome(p.pedido_titulo)}</span>
               <span className="text-base font-semibold text-laranja-escuro">Sua oferta: {preco(p.preco_centavos)}</span>
               <span className="text-legenda text-texto-suave">
                 {p.pedido_cidade} · enviada {tempoRelativo(p.criado_em)}

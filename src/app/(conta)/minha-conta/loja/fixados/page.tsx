@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ImageOff, Package, Plus } from "lucide-react";
@@ -77,7 +78,7 @@ export default async function PaginaFixadosLoja() {
             {fixados.map((a, i) => (
               <li key={a.id}>
                 <Linha anuncio={a} aviso={avisos.get(a.id)}>
-                  <MoverFixado anuncioId={a.id} titulo={a.titulo} primeiro={i === 0} ultimo={i === fixados.length - 1} />
+                  <MoverFixado anuncioId={a.id} titulo={formatarNome(a.titulo)} primeiro={i === 0} ultimo={i === fixados.length - 1} />
                   <BotaoFixar anuncioId={a.id} fixado />
                 </Linha>
               </li>
@@ -126,7 +127,7 @@ function Linha({ anuncio: a, aviso, children }: { anuncio: MeuAnuncioVitrine; av
           )}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="line-clamp-2 text-base leading-5">{a.titulo}</span>
+          <span className="line-clamp-2 text-base leading-5">{formatarNome(a.titulo)}</span>
           <span className="text-base font-bold">{preco(a.preco_centavos)}</span>
           {aviso && <span className="text-legenda font-semibold text-aviso">{aviso}</span>}
         </span>
