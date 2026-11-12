@@ -6,15 +6,17 @@ const { carregar } = require('./carregar.cjs');
 const id = '60000000-0000-4000-a000-000000000001';
 const base = 'src/app/(conta)/anunciar/';
 const anuncio = { id, vitrine_id: 'loja', status: 'rascunho', fotos: [], atributos: {}, preco_centavos: null, categoria_id: null, publicado_em: null };
-const conta = { vitrine: { id: 'loja', microrregiao_id: 'regiao', status: 'ativa' }, podePublicar: true };
+const conta = { vitrine: { id: 'loja', dono_id: 'user_loja', microrregiao_id: 'regiao', status: 'ativa' }, podePublicar: true };
 function fronteiras(op = {}) {
   const gravacoes = []; const filtros = []; let chamadas = 0;
   const db = { from() { const q = { select() { return q; }, eq(...args) { filtros.push(args); return q; }, filter(...args) { filtros.push(args); return q; }, order() { return q; }, limit() { return q; }, update(dados) { gravacoes.push(dados); return q; }, insert(dados) { gravacoes.push(dados); return q; }, async maybeSingle() { chamadas++; return op.respostas?.[chamadas - 1] ?? { data: { id, status: 'rascunho' }, error: null }; }, async single() { return op.insertResposta ?? { data: { id }, error: null }; } }; return q; }, rpc: async () => op.rpc ?? { data: 'ativo', error: null } };
   const mocks = {
     '@clerk/nextjs/server': { auth: async () => ({ userId: op.semLogin ? null : 'user_loja' }) },
     '@/lib/supabase/server': { createClient: async () => db },
-    '@/lib/dados/anuncios': { meuAnuncio: async () => op.semAnuncio ? null : { ...anuncio, ...op.anuncio }, meusAnuncios: async () => [] },
-    '@/lib/dados/conta': { meuPerfilEVitrine: async () => conta },
+    '@/lib/dados/anuncios': { anuncioDaLoja: async () => op.semAnuncio ? null : { ...anuncio, ...op.anuncio }, anunciosDaLoja: async () => [] },
+    '@/lib/dados/conta': { contaDaLoja: async () => conta },
+    '@/lib/dados/loja-ativa': { lojasQueCuido: async () => [], lojaEscolhida: async () => ({ id: 'loja', nome: 'Loja', dono: true }) },
+    '@/components/conta/seletor-loja': { SeletorLoja: () => null },
     '@/lib/dados/categorias': { categoriaPorId: async (id) => op.categorias?.[id] ?? null, categoriaDoAnuncio: async (id) => op.categorias?.[id] ?? null },
     '@/lib/dados/regiao': { listarCidades: async () => op.cidades ?? [{ nome: 'Corrente', uf: 'PI' }] },
     '@/lib/dados/config': { lerConfigNumero: async (chave, regiao) => { assert.equal(regiao, 'regiao'); return chave.endsWith('maximo') ? 2 : 1; } },
@@ -208,6 +210,7 @@ test('foto ainda referenciada ou consulta indisponível nunca é apagada do Stor
     const q = { select() { return q; }, contains() { return q; }, or() { return q; }, eq() { return q; }, async limit() { return resposta; } };
     const { apagarFoto } = carregar('src/lib/dados/fotos.ts', {
       '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_loja' }) },
+      '@/lib/dados/loja-ativa': { lojaEscolhida: async () => ({ id: 'loja', nome: 'Loja', dono: true }) },
       '@/lib/supabase/server': { createClient: async () => ({ from: () => q, storage: { from: () => ({ getPublicUrl: () => ({ data: { publicUrl: url } }), remove: async () => { removidas++; return { error: null }; } }) } }) },
     });
     const r = await apagarFoto(url);

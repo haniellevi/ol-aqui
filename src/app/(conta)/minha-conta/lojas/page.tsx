@@ -4,6 +4,7 @@ import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { Botao } from "@/components/ui/botao";
 import { Aviso } from "@/components/conta/aviso";
 import { Vazio } from "@/components/ui/vazio";
+import { escolherLoja } from "@/app/(conta)/_loja/actions";
 
 export const metadata: Metadata = { title: "Minhas lojas" };
 export type LojaDaConta = { id: string; nome: string; dono: boolean };
@@ -26,7 +27,14 @@ export default async function MinhasLojas() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {loja.dono && <Botao href="/minha-conta/loja">Editar minha loja</Botao>}
-                  <Botao href={`/minha-conta/lojas/${loja.id}`} variante={loja.dono ? "secundario" : "primario"}>
+                  {!loja.dono && (
+                    <form action={escolherLoja}>
+                      <input type="hidden" name="loja" value={loja.id} />
+                      <input type="hidden" name="voltar" value="/minha-conta/anuncios" />
+                      <Botao type="submit">Cuidar dos anúncios</Botao>
+                    </form>
+                  )}
+                  <Botao href={`/minha-conta/lojas/${loja.id}`} variante="secundario">
                     {loja.dono ? "Gerenciar equipe" : "Editar informações da vitrine"}
                   </Botao>
                 </div>

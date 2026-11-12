@@ -8,7 +8,7 @@ function ambiente(opts = {}) {
   const q = { update(v) { chamadas.push(['update',v]); return q; }, eq() { return q; }, async select() { return opts.resposta ?? { data: [{id}], error: null }; } };
   const actions = carregar('src/app/(conta)/minha-conta/anuncios/actions.ts', {
     '@clerk/nextjs/server': { auth: async () => ({ userId: opts.semSessao ? null : 'user_loja' }) },
-    '@/lib/dados/anuncios': { meuAnuncio: async () => opts.semDono ? null : ({ id, status: opts.status ?? 'ativo' }) },
+    '@/lib/dados/anuncios': { anuncioDaLoja: async () => opts.semDono ? null : ({ id, status: opts.status ?? 'ativo' }) },
     '@/lib/supabase/server': { createClient: async () => ({ from: () => q, rpc: async (...args) => {
       chamadas.push(args); if (opts.falha) throw Error('offline');
       return opts.resposta ?? { data: opts.retorno, error: null };
@@ -64,9 +64,11 @@ test('restaurar mantém a aba Lixeira e só encaminha ao destino depois do últi
   const outro = { id: '70000000-0000-4000-a000-000000000002', status: 'excluido', titulo: 'Ainda na lixeira', fotos: [] };
   const pagina = anuncios => carregar('src/app/(conta)/minha-conta/anuncios/page.tsx', {
     'next/navigation': { redirect: destino => { throw Error(`redirect:${destino}`); } },
-    '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ vitrine: { tipo: 'pf' }, podePublicar: true }) },
-    '@/lib/dados/anuncios': { meusAnuncios: async () => anuncios },
+    '@/lib/dados/conta': { contaDaLoja: async () => ({ vitrine: { tipo: 'pf' }, podePublicar: true }) },
+    '@/lib/dados/anuncios': { anunciosDaLoja: async () => anuncios },
     '@/lib/dados/historico': { ultimasMudancas: async () => new Map() },
+    '@/lib/dados/loja-ativa': { lojasQueCuido: async () => [], lojaEscolhida: async () => null },
+    '@/components/conta/seletor-loja': { SeletorLoja: () => null },
     '@/lib/dados/destaques': { resultadosDestaques: async () => [] },
     '@/lib/dados/vitrine-completa': {},
     '@/components/conta/resumo-plano': { resumoPlano: () => null },
@@ -90,9 +92,11 @@ test('todos exclui lixeira e cada estado possui destino e rótulo', () => {
 test('dono vê o aviso das categorias sugeridas (loja ou pessoa física), com ou sem a vitrine nova', async () => {
   const pagina = (ativa, total, tipo = 'loja') => carregar('src/app/(conta)/minha-conta/anuncios/page.tsx', {
     'next/navigation': { redirect: destino => { throw Error(`redirect:${destino}`); } },
-    '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ perfil: { microrregiao_id: 'regiao-1' }, vitrine: { tipo, id: '70000000-0000-4000-a000-000000000009' }, podePublicar: true }) },
-    '@/lib/dados/anuncios': { meusAnuncios: async () => [] },
+    '@/lib/dados/conta': { contaDaLoja: async () => ({ perfil: { microrregiao_id: 'regiao-1' }, vitrine: { tipo, id: '70000000-0000-4000-a000-000000000009' }, podePublicar: true }) },
+    '@/lib/dados/anuncios': { anunciosDaLoja: async () => [] },
     '@/lib/dados/historico': { ultimasMudancas: async () => new Map() },
+    '@/lib/dados/loja-ativa': { lojasQueCuido: async () => [], lojaEscolhida: async () => null },
+    '@/components/conta/seletor-loja': { SeletorLoja: () => null },
     '@/lib/dados/destaques': { resultadosDestaques: async () => [] },
     '@/lib/dados/vitrine-completa': { meusFixados: async () => new Set(), meusRecursosVitrine: async () => ({ fixados_max: 3 }), planosPublicos: async () => [], vitrineNovaAtiva: async (r) => ativa && r === 'regiao-1' },
     '@/lib/dados/categorias-ia': { minhasSugestoesCategoria: async () => Array(total).fill({}) },

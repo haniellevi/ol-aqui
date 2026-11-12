@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { BarChart3, Clock, Eye, Heart, MessageCircle, Pin, Plus } from "lucide-react";
-import { meuPerfilEVitrine } from "@/lib/dados/conta";
-import { meusAnuncios } from "@/lib/dados/anuncios";
+import { contaDaLoja } from "@/lib/dados/conta";
+import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
+import { SeletorLoja } from "@/components/conta/seletor-loja";
+import { anunciosDaLoja } from "@/lib/dados/anuncios";
 import { ultimasMudancas } from "@/lib/dados/historico";
 import { fraseHistorico, type LinhaHistorico } from "@/lib/historico";
 import { fraseResultado, resultadosDestaques } from "@/lib/dados/destaques";
@@ -32,7 +34,7 @@ import { Alert } from "@/components/ui/alert";
 export const metadata: Metadata = { title: "Meus anúncios" };
 
 export default async function PaginaMeusAnuncios({ searchParams }: { searchParams: Promise<{ aba?: string | string[]; resultado?: string; anuncio?: string; salvo?: string }> }) {
-  const [sp, conta, anuncios, destaques] = await Promise.all([searchParams, meuPerfilEVitrine(), meusAnuncios(), resultadosDestaques()]);
+  const [sp, conta, anuncios, destaquesDono, lojas, lojaAtual] = await Promise.all([searchParams, contaDaLoja(), anunciosDaLoja(), resultadosDestaques(), lojasQueCuido(), lojaEscolhida()]);
 
   if (!conta) throw new Error("Não foi possível carregar sua conta. Tente novamente.");
   if (!conta.vitrine) {
@@ -46,6 +48,9 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
     );
   }
 
+  // P5b: ajudante não vê Destacar, pagamentos, plano nem Produtos no topo (são do dono).
+  const ajudante = conta.ajudante === true;
+  const destaques = ajudante ? [] : destaquesDono;
   const contagem = Object.fromEntries(
     ABAS.map((a) => [a.chave, anuncios.filter((x) => (a.status as readonly StatusAnuncio[]).includes(x.status)).length]),
   ) as Record<(typeof ABAS)[number]["chave"], number>;
@@ -73,23 +78,25 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
     }
   }
   // Loja com "fixar no topo" no plano: botão em cada anúncio no ar (o banco confere o limite)
-  const loja = conta.vitrine.tipo === "loja";
+  const loja = conta.vitrine.tipo === "loja" && !ajudante;
   const [fixados, recursos] = loja ? await Promise.all([meusFixados(conta.vitrine.id), meusRecursosVitrine()]) : [new Set<string>(), null];
   const podeFixar = !!recursos && recursos.fixados_max !== 0;
   // Plano sem "fixar no topo": avisa uma vez, com os planos que têm (lidos da tabela de planos)
   const disponivelFixar = loja && !podeFixar ? textoDisponivelEm(await planosPublicos(), "fixados") : null;
   // Categorias sugeridas esperando o dono (da migração de categorias ou da IA): loja e pessoa física, com ou sem a IA ligada.
-  const sugestoesIA = (await minhasSugestoesCategoria(conta.vitrine.id))?.length ?? 0;
+  const sugestoesIA = ajudante ? 0 : (await minhasSugestoesCategoria(conta.vitrine.id))?.length ?? 0;
   // Última mudança de cada anúncio (dono, ajudante ou equipe). Falha → a linha só não aparece.
   const mudancas = await ultimasMudancas(lista.map((a) => a.id));
 
   return (
     <PaginaConta larga>
-      <TopoConta titulo="Meus anúncios" texto={plano ? plano.uso : undefined}>
+      <TopoConta titulo="Meus anúncios" texto={plano && !ajudante ? plano.uso : undefined}>
         <Botao href="/anunciar" icone={<Plus />} larguraTotal className="sm:w-fit">
           Novo anúncio
         </Botao>
       </TopoConta>
+
+      <SeletorLoja lojas={lojas} atual={lojaAtual} voltar="/minha-conta/anuncios" />
 
       {aviso && <Aviso tipo="ok">{aviso}</Aviso>}
 
@@ -102,7 +109,10 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         </Aviso>
       )}
 
-      {!conta.podePublicar && (
+      {!conta.podePublicar && ajudante && (
+        <Aviso tipo="atencao">A loja está no limite do plano. Para pôr mais anúncios no ar, pause um ou fale com o dono da loja.</Aviso>
+      )}
+      {!conta.podePublicar && !ajudante && (
         <Aviso tipo="atencao">
           <span>Você está no limite do seu plano. Para pôr mais anúncios no ar, pause um ou troque de plano.</span>
           <Link href="/minha-conta/plano" className="inline-flex min-h-10 items-center underline underline-offset-4">
@@ -158,6 +168,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
                 fixado={fixados.has(a.id)}
                 mostrarFixar={loja && (podeFixar || fixados.has(a.id))}
                 mudanca={mudancas.get(a.id)}
+                podeDestacar={!ajudante}
               />
             </li>
           ))}
@@ -174,6 +185,7 @@ function LinhaAnuncio({
   fixado = false,
   mostrarFixar = false,
   mudanca,
+  podeDestacar = true,
 }: {
   anuncio: MeuAnuncio;
   destaque?: ResultadoDestaque;
@@ -181,6 +193,7 @@ function LinhaAnuncio({
   fixado?: boolean;
   mostrarFixar?: boolean;
   mudanca?: LinhaHistorico;
+  podeDestacar?: boolean;
 }) {
   const titulo = a.titulo?.trim() || "Anúncio sem título";
   const rotulo = ROTULO[a.status];
@@ -275,6 +288,7 @@ function LinhaAnuncio({
         status={a.status}
         titulo={titulo}
         temPagamento={pago || destaque || !!p}
+        podeDestacar={podeDestacar}
         maisAcoes={a.status !== "excluido" && mostrarFixar && (a.status === "ativo" || fixado) ? <BotaoFixar anuncioId={a.id} fixado={fixado} comoItemDeMenu /> : undefined}
       />
     </article>

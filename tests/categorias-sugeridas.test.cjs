@@ -63,8 +63,8 @@ function acoesAnuncio({ erroSugerir = null, categoriaSalva = null } = {}) {
   const mocks = {
     '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_loja' }) },
     '@/lib/supabase/server': { createClient: async () => db },
-    '@/lib/dados/anuncios': { meuAnuncio: async () => anuncio },
-    '@/lib/dados/conta': { meuPerfilEVitrine: async () => conta },
+    '@/lib/dados/anuncios': { anuncioDaLoja: async () => anuncio },
+    '@/lib/dados/conta': { contaDaLoja: async () => conta },
     '@/lib/dados/categorias': {
       categoriaPorId: async (id) => (id === CAT ? { categoria: { id: CAT, nome: 'Ração', campos: [] }, filhas: [] } : null),
       categoriaDoAnuncio: async () => null,

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ImageOff, Receipt, ShieldAlert } from "lucide-react";
-import { meuAnuncio } from "@/lib/dados/anuncios";
-import { meuPerfilEVitrine } from "@/lib/dados/conta";
+import { anuncioDaLoja } from "@/lib/dados/anuncios";
+import { contaDaLoja } from "@/lib/dados/conta";
 import { avulsoParaMim, meuPagamento } from "@/lib/dados/cobranca";
 import { asaasConfigurado } from "@/lib/asaas";
 import { precisaDocumento } from "@/lib/cobranca-destaque";
@@ -30,12 +30,14 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
   const p = um(sp.p);
   if (!ehUuid(id)) redirect("/anunciar");
 
-  const conta = await meuPerfilEVitrine();
+  const conta = await contaDaLoja();
   if (!conta) redirect(`/entrar?redirect_url=${encodeURIComponent(`/anunciar/avulso?id=${id}`)}`);
   if (!conta.vitrine) redirect("/quero-vender");
+  // P5b: pagamento é do dono da loja; o ajudante volta para o Anunciar.
+  if (conta.ajudante) redirect("/anunciar");
   const vitrine = conta.vitrine;
 
-  const anuncio = await meuAnuncio(id);
+  const anuncio = await anuncioDaLoja(id);
   if (!anuncio || anuncio.status === "congelado") notFound();
   const editar = anuncio.status !== "rascunho";
   const revisar = urlPasso("revisar", anuncio.id, editar);

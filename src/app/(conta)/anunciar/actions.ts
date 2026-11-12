@@ -5,8 +5,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
-import { meuAnuncio } from "@/lib/dados/anuncios";
-import { meuPerfilEVitrine } from "@/lib/dados/conta";
+import { anuncioDaLoja } from "@/lib/dados/anuncios";
+import { contaDaLoja } from "@/lib/dados/conta";
 import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
 import { listarCidades } from "@/lib/dados/regiao";
 import { lerConfigNumero } from "@/lib/dados/config";
@@ -62,7 +62,7 @@ function destino(passo: SlugPasso, c: Comum): string {
 
 async function abrir(id: string): Promise<MeuAnuncio | null> {
   if (!ehUuid(id)) return null;
-  const a = await meuAnuncio(id);
+  const a = await anuncioDaLoja(id);
   return a && a.status !== "congelado" && a.status !== "excluido" ? a : null;
 }
 
@@ -93,7 +93,7 @@ async function gravar(id: string, colunas: Record<string, unknown>, antes?: MeuA
  * barrando o excesso de rascunhos e só põe no ar com vaga no plano ou avulso pago.
  */
 export async function novoRascunho(opcoes?: { avulso?: boolean; chave?: string }): Promise<EstadoForm> {
-  const conta = await meuPerfilEVitrine();
+  const conta = await contaDaLoja();
   if (!conta) return { erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
   if (!conta.vitrine) redirect("/quero-vender");
   if (conta.vitrine.status === "suspensa") redirect("/anunciar");
@@ -110,7 +110,7 @@ export async function novoRascunho(opcoes?: { avulso?: boolean; chave?: string }
     .select("id")
     .single();
   if (error?.code === "23505" && opcoes?.chave) {
-    const existente = await meuAnuncio(opcoes.chave);
+    const existente = await anuncioDaLoja(opcoes.chave);
     if (existente?.status === "rascunho") redirect(urlPasso("fotos", existente.id));
   }
   if (error || !data) return { erro: traduzirErro(error) };
@@ -129,14 +129,15 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
   const anuncio = await abrir(id);
   if (!anuncio) return { ok: false, erro: { mensagem: NAO_ACHOU } };
 
-  const conta = await meuPerfilEVitrine();
+  const conta = await contaDaLoja();
   if (!conta?.vitrine) return { ok: false, erro: { mensagem: NAO_ACHOU } };
   const regiao = conta.vitrine.microrregiao_id;
   const maximo = Math.min((await lerConfigNumero("anuncio.fotos_maximo", regiao)) ?? MAX_FOTOS_BANCO, MAX_FOTOS_BANCO);
   if (!Array.isArray(fotos) || fotos.length > maximo) {
     return { ok: false, erro: { mensagem: `Use no máximo ${maximo} fotos.`, campo: "fotos" } };
   }
-  const prefixo = `/storage/v1/object/public/anuncios/${userId}/`;
+  // Fotos ficam na pasta do dono da loja (o ajudante também envia para lá).
+  const prefixo = `/storage/v1/object/public/anuncios/${conta.vitrine.dono_id}/`;
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const origemOlaki = base ? new URL(base) : null;
   const valida = (u: unknown) => {
@@ -173,7 +174,7 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
     .filter("fotos", "eq", `{${anteriores.map((f) => JSON.stringify(f)).join(",")}}`).select("id").maybeSingle();
   if (error) return { ok: false, erro: traduzirErro(error) };
   if (data) return { ok: true, dados: undefined };
-  const atual = await db.from("anuncios").select("fotos, vitrines_lojas!inner(dono_id)").eq("id", id).eq("vitrines_lojas.dono_id", userId).maybeSingle();
+  const atual = await db.from("anuncios").select("fotos").eq("id", id).eq("vitrine_id", conta.vitrine.id).maybeSingle();
   if (atual.error || !atual.data) return { ok: false, erro: { mensagem: "Não foi possível confirmar as fotos. Tente de novo." } };
   const fotosAtuais = (atual.data.fotos ?? []) as string[];
   // Uma resposta perdida pode ter sido gravada. Repetir a mesma lista é seguro.
@@ -345,7 +346,7 @@ export async function salvarLocal(_antes: EstadoForm, form: FormData): Promise<E
   const c = lerComum(form);
   const anuncio = await abrir(c.id);
   if (!anuncio) return { erro: { mensagem: NAO_ACHOU } };
-  const conta = await meuPerfilEVitrine();
+  const conta = await contaDaLoja();
   if (!conta?.vitrine) return { erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
 
   const cidade = String(form.get("cidade") ?? "").trim();

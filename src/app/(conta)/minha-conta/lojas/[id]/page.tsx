@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ehUuid } from "@/lib/formato";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { Aviso } from "@/components/conta/aviso";
+import { Badge } from "@/components/ui/badge";
+import { MARCA_EQUIPE } from "@/lib/historico";
 import { FormInformacoes, type DadosInformacoes } from "@/components/vitrine/form-informacoes";
 import { FormConvidarGerente, FormRevogarGerente } from "../equipe";
 import { salvarVitrineGerenciada } from "../actions";
@@ -11,7 +13,7 @@ import type { LojaDaConta } from "../page";
 
 export const metadata: Metadata = { title: "Gerenciar loja" };
 type DadosGerente = Omit<DadosInformacoes, "instagram" | "formas_pagamento">;
-type Convite = { id: string; final_telefone: string; expira_em: string; gerente: string | null };
+type Convite = { id: string; final_telefone: string; expira_em: string; gerente: string | null; e_equipe?: boolean };
 const dataCurta = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" });
 
 export default async function GerenciarLoja({ params }: { params: Promise<{ id: string }> }) {
@@ -42,7 +44,7 @@ export default async function GerenciarLoja({ params }: { params: Promise<{ id: 
   return (
     <PaginaConta>
       <TopoConta titulo={`Equipe de ${loja.nome}`} voltar={voltar} textoVoltar="Minhas lojas"
-        texto="Gerentes podem editar endereço, horários, descrição e entrega. O dono cuida dos acessos, do plano e da cobrança." />
+        texto="Gerentes cuidam dos anúncios da loja (criar, editar, publicar, pausar e lixeira) e editam endereço, horários, descrição e entrega. Nome e WhatsApp da loja, acessos, plano, cobrança e Destacar ficam com o dono." />
       <FormConvidarGerente loja={id} />
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Gerentes e convites</h2>
@@ -50,7 +52,10 @@ export default async function GerenciarLoja({ params }: { params: Promise<{ id: 
           <ul className="grid gap-2">
             {convites.map((c) => (
               <li key={c.id} className="rounded-card border border-borda bg-cartao p-4">
-                <p className="font-semibold break-words">{c.gerente ?? `WhatsApp final ${c.final_telefone}`}</p>
+                <p className="flex flex-wrap items-center gap-2 font-semibold break-words">
+                  {c.gerente ?? `WhatsApp final ${c.final_telefone}`}
+                  {c.e_equipe && <Badge variant="secondary">{MARCA_EQUIPE}</Badge>}
+                </p>
                 <p className="text-sm text-texto-suave">{c.gerente ? "Gerente ativo" : `Convite pendente até ${dataCurta.format(new Date(c.expira_em))}`}</p>
                 <FormRevogarGerente loja={id} convite={c.id} aceito={c.gerente !== null} />
               </li>
