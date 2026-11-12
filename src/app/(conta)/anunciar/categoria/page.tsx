@@ -4,6 +4,7 @@ import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
+import { DescartarAnuncio } from "@/components/anunciar/descartar-anuncio";
 import { EscolhaCategoria } from "@/components/anunciar/escolha-categoria";
 import { SugestaoPendente } from "@/components/anunciar/sugestao-pendente";
 import { minhaSugestaoCategoria } from "@/lib/dados/sugestoes-categoria";
@@ -40,6 +41,7 @@ export default async function PassoCategoria({ searchParams }: { searchParams: P
           </Botao>
         </Vazio>
       )}
+      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho />}
     </CorpoPasso>
   );
 }

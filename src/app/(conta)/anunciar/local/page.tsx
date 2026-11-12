@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { listarCidades } from "@/lib/dados/regiao";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
+import { DescartarAnuncio } from "@/components/anunciar/descartar-anuncio";
 import { FormLocal } from "@/components/anunciar/form-local";
 import { carregarPasso, type ParamsPasso } from "../_carregar";
 
@@ -28,6 +29,7 @@ export default async function PassoLocal({ searchParams }: { searchParams: Param
         cidadeInicial={cidadeInicial}
         bairroInicial={bairroInicial}
       />
+      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho />}
     </CorpoPasso>
   );
 }

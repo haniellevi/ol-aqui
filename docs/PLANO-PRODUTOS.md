@@ -171,6 +171,14 @@ Cada etapa vira um PR próprio, com testes do banco (`supabase/testes`) e da tel
 
 ### Etapa P6 — Excluir dentro do cadastro
 - "Descartar rascunho" em todos os passos de `/anunciar`, e "Excluir anúncio" no fim da edição, com o mesmo diálogo de `acoes-anuncio.tsx`.
+- Decidido com o Raniel em 12/11/2026:
+  - o botão fica no fim da página, em texto vermelho, embaixo do formulário (fora da barra fixa do "Continuar");
+  - depois de confirmar, a pessoa vai para Meus anúncios › Lixeira, com o aviso "Anúncio movido para a lixeira" e o botão Restaurar.
+- Como funciona: `src/components/anunciar/descartar-anuncio.tsx`. Usa `descartarAnuncio`: a mesma regra do menu "Mais" (`mover_anuncio_lixeira`) e, depois, passa o seletor para a loja do anúncio, para a aba Lixeira abrir na loja certa; sem mudança no banco.
+  - Rascunho: "Descartar rascunho" nos 6 passos.
+  - Anúncio publicado (editando): "Excluir anúncio" só no último passo (Revisar), com o aviso de pagamento quando há avulso pago, destaque no ar ou destaque esperando pagamento (mesmo critério de Meus anúncios).
+  - Super admin editando anúncio de outra pessoa não vê o botão: usa a lixeira do painel, que avisa o dono.
+  - Dono e ajudante podem descartar (a função do banco confere quem cuida da loja).
 
 ## Riscos e pontos em aberto
 - **Troca da árvore** mexe em todos os anúncios. Antes de rodar em produção:

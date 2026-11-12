@@ -8,7 +8,8 @@ function ambiente(opts = {}) {
   const q = { update(v) { chamadas.push(['update',v]); return q; }, eq() { return q; }, async select() { return opts.resposta ?? { data: [{id}], error: null }; } };
   const actions = carregar('src/app/(conta)/minha-conta/anuncios/actions.ts', {
     '@clerk/nextjs/server': { auth: async () => ({ userId: opts.semSessao ? null : 'user_loja' }) },
-    '@/lib/dados/anuncios': { anuncioDaLoja: async () => opts.semDono ? null : ({ id, status: opts.status ?? 'ativo' }) },
+    '@/lib/dados/anuncios': { anuncioDaLoja: async () => opts.semDono ? null : ({ id, status: opts.status ?? 'ativo', vitrine_id: opts.vitrine ?? 'loja-do-anuncio' }) },
+    '@/lib/dados/loja-ativa': { guardarLojaEscolhida: async (loja) => { chamadas.push(['loja', loja]); return true; } },
     '@/lib/supabase/server': { createClient: async () => ({ from: () => q, rpc: async (...args) => {
       chamadas.push(args); if (opts.falha) throw Error('offline');
       return opts.resposta ?? { data: opts.retorno, error: null };
@@ -23,6 +24,17 @@ test('ações rejeitam UUID inválido, sessão expirada e anúncio de outro dono
     const {actions,chamadas}=ambiente(opcoes);
     assert.equal((await actions.moverParaLixeira(Object.keys(opcoes).length ? id : 'invalido')).ok,false);
     assert.equal(chamadas.length,0);
+  }
+});
+test('P6: descartar no Anunciar manda para a lixeira e passa a trabalhar na loja do anúncio', async () => {
+  const ok = ambiente({ retorno: 'excluido', vitrine: 'loja-ajudada' });
+  assert.deepEqual(await ok.actions.descartarAnuncio(id), { ok: true, dados: 'excluido' });
+  assert.deepEqual(ok.chamadas[0], ['mover_anuncio_lixeira', { p_anuncio_id: id }]);
+  assert.deepEqual(ok.chamadas.find((c) => c[0] === 'loja'), ['loja', 'loja-ajudada']);
+  for (const opcoes of [{ retorno: 'ativo' }, { resposta: { data: null, error: { code: '42501', message: 'sem permissão' } } }, { semDono: true }]) {
+    const falhou = ambiente(opcoes);
+    assert.equal((await falhou.actions.descartarAnuncio(id)).ok, false);
+    assert.equal(falhou.chamadas.some((c) => c[0] === 'loja'), false, 'loja só muda depois de dar certo');
   }
 });
 test('reativação não transforma retorno nulo ou inesperado em sucesso', async () => {

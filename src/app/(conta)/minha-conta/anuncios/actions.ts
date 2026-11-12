@@ -5,6 +5,7 @@ import { unstable_rethrow } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { anuncioDaLoja } from "@/lib/dados/anuncios";
+import { guardarLojaEscolhida } from "@/lib/dados/loja-ativa";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import type { MeuAnuncio, Resultado, StatusAnuncio } from "@/lib/tipos";
@@ -67,6 +68,16 @@ export async function marcarVendido(id: string, peloOlaki: boolean): Promise<Res
 
 export async function moverParaLixeira(id: string): Promise<Resultado<StatusAnuncio>> {
   return alterar(id, (db) => chamar(db, "mover_anuncio_lixeira", { p_anuncio_id: id }, ["excluido"]));
+}
+
+/** Etapa P6: "Descartar rascunho" / "Excluir anúncio" no Anunciar. Igual a moverParaLixeira, e passa a
+ *  trabalhar na loja do anúncio, para a aba Lixeira (com o aviso e o Restaurar) abrir na loja certa. */
+export async function descartarAnuncio(id: string): Promise<Resultado<StatusAnuncio>> {
+  return alterar(id, async (db, a) => {
+    const r = await chamar(db, "mover_anuncio_lixeira", { p_anuncio_id: id }, ["excluido"]);
+    if (r.ok && a.vitrine_id) await guardarLojaEscolhida(a.vitrine_id);
+    return r;
+  });
 }
 
 export async function restaurarAnuncio(id: string): Promise<Resultado<StatusAnuncio>> {
