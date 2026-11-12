@@ -107,10 +107,9 @@ Se só trocarmos as chaves, todo mundo "perde" a conta. Por isso a troca é feit
 
 ## O que falta (para você ou para a próxima sessão)
 
-- **Antes da virada:** a exclusão de conta (`src/lib/conta-exclusao.ts`, `apagarPasta`) apaga só a pasta
-  `<ID atual>/`. Com as fotos deixadas na pasta antiga, quem pedir exclusão depois da virada ficaria com fotos
-  na pasta velha. Ajustar a exclusão para também apagar a pasta do ID antigo (o par fica em
-  `admin_gestao_eventos`, `acao = 'troca_id_clerk'`), ou mover as fotos e usar `true`.
+- ~~Exclusão de conta apagar também a pasta do ID antigo~~ **feito**: `pastasDaConta` em
+  `src/lib/conta-exclusao.ts` lê o par antigo → novo em `admin_gestao_eventos` (`acao = 'troca_id_clerk'`)
+  e a exclusão põe na fila e apaga as duas pastas (nunca a de um ID antigo que voltou a ser perfil).
 - (Opcional) Script de mover fotos no Storage pela API (`move`) por pessoa, para usar `p_mover_arquivos = true`.
 - Confirmar no Supabase real que o dono da função pode desligar os gatilhos das tabelas (`alter table ... disable trigger`).
 - Ensaiar a função num **clone** do banco de produção antes da virada (nunca ensaiar direto na produção).
