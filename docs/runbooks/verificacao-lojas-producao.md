@@ -24,11 +24,27 @@ Onde rodar as consultas: Supabase > projeto OLAKI > **SQL Editor**. Cole, clique
 
 ---
 
-## Passo 0. Conferir os números antes de dar a cortesia [só leitura]
+## Passo 1. Migrações pelo editor SQL, **sem** a cortesia [precisa do sim do Raniel]
 
-Mostre estes números ao Raniel **antes** de aplicar as migrações.
+O que faz: cria as tabelas e funções do Radar v2 e da verificação de lojas.
+Risco: mexe no banco de produção. Faça backup antes (Supabase > Database > Backups) e confira com
+`select max(version) from supabase_migrations.schema_migrations;` o que já foi aplicado.
+**Não aplique ainda** o arquivo `20261118080000_cortesia_lancamento.sql`: ele só entra no Passo 4, depois do código.
 
-**A. Quantas lojas e vendedores PF ganhariam a cortesia de 30 dias** (pagam, estão ativos e não têm selo):
+Ordem (arquivos da pasta `supabase/migrations`, cada um colado inteiro no editor, na ordem do nome):
+
+1. Todos os `20261117*` do Radar v2 (que ainda não estiverem no banco).
+2. Os `20261118010000` até `20261118070000`, em ordem. **Pare antes** do `20261118080000`.
+
+---
+
+## Passo 2. Contar quem ganharia a cortesia [só leitura]
+
+Só funciona **depois do Passo 1** (as tabelas do Radar precisam existir). Mostre estes números ao Raniel **antes** do Passo 4.
+As consultas usam a mesma regra da migração da cortesia: loja ou vendedor PF ativo, em plano pago com Radar (não teste, não grátis),
+que **ainda não atende o Radar** (falta o selo) e que **nunca teve** uma linha de cortesia.
+
+**A. Quantas lojas e vendedores PF ganhariam a cortesia de 30 dias:**
 
 ```sql
 select v.tipo, count(*) as quantas
@@ -36,12 +52,12 @@ from vitrines_lojas v
 cross join lateral plano_efetivo(v) p
 where v.status = 'ativa'
   and p.codigo is not null and p.acesso_radar and not p.e_teste and p.preco_centavos > 0
-  and not coalesce(case when v.tipo = 'loja' then v.selo_loja_verificada
-        else (select pf.selo_negociador_certificado and pf.verificacao_pf_em is not null from perfis pf where pf.id = v.dono_id) end, false)
+  and not exists (select 1 from radar_cortesias c where c.vitrine_id = v.id)
+  and not pode_atender_radar(v.dono_id)
 group by v.tipo;
 ```
 
-**B. Lojas pagas sem selo, por plano** (as mesmas, em lista):
+**B. As mesmas, em lista:**
 
 ```sql
 select v.nome, v.tipo, v.plano, v.plano_expira_em
@@ -49,12 +65,12 @@ from vitrines_lojas v
 cross join lateral plano_efetivo(v) p
 where v.status = 'ativa'
   and p.codigo is not null and p.acesso_radar and not p.e_teste and p.preco_centavos > 0
-  and not coalesce(case when v.tipo = 'loja' then v.selo_loja_verificada
-        else (select pf.selo_negociador_certificado and pf.verificacao_pf_em is not null from perfis pf where pf.id = v.dono_id) end, false)
+  and not exists (select 1 from radar_cortesias c where c.vitrine_id = v.id)
+  and not pode_atender_radar(v.dono_id)
 order by v.nome;
 ```
 
-**C. Selos dados na mão (sem data de conferência do CNPJ).** Quando a reconferência mensal for ligada (passo 8),
+**C. Selos dados na mão (sem data de conferência do CNPJ).** Quando a reconferência mensal for ligada (passo 10),
 essas lojas serão conferidas na Receita e **podem perder o selo** se o CNPJ não estiver ativo ou não for achado:
 
 ```sql
@@ -64,35 +80,11 @@ where selo_loja_verificada and cnpj_conferido_em is null;
 ```
 
 Para ver quais são: troque `count(*) as selos_manuais` por `nome, cnpj, cidade` e acrescente `order by nome`.
-Decisão para o Raniel: se o número for alto, confira o CNPJ dessas lojas antes do passo 8.
+Decisão para o Raniel: se o número for alto, confira o CNPJ dessas lojas antes do passo 10.
 
 ---
 
-## Passo 1. Migrações pelo editor SQL [precisa do sim do Raniel]
-
-O que faz: cria as tabelas e funções do Radar v2, da verificação de lojas e da cortesia.
-Risco: a migração da cortesia **já dá os 30 dias e manda o aviso no sino** para as lojas do Passo 0-A, na hora.
-Não dá para "desavisar". Por isso o Passo 0 vem antes.
-
-Ordem (arquivos da pasta `supabase/migrations`, cada um colado inteiro no editor, na ordem do nome):
-
-1. Todos os `20261117*` do Radar v2 (que ainda não estiverem no banco).
-2. Todos os `20261118*`, em ordem. O último é `20261118080000_cortesia_lancamento.sql` (a cortesia).
-
-Dica de segurança: antes, faça backup (Supabase > Database > Backups) e confira com
-`select max(version) from supabase_migrations.schema_migrations;` o que já foi aplicado.
-
-Conferir depois:
-
-```sql
-select count(*) as cortesias_de_lancamento from radar_cortesias where criado_por = 'sistema';
-```
-
-Tem que bater com o número do Passo 0-A.
-
----
-
-## Passo 2. Código na Vercel [precisa do sim do Raniel]
+## Passo 3. Código na Vercel [precisa do sim do Raniel]
 
 O que faz: publica o site novo (tela "Verificar minha loja", Radar v2). Conferir antes que a Vercel usa Node 22 ou mais.
 Risco: site fora do ar se o deploy falhar; dá para voltar para o deploy anterior na Vercel (Deployments > ... > Promote to Production no deploy antigo).
@@ -100,7 +92,30 @@ Também confira nas variáveis da Vercel (só os **nomes**, sem mostrar valores)
 
 ---
 
-## Passo 3. Conferir os crons [só leitura]
+## Passo 4. Cortesia de 30 dias [precisa do sim do Raniel]
+
+**Este passo manda aviso para lojas de verdade e não dá para desfazer o aviso.**
+
+Antes de começar: o código do Passo 3 já está no ar e a página **/minha-conta/loja/verificar** abre (entre com uma loja de teste e veja);
+os avisos mandam a loja para essa página (e vendedor PF para `/minha-conta/verificacao`). Os números do Passo 2 foram mostrados ao Raniel e ele deu o "sim".
+
+O que faz: cola no editor SQL o arquivo `20261118080000_cortesia_lancamento.sql`. Ele dá, uma única vez, 30 dias de Radar
+para as lojas e PF da lista do Passo 2, registra no histórico e manda o aviso no sino
+("Você tem 30 dias de Radar de cortesia. Verifique sua loja para continuar."). Ele também agenda o aviso de fim de prazo (cron `olaki-cortesia-fim`).
+Risco: o aviso sai na hora. Se precisar encerrar a cortesia de alguém, veja "Se der errado" no fim.
+
+Conferir depois:
+
+```sql
+select count(*) as cortesias_de_lancamento from radar_cortesias where criado_por = 'sistema';
+```
+
+Tem que ser **igual** ao total do Passo 2-A (a consulta usa a mesma regra da migração). Se for diferente, alguém mudou de plano ou de selo
+entre a contagem e a aplicação; confira a lista antes de seguir.
+
+---
+
+## Passo 5. Conferir os crons [só leitura]
 
 ```sql
 select jobname, schedule, active
@@ -137,32 +152,32 @@ Ver como cada chave está agora [só leitura]:
 select chave, valor from configuracoes where chave like 'verificacao.%' order by chave;
 ```
 
-Se o `update` disser "0 rows", a migração das chaves não rodou (volte ao Passo 1).
+Depois de cada `update`, o editor mostra "Success. No rows returned" — isso é normal. Para ter certeza de que mudou, rode a consulta "Ver como cada chave está agora" acima; se a chave nem aparecer na lista, a migração das chaves não rodou (volte ao Passo 1).
 
 ---
 
-## Passos 4 a 8: ligar, na ordem, um de cada vez
+## Passos 6 a 10: ligar, na ordem, um de cada vez
 
 Espere e confira entre um passo e outro. Se algo estranho aparecer, desligue a chave do passo e me avise.
 
-**Passo 4. `verificacao.whatsapp_equipe` [precisa do sim do Raniel].**
+**Passo 6. `verificacao.whatsapp_equipe` [precisa do sim do Raniel].**
 Faz: a equipe (suporte e administrador) recebe WhatsApp quando chega um pedido, só entre 8h e 20h (Fortaleza).
 Risco: as primeiras mensagens automáticas do número Evolution; veja o aviso de banimento acima.
 Conferir: faça um pedido de teste numa loja de teste e veja se a equipe é avisada.
 
-**Passo 5. `verificacao.ia_ativa` junto com `verificacao.ia_ligada_em` [precisa do sim do Raniel].**
+**Passo 7. `verificacao.ia_ativa` junto com `verificacao.ia_ligada_em` [precisa do sim do Raniel].**
 Rode os dois `update` da tabela, um depois do outro (primeiro a data, depois a chave).
 Faz: a IA passa a conferir os documentos. Nos 14 primeiros dias a equipe revê **todas** as aprovações da IA; depois, 1 em cada 10.
 Risco: gasto com a IA (limite no orçamento do robô) e a IA errar; por isso a revisão total.
 
-**Passo 6. `verificacao.whatsapp_loja` [precisa do sim do Raniel].**
+**Passo 8. `verificacao.whatsapp_loja` [precisa do sim do Raniel].**
 Faz: a loja recebe WhatsApp quando o pedido é decidido. Risco: mais mensagens pelo número Evolution.
 
-**Passo 7. Esperar e olhar.** Deixe rodar alguns dias. Veja pedidos parados, erros e se a equipe responde em até 24 horas.
+**Passo 9. Esperar e olhar.** Deixe rodar alguns dias. Veja pedidos parados, erros e se a equipe responde em até 24 horas.
 
-**Passo 8. `verificacao.reconferencia_ativa` [precisa do sim do Raniel] - por último, só depois de contar o Passo 0-C.**
+**Passo 10. `verificacao.reconferencia_ativa` [precisa do sim do Raniel] - por último, só depois de contar o Passo 2-C.**
 Faz: todo mês as lojas com selo têm o CNPJ conferido na Receita (uma rotina diária pega as que estão vencidas, em lotes pequenos).
-Risco: a loja cujo CNPJ estiver inativo ou não for achado **perde o selo** e a loja é avisada (e a equipe também). Selos manuais (Passo 0-C) entram nessa conta.
+Risco: a loja cujo CNPJ estiver inativo ou não for achado **perde o selo** e a loja é avisada (e a equipe também). Selos manuais (Passo 2-C) entram nessa conta.
 
 ---
 
