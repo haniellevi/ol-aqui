@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
@@ -21,7 +22,7 @@ export default async function HistoricoAnuncioPage({ params }: { params: Promise
   if (!anuncio) notFound();
   const linhas = await lerHistorico({ anuncio: id });
   if (!linhas) notFound();
-  const titulo = anuncio.titulo?.trim() || "Anúncio sem título";
+  const titulo = formatarNome(anuncio.titulo) || "Anúncio sem título";
   return (
     <PaginaConta>
       <TopoConta titulo="Histórico do anúncio" texto={titulo} voltar="/minha-conta/anuncios" textoVoltar="Meus anúncios" />

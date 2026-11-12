@@ -43,6 +43,11 @@ insert into vitrines_lojas(dono_id, microrregiao_id, slug, nome, cidade, tipo, p
 select dono, regiao, 'teste-radar-340-' || nome, 'Vitrine de teste 340 ' || nome,
        cidade, tipo, plano, now() + interval '1 day', now() + make_interval(secs => indice)
   from candidatos340;
+-- Radar v2: atender e receber aviso exige selo (loja verificada / PF certificada); o plano segue valendo
+update vitrines_lojas set verificacao_estado = 'aprovada', selo_loja_verificada = true
+ where slug like 'teste-radar-340-%' and tipo = 'loja';
+update perfis set selo_negociador_certificado = true, verificacao_pf_em = now()
+ where id in (select dono from candidatos340 where tipo = 'pf');
 insert into anuncios(vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, status)
 select v.id, case when c.nome = 'irmao' then :'decoracao' else :'moveis' end::uuid,
        'Anúncio de teste 340 ' || c.nome, c.cidade, 10000, '{"estado":"usado"}',

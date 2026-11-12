@@ -1,5 +1,6 @@
 "use client";
 
+import { formatarNome } from "@/lib/formatar-nome";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
@@ -26,7 +27,7 @@ export function DescartarAnuncio({ id, titulo, rascunho, temPagamento = false }:
   const [sessaoExpirada, setSessaoExpirada] = useState(false);
   const [recarregar, setRecarregar] = useState(false);
   const rotulo = rascunho ? "Descartar rascunho" : "Excluir anúncio";
-  const nome = titulo?.trim() || (rascunho ? "Rascunho sem título" : "Anúncio sem título");
+  const nome = formatarNome(titulo) || (rascunho ? "Rascunho sem título" : "Anúncio sem título");
 
   function abrir() {
     setErro(null);

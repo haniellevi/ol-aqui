@@ -21,6 +21,9 @@ values ('33000000-0000-4000-a000-000000000001','user_comprador',:'regiao',:'moto
        ('33000000-0000-4000-a000-000000000003','user_comprador',:'regiao',:'veiculos',
         'Veículo sem nicho específico',null,'Corrente',now()-interval '2 days');
 
+-- Radar v2: quem não atende só vê pedido "todos"; este é o pedido aberto a todo mundo da região.
+update radar_pedidos set visibilidade='todos' where id='33000000-0000-4000-a000-000000000001';
+
 -- Mais de uma página de pedidos de um nicho vizinho, todos mais recentes.
 insert into radar_pedidos(comprador_id,microrregiao_id,categoria_id,titulo,cidade,criado_em)
 select 'user_comprador',:'regiao',:'carros','Pedido de carro de teste '||n,'Corrente',now()
@@ -61,8 +64,8 @@ end $$;
 
 set local request.jwt.claim.sub='user_semcodigo';
 do $$ begin
-  assert (select detalhes is null and comprador_primeiro_nome is null
+  assert (select detalhes = 'Detalhe do comprador' and comprador_primeiro_nome is null
     from radar_feed_regional('categoria',current_setting('teste.radar330_motos')::uuid,40,0)
-    where id='33000000-0000-4000-a000-000000000001'), 'Filtro mantém dados privados protegidos';
+    where id='33000000-0000-4000-a000-000000000001'), 'Filtro: pedido Todo mundo mostra detalhes e protege o nome do comprador';
 end $$;
 rollback;

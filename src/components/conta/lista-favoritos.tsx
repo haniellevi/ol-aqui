@@ -1,5 +1,6 @@
 "use client";
 
+import { formatarNome } from "@/lib/formatar-nome";
 import { useState } from "react";
 import { PackageX, Radar } from "lucide-react";
 import type { Favorito } from "@/lib/dados/favoritos";
@@ -8,7 +9,7 @@ import { BotaoRemoverFavorito } from "./botao-remover-favorito";
 import { Badge } from "@/components/ui/badge";
 import { Botao } from "@/components/ui/botao";
 
-/** radar: mostra "Pedir no Radar" (vitrine nova ligada). */
+/** radar: mostra "Estou procurando…" (vitrine nova ligada). */
 export function ListaFavoritos({ itens, radar = false }: { itens: Favorito[]; radar?: boolean }) {
   const [removido, setRemovido] = useState<string | null>(null);
   return <div className="flex flex-col gap-3">
@@ -17,7 +18,7 @@ export function ListaFavoritos({ itens, radar = false }: { itens: Favorito[]; ra
     </p>
     <ul aria-label="Anúncios salvos" className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {itens.map((f, indice) => {
-        const titulo = f.anuncio?.titulo ?? `Anúncio indisponível ${indice + 1}`;
+        const titulo = formatarNome(f.anuncio?.titulo) || `Anúncio indisponível ${indice + 1}`;
         return <li key={f.id} className="flex min-w-0 flex-col gap-2 rounded-card bg-cartao p-2 shadow-1">
           <Badge variant={f.situacao === "ativo" ? "success" : "secondary"}>
             {f.situacao === "ativo" ? "Disponível" : f.situacao === "vendido" ? "Vendido" : "Fora do ar"}
@@ -30,7 +31,7 @@ export function ListaFavoritos({ itens, radar = false }: { itens: Favorito[]; ra
             </div>}
           <p className="px-1 text-legenda text-texto-suave">Salvo em <time dateTime={f.salvoEm}>{new Date(f.salvoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time></p>
           {radar && <div className="px-1"><Botao href={f.radar} tamanho="pequeno" variante={f.situacao === "ativo" ? "texto" : "primario"} icone={<Radar />}
-            aria-label={f.anuncio ? `Pedir parecido com ${titulo} no Radar` : "Pedir parecido no Radar"}>Pedir no Radar</Botao></div>}
+            aria-label={f.anuncio ? `Estou procurando algo parecido com ${titulo}` : "Estou procurando algo parecido"}>Estou procurando…</Botao></div>}
           <div className="border-t border-borda pt-1"><BotaoRemoverFavorito anuncioId={f.id} titulo={titulo} comTexto onRemovido={() => setRemovido(titulo)} /></div>
         </li>;
       })}

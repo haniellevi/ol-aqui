@@ -44,6 +44,8 @@ export type CartaoAki = {
   vitrine_selo: boolean;
   vitrine_tipo: "pf" | "loja";
   aceita_troca?: boolean;
+  preco_antes_centavos?: number | null;
+  uf?: string | null;
 };
 
 /** Pedido do Radar preparado pelo Merc. Só vira pedido quando a pessoa toca em "Confirmar". */
@@ -51,7 +53,8 @@ export type DadosPedidoRadar = {
   titulo: string;
   detalhes: string | null;
   preco_max_centavos: number | null;
-  cidade: string;
+  /** null = região toda (o Aki só manda cidade quando a pessoa disse uma). */
+  cidade: string | null;
   urgencia: "normal" | "esta_semana" | "hoje";
   categoria: "imovel" | "veiculo" | "movel" | "geral";
 };

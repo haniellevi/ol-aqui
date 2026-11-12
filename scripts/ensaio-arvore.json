@@ -1,0 +1,1877 @@
+{
+ "categorias": [
+  {
+   "slug": "veiculos",
+   "nome": "Veículos",
+   "pai": null,
+   "ordem": 1,
+   "ativa": true
+  },
+  {
+   "slug": "imoveis",
+   "nome": "Imóveis",
+   "pai": null,
+   "ordem": 2,
+   "ativa": true
+  },
+  {
+   "slug": "agro",
+   "nome": "Agro",
+   "pai": null,
+   "ordem": 3,
+   "ativa": true
+  },
+  {
+   "slug": "animais-de-estimacao",
+   "nome": "Pet",
+   "pai": null,
+   "ordem": 4,
+   "ativa": true
+  },
+  {
+   "slug": "celulares-e-telefonia",
+   "nome": "Celulares e telefonia",
+   "pai": null,
+   "ordem": 5,
+   "ativa": true
+  },
+  {
+   "slug": "informatica",
+   "nome": "Informática",
+   "pai": null,
+   "ordem": 6,
+   "ativa": true
+  },
+  {
+   "slug": "games",
+   "nome": "Games",
+   "pai": null,
+   "ordem": 7,
+   "ativa": true
+  },
+  {
+   "slug": "tv-audio-e-foto",
+   "nome": "TV, áudio e foto",
+   "pai": null,
+   "ordem": 8,
+   "ativa": true
+  },
+  {
+   "slug": "eletrodomesticos",
+   "nome": "Eletro",
+   "pai": null,
+   "ordem": 9,
+   "ativa": true
+  },
+  {
+   "slug": "moveis",
+   "nome": "Móveis",
+   "pai": null,
+   "ordem": 10,
+   "ativa": true
+  },
+  {
+   "slug": "casa-e-moveis",
+   "nome": "Casa e decoração",
+   "pai": null,
+   "ordem": 11,
+   "ativa": true
+  },
+  {
+   "slug": "construcao",
+   "nome": "Materiais de construção",
+   "pai": null,
+   "ordem": 12,
+   "ativa": true
+  },
+  {
+   "slug": "moda-e-beleza",
+   "nome": "Moda e beleza",
+   "pai": null,
+   "ordem": 13,
+   "ativa": true
+  },
+  {
+   "slug": "infantil",
+   "nome": "Infantil",
+   "pai": null,
+   "ordem": 14,
+   "ativa": true
+  },
+  {
+   "slug": "esporte",
+   "nome": "Esporte e lazer",
+   "pai": null,
+   "ordem": 15,
+   "ativa": true
+  },
+  {
+   "slug": "musica-e-hobbies",
+   "nome": "Música e hobbies",
+   "pai": null,
+   "ordem": 16,
+   "ativa": true
+  },
+  {
+   "slug": "comercio-e-escritorio",
+   "nome": "Comércio e escritório",
+   "pai": null,
+   "ordem": 17,
+   "ativa": true
+  },
+  {
+   "slug": "festas-e-eventos",
+   "nome": "Festas e eventos",
+   "pai": null,
+   "ordem": 18,
+   "ativa": true
+  },
+  {
+   "slug": "servicos",
+   "nome": "Serviços",
+   "pai": null,
+   "ordem": 19,
+   "ativa": true
+  },
+  {
+   "slug": "empregos",
+   "nome": "Empregos",
+   "pai": null,
+   "ordem": 20,
+   "ativa": true
+  },
+  {
+   "slug": "outros",
+   "nome": "Outros",
+   "pai": null,
+   "ordem": 21,
+   "ativa": true
+  },
+  {
+   "slug": "carros",
+   "nome": "Carros",
+   "pai": "veiculos",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Veículos › Carros"
+  },
+  {
+   "slug": "motos",
+   "nome": "Motos",
+   "pai": "veiculos",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Veículos › Motos"
+  },
+  {
+   "slug": "caminhoes-e-utilitarios",
+   "nome": "Caminhões e utilitários",
+   "pai": "veiculos",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Veículos › Caminhões e utilitários"
+  },
+  {
+   "slug": "onibus-e-vans",
+   "nome": "Ônibus e vans",
+   "pai": "veiculos",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Veículos › Ônibus e vans"
+  },
+  {
+   "slug": "pecas-e-acessorios",
+   "nome": "Peças e acessórios",
+   "pai": "veiculos",
+   "ordem": 5,
+   "ativa": true
+  },
+  {
+   "slug": "pecas-de-motor",
+   "nome": "Peças de motor e mecânica",
+   "pai": "pecas-e-acessorios",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Veículos › Peças e acessórios › Peças de motor e mecânica"
+  },
+  {
+   "slug": "pneus-e-rodas",
+   "nome": "Pneus e rodas",
+   "pai": "pecas-e-acessorios",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Veículos › Peças e acessórios › Pneus e rodas"
+  },
+  {
+   "slug": "som-automotivo",
+   "nome": "Som e multimídia",
+   "pai": "pecas-e-acessorios",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Veículos › Peças e acessórios › Som e multimídia"
+  },
+  {
+   "slug": "acessorios-automotivos",
+   "nome": "Acessórios",
+   "pai": "pecas-e-acessorios",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Veículos › Peças e acessórios › Acessórios"
+  },
+  {
+   "slug": "casas",
+   "nome": "Casas",
+   "pai": "imoveis",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Imóveis › Casas"
+  },
+  {
+   "slug": "apartamentos",
+   "nome": "Apartamentos",
+   "pai": "imoveis",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Imóveis › Apartamentos"
+  },
+  {
+   "slug": "kitnets-e-quartos",
+   "nome": "Kitnets e quartos",
+   "pai": "imoveis",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Imóveis › Kitnets e quartos"
+  },
+  {
+   "slug": "terrenos-e-lotes",
+   "nome": "Terrenos e lotes",
+   "pai": "imoveis",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Imóveis › Terrenos e lotes"
+  },
+  {
+   "slug": "fazendas-e-sitios",
+   "nome": "Fazendas e sítios",
+   "pai": "imoveis",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Imóveis › Fazendas e sítios"
+  },
+  {
+   "slug": "pontos-comerciais",
+   "nome": "Pontos comerciais",
+   "pai": "imoveis",
+   "ordem": 6,
+   "ativa": true,
+   "caminho": "Imóveis › Pontos comerciais"
+  },
+  {
+   "slug": "temporada",
+   "nome": "Temporada",
+   "pai": "imoveis",
+   "ordem": 7,
+   "ativa": true,
+   "caminho": "Imóveis › Temporada"
+  },
+  {
+   "slug": "tratores-e-maquinas",
+   "nome": "Tratores e máquinas",
+   "pai": "agro",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Agro › Tratores e máquinas"
+  },
+  {
+   "slug": "implementos",
+   "nome": "Implementos",
+   "pai": "agro",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Agro › Implementos"
+  },
+  {
+   "slug": "pecas-para-tratores",
+   "nome": "Peças para tratores e máquinas",
+   "pai": "agro",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Agro › Peças para tratores e máquinas"
+  },
+  {
+   "slug": "gado-e-animais",
+   "nome": "Gado e animais",
+   "pai": "agro",
+   "ordem": 4,
+   "ativa": true
+  },
+  {
+   "slug": "bovinos",
+   "nome": "Bovinos",
+   "pai": "gado-e-animais",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Agro › Gado e animais › Bovinos"
+  },
+  {
+   "slug": "equinos",
+   "nome": "Equinos",
+   "pai": "gado-e-animais",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Agro › Gado e animais › Equinos"
+  },
+  {
+   "slug": "caprinos-e-ovinos",
+   "nome": "Caprinos e ovinos",
+   "pai": "gado-e-animais",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Agro › Gado e animais › Caprinos e ovinos"
+  },
+  {
+   "slug": "suinos",
+   "nome": "Suínos",
+   "pai": "gado-e-animais",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Agro › Gado e animais › Suínos"
+  },
+  {
+   "slug": "aves",
+   "nome": "Aves",
+   "pai": "gado-e-animais",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Agro › Gado e animais › Aves"
+  },
+  {
+   "slug": "sementes-e-insumos",
+   "nome": "Sementes e insumos",
+   "pai": "agro",
+   "ordem": 5,
+   "ativa": true
+  },
+  {
+   "slug": "sementes",
+   "nome": "Sementes",
+   "pai": "sementes-e-insumos",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Agro › Sementes e insumos › Sementes"
+  },
+  {
+   "slug": "adubos-e-fertilizantes",
+   "nome": "Adubos e fertilizantes",
+   "pai": "sementes-e-insumos",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Agro › Sementes e insumos › Adubos e fertilizantes"
+  },
+  {
+   "slug": "defensivos",
+   "nome": "Defensivos",
+   "pai": "sementes-e-insumos",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Agro › Sementes e insumos › Defensivos"
+  },
+  {
+   "slug": "racoes-para-criacao",
+   "nome": "Rações para criação",
+   "pai": "sementes-e-insumos",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Agro › Sementes e insumos › Rações para criação"
+  },
+  {
+   "slug": "sal-mineral",
+   "nome": "Sal mineral",
+   "pai": "sementes-e-insumos",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Agro › Sementes e insumos › Sal mineral"
+  },
+  {
+   "slug": "graos",
+   "nome": "Grãos",
+   "pai": "agro",
+   "ordem": 6,
+   "ativa": true,
+   "caminho": "Agro › Grãos"
+  },
+  {
+   "slug": "apicultura",
+   "nome": "Apicultura",
+   "pai": "agro",
+   "ordem": 7,
+   "ativa": true,
+   "caminho": "Agro › Apicultura"
+  },
+  {
+   "slug": "cachorros",
+   "nome": "Cachorros",
+   "pai": "animais-de-estimacao",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Pet › Cachorros"
+  },
+  {
+   "slug": "gatos",
+   "nome": "Gatos",
+   "pai": "animais-de-estimacao",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Pet › Gatos"
+  },
+  {
+   "slug": "outros-animais",
+   "nome": "Outros animais",
+   "pai": "animais-de-estimacao",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Pet › Outros animais"
+  },
+  {
+   "slug": "produtos-para-pets",
+   "nome": "Produtos para pets",
+   "pai": "animais-de-estimacao",
+   "ordem": 4,
+   "ativa": true
+  },
+  {
+   "slug": "racao",
+   "nome": "Ração",
+   "pai": "produtos-para-pets",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Pet › Produtos para pets › Ração"
+  },
+  {
+   "slug": "petiscos",
+   "nome": "Petiscos",
+   "pai": "produtos-para-pets",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Pet › Produtos para pets › Petiscos"
+  },
+  {
+   "slug": "coleiras-e-guias",
+   "nome": "Coleiras e guias",
+   "pai": "produtos-para-pets",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Pet › Produtos para pets › Coleiras e guias"
+  },
+  {
+   "slug": "camas-e-casinhas",
+   "nome": "Camas e casinhas",
+   "pai": "produtos-para-pets",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Pet › Produtos para pets › Camas e casinhas"
+  },
+  {
+   "slug": "brinquedos-para-pets",
+   "nome": "Brinquedos para pets",
+   "pai": "produtos-para-pets",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Pet › Produtos para pets › Brinquedos para pets"
+  },
+  {
+   "slug": "higiene-e-saude-pet",
+   "nome": "Higiene e saúde",
+   "pai": "produtos-para-pets",
+   "ordem": 6,
+   "ativa": true,
+   "caminho": "Pet › Produtos para pets › Higiene e saúde"
+  },
+  {
+   "slug": "aquarios-e-gaiolas",
+   "nome": "Aquários e gaiolas",
+   "pai": "produtos-para-pets",
+   "ordem": 7,
+   "ativa": true,
+   "caminho": "Pet › Produtos para pets › Aquários e gaiolas"
+  },
+  {
+   "slug": "celulares",
+   "nome": "Celulares",
+   "pai": "celulares-e-telefonia",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Celulares e telefonia › Celulares"
+  },
+  {
+   "slug": "acessorios-de-celular",
+   "nome": "Acessórios de celular",
+   "pai": "celulares-e-telefonia",
+   "ordem": 2,
+   "ativa": true
+  },
+  {
+   "slug": "capas-e-peliculas",
+   "nome": "Capas e películas",
+   "pai": "acessorios-de-celular",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Celulares e telefonia › Acessórios de celular › Capas e películas"
+  },
+  {
+   "slug": "carregadores-e-cabos",
+   "nome": "Carregadores e cabos",
+   "pai": "acessorios-de-celular",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Celulares e telefonia › Acessórios de celular › Carregadores e cabos"
+  },
+  {
+   "slug": "suportes-de-celular",
+   "nome": "Suportes",
+   "pai": "acessorios-de-celular",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Celulares e telefonia › Acessórios de celular › Suportes"
+  },
+  {
+   "slug": "pecas-de-celular",
+   "nome": "Peças de celular",
+   "pai": "celulares-e-telefonia",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Celulares e telefonia › Peças de celular"
+  },
+  {
+   "slug": "smartwatches",
+   "nome": "Smartwatches",
+   "pai": "celulares-e-telefonia",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Celulares e telefonia › Smartwatches"
+  },
+  {
+   "slug": "telefonia-fixa",
+   "nome": "Telefonia fixa",
+   "pai": "celulares-e-telefonia",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Celulares e telefonia › Telefonia fixa"
+  },
+  {
+   "slug": "notebooks",
+   "nome": "Notebooks",
+   "pai": "informatica",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Informática › Notebooks"
+  },
+  {
+   "slug": "computadores",
+   "nome": "Computadores",
+   "pai": "informatica",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Informática › Computadores"
+  },
+  {
+   "slug": "monitores",
+   "nome": "Monitores",
+   "pai": "informatica",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Informática › Monitores"
+  },
+  {
+   "slug": "tablets-e-leitores",
+   "nome": "Tablets e leitores",
+   "pai": "informatica",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Informática › Tablets e leitores"
+  },
+  {
+   "slug": "impressoras-e-scanners",
+   "nome": "Impressoras e scanners",
+   "pai": "informatica",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Informática › Impressoras e scanners"
+  },
+  {
+   "slug": "perifericos",
+   "nome": "Periféricos",
+   "pai": "informatica",
+   "ordem": 6,
+   "ativa": true
+  },
+  {
+   "slug": "teclados-e-mouses",
+   "nome": "Teclados e mouses",
+   "pai": "perifericos",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Informática › Periféricos › Teclados e mouses"
+  },
+  {
+   "slug": "webcams",
+   "nome": "Webcams",
+   "pai": "perifericos",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Informática › Periféricos › Webcams"
+  },
+  {
+   "slug": "estabilizadores-e-nobreaks",
+   "nome": "Estabilizadores e nobreaks",
+   "pai": "perifericos",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Informática › Periféricos › Estabilizadores e nobreaks"
+  },
+  {
+   "slug": "pecas-de-computador",
+   "nome": "Peças e componentes",
+   "pai": "informatica",
+   "ordem": 7,
+   "ativa": true
+  },
+  {
+   "slug": "placas-de-video",
+   "nome": "Placas de vídeo",
+   "pai": "pecas-de-computador",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Informática › Peças e componentes › Placas de vídeo"
+  },
+  {
+   "slug": "memoria-ram",
+   "nome": "Memória RAM",
+   "pai": "pecas-de-computador",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Informática › Peças e componentes › Memória RAM"
+  },
+  {
+   "slug": "processadores",
+   "nome": "Processadores",
+   "pai": "pecas-de-computador",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Informática › Peças e componentes › Processadores"
+  },
+  {
+   "slug": "hd-e-ssd",
+   "nome": "HD e SSD",
+   "pai": "pecas-de-computador",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Informática › Peças e componentes › HD e SSD"
+  },
+  {
+   "slug": "redes-e-internet",
+   "nome": "Redes e internet",
+   "pai": "informatica",
+   "ordem": 8,
+   "ativa": true,
+   "caminho": "Informática › Redes e internet"
+  },
+  {
+   "slug": "consoles",
+   "nome": "Consoles",
+   "pai": "games",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Games › Consoles"
+  },
+  {
+   "slug": "jogos",
+   "nome": "Jogos",
+   "pai": "games",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Games › Jogos"
+  },
+  {
+   "slug": "acessorios-de-games",
+   "nome": "Acessórios de games",
+   "pai": "games",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Games › Acessórios de games"
+  },
+  {
+   "slug": "tv-e-som",
+   "nome": "TV e som",
+   "pai": "tv-audio-e-foto",
+   "ordem": 1,
+   "ativa": true
+  },
+  {
+   "slug": "tvs",
+   "nome": "TVs",
+   "pai": "tv-e-som",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "TV, áudio e foto › TV e som › TVs"
+  },
+  {
+   "slug": "som-e-caixas",
+   "nome": "Som e caixas",
+   "pai": "tv-e-som",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "TV, áudio e foto › TV e som › Som e caixas"
+  },
+  {
+   "slug": "fones-de-ouvido",
+   "nome": "Fones de ouvido",
+   "pai": "tv-e-som",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "TV, áudio e foto › TV e som › Fones de ouvido"
+  },
+  {
+   "slug": "streaming-e-tv-box",
+   "nome": "Streaming e TV box",
+   "pai": "tv-e-som",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "TV, áudio e foto › TV e som › Streaming e TV box"
+  },
+  {
+   "slug": "projetores",
+   "nome": "Projetores",
+   "pai": "tv-e-som",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "TV, áudio e foto › TV e som › Projetores"
+  },
+  {
+   "slug": "cameras-e-drones",
+   "nome": "Câmeras e drones",
+   "pai": "tv-audio-e-foto",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "TV, áudio e foto › Câmeras e drones"
+  },
+  {
+   "slug": "geladeiras-e-freezers",
+   "nome": "Geladeiras e freezers",
+   "pai": "eletrodomesticos",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Eletro › Geladeiras e freezers"
+  },
+  {
+   "slug": "fogoes-e-fornos",
+   "nome": "Fogões e fornos",
+   "pai": "eletrodomesticos",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Eletro › Fogões e fornos"
+  },
+  {
+   "slug": "maquinas-de-lavar",
+   "nome": "Máquinas de lavar e secadoras",
+   "pai": "eletrodomesticos",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Eletro › Máquinas de lavar e secadoras"
+  },
+  {
+   "slug": "ar-e-ventiladores",
+   "nome": "Ar-condicionado e ventiladores",
+   "pai": "eletrodomesticos",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Eletro › Ar-condicionado e ventiladores"
+  },
+  {
+   "slug": "portateis-de-cozinha",
+   "nome": "Portáteis de cozinha",
+   "pai": "eletrodomesticos",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Eletro › Portáteis de cozinha"
+  },
+  {
+   "slug": "cuidados-pessoais",
+   "nome": "Cuidados pessoais",
+   "pai": "eletrodomesticos",
+   "ordem": 6,
+   "ativa": true,
+   "caminho": "Eletro › Cuidados pessoais"
+  },
+  {
+   "slug": "sofas-e-poltronas",
+   "nome": "Sofás e poltronas",
+   "pai": "moveis",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Móveis › Sofás e poltronas"
+  },
+  {
+   "slug": "camas-e-colchoes",
+   "nome": "Camas e colchões",
+   "pai": "moveis",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Móveis › Camas e colchões"
+  },
+  {
+   "slug": "guarda-roupas-e-comodas",
+   "nome": "Guarda-roupas e cômodas",
+   "pai": "moveis",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Móveis › Guarda-roupas e cômodas"
+  },
+  {
+   "slug": "mesas-e-cadeiras",
+   "nome": "Mesas e cadeiras",
+   "pai": "moveis",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Móveis › Mesas e cadeiras"
+  },
+  {
+   "slug": "racks-e-estantes",
+   "nome": "Racks e estantes",
+   "pai": "moveis",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Móveis › Racks e estantes"
+  },
+  {
+   "slug": "moveis-de-escritorio",
+   "nome": "Móveis de escritório",
+   "pai": "moveis",
+   "ordem": 6,
+   "ativa": true,
+   "caminho": "Móveis › Móveis de escritório"
+  },
+  {
+   "slug": "decoracao",
+   "nome": "Decoração",
+   "pai": "casa-e-moveis",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Casa e decoração › Decoração"
+  },
+  {
+   "slug": "cozinha-e-utensilios",
+   "nome": "Cozinha e utensílios",
+   "pai": "casa-e-moveis",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Casa e decoração › Cozinha e utensílios"
+  },
+  {
+   "slug": "cama-mesa-e-banho",
+   "nome": "Cama, mesa e banho",
+   "pai": "casa-e-moveis",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Casa e decoração › Cama, mesa e banho"
+  },
+  {
+   "slug": "iluminacao",
+   "nome": "Iluminação",
+   "pai": "casa-e-moveis",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Casa e decoração › Iluminação"
+  },
+  {
+   "slug": "jardim-e-area-externa",
+   "nome": "Jardim e área externa",
+   "pai": "casa-e-moveis",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Casa e decoração › Jardim e área externa"
+  },
+  {
+   "slug": "limpeza-e-organizacao",
+   "nome": "Limpeza e organização",
+   "pai": "casa-e-moveis",
+   "ordem": 6,
+   "ativa": true,
+   "caminho": "Casa e decoração › Limpeza e organização"
+  },
+  {
+   "slug": "seguranca-e-casa-inteligente",
+   "nome": "Segurança e casa inteligente",
+   "pai": "casa-e-moveis",
+   "ordem": 7,
+   "ativa": true,
+   "caminho": "Casa e decoração › Segurança e casa inteligente"
+  },
+  {
+   "slug": "ferramentas",
+   "nome": "Ferramentas",
+   "pai": "construcao",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Materiais de construção › Ferramentas"
+  },
+  {
+   "slug": "eletrica-e-hidraulica",
+   "nome": "Elétrica e hidráulica",
+   "pai": "construcao",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Materiais de construção › Elétrica e hidráulica"
+  },
+  {
+   "slug": "loucas-metais-e-pias",
+   "nome": "Louças, metais e pias",
+   "pai": "construcao",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Materiais de construção › Louças, metais e pias"
+  },
+  {
+   "slug": "portas-e-janelas",
+   "nome": "Portas e janelas",
+   "pai": "construcao",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Materiais de construção › Portas e janelas"
+  },
+  {
+   "slug": "pisos-e-revestimentos",
+   "nome": "Pisos e revestimentos",
+   "pai": "construcao",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Materiais de construção › Pisos e revestimentos"
+  },
+  {
+   "slug": "tintas-e-pintura",
+   "nome": "Tintas e pintura",
+   "pai": "construcao",
+   "ordem": 6,
+   "ativa": true,
+   "caminho": "Materiais de construção › Tintas e pintura"
+  },
+  {
+   "slug": "alvenaria-e-estrutura",
+   "nome": "Alvenaria e estrutura",
+   "pai": "construcao",
+   "ordem": 7,
+   "ativa": true,
+   "caminho": "Materiais de construção › Alvenaria e estrutura"
+  },
+  {
+   "slug": "roupas",
+   "nome": "Roupas",
+   "pai": "moda-e-beleza",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Moda e beleza › Roupas"
+  },
+  {
+   "slug": "calcados",
+   "nome": "Calçados",
+   "pai": "moda-e-beleza",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Moda e beleza › Calçados"
+  },
+  {
+   "slug": "bolsas",
+   "nome": "Bolsas e acessórios",
+   "pai": "moda-e-beleza",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Moda e beleza › Bolsas e acessórios"
+  },
+  {
+   "slug": "joias-e-relogios",
+   "nome": "Joias e relógios",
+   "pai": "moda-e-beleza",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Moda e beleza › Joias e relógios"
+  },
+  {
+   "slug": "beleza",
+   "nome": "Beleza e perfumaria",
+   "pai": "moda-e-beleza",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Moda e beleza › Beleza e perfumaria"
+  },
+  {
+   "slug": "roupas-infantis",
+   "nome": "Roupas infantis",
+   "pai": "infantil",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Infantil › Roupas infantis"
+  },
+  {
+   "slug": "calcados-infantis",
+   "nome": "Calçados infantis",
+   "pai": "infantil",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Infantil › Calçados infantis"
+  },
+  {
+   "slug": "brinquedos-e-jogos",
+   "nome": "Brinquedos e jogos",
+   "pai": "infantil",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Infantil › Brinquedos e jogos"
+  },
+  {
+   "slug": "carrinhos-e-cadeirinhas",
+   "nome": "Carrinhos e cadeirinhas",
+   "pai": "infantil",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Infantil › Carrinhos e cadeirinhas"
+  },
+  {
+   "slug": "moveis-infantis",
+   "nome": "Móveis infantis",
+   "pai": "infantil",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Infantil › Móveis infantis"
+  },
+  {
+   "slug": "maternidade",
+   "nome": "Maternidade",
+   "pai": "infantil",
+   "ordem": 6,
+   "ativa": true,
+   "caminho": "Infantil › Maternidade"
+  },
+  {
+   "slug": "bicicletas-e-ciclismo",
+   "nome": "Bicicletas e ciclismo",
+   "pai": "esporte",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Esporte e lazer › Bicicletas e ciclismo"
+  },
+  {
+   "slug": "academia-e-fitness",
+   "nome": "Academia e fitness",
+   "pai": "esporte",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Esporte e lazer › Academia e fitness"
+  },
+  {
+   "slug": "futebol-e-quadra",
+   "nome": "Futebol e esportes de quadra",
+   "pai": "esporte",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Esporte e lazer › Futebol e esportes de quadra"
+  },
+  {
+   "slug": "pesca-e-camping",
+   "nome": "Pesca e camping",
+   "pai": "esporte",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Esporte e lazer › Pesca e camping"
+  },
+  {
+   "slug": "roupas-e-calcados-esportivos",
+   "nome": "Roupas e calçados esportivos",
+   "pai": "esporte",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Esporte e lazer › Roupas e calçados esportivos"
+  },
+  {
+   "slug": "instrumentos-musicais",
+   "nome": "Instrumentos musicais",
+   "pai": "musica-e-hobbies",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Música e hobbies › Instrumentos musicais"
+  },
+  {
+   "slug": "livros-e-revistas",
+   "nome": "Livros e revistas",
+   "pai": "musica-e-hobbies",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Música e hobbies › Livros e revistas"
+  },
+  {
+   "slug": "colecionaveis-e-antiguidades",
+   "nome": "Colecionáveis e antiguidades",
+   "pai": "musica-e-hobbies",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Música e hobbies › Colecionáveis e antiguidades"
+  },
+  {
+   "slug": "artesanato",
+   "nome": "Artesanato",
+   "pai": "musica-e-hobbies",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Música e hobbies › Artesanato"
+  },
+  {
+   "slug": "equipamentos-para-comercio",
+   "nome": "Equipamentos para comércio",
+   "pai": "comercio-e-escritorio",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Comércio e escritório › Equipamentos para comércio"
+  },
+  {
+   "slug": "gastronomia-e-food-service",
+   "nome": "Gastronomia e food service",
+   "pai": "comercio-e-escritorio",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Comércio e escritório › Gastronomia e food service"
+  },
+  {
+   "slug": "saude-e-estetica",
+   "nome": "Equipamentos de saúde e estética",
+   "pai": "comercio-e-escritorio",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Comércio e escritório › Equipamentos de saúde e estética"
+  },
+  {
+   "slug": "uniformes-e-epis",
+   "nome": "Uniformes e EPIs",
+   "pai": "comercio-e-escritorio",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Comércio e escritório › Uniformes e EPIs"
+  },
+  {
+   "slug": "papelaria-e-escritorio",
+   "nome": "Papelaria e escritório",
+   "pai": "comercio-e-escritorio",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Comércio e escritório › Papelaria e escritório"
+  },
+  {
+   "slug": "decoracao-de-festa",
+   "nome": "Decoração de festa",
+   "pai": "festas-e-eventos",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Festas e eventos › Decoração de festa"
+  },
+  {
+   "slug": "aluguel-para-festas",
+   "nome": "Aluguel para festas",
+   "pai": "festas-e-eventos",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Festas e eventos › Aluguel para festas"
+  },
+  {
+   "slug": "lembrancinhas-e-convites",
+   "nome": "Lembrancinhas e convites",
+   "pai": "festas-e-eventos",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Festas e eventos › Lembrancinhas e convites"
+  },
+  {
+   "slug": "noivas-e-noivos",
+   "nome": "Noivas e noivos",
+   "pai": "festas-e-eventos",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Festas e eventos › Noivas e noivos"
+  },
+  {
+   "slug": "pedreiro",
+   "nome": "Pedreiro",
+   "pai": "servicos",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Serviços › Pedreiro"
+  },
+  {
+   "slug": "eletricista",
+   "nome": "Eletricista",
+   "pai": "servicos",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Serviços › Eletricista"
+  },
+  {
+   "slug": "encanador",
+   "nome": "Encanador",
+   "pai": "servicos",
+   "ordem": 3,
+   "ativa": true,
+   "caminho": "Serviços › Encanador"
+  },
+  {
+   "slug": "pintor",
+   "nome": "Pintor",
+   "pai": "servicos",
+   "ordem": 4,
+   "ativa": true,
+   "caminho": "Serviços › Pintor"
+  },
+  {
+   "slug": "mecanico",
+   "nome": "Mecânico",
+   "pai": "servicos",
+   "ordem": 5,
+   "ativa": true,
+   "caminho": "Serviços › Mecânico"
+  },
+  {
+   "slug": "conserto-de-celular-e-informatica",
+   "nome": "Conserto de celular e informática",
+   "pai": "servicos",
+   "ordem": 6,
+   "ativa": true,
+   "caminho": "Serviços › Conserto de celular e informática"
+  },
+  {
+   "slug": "fretes",
+   "nome": "Fretes e mudanças",
+   "pai": "servicos",
+   "ordem": 7,
+   "ativa": true,
+   "caminho": "Serviços › Fretes e mudanças"
+  },
+  {
+   "slug": "diaristas",
+   "nome": "Diaristas",
+   "pai": "servicos",
+   "ordem": 8,
+   "ativa": true,
+   "caminho": "Serviços › Diaristas"
+  },
+  {
+   "slug": "beleza-e-estetica",
+   "nome": "Beleza e estética",
+   "pai": "servicos",
+   "ordem": 9,
+   "ativa": true,
+   "caminho": "Serviços › Beleza e estética"
+  },
+  {
+   "slug": "buffet-e-eventos",
+   "nome": "Buffet e eventos",
+   "pai": "servicos",
+   "ordem": 10,
+   "ativa": true,
+   "caminho": "Serviços › Buffet e eventos"
+  },
+  {
+   "slug": "aulas",
+   "nome": "Aulas",
+   "pai": "servicos",
+   "ordem": 11,
+   "ativa": true,
+   "caminho": "Serviços › Aulas"
+  },
+  {
+   "slug": "outros-servicos",
+   "nome": "Outros serviços",
+   "pai": "servicos",
+   "ordem": 12,
+   "ativa": true,
+   "caminho": "Serviços › Outros serviços"
+  },
+  {
+   "slug": "vagas",
+   "nome": "Vagas",
+   "pai": "empregos",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Empregos › Vagas"
+  },
+  {
+   "slug": "procuro-trabalho",
+   "nome": "Procuro trabalho",
+   "pai": "empregos",
+   "ordem": 2,
+   "ativa": true,
+   "caminho": "Empregos › Procuro trabalho"
+  },
+  {
+   "slug": "diversos",
+   "nome": "Diversos",
+   "pai": "outros",
+   "ordem": 1,
+   "ativa": true,
+   "caminho": "Outros › Diversos"
+  }
+ ],
+ "folhas": [
+  {
+   "slug": "carros",
+   "caminho": "Veículos › Carros"
+  },
+  {
+   "slug": "motos",
+   "caminho": "Veículos › Motos"
+  },
+  {
+   "slug": "caminhoes-e-utilitarios",
+   "caminho": "Veículos › Caminhões e utilitários"
+  },
+  {
+   "slug": "onibus-e-vans",
+   "caminho": "Veículos › Ônibus e vans"
+  },
+  {
+   "slug": "pecas-de-motor",
+   "caminho": "Veículos › Peças e acessórios › Peças de motor e mecânica"
+  },
+  {
+   "slug": "pneus-e-rodas",
+   "caminho": "Veículos › Peças e acessórios › Pneus e rodas"
+  },
+  {
+   "slug": "som-automotivo",
+   "caminho": "Veículos › Peças e acessórios › Som e multimídia"
+  },
+  {
+   "slug": "acessorios-automotivos",
+   "caminho": "Veículos › Peças e acessórios › Acessórios"
+  },
+  {
+   "slug": "casas",
+   "caminho": "Imóveis › Casas"
+  },
+  {
+   "slug": "apartamentos",
+   "caminho": "Imóveis › Apartamentos"
+  },
+  {
+   "slug": "kitnets-e-quartos",
+   "caminho": "Imóveis › Kitnets e quartos"
+  },
+  {
+   "slug": "terrenos-e-lotes",
+   "caminho": "Imóveis › Terrenos e lotes"
+  },
+  {
+   "slug": "fazendas-e-sitios",
+   "caminho": "Imóveis › Fazendas e sítios"
+  },
+  {
+   "slug": "pontos-comerciais",
+   "caminho": "Imóveis › Pontos comerciais"
+  },
+  {
+   "slug": "temporada",
+   "caminho": "Imóveis › Temporada"
+  },
+  {
+   "slug": "tratores-e-maquinas",
+   "caminho": "Agro › Tratores e máquinas"
+  },
+  {
+   "slug": "implementos",
+   "caminho": "Agro › Implementos"
+  },
+  {
+   "slug": "pecas-para-tratores",
+   "caminho": "Agro › Peças para tratores e máquinas"
+  },
+  {
+   "slug": "bovinos",
+   "caminho": "Agro › Gado e animais › Bovinos"
+  },
+  {
+   "slug": "equinos",
+   "caminho": "Agro › Gado e animais › Equinos"
+  },
+  {
+   "slug": "caprinos-e-ovinos",
+   "caminho": "Agro › Gado e animais › Caprinos e ovinos"
+  },
+  {
+   "slug": "suinos",
+   "caminho": "Agro › Gado e animais › Suínos"
+  },
+  {
+   "slug": "aves",
+   "caminho": "Agro › Gado e animais › Aves"
+  },
+  {
+   "slug": "sementes",
+   "caminho": "Agro › Sementes e insumos › Sementes"
+  },
+  {
+   "slug": "adubos-e-fertilizantes",
+   "caminho": "Agro › Sementes e insumos › Adubos e fertilizantes"
+  },
+  {
+   "slug": "defensivos",
+   "caminho": "Agro › Sementes e insumos › Defensivos"
+  },
+  {
+   "slug": "racoes-para-criacao",
+   "caminho": "Agro › Sementes e insumos › Rações para criação"
+  },
+  {
+   "slug": "sal-mineral",
+   "caminho": "Agro › Sementes e insumos › Sal mineral"
+  },
+  {
+   "slug": "graos",
+   "caminho": "Agro › Grãos"
+  },
+  {
+   "slug": "apicultura",
+   "caminho": "Agro › Apicultura"
+  },
+  {
+   "slug": "cachorros",
+   "caminho": "Pet › Cachorros"
+  },
+  {
+   "slug": "gatos",
+   "caminho": "Pet › Gatos"
+  },
+  {
+   "slug": "outros-animais",
+   "caminho": "Pet › Outros animais"
+  },
+  {
+   "slug": "racao",
+   "caminho": "Pet › Produtos para pets › Ração"
+  },
+  {
+   "slug": "petiscos",
+   "caminho": "Pet › Produtos para pets › Petiscos"
+  },
+  {
+   "slug": "coleiras-e-guias",
+   "caminho": "Pet › Produtos para pets › Coleiras e guias"
+  },
+  {
+   "slug": "camas-e-casinhas",
+   "caminho": "Pet › Produtos para pets › Camas e casinhas"
+  },
+  {
+   "slug": "brinquedos-para-pets",
+   "caminho": "Pet › Produtos para pets › Brinquedos para pets"
+  },
+  {
+   "slug": "higiene-e-saude-pet",
+   "caminho": "Pet › Produtos para pets › Higiene e saúde"
+  },
+  {
+   "slug": "aquarios-e-gaiolas",
+   "caminho": "Pet › Produtos para pets › Aquários e gaiolas"
+  },
+  {
+   "slug": "celulares",
+   "caminho": "Celulares e telefonia › Celulares"
+  },
+  {
+   "slug": "capas-e-peliculas",
+   "caminho": "Celulares e telefonia › Acessórios de celular › Capas e películas"
+  },
+  {
+   "slug": "carregadores-e-cabos",
+   "caminho": "Celulares e telefonia › Acessórios de celular › Carregadores e cabos"
+  },
+  {
+   "slug": "suportes-de-celular",
+   "caminho": "Celulares e telefonia › Acessórios de celular › Suportes"
+  },
+  {
+   "slug": "pecas-de-celular",
+   "caminho": "Celulares e telefonia › Peças de celular"
+  },
+  {
+   "slug": "smartwatches",
+   "caminho": "Celulares e telefonia › Smartwatches"
+  },
+  {
+   "slug": "telefonia-fixa",
+   "caminho": "Celulares e telefonia › Telefonia fixa"
+  },
+  {
+   "slug": "notebooks",
+   "caminho": "Informática › Notebooks"
+  },
+  {
+   "slug": "computadores",
+   "caminho": "Informática › Computadores"
+  },
+  {
+   "slug": "monitores",
+   "caminho": "Informática › Monitores"
+  },
+  {
+   "slug": "tablets-e-leitores",
+   "caminho": "Informática › Tablets e leitores"
+  },
+  {
+   "slug": "impressoras-e-scanners",
+   "caminho": "Informática › Impressoras e scanners"
+  },
+  {
+   "slug": "teclados-e-mouses",
+   "caminho": "Informática › Periféricos › Teclados e mouses"
+  },
+  {
+   "slug": "webcams",
+   "caminho": "Informática › Periféricos › Webcams"
+  },
+  {
+   "slug": "estabilizadores-e-nobreaks",
+   "caminho": "Informática › Periféricos › Estabilizadores e nobreaks"
+  },
+  {
+   "slug": "placas-de-video",
+   "caminho": "Informática › Peças e componentes › Placas de vídeo"
+  },
+  {
+   "slug": "memoria-ram",
+   "caminho": "Informática › Peças e componentes › Memória RAM"
+  },
+  {
+   "slug": "processadores",
+   "caminho": "Informática › Peças e componentes › Processadores"
+  },
+  {
+   "slug": "hd-e-ssd",
+   "caminho": "Informática › Peças e componentes › HD e SSD"
+  },
+  {
+   "slug": "redes-e-internet",
+   "caminho": "Informática › Redes e internet"
+  },
+  {
+   "slug": "consoles",
+   "caminho": "Games › Consoles"
+  },
+  {
+   "slug": "jogos",
+   "caminho": "Games › Jogos"
+  },
+  {
+   "slug": "acessorios-de-games",
+   "caminho": "Games › Acessórios de games"
+  },
+  {
+   "slug": "tvs",
+   "caminho": "TV, áudio e foto › TV e som › TVs"
+  },
+  {
+   "slug": "som-e-caixas",
+   "caminho": "TV, áudio e foto › TV e som › Som e caixas"
+  },
+  {
+   "slug": "fones-de-ouvido",
+   "caminho": "TV, áudio e foto › TV e som › Fones de ouvido"
+  },
+  {
+   "slug": "streaming-e-tv-box",
+   "caminho": "TV, áudio e foto › TV e som › Streaming e TV box"
+  },
+  {
+   "slug": "projetores",
+   "caminho": "TV, áudio e foto › TV e som › Projetores"
+  },
+  {
+   "slug": "cameras-e-drones",
+   "caminho": "TV, áudio e foto › Câmeras e drones"
+  },
+  {
+   "slug": "geladeiras-e-freezers",
+   "caminho": "Eletro › Geladeiras e freezers"
+  },
+  {
+   "slug": "fogoes-e-fornos",
+   "caminho": "Eletro › Fogões e fornos"
+  },
+  {
+   "slug": "maquinas-de-lavar",
+   "caminho": "Eletro › Máquinas de lavar e secadoras"
+  },
+  {
+   "slug": "ar-e-ventiladores",
+   "caminho": "Eletro › Ar-condicionado e ventiladores"
+  },
+  {
+   "slug": "portateis-de-cozinha",
+   "caminho": "Eletro › Portáteis de cozinha"
+  },
+  {
+   "slug": "cuidados-pessoais",
+   "caminho": "Eletro › Cuidados pessoais"
+  },
+  {
+   "slug": "sofas-e-poltronas",
+   "caminho": "Móveis › Sofás e poltronas"
+  },
+  {
+   "slug": "camas-e-colchoes",
+   "caminho": "Móveis › Camas e colchões"
+  },
+  {
+   "slug": "guarda-roupas-e-comodas",
+   "caminho": "Móveis › Guarda-roupas e cômodas"
+  },
+  {
+   "slug": "mesas-e-cadeiras",
+   "caminho": "Móveis › Mesas e cadeiras"
+  },
+  {
+   "slug": "racks-e-estantes",
+   "caminho": "Móveis › Racks e estantes"
+  },
+  {
+   "slug": "moveis-de-escritorio",
+   "caminho": "Móveis › Móveis de escritório"
+  },
+  {
+   "slug": "decoracao",
+   "caminho": "Casa e decoração › Decoração"
+  },
+  {
+   "slug": "cozinha-e-utensilios",
+   "caminho": "Casa e decoração › Cozinha e utensílios"
+  },
+  {
+   "slug": "cama-mesa-e-banho",
+   "caminho": "Casa e decoração › Cama, mesa e banho"
+  },
+  {
+   "slug": "iluminacao",
+   "caminho": "Casa e decoração › Iluminação"
+  },
+  {
+   "slug": "jardim-e-area-externa",
+   "caminho": "Casa e decoração › Jardim e área externa"
+  },
+  {
+   "slug": "limpeza-e-organizacao",
+   "caminho": "Casa e decoração › Limpeza e organização"
+  },
+  {
+   "slug": "seguranca-e-casa-inteligente",
+   "caminho": "Casa e decoração › Segurança e casa inteligente"
+  },
+  {
+   "slug": "ferramentas",
+   "caminho": "Materiais de construção › Ferramentas"
+  },
+  {
+   "slug": "eletrica-e-hidraulica",
+   "caminho": "Materiais de construção › Elétrica e hidráulica"
+  },
+  {
+   "slug": "loucas-metais-e-pias",
+   "caminho": "Materiais de construção › Louças, metais e pias"
+  },
+  {
+   "slug": "portas-e-janelas",
+   "caminho": "Materiais de construção › Portas e janelas"
+  },
+  {
+   "slug": "pisos-e-revestimentos",
+   "caminho": "Materiais de construção › Pisos e revestimentos"
+  },
+  {
+   "slug": "tintas-e-pintura",
+   "caminho": "Materiais de construção › Tintas e pintura"
+  },
+  {
+   "slug": "alvenaria-e-estrutura",
+   "caminho": "Materiais de construção › Alvenaria e estrutura"
+  },
+  {
+   "slug": "roupas",
+   "caminho": "Moda e beleza › Roupas"
+  },
+  {
+   "slug": "calcados",
+   "caminho": "Moda e beleza › Calçados"
+  },
+  {
+   "slug": "bolsas",
+   "caminho": "Moda e beleza › Bolsas e acessórios"
+  },
+  {
+   "slug": "joias-e-relogios",
+   "caminho": "Moda e beleza › Joias e relógios"
+  },
+  {
+   "slug": "beleza",
+   "caminho": "Moda e beleza › Beleza e perfumaria"
+  },
+  {
+   "slug": "roupas-infantis",
+   "caminho": "Infantil › Roupas infantis"
+  },
+  {
+   "slug": "calcados-infantis",
+   "caminho": "Infantil › Calçados infantis"
+  },
+  {
+   "slug": "brinquedos-e-jogos",
+   "caminho": "Infantil › Brinquedos e jogos"
+  },
+  {
+   "slug": "carrinhos-e-cadeirinhas",
+   "caminho": "Infantil › Carrinhos e cadeirinhas"
+  },
+  {
+   "slug": "moveis-infantis",
+   "caminho": "Infantil › Móveis infantis"
+  },
+  {
+   "slug": "maternidade",
+   "caminho": "Infantil › Maternidade"
+  },
+  {
+   "slug": "bicicletas-e-ciclismo",
+   "caminho": "Esporte e lazer › Bicicletas e ciclismo"
+  },
+  {
+   "slug": "academia-e-fitness",
+   "caminho": "Esporte e lazer › Academia e fitness"
+  },
+  {
+   "slug": "futebol-e-quadra",
+   "caminho": "Esporte e lazer › Futebol e esportes de quadra"
+  },
+  {
+   "slug": "pesca-e-camping",
+   "caminho": "Esporte e lazer › Pesca e camping"
+  },
+  {
+   "slug": "roupas-e-calcados-esportivos",
+   "caminho": "Esporte e lazer › Roupas e calçados esportivos"
+  },
+  {
+   "slug": "instrumentos-musicais",
+   "caminho": "Música e hobbies › Instrumentos musicais"
+  },
+  {
+   "slug": "livros-e-revistas",
+   "caminho": "Música e hobbies › Livros e revistas"
+  },
+  {
+   "slug": "colecionaveis-e-antiguidades",
+   "caminho": "Música e hobbies › Colecionáveis e antiguidades"
+  },
+  {
+   "slug": "artesanato",
+   "caminho": "Música e hobbies › Artesanato"
+  },
+  {
+   "slug": "equipamentos-para-comercio",
+   "caminho": "Comércio e escritório › Equipamentos para comércio"
+  },
+  {
+   "slug": "gastronomia-e-food-service",
+   "caminho": "Comércio e escritório › Gastronomia e food service"
+  },
+  {
+   "slug": "saude-e-estetica",
+   "caminho": "Comércio e escritório › Equipamentos de saúde e estética"
+  },
+  {
+   "slug": "uniformes-e-epis",
+   "caminho": "Comércio e escritório › Uniformes e EPIs"
+  },
+  {
+   "slug": "papelaria-e-escritorio",
+   "caminho": "Comércio e escritório › Papelaria e escritório"
+  },
+  {
+   "slug": "decoracao-de-festa",
+   "caminho": "Festas e eventos › Decoração de festa"
+  },
+  {
+   "slug": "aluguel-para-festas",
+   "caminho": "Festas e eventos › Aluguel para festas"
+  },
+  {
+   "slug": "lembrancinhas-e-convites",
+   "caminho": "Festas e eventos › Lembrancinhas e convites"
+  },
+  {
+   "slug": "noivas-e-noivos",
+   "caminho": "Festas e eventos › Noivas e noivos"
+  },
+  {
+   "slug": "pedreiro",
+   "caminho": "Serviços › Pedreiro"
+  },
+  {
+   "slug": "eletricista",
+   "caminho": "Serviços › Eletricista"
+  },
+  {
+   "slug": "encanador",
+   "caminho": "Serviços › Encanador"
+  },
+  {
+   "slug": "pintor",
+   "caminho": "Serviços › Pintor"
+  },
+  {
+   "slug": "mecanico",
+   "caminho": "Serviços › Mecânico"
+  },
+  {
+   "slug": "conserto-de-celular-e-informatica",
+   "caminho": "Serviços › Conserto de celular e informática"
+  },
+  {
+   "slug": "fretes",
+   "caminho": "Serviços › Fretes e mudanças"
+  },
+  {
+   "slug": "diaristas",
+   "caminho": "Serviços › Diaristas"
+  },
+  {
+   "slug": "beleza-e-estetica",
+   "caminho": "Serviços › Beleza e estética"
+  },
+  {
+   "slug": "buffet-e-eventos",
+   "caminho": "Serviços › Buffet e eventos"
+  },
+  {
+   "slug": "aulas",
+   "caminho": "Serviços › Aulas"
+  },
+  {
+   "slug": "outros-servicos",
+   "caminho": "Serviços › Outros serviços"
+  },
+  {
+   "slug": "vagas",
+   "caminho": "Empregos › Vagas"
+  },
+  {
+   "slug": "procuro-trabalho",
+   "caminho": "Empregos › Procuro trabalho"
+  },
+  {
+   "slug": "diversos",
+   "caminho": "Outros › Diversos"
+  }
+ ]
+}

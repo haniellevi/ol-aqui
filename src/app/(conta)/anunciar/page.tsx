@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -123,7 +124,7 @@ export default async function PaginaAnunciar() {
                 )}
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-base font-semibold">{r.titulo || "Anúncio sem título"}</span>
+                <span className="truncate text-base font-semibold">{formatarNome(r.titulo) || "Anúncio sem título"}</span>
                 <span className="flex items-center gap-1 text-sm text-texto-suave">
                   <FileClock className="size-4" aria-hidden />
                   Rascunho · mexido {tempoRelativo(r.atualizado_em)}

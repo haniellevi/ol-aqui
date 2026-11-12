@@ -126,14 +126,14 @@ export const FERRAMENTAS: FerramentaIA[] = [
   {
     nome: "preparar_pedido_radar",
     descricao:
-      "Prepara um pedido no Radar (as lojas da região mandam propostas). NÃO cria o pedido: aparece um botão para a pessoa confirmar.",
+      "Prepara um pedido no Radar (as lojas da região respondem). Use quando a pessoa não achou o que procura: pergunte antes \"Quer que eu peça para as lojas?\". NÃO cria o pedido: aparece um botão para a pessoa confirmar e outro que abre o pedido já preenchido (área Toda a região, quem vê Só lojas).",
     parametros: {
       type: "object",
       properties: {
         titulo: { type: "string", description: "O que procura, 8 a 120 letras. Ex.: Procuro moto para roça até 10 mil" },
         detalhes: { type: "string", description: "Detalhes, até 1000 letras." },
         preco_max_reais: { type: "number" },
-        cidade: { type: "string" },
+        cidade: { type: "string", description: "Só se a pessoa disse a cidade. Sem cidade, o pedido vale para a região toda." },
         urgencia: { type: "string", enum: [...URGENCIAS_RADAR] },
         categoria_slug: { type: "string" },
       },
@@ -207,6 +207,8 @@ function paraCartao(a: AnuncioCard): CartaoAki {
     vitrine_selo: a.vitrine_selo,
     vitrine_tipo: a.vitrine_tipo,
     aceita_troca: a.aceita_troca,
+    preco_antes_centavos: a.preco_antes_centavos ?? null,
+    uf: a.uf ?? null,
   };
 }
 
@@ -483,9 +485,9 @@ async function prepararRadar(args: Record<string, unknown>, ctx: ContextoFerrame
     const achada = await categoriaPorSlug(slug);
     if (achada) categoria = achada.categoria.tipo_legado;
   }
+  // Só fixa uma cidade quando a pessoa disse qual; sem cidade o pedido vale para a região toda.
   const cidadeArg = texto(args.cidade, 80);
-  const cidade =
-    (cidadeArg && ctx.cidades.find((x) => x.toLowerCase() === cidadeArg.toLowerCase())) ?? ctx.cidadePerfil ?? ctx.cidades[0] ?? null;
+  const cidade = (cidadeArg && ctx.cidades.find((x) => x.toLowerCase() === cidadeArg.toLowerCase())) ?? null;
   const v = validarPedidoRadar({
     titulo: args.titulo,
     detalhes: args.detalhes,
@@ -503,7 +505,7 @@ async function prepararRadar(args: Record<string, unknown>, ctx: ContextoFerrame
   }
   addAcao(ctx, { tipo: "pedido_radar", rotulo: "Confirmar pedido no Radar", dados: v.dados });
   // quem prefere escolher prazo e faixa de preço abre o formulário com o texto já preenchido
-  addAcao(ctx, { tipo: "link", rotulo: "Mudar detalhes ou prazo", href: linkPedirRadar(v.dados.titulo), icone: "radar" });
+  addAcao(ctx, { tipo: "link", rotulo: "Abrir o pedido para ajustar", href: linkPedirRadar(v.dados.titulo), icone: "radar" });
   return ok({ preparado: true, criado: false, aviso: 'O pedido só vai para o Radar quando a pessoa tocar em "Confirmar pedido no Radar".', pedido: v.dados });
 }
 

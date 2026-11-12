@@ -4,6 +4,7 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
+import { avisoComoVaiAparecer } from "@/lib/formatar-nome";
 import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import { reduzirFoto, enviarFoto } from "@/lib/fotos";
 import { prepararEnvioImagemLoja, salvarLoja, descartarLogo, type EstadoLojaConta } from "@/app/(conta)/minha-conta/loja/actions";
@@ -85,7 +86,7 @@ export function FormMinhaLoja({ loja, cidades, ajudante = false }: { loja: Dados
           </p>
         ) : (
           <>
-            <Campo rotulo="Nome da loja" name="nome" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={80} erro={campos.nome} />
+            <Campo rotulo="Nome da loja" name="nome" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={80} erro={campos.nome} dica={avisoComoVaiAparecer(nome)} />
             <Campo
               rotulo="WhatsApp da loja"
               name="whatsapp"

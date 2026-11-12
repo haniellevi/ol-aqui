@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { sincronizarPerfil } from "@/lib/perfil";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
+import { buscarAnuncios } from "@/lib/dados/anuncios";
 import { traduzirErro } from "@/lib/erros";
 import { centavosDoTexto, ehUuid } from "@/lib/formato";
 import { validarPedido, validarProposta, type EntradaPedido, type EntradaProposta } from "@/components/radar/validacao";
@@ -16,6 +17,8 @@ import type {
   RespostaEscolher,
   RespostaProposta,
   RespostaSimples,
+  Resultado,
+  AnuncioParaIndicar,
 } from "@/lib/tipos-radar";
 
 // Ações do Radar. Quem decide tudo é o banco (funções criar_pedido_radar, propor_radar,
@@ -71,7 +74,9 @@ export async function criarPedido(entrada: EntradaPedido): Promise<RespostaCriar
   const { data, error } = await db.rpc("criar_pedido_radar_site", {
     p_chave: entrada.chaveEnvio,
     p_titulo: String(entrada.titulo ?? "").slice(0, 200),
-    p_cidade: String(entrada.cidade ?? "").slice(0, 80),
+    p_cidade: entrada.cidade ? String(entrada.cidade).slice(0, 80) : null,
+    p_cidades_ids: entrada.cidadesIds && entrada.cidadesIds.length > 0 ? entrada.cidadesIds : null,
+    p_visibilidade: entrada.visibilidade,
     p_modo: entrada.modo === "propostas_prazo" ? "propostas_prazo" : "whatsapp_direto",
     p_prazo_horas: entrada.modo === "propostas_prazo" && Number.isInteger(entrada.prazoHoras) ? entrada.prazoHoras : null,
     p_detalhes: entrada.detalhes ? String(entrada.detalhes).slice(0, 1200) : null,
@@ -180,4 +185,91 @@ export async function mudarArquivoPedido(pedidoId: string, arquivar: boolean): P
   revalidatePath(`/radar/${pedidoId}`);
   revalidatePath("/radar");
   return { ok: true, mensagem: arquivar ? "Pedido arquivado." : "Pedido retirado do arquivo." };
+}
+
+function atualizarPedido(pedidoId: string) {
+  revalidatePath(`/radar/pedido/${pedidoId}`);
+  revalidatePath(`/radar/${pedidoId}`);
+  revalidatePath("/radar");
+}
+
+/** Comprador estende o prazo do pedido (o banco confere dono, limite e situação). */
+export async function estenderPedido(id: string): Promise<Resultado<{ expiraEm: string }>> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, erro: SEM_LOGIN };
+  if (!ehUuid(id)) return { ok: false, erro: "Pedido não encontrado." };
+  const db = await createClient();
+  const { data, error } = await db.rpc("estender_pedido_radar", { p_id: id });
+  if (error) return { ok: false, ...mensagemDe(error) };
+  if (typeof data !== "string" || Number.isNaN(Date.parse(data))) return { ok: false, erro: "Não foi possível confirmar o novo prazo. Atualize o pedido e tente novamente." };
+  atualizarPedido(id);
+  return { ok: true, expiraEm: data };
+}
+
+/** Comprador resolve o pedido: com uma loja (propostaId) ou "resolvi fora do Olaki" (fora). */
+export async function resolverPedido(id: string, propostaId: string | null, fora: boolean): Promise<Resultado<{ mensagem?: string }>> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, erro: SEM_LOGIN };
+  if (!ehUuid(id) || (propostaId !== null && !ehUuid(propostaId)) || typeof fora !== "boolean") return { ok: false, erro: "Pedido não encontrado." };
+  if (propostaId !== null && fora) return { ok: false, erro: "Escolha uma loja ou \"Resolvi fora do Olaki\", não as duas.", campo: "proposta" };
+  const db = await createClient();
+  const { error } = await db.rpc("resolver_pedido_radar", { p_id: id, p_proposta_id: propostaId, p_fora: fora });
+  if (error) return { ok: false, ...mensagemDe(error) };
+  atualizarPedido(id);
+  return { ok: true };
+}
+
+/** Nota do comprador depois de resolver: 1 = deu certo, -1 = não deu. */
+export async function avaliarPedido(id: string, nota: 1 | -1): Promise<Resultado<{ mensagem?: string }>> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, erro: SEM_LOGIN };
+  if (!ehUuid(id) || (nota !== 1 && nota !== -1)) return { ok: false, erro: "Pedido não encontrado." };
+  const db = await createClient();
+  const { error } = await db.rpc("avaliar_pedido_radar", { p_id: id, p_avaliacao: nota });
+  if (error) return { ok: false, ...mensagemDe(error) };
+  atualizarPedido(id);
+  return { ok: true };
+}
+
+/** "Eu sei onde tem": indica um anúncio para o pedido de outra pessoa. */
+export async function indicarAnuncio(pedidoId: string, anuncioId: string): Promise<Resultado<{ id: string }>> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, erro: SEM_LOGIN };
+  if (!ehUuid(pedidoId) || !ehUuid(anuncioId)) return { ok: false, erro: "Pedido ou anúncio não encontrado." };
+  const db = await createClient();
+  const { data, error } = await db.rpc("indicar_anuncio_radar", { p_pedido: pedidoId, p_anuncio: anuncioId });
+  if (error) return { ok: false, ...mensagemDe(error) };
+  if (typeof data !== "string" || !ehUuid(data)) return { ok: false, erro: "Não foi possível confirmar a indicação. Tente novamente." };
+  atualizarPedido(pedidoId);
+  return { ok: true, id: data };
+}
+
+/**
+ * "Eu sei onde tem": procura anúncios na região do PEDIDO (a mesma busca do site) para a pessoa escolher qual indicar.
+ * O pedido só aparece para quem é da região dele, então a região vem da conta; o banco confere de novo ao indicar.
+ */
+export async function buscarParaIndicar(pedidoId: string, termo: string): Promise<Resultado<{ anuncios: AnuncioParaIndicar[] }>> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, erro: SEM_LOGIN };
+  if (!ehUuid(pedidoId)) return { ok: false, erro: "Pedido não encontrado." };
+  const q = typeof termo === "string" ? termo.trim().slice(0, 80) : "";
+  if (q.length < 2) return { ok: true, anuncios: [] };
+  try {
+    const db = await createClient();
+    const { data: linhas, error } = await db.rpc("radar_pedido", { p_id: pedidoId });
+    const pedido = Array.isArray(linhas) ? linhas[0] : null;
+    if (error || !pedido || pedido.bloqueado) return { ok: false, erro: "Este pedido não está mais aberto." };
+    const conta = await meuPerfilEVitrine();
+    const regiaoId = conta?.perfil.microrregiao_id;
+    if (!regiaoId) return { ok: false, erro: "Complete o seu cadastro para indicar." };
+    const { data: regiao } = await db.from("microrregioes").select("slug").eq("id", regiaoId).maybeSingle();
+    if (!regiao?.slug) return { ok: false, erro: "Não deu para buscar agora. Tente novamente." };
+    const { anuncios } = await buscarAnuncios({ q, limite: 8, regiao: regiao.slug });
+    return {
+      ok: true,
+      anuncios: anuncios.map((a) => ({ id: a.id, titulo: a.titulo, preco_centavos: a.preco_centavos, capa: a.capa, vitrine_nome: a.vitrine_nome })),
+    };
+  } catch {
+    return { ok: false, erro: "Não deu para buscar agora. Tente novamente." };
+  }
 }

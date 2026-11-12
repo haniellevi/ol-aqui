@@ -1,11 +1,12 @@
 import "server-only";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
+import { completarCards } from "@/lib/dados/cards-extra";
 import { ehUuid } from "@/lib/formato";
 import type { AnuncioCard, StatusAnuncio, TipoVitrine } from "@/lib/tipos";
 
 export const FAVORITOS_POR_PAGINA = 24;
-export type AnuncioFavorito = Pick<AnuncioCard, "id" | "slug" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo">;
+export type AnuncioFavorito = Pick<AnuncioCard, "id" | "slug" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo" | "preco_antes_centavos" | "uf">;
 /** radar: link para pedir parecido no Radar (sem título quando o anúncio saiu do ar). */
 export type Favorito = { id: string; salvoEm: string; anuncio: AnuncioFavorito | null; situacao: "ativo" | "vendido" | "indisponivel"; radar: string };
 type Linha = {
@@ -51,7 +52,9 @@ export async function meusFavoritos(pagina = 1): Promise<{ itens: Favorito[]; to
       },
     };
   });
-  return { itens, total: count! };
+  // Preço antes (riscado) e UF da cidade, numa consulta só; se falhar, os cards seguem sem eles.
+  const completos = new Map((await completarCards(itens.flatMap((f) => (f.anuncio ? [f.anuncio] : [])))).map((a) => [a.id, a]));
+  return { itens: itens.map((f) => (f.anuncio ? { ...f, anuncio: completos.get(f.anuncio.id) ?? f.anuncio } : f)), total: count! };
 }
 
 /** Quais destes anúncios a pessoa salvou (cards da vitrine). null = falha de leitura, nunca "nenhum". */

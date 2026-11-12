@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -127,7 +128,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
                     <span className="grid size-14 shrink-0 place-items-center rounded-campo bg-fundo text-texto-suave" aria-hidden><ImageOff className="size-5" /></span>
                   )}
                   <div className="flex min-w-0 flex-col">
-                    <span className="truncate font-semibold">{p.titulo}</span>
+                    <span className="truncate font-semibold">{formatarNome(p.titulo)}</span>
                     <span className="text-sm text-texto-suave">
                       {p.visualizacoes === 1 ? "1 vista" : `${inteiro(p.visualizacoes)} vistas`} · {p.cliques === 1 ? "1 clique no WhatsApp" : `${inteiro(p.cliques)} cliques no WhatsApp`}
                     </span>
@@ -154,7 +155,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
               <li key={t.anuncio_id} className="flex flex-col">
                 <Link href={urlPasso(PASSO_DA_DICA[t.motivo], t.anuncio_id, true)} className="flex min-h-14 items-center gap-3 p-3 hover:bg-fundo">
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-semibold">{t.titulo}</span>
+                    <span className="truncate font-semibold">{formatarNome(t.titulo)}</span>
                     <span className="text-sm text-texto-suave">{t.texto}</span>
                   </div>
                   <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-laranja-escuro">
@@ -163,7 +164,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
                   </span>
                 </Link>
                 {comIA && (
-                  <Link href={linkMelhorarComIA(t.anuncio_id)} aria-label={`Melhorar ${t.titulo} com IA`}
+                  <Link href={linkMelhorarComIA(t.anuncio_id)} aria-label={`Melhorar ${formatarNome(t.titulo)} com IA`}
                     className="-mt-2 flex min-h-10 items-center gap-1 px-3 pb-3 text-sm font-semibold text-laranja-escuro underline underline-offset-4">
                     <Sparkles className="size-4" aria-hidden />
                     Melhorar com IA

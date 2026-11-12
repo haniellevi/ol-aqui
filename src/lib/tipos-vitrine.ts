@@ -82,6 +82,8 @@ export type AnuncioVitrine = {
   grupo_ordem: number;
   /** true = entra nos grupos desta página; false = veio só porque está numa seção da loja. */
   na_pagina: boolean;
+  preco_antes_centavos?: number | null; // preço anterior (riscado no card)
+  uf?: string | null; // UF da cidade
 };
 
 /* ------------------------------ Dono -------------------------------- */
@@ -174,6 +176,7 @@ export type PlanoPublico = {
   limite_anuncios: number | null;
   acesso_radar: boolean;
   propostas_radar_mes: number | null;
+  aviso_radar_na_hora: boolean;
   e_teste: boolean;
   ordem: number;
   vitrine_foto_fachada: boolean;

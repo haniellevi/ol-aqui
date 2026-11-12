@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, Clock, Eye, MessageCircle, Sparkles } from "lucide-react";
@@ -77,7 +78,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
     );
   }
 
-  const titulo = anuncio.titulo ?? "meu anúncio";
+  const titulo = formatarNome(anuncio.titulo) || "meu anúncio";
   const url = urlAbsoluta(linkAnuncio(anuncio.id, anuncio.titulo, anuncio.slug));
   const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Olha o que estou vendendo no Mercado da Região: *${titulo}* ${url}`)}`;
 

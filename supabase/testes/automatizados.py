@@ -69,8 +69,22 @@ try:
     print('PASS: ajudante cuida da Minha loja sem mudar nome, WhatsApp nem plano; estranho não mexe', flush=True)
     checked(sql((root/'supabase/testes/590_montar_e_transferir_loja.sql').read_text()))
     print('PASS: super admin monta loja escondida e o dono recebe pelo convite; fotos mudam de pasta e prontos vão ao ar', flush=True)
+    checked(sql((root/'supabase/testes/600_radar_quem_atende.sql').read_text()))
+    print('PASS: Radar só atende loja verificada e paga (ou cortesia da equipe); aviso na hora só no Full', flush=True)
+    checked(sql((root/'supabase/testes/610_radar_area_visibilidade.sql').read_text()))
+    print('PASS: pedido do Radar com várias cidades, visibilidade só lojas ou todos, área da loja e até 5 lojas', flush=True)
+    checked(sql((root/'supabase/testes/620_radar_aviso_full.sql').read_text()))
+    print('PASS: aviso de pedido novo só para Full verificada e cortesia, dentro da área e do nicho', flush=True)
+    checked(sql((root/'supabase/testes/630_radar_prazo.sql').read_text()))
+    print('PASS: pedido do Radar avisa 2 dias antes de vencer e o comprador estende com Ainda preciso até 2 vezes', flush=True)
+    checked(sql((root/'supabase/testes/640_radar_resolver_indicar.sql').read_text()))
+    print('PASS: Radar pergunta com quem resolveu, guarda a nota 👍/👎 e aceita indicação de anúncio (Eu sei onde tem)', flush=True)
+    checked(sql((root/'supabase/testes/650_radar_ajustes_finais.sql').read_text()))
+    print('PASS: Radar devolve pode_propor, loja de fora da área indica, loja ativa nas indicações, aviso com a região e contas internas fechadas', flush=True)
     checked(sql((root/'supabase/testes/600_acertos_categoria_ia.sql').read_text()))
     print('PASS: acertos da IA de categorias: guarda sugestão e escolha, só quem cuida grava, só admin lê, período e erros', flush=True)
+    checked(sql((root/'supabase/testes/610_preco_antes.sql').read_text()))
+    print('PASS: preço antes e UF no card: só quem cuida grava, visitante lê o que está no ar, rascunho fica privado', flush=True)
     checked(sql((root/'supabase/testes/700_verificacao_reabertura.sql').read_text()))
     print('PASS: selo da loja só cai com CNPJ, endereço, cidade ou WhatsApp; nome e Instagram deixam aviso para a equipe', flush=True)
     checked(sql((root/'supabase/testes/710_verificacao_loja_nucleo.sql').read_text()))
@@ -85,15 +99,20 @@ try:
     print('PASS: reconferência mensal do CNPJ: reserva das lojas vencidas, ativa só atualiza a data, inativa e não encontrada tiram o selo com um aviso da loja e da equipe, nova verificação depois, aprovações gravam a data e permissões', flush=True)
     checked(sql((root/'supabase/testes/760_verificacao_loja_ajustes.sql').read_text()))
     print('PASS: ajustes da revisão final da verificação: reconferência desligada de fábrica, dono não escreve cnpj_conferido_em, revisão manual fecha o pedido aberto sem aviso errado, selo removido fecha a revisão por amostra e pedido parado há mais de 30 minutos vai para a equipe', flush=True)
-    migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
+    migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin
-        assert (select texto = 'Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.' from home_blocos where chave = 'radar'), 'Texto padrão do Radar incorreto';
+        assert (select texto = 'Diga o que precisa. As lojas da região te respondem.' and botao = 'Estou procurando…' from home_blocos where chave = 'radar'), 'Texto padrão do Radar incorreto';
       end $$;
-      update home_blocos set texto = 'Texto personalizado da equipe' where chave = 'radar';
+      update home_blocos set texto = 'Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.', botao = 'Pedir no Radar' where chave = 'radar';
+    """ + migracao_home + """
+      do $$ begin
+        assert (select texto = 'Diga o que precisa. As lojas da região te respondem.' and botao = 'Estou procurando…' from home_blocos where chave = 'radar'), 'Migração não trocou o texto antigo';
+      end $$;
+      update home_blocos set texto = 'Texto personalizado da equipe', botao = 'Botão da equipe' where chave = 'radar';
     """ + migracao_home + migracao_home + """
       do $$ begin
-        assert (select texto = 'Texto personalizado da equipe' from home_blocos where chave = 'radar'), 'Migração sobrescreveu texto personalizado';
+        assert (select texto = 'Texto personalizado da equipe' and botao = 'Botão da equipe' from home_blocos where chave = 'radar'), 'Migração sobrescreveu texto personalizado';
       end $$;
       rollback;
     """))

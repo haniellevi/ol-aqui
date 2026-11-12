@@ -1,5 +1,6 @@
 "use client";
 
+import { formatarNome } from "@/lib/formatar-nome";
 import { useState } from "react";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
 import { corDoTextoSobre, corSegura } from "@/components/vitrine/regras";
@@ -47,7 +48,7 @@ export function BannerLoja({
           src={url}
           ref={(img) => { if (img?.complete && img.naturalWidth === 0) setFalhou(url); }}
           onError={() => setFalhou(url)}
-          alt={`${posicaoAki === null ? "Fachada" : "Banner"} da loja ${nome}`}
+          alt={`${posicaoAki === null ? "Fachada" : "Banner"} da loja ${formatarNome(nome)}`}
           width={BANNER_LARGURA}
           height={BANNER_ALTURA}
           fetchPriority={prioridade ? "high" : undefined}
@@ -56,7 +57,7 @@ export function BannerLoja({
         />
         {posicaoAki !== null && logo && (
           // eslint-disable-next-line @next/next/no-img-element -- logo do Storage ou prévia local
-          <img src={logo} alt={`Logo de ${nome}`} className="absolute top-1/2 h-[62%] w-1/4 -translate-x-1/2 -translate-y-1/2 object-contain"
+          <img src={logo} alt={`Logo de ${formatarNome(nome)}`} className="absolute top-1/2 h-[62%] w-1/4 -translate-x-1/2 -translate-y-1/2 object-contain"
             style={{ left: `${12.5 + posicaoAki * 0.75}%` }} />
         )}
       </div>
@@ -78,7 +79,7 @@ export function BannerLoja({
       <span className="hidden shrink-0 sm:block">
         <AvatarVitrine nome={nome} logo={logo} tamanho="lg" />
       </span>
-      <span className="line-clamp-2 text-center text-xl leading-6 font-bold sm:text-2xl sm:leading-8">{nome}</span>
+      <span className="line-clamp-2 text-center text-xl leading-6 font-bold sm:text-2xl sm:leading-8">{formatarNome(nome)}</span>
     </div>
   );
 }

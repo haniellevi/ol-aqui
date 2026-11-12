@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
@@ -22,7 +23,7 @@ export default async function MinhasLojas() {
             {lojas.map((loja) => (
               <li key={loja.id} className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
                 <div>
-                  <h2 className="text-lg font-semibold break-words">{loja.nome}</h2>
+                  <h2 className="text-lg font-semibold break-words">{formatarNome(loja.nome)}</h2>
                   <p className="text-sm text-texto-suave">{loja.dono ? "Sua loja" : "Você é gerente"}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">

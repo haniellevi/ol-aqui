@@ -6,6 +6,7 @@ import { seguro } from "@/lib/dados/seguro";
 import { lerConfig } from "@/lib/dados/config";
 import { ehUuid, numeroDoTexto } from "@/lib/formato";
 import { lojaEscolhida } from "@/lib/dados/loja-ativa";
+import { completarCards } from "@/lib/dados/cards-extra";
 import type {
   AnuncioVitrine,
   MeuAnuncioVitrine,
@@ -56,7 +57,7 @@ export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitri
     const db = await createClient();
     const { data, error } = await db.rpc("anuncios_vitrine", { p_vitrine_id: vitrineId, p_ordem: ordem, p_pagina: pagina });
     if (error || !Array.isArray(data) || data.some((a) => !a || !ehUuid(a.id) || typeof a.na_pagina !== "boolean")) throw new Error("Não foi possível carregar os produtos.");
-    return data as AnuncioVitrine[];
+    return completarCards(data as AnuncioVitrine[]);
 });
 
 const COLUNAS_MINHA =
@@ -199,7 +200,7 @@ export async function opcoesVitrine(microrregiaoId: string | null): Promise<Opco
 }
 
 const COLUNAS_PLANO_PUBLICO =
-  "codigo, nome, descricao, publico, preco_centavos, periodo_dias, limite_anuncios, acesso_radar, propostas_radar_mes, e_teste, ordem, " +
+  "codigo, nome, descricao, publico, preco_centavos, periodo_dias, limite_anuncios, acesso_radar, propostas_radar_mes, aviso_radar_na_hora, e_teste, ordem, " +
   "vitrine_foto_fachada, vitrine_secoes_max, vitrine_fixados_max, recomendado";
 
 /** Planos à venda (tabela planos, só os ativos), na ordem do painel. */

@@ -1,7 +1,9 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { AlertTriangle, Info } from "lucide-react";
 import { anuncioPublico } from "@/lib/dados/anuncios";
+import { completarCards } from "@/lib/dados/cards-extra";
 import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
 import { nomeCaminho } from "@/lib/categorias-arvore";
 import { lerConfigNumero } from "@/lib/dados/config";
@@ -31,12 +33,13 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
   const pagoAte = anuncio.pago_ate && new Date(anuncio.pago_ate).getTime() > Date.now() ? anuncio.pago_ate : null;
   // nunca esteve no ar: só vale categoria visível (o banco recusa publicar em categoria escondida)
   const nuncaNoAr = !anuncio.publicado_em;
-  const [publico, achada, minimoFotos, avulso, destaques] = await Promise.all([
+  const [publico, achada, minimoFotos, avulso, destaques, [extra]] = await Promise.all([
     anuncioPublico(anuncio.id),
     anuncio.categoria_id ? (nuncaNoAr ? categoriaPorId : categoriaDoAnuncio)(anuncio.categoria_id) : Promise.resolve(null),
     lerConfigNumero("anuncio.fotos_minimo", conta.vitrine.microrregiao_id),
     !jaPublicado && !conta.podePublicar && !pagoAte && !conta.ajudante ? avulsoParaMim(conta.vitrine) : Promise.resolve(null),
     equipe ? Promise.resolve([]) : resultadosDestaques(anuncio.id),
+    completarCards([{ id: anuncio.id }]), // preço antes (riscado) e UF da cidade, para a prévia sair igual ao site
   ]);
   // P6: aviso de pagamento ao descartar, com o mesmo critério de Meus anúncios:
   // avulso pago, destaque no ar ou destaque esperando pagamento.
@@ -67,7 +70,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
       passo: "categoria",
       falta: !anuncio.categoria_id || categoriaSumiu,
     },
-    { rotulo: "Título", valor: titulo || "Falta escrever", passo: "detalhes", falta: titulo.length < 5 },
+    { rotulo: "Título", valor: formatarNome(titulo) || "Falta escrever", passo: "detalhes", falta: titulo.length < 5 },
     ...campos.map<Linha>((c) => {
       const v = valorDoCampo(c, anuncio.atributos[c.chave]);
       return { rotulo: c.rotulo, valor: v || (c.obrigatorio ? "Falta preencher" : "Não informado"), passo: "detalhes", falta: c.obrigatorio && !v };
@@ -104,15 +107,17 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
           anuncio={{
             id: anuncio.id,
             slug: null, // rascunho: o endereço só nasce ao publicar
-            titulo: titulo || "Seu anúncio",
+            titulo: formatarNome(titulo) || "Seu anúncio",
             preco_centavos: anuncio.preco_centavos,
             cidade: anuncio.cidade ?? v.cidade,
             capa: anuncio.fotos[0] ?? null,
             criado_em: anuncio.publicado_em ?? new Date().toISOString(),
             destaque: publico?.destaque ?? false,
-            vitrine_nome: publico?.vitrine_nome ?? v.nome,
+            vitrine_nome: formatarNome(publico?.vitrine_nome ?? v.nome),
             vitrine_selo: publico?.vitrine_selo ?? v.selo_loja_verificada,
             vitrine_tipo: publico?.vitrine_tipo ?? v.tipo,
+            preco_antes_centavos: extra?.preco_antes_centavos ?? null,
+            uf: extra?.uf ?? null,
           }}
         />
       </div>

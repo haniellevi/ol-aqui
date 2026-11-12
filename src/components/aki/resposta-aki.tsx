@@ -48,7 +48,7 @@ function BotaoRadar({
       <div className="rounded-card border border-borda px-3 py-2 text-sm">
         <p className="font-semibold">{acao.dados.titulo}</p>
         {acao.dados.detalhes && <p className="text-texto-suave">{acao.dados.detalhes}</p>}
-        <p className="text-legenda text-texto-suave">{acao.dados.cidade}</p>
+        <p className="text-legenda text-texto-suave">{acao.dados.cidade ?? "Toda a região"}</p>
       </div>
       <Botao
         variante="secundario"

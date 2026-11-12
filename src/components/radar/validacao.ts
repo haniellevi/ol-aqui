@@ -1,9 +1,11 @@
 import { centavosDoTexto, ehUuid } from "@/lib/formato";
-import type { ModoContato } from "@/lib/tipos-radar";
+import type { ModoContato, Visibilidade } from "@/lib/tipos-radar";
 
 export type EntradaPedido = {
   chaveEnvio: string; titulo: string; detalhes?: string; categoriaId?: string | null;
-  precoMin?: string; precoMax?: string; cidade: string; modo: ModoContato;
+  precoMin?: string; precoMax?: string; cidade?: string; modo: ModoContato;
+  /** 0–20 cidades; vazio = região toda. */
+  cidadesIds?: string[]; visibilidade: Visibilidade;
   prazoHoras?: number | null; whatsapp?: string;
 };
 export type EntradaProposta = { pedidoId: string; anuncioId?: string | null; fotoUrl?: string | null; preco?: string; mensagem?: string };
@@ -21,7 +23,9 @@ export function validarPedido(e: EntradaPedido): ErroRadar | null {
   if (!e || typeof e !== "object" || !ehUuid(e.chaveEnvio)) return { erro: "Atualize a página e tente novamente." };
   if (typeof e.titulo !== "string" || e.titulo.trim().length < 8 || e.titulo.trim().length > 120) return { erro: "Descreva o que procura usando de 8 a 120 caracteres.", campo: "titulo" };
   if (e.detalhes != null && (typeof e.detalhes !== "string" || e.detalhes.length > 1000)) return { erro: "Use até 1.000 caracteres nos detalhes.", campo: "detalhes" };
-  if (typeof e.cidade !== "string" || !e.cidade.trim() || e.cidade.length > 80) return { erro: "Escolha a cidade.", campo: "cidade" };
+  if (e.cidade != null && (typeof e.cidade !== "string" || e.cidade.length > 80)) return { erro: "Escolha a cidade.", campo: "cidade" };
+  if (e.cidadesIds != null && (!Array.isArray(e.cidadesIds) || e.cidadesIds.length > 20 || !e.cidadesIds.every(ehUuid))) return { erro: "Escolha até 20 cidades da lista.", campo: "cidades" };
+  if (e.visibilidade !== "lojas" && e.visibilidade !== "todos") return { erro: "Escolha quem pode ver o pedido.", campo: "visibilidade" };
   if (!["whatsapp_direto", "propostas_prazo"].includes(e.modo)) return { erro: "Escolha como quer receber as propostas." };
   if (e.categoriaId != null && !ehUuid(e.categoriaId)) return { erro: "Escolha uma categoria válida.", campo: "categoria" };
   if (e.modo === "propostas_prazo" && (!Number.isInteger(e.prazoHoras) || (e.prazoHoras ?? 0) <= 0)) return { erro: "Escolha o prazo das propostas.", campo: "prazo" };

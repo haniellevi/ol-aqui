@@ -5,6 +5,7 @@ import { CheckCircle2, ChevronDown, Loader2, MessageCircle, Plus, Store, XCircle
 import { Botao } from "@/components/ui/botao";
 import { CadastroLojaAki } from "@/components/aki/cadastro-loja-aki";
 import { Campo } from "@/components/ui/campo";
+import { avisoComoVaiAparecer } from "@/lib/formatar-nome";
 import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import { criarLoja, verificarSlug, type EstadoLoja } from "@/app/(conta)/quero-vender/actions";
 import { linkLoja, slugDoTitulo, urlAbsoluta } from "@/lib/formato";
@@ -148,6 +149,7 @@ export function FormLoja({
         autoComplete="organization"
         placeholder="Ex.: João Moto Peças"
         erro={erroDe("nome_loja")}
+        dica={avisoComoVaiAparecer(nome)}
       />
 
       <CadastroLojaAki nome={nome} aplicar={(dados) => {

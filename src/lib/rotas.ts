@@ -54,11 +54,32 @@ export const linkAtendimento = (id: string) => `${LINK_ATENDIMENTO}/${id}`;
 
 /** Radar: pedir (com o texto já preenchido), pedido do comprador e pedido visto pela loja. */
 export const LINK_RADAR = "/radar";
-export type FiltrosPedido = { categoria?: string | null; cidade?: string | null; precoMin?: string | null; precoMax?: string | null };
+export type FiltrosPedido = {
+  categoria?: string | null;
+  cidade?: string | null;
+  precoMin?: string | null;
+  precoMax?: string | null;
+  /** "Pedir de novo": o resto do pedido antigo (detalhes, categoria por id, cidades marcadas e quem vê). */
+  detalhes?: string | null;
+  categoriaId?: string | null;
+  cidades?: string[] | null;
+  visibilidade?: "lojas" | "todos" | null;
+};
 export const linkPedirRadar = (texto?: string | null, filtros: FiltrosPedido = {}) => {
   const params = new URLSearchParams();
-  for (const [chave, valor] of Object.entries({ q: texto, categoria: filtros.categoria, cidade: filtros.cidade, preco_min: filtros.precoMin, preco_max: filtros.precoMax })) {
-    const t = (valor ?? "").trim().slice(0, 120);
+  const campos: [string, string | null | undefined, number][] = [
+    ["q", texto, 120],
+    ["detalhes", filtros.detalhes, 1000],
+    ["categoria", filtros.categoria, 120],
+    ["categoria_id", filtros.categoriaId, 36],
+    ["cidade", filtros.cidade, 120],
+    ["preco_min", filtros.precoMin, 120],
+    ["preco_max", filtros.precoMax, 120],
+    ["cidades", filtros.cidades?.slice(0, 20).join(","), 20 * 37],
+    ["quem", filtros.visibilidade, 5],
+  ];
+  for (const [chave, valor, max] of campos) {
+    const t = (valor ?? "").trim().slice(0, max);
     if (t) params.set(chave, t);
   }
   return params.size ? `/radar/pedir?${params}` : "/radar/pedir";

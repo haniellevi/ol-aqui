@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import { ImageOff } from "lucide-react";
 import { PERIODOS_PRODUTOS, type NumerosProduto, type PeriodoProdutos } from "@/lib/dados/metricas-produtos";
 import { inteiro } from "@/lib/formato";
@@ -60,7 +61,7 @@ export function NumerosProdutos({
                   <span className="grid size-14 shrink-0 place-items-center rounded-campo bg-fundo text-texto-suave" aria-hidden><ImageOff className="size-5" /></span>
                 )}
                 <div className="flex min-w-0 flex-col">
-                  <span className="truncate font-semibold">{p.titulo}</span>
+                  <span className="truncate font-semibold">{formatarNome(p.titulo)}</span>
                   <span className="text-sm text-texto-suave">{SITUACAO[p.status] ?? "Fora do ar"}</span>
                 </div>
               </div>

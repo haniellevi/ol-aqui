@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { Store } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
@@ -47,7 +48,7 @@ export default async function PaginaDestacarLoja({ searchParams }: { searchParam
       <div className="flex items-center gap-3 rounded-card bg-cartao p-3 shadow-1">
         <AvatarVitrine nome={v.nome} logo={v.logo_url} />
         <div className="min-w-0">
-          <p className="truncate text-base font-semibold">{v.nome}</p>
+          <p className="truncate text-base font-semibold">{formatarNome(v.nome)}</p>
           <p className="text-legenda text-texto-suave">{v.cidade}</p>
         </div>
       </div>
