@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { faixaPreco } from "@/lib/dados/anuncios";
+import { completarCards } from "@/lib/dados/cards-extra";
 import { precoFalado } from "@/lib/formato";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
@@ -14,7 +15,11 @@ const FORM = "form-preco";
 // T20 · Passo 4: preço, "A combinar", "Aceito troca" e a faixa dos parecidos na região.
 export default async function PassoPreco({ searchParams }: { searchParams: ParamsPasso }) {
   const { anuncio, conta, editar, equipe } = await carregarPasso(searchParams);
-  const faixa = anuncio.categoria_id ? await faixaPreco(anuncio.categoria_id, conta.vitrine.microrregiao_id) : null;
+  const [faixa, extra] = await Promise.all([
+    anuncio.categoria_id ? faixaPreco(anuncio.categoria_id, conta.vitrine.microrregiao_id) : null,
+    // "Preço antes" só na edição; sem a coluna no banco (migração não aplicada) o campo não aparece.
+    editar ? completarCards([{ id: anuncio.id }]).then(([a]) => a) : undefined,
+  ]);
   const dica =
     faixa && faixa.minimo != null && faixa.maximo != null
       ? faixa.minimo === faixa.maximo
@@ -35,6 +40,7 @@ export default async function PassoPreco({ searchParams }: { searchParams: Param
         aCombinarInicial={anuncio.preco_centavos == null && jaPassou}
         aceitaTrocaInicial={anuncio.aceita_troca}
         dicaFaixa={dica}
+        precoAntesInicial={extra && "preco_antes_centavos" in extra ? extra.preco_antes_centavos : undefined}
       />
       {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho />}
     </CorpoPasso>

@@ -30,7 +30,7 @@ export async function CabecalhoPublico() {
         <MenuCidades cidade={cidade} regiao={regiao?.id} cidades={cidades} />
 
         <div className="ml-2 hidden min-w-0 max-w-xl flex-1 md:block">
-          <CampoBusca id="busca-topo" />
+          <CampoBusca id="busca-topo" sugestoes regiao={`${regiao?.id ?? ""}|${cidade ?? ""}`} />
         </div>
 
         <nav aria-label="Principal" className="ml-auto hidden items-center gap-1 md:flex">

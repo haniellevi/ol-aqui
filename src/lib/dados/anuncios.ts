@@ -6,6 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { seguro } from "@/lib/dados/seguro";
 import { regiaoAtual } from "@/lib/dados/regiao";
+import { completarCards } from "@/lib/dados/cards-extra";
 import { ehSlugAnuncio, ehUuid } from "@/lib/formato";
 import type {
   AnuncioCard,
@@ -47,7 +48,7 @@ async function lerBusca(p: ParametrosBusca): Promise<ResultadoBusca> {
   const { data, error } = await db.rpc(p.facetas ? "buscar_anuncios_com_facetas" : "buscar_anuncios", args);
   const linhas = p.facetas ? data?.anuncios : data;
   if (error || !Array.isArray(linhas)) throw new Error("Não foi possível consultar os anúncios.");
-  const anuncios = (linhas as AnuncioCard[]).map((a) => ({ ...a, atributos: a.atributos ?? {}, total: Number(a.total) }));
+  const anuncios = await completarCards((linhas as AnuncioCard[]).map((a) => ({ ...a, atributos: a.atributos ?? {}, total: Number(a.total) })));
   if (p.facetas) return { anuncios, total: Number(data.total), facetas: data.facetas };
   return { anuncios, total: anuncios[0]?.total ?? 0 };
 }
@@ -148,7 +149,7 @@ async function lerDaVitrine(v: Vitrine, limite: number): Promise<AnuncioCard[]> 
     destaque: !!a.destaque_ate && new Date(a.destaque_ate).getTime() > agora,
     total: data.length,
   }));
-  return cards.sort((x, y) => Number(y.destaque) - Number(x.destaque));
+  return (await completarCards(cards)).sort((x, y) => Number(y.destaque) - Number(x.destaque));
 }
 
 const COLUNAS_MEU =

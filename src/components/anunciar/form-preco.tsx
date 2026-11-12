@@ -11,6 +11,7 @@ import { BarraContinuar } from "./barra-continuar";
 
 // Passo 4 · Preço: teclado de número com "R$" fixo, "A combinar" e "Aceito troca".
 // A dica "Parecidos na região" só aparece quando o banco tem anúncios suficientes.
+// Na edição aparece "Preço antes" (opcional): quem baixou o preço diz quanto era e o card mostra riscado.
 
 const CAIXA =
   "flex min-h-10 cursor-pointer items-center gap-3 rounded-card border border-borda bg-cartao px-3 py-2 text-base font-semibold " +
@@ -28,6 +29,7 @@ export function FormPreco({
   aCombinarInicial,
   aceitaTrocaInicial,
   dicaFaixa,
+  precoAntesInicial,
 }: {
   id: string;
   editar: boolean;
@@ -37,11 +39,15 @@ export function FormPreco({
   aceitaTrocaInicial: boolean;
   /** Texto pronto, ex.: "R$ 8 mil a R$ 11 mil" (null = sem dados suficientes). */
   dicaFaixa: string | null;
+  /** Só na edição. undefined = campo indisponível (banco ainda sem a coluna): não mostra. */
+  precoAntesInicial?: number | null;
 }) {
   const [estado, onSubmit, enviando, enviar] = useEnvioAnuncio(salvarPreco);
   const [preco, setPreco] = useState(paraTexto(precoInicial));
   const [aCombinar, setACombinar] = useState(aCombinarInicial);
   const [troca, setTroca] = useState(aceitaTrocaInicial);
+  const [antes, setAntes] = useState(paraTexto(precoAntesInicial ?? null));
+  const mostrarAntes = editar && precoAntesInicial !== undefined;
 
   return (
     <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-5" noValidate>
@@ -66,6 +72,28 @@ export function FormPreco({
         erro={estado?.campos?.preco}
         className="[&_input]:text-xl [&_input]:font-bold"
       />
+
+      {mostrarAntes && (
+        <>
+          <input type="hidden" name="tem_preco_antes" value="1" />
+          <Campo
+            rotulo="Preço antes"
+            opcional
+            name="preco_antes"
+            prefixo="R$"
+            value={aCombinar ? "" : antes}
+            onChange={(e) => setAntes(e.target.value)}
+            maxLength={30}
+            dica="Baixou o preço? Coloque quanto era. Ele aparece riscado no anúncio."
+            inputMode="decimal"
+            autoComplete="off"
+            enterKeyHint="done"
+            placeholder={aCombinar ? "" : "0"}
+            disabled={aCombinar}
+            erro={estado?.campos?.preco_antes}
+          />
+        </>
+      )}
 
       {dicaFaixa && (
         <p className="flex gap-2 rounded-card bg-fundo p-3 text-base">

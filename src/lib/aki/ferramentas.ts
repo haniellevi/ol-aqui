@@ -207,6 +207,8 @@ function paraCartao(a: AnuncioCard): CartaoAki {
     vitrine_selo: a.vitrine_selo,
     vitrine_tipo: a.vitrine_tipo,
     aceita_troca: a.aceita_troca,
+    preco_antes_centavos: a.preco_antes_centavos ?? null,
+    uf: a.uf ?? null,
   };
 }
 

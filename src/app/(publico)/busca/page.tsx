@@ -40,7 +40,7 @@ export default async function PaginaBusca({ searchParams }: Props) {
         topo={
           <>
             <h1 className="text-titulo font-semibold">{q ? `Resultados para “${q}”` : "Buscar anúncios"}</h1>
-            <CampoBusca valor={q} manter={sp} />
+            <CampoBusca valor={q} manter={sp} sugestoes />
           </>
         }
       />
