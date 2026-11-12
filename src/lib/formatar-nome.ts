@@ -10,10 +10,6 @@ const ROMANO = /^(?:II|III|IV|VI|VII|VIII|IX|XI|XII|XIII|XIV|XV)$/;
 /** Siglas com vogal que continuam maiúsculas: tipo de empresa e termos de produto comuns na região. */
 const SIGLAS = new Set(["LTDA", "EPP", "MEI", "EIRELI", "ONG", "USB", "LED", "LCD", "HD", "SSD", "PI"]);
 
-/** Abreviações sem vogal que não são sigla: "DR. JOÃO" → "Dr. João". */
-const ABREVIACOES = new Set(["DR", "SR", "SRS"]);
-
-const VOGAL = /[aeiouáéíóúâêôãõàäëïöü]/i;
 const LETRA = /\p{L}/u;
 const MAIUSCULA = /\p{Lu}/u;
 const TEM_NUMERO = /\d/;
@@ -33,8 +29,8 @@ function palavraPadrao(palavra: string, primeira: boolean): string {
       const emMaiuscula = letras.length >= 2 && letras === letras.toLocaleUpperCase("pt-BR");
       // Sigla com pontos ("S.A.", "S.A"): fica maiúscula.
       if (emMaiuscula && /^(?:\p{L}\.)+\p{L}?\.?$/u.test(parte)) return parte;
-      // Sigla: só consoantes ("RVS", "TV", "LG"), algarismo romano ou da lista (LTDA, ME…).
-      if (emMaiuscula && !ABREVIACOES.has(letras) && (!VOGAL.test(letras) || ROMANO.test(letras) || SIGLAS.has(letras))) return parte;
+      // Só algarismo romano ou sigla da lista (LTDA, MEI…) fica maiúscula. "RVS", "TV", "LG" viram "Rvs", "Tv", "Lg".
+      if (emMaiuscula && (ROMANO.test(letras) || SIGLAS.has(letras))) return parte;
       const minuscula = parte.toLocaleLowerCase("pt-BR");
       if (!(primeira && i === 0) && LIGACOES.has(minuscula)) return minuscula;
       return maiusculaNoInicio(minuscula);
@@ -47,7 +43,7 @@ function palavraPadrao(palavra: string, primeira: boolean): string {
  *
  * - Todo (ou quase todo, 80% das letras) em CAIXA ALTA → Cada Palavra com a Primeira Maiúscula,
  *   com "de, da, do, das, dos, e, na, no, com, em" minúsculas no meio: "CASA DA ANA" → "Casa da Ana".
- *   Siglas sem vogal ou conhecidas continuam maiúsculas ("RVS", "TV LG", "LTDA", "S.A."); palavras com número ficam como foram
+ *   Só algarismo romano, siglas da lista ("LTDA", "MEI", "HD"…) e pontuadas ("S.A.") continuam maiúsculas; palavras com número ficam como foram
  *   digitadas ("15KG", "160cc", "PS5").
  * - Todo em minúscula → só a primeira letra maiúscula: "geladeira usada" → "Geladeira usada".
  * - Maiúsculas e minúsculas misturadas → fica como está ("Loja RVS", "iPhone 11").
