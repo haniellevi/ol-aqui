@@ -4,7 +4,7 @@ import type { AnuncioCard } from "@/lib/tipos";
 
 export type AnuncioVisto = Pick<
   AnuncioCard,
-  "id" | "slug" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo"
+  "id" | "slug" | "titulo" | "preco_centavos" | "cidade" | "capa" | "criado_em" | "destaque" | "vitrine_nome" | "vitrine_selo" | "vitrine_tipo" | "preco_antes_centavos" | "uf"
 >;
 
 const CHAVE = "mr-vistos-v1";

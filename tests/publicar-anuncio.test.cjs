@@ -251,3 +251,39 @@ test('foto ainda referenciada ou consulta indisponível nunca é apagada do Stor
     assert.equal((await apagarFoto(url.replace('user_loja','user_outro'))).ok, false);
   }
 });
+
+// Preço antes (riscado no card): só quando o campo apareceu na edição; precisa ser maior que o preço de agora.
+test('preço antes maior que o atual é gravado junto com o preço', async () => {
+  const { a, gravacoes } = fronteiras();
+  await assert.rejects(a.salvarPreco(null, form({ preco: '1.200', tem_preco_antes: '1', preco_antes: '1.500,00' })), /redirect:/);
+  assert.deepEqual(gravacoes[0], { preco_centavos: 120000, aceita_troca: false, preco_antes_centavos: 150000 });
+});
+for (const [antes, valores] of [['1.200', {}], ['900', {}], ['abc', {}], ['1.500', { preco: '', a_combinar: '' }]]) {
+  test(`preço antes ${antes} inválido para o preço de agora não grava`, async () => {
+    const { a, gravacoes } = fronteiras({ anuncio: { status: 'ativo', publicado_em: '2026-11-01T00:00:00Z' } });
+    const r = await a.salvarPreco(null, form({ preco: '1.200', tem_preco_antes: '1', preco_antes: antes, ...valores }));
+    assert.ok(r.campos.preco_antes || r.campos.preco); assert.equal(gravacoes.length, 0);
+  });
+}
+test('preço antes vazio ou "a combinar" apaga o riscado; sem o campo na tela nada muda', async () => {
+  for (const valores of [{ preco: '1.200', preco_antes: '' }, { a_combinar: 'on', preco_antes: '1.500' }]) {
+    const { a, gravacoes } = fronteiras();
+    await assert.rejects(a.salvarPreco(null, form({ tem_preco_antes: '1', ...valores })), /redirect:/);
+    assert.equal(gravacoes[0].preco_antes_centavos, null);
+  }
+  const { a, gravacoes } = fronteiras();
+  await assert.rejects(a.salvarPreco(null, form({ preco: '1.200', preco_antes: '1.500' })), /redirect:/);
+  assert.equal('preco_antes_centavos' in gravacoes[0], false);
+});
+test('campo "Preço antes" só aparece na edição e quando o banco já tem a coluna', () => {
+  const { FormPreco } = carregar('src/components/anunciar/form-preco.tsx', {
+    './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
+    '@/app/(conta)/anunciar/actions': { salvarPreco() {} },
+  });
+  const props = { id, formId: 'p', precoInicial: 120000, aCombinarInicial: false, aceitaTrocaInicial: false, dicaFaixa: null };
+  const comCampo = render(React.createElement(FormPreco, { ...props, editar: true, precoAntesInicial: 150000 }));
+  assert.match(comCampo, /Preço antes<span[^>]*>\(opcional\)<\/span>/); assert.match(comCampo, /name="preco_antes"[^>]*value="1\.500,00"/);
+  assert.match(comCampo, /name="tem_preco_antes" value="1"/);
+  assert.doesNotMatch(render(React.createElement(FormPreco, { ...props, editar: false, precoAntesInicial: null })), /Preço antes/);
+  assert.doesNotMatch(render(React.createElement(FormPreco, { ...props, editar: true })), /Preço antes/);
+});
