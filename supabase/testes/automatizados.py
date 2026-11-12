@@ -77,6 +77,8 @@ try:
     print('PASS: núcleo da verificação da loja: envio com limite e arquivos privados, decisão única, situação da loja e permissões', flush=True)
     checked(sql((root/'supabase/testes/720_verificacao_loja_fila.sql').read_text()))
     print('PASS: fila da IA da verificação da loja: reserva com orçamento, decisão final, nova tentativa da Receita, 3ª recusa, cadastro que muda e permissões', flush=True)
+    checked(sql((root/'supabase/testes/730_whatsapp_fila.sql').read_text()))
+    print('PASS: fila de WhatsApp e avisos da verificação: janela 8h-20h, destinatários da equipe, chaves desligadas, um aviso por transição, lembrete de 24 h e permissões', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
