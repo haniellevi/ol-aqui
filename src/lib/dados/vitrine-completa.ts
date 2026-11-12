@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { seguro } from "@/lib/dados/seguro";
 import { lerConfig } from "@/lib/dados/config";
 import { ehUuid, numeroDoTexto } from "@/lib/formato";
+import { lojaEscolhida } from "@/lib/dados/loja-ativa";
 import type {
   AnuncioVitrine,
   MeuAnuncioVitrine,
@@ -62,15 +63,20 @@ const COLUNAS_MINHA =
   "id, dono_id, cidade, bairro, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_aki_posicao, categoria_loja, banner_modelo, banner_cor, " +
   "endereco, lat, lng, horarios, sobre, formas_pagamento, faz_entrega, entrega_obs";
 
-/** Vitrine do usuário logado com os campos da vitrine completa. Sem login ou sem vitrine → null. */
+/**
+ * Vitrine da loja escolhida no seletor (a própria ou, na P5b-2b, uma que a pessoa ajuda) com os campos
+ * da vitrine completa. `ajudante` = a loja é de outra pessoa. Sem login ou sem loja → null.
+ */
 export const minhaVitrineCompleta = cache(async (exigirLeitura = false): Promise<MinhaVitrineCompleta | null> => {
   const ler = async () => {
     const { userId } = await auth();
     if (!userId) return null;
+    const escolhida = await lojaEscolhida();
+    if (!escolhida) return null;
     const db = await createClient();
     const [{ data, error }, contatos] = await Promise.all([
-      db.from("vitrines_lojas").select(COLUNAS_MINHA).eq("dono_id", userId).maybeSingle(),
-      db.rpc("meus_contatos_vitrine").maybeSingle<{ whatsapp: string | null; instagram: string | null; site_url?: string | null; telefone_publico?: string | null }>(),
+      db.from("vitrines_lojas").select(COLUNAS_MINHA).eq("id", escolhida.id).maybeSingle(),
+      db.rpc("contatos_da_loja", { p_vitrine: escolhida.id }).maybeSingle<{ whatsapp: string | null; instagram: string | null; site_url?: string | null; telefone_publico?: string | null }>(),
     ]);
     if (error || contatos.error) throw new Error("Não foi possível carregar sua loja. Tente novamente.");
     if (!data) return null;
@@ -81,9 +87,10 @@ export const minhaVitrineCompleta = cache(async (exigirLeitura = false): Promise
       site_url: contatos.data?.site_url ?? null,
       telefone_publico: contatos.data?.telefone_publico ?? null,
     };
-    if (exigirLeitura && (v.dono_id !== userId || !ehUuid(v.id))) throw new Error("Não foi possível confirmar sua loja.");
+    if (exigirLeitura && (v.id !== escolhida.id || !ehUuid(v.id) || (v.dono_id === userId) !== escolhida.dono)) throw new Error("Não foi possível confirmar sua loja.");
     return {
       ...v,
+      ajudante: v.dono_id !== userId,
       lat: v.lat == null ? null : Number(v.lat),
       lng: v.lng == null ? null : Number(v.lng),
       formas_pagamento: v.formas_pagamento ?? [],
@@ -102,11 +109,16 @@ const SEM_RECURSOS: RecursosVitrine = {
   banner_moderado_motivo: null,
 };
 
-/** O que o plano de agora libera na minha vitrine e quanto já uso (calculado pelo banco). */
+/** O que o plano de agora libera na loja escolhida e quanto ela já usa (calculado pelo banco). */
 export const meusRecursosVitrine = cache(async (exigirLeitura = false): Promise<RecursosVitrine> => {
   const ler = async () => {
+    const escolhida = await lojaEscolhida();
+    if (!escolhida) {
+      if (exigirLeitura) throw new Error("Não foi possível confirmar os recursos da loja.");
+      return SEM_RECURSOS;
+    }
     const db = await createClient();
-    const { data, error } = await db.rpc("minha_vitrine_recursos");
+    const { data, error } = await db.rpc("recursos_da_loja", { p_vitrine: escolhida.id });
     if (error) throw new Error("Não foi possível carregar os recursos do plano.");
     const linha = (Array.isArray(data) ? data[0] : data) as RecursosVitrine | undefined;
     if (exigirLeitura && (!linha || typeof linha.foto_fachada !== "boolean")) throw new Error("Não foi possível confirmar os recursos da loja.");

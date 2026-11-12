@@ -26,7 +26,14 @@ export default async function MinhasLojas() {
                   <p className="text-sm text-texto-suave">{loja.dono ? "Sua loja" : "Você é gerente"}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {loja.dono && <Botao href="/minha-conta/loja">Editar minha loja</Botao>}
+                  {/* A Minha loja segue a loja escolhida: o botão escolhe a própria antes de abrir. */}
+                  {loja.dono && (
+                    <form action={escolherLoja}>
+                      <input type="hidden" name="loja" value={loja.id} />
+                      <input type="hidden" name="voltar" value="/minha-conta/loja" />
+                      <Botao type="submit">Editar minha loja</Botao>
+                    </form>
+                  )}
                   {!loja.dono && (
                     <form action={escolherLoja}>
                       <input type="hidden" name="loja" value={loja.id} />
@@ -34,9 +41,15 @@ export default async function MinhasLojas() {
                       <Botao type="submit">Cuidar dos anúncios</Botao>
                     </form>
                   )}
-                  <Botao href={`/minha-conta/lojas/${loja.id}`} variante="secundario">
-                    {loja.dono ? "Gerenciar equipe" : "Editar informações da vitrine"}
-                  </Botao>
+                  {/* P5b-2b: o ajudante cuida da Minha loja da loja escolhida. */}
+                  {!loja.dono && (
+                    <form action={escolherLoja}>
+                      <input type="hidden" name="loja" value={loja.id} />
+                      <input type="hidden" name="voltar" value="/minha-conta/loja" />
+                      <Botao type="submit" variante="secundario">Cuidar da loja</Botao>
+                    </form>
+                  )}
+                  {loja.dono && <Botao href={`/minha-conta/lojas/${loja.id}`} variante="secundario">Gerenciar equipe</Botao>}
                 </div>
               </li>
             ))}

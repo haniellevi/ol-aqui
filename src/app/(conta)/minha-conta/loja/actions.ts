@@ -38,10 +38,11 @@ export async function prepararEnvioImagemLoja(qual: "logo", formato: "webp" | "j
     if (!["webp", "jpg", "png"].includes(formato)) return { ok: false, erro: { mensagem: "Formato de imagem inválido." } };
     const fmt = formato;
     const v = await minhaVitrineCompleta(true);
-    if (v?.tipo !== "loja" || v.dono_id !== userId || v.status === "suspensa") return { ok: false, erro: { mensagem: "Só lojas podem mudar a logo." } };
+    if (v?.tipo !== "loja" || v.status === "suspensa") return { ok: false, erro: { mensagem: "Só lojas podem mudar a logo." } };
 
     const db = await createClient();
-    const caminho = `${userId}/loja/${qual}-${crypto.randomUUID()}.${fmt}`;
+    // P5b-2b: a logo fica na pasta do dono, mesmo quando quem envia é o ajudante.
+    const caminho = `${v.dono_id}/loja/${qual}-${crypto.randomUUID()}.${fmt}`;
     const { data, error } = await db.storage.from(BUCKET).createSignedUploadUrl(caminho);
     if (error || !data) return { ok: false, erro: { mensagem: "Não deu para preparar o envio da imagem. Tente de novo." } };
     const urlPublica = db.storage.from(BUCKET).getPublicUrl(caminho).data.publicUrl;
@@ -56,11 +57,12 @@ export async function salvarLoja(_antes: EstadoLojaConta, form: FormData): Promi
     const { userId } = await auth();
     if (!userId) return { erro: "Entre na sua conta para continuar." };
     const v = await minhaVitrineCompleta(true);
-    if (!v || v.tipo !== "loja" || v.dono_id !== userId) return { erro: "Só lojas têm vitrine para editar." };
+    if (!v || v.tipo !== "loja") return { erro: "Só lojas têm vitrine para editar." };
 
-    if (["nome", "whatsapp", "cidade", "bairro", "logo_url"].some((k) => typeof form.get(k) !== "string")) return { erro: "Recarregue a página e preencha os dados da loja." };
-    const nome = String(form.get("nome") ?? "").replace(/\s+/g, " ").trim();
-    const whatsapp = String(form.get("whatsapp") ?? "").trim();
+    if ((v.ajudante ? ["cidade", "bairro", "logo_url"] : ["nome", "whatsapp", "cidade", "bairro", "logo_url"]).some((k) => typeof form.get(k) !== "string")) return { erro: "Recarregue a página e preencha os dados da loja." };
+    // P5b-2b: nome e WhatsApp são só do dono; para o ajudante valem os de agora.
+    const nome = v.ajudante ? v.nome : String(form.get("nome") ?? "").replace(/\s+/g, " ").trim();
+    const whatsapp = v.ajudante ? v.whatsapp ?? "" : String(form.get("whatsapp") ?? "").trim();
     const fone = telefoneComercialDigitado(whatsapp);
     const cidade = String(form.get("cidade") ?? "").trim();
     const bairro = String(form.get("bairro") ?? "").replace(/\s+/g, " ").trim();
@@ -74,21 +76,20 @@ export async function salvarLoja(_antes: EstadoLojaConta, form: FormData): Promi
     else if (cidade !== v.cidade && !cidades.some((c) => c.nome === cidade)) campos.cidade = "Escolha uma cidade da lista.";
     if (bairro.length > 80) campos.bairro = "Bairro muito longo (até 80 letras).";
     // Imagem nova precisa ser do Storage do Mercado da Região; a atual (mesmo endereço) pode ficar.
-    if (logo && logo !== v.logo_url && !imagemValida(logo, userId)) campos.logo_url = "Envie a logo pelo botão.";
+    if (logo && logo !== v.logo_url && !imagemValida(logo, v.dono_id)) campos.logo_url = "Envie a logo pelo botão.";
     if (Object.keys(campos).length) return { erro: "Confira os campos marcados.", campos };
 
     const db = await createClient();
     const { data, error } = await db
       .from("vitrines_lojas")
       .update({
-        nome,
-        whatsapp: fone,
+        ...(v.ajudante ? {} : { nome, whatsapp: fone }),
         cidade,
         bairro: bairro || null,
         logo_url: logo || null,
       })
       .eq("id", v.id)
-      .eq("dono_id", userId).select("id").maybeSingle();
+      .eq("dono_id", v.dono_id).select("id").maybeSingle();
     if (error) {
       const e = traduzirErro(error);
       if (e.campo) return { erro: "Confira o campo marcado.", campos: { [e.campo]: e.mensagem } };
@@ -98,7 +99,7 @@ export async function salvarLoja(_antes: EstadoLojaConta, form: FormData): Promi
     if (data?.id !== v.id) return { erro: "A loja não foi atualizada. Recarregue a página e tente novamente." };
 
     // Logo trocada ou tirada: apaga a antiga da pasta da loja (só a do próprio usuário).
-    const antigas = [v.logo_url !== (logo || null) ? v.logo_url : null].filter((u): u is string => !!u && imagemValida(u, userId));
+    const antigas = [v.logo_url !== (logo || null) ? v.logo_url : null].filter((u): u is string => !!u && imagemValida(u, v.dono_id));
     await Promise.allSettled(antigas.map((u) => apagarFoto(u)));
 
     revalidatePath("/minha-conta", "layout");
@@ -117,6 +118,9 @@ export async function salvarLoja(_antes: EstadoLojaConta, form: FormData): Promi
 export async function descartarLogo(url: string): Promise<void> {
   try {
     const { userId } = await auth();
-    if (userId && imagemValida(url, userId)) await apagarFoto(url);
+    if (!userId) return;
+    // Pasta própria ou (P5b-2b) a pasta do dono da loja que a pessoa ajuda; apagarFoto confere no banco.
+    const dono = (await minhaVitrineCompleta())?.dono_id;
+    if (imagemValida(url, userId) || (dono && imagemValida(url, dono))) await apagarFoto(url);
   } catch { /* A limpeza pode ser repetida sem comprometer o salvamento. */ }
 }

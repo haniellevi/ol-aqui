@@ -25,7 +25,8 @@ async function minhaLoja(exigirLeitura = false) {
   const { userId } = await auth();
   if (!userId) return { userId: null, v: null } as const;
   const v = await minhaVitrineCompleta(exigirLeitura);
-  return { userId, v: v && v.tipo === "loja" && (!exigirLeitura || v.dono_id === userId) ? v : null } as const;
+  // A loja escolhida (própria ou, na P5b-2b, uma que a pessoa ajuda); o banco confere quem pode mexer.
+  return { userId, v: v && v.tipo === "loja" ? v : null } as const;
 }
 
 function atualizar(slug: string) {
@@ -66,7 +67,7 @@ export async function prepararEnvioBanner(formato: "webp" | "jpg"): Promise<Resu
     if (!["webp", "jpg"].includes(formato) || v.status === "suspensa") return { ok: false, erro: { mensagem: "Não é possível enviar esta foto." } };
     const fmt = formato;
     const db = await createClient();
-    const caminho = `${userId}/vitrine/banner-${crypto.randomUUID()}.${fmt}`;
+    const caminho = `${v.dono_id}/vitrine/banner-${crypto.randomUUID()}.${fmt}`;
     const { data, error } = await db.storage.from(BUCKET).createSignedUploadUrl(caminho);
     if (error || !data) return { ok: false, erro: { mensagem: "Não deu para preparar o envio da foto. Tente de novo." } };
     const urlPublica = db.storage.from(BUCKET).getPublicUrl(caminho).data.publicUrl;
@@ -100,7 +101,7 @@ export async function salvarBanner(_antes: EstadoVitrine, form: FormData): Promi
       return { erro: "Escolha uma das cores da lista.", campos: { banner_cor: "Escolha uma das cores da lista." } };
     }
     // Foto nova precisa ser do Storage do Mercado da Região; a atual (mesmo endereço) pode ficar.
-    if (url && url !== v.banner_url && !bannerValido(url, userId)) {
+    if (url && url !== v.banner_url && !bannerValido(url, v.dono_id)) {
       return { erro: "Envie a foto pelo botão.", campos: { banner: "Envie a foto pelo botão." } };
     }
     if (tipo === "foto" && !url) {
@@ -114,13 +115,13 @@ export async function salvarBanner(_antes: EstadoVitrine, form: FormData): Promi
     if (v.capa_url && v.capa_url === v.banner_url && novaUrl !== v.banner_url) mudancas.capa_url = null;
 
     const db = await createClient();
-    const { data, error } = await db.from("vitrines_lojas").update(mudancas).eq("id", v.id).eq("dono_id", userId).select("id").maybeSingle();
+    const { data, error } = await db.from("vitrines_lojas").update(mudancas).eq("id", v.id).eq("dono_id", v.dono_id).select("id").maybeSingle();
     if (error) {
       const e = traduzirErro(error);
       return { erro: e.mensagem, campos: e.campo ? { [e.campo]: e.mensagem } : undefined };
     }
     if (data?.id !== v.id) return { erro: "A capa não foi atualizada. Recarregue a página e tente novamente." };
-    if (v.banner_url && v.banner_url !== novaUrl && arquivoMeu(v.banner_url, userId)) {
+    if (v.banner_url && v.banner_url !== novaUrl && arquivoMeu(v.banner_url, v.dono_id)) {
       await Promise.allSettled([apagarFoto(v.banner_url)]);
     }
     atualizar(v.slug);
@@ -135,13 +136,15 @@ export async function aplicarBannerAki(id: string, posicao: number, logo: string
     const { userId, v } = await minhaLoja(true);
     if (!userId) return SEM_LOGIN;
     if (!v) return SO_LOJA;
+    // P5b-2b: a arte do Merc gasta a IA do plano; fica com o dono.
+    if (v.ajudante) return { ok: false, erro: { mensagem: "Só o dono da loja usa a capa feita pelo Merc." } };
     if (!ehUuid(id) || !Number.isInteger(posicao) || posicao < 0 || posicao > 100) {
       return { ok: false, erro: { mensagem: "Confira a arte e a posição do logo." } };
     }
     const db = await createClient();
     const { error } = await db.rpc("aki_aplicar_banner", { p_id: id, p_posicao: posicao, p_logo: logo });
     if (error) return { ok: false, erro: traduzirErro(error) };
-    if (logo && v.logo_url && v.logo_url !== logo && arquivoMeu(v.logo_url, userId)) {
+    if (logo && v.logo_url && v.logo_url !== logo && arquivoMeu(v.logo_url, v.dono_id)) {
       await Promise.allSettled([apagarFoto(v.logo_url)]);
     }
     atualizar(v.slug);
@@ -157,7 +160,7 @@ export async function descartarFotoBanner(url: string): Promise<Resultado> {
     const { userId, v } = await minhaLoja(true);
     if (!userId) return SEM_LOGIN;
     if (!v) return SO_LOJA;
-    if (!bannerValido(url, userId) || url === v.banner_url) return { ok: true, dados: undefined };
+    if (!bannerValido(url, v.dono_id) || url === v.banner_url) return { ok: true, dados: undefined };
     return apagarFoto(url);
   } catch {
     return { ok: false, erro: { mensagem: "Não foi possível descartar a foto." } };
@@ -267,7 +270,7 @@ export async function salvarInformacoes(_antes: EstadoVitrine, form: FormData): 
         entrega_obs: entregaObs || null,
       })
       .eq("id", v.id)
-      .eq("dono_id", userId).select("id").maybeSingle();
+      .eq("dono_id", v.dono_id).select("id").maybeSingle();
     if (error) {
       const e = traduzirErro(error);
       return { erro: e.mensagem, campos: e.campo ? { [e.campo]: e.mensagem } : undefined };

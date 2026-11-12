@@ -108,6 +108,37 @@ test('apagar foto: ajudante apaga só na pasta do dono de uma loja que ajuda', a
   assert.deepEqual(await rodar('user_outro', [propria], { motivo: 'Ajuste', expira_em: '2026-11-14T15:00:00Z' }), { ok: false, removidas: 0 });
 });
 
+test('apagar foto: ajudante apaga logo e capa antigas só na pasta da loja que ajuda (P5b-2b)', async () => {
+  const url = (dono, pasta) => `https://abc.supabase.co/storage/v1/object/public/anuncios/${dono}/${pasta}/logo-1.webp`;
+  const rodar = async (dono, pasta, lojas) => {
+    let removidas = 0;
+    const consulta = (tabela) => {
+      const f = {};
+      const q = { select() { return q; }, contains() { return q; }, or() { f.or = true; return q; }, eq(c, v) { f[c] = v; return q; }, in(c, v) { f[c] = v; return q; },
+        async limit() {
+          // Só a busca "loja que ajudo com este dono" acha algo; as buscas de foto em uso voltam vazias.
+          const achou = tabela === 'vitrines_lojas' && !f.or && f.dono_id === 'user_dono' && Array.isArray(f.id) && f.id.includes(ajudada.id) && !f.id.includes(propria.id);
+          return { data: achou ? [{ id: ajudada.id }] : [], error: null };
+        },
+        async maybeSingle() { return { data: null }; } };
+      return q;
+    };
+    const { apagarFoto } = carregar('src/lib/dados/fotos.ts', {
+      '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_ajudante' }) },
+      '@/lib/dados/loja-ativa': { lojasQueCuido: async () => lojas },
+      '@/lib/dados/edicao-admin': { edicaoAdmin: async () => null },
+      '@/lib/supabase/server': { createClient: async () => ({ from: consulta, storage: { from: () => ({ getPublicUrl: () => ({ data: { publicUrl: url(dono, pasta) } }), remove: async () => { removidas++; return { error: null }; } }) } }) },
+    });
+    const r = await apagarFoto(url(dono, pasta));
+    return { ok: r.ok, removidas };
+  };
+  assert.deepEqual(await rodar('user_dono', 'loja', [propria, ajudada]), { ok: true, removidas: 1 });
+  assert.deepEqual(await rodar('user_dono', 'vitrine', [propria, ajudada]), { ok: true, removidas: 1 });
+  assert.deepEqual(await rodar('user_outro', 'loja', [propria, ajudada]), { ok: false, removidas: 0 });
+  assert.deepEqual(await rodar('user_dono', 'loja', [propria]), { ok: false, removidas: 0 });
+  assert.deepEqual(await rodar('user_dono', 'outra', [propria, ajudada]), { ok: false, removidas: 0 });
+});
+
 test('passo do anúncio usa a loja do próprio anúncio (rascunho do Merc com outra loja escolhida)', async () => {
   const pedidas = [];
   const contaDe = (loja, ajudante) => ({ perfil: {}, vitrine: { id: loja, tipo: 'loja', microrregiao_id: 'r' }, podePublicar: true, ...(ajudante ? { ajudante: true } : {}) });
@@ -188,4 +219,49 @@ test('super admin sem loja própria abre o passo do anúncio com a edição aber
   assert.equal(r.conta.vitrine.id, ajudada.id);
   assert.deepEqual(r.equipe, edicao);
   await assert.rejects(montar(null), /redirect:\/quero-vender/);
+});
+
+// Etapa P5b-2b: a Minha loja vista pelo ajudante.
+test('Minha loja do ajudante: sem verificação, Destacar, exclusão nem IA; nome e WhatsApp só leitura', async () => {
+  const props = [];
+  const Form = (p) => { props.push(p); return null; };
+  const pagina = (ajudante) => carregar('src/app/(conta)/minha-conta/loja/page.tsx', {
+    '@/lib/dados/regiao': { listarCidades: async () => [] },
+    '@/lib/dados/vitrine-completa': {
+      minhaVitrineCompleta: async () => ({ id: ajudada.id, dono_id: 'user_dono', ajudante, tipo: 'loja', status: 'ativa', slug: 'loja-do-ze', nome: 'Loja do Zé', whatsapp: '5589999990001', cidade: 'Corrente', bairro: null, logo_url: null, microrregiao_id: 'r', banner_tipo: 'modelo', banner_url: null, banner_modelo: 'liso', banner_cor: '#4B1248' }),
+      meusRecursosVitrine: async () => ({ foto_fachada: true, secoes_max: 3, fixados_max: 3, secoes_total: 0, fixados_total: 0, banner_moderado_motivo: null }),
+      planosPublicos: async () => [],
+      vitrineNovaAtiva: async () => true,
+    },
+    '@/lib/dados/categorias-ia': { minhasSugestoesCategoria: async () => { if (ajudante) throw Error('ajudante não lê sugestões da IA'); return []; } },
+    '@/lib/dados/historico': { lerHistorico: async () => [] },
+    '@/lib/dados/destaques': { resultadosDestaques: async () => { if (ajudante) throw Error('ajudante não lê destaques'); return []; } },
+    '@/lib/supabase/server': { createClient: async () => ({ rpc: async (n) => { if (ajudante) throw Error('ajudante não chama ' + n); return { data: n === 'minha_loja_exclusao' ? { na_lixeira: false, tem_pagamentos: false } : [{ estado: 'aprovada', motivo: null }], error: null }; } }) },
+    '@/lib/dados/loja-ativa': { lojasQueCuido: async () => [propria, ajudada], lojaEscolhida: async () => ajudada },
+    '@/components/conta/seletor-loja': { SeletorLoja: ({ atual, voltar }) => `SELETOR:${atual.nome}:${voltar}` },
+    '@/components/conta/form-minha-loja': { FormMinhaLoja: Form },
+    '@/components/destaques/destaques-ativos': { DestaquesAtivos: () => null },
+    '@/components/vitrine/banner-loja': { BannerLoja: () => null },
+    '@/components/conta/excluir-loja': { ExcluirLoja: () => 'EXCLUIR LOJA', LojaNaLixeira: () => null },
+  }).default();
+  const arvore = await pagina(true);
+  const html = render(arvore);
+  // Trocar de loja no seletor recria o formulário (sem levar dados da loja anterior).
+  const achar = (no) => {
+    if (!no || typeof no !== 'object') return null;
+    if (Array.isArray(no)) { for (const x of no) { const r = achar(x); if (r) return r; } return null; }
+    return no.type === Form ? no : achar(no.props?.children);
+  };
+  assert.equal(achar(arvore)?.key, ajudada.id);
+  assert.match(html, /SELETOR:Loja do Zé:\/minha-conta\/loja/);
+  assert.match(html, /Você ajuda nesta loja/);
+  assert.doesNotMatch(html, /Destacar minha loja|EXCLUIR LOJA|Loja verificada|Revise suas categorias/);
+  assert.match(html, /Seções próprias/);
+  assert.match(html, /Desempenho da loja/);
+  assert.equal(props[0].ajudante, true);
+  const dono = render(await pagina(false));
+  assert.match(dono, /Destacar minha loja/);
+  assert.match(dono, /EXCLUIR LOJA/);
+  assert.match(dono, /Revise suas categorias/);
+  assert.equal(props[1].ajudante, false);
 });

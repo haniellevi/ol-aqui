@@ -86,9 +86,12 @@ select editar_loja_gerenciada('42000000-0000-4000-a000-000000000001', 'Rua de te
   '{"seg":[{"abre":"08:00","fecha":"18:00"}]}', 'Loja fictícia', true, 'Entrega no centro');
 do $$ declare n integer; begin
   assert (select sobre = 'Loja fictícia' and faz_entrega from dados_loja_gerenciada('42000000-0000-4000-a000-000000000001')), 'edita informações permitidas';
-  update vitrines_lojas set whatsapp = '5589999990422' where id = '42000000-0000-4000-a000-000000000001';
-  get diagnostics n = row_count;
-  assert n = 0, 'alteração direta do contato continua protegida por RLS';
+  -- P5b-2b: o gerente edita a loja direto, mas nome e WhatsApp seguem só do dono (o banco recusa).
+  begin
+    update vitrines_lojas set whatsapp = '5589999990422' where id = '42000000-0000-4000-a000-000000000001';
+    get diagnostics n = row_count;
+    assert n = 0, 'alteração direta do contato continua protegida';
+  exception when sqlstate '42501' then null; end;
 end $$;
 
 set local request.jwt.claim.sub = 'user_dono420';

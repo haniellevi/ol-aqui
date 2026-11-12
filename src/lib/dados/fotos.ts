@@ -66,7 +66,7 @@ export async function apagarFoto(urlOuCaminho: string): Promise<Resultado> {
   const caminho = caminhoDaFoto(urlOuCaminho);
   if (!caminho) return { ok: false, erro: { mensagem: "Foto não encontrada." } };
   const db = await createClient();
-  // Própria pasta, ou (P5b) a pasta <dono>/<anúncio>/ de uma loja que a pessoa ajuda.
+  // Própria pasta, ou (P5b) a pasta <dono>/<anúncio>/, <dono>/loja/ ou <dono>/vitrine/ de uma loja que a pessoa ajuda.
   if (!caminho.startsWith(`${userId}/`) && !(await pastaDaLojaAjudada(db, caminho))) return { ok: false, erro: { mensagem: "Foto não encontrada." } };
   // Pode ter sido usada em outro anúncio, na vitrine ou em uma proposta.
   // Falha de consulta também impede apagar: uma resposta perdida não pode quebrar uma foto salva.
@@ -83,8 +83,15 @@ export async function apagarFoto(urlOuCaminho: string): Promise<Resultado> {
 
 async function pastaDaLojaAjudada(db: Awaited<ReturnType<typeof createClient>>, caminho: string): Promise<boolean> {
   const partes = caminho.split("/");
+  if (partes.length !== 3) return false;
   const ajudadas = (await lojasQueCuido()).filter((l) => !l.dono).map((l) => l.id);
-  if (partes.length !== 3 || !ehUuid(partes[1])) return false;
+  // P5b-2b: logo e capa de uma loja que a pessoa ajuda (<dono>/loja/ e <dono>/vitrine/).
+  if (partes[1] === "loja" || partes[1] === "vitrine") {
+    if (!ajudadas.length) return false;
+    const { data, error } = await db.from("vitrines_lojas").select("id").in("id", ajudadas).eq("dono_id", partes[0]).limit(1);
+    return !error && !!data?.length;
+  }
+  if (!ehUuid(partes[1])) return false;
   // P5b-2a: super admin com a edição aberta no anúncio também apaga na pasta do dono.
   const equipe = !!(await edicaoAdmin(partes[1]));
   if (!ajudadas.length && !equipe) return false;

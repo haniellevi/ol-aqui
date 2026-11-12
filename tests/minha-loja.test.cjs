@@ -23,7 +23,7 @@ function ambiente(o={}) {
  return {a:carregar('src/app/(conta)/minha-conta/loja/actions.ts',mocks),b:carregar('src/app/(conta)/minha-conta/loja/vitrine-actions.ts',mocks),chamadas};
 }
 test('Minha loja: salvar dados, capa e informações exige a identidade proprietária',async()=>{
- for(const o of [{semLogin:true},{semLoja:true},{v:{dono_id:'outro'}},{v:{tipo:'pf'}},{falhaLeitura:true}]) {
+ for(const o of [{semLogin:true},{semLoja:true},{v:{tipo:'pf'}},{falhaLeitura:true}]) {
   const {a,b,chamadas}=ambiente(o);
   for(const r of [await a.salvarLoja(null,form()),await b.salvarBanner(null,form()),await b.salvarInformacoes(null,form())])assert.ok(r.erro);
   assert.equal(chamadas.some(x=>x[0]==='update'),false);
@@ -62,7 +62,7 @@ test('Minha loja: valida nome, telefone, região, uploads alheios e entradas nã
  const {a}=ambiente({semCidades:true});assert.ok((await a.salvarLoja(null,form({cidade:'Nova cidade'}))).erro);assert.ok((await a.salvarLoja(null,form())).ok);
 });
 test('Minha loja: envio de logo/capa limita formato, dono, suspensão e plano',async()=>{
- for(const o of [{semLogin:true},{semLoja:true},{v:{dono_id:'outro'}},{v:{status:'suspensa'}},{falhaLeitura:true}]){
+ for(const o of [{semLogin:true},{semLoja:true},{v:{status:'suspensa'}},{falhaLeitura:true}]){
   const {a,b,chamadas}=ambiente(o);assert.equal((await a.prepararEnvioImagemLoja('logo','webp')).ok,false);assert.equal((await b.prepararEnvioBanner('jpg')).ok,false);assert.equal(chamadas.some(x=>x[0]==='upload'),false);
  }
  for(const o of [{semFoto:true},{falhaPlano:true}])assert.equal((await ambiente(o).b.prepararEnvioBanner('jpg')).ok,false);
@@ -88,10 +88,29 @@ test('Informações: recusa sobreposição, horário invertido, dia desconhecido
 });
 test('Minha loja: leitura estrita distingue ausência, erro de serviço e loja alheia',async()=>{
  for(const o of [{data:null,error:null},{data:null,error:{message:'falhou'}},{data:{id,dono_id:'outro'},error:null},{data:{id,dono_id:uid,formas_pagamento:[]},error:null}]){
-  const q={select(){return this;},eq(){return this;},maybeSingle:async()=>o};const {minhaVitrineCompleta}=carregar('src/lib/dados/vitrine-completa.ts',{'@clerk/nextjs/server':{auth:async()=>({userId:uid})},'@/lib/supabase/server':{createClient:async()=>({from:()=>q,rpc:()=>({maybeSingle:async()=>({data:null,error:null})})})}});
+  const q={select(){return this;},eq(){return this;},maybeSingle:async()=>o};const {minhaVitrineCompleta}=carregar('src/lib/dados/vitrine-completa.ts',{'@clerk/nextjs/server':{auth:async()=>({userId:uid})},'@/lib/dados/loja-ativa':{lojaEscolhida:async()=>({id,nome:'Loja',dono:true})},'@/lib/supabase/server':{createClient:async()=>({from:()=>q,rpc:()=>({maybeSingle:async()=>({data:null,error:null})})})}});
   if(o.error||o.data?.dono_id==='outro')await assert.rejects(minhaVitrineCompleta(true));else assert.equal((await minhaVitrineCompleta(true))?.id??null,o.data?.id??null);
  }
 });
 test('Capa: recusa arquivo vazio ou maior que 20 MB antes de decodificar',async()=>{
  const {abrirFoto}=carregar('src/components/vitrine/cortar-banner.ts');await assert.rejects(abrirFoto(new Blob([])),/20 MB/);await assert.rejects(abrirFoto(new Blob([new Uint8Array(20*1024*1024+1)])),/20 MB/);
+});
+
+// Etapa P5b-2b: o ajudante cuida da Minha loja da loja escolhida, sem mudar nome nem WhatsApp.
+test('Minha loja do ajudante: salva sem nome e WhatsApp, fotos na pasta do dono e sem capa do Merc',async()=>{
+ const dono='user_dono';
+ const {a,b,chamadas}=ambiente({v:{dono_id:dono,ajudante:true,nome:'Loja do Zé',whatsapp:'5589999990001',logo_url:img('loja',dono),banner_url:img('vitrine',dono)}});
+ const f=form({nome:'Nome trocado',whatsapp:'(89) 98888-0000'});
+ assert.ok((await a.salvarLoja(null,f)).ok);
+ assert.deepEqual(chamadas.find(x=>x[0]==='update')[1],{cidade:'Corrente',bairro:'Centro',logo_url:null});
+ assert.ok(chamadas.some(x=>x[0]==='eq'&&x[1]==='dono_id'&&x[2]===dono));
+ assert.equal(chamadas.filter(x=>x[0]==='delete').length,1,'Logo antiga do dono apagada');
+ assert.ok((await a.prepararEnvioImagemLoja('logo','webp')).ok);
+ assert.ok((await b.prepararEnvioBanner('jpg')).ok);
+ const envios=chamadas.filter(x=>x[0]==='upload').map(x=>x[1]);
+ assert.match(envios[0],/^user_dono\/loja\/logo-[\w-]+\.webp$/);
+ assert.match(envios[1],/^user_dono\/vitrine\/banner-[\w-]+\.jpg$/);
+ const aki=await b.aplicarBannerAki('95000000-0000-4000-a000-000000000009',50,null);
+ assert.equal(aki.ok,false);
+ assert.match(aki.erro.mensagem,/Só o dono/);
 });

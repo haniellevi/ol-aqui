@@ -21,6 +21,8 @@ import { textoDisponivelEm } from "@/components/vitrine/regras";
 import { createClient } from "@/lib/supabase/server";
 import { Alert } from "@/components/ui/alert";
 import { ExcluirLoja, LojaNaLixeira } from "@/components/conta/excluir-loja";
+import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
+import { SeletorLoja } from "@/components/conta/seletor-loja";
 
 type ExclusaoLoja = { na_lixeira: boolean; apagar_apos: string | null; pode_restaurar: boolean | null; tem_pagamentos: boolean };
 
@@ -53,19 +55,24 @@ export default async function PaginaMinhaLoja() {
       </PaginaConta>
     );
   }
-  const [cidades, recursos, planos, destaques, verificacaoR, exclusaoR] = await Promise.all([
+  // P5b-2b: o ajudante não vê verificação, Destacar, destaques, exclusão nem a revisão de categorias pela IA (são do dono).
+  const ajudante = v.ajudante === true;
+  const [cidades, recursos, planos, destaques, verificacaoR, exclusaoR, lojas, lojaAtual] = await Promise.all([
     listarCidades(v.microrregiao_id),
     meusRecursosVitrine(true),
     planosPublicos(),
-    resultadosDestaques(),
-    createClient().then((db) => db.rpc("minha_verificacao_loja")),
-    createClient().then((db) => db.rpc("minha_loja_exclusao")),
+    ajudante ? Promise.resolve([]) : resultadosDestaques(),
+    ajudante ? Promise.resolve(null) : createClient().then((db) => db.rpc("minha_verificacao_loja")),
+    ajudante ? Promise.resolve(null) : createClient().then((db) => db.rpc("minha_loja_exclusao")),
+    lojasQueCuido(),
+    lojaEscolhida(),
   ]);
+  const vitrineNova = await vitrineNovaAtiva(v.microrregiao_id).catch(() => false);
   // Vitrine com IA (etapa 4): sugestões de categoria, só com a vitrine nova ligada.
-  const sugestoesIA = (await vitrineNovaAtiva(v.microrregiao_id).catch(() => false)) ? await minhasSugestoesCategoria(v.id) : undefined;
+  const sugestoesIA = vitrineNova && !ajudante ? await minhasSugestoesCategoria(v.id) : undefined;
   // Última mudança nos dados da loja (Etapa P5a). Falha → o item mostra só o texto padrão.
   const ultimaMudanca = (await lerHistorico({ loja: v.id }, 1).catch(() => null))?.[0];
-  const exclusao = exclusaoR.error ? null : (exclusaoR.data as ExclusaoLoja | null);
+  const exclusao = !exclusaoR || exclusaoR.error ? null : (exclusaoR.data as ExclusaoLoja | null);
   if (exclusao?.na_lixeira) {
     return (
       <PaginaConta>
@@ -74,7 +81,7 @@ export default async function PaginaMinhaLoja() {
       </PaginaConta>
     );
   }
-  const verificacao = !verificacaoR.error && Array.isArray(verificacaoR.data)
+  const verificacao = verificacaoR && !verificacaoR.error && Array.isArray(verificacaoR.data)
     ? verificacaoR.data[0] as { estado: string; motivo: string | null } | undefined
     : undefined;
   const completa = v;
@@ -99,6 +106,7 @@ export default async function PaginaMinhaLoja() {
   return (
     <PaginaConta>
       <TopoConta titulo="Minha loja">
+        {lojaAtual && <SeletorLoja lojas={lojas} atual={lojaAtual} voltar="/minha-conta/loja" />}
         <p className="text-base break-all text-texto-suave">
           Sua vitrine: <strong className="text-texto">{endereco}</strong>
         </p>
@@ -116,7 +124,9 @@ export default async function PaginaMinhaLoja() {
             : "Sua loja está com pagamento atrasado. Veja em Meu plano."}
         </Aviso>
       )}
-      {verificacao?.estado === "aprovada" ? (
+      {ajudante ? (
+        <Aviso tipo="info">Você ajuda nesta loja. Nome, WhatsApp, plano, Destacar e excluir a loja ficam com o dono.</Aviso>
+      ) : verificacao?.estado === "aprovada" ? (
         <Aviso tipo="ok">Loja verificada.</Aviso>
       ) : verificacao?.estado === "pendente" ? (
         <Aviso tipo="info">Verificação pendente. A equipe vai conferir os dados, os links e o contato da loja.</Aviso>
@@ -163,7 +173,7 @@ export default async function PaginaMinhaLoja() {
             <ItemMenu href={LINK_LOJA_FIXADOS} icone={<Pin />} titulo="Produtos no topo" detalhe={usoFixados} />
             <ItemMenu href={LINK_LOJA_HISTORICO} icone={<History />} titulo="Histórico da loja"
               detalhe={ultimaMudanca ? `Última mudança: ${fraseHistorico(ultimaMudanca)}` : "Quem mudou os dados da loja e quando"} />
-            {sugestoesIA !== undefined && (
+            {vitrineNova && (
               <ItemMenu href={LINK_LOJA_DESEMPENHO} icone={<ChartNoAxesColumn />} titulo="Desempenho da loja" detalhe="Visitas, cliques no WhatsApp e dicas" />
             )}
             {sugestoesIA !== undefined && (
@@ -178,7 +188,9 @@ export default async function PaginaMinhaLoja() {
         <h2 id="titulo-dados" className="text-lg font-bold">
           Dados da loja
         </h2>
+        {/* key: ao trocar de loja no seletor, o formulário recomeça com os dados da loja nova. */}
         <FormMinhaLoja
+          key={v.id}
           loja={{
             nome: v.nome,
             whatsapp: v.whatsapp,
@@ -187,9 +199,10 @@ export default async function PaginaMinhaLoja() {
             logo_url: v.logo_url,
           }}
           cidades={cidades}
+          ajudante={ajudante}
         />
       </section>
-      {v.status === "ativa" && (
+      {v.status === "ativa" && !ajudante && (
         <section aria-labelledby="titulo-destacar-loja" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
           <h2 id="titulo-destacar-loja" className="flex items-center gap-2 text-lg font-semibold">
             <Sparkles className="size-5 text-laranja-escuro" aria-hidden />
@@ -214,7 +227,7 @@ export default async function PaginaMinhaLoja() {
         </section>
       )}
       <DestaquesAtivos lista={destaquesLoja} titulo="Destaques da loja" />
-      {exclusao && v.status !== "suspensa" && (
+      {exclusao && !ajudante && v.status !== "suspensa" && (
         <section aria-labelledby="titulo-excluir-loja" className="flex flex-col gap-3">
           <h2 id="titulo-excluir-loja" className="text-lg font-bold">
             Excluir loja

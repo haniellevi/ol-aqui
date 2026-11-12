@@ -152,6 +152,8 @@ Cada etapa vira um PR próprio, com testes do banco (`supabase/testes`) e da tel
 - **P5b** — ajudantes (gerente cria, edita, pausa e manda anúncios para a lixeira; nome e WhatsApp da loja só o dono), marca "Equipe Mercado da Região", seletor de loja e **super admin edita o anúncio dos outros na mesma tela do vendedor** (mesma base dos ajudantes).
   - Decidido em 13/11/2026: seletor "Trabalhando na loja X" no topo da área do vendedor; ajudante cria e publica (conta no plano da loja e passa pela mesma moderação); também cuida de Seções próprias, Produtos no topo e vê Desempenho; não mexe em Destacar, plano, pagamento nem em apagar a loja; todos os ajudantes têm as mesmas permissões; mudanças do ajudante só vão para o histórico (sem sino). Super admin: botão "Editar anúncio" no painel, motivo digitado uma vez ao abrir, vale por 2 horas, dono recebe 1 aviso no sino com o motivo.
   - Entrega em 2 PRs: **P5b-1** (ajudante nos anúncios, seletor de loja, selo da equipe) e **P5b-2** (ajudante nos dados da loja, seções, topo e desempenho; super admin edita anúncio dos outros).
+  - P5b-2 dividido em **P5b-2a** (super admin edita anúncio dos outros; PR #113, no ar) e **P5b-2b** (ajudante na Minha loja).
+  - Decidido em 12/11/2026 para a P5b-2b: o ajudante também troca capa (foto ou modelo), logo, cidade e bairro; não usa o que gasta IA do dono (capa feita pelo Merc, "Melhorar com IA" e revisão de categorias pela IA). A Minha loja segue a loja escolhida no seletor; nome e WhatsApp aparecem só para leitura.
 - **P5c** — criar loja e transferir para o dono.
 
 ### Etapa P6 — Excluir dentro do cadastro

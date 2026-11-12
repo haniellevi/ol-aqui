@@ -65,6 +65,8 @@ try:
     print('PASS: ajudante da loja cuida dos anúncios; estranho, revogado e sem WhatsApp não mexem', flush=True)
     checked(sql((root/'supabase/testes/570_super_admin_edita_anuncio.sql').read_text()))
     print('PASS: super admin edita anúncio dos outros só com motivo, prazo de 2 horas e um aviso ao dono', flush=True)
+    checked(sql((root/'supabase/testes/580_ajudantes_loja.sql').read_text()))
+    print('PASS: ajudante cuida da Minha loja sem mudar nome, WhatsApp nem plano; estranho não mexe', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

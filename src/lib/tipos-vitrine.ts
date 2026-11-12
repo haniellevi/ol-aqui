@@ -101,6 +101,8 @@ export type RecursosVitrine = {
 export type MinhaVitrineCompleta = {
   id: string;
   dono_id: string;
+  /** P5b-2b: a loja é de outra pessoa (quem está logado ajuda). */
+  ajudante?: boolean;
   whatsapp: string | null;
   cidade: string;
   bairro: string | null;

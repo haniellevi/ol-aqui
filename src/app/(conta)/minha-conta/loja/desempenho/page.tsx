@@ -64,7 +64,8 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
   const [d, dicas, comIA, produtos] = await Promise.all([
     meuDesempenhoLoja(v.id, dias),
     minhasDicasLoja(v.id),
-    melhoriaIAAtiva(v.microrregiao_id).catch(() => false),
+    // P5b-2b: "Melhorar com IA" gasta a IA do plano; fica com o dono.
+    v.ajudante ? false : melhoriaIAAtiva(v.microrregiao_id).catch(() => false),
     meusNumerosProdutos(v.id, periodoProdutos),
   ]);
 
