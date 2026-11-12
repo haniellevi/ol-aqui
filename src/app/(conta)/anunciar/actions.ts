@@ -129,7 +129,7 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
   const anuncio = await abrir(id);
   if (!anuncio) return { ok: false, erro: { mensagem: NAO_ACHOU } };
 
-  const conta = await contaDaLoja();
+  const conta = await contaDaLoja(false, anuncio.vitrine_id);
   if (!conta?.vitrine) return { ok: false, erro: { mensagem: NAO_ACHOU } };
   const regiao = conta.vitrine.microrregiao_id;
   const maximo = Math.min((await lerConfigNumero("anuncio.fotos_maximo", regiao)) ?? MAX_FOTOS_BANCO, MAX_FOTOS_BANCO);
@@ -346,7 +346,7 @@ export async function salvarLocal(_antes: EstadoForm, form: FormData): Promise<E
   const c = lerComum(form);
   const anuncio = await abrir(c.id);
   if (!anuncio) return { erro: { mensagem: NAO_ACHOU } };
-  const conta = await contaDaLoja();
+  const conta = await contaDaLoja(false, anuncio.vitrine_id);
   if (!conta?.vitrine) return { erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
 
   const cidade = String(form.get("cidade") ?? "").trim();

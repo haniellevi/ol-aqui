@@ -5,7 +5,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { ehUuid } from "@/lib/formato";
-import { lojaEscolhida } from "@/lib/dados/loja-ativa";
+import { lojasQueCuido } from "@/lib/dados/loja-ativa";
 import type { Resultado } from "@/lib/tipos";
 
 const BUCKET = "anuncios";
@@ -38,10 +38,10 @@ export async function criarUrlEnvioFoto(anuncioId: string, formato: "webp" | "jp
     .eq("id", anuncioId)
     .maybeSingle();
   if (erroAnuncio) return { ok: false, erro: { mensagem: "Não foi possível abrir o anúncio. Tente de novo." } };
-  // P5b: anúncio da própria loja ou de uma loja que a pessoa ajuda (a escolhida no seletor).
-  const loja = await lojaEscolhida();
+  // P5b: anúncio da própria loja ou de uma loja que a pessoa ajuda.
+  const lojas = await lojasQueCuido();
   const dono = (anuncio?.vitrines_lojas as { dono_id?: string } | null)?.dono_id;
-  if (!anuncio || !dono || anuncio.vitrine_id !== loja?.id) return { ok: false, erro: { mensagem: "Anúncio não encontrado." } };
+  if (!anuncio || !dono || !lojas.some((l) => l.id === anuncio.vitrine_id)) return { ok: false, erro: { mensagem: "Anúncio não encontrado." } };
   if (((anuncio.fotos as string[] | null)?.length ?? 0) >= MAX_FOTOS) {
     return { ok: false, erro: { mensagem: `Você já colocou ${MAX_FOTOS} fotos. Tire uma para pôr outra.`, campo: "fotos" } };
   }
@@ -64,7 +64,7 @@ export async function apagarFoto(urlOuCaminho: string): Promise<Resultado> {
   const caminho = caminhoDaFoto(urlOuCaminho);
   if (!caminho) return { ok: false, erro: { mensagem: "Foto não encontrada." } };
   const db = await createClient();
-  // Própria pasta, ou (P5b) a pasta <dono>/<anúncio>/ da loja que a pessoa ajuda e escolheu no seletor.
+  // Própria pasta, ou (P5b) a pasta <dono>/<anúncio>/ de uma loja que a pessoa ajuda.
   if (!caminho.startsWith(`${userId}/`) && !(await pastaDaLojaAjudada(db, caminho))) return { ok: false, erro: { mensagem: "Foto não encontrada." } };
   // Pode ter sido usada em outro anúncio, na vitrine ou em uma proposta.
   // Falha de consulta também impede apagar: uma resposta perdida não pode quebrar uma foto salva.
@@ -81,10 +81,10 @@ export async function apagarFoto(urlOuCaminho: string): Promise<Resultado> {
 
 async function pastaDaLojaAjudada(db: Awaited<ReturnType<typeof createClient>>, caminho: string): Promise<boolean> {
   const partes = caminho.split("/");
-  const loja = await lojaEscolhida();
-  if (partes.length !== 3 || !ehUuid(partes[1]) || !loja || loja.dono) return false;
+  const ajudadas = (await lojasQueCuido()).filter((l) => !l.dono).map((l) => l.id);
+  if (partes.length !== 3 || !ehUuid(partes[1]) || !ajudadas.length) return false;
   const { data } = await db.from("anuncios").select("id, vitrines_lojas!inner(dono_id)")
-    .eq("id", partes[1]).eq("vitrine_id", loja.id).maybeSingle();
+    .eq("id", partes[1]).in("vitrine_id", ajudadas).maybeSingle();
   return (data?.vitrines_lojas as { dono_id?: string } | null | undefined)?.dono_id === partes[0];
 }
 

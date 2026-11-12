@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { seguro } from "@/lib/dados/seguro";
 import { COLUNAS_VITRINE } from "@/lib/dados/vitrines";
-import { lojaEscolhida } from "@/lib/dados/loja-ativa";
+import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
 import type { MeuPerfil, MinhaConta, MinhaVitrine, Plano } from "@/lib/tipos";
 
 /**
@@ -17,9 +17,11 @@ export const meuPerfilEVitrine = cache((exigirLeitura = false): Promise<MinhaCon
 /**
  * Etapa P5b: a mesma conta, mas com a loja escolhida no seletor (a própria ou uma que a pessoa ajuda).
  * Usada só na área de anúncios (Meus anúncios e Anunciar). Ajudante: `ajudante = true`, sem WhatsApp da loja.
+ * Com `lojaId` (a loja de um anúncio já aberto), usa essa loja se a pessoa cuida dela; senão → null.
  */
-export const contaDaLoja = cache(async (exigirLeitura = false): Promise<MinhaConta | null> => {
-  const loja = await lojaEscolhida();
+export const contaDaLoja = cache(async (exigirLeitura = false, lojaId?: string): Promise<MinhaConta | null> => {
+  const loja = lojaId ? (await lojasQueCuido()).find((l) => l.id === lojaId) ?? null : await lojaEscolhida();
+  if (lojaId && !loja) return null;
   const ler = () => lerConta(exigirLeitura, loja && !loja.dono ? loja.id : undefined);
   return exigirLeitura ? ler() : seguro(ler, null);
 });
