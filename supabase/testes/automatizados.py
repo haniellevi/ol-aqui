@@ -73,6 +73,8 @@ try:
     print('PASS: Radar só atende loja verificada e paga (ou cortesia da equipe); aviso na hora só no Full', flush=True)
     checked(sql((root/'supabase/testes/610_radar_area_visibilidade.sql').read_text()))
     print('PASS: pedido do Radar com várias cidades, visibilidade só lojas ou todos, área da loja e até 5 lojas', flush=True)
+    checked(sql((root/'supabase/testes/620_radar_aviso_full.sql').read_text()))
+    print('PASS: aviso de pedido novo só para Full verificada e cortesia, dentro da área e do nicho', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
