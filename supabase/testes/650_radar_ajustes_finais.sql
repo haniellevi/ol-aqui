@@ -75,11 +75,14 @@ set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_q650dent';
 select pg_temp.confere((select pode_propor from radar_pedido('65000000-0000-4000-a000-000000000001')), 'Loja da área pode propor (tela)');
 select pg_temp.confere((select pode_propor from radar_feed() where id = '65000000-0000-4000-a000-000000000001'), 'Loja da área pode propor (feed)');
+select pg_temp.confere((select pode_propor from radar_feed_regional() where id = '65000000-0000-4000-a000-000000000001'), 'Loja da área pode propor (feed regional)');
 set local request.jwt.claim.sub='user_q650fora';
 select pg_temp.confere((select not pode_propor and not bloqueado and detalhes = 'Detalhe 650A' and area_texto = 'Corrente'
   from radar_pedido('65000000-0000-4000-a000-000000000001')), 'Loja de fora da área vê o pedido Todo mundo sem poder propor');
 select pg_temp.confere((select count(*) = 1 and bool_and(not pode_propor) from radar_feed() where id = '65000000-0000-4000-a000-000000000001'),
   'Feed: pedido Todo mundo de outra cidade sem pode_propor');
+select pg_temp.confere((select count(*) = 1 and bool_and(not pode_propor) from radar_feed_regional() where id = '65000000-0000-4000-a000-000000000001'),
+  'Feed regional: pedido Todo mundo de outra cidade sem pode_propor');
 select pg_temp.confere((select pode_propor from radar_pedido('65000000-0000-4000-a000-000000000002')), 'Região toda: a loja de Parnaguá pode propor');
 set local request.jwt.claim.sub='user_q650comp';
 select pg_temp.confere((select not pode_propor from radar_pedido('65000000-0000-4000-a000-000000000001')), 'Comprador não propõe no próprio pedido');
