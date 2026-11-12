@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Heart, Loader2 } from "lucide-react";
 import { alternarFavorito } from "@/app/(publico)/anuncio/[idslug]/actions";
+import { guardarPendente } from "@/lib/salvar-pendente";
 
 // Coração no canto da foto do card. Logado: salva/tira na hora (volta se der erro).
 // Sem conta: leva para Entrar e, na volta ao Início, o anúncio já fica salvo (?salvar=<id>).
@@ -37,7 +38,7 @@ export function CoracaoCard({ anuncioId, titulo, logado, inicial }: { anuncioId:
   if (!logado) {
     const volta = `/?salvar=${anuncioId}`;
     return (
-      <Link href={`/entrar?redirect_url=${encodeURIComponent(volta)}`} aria-label={`Entre para salvar "${titulo}" nos favoritos`} className={ALVO}>
+      <Link href={`/entrar?redirect_url=${encodeURIComponent(volta)}`} onClick={() => guardarPendente(anuncioId)} aria-label={`Entre para salvar "${titulo}" nos favoritos`} className={ALVO}>
         <span className={BOLA}><Heart className="size-5" aria-hidden /></span>
       </Link>
     );
