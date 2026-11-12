@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import sharp from "sharp";
 import { BANNER_ALTURA, BANNER_LARGURA, FOTO_FEED_ALTURA, FOTO_FEED_LARGURA } from "@/lib/tamanhos-imagem";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { clarearFundoLiso } from "@/lib/aki/fundo-foto";
 import { ehUuid } from "@/lib/formato";
 import { MODELOS_LOJISTA, type RespostaCadastroAki } from "@/lib/aki/lojista";
@@ -247,10 +248,22 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
   }
 }
 
+/**
+ * Conta bloqueada ou excluída pelo admin não usa o Aki (que gasta crédito pago).
+ * Pergunta ao banco com a sessão da própria pessoa: usuario_id() volta vazio para essas contas.
+ */
+async function contaLiberada(userId: string): Promise<boolean> {
+  const db = await createClient();
+  const { data, error } = await db.rpc("usuario_id");
+  if (error) throw new Error("Não foi possível confirmar a conta.");
+  return data === userId;
+}
+
 export async function GET(req: Request) {
   const { userId } = await auth();
   if (!userId) return falha("Entre na sua conta para usar o Aki.", 401);
   try {
+    if (!(await contaLiberada(userId))) return falha("Sua conta está bloqueada. Fale com o suporte.", 403);
     const db = supabaseAdmin();
     const { data, error } = await db.rpc("aki_creditos_imagem", { p_usuario: userId }).single();
     if (error || !data) return falha("Não foi possível consultar o saldo.", 503);
@@ -287,6 +300,7 @@ export async function POST(req: Request) {
     if (bruto.length > 6000) return falha("O pedido está muito grande.", 413);
     const corpo = JSON.parse(bruto);
     if (!corpo || typeof corpo !== "object") return falha("Confira o pedido ao Aki.");
+    if (!(await contaLiberada(userId))) return falha("Sua conta está bloqueada. Fale com o suporte.", 403);
     const db = supabaseAdmin();
     if (corpo.tipo === "cadastro") return await sugerirCadastro(db, userId, chave, corpo);
     if (corpo.tipo === "banner" || corpo.tipo === "produto") return await gerarImagem(db, userId, chave, corpo);

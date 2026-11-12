@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { alternarFavorito } from "@/app/(publico)/anuncio/[idslug]/actions";
 import { ehUuid } from "@/lib/formato";
+import { avisarFavorito } from "@/components/anuncio/coracao-card";
 
 // Volta do "Entrar para salvar": o Início chega com ?salvar=<id>. Salva o anúncio uma vez,
 // tira o parâmetro do endereço e avisa o resultado. Sem login, não faz nada.
@@ -25,9 +26,12 @@ export function SalvarAoVoltar({ logado }: { logado: boolean }) {
     };
     if (!ehUuid(id)) return limpar();
     alternarFavorito(id, true)
-      .then((r) => setAviso(r.ok ? { texto: "Pronto: o anúncio ficou salvo nos seus favoritos.", erro: false } : { texto: r.erro.mensagem, erro: true }))
+      .then((r) => {
+        if (r.ok) avisarFavorito(id, r.dados.favorito);
+        setAviso(r.ok ? { texto: "Pronto: o anúncio ficou salvo nos seus favoritos.", erro: false } : { texto: r.erro.mensagem, erro: true });
+      })
       .catch(() => setAviso({ texto: "Não conseguimos salvar o favorito. Tente pelo coração do anúncio.", erro: true }))
-      .finally(limpar);
+      .finally(limpar); // trocar o endereço já busca a página de novo (corações vêm salvos)
   }, [logado, id, params, router, caminho]);
 
   useEffect(() => {
