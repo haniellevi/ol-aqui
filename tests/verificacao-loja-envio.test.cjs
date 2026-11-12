@@ -88,7 +88,15 @@ test('corpo grande demais devolve 413', async () => {
   const { POST, chamadas } = montar();
   const form = formulario();
   form.set('fachada', new Blob([new Uint8Array(5 * 1024 * 1024)], { type: 'application/pdf' }), 'grande.pdf');
-  assert.equal((await POST(pedido(form))).status, 413);
+  // Corpo já serializado: no Node 24 o FormData vira um stream que segue escrevendo depois que a rota cancela a leitura.
+  const pronto = new Response(form);
+  const corpo = new Uint8Array(await pronto.arrayBuffer());
+  const req = new Request(`${origem}/api/verificacao-loja`, {
+    method: 'POST',
+    headers: { origin: origem, 'content-type': pronto.headers.get('content-type') },
+    body: corpo,
+  });
+  assert.equal((await POST(req)).status, 413);
   assert.deepEqual(chamadas, []);
 });
 
