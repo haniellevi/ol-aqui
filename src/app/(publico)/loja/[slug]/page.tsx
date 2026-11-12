@@ -302,7 +302,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                   <h2 id="destaques-loja" className="scroll-mt-32 text-lg font-semibold">
                     Destaques da loja
                   </h2>
-                  <GradeAnuncios className={grade} anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} acao={acao} />
+                  <GradeAnuncios medirEm="loja" className={grade} anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} acao={acao} />
                 </section>
               )}
               {secoes.map((s) => (
@@ -310,15 +310,15 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                   <h2 id={`secao-${s.id}`} className="scroll-mt-32 text-lg font-semibold">
                     {s.nome}
                   </h2>
-                  <GradeAnuncios className={grade} anuncios={s.itens.map((a) => paraCard(a, v))} acao={acao} />
+                  <GradeAnuncios medirEm="loja" className={grade} anuncios={s.itens.map((a) => paraCard(a, v))} acao={acao} />
                 </section>
               ))}
-              {ordem === "menor_preco" ? <section aria-labelledby="ordem-preco" className="flex flex-col gap-3"><h2 id="ordem-preco" className="text-lg font-semibold">Do menor para o maior preço</h2><GradeAnuncios className={grade} anuncios={anuncios.map((a) => paraCard(a, v))} acao={acao} /></section> : grupos.map((g, i) => (
+              {ordem === "menor_preco" ? <section aria-labelledby="ordem-preco" className="flex flex-col gap-3"><h2 id="ordem-preco" className="text-lg font-semibold">Do menor para o maior preço</h2><GradeAnuncios medirEm="loja" className={grade} anuncios={anuncios.map((a) => paraCard(a, v))} acao={acao} /></section> : grupos.map((g, i) => (
                 <section key={g.nome} aria-labelledby={`grupo-${i}`} className="flex flex-col gap-3">
                   <h2 id={`grupo-${i}`} className="scroll-mt-32 text-lg font-semibold">
                     {g.nome} <span className="text-base font-normal text-texto-suave">({inteiro(g.itens.length)})</span>
                   </h2>
-                  <GradeAnuncios className={grade} anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} acao={acao} />
+                  <GradeAnuncios medirEm="loja" className={grade} anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} acao={acao} />
                 </section>
               ))}
               {(temMais || pagina > 1) && (

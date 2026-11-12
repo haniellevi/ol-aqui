@@ -3,6 +3,7 @@ import { categoriaPorSlug } from "@/lib/dados/categorias";
 import { CampoBusca } from "@/components/busca/campo-busca";
 import { Listagem } from "@/components/busca/listagem";
 import type { ParametrosUrl } from "@/components/busca/parametros";
+import { MarcarBusca } from "@/components/busca/marcar-busca";
 
 // T5 · Resultado da busca. Sempre montada na hora (resultado atual).
 export const dynamic = "force-dynamic";
@@ -30,17 +31,20 @@ export default async function PaginaBusca({ searchParams }: Props) {
   const categoria = slug ? await categoriaPorSlug(slug) : null;
 
   return (
-    <Listagem
-      caminho="/busca"
-      sp={sp}
-      categoria={categoria}
-      categoriaPeloEndereco={false}
-      topo={
-        <>
-          <h1 className="text-titulo font-semibold">{q ? `Resultados para “${q}”` : "Buscar anúncios"}</h1>
-          <CampoBusca valor={q} manter={sp} />
-        </>
-      }
-    />
+    <>
+      <Listagem
+        caminho="/busca"
+        sp={sp}
+        categoria={categoria}
+        categoriaPeloEndereco={false}
+        topo={
+          <>
+            <h1 className="text-titulo font-semibold">{q ? `Resultados para “${q}”` : "Buscar anúncios"}</h1>
+            <CampoBusca valor={q} manter={sp} />
+          </>
+        }
+      />
+      {q && <MarcarBusca termo={q} />}
+    </>
   );
 }

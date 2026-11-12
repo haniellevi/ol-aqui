@@ -188,6 +188,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
                   <GradeAnuncios
                     anuncios={normais}
                     prioridade={destaques.length ? 0 : 2}
+                    medirEm="inicio"
                     vazio={
                       <Vazio
                         className={estilos.vazio}
