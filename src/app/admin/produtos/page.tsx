@@ -110,7 +110,7 @@ export default async function PaginaProdutos({ searchParams }: { searchParams: P
             <TableBody>
               {grupos.map((g) => (
                 <TableRow key={g.rotulo}>
-                  <TableCell className="[overflow-wrap:anywhere]">{g.rotulo}</TableCell>
+                  <TableCell className="min-w-40 [overflow-wrap:anywhere]">{g.rotulo}</TableCell>
                   <TableCell className="text-right tabular-nums">{inteiro(g.produtos)}</TableCell>
                   <TableCell className="text-right tabular-nums">{inteiro(g.aparicoes)}</TableCell>
                   <TableCell className="text-right tabular-nums">{inteiro(g.visualizacoes)}</TableCell>
@@ -127,7 +127,7 @@ export default async function PaginaProdutos({ searchParams }: { searchParams: P
       ) : (
         <Cartao>
           <p className="mb-2 text-legenda text-texto-suave">Os 30 produtos mais vistos do período.</p>
-          <Table rotulo="Números dos produtos mais vistos" className="min-w-[1000px]">
+          <Table rotulo="Números dos produtos mais vistos" className="min-w-[1200px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Produto</TableHead>
@@ -149,8 +149,8 @@ export default async function PaginaProdutos({ searchParams }: { searchParams: P
                     {p.titulo}
                     <span className="block text-legenda text-texto-suave">{SITUACAO[p.status] ?? p.status}</span>
                   </TableCell>
-                  <TableCell className="[overflow-wrap:anywhere]">{p.loja}</TableCell>
-                  <TableCell>{p.regiao}</TableCell>
+                  <TableCell className="min-w-36 [overflow-wrap:anywhere]">{p.loja}</TableCell>
+                  <TableCell className="min-w-40">{p.regiao}</TableCell>
                   <TableCell className="text-right tabular-nums">{inteiro(p.aparicoes)}</TableCell>
                   <TableCell className="text-right tabular-nums">{inteiro(p.visualizacoes)}</TableCell>
                   <TableCell className="text-right tabular-nums">{inteiro(p.cliques_whatsapp)}</TableCell>
