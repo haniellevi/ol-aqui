@@ -15,7 +15,9 @@ function cpfValido(d: string): boolean {
   return true;
 }
 
-function cnpjValido(d: string): boolean {
+/** true se o texto tiver 14 números com os dígitos verificadores certos (aceita pontos, barra e traço). */
+export function cnpjValido(texto: string): boolean {
+  const d = soDigitos(texto);
   if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
   const pesos = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   for (const tamanho of [12, 13]) {
