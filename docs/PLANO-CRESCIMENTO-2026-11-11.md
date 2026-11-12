@@ -169,3 +169,18 @@ Regra geral: o JEV só escolhe entre opções que o sistema oferece; resultados 
 ## Próximo passo
 
 Etapa 0: arrumar a pasta local a partir da `main` e medir a velocidade atual no celular.
+
+## Fotos e edição de anúncios (decidido em 11/11/2026)
+
+Já corrigido no PR #103: foto inteira (sem cortar) no card, fundo branco no card e na galeria, botões alinhados na tela "anúncio no ar".
+
+| Tema | Decisão |
+|---|---|
+| Editar anúncio | Etapas tocáveis no topo (Fotos · Título · Preço · Categoria...). Ao editar, vai direto; no anúncio novo, só libera etapas já preenchidas |
+| Formato da foto | Quadrada 1:1 em todo o site (card, loja, galeria). Dica no envio: "foto quadrada, 1080 × 1080, produto no centro, fundo claro" |
+| IA nas fotos | Ajusta para 1:1, limpa o fundo e melhora a foto. Preço fixo com cota mensal no plano mais caro + pacote extra |
+| Teste grátis | Todo lojista trata 3 fotos de graça; depois só no plano mais caro |
+
+Falta para fechar a cota: medir o custo real por foto do modelo de imagem já usado pelo Merc (`gpt-image-2` / `gpt-image-1.5`, `src/lib/aki/lojista.ts`) com 10 fotos reais. Regra para a cota: custo da cota ≤ 20% do valor do plano. Exemplo só de conta: se cada foto custar R$ 0,25 e o plano for R$ 79, cabem até ~60 fotos/mês.
+
+Pendente de decisão: ajustes para o app ficar mais enxuto no celular (filtros numa linha só, menos espaço vazio, Merc só com ícone, janela do Merc menor; botões com 44 px).
