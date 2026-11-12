@@ -4,6 +4,8 @@ import type { Receita, ReceitaResultado } from "./tipos";
 // Consulta pública da BrasilAPI (nomes de campos confirmados em docs/designs/verificacao-lojas-spike.md).
 // Qualquer falha de rede, limite ou resposta estranha vira "fora_do_ar": nunca reprova a loja por culpa da consulta.
 const TAMANHO_MAXIMO = 100_000;
+// Sem identificação, o Cloudflare da BrasilAPI barra o fetch do Node (403/429).
+const CABECALHOS = { "user-agent": "OLAKI/1.0 (+https://ol-aqui.vercel.app)", accept: "application/json" };
 
 function texto(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
@@ -34,7 +36,7 @@ export async function consultarCnpj(cnpj: string): Promise<ReceitaResultado> {
   if (digitos.length !== 14) return { estado: "nao_encontrada" };
   try {
     const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digitos}`, {
-      signal: AbortSignal.timeout(8_000), cache: "no-store", redirect: "error",
+      signal: AbortSignal.timeout(8_000), cache: "no-store", redirect: "error", headers: CABECALHOS,
     });
     if (r.status === 404 || r.status === 400) return { estado: "nao_encontrada" };
     if (!r.ok) return { estado: "fora_do_ar" };
