@@ -23,6 +23,7 @@ import { Alert } from "@/components/ui/alert";
 import { ExcluirLoja, LojaNaLixeira } from "@/components/conta/excluir-loja";
 import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
 import { SeletorLoja } from "@/components/conta/seletor-loja";
+import { FormTerminarRecebimento } from "@/app/receber-loja/form-receber";
 
 type ExclusaoLoja = { na_lixeira: boolean; apagar_apos: string | null; pode_restaurar: boolean | null; tem_pagamentos: boolean };
 
@@ -38,7 +39,8 @@ const ORIENTACOES_VERIFICACAO: Record<string, string> = {
 
 // T38 · Minha loja (só para lojas): dados e logo aqui; banner, informações, seções próprias e
 // produtos no topo em telas próprias (vitrine completa). O que o plano libera vem do banco.
-export default async function PaginaMinhaLoja() {
+export default async function PaginaMinhaLoja({ searchParams }: { searchParams: Promise<{ recebida?: string | string[] }> }) {
+  const { recebida } = await searchParams;
   const v = await minhaVitrineCompleta(true);
   if (!v || v.tipo !== "loja") {
     return (
@@ -117,14 +119,25 @@ export default async function PaginaMinhaLoja() {
         )}
       </TopoConta>
 
-      {v.status !== "ativa" && (
+      {/* P5c: loja montada pela equipe (só ela vê) e loja recém-recebida pelo dono. */}
+      {v.status === "montagem" ? (
+        <Aviso tipo="info">Loja em montagem: só a equipe vê. Ela vai ao ar quando o dono aceitar o convite. Nome e endereço mudam no painel.</Aviso>
+      ) : v.status !== "ativa" && (
         <Aviso tipo="atencao">
           {v.status === "suspensa"
             ? "Sua loja está suspensa e não aparece no site. Fale com o suporte."
             : "Sua loja está com pagamento atrasado. Veja em Meu plano."}
         </Aviso>
       )}
-      {ajudante ? (
+      {!ajudante && v.pasta_montagem ? (
+        <>
+          <Aviso tipo="atencao">Falta terminar de receber a loja: as fotos ainda não passaram para a sua conta.</Aviso>
+          <FormTerminarRecebimento loja={v.id} />
+        </>
+      ) : !ajudante && typeof recebida === "string" && fraseRecebida(recebida) && (
+        <Aviso tipo="ok">{fraseRecebida(recebida)}</Aviso>
+      )}
+      {v.status === "montagem" ? null : ajudante ? (
         <Aviso tipo="info">Você ajuda nesta loja. Nome, WhatsApp, plano, Destacar e excluir a loja ficam com o dono.</Aviso>
       ) : verificacao?.estado === "aprovada" ? (
         <Aviso tipo="ok">Loja verificada.</Aviso>
@@ -259,4 +272,17 @@ function ItemMenu({ href, icone, titulo, detalhe }: { href: string; icone: React
       </Link>
     </li>
   );
+}
+
+/** P5c: "3-1-0" (no ar, em análise, rascunho) → frase do recebimento da loja. */
+function fraseRecebida(recebida: string): string | null {
+  const n = /^(\d{1,4})-(\d{1,4})-(\d{1,4})$/.exec(recebida)?.slice(1).map(Number);
+  if (!n) return null;
+  const [noAr, analise, rascunho] = n;
+  const partes = [
+    noAr && (noAr === 1 ? "1 produto foi ao ar" : `${noAr} produtos foram ao ar`),
+    analise && (analise === 1 ? "1 está em análise" : `${analise} estão em análise`),
+    rascunho && (rascunho === 1 ? "1 ficou como rascunho para você revisar" : `${rascunho} ficaram como rascunho para você revisar`),
+  ].filter(Boolean);
+  return `Loja recebida. Ela é sua e já está no ar.${partes.length ? ` ${partes.join(", ")}.` : ""}`;
 }

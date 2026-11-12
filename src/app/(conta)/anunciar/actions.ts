@@ -386,5 +386,7 @@ export async function publicarAnuncio(_antes: EstadoForm, form: FormData): Promi
   const status = typeof data === "string" ? data : "";
   if (status === "em_analise") redirect(`/anunciar/pronto?id=${encodeURIComponent(c.id)}&status=analise`);
   if (status === "ativo") redirect(`/anunciar/pronto?id=${encodeURIComponent(c.id)}`);
+  // P5c: loja em montagem — o produto fica pronto e vai ao ar quando o dono aceitar a loja.
+  if (status === "pronto") redirect(`/anunciar/pronto?id=${encodeURIComponent(c.id)}&status=pronto`);
   return { erro: traduzirErro(null) };
 }

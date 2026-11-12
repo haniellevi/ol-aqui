@@ -22,6 +22,26 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   if (!ehUuid(id)) notFound();
   const anuncio = await anuncioDaLoja(id);
   if (!anuncio) notFound();
+  // P5c: produto de loja em montagem fica pronto (rascunho) até o dono aceitar a loja.
+  if (anuncio.status === "rascunho" && anuncio.pronto_em) {
+    return (
+      <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-4 py-8 text-center">
+        <span className="grid size-20 place-items-center rounded-full bg-aviso-fundo text-aviso" aria-hidden>
+          <Clock className="size-10" />
+        </span>
+        <h1 className="text-titulo font-semibold text-beringela">Produto pronto</h1>
+        <p className="max-w-sm text-base text-texto-suave">
+          A loja ainda está em montagem. Este produto vai ao ar quando o dono aceitar a loja, depois da conferência de sempre.
+        </p>
+        <div className="flex w-full max-w-sm flex-col gap-3">
+          <Botao href="/minha-conta/anuncios" larguraTotal>
+            Ver produtos da loja
+          </Botao>
+          <BotaoNovoRascunho variante="secundario" texto="Cadastrar outro" />
+        </div>
+      </main>
+    );
+  }
   // ainda não publicado (ex.: abriu o endereço direto): volta para o Revisar
   if (anuncio.status !== "ativo" && anuncio.status !== "em_analise") redirect(urlPasso("revisar", anuncio.id, anuncio.status !== "rascunho"));
 

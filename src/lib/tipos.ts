@@ -160,6 +160,8 @@ export type MeuAnuncio = {
   vendido_em: string | null;
   criado_em: string;
   atualizado_em: string;
+  /** P5c: rascunho pronto numa loja em montagem (vai ao ar quando o dono aceitar). */
+  pronto_em?: string | null;
 };
 
 export type FaixaPreco = { minimo: number | null; maximo: number | null; quantidade: number };
@@ -182,7 +184,7 @@ export type Vitrine = {
   tipo: TipoVitrine;
   selo_loja_verificada: boolean;
   microrregiao_id: string;
-  status: "ativa" | "inadimplente" | "suspensa";
+  status: "ativa" | "inadimplente" | "suspensa" | "montagem";
   criado_em: string;
 };
 

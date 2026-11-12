@@ -222,6 +222,7 @@ function LinhaAnuncio({
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={rotulo.cor}>{rotulo.texto}</Badge>
+            {a.status === "rascunho" && a.pronto_em && <Badge variant="secondary">Pronto: vai ao ar quando o dono aceitar</Badge>}
             {destaque && <Badge variant="featured">Destaque</Badge>}
             {pago && <Badge variant="secondary">Avulso pago</Badge>}
             {fixado && <Badge variant="default">No topo da loja</Badge>}

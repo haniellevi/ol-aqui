@@ -177,7 +177,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
     <main className={`mx-auto flex w-full max-w-6xl flex-col gap-5 md:px-4 md:py-4 ${temBarra ? "pb-24 md:pb-8" : "pb-8"}`}>
       {v.status !== "ativa" && (
         <Alert variant="warning" role="status" className="mx-4 mt-3 md:mx-0 md:mt-0">
-          Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : "plano vencido"}). Visível apenas para o responsável e a equipe Mercado da Região.
+          Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : v.status === "montagem" ? "em montagem" : "plano vencido"}). Visível apenas para o responsável e a equipe Mercado da Região.
         </Alert>
       )}
 

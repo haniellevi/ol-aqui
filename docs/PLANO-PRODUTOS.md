@@ -155,6 +155,19 @@ Cada etapa vira um PR próprio, com testes do banco (`supabase/testes`) e da tel
   - P5b-2 dividido em **P5b-2a** (super admin edita anúncio dos outros; PR #113, no ar) e **P5b-2b** (ajudante na Minha loja).
   - Decidido em 12/11/2026 para a P5b-2b: o ajudante também troca capa (foto ou modelo), logo, cidade e bairro; não usa o que gasta IA do dono (capa feita pelo Merc, "Melhorar com IA" e revisão de categorias pela IA). A Minha loja segue a loja escolhida no seletor; nome e WhatsApp aparecem só para leitura.
 - **P5c** — criar loja e transferir para o dono.
+  - Decidido em 12/11/2026:
+    - a loja montada fica **escondida** (estado "montagem") até o dono aceitar; só a equipe vê;
+    - só aceita quem **ainda não vende** no site; quem já tem loja vê o aviso "fale com a equipe";
+    - o **teste grátis começa no aceite**;
+    - no aceite, o dono escolhe se a equipe continua como ajudante (caixa **desmarcada**);
+    - os produtos que a equipe marcou como prontos **vão ao ar sozinhos** no aceite, com as conferências de sempre; o que falhar fica como rascunho.
+  - Como funciona:
+    - Painel › Lojas › "Montar loja para um dono" (só super admin): nome, endereço, região e cidade.
+    - A loja nasce com um dono provisório técnico e sem WhatsApp. O super admin cuida dela pelo seletor, como ajudante. Publicar ali deixa o produto "pronto".
+    - Na ficha da loja: "Cuidar da loja", "Cadastrar produto" e o convite (WhatsApp do dono, vale 7 dias, um por vez, com botão "Enviar pelo WhatsApp").
+    - O dono abre `/receber-loja`, confirma o WhatsApp e aceita. A loja ganha o WhatsApp dele e vai ao ar.
+    - O servidor leva as fotos para a pasta do dono e publica os prontos. Se falhar, a Minha loja mostra "Terminar de receber a loja".
+    - Suspender e reativar uma loja em montagem a devolve para a montagem: ela nunca vai ao ar sem dono.
 
 ### Etapa P6 — Excluir dentro do cadastro
 - "Descartar rascunho" em todos os passos de `/anunciar`, e "Excluir anúncio" no fim da edição, com o mesmo diálogo de `acoes-anuncio.tsx`.

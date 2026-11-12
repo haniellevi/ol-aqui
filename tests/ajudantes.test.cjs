@@ -65,6 +65,28 @@ test('Meus anúncios do ajudante: sem plano, sem Destacar e com aviso para falar
   assert.equal(recebidos[0].podeDestacar, false);
 });
 
+test('P5c: Meus anúncios marca o rascunho pronto da loja em montagem', async () => {
+  const item = (n, pronto_em) => ({ id: `57100000-0000-4000-a000-00000000000${n}`, status: 'rascunho', titulo: `Produto ${n}`, fotos: [], atributos: {}, preco_centavos: 100, visualizacoes: 0, cliques_whatsapp: 0, total_favoritos: 0, atualizado_em: '2026-11-12T10:00:00Z', pronto_em });
+  const pagina = carregar('src/app/(conta)/minha-conta/anuncios/page.tsx', {
+    'next/navigation': { redirect: (d) => { throw Error(`redirect:${d}`); } },
+    '@/lib/dados/conta': { contaDaLoja: async () => ({ perfil: { microrregiao_id: 'r' }, vitrine: { tipo: 'loja', id: ajudada.id }, podePublicar: false, ajudante: true }) },
+    '@/lib/dados/anuncios': { anunciosDaLoja: async () => [item(1, '2026-11-12T10:00:00Z'), item(2, null)] },
+    '@/lib/dados/historico': { ultimasMudancas: async () => new Map() },
+    '@/lib/dados/loja-ativa': { lojasQueCuido: async () => [propria, ajudada], lojaEscolhida: async () => ajudada },
+    '@/components/conta/seletor-loja': { SeletorLoja: () => null },
+    '@/lib/dados/destaques': { resultadosDestaques: async () => [], fraseResultado: () => '' },
+    '@/lib/dados/vitrine-completa': { meusFixados: async () => [], meusRecursosVitrine: async () => ({}), planosPublicos: async () => [] },
+    '@/lib/dados/categorias-ia': { minhasSugestoesCategoria: async () => [] },
+    '@/components/conta/resumo-plano': { resumoPlano: () => ({ uso: '' }) },
+    '@/components/conta/acoes-anuncio': { AcoesAnuncio: () => null },
+    '@/components/conta/filtro-meus-anuncios': { FiltroMeusAnuncios: () => null },
+    '@/components/conta/foto-meu-anuncio': { FotoMeuAnuncio: () => null },
+    '@/components/vitrine/botao-fixar': { BotaoFixar: () => null },
+  }).default({ searchParams: Promise.resolve({ aba: 'rascunhos' }) });
+  const html = render(await pagina);
+  assert.equal((html.match(/Pronto: vai ao ar quando o dono aceitar/g) || []).length, 1);
+});
+
 test('Minhas lojas: ajudante ganha o botão "Cuidar dos anúncios"', async () => {
   const { default: Pagina } = carregar('src/app/(conta)/minha-conta/lojas/page.tsx', {
     '@/lib/supabase/server': { createClient: async () => ({ rpc: async () => ({ data: [propria, ajudada], error: null }) }) },
@@ -225,10 +247,10 @@ test('super admin sem loja própria abre o passo do anúncio com a edição aber
 test('Minha loja do ajudante: sem verificação, Destacar, exclusão nem IA; nome e WhatsApp só leitura', async () => {
   const props = [];
   const Form = (p) => { props.push(p); return null; };
-  const pagina = (ajudante) => carregar('src/app/(conta)/minha-conta/loja/page.tsx', {
+  const pagina = (ajudante, extra = {}, sp = {}) => carregar('src/app/(conta)/minha-conta/loja/page.tsx', {
     '@/lib/dados/regiao': { listarCidades: async () => [] },
     '@/lib/dados/vitrine-completa': {
-      minhaVitrineCompleta: async () => ({ id: ajudada.id, dono_id: 'user_dono', ajudante, tipo: 'loja', status: 'ativa', slug: 'loja-do-ze', nome: 'Loja do Zé', whatsapp: '5589999990001', cidade: 'Corrente', bairro: null, logo_url: null, microrregiao_id: 'r', banner_tipo: 'modelo', banner_url: null, banner_modelo: 'liso', banner_cor: '#4B1248' }),
+      minhaVitrineCompleta: async () => ({ id: ajudada.id, dono_id: 'user_dono', ajudante, tipo: 'loja', status: 'ativa', slug: 'loja-do-ze', nome: 'Loja do Zé', whatsapp: '5589999990001', cidade: 'Corrente', bairro: null, logo_url: null, microrregiao_id: 'r', banner_tipo: 'modelo', banner_url: null, banner_modelo: 'liso', banner_cor: '#4B1248', ...extra }),
       meusRecursosVitrine: async () => ({ foto_fachada: true, secoes_max: 3, fixados_max: 3, secoes_total: 0, fixados_total: 0, banner_moderado_motivo: null }),
       planosPublicos: async () => [],
       vitrineNovaAtiva: async () => true,
@@ -243,7 +265,8 @@ test('Minha loja do ajudante: sem verificação, Destacar, exclusão nem IA; nom
     '@/components/destaques/destaques-ativos': { DestaquesAtivos: () => null },
     '@/components/vitrine/banner-loja': { BannerLoja: () => null },
     '@/components/conta/excluir-loja': { ExcluirLoja: () => 'EXCLUIR LOJA', LojaNaLixeira: () => null },
-  }).default();
+    '@/app/receber-loja/form-receber': { FormTerminarRecebimento: ({ loja }) => `TERMINAR:${loja}` },
+  }).default({ searchParams: Promise.resolve(sp) });
   const arvore = await pagina(true);
   const html = render(arvore);
   // Trocar de loja no seletor recria o formulário (sem levar dados da loja anterior).
@@ -264,4 +287,16 @@ test('Minha loja do ajudante: sem verificação, Destacar, exclusão nem IA; nom
   assert.match(dono, /EXCLUIR LOJA/);
   assert.match(dono, /Revise suas categorias/);
   assert.equal(props[1].ajudante, false);
+
+  // P5c: super admin na loja em montagem, dono com fotos pendentes e dono que acabou de receber.
+  const montagem = render(await pagina(true, { status: 'montagem' }));
+  assert.match(montagem, /Loja em montagem: só a equipe vê/);
+  assert.doesNotMatch(montagem, /Você ajuda nesta loja|pagamento atrasado/);
+  const pendente = render(await pagina(false, { pasta_montagem: 'user_montagem' + 'a'.repeat(32) }));
+  assert.match(pendente, /Falta terminar de receber a loja/);
+  assert.match(pendente, new RegExp(`TERMINAR:${ajudada.id}`));
+  const recebida = render(await pagina(false, {}, { recebida: '3-1-0' }));
+  assert.match(recebida, /Loja recebida\. Ela é sua e já está no ar\. 3 produtos foram ao ar, 1 está em análise\./);
+  assert.doesNotMatch(render(await pagina(false, {}, { recebida: 'x' })), /Loja recebida/);
+  assert.doesNotMatch(render(await pagina(true, {}, { recebida: '1-0-0' })), /Loja recebida/, 'Ajudante não vê o aviso do dono');
 });

@@ -61,7 +61,7 @@ export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitri
 
 const COLUNAS_MINHA =
   "id, dono_id, cidade, bairro, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_aki_posicao, categoria_loja, banner_modelo, banner_cor, " +
-  "endereco, lat, lng, horarios, sobre, formas_pagamento, faz_entrega, entrega_obs";
+  "endereco, lat, lng, horarios, sobre, formas_pagamento, faz_entrega, entrega_obs, pasta_montagem";
 
 /**
  * Vitrine da loja escolhida no seletor (a própria ou, na P5b-2b, uma que a pessoa ajuda) com os campos

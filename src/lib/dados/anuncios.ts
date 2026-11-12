@@ -152,7 +152,7 @@ async function lerDaVitrine(v: Vitrine, limite: number): Promise<AnuncioCard[]> 
 }
 
 const COLUNAS_MEU =
-  "id, slug, vitrine_id, categoria_id, titulo, descricao, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, status, visualizacoes, cliques_whatsapp, total_favoritos, destaque_ate, pago_ate, motivo_analise, excluido_em, status_antes_exclusao, publicado_em, vendido_em, criado_em, atualizado_em, vitrines_lojas!inner(dono_id)";
+  "id, slug, vitrine_id, categoria_id, titulo, descricao, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, status, visualizacoes, cliques_whatsapp, total_favoritos, destaque_ate, pago_ate, motivo_analise, excluido_em, status_antes_exclusao, publicado_em, vendido_em, criado_em, atualizado_em, pronto_em, vitrines_lojas!inner(dono_id)";
 
 const COLUNAS_LOJA = COLUNAS_MEU.replace(", vitrines_lojas!inner(dono_id)", "");
 

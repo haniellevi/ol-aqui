@@ -3,6 +3,7 @@ import { linkSiteLoja } from "@/components/vitrine/regras";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { exigirTela } from "@/lib/admin/equipe";
+import { eSuperAdmin } from "@/lib/admin/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { inteiro, quando } from "@/lib/admin/formato";
 import { ehUuid, linkLoja, telefone } from "@/lib/formato";
@@ -31,6 +32,7 @@ const SITUACOES: { valor: LojaAdmin["situacao"]; nome: string; cor: TomSelo }[] 
   { valor: "arquivada", nome: "Arquivada", cor: "secondary" },
   { valor: "suspensa", nome: "Suspensa", cor: "destructive" },
   { valor: "excluida", nome: "Na lixeira", cor: "destructive" },
+  { valor: "montagem", nome: "Em montagem", cor: "secondary" },
 ];
 const SITUACAO = new Map(SITUACOES.map((s) => [s.valor, s]));
 
@@ -118,6 +120,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
   const regiao = ehUuid(um(sp.regiao)) ? um(sp.regiao) : "";
   const tipo = um(sp.tipo) === "pf" || um(sp.tipo) === "loja" ? um(sp.tipo) : "";
   const pagina = Math.max(1, Math.min(1000, Number.parseInt(um(sp.pagina), 10) || 1));
+  const superAdminP = papel === "administrador" ? eSuperAdmin(supabase) : Promise.resolve(false);
 
   const [lojasR, regioesR, planosR, verifR] = await Promise.all([
     supabase.rpc("admin_lojas", {
@@ -139,6 +142,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
           .order("criado_em")
           .limit(50),
   ]);
+  const superAdmin = await superAdminP;
 
   const lojas = ((lojasR.data ?? []) as LojaAdmin[]).map((l) => ({ ...l, total: Number(l.total) }));
   const total = lojas[0]?.total ?? 0;
@@ -183,7 +187,12 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
       >
         Lojas
       </Titulo>
-      {papel === "administrador" && <Link href="/admin/lojas/nova" className={`${estiloBotao} mb-4`}>Cadastrar loja</Link>}
+      {papel === "administrador" && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Link href="/admin/lojas/nova" className={estiloBotao}>Cadastrar loja</Link>
+          {superAdmin && <Link href="/admin/lojas/montar" className={estiloBotaoSec}>Montar loja para um dono</Link>}
+        </div>
+      )}
       {sp.excluida === "1" && <Aviso tipo="ok">Loja excluída. A conta do titular foi mantida.</Aviso>}
 
       <Cartao className="mb-6">
