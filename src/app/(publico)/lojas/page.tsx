@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { Botao } from "@/components/ui/botao";
 import { Seletor } from "@/components/conta/seletor";
@@ -72,7 +73,7 @@ export default async function CatalogoLojas({ searchParams }: {
             <li key={l.id} className="min-w-0">
               <Link href={linkLoja(l.slug)} className="flex h-full flex-col items-center gap-2 rounded-card border border-borda bg-cartao p-4 text-center hover:border-laranja-escuro">
                 <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="lg" />
-                <span className="font-semibold break-words text-beringela">{l.nome}</span>
+                <span className="font-semibold break-words text-beringela">{formatarNome(l.nome)}</span>
                 <span className="text-sm text-texto-suave">{l.cidade}</span>
                 {l.verificada && <span className="text-sm font-semibold text-verde-escuro">Loja verificada</span>}
                 <span className="text-sm font-semibold text-laranja-escuro">Ver vitrine e contatos</span>

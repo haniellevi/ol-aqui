@@ -1,5 +1,6 @@
 // /radar/pedido/[id]: o comprador vê o próprio pedido e compara as propostas.
 // Só o dono abre esta tela (o banco devolve sou_comprador); para os outros é "não encontrado".
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CalendarClock, CheckCircle2, ChevronLeft, Eye, Hourglass, MapPin, MessageCircle, RotateCcw, ShieldAlert, Store } from "lucide-react";
@@ -104,7 +105,7 @@ export default async function MeuPedidoPage({
           <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
           {arquivado && <Badge variant="secondary">Arquivado</Badge>}
         </div>
-        <h1 className="text-facil-titulo font-semibold break-words text-beringela">{pedido.titulo}</h1>
+        <h1 className="text-facil-titulo font-semibold break-words text-beringela">{formatarNome(pedido.titulo)}</h1>
         {pedido.detalhes && <p className="text-facil break-words whitespace-pre-line text-texto-suave">{pedido.detalhes}</p>}
         <p className="text-facil font-semibold">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
         <p className="flex items-start gap-2 text-facil">
@@ -212,10 +213,10 @@ function Indicacoes({ lista }: { lista: IndicacaoRadar[] }) {
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <Link href={linkAnuncio(i.anuncio_id, i.titulo, null)} className={`min-h-12 content-center text-facil font-semibold break-words text-laranja-escuro underline underline-offset-4 ${FOCO_LINK}`}>
-                {i.titulo}
+                {formatarNome(i.titulo)}
               </Link>
               <span className="text-facil font-bold text-beringela">{i.preco_centavos != null ? preco(i.preco_centavos) : "Preço a combinar"}</span>
-              <span className="text-facil text-texto-suave">{i.vitrine_nome} · indicado {tempoRelativo(i.criado_em)}</span>
+              <span className="text-facil text-texto-suave">{formatarNome(i.vitrine_nome)} · indicado {tempoRelativo(i.criado_em)}</span>
             </div>
           </li>
         ))}

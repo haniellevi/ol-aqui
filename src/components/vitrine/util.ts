@@ -1,8 +1,9 @@
 // Pequenas regras de exibição do vendedor (servidor e navegador).
+import { formatarNome } from "@/lib/formatar-nome";
 
 /** Pessoa física aparece só com o primeiro nome (privacidade). */
 export function primeiroNome(nome: string | null | undefined): string {
-  return String(nome ?? "").trim().split(/\s+/)[0] || "Vendedor";
+  return formatarNome(String(nome ?? "").trim().split(/\s+/)[0]) || "Vendedor";
 }
 
 /** Iniciais para o círculo quando não há logo: "João Moto Peças" → "JM". */

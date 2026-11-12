@@ -83,6 +83,8 @@ try:
     print('PASS: Radar devolve pode_propor, loja de fora da área indica, loja ativa nas indicações, aviso com a região e contas internas fechadas', flush=True)
     checked(sql((root/'supabase/testes/600_acertos_categoria_ia.sql').read_text()))
     print('PASS: acertos da IA de categorias: guarda sugestão e escolha, só quem cuida grava, só admin lê, período e erros', flush=True)
+    checked(sql((root/'supabase/testes/610_preco_antes.sql').read_text()))
+    print('PASS: preço antes e UF no card: só quem cuida grava, visitante lê o que está no ar, rascunho fica privado', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin

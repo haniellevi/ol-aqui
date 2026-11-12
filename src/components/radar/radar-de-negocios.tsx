@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 // components/radar/radar-de-negocios.tsx
 // Radar de Negócios: a "lista quente" invertida do Mercado da Região.
 // "Propor" abre a tela do pedido (/radar/[id]) com a folha de proposta: anúncio ou foto, preço e mensagem.
@@ -220,7 +221,7 @@ function CartaoPedido({
         {/* O que procura: sempre visível, é o "gancho" que vende o plano */}
         <h2 className="mt-2 text-facil-titulo font-semibold break-words text-beringela">
           <Link href={p.souComprador ? linkMeuPedidoRadar(p.id) : linkPedido} className="rounded-card hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro">
-            {p.titulo}
+            {formatarNome(p.titulo)}
           </Link>
         </h2>
 

@@ -1,7 +1,9 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { anuncioIdPorSlug, anuncioPublico, buscarAnuncios } from "@/lib/dados/anuncios";
+import { completarCards } from "@/lib/dados/cards-extra";
 import { ehFavorito } from "@/lib/dados/favoritos";
 import { seguro } from "@/lib/dados/seguro";
 import { ehSlugAnuncio, idDoLinkAnuncio, linkAnuncio, preco, slugDoTitulo } from "@/lib/formato";
@@ -45,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const fora = id ? await anuncioForaDoAr(id) : null;
     return { title: fora ? "Anúncio fora do ar" : "Anúncio não encontrado", robots: { index: false } };
   }
-  const titulo = a.titulo || "Anúncio";
+  const titulo = formatarNome(a.titulo) || "Anúncio";
   const caminho = linkAnuncio(a.id, a.titulo, a.slug);
   const resumo = `${preco(a.preco_centavos)}${a.cidade ? ` em ${a.cidade}` : ""}. ${(a.descricao ?? "").replace(/\s+/g, " ").slice(0, 140)}`.trim();
   return {
@@ -82,11 +84,12 @@ export default async function PaginaAnuncio({ params }: Props) {
   if (!a.slug && decodificar(idslug) !== `${a.id}-${slugDoTitulo(a.titulo)}`) redirect(caminho);
 
   const { userId } = await auth();
-  const [favorito, parecidosBusca] = await Promise.all([
+  const [favorito, parecidosBusca, [extra]] = await Promise.all([
     a.status === "ativo" ? ehFavorito(a.id, userId).catch(() => null) : Promise.resolve(false),
     // Recomendações são secundárias: sua falha não deve impedir o contato do anúncio aberto.
     a.categoria_slug ? seguro(() => buscarAnuncios({ categoria: a.categoria_slug!, limite: 9 }), null) : Promise.resolve(null),
+    completarCards([{ id: a.id }]), // preço antes e UF para o card de "Você viu há pouco"
   ]);
   const parecidos = (parecidosBusca?.anuncios ?? []).filter((p) => p.id !== a.id).slice(0, 8);
-  return <ConteudoAnuncio key={a.id} a={a} favorito={favorito} logado={!!userId} parecidos={parecidos} />;
+  return <ConteudoAnuncio key={a.id} a={a} favorito={favorito} logado={!!userId} parecidos={parecidos} extra={extra} />;
 }

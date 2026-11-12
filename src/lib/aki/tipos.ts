@@ -44,6 +44,8 @@ export type CartaoAki = {
   vitrine_selo: boolean;
   vitrine_tipo: "pf" | "loja";
   aceita_troca?: boolean;
+  preco_antes_centavos?: number | null;
+  uf?: string | null;
 };
 
 /** Pedido do Radar preparado pelo Merc. Só vira pedido quando a pessoa toca em "Confirmar". */

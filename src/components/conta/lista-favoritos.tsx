@@ -1,5 +1,6 @@
 "use client";
 
+import { formatarNome } from "@/lib/formatar-nome";
 import { useState } from "react";
 import { PackageX, Radar } from "lucide-react";
 import type { Favorito } from "@/lib/dados/favoritos";
@@ -17,7 +18,7 @@ export function ListaFavoritos({ itens, radar = false }: { itens: Favorito[]; ra
     </p>
     <ul aria-label="Anúncios salvos" className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {itens.map((f, indice) => {
-        const titulo = f.anuncio?.titulo ?? `Anúncio indisponível ${indice + 1}`;
+        const titulo = formatarNome(f.anuncio?.titulo) || `Anúncio indisponível ${indice + 1}`;
         return <li key={f.id} className="flex min-w-0 flex-col gap-2 rounded-card bg-cartao p-2 shadow-1">
           <Badge variant={f.situacao === "ativo" ? "success" : "secondary"}>
             {f.situacao === "ativo" ? "Disponível" : f.situacao === "vendido" ? "Vendido" : "Fora do ar"}

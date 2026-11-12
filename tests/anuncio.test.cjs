@@ -47,7 +47,8 @@ test('título e descrição maliciosos são escapados no HTML e dados estruturad
   const html = conteudo({ titulo: '</script><img src=x onerror=alert(1)>', descricao: '<script>alert(1)</script>' });
   assert.doesNotMatch(html, /<img src=x|<script>alert/);
   const json = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1];
-  assert.equal(JSON.parse(json).name, '</script><img src=x onerror=alert(1)>');
+  // O título aparece no padrão do site (1ª letra maiúscula, formatarNome) e continua escapado.
+  assert.equal(JSON.parse(json).name, '</Script><img src=x onerror=alert(1)>');
 });
 test('endereço com codificação quebrada é inválido sem lançar URIError', () => {
   assert.equal(idDoLinkAnuncio('%E0%A4%A'), null);

@@ -1,4 +1,5 @@
 "use client";
+import { formatarNome } from "@/lib/formatar-nome";
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -102,7 +103,7 @@ export function FolhaResolver({
               <div className="flex flex-col gap-2">
                 {propostas.map((p) => (
                   <Botao key={p.propostaId} variante="secundario" larguraTotal icone={<Store />} disabled={pendente} onClick={() => escolherLoja(p)} tamanho="grande" className="sm:max-w-none">
-                    {p.lojaNome}
+                    {formatarNome(p.lojaNome)}
                   </Botao>
                 ))}
                 <Botao variante="secundario" larguraTotal disabled={pendente} onClick={outroLugar} tamanho="grande" className="sm:max-w-none">

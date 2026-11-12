@@ -1,5 +1,6 @@
 "use client";
 
+import { formatarNome } from "@/lib/formatar-nome";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Check, ImagePlus, MessageCircle, Pencil, Send } from "lucide-react";
@@ -230,7 +231,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                               </span>
                             )}
                             <span className="flex min-w-0 flex-1 flex-col">
-                              <span className="truncate text-base font-semibold">{a.titulo}</span>
+                              <span className="truncate text-base font-semibold">{formatarNome(a.titulo)}</span>
                               {a.preco_centavos != null && <span className="text-legenda text-texto-suave">{preco(a.preco_centavos)}</span>}
                             </span>
                             {ativo && <Check className="size-5 shrink-0 text-laranja-escuro" aria-hidden />}

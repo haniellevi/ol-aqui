@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ImageOff } from "lucide-react";
@@ -24,7 +25,7 @@ export default async function PaginaDestacar({ params, searchParams }: Props) {
   const anuncio = await meuAnuncio(anuncioId);
   if (!anuncio) notFound();
 
-  const titulo = anuncio.titulo?.trim() || "Seu anúncio";
+  const titulo = formatarNome(anuncio.titulo) || "Seu anúncio";
   const topo = <TopoConta titulo="Destacar anúncio" voltar="/minha-conta/anuncios" textoVoltar="Meus anúncios" />;
 
   if (anuncio.status !== "ativo") {

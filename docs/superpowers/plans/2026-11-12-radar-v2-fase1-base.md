@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Trabalhar na worktree `.claude/worktrees/radar-v2`, ramo `claude/radar-v2`, a partir de `origin/main` (7cff6de).
-- Migrações novas: `20261117010000_radar_quem_atende.sql`, `20261117020000_radar_pedido_area.sql`, `20261117030000_radar_prazo_resolucao.sql`. Nunca editar migração antiga; redefinir função com `create or replace` (ou `drop` + `create` quando a assinatura muda) e repetir `revoke`/`grant`.
+- Migrações novas: `20261117010000_radar_quem_atende.sql`, `20261117025000_radar_pedido_area.sql`, `20261117030000_radar_prazo_resolucao.sql`. Nunca editar migração antiga; redefinir função com `create or replace` (ou `drop` + `create` quando a assinatura muda) e repetir `revoke`/`grant`.
 - Toda função nova: `security definer`, `set search_path = public, extensions`, `revoke ... from public, anon`, `grant execute ... to authenticated` (ou só `service_role` para rotina).
 - Limites e textos ficam em `configuracoes` (grupo `radar`) com `on conflict do nothing`; nunca sobrescrever valor que o admin já mudou (use `update ... where valor = '<padrão antigo>'::jsonb`).
 - Mensagens de erro em pt-BR simples, com `errcode` e `detail = 'campo:<nome>'` quando é de campo, como nas funções atuais.
@@ -69,7 +69,7 @@
 ### Task 2: Pedido com área, visibilidade e até 5 lojas
 
 **Files:**
-- Create: `supabase/migrations/20261117020000_radar_pedido_area.sql`
+- Create: `supabase/migrations/20261117025000_radar_pedido_area.sql`
 - Test: `supabase/testes/610_radar_area_visibilidade.sql`
 - Modify: `supabase/testes/automatizados.py`
 
@@ -101,7 +101,7 @@
 ### Task 3: Aviso de pedido novo só para Full (e cortesia), dentro da área
 
 **Files:**
-- Modify: `supabase/migrations/20261117020000_radar_pedido_area.sql` (mesma migração da Task 2, seção nova no fim)
+- Modify: `supabase/migrations/20261117025000_radar_pedido_area.sql` (mesma migração da Task 2, seção nova no fim)
 - Test: `supabase/testes/620_radar_aviso_full.sql`
 - Modify: `supabase/testes/automatizados.py`
 

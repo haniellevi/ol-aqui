@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { ReactNode } from "react";
 import { MapPin } from "lucide-react";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
@@ -47,7 +48,7 @@ export function CabecalhoVitrine({
         </div>
         <div className="flex flex-col gap-1">
           <span className="text-legenda text-texto-suave">{rotulo}</span>
-          <h1 className="text-titulo font-semibold">{nome}</h1>
+          <h1 className="text-titulo font-semibold">{formatarNome(nome)}</h1>
           {selo && (
             <span>
               <SeloLoja />

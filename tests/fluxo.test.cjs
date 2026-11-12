@@ -5,16 +5,25 @@ const { carregar } = require('./carregar.cjs');
 const { centavosDoTexto } = carregar('src/lib/formato.ts');
 const React = require('react');
 const { renderToPipeableStream, renderToStaticMarkup } = require('react-dom/server');
-function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul' }, anuncios = [], total = anuncios.length, destaques = [], blocos, lojas = [], erro = false, minimo = null } = {}) {
+const CATEGORIAS = [
+  { id: 'c1', slug: 'veiculos', nome: 'Veículos', icone: 'car', filhas: [] },
+  { id: 'c2', slug: 'pet', nome: 'Pet', icone: 'paw-print', filhas: [{ id: 'c21', slug: 'racao', nome: 'Ração', icone: 'bone', filhas: [] }] },
+];
+function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul' }, anuncios = [], total = anuncios.length, destaques = [], blocos, lojas = [], categoriasLojas = new Map(), erro = false } = {}) {
   return carregar('src/app/(publico)/page.tsx', {
     './inicio.module.css': { default: { fundo: 'inicio-fundo', categoria: 'inicio-categoria', vazio: 'inicio-vazio' } },
+    '@clerk/nextjs/server': { auth: async () => ({ userId: null }) },
+    '@/lib/dados/favoritos': { favoritosEntre: async () => new Set() },
+    '@/lib/dados/anuncios': { buscarAnuncios: async () => ({ anuncios: [] }) },
+    '@/components/anuncio/salvar-ao-voltar': { SalvarAoVoltar: () => null },
+    '@/components/anuncio/vistos-recentemente': { VistosRecentemente: () => null },
+    '@/components/busca/campo-busca': { CampoBusca: ({ id }) => React.createElement('form', { role: 'search', action: '/busca', method: 'get' }, React.createElement('input', { id, type: 'search', name: 'q' })) },
+    '@/components/vitrine/avatar-vitrine': { AvatarVitrine: ({ nome }) => React.createElement('span', null, nome[0]) },
     '@/lib/dados/regiao': { regiaoAtual: async () => regiao },
-    '@/lib/dados/categorias': { listarCategorias: async () => [
-      { id: 'c1', slug: 'veiculos', nome: 'Veículos', icone: 'car', filhas: [] },
-      { id: 'c2', slug: 'casa-e-moveis', nome: 'Casa e decoração', icone: 'sofa', filhas: [] },
-    ], totaisCategorias: async () => null },
+    '@/lib/dados/categorias': { listarCategorias: async () => CATEGORIAS, totaisCategorias: async () => null },
     '@/lib/dados/catalogo': {
       lojasCatalogo: async () => lojas,
+      categoriasDasLojas: async () => categoriasLojas,
       anunciosCatalogo: async (r, modo, limite) => {
         assert.equal(r, regiao);
         if (modo === 'patrocinados') return destaques;
@@ -24,110 +33,104 @@ function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul
         return anuncios.map(a => ({ ...a, total }));
       },
     },
-    '@/lib/dados/paginas': { minimoAnunciosInicio: async () => minimo, blocosHome: async () => blocos ?? ['destaques', 'radar', 'recentes'].map(chave => ({ chave, ativo: true })) },
+    '@/lib/dados/paginas': { blocosHome: async () => blocos ?? ['lojas_regiao', 'destaques', 'radar', 'recentes'].map(chave => ({ chave, ativo: true, titulo: null, texto: null, botao: null })) },
     '@/components/anuncio/card-anuncio': { CardAnuncio: ({ anuncio }) => React.createElement('article', null, anuncio.titulo) },
     '@/components/destaques/lojas-em-destaque': { LojasEmDestaque: () => null },
   });
 }
+async function htmlInicio(opcoes, params = {}) {
+  const pagina = await inicio(opcoes).default({ searchParams: Promise.resolve(params) });
+  const destino = new PassThrough();
+  const { pipe } = renderToPipeableStream(pagina, { onAllReady: () => pipe(destino), onError: (e) => destino.destroy(e) });
+  return Buffer.concat(await destino.toArray()).toString();
+}
+const LOJAS = [
+  { id: 'l1', slug: 'multi', nome: 'Multi', cidade: 'Corrente', logo_url: null, verificada: true },
+  { id: 'l2', slug: 'rvs', nome: 'RVS TECNOLOGIA', cidade: 'Corrente', logo_url: null, verificada: false },
+];
 test('início apresenta região, busca GET acessível e destinos das categorias', async () => {
-  const html = renderToStaticMarkup(await inicio().default({ searchParams: Promise.resolve({}) }));
-  assert.match(html, /<h1[^>]*>Compre e venda em Corrente e região<\/h1>/);
-  const form = html.match(/<form\b[^>]*>/)?.[0] ?? '';
-  for (const atributo of ['action="/busca"', 'method="get"', 'role="search"']) assert.ok(form.includes(atributo));
-  assert.match(html, /<label for="busca-inicio"[^>]*>O que você procura\?/);
-  const campo = html.match(/<input\b[^>]*>/)?.[0] ?? '';
-  for (const atributo of ['id="busca-inicio"', 'type="search"', 'name="q"']) assert.ok(campo.includes(atributo));
-  for (const href of ['/c/veiculos', '/c/casa-e-moveis', '/categorias']) assert.ok(html.includes(`href="${href}"`));
+  const html = await htmlInicio();
+  assert.match(html, /<h1[^>]*>Anúncios em (<!-- -->)?Corrente e região<\/h1>/);
+  assert.match(html, /<form[^>]*role="search"[^>]*action="\/busca"/);
+  for (const href of ['/c/veiculos', '/c/pet', '/categorias']) assert.ok(html.includes(`href="${href}"`));
 });
-test('início usa a cidade escolhida e mantém um acesso ao catálogo com o bloco de lojas desligado', async () => {
-  const pagina = inicio({
-    regiao: { id: 'r', cidade: 'Bom Jesus', cidadeSede: 'Corrente', nome: 'Extremo Sul' },
-    blocos: [{ chave: 'lojas_regiao', ativo: false }],
-  });
-  const html = renderToStaticMarkup(await pagina.default({ searchParams: Promise.resolve({}) }));
-  assert.match(html, /<h1[^>]*>Compre e venda em Bom Jesus e região<\/h1>/);
+test('início mostra as lojas no topo do feed, com busca, tipo de loja e um só "Ver todas"', async () => {
+  const html = await htmlInicio({ lojas: LOJAS, categoriasLojas: new Map([['l1', ['c21', 'c21']], ['l2', ['c1']]]), anuncios: [{ id: 'a1', titulo: 'Mesa' }] });
+  assert.match(html, /id="titulo-lojas"[^>]*>Lojas de Corrente e região<\/h2><a\b[^>]*href="\/lojas"[^>]*>(<span[^>]*>)?Ver todas<\//);
   assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
-  assert.doesNotMatch(html, /id="titulo-lojas"/);
+  assert.match(html, /<label for="busca-loja"[^>]*>Buscar loja<\/label>/);
+  assert.match(html, /role="group" aria-label="Tipo de loja"/);
+  for (const nome of ['>Todos os tipos<', '>Pet<', '>Veículos<']) assert.ok(html.includes(nome), nome);
+  for (const slug of ['multi', 'rvs']) assert.ok(html.includes(`href="/loja/${slug}"`));
+  assert.match(html, /aria-label="Loja verificada"/);
+  const lojasEm = html.indexOf('titulo-lojas');
+  assert.ok(lojasEm < html.indexOf('titulo-inicio') && lojasEm < html.indexOf('titulo-recentes'));
+  assert.doesNotMatch(html, /Ver todas as lojas/);
 });
-test('início mostra um único acesso ao catálogo junto ao título da seção, mesmo sem lojas', async () => {
-  const blocos = [{ chave: 'lojas_regiao', ativo: true }];
-  for (const lojas of [[], [{ id: 'l1', slug: 'multi', nome: 'Multi' }]]) {
-    const pagina = await inicio({ blocos, lojas }).default({ searchParams: Promise.resolve({}) });
-    const destino = new PassThrough();
-    const { pipe } = renderToPipeableStream(pagina, {
-      onAllReady: () => pipe(destino),
-      onError: (erro) => destino.destroy(erro),
-    });
-    const html = Buffer.concat(await destino.toArray()).toString();
-    assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
-    assert.match(html, /id="titulo-lojas"[^>]*>Lojas de Corrente e região<\/h2><a\b[^>]*href="\/lojas"[^>]*><span[^>]*>Ver todas as lojas/);
-    assert.equal(html.includes('href="/loja/multi"'), lojas.length > 0);
+test('início esconde o filtro de tipo quando as lojas não têm tipos diferentes', async () => {
+  const html = await htmlInicio({ lojas: LOJAS });
+  assert.doesNotMatch(html, /aria-label="Tipo de loja"/);
+  assert.match(html, /busca-loja/);
+  const vazio = await htmlInicio({ lojas: [] });
+  assert.match(vazio, /id="titulo-lojas"/);
+  assert.doesNotMatch(vazio, /busca-loja/);
+  assert.equal((vazio.match(/href="\/lojas"/g) ?? []).length, 1);
+});
+test('início com o bloco de lojas desligado mantém um acesso ao catálogo', async () => {
+  const html = await htmlInicio({ regiao: { id: 'r', cidade: 'Bom Jesus', cidadeSede: 'Corrente', nome: 'Extremo Sul' }, blocos: [{ chave: 'recentes', ativo: true }, { chave: 'lojas_regiao', ativo: false }], lojas: LOJAS });
+  assert.match(html, /<h1[^>]*>Anúncios em (<!-- -->)?Bom Jesus e região<\/h1>/);
+  assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
+  assert.match(html, /Ver todas as lojas/);
+  assert.doesNotMatch(html, /id="titulo-lojas"|href="\/loja\/multi"/);
+});
+test('início troca os cartões grandes por uma faixa fina de Radar e Anunciar acima dos anúncios', async () => {
+  for (const anuncios of [[], [{ id: 'a1', titulo: 'Mesa da região' }]]) {
+    const html = await htmlInicio({ anuncios });
+    assert.match(html, /<nav aria-label="Pedir no Radar ou anunciar">/);
+    assert.equal((html.match(/href="\/radar\/pedir"/g) ?? []).length, 1);
+    assert.match(html, /Não achou\?.*Estou procurando/);
+    assert.match(html, /Quer vender\?.*>Anunciar</);
+    assert.doesNotMatch(html, /titulo-vender|>Exemplo<|Anunciar grátis|Tem algo parado em casa/);
+    assert.ok(html.indexOf('Pedir no Radar ou anunciar') < html.indexOf('titulo-recentes'));
   }
 });
-test('início vazio oferece anúncio e apenas um acesso ao pedido no Radar', async () => {
-  const html = renderToStaticMarkup(await inicio().default({ searchParams: Promise.resolve({}) }));
-  assert.match(html, /id="titulo-vender"[^>]*>Tem algo para vender\?/);
-  assert.match(html, /href="\/anunciar"/);
-  assert.equal((html.match(/href="\/radar\/pedir"/g) ?? []).length, 1);
-  assert.match(html, /As lojas da região respondem e você escolhe com quem conversar/);
-  assert.equal((html.match(/>Exemplo</g) ?? []).length, 2);
-  assert.ok(html.indexOf('titulo-radar') < html.indexOf('titulo-vender'));
-  assert.ok(html.indexOf('titulo-vender') < html.indexOf('href="/c/veiculos"'));
-  assert.doesNotMatch(html, /<article|Ver mais anúncios|Seu anúncio pode ser o primeiro|id="titulo-recentes"/);
+test('início vazio mostra a grade vazia com saída para anunciar', async () => {
+  const html = await htmlInicio();
+  assert.match(html, /Seu anúncio pode ser o primeiro/);
+  assert.match(html, /id="titulo-recentes"/);
+  assert.doesNotMatch(html, /<article/);
 });
 test('início com anúncios mantém destaques e paginação sem mostrar estado vazio', async () => {
   const anuncios = [{ id: 'a1', titulo: 'Mesa da região' }, { id: 'a2', titulo: 'Bicicleta da região' }];
   for (const total of [8, 25]) {
-    const html = renderToStaticMarkup(await inicio({ anuncios, total, destaques: [{ id: 'd1', titulo: 'Destaque da região' }] }).default({ searchParams: Promise.resolve({}) }));
+    const html = await htmlInicio({ anuncios, total, destaques: [{ id: 'd1', titulo: 'Destaque da região' }] });
     for (const titulo of ['Destaque da região', 'Mesa da região', 'Bicicleta da região']) assert.ok(html.includes(titulo));
     assert.equal((html.match(/<article/g) ?? []).length, 3);
     assert.equal(html.includes('/?pagina=2#anuncios'), total > 24);
-    assert.doesNotMatch(html, /Seu anúncio pode ser o primeiro|Anunciar agora|titulo-vender|>Exemplo</);
-    assert.ok(html.indexOf('href="/c/veiculos"') < html.indexOf('titulo-radar'));
+    assert.doesNotMatch(html, /Seu anúncio pode ser o primeiro/);
   }
-});
-test('início com poucos anúncios mostra as duas portas e os anúncios que já existem', async () => {
-  const anuncios = [{ id: 'a1', titulo: 'Mesa da região' }, { id: 'a2', titulo: 'Bicicleta da região' }];
-  const html = renderToStaticMarkup(await inicio({ anuncios }).default({ searchParams: Promise.resolve({}) }));
-  assert.match(html, /id="titulo-vender"/);
-  assert.equal((html.match(/href="\/radar\/pedir"/g) ?? []).length, 1);
-  assert.match(html, /id="titulo-recentes"/);
-  assert.equal((html.match(/<article/g) ?? []).length, 2);
-  const segunda = renderToStaticMarkup(await inicio({ anuncios, total: 30 }).default({ searchParams: Promise.resolve({ pagina: '2' }) }));
-  assert.doesNotMatch(segunda, /titulo-vender/);
-  const ajustado = renderToStaticMarkup(await inicio({ anuncios, minimo: 2 }).default({ searchParams: Promise.resolve({}) }));
-  assert.doesNotMatch(ajustado, /titulo-vender/);
 });
 test('início respeita textos, ordem e visibilidade definidos no painel', async () => {
   const blocos = [
+    { chave: 'lojas_regiao', ativo: true, titulo: 'Comércio de {lugar}' },
     { chave: 'recentes', ativo: true, titulo: 'Novidades de {lugar}', texto: 'Anuncie em {lugar}.' },
-    { chave: 'radar', ativo: true, titulo: 'Pedido em {lugar}', texto: 'Texto da equipe <seguro>', botao: 'Criar pedido' },
+    { chave: 'radar', ativo: true, titulo: 'Pedido em {lugar}?', texto: 'Texto da equipe', botao: 'Criar <pedido>' },
   ];
-  const html = renderToStaticMarkup(await inicio({ blocos, minimo: 0 }).default({ searchParams: Promise.resolve({}) }));
+  const html = await htmlInicio({ blocos });
+  assert.match(html, /id="titulo-lojas"[^>]*>Comércio de Corrente e região</);
   assert.match(html, /Novidades de Corrente e região/);
   assert.match(html, /Anuncie em Corrente e região\./);
-  assert.match(html, /Texto da equipe &lt;seguro&gt;/);
-  assert.match(html, /Criar pedido/);
-  assert.ok(html.indexOf('titulo-recentes') < html.indexOf('titulo-radar'));
-  const oculto = renderToStaticMarkup(await inicio({ minimo: 0, blocos: blocos.map(b => ({ ...b, ativo: b.chave !== 'radar' })) }).default({ searchParams: Promise.resolve({}) }));
-  assert.doesNotMatch(oculto, /titulo-radar|href="\/radar\/pedir"/);
-});
-test('início no começo usa os textos e a ordem do painel nas duas portas', async () => {
-  const blocos = [
-    { chave: 'recentes', ativo: true, titulo: 'Novidades de {lugar}', texto: 'Anuncie em {lugar}.' },
-    { chave: 'radar', ativo: true, titulo: 'Pedido em {lugar}', texto: 'Texto da equipe <seguro>', botao: 'Criar pedido' },
-  ];
-  const html = renderToStaticMarkup(await inicio({ blocos }).default({ searchParams: Promise.resolve({}) }));
-  for (const texto of [/Pedido em Corrente e região/, /Texto da equipe &lt;seguro&gt;/, /Criar pedido/, /Anuncie em Corrente e região\./]) assert.match(html, texto);
-  assert.ok(html.indexOf('titulo-vender') < html.indexOf('titulo-radar'));
-  const semRadar = renderToStaticMarkup(await inicio({ blocos: blocos.map(b => ({ ...b, ativo: b.chave !== 'radar' })) }).default({ searchParams: Promise.resolve({}) }));
-  assert.doesNotMatch(semRadar, /titulo-radar|\/radar\/pedir/);
-  assert.match(semRadar, /titulo-vender/);
+  assert.match(html, /Pedido em Corrente e região\?/);
+  assert.match(html, /Criar &lt;pedido&gt;/);
+  assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('href="/radar/pedir"'));
+  const oculto = await htmlInicio({ blocos: blocos.map(b => ({ ...b, ativo: b.chave !== 'radar' })) });
+  assert.doesNotMatch(oculto, /href="\/radar\/pedir"|Pedido em/);
+  assert.match(oculto, /Quer vender\?/);
 });
 test('início sem região mantém busca e não inventa localização', async () => {
   const pagina = inicio({ regiao: null });
   const html = renderToStaticMarkup(await pagina.default({ searchParams: Promise.resolve({}) }));
-  assert.match(html, /Compre e venda em sua região/);
+  assert.match(html, /Anúncios em sua região/);
   assert.match(html, /action="\/busca"/);
   assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
   const metadata = await pagina.generateMetadata();
@@ -136,6 +139,18 @@ test('início sem região mantém busca e não inventa localização', async () 
 });
 test('falha ao consultar anúncios não vira página inicial falsamente vazia', async () => {
   await assert.rejects(inicio({ erro: true }).default({ searchParams: Promise.resolve({}) }), /Não foi possível consultar os anúncios/);
+});
+test('tipo de loja sobe até a categoria de cima e ordena pelos que têm mais lojas', () => {
+  const { tiposDasLojas } = carregar('src/lib/tipos-de-loja.ts');
+  const { porLoja, tipos } = tiposDasLojas(
+    [{ id: 'l1' }, { id: 'l2' }, { id: 'l3' }],
+    new Map([['l1', ['c21', 'c1', 'c21']], ['l2', ['c21', 'sumiu']], ['l3', []]]),
+    CATEGORIAS,
+  );
+  assert.deepEqual(porLoja.get('l1'), ['pet', 'veiculos']);
+  assert.deepEqual(porLoja.get('l2'), ['pet']);
+  assert.deepEqual(porLoja.get('l3'), []);
+  assert.deepEqual(tipos.map(t => t.slug), ['pet', 'veiculos']);
 });
 for (const [texto, esperado] of [['1.500,50',150050],['1500.50',150050],['1.500',150000],['49,90',4990],['0',0],['R$ 12,90',1290],['',null],['abc',null],['1e5',null],['-1',null],['0x10',null],['12,345',null]]) {
   test(`preço ${JSON.stringify(texto)}`, () => assert.equal(centavosDoTexto(texto), esperado));
@@ -227,27 +242,6 @@ test('falha na consulta de termos não equivale a aceite concluído',async()=>{
     '@/lib/supabase/server':{createClient:async()=>({rpc:async()=>({data:null,error:{message:'offline'}})})},
   });
   await assert.rejects(paginas.termosPendentes(),/consultar os termos/);
-});
-test('limite do início "no começo" é lido pela tabela pública, sem a função config()',async()=>{
-  const paginasCom=(linhas,erro=null)=>carregar('src/lib/dados/paginas.ts',{
-    '@clerk/nextjs/server':{},
-    '@/lib/dados/seguro':{seguro:async(ler,padrao)=>{try{return await ler();}catch{return padrao;}}},
-    '@/lib/supabase/server':{createClient:async()=>({
-      rpc:async()=>{throw new Error('visitante não chama config()');},
-      from:(tabela)=>({select:()=>({in:async(coluna,chaves)=>{
-        assert.equal(tabela,'configuracoes');
-        assert.deepEqual(chaves,['home.comeco_min_anuncios']);
-        return {data:linhas,error:erro};
-      }})}),
-    })},
-  });
-  const linha=(valor,microrregiao_id=null)=>({chave:'home.comeco_min_anuncios',valor,microrregiao_id});
-  assert.equal(await paginasCom([linha(12)]).minimoAnunciosInicio('r'),12);
-  assert.equal(await paginasCom([linha(12),linha('3','r')]).minimoAnunciosInicio('r'),3);
-  assert.equal(await paginasCom([linha(0)]).minimoAnunciosInicio('r'),0);
-  assert.equal(await paginasCom([]).minimoAnunciosInicio('r'),null);
-  assert.equal(await paginasCom([linha('muitos')]).minimoAnunciosInicio('r'),null);
-  assert.equal(await paginasCom(null,{message:'offline'}).minimoAnunciosInicio('r'),null);
 });
 test('login e cadastro preservam destino passando pela conclusão de perfil',async()=>{
   const pagina=carregar('src/app/entrar/[[...entrar]]/page.tsx',{
