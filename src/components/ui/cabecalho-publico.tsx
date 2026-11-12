@@ -2,6 +2,7 @@ import Image from "next/image";
 import { SinoAvisos } from "@/components/conta/sino-avisos";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { Plus, Radar, UserRound } from "lucide-react";
 import { CampoBusca } from "@/components/busca/campo-busca";
 import { listarCidadesAtivas, regiaoAtual } from "@/lib/dados/regiao";
@@ -13,8 +14,22 @@ import { MenuCidades } from "./menu-cidades";
 
 const LINK = "inline-flex h-10 items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
+/**
+ * O login só pode ser lido onde o middleware do Clerk rodou. Endereços que ele não cobre (ex.: um .png
+ * inexistente, que cai na página "não encontrada") fazem o auth() lançar erro; aí o cabeçalho mostra
+ * "Entrar", como para um visitante, em vez de usar SignedIn/SignedOut (que chamariam o auth()).
+ */
+async function loginLegivel(): Promise<boolean> {
+  try {
+    await auth();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function CabecalhoPublico() {
-  const [regiao, cidades] = await Promise.all([regiaoAtual(), listarCidadesAtivas().catch(() => [])]);
+  const [regiao, cidades, comLogin] = await Promise.all([regiaoAtual(), listarCidadesAtivas().catch(() => []), loginLegivel()]);
   const cidade = regiao?.cidade ?? regiao?.cidadeSede ?? regiao?.nome ?? null;
 
   return (
@@ -43,17 +58,25 @@ export async function CabecalhoPublico() {
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center md:ml-1">
-          <SignedOut>
+          {!comLogin ? (
             <Link href="/entrar" className={LINK}>
               <UserRound className="size-5" aria-hidden /> Entrar
             </Link>
-          </SignedOut>
-          <SignedIn>
-            <SinoAvisos />
-            <Link href="/minha-conta" aria-label="Minha conta" className={LINK}>
-              <UserRound className="size-5" aria-hidden /> <span className="hidden sm:inline">Conta</span>
-            </Link>
-          </SignedIn>
+          ) : (
+            <>
+              <SignedOut>
+                <Link href="/entrar" className={LINK}>
+                  <UserRound className="size-5" aria-hidden /> Entrar
+                </Link>
+              </SignedOut>
+              <SignedIn>
+                <SinoAvisos />
+                <Link href="/minha-conta" aria-label="Minha conta" className={LINK}>
+                  <UserRound className="size-5" aria-hidden /> <span className="hidden sm:inline">Conta</span>
+                </Link>
+              </SignedIn>
+            </>
+          )}
         </div>
       </div>
     </header>
