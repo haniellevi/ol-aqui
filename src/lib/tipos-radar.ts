@@ -30,6 +30,9 @@ export type MeuPedidoRadar = {
   /** Quantas vezes o prazo já foi estendido e se ainda dá. */
   extensoes?: number;
   pode_estender?: boolean;
+  /** Onde vale e quem vê (quando o banco devolver). */
+  area_texto?: string | null;
+  visibilidade?: Visibilidade;
   /** Como o pedido foi resolvido (quando o banco devolver): loja escolhida, fora do Olaki, nota. */
   resolvido_proposta_id?: string | null;
   resolvido_fora?: boolean;
@@ -87,6 +90,9 @@ export type IndicacaoRadar = {
   vitrine_nome: string;
   criado_em: string;
 };
+
+/** Anúncio achado na busca para "Eu sei onde tem". */
+export type AnuncioParaIndicar = { id: string; titulo: string; preco_centavos: number | null; capa: string | null; vitrine_nome: string };
 
 /** Linha de propostas_do_pedido(id): o que o comprador compara (sem contato). */
 export type PropostaRecebida = {

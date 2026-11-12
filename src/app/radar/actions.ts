@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { sincronizarPerfil } from "@/lib/perfil";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
+import { buscarAnuncios } from "@/lib/dados/anuncios";
 import { traduzirErro } from "@/lib/erros";
 import { centavosDoTexto, ehUuid } from "@/lib/formato";
 import { validarPedido, validarProposta, type EntradaPedido, type EntradaProposta } from "@/components/radar/validacao";
@@ -17,6 +18,7 @@ import type {
   RespostaProposta,
   RespostaSimples,
   Resultado,
+  AnuncioParaIndicar,
 } from "@/lib/tipos-radar";
 
 // Ações do Radar. Quem decide tudo é o banco (funções criar_pedido_radar, propor_radar,
@@ -240,4 +242,21 @@ export async function indicarAnuncio(pedidoId: string, anuncioId: string): Promi
   if (typeof data !== "string" || !ehUuid(data)) return { ok: false, erro: "Não foi possível confirmar a indicação. Tente novamente." };
   atualizarPedido(pedidoId);
   return { ok: true, id: data };
+}
+
+/** "Eu sei onde tem": procura anúncios da região (a mesma busca do site) para a pessoa escolher qual indicar. */
+export async function buscarParaIndicar(termo: string): Promise<Resultado<{ anuncios: AnuncioParaIndicar[] }>> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, erro: SEM_LOGIN };
+  const q = typeof termo === "string" ? termo.trim().slice(0, 80) : "";
+  if (q.length < 2) return { ok: true, anuncios: [] };
+  try {
+    const { anuncios } = await buscarAnuncios({ q, limite: 8 });
+    return {
+      ok: true,
+      anuncios: anuncios.map((a) => ({ id: a.id, titulo: a.titulo, preco_centavos: a.preco_centavos, capa: a.capa, vitrine_nome: a.vitrine_nome })),
+    };
+  } catch {
+    return { ok: false, erro: "Não deu para buscar agora. Tente novamente." };
+  }
 }

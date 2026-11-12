@@ -7,6 +7,7 @@ import { Botao } from "@/components/ui/botao";
 import type { MeuPedidoRadar, MinhaPropostaRadar } from "@/lib/tipos-radar";
 import { CLASSE_TOM, dataHoraCurta, resumoPropostas, rotuloSituacao } from "./util";
 import { Badge } from "@/components/ui/badge";
+import { SeloVisibilidade } from "./selo-visibilidade";
 
 const CARTAO =
   "flex min-h-10 items-center gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1 hover:bg-fundo " +
@@ -37,7 +38,10 @@ export function ListaMeusPedidos({ pedidos, linkPedir, arquivados = false }: {
           <li key={p.id}>
             <Link href={linkMeuPedidoRadar(p.id)} className={CARTAO}>
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
+                <span className="flex flex-wrap items-center gap-2">
+                  <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
+                  <SeloVisibilidade visibilidade={p.visibilidade} />
+                </span>
                 <span className="text-base leading-snug font-semibold break-words">{p.titulo}</span>
                 <span className="text-base font-semibold text-laranja-escuro">{resumoPropostas(p.total_propostas, p.menor_preco_centavos)}</span>
                 <span className="flex flex-wrap items-center gap-x-2 text-legenda text-texto-suave">
@@ -53,7 +57,7 @@ export function ListaMeusPedidos({ pedidos, linkPedir, arquivados = false }: {
                     </span>
                   ) : null}
                   <span>
-                    {p.cidade} · {tempoRelativo(p.criado_em)}
+                    {p.area_texto ?? p.cidade} · {tempoRelativo(p.criado_em)}
                   </span>
                 </span>
               </div>

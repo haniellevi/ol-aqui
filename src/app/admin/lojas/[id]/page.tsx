@@ -15,6 +15,8 @@ import { FormGestaoLoja } from "../gestao-formularios";
 import { FormLixeiraLoja } from "../../lixeira/formularios";
 import type { Lixeira } from "@/lib/admin/lixeira";
 import { FormArquivoLoja } from "./arquivo";
+import { FormCortesiaRadar } from "./cortesia-radar";
+import { cortesiaRadarAtiva } from "@/lib/admin/cortesia-radar";
 import { eSuperAdmin } from "@/lib/admin/auth";
 import { Botao } from "@/components/ui/botao";
 import { escolherLoja } from "@/app/(conta)/_loja/actions";
@@ -55,7 +57,7 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
   if (!ehUuid(id)) notFound();
   const admin = papel === "administrador";
   const podeOperar = admin || papel === "suporte";
-  const [lojas, fichaR, planos, regiao, gestaoR, locais, lixeiraR, superAdmin, conviteR] = await Promise.all([
+  const [lojas, fichaR, planos, regiao, gestaoR, locais, lixeiraR, superAdmin, conviteR, cortesiaR] = await Promise.all([
     supabase.rpc("admin_lojas", { p_busca: id, p_limite: 1 }),
     supabase.rpc("admin_ficha_loja", { p_loja: id }),
     admin ? supabase.from("planos").select("codigo, nome").order("ordem") : Promise.resolve({ data: [], error: null }),
@@ -67,6 +69,8 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
     // P5c: convite pendente do dono (só o super admin recebe linha).
     admin ? supabase.rpc("super_convite_dono_pendente", { p_loja: id }).maybeSingle<{ final_telefone: string; expira_em: string }>()
       : Promise.resolve({ data: null, error: null }),
+    // Cortesia do Radar: tabela sem leitura direta; só administrador, lida no servidor.
+    admin ? cortesiaRadarAtiva(id) : Promise.resolve({ cortesia: null, erro: false }),
   ]);
 
   const voltar = <Link href={LINK_ADMIN_LOJAS} className={`${estiloBotaoSec} mb-4`}>Voltar para Lojas</Link>;
@@ -166,6 +170,24 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
           {planos.error ? <Aviso tipo="erro">Não foi possível carregar os planos. Atualize a página.</Aviso> : null}
           <FormAcaoLoja key={loja.status} loja={loja} planos={planos.data ?? []}
             permitidas={admin && !planos.error ? null : ["suspender", "reativar"]} />
+        </Cartao>
+      )}
+      {admin && !arquivada && !excluida && !montagem && (
+        <Cartao>
+          <h2 className="mb-2 text-sm font-semibold text-beringela">Cortesia do Radar</h2>
+          <p className="mb-3 text-sm text-texto-suave">
+            A loja vê os pedidos &quot;Só lojas&quot; e manda ofertas sem precisar do plano Full, até a data escolhida.
+          </p>
+          {cortesiaR.erro ? (
+            <Aviso tipo="erro">Não foi possível ver a cortesia do Radar. Atualize a página.</Aviso>
+          ) : cortesiaR.cortesia ? (
+            <p className="mb-3 text-sm font-semibold text-verde-escuro">
+              Cortesia ativa até {quando(cortesiaR.cortesia.ate)}{cortesiaR.cortesia.motivo ? ` · ${cortesiaR.cortesia.motivo}` : ""}
+            </p>
+          ) : (
+            <p className="mb-3 text-sm text-texto-suave">Sem cortesia ativa.</p>
+          )}
+          <FormCortesiaRadar vitrineId={loja.id} ativa={!!cortesiaR.cortesia} />
         </Cartao>
       )}
       {admin && loja.tipo === "loja" && !excluida && (

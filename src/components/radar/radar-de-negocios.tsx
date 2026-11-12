@@ -6,6 +6,8 @@ import Link from "next/link";
 import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, MessageCircle, Radar, Send, Users } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import type { CategoriaComFilhas } from "@/lib/tipos";
+import { SeloVisibilidade } from "./selo-visibilidade";
+import type { Visibilidade } from "@/lib/tipos-radar";
 import { AtualizarRadar } from "./atualizar-radar";
 import { faixaPreco, dataHoraCurta } from "./util";
 import { LINK_PLANOS, linkMeuPedidoRadar, linkPedidoRadarLoja } from "@/lib/rotas";
@@ -30,6 +32,9 @@ export type PedidoRadar = {
   souComprador: boolean; // o pedido é meu (não proponho no meu próprio pedido)
   precoMinCentavos: number | null;
   categoriaNome: string | null;
+  /** Onde vale ("Toda a região" ou as cidades) e quem vê. */
+  areaTexto?: string | null;
+  visibilidade?: Visibilidade | null;
 };
 
 export type PlanoResumo = { codigo: string; nome: string; preco_centavos: number; periodo_dias?: number };
@@ -180,6 +185,7 @@ function CartaoPedido({
               Propostas até {dataHoraCurta(p.propostasAte)}
             </Badge>
           )}
+          <SeloVisibilidade visibilidade={p.visibilidade} />
           {p.compradorCertificado && (
             <Badge variant="success">
               <BadgeCheck className="size-3.5" aria-hidden />
@@ -205,7 +211,7 @@ function CartaoPedido({
           </span>
           <span className="inline-flex items-center gap-1 text-sm text-texto-suave">
             <MapPin className="size-4" aria-hidden />
-            {p.cidade}
+            {p.areaTexto ?? p.cidade}
           </span>
         </div>
 

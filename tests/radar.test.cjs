@@ -216,3 +216,16 @@ test('v2 telas: FolhaResolver — Outro lugar resolve fora e fecha; loja vai par
  dois.log.botoes['Não foi bom']();await dois.log.ultima;
  assert.deepEqual(dois.log.acoes,[['avaliar',id,-1]]);
 });
+test('v2 Eu sei onde tem: busca exige sessão, ignora termo curto e devolve só o que a tela usa',async()=>{
+ const monta=({login=true,falha=false}={})=>{const buscas=[];const a=carregar('src/app/radar/actions.ts',{
+  '@clerk/nextjs/server':{auth:async()=>({userId:login?'user_x':null}),currentUser:async()=>({id:'user_x'})},
+  'next/cache':{revalidatePath(){}},'@/lib/perfil':{sincronizarPerfil:async()=>{}},'@/lib/dados/conta':{meuPerfilEVitrine:async()=>null},
+  '@/lib/dados/radar':{},'@/lib/supabase/admin':{},'@/lib/supabase/server':{createClient:async()=>({})},
+  '@/lib/dados/anuncios':{buscarAnuncios:async p=>{buscas.push(p);if(falha)throw new Error('x');return {anuncios:[{id:'a1',titulo:'Geladeira',preco_centavos:100000,capa:null,vitrine_nome:'Loja',slug:'s',cidade:'C',atributos:{}}],total:1};}}});return {a,buscas};};
+ const sem=monta({login:false});assert.equal((await sem.a.buscarParaIndicar('geladeira')).ok,false);assert.equal(sem.buscas.length,0);
+ const curto=monta();assert.deepEqual(await curto.a.buscarParaIndicar(' g '),{ok:true,anuncios:[]});assert.equal(curto.buscas.length,0);
+ const bom=monta();const r=await bom.a.buscarParaIndicar('geladeira');
+ assert.deepEqual(bom.buscas,[{q:'geladeira',limite:8}]);
+ assert.deepEqual(r.anuncios,[{id:'a1',titulo:'Geladeira',preco_centavos:100000,capa:null,vitrine_nome:'Loja'}]);
+ const ruim=await monta({falha:true}).a.buscarParaIndicar('geladeira');assert.equal(ruim.ok,false);assert.match(ruim.erro,/Tente novamente/);
+});

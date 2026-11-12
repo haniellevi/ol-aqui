@@ -44,6 +44,8 @@ type LinhaFeed = {
   comprador_primeiro_nome: string | null;
   ja_propus: boolean;
   sou_comprador: boolean;
+  area_texto: string | null;
+  visibilidade: PedidoRadar["visibilidade"];
 };
 
 type ParametrosRadar = Promise<{ aba?: string; q?: string; nicho?: string; pagina?: string; arquivo?: string }>;
@@ -131,6 +133,8 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
     compradorCertificado: p.comprador_certificado,
     jaPropus: p.ja_propus,
     souComprador: p.sou_comprador,
+    areaTexto: p.area_texto,
+    visibilidade: p.visibilidade,
     // Bloqueio real: o banco já devolve null para quem não tem acesso; aqui reforçamos.
     detalhes: temAcesso || p.sou_comprador ? p.detalhes : null,
     compradorNome: temAcesso ? p.comprador_primeiro_nome : null,
