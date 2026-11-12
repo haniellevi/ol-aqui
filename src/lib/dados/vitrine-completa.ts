@@ -35,7 +35,7 @@ export const vitrinePublica = cache(async (slug: string): Promise<VitrinePublica
     if (error) throw new Error("Não foi possível carregar a loja.");
     if (data === null) return null;
     const v = data as VitrinePublica;
-    if (!v || !ehUuid(v.id) || v.slug !== s || typeof v.nome !== "string" || !["ativa", "suspensa", "inadimplente"].includes(v.status) || !Number.isSafeInteger(v.total_anuncios) || v.total_anuncios < 0 || !Array.isArray(v.secoes)) throw new Error("Resposta da loja inválida.");
+    if (!v || !ehUuid(v.id) || v.slug !== s || typeof v.nome !== "string" || !["ativa", "suspensa", "inadimplente", "montagem"].includes(v.status) || !Number.isSafeInteger(v.total_anuncios) || v.total_anuncios < 0 || !Array.isArray(v.secoes)) throw new Error("Resposta da loja inválida.");
     return {
       ...v,
       lat: v.lat == null ? null : Number(v.lat),
@@ -61,7 +61,7 @@ export const anunciosVitrine = cache(async (vitrineId: string, ordem: OrdemVitri
 
 const COLUNAS_MINHA =
   "id, dono_id, cidade, bairro, slug, nome, tipo, status, microrregiao_id, logo_url, capa_url, descricao, banner_tipo, banner_url, banner_aki_posicao, categoria_loja, banner_modelo, banner_cor, " +
-  "endereco, lat, lng, horarios, sobre, formas_pagamento, faz_entrega, entrega_obs";
+  "endereco, lat, lng, horarios, sobre, formas_pagamento, faz_entrega, entrega_obs, pasta_montagem";
 
 /**
  * Vitrine da loja escolhida no seletor (a própria ou, na P5b-2b, uma que a pessoa ajuda) com os campos

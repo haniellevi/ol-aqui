@@ -15,6 +15,10 @@ import { FormGestaoLoja } from "../gestao-formularios";
 import { FormLixeiraLoja } from "../../lixeira/formularios";
 import type { Lixeira } from "@/lib/admin/lixeira";
 import { FormArquivoLoja } from "./arquivo";
+import { eSuperAdmin } from "@/lib/admin/auth";
+import { Botao } from "@/components/ui/botao";
+import { escolherLoja } from "@/app/(conta)/_loja/actions";
+import { FormCancelarConviteDono, FormConvidarDono } from "../montagem-formularios";
 
 export const metadata = { title: "Ficha da loja" };
 
@@ -34,6 +38,7 @@ type Ficha = {
 const SITUACAO = {
   teste: "Em teste", teste_vencido: "Teste vencido", ativa: "Plano em dia", vencida: "Plano vencido",
   gratis: "Grátis", inadimplente: "Inadimplente", suspensa: "Suspensa", arquivada: "Arquivada", excluida: "Na lixeira",
+  montagem: "Em montagem",
 };
 const VERIFICACAO: Record<string, string> = {
   pendente: "Pendente", aprovada: "Aprovada", correcao: "Correção solicitada", recusada: "Recusada",
@@ -50,7 +55,7 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
   if (!ehUuid(id)) notFound();
   const admin = papel === "administrador";
   const podeOperar = admin || papel === "suporte";
-  const [lojas, fichaR, planos, regiao, gestaoR, locais, lixeiraR] = await Promise.all([
+  const [lojas, fichaR, planos, regiao, gestaoR, locais, lixeiraR, superAdmin, conviteR] = await Promise.all([
     supabase.rpc("admin_lojas", { p_busca: id, p_limite: 1 }),
     supabase.rpc("admin_ficha_loja", { p_loja: id }),
     admin ? supabase.from("planos").select("codigo, nome").order("ordem") : Promise.resolve({ data: [], error: null }),
@@ -58,6 +63,10 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
     admin ? supabase.rpc("admin_loja_detalhe", { p_id: id }) : Promise.resolve({data:null,error:null}),
     admin ? localidadesGestao(supabase) : Promise.resolve(null),
     admin ? supabase.rpc("admin_lixeira") : Promise.resolve({ data: null, error: null }),
+    admin ? eSuperAdmin(supabase) : Promise.resolve(false),
+    // P5c: convite pendente do dono (só o super admin recebe linha).
+    admin ? supabase.rpc("super_convite_dono_pendente", { p_loja: id }).maybeSingle<{ final_telefone: string; expira_em: string }>()
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const voltar = <Link href={LINK_ADMIN_LOJAS} className={`${estiloBotaoSec} mb-4`}>Voltar para Lojas</Link>;
@@ -70,6 +79,7 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
   const gestao = gestaoR.data as LojaGestao | null;
   const arquivada = loja.situacao === "arquivada";
   const excluida = loja.situacao === "excluida";
+  const montagem = loja.status === "montagem";
   const naLixeira = (lixeiraR.data as Lixeira | null)?.lojas.find((l) => l.id === loja.id) ?? null;
   const comConta = excluida && naLixeira?.origem === "conta";
   const local = [loja.cidade, regiao.data?.find((r) => r.id === loja.microrregiao_id)?.nome].filter(Boolean).join(" · ");
@@ -85,7 +95,7 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
           {loja.status === "ativa" && <Link href={linkLoja(encodeURIComponent(loja.slug))} className={estiloBotaoSec}>Ver vitrine</Link>}
         </div>
         <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-          <Dado rotulo="Responsável">{loja.dono_nome ?? "Indisponível"}</Dado>
+          <Dado rotulo="Responsável">{montagem ? "Equipe Mercado da Região, até o dono aceitar" : loja.dono_nome ?? "Indisponível"}</Dado>
           {loja.whatsapp && <Dado rotulo="WhatsApp">{telefone(loja.whatsapp)}</Dado>}
           <Dado rotulo="Plano">{loja.plano_efetivo_nome ?? loja.plano_nome ?? "Sem plano"}</Dado>
           {vencimento && <Dado rotulo="Vencimento">{quando(vencimento)}</Dado>}
@@ -103,17 +113,54 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
         </dl>
         {admin && (
           <div className="mt-3 flex flex-wrap gap-2">
-            <Link href={`/admin/usuarios/${loja.dono_id}`} className={estiloBotaoSec}>Gerenciar titular</Link>
+            {!montagem && <Link href={`/admin/usuarios/${loja.dono_id}`} className={estiloBotaoSec}>Gerenciar titular</Link>}
             <Link href={`${LINK_ADMIN_ANUNCIOS}?loja=${loja.id}`} prefetch={false} className={estiloBotaoSec}>Ver anúncios</Link>
             <Link href={`${LINK_ADMIN_PAGAMENTOS}?loja=${loja.id}&ambiente=todos`} prefetch={false} className={estiloBotaoSec}>Ver pagamentos</Link>
           </div>
         )}
       </Cartao>
+      {montagem && !arquivada && !excluida && (
+        <Cartao>
+          <h2 className="mb-2 text-sm font-semibold text-beringela">Loja em montagem</h2>
+          <p className="mb-3 text-sm text-texto-suave">
+            Só a equipe vê esta loja. Cadastre os produtos e a aparência pela conta, como ajudante: o produto publicado fica pronto
+            e vai ao ar quando o dono aceitar. O teste grátis começa no dia do aceite.
+          </p>
+          {superAdmin ? (
+            <>
+              <div className="mb-4 flex flex-wrap gap-2">
+                <form action={escolherLoja}>
+                  <input type="hidden" name="loja" value={loja.id} />
+                  <input type="hidden" name="voltar" value="/minha-conta/loja" />
+                  <Botao type="submit" variante="secundario">Cuidar da loja</Botao>
+                </form>
+                <form action={escolherLoja}>
+                  <input type="hidden" name="loja" value={loja.id} />
+                  <input type="hidden" name="voltar" value="/anunciar" />
+                  <Botao type="submit" variante="secundario">Cadastrar produto</Botao>
+                </form>
+              </div>
+              <h3 className="mb-2 text-sm font-semibold">Convite para o dono</h3>
+              {conviteR.error ? (
+                <Aviso tipo="erro">Não foi possível ver o convite pendente. Atualize a página.</Aviso>
+              ) : conviteR.data && (
+                <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+                  <p>Convite aberto para o WhatsApp terminado em {conviteR.data.final_telefone}, vale até {quando(conviteR.data.expira_em)}. Um convite novo cancela este.</p>
+                  <FormCancelarConviteDono loja={loja.id} />
+                </div>
+              )}
+              <FormConvidarDono loja={loja.id} nome={loja.nome} />
+            </>
+          ) : (
+            <p className="text-sm">Só o super admin cuida da loja em montagem e convida o dono.</p>
+          )}
+        </Cartao>
+      )}
       {admin && !arquivada && !excluida && (gestao && locais && !gestaoR.error ? <details className="rounded-card border border-borda bg-cartao p-3" open>
         <summary className="cursor-pointer text-sm font-semibold text-beringela">Editar cadastro da loja</summary>
         <div className="mt-4"><FormGestaoLoja loja={gestao} locais={locais} /></div>
       </details> : <Aviso tipo="erro">Não foi possível carregar a edição da loja. Atualize a página.</Aviso>)}
-      {podeOperar && !arquivada && !excluida && (
+      {podeOperar && !arquivada && !excluida && !montagem && (
         <Cartao>
           <h2 className="mb-3 text-sm font-semibold text-beringela">Operação</h2>
           {planos.error ? <Aviso tipo="erro">Não foi possível carregar os planos. Atualize a página.</Aviso> : null}

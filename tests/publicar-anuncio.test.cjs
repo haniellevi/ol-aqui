@@ -117,6 +117,16 @@ test('publicação usa status retornado pelo banco e preserva erros de validaç�
   const { a } = fronteiras({ rpc: { error: { code: '23514', message: 'Coloque foto', details: 'campo:fotos' } } });
   assert.equal((await a.publicarAnuncio(null, form())).erro.campo, 'fotos');
 });
+test('P5c: publicar na loja em montagem deixa o produto pronto e mostra a tela certa', async () => {
+  const { a } = fronteiras({ rpc: { data: 'pronto' } });
+  await assert.rejects(a.publicarAnuncio(null, form()), /redirect:\/anunciar\/pronto\?id=.*0001&status=pronto$/);
+  const { mocks } = fronteiras({ anuncio: { status: 'rascunho', titulo: 'Mesa', pronto_em: '2026-11-12T10:00:00Z' } });
+  const { default: Pagina } = carregar(base + 'pronto/page.tsx', mocks);
+  const html = render(await Pagina({ searchParams: Promise.resolve({ id, status: 'pronto' }) }));
+  assert.match(html, /Produto pronto/);
+  assert.match(html, /vai ao ar quando o dono aceitar a loja/);
+  assert.doesNotMatch(html, /Seu anúncio está no ar!/);
+});
 test('publicação não permite editar anúncio de outro usuário', async () => {
   const { a, gravacoes } = fronteiras({ semAnuncio: true });
   assert.ok((await a.publicarAnuncio(null, form())).erro); assert.equal(gravacoes.length, 0);

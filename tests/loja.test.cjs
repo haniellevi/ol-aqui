@@ -10,6 +10,9 @@ test('loja: leitura distingue inexistente de falha e rejeita resposta malformada
  assert.equal(await dados({data:null}).vitrinePublica('loja-teste'),null);
  for(const op of [{error:{}},{rede:true},{data:[]},{data:{...loja,total_anuncios:-1}},{data:{...loja,slug:'outra'}}]) await assert.rejects(dados(op).vitrinePublica('loja-teste'));
  const d=dados({data:loja});assert.equal((await d.vitrinePublica(' LOJA-TESTE ')).slug,'loja-teste');assert.equal(await d.vitrinePublica('../segredo'),null);assert.equal(d.chamadas.length,1);
+ // P5c: a equipe vê a prévia da loja em montagem; estado desconhecido continua recusado.
+ assert.equal((await dados({data:{...loja,status:'montagem'}}).vitrinePublica('loja-teste')).status,'montagem');
+ await assert.rejects(dados({data:{...loja,status:'qualquer'}}).vitrinePublica('loja-teste'));
 });
 test('loja: produtos validam identificador, ordem e página; erro não vira vazio',async()=>{
  for(const op of [{data:null},{error:{}},{rede:true},{data:[{id:'errado',na_pagina:true}]}]) await assert.rejects(dados(op).anunciosVitrine(loja.id));

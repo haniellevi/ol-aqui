@@ -52,7 +52,7 @@ export type VitrinePublica = {
   formas_pagamento: string[];
   faz_entrega: boolean | null;
   entrega_obs: string | null;
-  status: "ativa" | "inadimplente" | "suspensa";
+  status: "ativa" | "inadimplente" | "suspensa" | "montagem";
   criado_em: string;
   microrregiao_id: string;
   e_dono: boolean;
@@ -103,13 +103,15 @@ export type MinhaVitrineCompleta = {
   dono_id: string;
   /** P5b-2b: a loja é de outra pessoa (quem está logado ajuda). */
   ajudante?: boolean;
+  /** P5c: loja recebida da equipe cujas fotos ainda estão na pasta provisória. */
+  pasta_montagem?: string | null;
   whatsapp: string | null;
   cidade: string;
   bairro: string | null;
   slug: string;
   nome: string;
   tipo: TipoVitrine;
-  status: "ativa" | "inadimplente" | "suspensa";
+  status: "ativa" | "inadimplente" | "suspensa" | "montagem";
   microrregiao_id: string;
   logo_url: string | null;
   capa_url: string | null;

@@ -20,6 +20,7 @@ export default function robots(): MetadataRoute.Robots {
         "/confirmar-celular",
         "/completar-perfil",
         "/convite-loja",
+        "/receber-loja",
       ],
     },
     sitemap: `${SITE}/sitemap.xml`,
