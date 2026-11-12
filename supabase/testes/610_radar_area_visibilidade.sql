@@ -98,6 +98,9 @@ select pg_temp.confere(exists(select 1 from radar_feed() where id=:'pa'::uuid),'
 select pg_temp.confere(exists(select 1 from radar_feed_regional('todas',null,41,0) where id=:'pa'::uuid),'Loja com " corrente " vê pedido de Corrente (regional)');
 select pg_temp.confere((select not bloqueado and titulo is not null from radar_pedido(:'pa'::uuid)),'Loja da área abre o pedido');
 select pg_temp.confere(exists(select 1 from radar_feed() where id='61000000-0000-4000-a000-0000000000d1'),'Loja vê pedido antigo');
+select pg_temp.confere((select area_texto='Toda a região' from radar_feed() where id='61000000-0000-4000-a000-0000000000d1')
+  and (select area_texto='Toda a região' from radar_feed_regional('todas',null,41,0) where id='61000000-0000-4000-a000-0000000000d1')
+  and (select area_texto='Toda a região' from radar_pedido('61000000-0000-4000-a000-0000000000d1')),'Pedido antigo (sem cidades) mostra Toda a região');
 select pg_temp.confere((select area_texto='Corrente, Gilbués' and visibilidade='lojas' from radar_feed() where id=:'pa'::uuid),'Feed traz visibilidade e área em texto');
 
 set local request.jwt.claim.sub='user_q610parn';
@@ -122,6 +125,15 @@ select pg_temp.confere(exists(select 1 from radar_feed() where id=:'pb'::uuid),'
 -- ---------- pedido antigo aceita proposta ----------
 set local request.jwt.claim.sub='user_q610corr';
 select pg_temp.confere((select count(*)=1 from propor_radar('61000000-0000-4000-a000-0000000000d1',null,null,150000,'Tenho um fogão')),'Loja atendente propõe em pedido antigo');
+
+-- ---------- área limita quem atende, em qualquer visibilidade ----------
+set local request.jwt.claim.sub='user_q610a';
+select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000a5','Procuro freezer horizontal grande',null,
+  'whatsapp_direto',null,null,null,null,null, array[:'c_corrente']::uuid[], 'todos') \gset e_
+select (:'e_criar_pedido_radar_site'::jsonb)->>'id' as pe \gset
+set local request.jwt.claim.sub='user_q610parn';
+select pg_temp.confere(exists(select 1 from radar_pedido(:'pe'::uuid) where not bloqueado),'Pedido para todos é visível à loja de fora da área');
+select pg_temp.recusa(format($q$select propor_radar(%L,null,null,100,'Oi')$q$, :'pe'),'42501');
 
 -- ---------- até 5 lojas ----------
 set local request.jwt.claim.sub='user_q610l1';

@@ -195,12 +195,13 @@ set search_path = public, extensions
 as $$
 declare
   p    public.radar_pedidos;
-  dono text;
+  v    public.vitrines_lojas;
 begin
   if public.usuario_id() is null or public.e_admin() then return new; end if;
   select * into p from public.radar_pedidos x where x.id = new.pedido_id;
-  select v.dono_id into dono from public.vitrines_lojas v where v.id = new.vitrine_id;
-  if p.id is not null and not public.radar_pode_ver_pedido(p, dono) then
+  select * into v from public.vitrines_lojas x where x.id = new.vitrine_id;
+  -- a área limita quem ATENDE, qualquer que seja a visibilidade (visibilidade só limita quem VÊ)
+  if p.id is not null and not (public.pode_atender_radar(v.dono_id) and public.radar_pedido_na_area(p, v)) then
     raise exception 'Este pedido não é da sua área.' using errcode = '42501';
   end if;
   return new;
@@ -245,7 +246,7 @@ as $$
                   where rp.pedido_id = p.id and v.dono_id = eu.uid),
          p.categoria_id, (select c.nome from public.categorias c where c.id = p.categoria_id),
          p.preco_min_centavos, p.comprador_id = eu.uid,
-         p.visibilidade, p.cidade
+         p.visibilidade, case when p.cidades_ids is null then 'Toda a região' else p.cidade end
   from eu
   cross join public.radar_pedidos p
   join public.perfis pf on pf.id = p.comprador_id
@@ -322,66 +323,62 @@ returns table (
 language sql stable security definer
 set search_path = public, extensions
 as $$
+
   with eu as materialized (
     select public.usuario_id() as uid,
            public.e_admin() as admin,
            public.pode_atender_radar(public.usuario_id()) as atende,
            (select me.microrregiao_id from public.perfis me where me.id = public.usuario_id()) as regiao,
            (select v from public.vitrines_lojas v where v.dono_id = public.usuario_id()) as vitrine
+  ), alvo as (
+    select p as ped, eu.uid, eu.admin, eu.atende, eu.vitrine, x.dono, x.propus,
+           (x.aberto_na_regiao and x.pode) as ve_aberto,
+           (x.aberto_na_regiao and not x.pode) as bloqueia
+      from eu
+      cross join public.radar_pedidos p
+      cross join lateral (
+        select p.comprador_id = eu.uid as dono,
+               exists (select 1 from public.radar_propostas rp join public.vitrines_lojas v on v.id = rp.vitrine_id
+                        where rp.pedido_id = p.id and v.dono_id = eu.uid) as propus,
+               (p.status = 'aberto' and p.expira_em > now() and p.microrregiao_id = eu.regiao) as aberto_na_regiao,
+               (p.visibilidade = 'todos' or eu.admin
+                or (eu.atende and public.radar_pedido_na_area(p, eu.vitrine))) as pode) x
+     where p.id = p_id and eu.uid is not null
   )
-  select p.id, p.titulo,
-         case when a.acesso then p.detalhes end,
-         p.categoria, p.categoria_id, c.nome,
-         p.preco_min_centavos, p.preco_max_centavos, p.cidade, p.urgencia, p.modo_contato,
-         p.propostas_ate, p.expira_em, p.criado_em, p.status::text,
-         case when p.status = 'em_analise' then 'em_analise'
-              when p.status <> 'aberto' or p.expira_em <= now() then 'fechado'
-              when p.modo_contato = 'propostas_prazo' and p.propostas_ate <= now() then 'prazo_acabou'
+  select (t.ped).id, (t.ped).titulo,
+         case when a.acesso then (t.ped).detalhes end,
+         (t.ped).categoria, (t.ped).categoria_id, c.nome,
+         (t.ped).preco_min_centavos, (t.ped).preco_max_centavos, (t.ped).cidade, (t.ped).urgencia, (t.ped).modo_contato,
+         (t.ped).propostas_ate, (t.ped).expira_em, (t.ped).criado_em, (t.ped).status::text,
+         case when (t.ped).status = 'em_analise' then 'em_analise'
+              when (t.ped).status <> 'aberto' or (t.ped).expira_em <= now() then 'fechado'
+              when (t.ped).modo_contato = 'propostas_prazo' and (t.ped).propostas_ate <= now() then 'prazo_acabou'
               else 'aberto' end,
-         p.total_propostas, p.max_propostas,
+         (t.ped).total_propostas, (t.ped).max_propostas,
          case when a.acesso then split_part(btrim(pf.nome), ' ', 1) end,
          pf.selo_negociador_certificado,
-         x.dono, x.propus,
-         coalesce((eu.vitrine).microrregiao_id = p.microrregiao_id, false),
+         t.dono, t.propus,
+         coalesce((t.vitrine).microrregiao_id = (t.ped).microrregiao_id, false),
          a.acesso,
-         case when x.dono or eu.admin then p.moderado_motivo end,
-         case when x.dono or eu.admin then p.fechado_motivo end,
-         p.visibilidade, p.cidade, false
-    from eu
-    cross join public.radar_pedidos p
-    join public.perfis pf on pf.id = p.comprador_id
-    left join public.categorias c on c.id = p.categoria_id
-    cross join lateral (
-      select p.comprador_id = eu.uid as dono,
-             exists (select 1 from public.radar_propostas rp join public.vitrines_lojas v on v.id = rp.vitrine_id
-                      where rp.pedido_id = p.id and v.dono_id = eu.uid) as propus,
-             (p.status = 'aberto' and p.expira_em > now() and p.microrregiao_id = eu.regiao) as aberto_na_regiao,
-             (p.visibilidade = 'todos' or eu.admin
-              or (eu.atende and public.radar_pedido_na_area(p, eu.vitrine))) as pode) x
-    cross join lateral (select x.dono or eu.admin or eu.atende as acesso) a
-   where p.id = p_id
-     and eu.uid is not null
-     and (x.dono or eu.admin or x.propus or (x.aberto_na_regiao and x.pode))
+         case when t.dono or t.admin then (t.ped).moderado_motivo end,
+         case when t.dono or t.admin then (t.ped).fechado_motivo end,
+         (t.ped).visibilidade,
+         case when (t.ped).cidades_ids is null then 'Toda a região' else (t.ped).cidade end,
+         false
+    from alvo t
+    join public.perfis pf on pf.id = (t.ped).comprador_id
+    left join public.categorias c on c.id = (t.ped).categoria_id
+    cross join lateral (select t.dono or t.admin or t.atende as acesso) a
+   where t.dono or t.admin or t.propus or t.ve_aberto
   union all
-  select p.id, null::text, null::text, null::public.categoria_anuncio, null::uuid, null::text,
+  select (t.ped).id, null::text, null::text, null::public.categoria_anuncio, null::uuid, null::text,
          null::bigint, null::bigint, null::text, null::text, null::text,
          null::timestamptz, null::timestamptz, null::timestamptz, null::text, null::text,
          null::integer, null::integer, null::text, null::boolean,
          false, false, true, false, null::text,
          null::text, 'lojas', null::text, true
-    from eu
-    cross join public.radar_pedidos p
-    cross join lateral (
-      select p.comprador_id = eu.uid as dono,
-             exists (select 1 from public.radar_propostas rp join public.vitrines_lojas v on v.id = rp.vitrine_id
-                      where rp.pedido_id = p.id and v.dono_id = eu.uid) as propus,
-             (p.status = 'aberto' and p.expira_em > now() and p.microrregiao_id = eu.regiao) as aberto_na_regiao,
-             (p.visibilidade = 'todos' or eu.admin
-              or (eu.atende and public.radar_pedido_na_area(p, eu.vitrine))) as pode) x
-   where p.id = p_id
-     and eu.uid is not null
-     and not (x.dono or eu.admin or x.propus)
-     and x.aberto_na_regiao and not x.pode
+    from alvo t
+   where not (t.dono or t.admin or t.propus) and t.bloqueia
 $$;
 revoke all on function public.radar_pedido(uuid) from public, anon;
 grant execute on function public.radar_pedido(uuid) to authenticated;
