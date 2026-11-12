@@ -2,13 +2,14 @@ import Image from "next/image";
 import { SinoAvisos } from "@/components/conta/sino-avisos";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { Plus, Radar, Search, UserRound } from "lucide-react";
+import { Plus, Radar, UserRound } from "lucide-react";
+import { CampoBusca } from "@/components/busca/campo-busca";
 import { listarCidadesAtivas, regiaoAtual } from "@/lib/dados/regiao";
 import { classesBotao } from "@/components/ui/botao";
 import { MenuCidades } from "./menu-cidades";
 
 // Cabeçalho das páginas públicas e da conta: logo, cidade ("Corrente ▾") e Entrar/Conta.
-// No computador mostra também Buscar, Radar e Anunciar (a barra de baixo some).
+// No computador mostra também a busca sempre à vista, Radar e Anunciar (a barra de baixo some).
 
 const LINK = "inline-flex h-10 items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
@@ -21,17 +22,18 @@ export async function CabecalhoPublico() {
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-4 focus:z-50 focus:rounded-card focus:bg-laranja focus:px-4 focus:py-3 focus:font-bold focus:text-beringela">
         Pular para o conteúdo
       </a>
-      <div className="mx-auto flex h-13 max-w-6xl items-center gap-2 px-4 md:h-14">
+      <div className="mx-auto flex h-13 max-w-7xl items-center gap-2 px-4 md:h-14">
         <Link href="/" className="flex h-10 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="Mercado da Região, página inicial">
           <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={98} height={36} priority className="h-7 w-auto sm:h-8" />
         </Link>
 
         <MenuCidades cidade={cidade} regiao={regiao?.id} cidades={cidades} />
 
+        <div className="ml-2 hidden min-w-0 max-w-xl flex-1 md:block">
+          <CampoBusca id="busca-topo" />
+        </div>
+
         <nav aria-label="Principal" className="ml-auto hidden items-center gap-1 md:flex">
-          <Link href="/busca" className={LINK}>
-            <Search className="size-5" aria-hidden /> Buscar
-          </Link>
           <Link href="/radar" className={LINK}>
             <Radar className="size-5" aria-hidden /> Radar
           </Link>

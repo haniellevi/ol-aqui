@@ -77,3 +77,4 @@ export async function ehFavorito(anuncioId: string, userId: string | null): Prom
   if (error || (data && data.anuncio_id !== anuncioId)) throw new Error("Não foi possível consultar seu favorito.");
   return !!data;
 }
+

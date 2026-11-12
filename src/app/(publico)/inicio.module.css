@@ -11,3 +11,30 @@
 .vazio > span {
   background: var(--color-selecao);
 }
+
+/* Linha da coluna da esquerda (categorias e atalhos). */
+.itemLado {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.5rem;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-campo);
+  font-size: 0.9375rem;
+  color: var(--color-texto);
+}
+.itemLado:hover {
+  background: var(--color-fundo);
+  color: var(--color-beringela);
+}
+.itemLado:focus-visible {
+  outline: 3px solid var(--color-laranja-escuro);
+  outline-offset: -3px;
+}
+
+/* Faixa dos destaques pagos: fundo próprio para separar do que é gratuito. */
+.faixaPaga {
+  padding: 0.75rem;
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, var(--color-patrocinado-fundo), var(--color-fundo) 85%);
+}
