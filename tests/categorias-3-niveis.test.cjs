@@ -188,6 +188,10 @@ test('painel novo: busca pelo título inteiro acha a categoria final, sem acento
   assert.deepEqual(sugerirPorTexto(arvore, 'de um'), []);
   assert.deepEqual(sugerirPorTexto(arvore, 'trator'), []);
   assert.deepEqual(sugerirPorTexto(arvore, 'ração', 1).length, 1);
+  // sigla de 2 letras conta ("TV" acha "TVs"); palavra vazia não ("vendo" e "de")
+  const tv = [{ id: 't', slug: 'tv-audio', nome: 'TV, áudio e foto', icone: 'tv', filhas: [{ id: 't1', slug: 'tv-e-som', nome: 'TV e som', icone: 'tv', filhas: [{ id: 't2', slug: 'tvs', nome: 'TVs', icone: 'tv', filhas: [] }, { id: 't3', slug: 'som', nome: 'Caixas de som', icone: 'tv', filhas: [] }] }] }];
+  assert.deepEqual(sugerirPorTexto(tv, 'TV').map((x) => x.no.slug), ['tvs', 'som']);
+  assert.deepEqual(sugerirPorTexto(tv, 'vendo TV de 50 polegadas').map((x) => x.no.slug)[0], 'tvs');
 });
 
 test('painel novo: para quem procura some a vazia e a com mais anúncios vem primeiro', async () => {

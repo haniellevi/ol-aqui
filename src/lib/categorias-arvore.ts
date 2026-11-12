@@ -109,11 +109,17 @@ export function arvoreComAnuncios<T extends CategoriaLeve>(arvore: T[], totais: 
     .map(({ c }) => ({ ...c, filhas: arvoreComAnuncios(c.filhas as T[], totais) }));
 }
 
-/** Palavras com 3 letras ou mais, sem acento e sem o "s" do plural ("motos" acha "Moto"). */
+/** Palavras que não ajudam a achar categoria ("geladeira de duas portas"). Siglas curtas como "TV" e "PC" ficam. */
+const PALAVRAS_VAZIAS = new Set([
+  "de", "da", "do", "das", "dos", "e", "em", "na", "no", "nas", "nos", "um", "uma", "uns", "umas", "o", "a", "os", "as",
+  "com", "sem", "para", "pra", "pro", "por", "ao", "aos", "ou", "que", "se", "mais", "bem", "ate", "vendo", "venda",
+]);
+
+/** Palavras que contam na busca, sem acento e sem o "s" do plural ("motos" acha "Moto"). */
 function palavras(texto: string): string[] {
   return semAcento(texto)
     .split(/[^a-z0-9]+/)
-    .filter((p) => p.length >= 3)
+    .filter((p) => p.length >= 2 && !PALAVRAS_VAZIAS.has(p))
     .map((p) => {
       const sem = p.replace(/(es|s)$/, "");
       return sem.length >= 3 ? sem : p;
