@@ -2,13 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import { registrarEvento } from "./actions";
+import { guardarVisto, type AnuncioVisto } from "@/lib/vistos";
 import { CHAVE_BUSCA_ABERTA, primeiraPaginaDaAba, termoDaAberturaRecente, termoDaBusca } from "@/lib/metricas/termos";
 
 // Conta uma visualização por abertura da página (depois de montar, nunca durante a montagem no servidor).
 // O banco ignora repetição do mesmo visitante e as visitas do próprio dono.
 // Palavra da busca: primeiro a marca do clique na busca (vale para navegação dentro do site);
 // sem marca, o endereço de origem, mas só se este anúncio foi a primeira página aberta na aba.
-export function RegistrarVisita({ anuncioId }: { anuncioId: string }) {
+// Também guarda o card no aparelho, para a faixa "Você viu há pouco" do Início.
+export function RegistrarVisita({ anuncioId, visto }: { anuncioId: string; visto?: AnuncioVisto }) {
   const feito = useRef<string | null>(null);
   useEffect(() => {
     if (feito.current === anuncioId) return;
@@ -26,6 +28,7 @@ export function RegistrarVisita({ anuncioId }: { anuncioId: string }) {
       if (primeiraPaginaDaAba(navegacao?.name, window.location.href)) termo = termoDaBusca(document.referrer, window.location.origin);
     }
     void registrarEvento(anuncioId, "visualizacao", termo).catch(() => undefined);
-  }, [anuncioId]);
+    if (visto) guardarVisto(visto);
+  }, [anuncioId, visto]);
   return null;
 }

@@ -20,6 +20,7 @@ colors:
   aviso-fundo: "#fffbeb"
   sucesso-fundo: "#ecf8f1"
   patrocinado-fundo: "#ffe4d1"
+  coracao: "#e11d48"
 typography:
   vitrine:
     fontFamily: "Poppins, system-ui, sans-serif"
