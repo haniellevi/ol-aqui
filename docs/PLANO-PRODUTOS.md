@@ -150,6 +150,8 @@ Cada etapa vira um PR próprio, com testes do banco (`supabase/testes`) e da tel
 **Divisão do P5 (decidida em 13/11/2026):**
 - **P5a** — papel `super_admin` (coluna `perfis.e_super_admin`, ligada só pelo banco), histórico (`historico_alteracoes`, linha "Última mudança" e página "Histórico" no anúncio e na loja), lixeira de anúncio pela equipe com motivo e aviso ao dono, "Apagar de vez agora" só do super admin e só para o que já está na lixeira (conta, loja e anúncio). Aprovar categoria passa a ser só do super admin.
 - **P5b** — ajudantes (gerente cria, edita, pausa e manda anúncios para a lixeira; nome e WhatsApp da loja só o dono), marca "Equipe Mercado da Região", seletor de loja e **super admin edita o anúncio dos outros na mesma tela do vendedor** (mesma base dos ajudantes).
+  - Decidido em 13/11/2026: seletor "Trabalhando na loja X" no topo da área do vendedor; ajudante cria e publica (conta no plano da loja e passa pela mesma moderação); também cuida de Seções próprias, Produtos no topo e vê Desempenho; não mexe em Destacar, plano, pagamento nem em apagar a loja; todos os ajudantes têm as mesmas permissões; mudanças do ajudante só vão para o histórico (sem sino). Super admin: botão "Editar anúncio" no painel, motivo digitado uma vez ao abrir, vale por 2 horas, dono recebe 1 aviso no sino com o motivo.
+  - Entrega em 2 PRs: **P5b-1** (ajudante nos anúncios, seletor de loja, selo da equipe) e **P5b-2** (ajudante nos dados da loja, seções, topo e desempenho; super admin edita anúncio dos outros).
 - **P5c** — criar loja e transferir para o dono.
 
 ### Etapa P6 — Excluir dentro do cadastro

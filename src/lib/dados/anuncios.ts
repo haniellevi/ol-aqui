@@ -1,4 +1,5 @@
 import "server-only";
+import { lojaEscolhida } from "@/lib/dados/loja-ativa";
 import { cache } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
@@ -152,6 +153,8 @@ async function lerDaVitrine(v: Vitrine, limite: number): Promise<AnuncioCard[]> 
 const COLUNAS_MEU =
   "id, slug, vitrine_id, categoria_id, titulo, descricao, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, status, visualizacoes, cliques_whatsapp, total_favoritos, destaque_ate, pago_ate, motivo_analise, excluido_em, status_antes_exclusao, publicado_em, vendido_em, criado_em, atualizado_em, vitrines_lojas!inner(dono_id)";
 
+const COLUNAS_LOJA = COLUNAS_MEU.replace(", vitrines_lojas!inner(dono_id)", "");
+
 function semDono(a: MeuAnuncio & { vitrines_lojas?: unknown }): MeuAnuncio {
   const { vitrines_lojas: _dono, ...resto } = a;
   void _dono;
@@ -176,6 +179,30 @@ export const meuAnuncio = cache(async (id: string): Promise<MeuAnuncio | null> =
   if (!data) return null;
   return semDono(data as unknown as MeuAnuncio);
 });
+
+/**
+ * Etapa P5b: um anúncio da loja escolhida no seletor (a própria ou uma que a pessoa ajuda).
+ * Usado em Meus anúncios e Anunciar. A RLS confere de novo quem pode ver.
+ */
+export const anuncioDaLoja = cache(async (id: string): Promise<MeuAnuncio | null> => {
+  const loja = await lojaEscolhida();
+  if (!loja || !ehUuid(id)) return null;
+  const db = await createClient();
+  const { data, error } = await db.from("anuncios").select(COLUNAS_LOJA).eq("id", id).eq("vitrine_id", loja.id).maybeSingle();
+  if (error) throw new Error("Não foi possível carregar seu rascunho. Tente de novo.");
+  return data ? semDono(data as unknown as MeuAnuncio) : null;
+});
+
+/** Etapa P5b: todos os anúncios da loja escolhida, mais novos primeiro. */
+export async function anunciosDaLoja(): Promise<MeuAnuncio[]> {
+  const loja = await lojaEscolhida();
+  if (!loja) return [];
+  const db = await createClient();
+  const { data, error } = await db.from("anuncios").select(COLUNAS_LOJA).eq("vitrine_id", loja.id)
+    .order("atualizado_em", { ascending: false }).limit(500);
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar seus anúncios. Tente de novo.");
+  return (data as unknown as MeuAnuncio[]).map(semDono);
+}
 
 /** Todos os anúncios do usuário logado (tela "Meus anúncios"), mais novos primeiro. */
 export async function meusAnuncios(): Promise<MeuAnuncio[]> {

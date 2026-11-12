@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { seguro } from "@/lib/dados/seguro";
 import { COLUNAS_VITRINE } from "@/lib/dados/vitrines";
+import { lojaEscolhida } from "@/lib/dados/loja-ativa";
 import type { MeuPerfil, MinhaConta, MinhaVitrine, Plano } from "@/lib/tipos";
 
 /**
@@ -13,19 +14,27 @@ import type { MeuPerfil, MinhaConta, MinhaVitrine, Plano } from "@/lib/tipos";
  */
 export const meuPerfilEVitrine = cache((exigirLeitura = false): Promise<MinhaConta | null> => exigirLeitura ? lerConta(true) : seguro(() => lerConta(), null));
 
-async function lerConta(exigirLeitura = false): Promise<MinhaConta | null> {
+/**
+ * Etapa P5b: a mesma conta, mas com a loja escolhida no seletor (a própria ou uma que a pessoa ajuda).
+ * Usada só na área de anúncios (Meus anúncios e Anunciar). Ajudante: `ajudante = true`, sem WhatsApp da loja.
+ */
+export const contaDaLoja = cache(async (exigirLeitura = false): Promise<MinhaConta | null> => {
+  const loja = await lojaEscolhida();
+  const ler = () => lerConta(exigirLeitura, loja && !loja.dono ? loja.id : undefined);
+  return exigirLeitura ? ler() : seguro(ler, null);
+});
+
+async function lerConta(exigirLeitura = false, lojaAjudada?: string): Promise<MinhaConta | null> {
   const { userId } = await auth();
   if (!userId) return null;
   const db = await createClient();
 
+  const consultaVitrine = db.from("vitrines_lojas").select(`${COLUNAS_VITRINE}, dono_id, plano, teste_expira_em, plano_expira_em`);
   const [perfilRes, vitrineRes, contatosRes] = await Promise.all([
     db.rpc("meu_perfil"),
-    db
-      .from("vitrines_lojas")
-      .select(`${COLUNAS_VITRINE}, dono_id, plano, teste_expira_em, plano_expira_em`)
-      .eq("dono_id", userId)
+    (lojaAjudada ? consultaVitrine.eq("id", lojaAjudada) : consultaVitrine.eq("dono_id", userId))
       .maybeSingle<Omit<MinhaVitrine, "whatsapp">>(),
-    db.rpc("meus_contatos_vitrine").maybeSingle<{ whatsapp: string | null }>(),
+    lojaAjudada ? Promise.resolve({ data: null, error: null }) : db.rpc("meus_contatos_vitrine").maybeSingle<{ whatsapp: string | null }>(),
   ]);
   const perfilLinha = Array.isArray(perfilRes.data) ? perfilRes.data[0] : perfilRes.data;
   if (perfilRes.error) throw new Error("Não foi possível carregar sua conta.");
@@ -33,7 +42,7 @@ async function lerConta(exigirLeitura = false): Promise<MinhaConta | null> {
   const perfil = paraPerfil(perfilLinha);
   if (vitrineRes.error || contatosRes.error) throw new Error("Não foi possível carregar sua vitrine.");
   const vitrine = vitrineRes.data ? { ...vitrineRes.data, whatsapp: contatosRes.data?.whatsapp ?? null } : null;
-  if (exigirLeitura && (perfil.id !== userId || (vitrine && vitrine.dono_id !== userId))) throw new Error("Não foi possível confirmar sua conta.");
+  if (exigirLeitura && (perfil.id !== userId || (vitrine && !lojaAjudada && vitrine.dono_id !== userId))) throw new Error("Não foi possível confirmar sua conta.");
 
   if (!vitrine) {
     return { perfil, vitrine: null, plano: null, limite: 0, ativos: 0, rascunhos: 0, podePublicar: false };
@@ -41,7 +50,7 @@ async function lerConta(exigirLeitura = false): Promise<MinhaConta | null> {
 
   const agoraIso = new Date().toISOString();
   const [plano, ativosRes, rascunhosRes] = await Promise.all([
-    planoEfetivo(exigirLeitura),
+    planoEfetivo(exigirLeitura, lojaAjudada),
     db
       .from("anuncios")
       .select("id", { count: "exact", head: true })
@@ -65,6 +74,7 @@ async function lerConta(exigirLeitura = false): Promise<MinhaConta | null> {
     ativos,
     rascunhos: rascunhosRes.count ?? 0,
     podePublicar: limite === null || ativos < limite,
+    ...(lojaAjudada ? { ajudante: true } : {}),
   };
 }
 
@@ -72,9 +82,9 @@ async function lerConta(exigirLeitura = false): Promise<MinhaConta | null> {
  * Plano que vale agora, calculado pelo banco (public.meu_plano → plano_efetivo). Assim a tela
  * enxerga até o plano contratado que saiu de venda (planos.ativo = false), igual ao limite do banco.
  */
-async function planoEfetivo(exigirLeitura = false): Promise<Plano | null> {
+async function planoEfetivo(exigirLeitura = false, loja?: string): Promise<Plano | null> {
   const db = await createClient();
-  const { data, error } = await db.rpc("meu_plano");
+  const { data, error } = loja ? await db.rpc("plano_da_loja", { p_vitrine: loja }) : await db.rpc("meu_plano");
   if (error) {
     if (exigirLeitura) throw new Error("Não foi possível carregar seu plano.");
     return null;

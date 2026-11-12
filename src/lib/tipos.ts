@@ -232,6 +232,7 @@ export type MinhaConta = {
   ativos: number; // anúncios ativos que contam no limite
   rascunhos: number;
   podePublicar: boolean; // limite null ou ativos < limite
+  ajudante?: boolean; // P5b: true quando a loja é de outra pessoa (a pessoa ajuda)
 };
 
 /** Retorno de quero_vender(). */

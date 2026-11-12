@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, Clock, Eye, MessageCircle, Sparkles } from "lucide-react";
-import { meuAnuncio } from "@/lib/dados/anuncios";
+import { anuncioDaLoja } from "@/lib/dados/anuncios";
+import { contaDaLoja } from "@/lib/dados/conta";
 import { ehUuid, linkAnuncio, urlAbsoluta } from "@/lib/formato";
 import { Botao } from "@/components/ui/botao";
 import { BotaoNovoRascunho } from "@/components/anunciar/botao-novo-rascunho";
@@ -19,11 +20,13 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   const sp = await searchParams;
   const id = um(sp.id);
   if (!ehUuid(id)) notFound();
-  const anuncio = await meuAnuncio(id);
+  const anuncio = await anuncioDaLoja(id);
   if (!anuncio) notFound();
   // ainda não publicado (ex.: abriu o endereço direto): volta para o Revisar
   if (anuncio.status !== "ativo" && anuncio.status !== "em_analise") redirect(urlPasso("revisar", anuncio.id, anuncio.status !== "rascunho"));
 
+  // P5b: Destacar é pago e fica com o dono da loja.
+  const ajudante = (await contaDaLoja())?.ajudante === true;
   const emAnalise = anuncio.status === "em_analise"; // o banco decide (?status=analise só deixa o link legível)
 
   if (emAnalise) {
@@ -75,15 +78,17 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
           Ver anúncio
         </Botao>
         <BotaoNovoRascunho variante="secundario" texto="Anunciar outro" />
-        {/* Mesma largura dos outros botões: sem caixa em volta, só a dica embaixo. */}
-        <div className="flex flex-col gap-1">
-          <Botao href={linkDestacar(anuncio.id)} variante="secundario" larguraTotal icone={<Sparkles />} aria-describedby="destacar-dica">
-            Destacar
-          </Botao>
-          <p id="destacar-dica" className="text-sm text-texto-suave">
-            Quer que mais gente veja? Destacar põe seu anúncio na frente.
-          </p>
-        </div>
+        {/* Mesma largura dos outros botões: sem caixa em volta, só a dica embaixo. Destacar é do dono (P5b). */}
+        {!ajudante && (
+          <div className="flex flex-col gap-1">
+            <Botao href={linkDestacar(anuncio.id)} variante="secundario" larguraTotal icone={<Sparkles />} aria-describedby="destacar-dica">
+              Destacar
+            </Botao>
+            <p id="destacar-dica" className="text-sm text-texto-suave">
+              Quer que mais gente veja? Destacar põe seu anúncio na frente.
+            </p>
+          </div>
+        )}
       </div>
     </main>
   );

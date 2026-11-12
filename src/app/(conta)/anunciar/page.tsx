@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronRight, FileClock, ImageOff, ShieldAlert } from "lucide-react";
-import { meuPerfilEVitrine } from "@/lib/dados/conta";
-import { meusAnuncios } from "@/lib/dados/anuncios";
+import { contaDaLoja } from "@/lib/dados/conta";
+import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
+import { SeletorLoja } from "@/components/conta/seletor-loja";
+import { anunciosDaLoja } from "@/lib/dados/anuncios";
 import { avulsoParaMim } from "@/lib/dados/cobranca";
 import { asaasConfigurado } from "@/lib/asaas";
 import { tempoRelativo } from "@/lib/formato";
@@ -18,7 +20,7 @@ export const metadata: Metadata = { title: "Anunciar" };
 // /anunciar: confere se a pessoa já vende e o limite do plano (T16) e então
 // oferece retomar ou começar. Abrir/pré-carregar a página nunca grava no banco.
 export default async function PaginaAnunciar() {
-  const conta = await meuPerfilEVitrine();
+  const conta = await contaDaLoja();
   if (!conta) {
     return (
       <main className="mx-auto w-full max-w-xl px-4 py-6">
@@ -40,12 +42,27 @@ export default async function PaginaAnunciar() {
     );
   }
 
-  const rascunhos = (await meusAnuncios()).filter((a) => a.status === "rascunho");
+  const [todos, lojas, lojaAtual] = await Promise.all([anunciosDaLoja(), lojasQueCuido(), lojaEscolhida()]);
+  const rascunhos = todos.filter((a) => a.status === "rascunho");
+  const seletor = <SeletorLoja lojas={lojas} atual={lojaAtual} voltar="/anunciar" />;
+
+  // P5b: ajudante no limite do plano não vê avulso nem planos (pagamento é do dono).
+  if (!conta.podePublicar && conta.ajudante) {
+    return (
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+        {seletor}
+        <Vazio titulo="A loja está no limite do plano" texto="Para pôr mais anúncios no ar, pause um anúncio da loja ou fale com o dono para trocar de plano.">
+          <Botao href="/minha-conta/anuncios" variante="secundario" larguraTotal>Ver os anúncios da loja</Botao>
+        </Vazio>
+      </main>
+    );
+  }
 
   if (!conta.podePublicar) {
     const avulso = await avulsoParaMim(conta.vitrine);
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+        {seletor}
         <LimiteAtingido
           conta={conta}
           avulsoPreco={avulso?.preco ?? null}
@@ -68,6 +85,7 @@ export default async function PaginaAnunciar() {
   if (rascunhos.length === 0) {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+        {seletor}
         <div className="flex flex-col gap-2">
           <h1 className="text-titulo font-semibold text-beringela">O que você quer vender?</h1>
           <p className="text-base text-texto-suave">Coloque as fotos, conte sobre o produto e escolha o preço e a cidade. Você confere tudo antes de publicar.</p>
@@ -84,6 +102,7 @@ export default async function PaginaAnunciar() {
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+      {seletor}
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold">Continuar de onde parou?</h1>
         <p className="text-base text-texto-suave">Você tem anúncio pela metade. Tudo o que preencheu ficou guardado.</p>

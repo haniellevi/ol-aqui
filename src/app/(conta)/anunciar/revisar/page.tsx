@@ -33,7 +33,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
     anuncioPublico(anuncio.id),
     anuncio.categoria_id ? (nuncaNoAr ? categoriaPorId : categoriaDoAnuncio)(anuncio.categoria_id) : Promise.resolve(null),
     lerConfigNumero("anuncio.fotos_minimo", conta.vitrine.microrregiao_id),
-    !jaPublicado && !conta.podePublicar && !pagoAte ? avulsoParaMim(conta.vitrine) : Promise.resolve(null),
+    !jaPublicado && !conta.podePublicar && !pagoAte && !conta.ajudante ? avulsoParaMim(conta.vitrine) : Promise.resolve(null),
   ]);
   const hrefAvulso = avulso ? linkAvulso(anuncio.id) : null;
 
@@ -138,6 +138,8 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
         <div className="flex gap-3 rounded-card bg-fundo p-3 text-base">
           <Info className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
           <p>
+            {conta.ajudante ? "A loja chegou ao limite de anúncios do plano. O anúncio fica guardado como rascunho. Fale com o dono da loja para trocar de plano." : (
+            <>
             Você chegou ao limite de anúncios do seu plano. O anúncio fica guardado como rascunho.{" "}
             {avulso && hrefAvulso ? (
               <>
@@ -151,6 +153,8 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
             <Link href={LINK_PLANOS} className="font-semibold text-laranja-escuro underline underline-offset-4">
               {avulso ? "ver planos" : "Ver planos"}
             </Link>
+            </>
+            )}
           </p>
         </div>
       )}

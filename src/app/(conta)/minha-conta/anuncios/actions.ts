@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
-import { meuAnuncio } from "@/lib/dados/anuncios";
+import { anuncioDaLoja } from "@/lib/dados/anuncios";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import type { MeuAnuncio, Resultado, StatusAnuncio } from "@/lib/tipos";
@@ -18,7 +18,7 @@ async function alterar(id: string, executar: (db: Banco, a: MeuAnuncio) => Promi
   try {
     const { userId } = await auth();
     if (!userId) return { ok: false, erro: { mensagem: "Sua sessão terminou. Entre na conta para continuar.", codigo: "28000" } };
-    const a = await meuAnuncio(id);
+    const a = await anuncioDaLoja(id);
     if (!a) return NAO_ACHOU;
     const r = await executar(await createClient(), a);
     if (r.ok) {

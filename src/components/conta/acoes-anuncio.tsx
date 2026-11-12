@@ -17,8 +17,8 @@ type Confirmacao = "pausar" | "vendido" | "excluir";
 
 // Plano de design: no card ficam à vista só a ação do momento e Editar (botões pequenos).
 // O resto (pausar, destacar, fixar, lixeira) fica no menu "Mais".
-export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAcoes }: {
-  id: string; status: StatusAnuncio; titulo: string; temPagamento?: boolean;
+export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAcoes, podeDestacar = true }: {
+  id: string; status: StatusAnuncio; titulo: string; temPagamento?: boolean; podeDestacar?: boolean;
   /** Ações extras que entram no menu "Mais" (ex.: fixar no topo da loja). */
   maisAcoes?: ReactNode;
 }) {
@@ -100,7 +100,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAco
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {status === "ativo" && <DropdownMenuItem disabled={ocupado} onClick={() => abrir("pausar")}><Pause aria-hidden />Pausar</DropdownMenuItem>}
-                {status === "ativo" && <DropdownMenuItem render={<Link href={linkDestacar(id)} />}><Sparkles aria-hidden />Destacar</DropdownMenuItem>}
+                {status === "ativo" && podeDestacar && <DropdownMenuItem render={<Link href={linkDestacar(id)} />}><Sparkles aria-hidden />Destacar</DropdownMenuItem>}
                 {maisAcoes}
                 <DropdownMenuItem variant="destructive" disabled={ocupado} onClick={() => abrir("excluir")}><Trash2 aria-hidden />Mover para lixeira</DropdownMenuItem>
               </DropdownMenuContent>
