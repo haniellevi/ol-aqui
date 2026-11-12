@@ -81,7 +81,7 @@ export function CoracaoCard({ anuncioId, titulo, logado, inicial }: { anuncioId:
           {pendente ? (
             <Loader2 className="size-5 animate-spin text-texto-suave motion-reduce:animate-none" aria-hidden />
           ) : (
-            <Heart className={`size-5 ${favorito ? "fill-laranja text-laranja-escuro" : ""}`} aria-hidden />
+            <Heart className={`size-5 ${favorito ? "fill-coracao text-coracao" : ""}`} aria-hidden />
           )}
         </span>
       </button>
