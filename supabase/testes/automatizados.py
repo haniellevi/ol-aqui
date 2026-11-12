@@ -77,6 +77,8 @@ try:
     print('PASS: aviso de pedido novo só para Full verificada e cortesia, dentro da área e do nicho', flush=True)
     checked(sql((root/'supabase/testes/630_radar_prazo.sql').read_text()))
     print('PASS: pedido do Radar avisa 2 dias antes de vencer e o comprador estende com Ainda preciso até 2 vezes', flush=True)
+    checked(sql((root/'supabase/testes/640_radar_resolver_indicar.sql').read_text()))
+    print('PASS: Radar pergunta com quem resolveu, guarda a nota 👍/👎 e aceita indicação de anúncio (Eu sei onde tem)', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin

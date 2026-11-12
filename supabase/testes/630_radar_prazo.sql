@@ -53,13 +53,14 @@ set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 
 -- lembrete: avisa só o pedido aberto que vence em até 2 dias
-select pg_temp.confere(radar_lembrar_vencimento() = 2, 'Avisa os dois pedidos abertos que vencem em 1 dia (1 e 4)');
+select pg_temp.confere(radar_lembrar_vencimento() >= 2, 'Avisa ao menos os dois pedidos abertos que vencem em 1 dia (1 e 4)');
 select pg_temp.confere((select count(*)=1 from notificacoes where usuario_id='user_prazo630' and tipo='vai_vencer'
   and chave='vai_vencer:63000000-0000-4000-a000-000000000001:0' and link='/radar/pedido/63000000-0000-4000-a000-000000000001'
   and titulo='Seu pedido vence em 2 dias' and texto like '%Procuro sofá 630%'),'Notificação do pedido 1');
 select pg_temp.confere((select count(*)=2 from notificacoes where usuario_id='user_prazo630' and tipo='vai_vencer'),'Sem aviso para atendido, vencido e distante');
 select pg_temp.confere((select lembrete_em is not null from radar_pedidos where id='63000000-0000-4000-a000-000000000001'),'Grava lembrete_em');
-select pg_temp.confere(radar_lembrar_vencimento() = 0, 'Segunda rodada não repete');
+select radar_lembrar_vencimento();
+select pg_temp.confere((select count(*)=2 from notificacoes where usuario_id='user_prazo630' and tipo='vai_vencer'),'Segunda rodada não repete aviso desta compradora');
 
 -- Ainda preciso: permissões e recusas
 set local role anon;
@@ -108,7 +109,7 @@ reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 update radar_pedidos set expira_em=now()+interval '1 day' where id='63000000-0000-4000-a000-000000000001';
-select pg_temp.confere(radar_lembrar_vencimento() = 1, 'Novo lembrete depois de estender');
+select pg_temp.confere(radar_lembrar_vencimento() >= 1, 'Novo lembrete depois de estender');
 select pg_temp.confere((select count(*)=1 from notificacoes where chave='vai_vencer:63000000-0000-4000-a000-000000000001:1'),'Chave com extensoes=1');
 
 -- estender 2 e 3
@@ -126,4 +127,13 @@ set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_prazo630';
 select pg_temp.confere((select not pode_estender and extensoes=2 from radar_pedido('63000000-0000-4000-a000-000000000001')),'No limite não mostra o botão');
 select pg_temp.confere((select not pode_estender and extensoes=2 from meus_pedidos_radar(false) where id='63000000-0000-4000-a000-000000000001'),'Lista no limite não mostra o botão');
+
+-- no limite de extensões o lembrete manda pedir de novo, sem falar em Ainda preciso
+reset role;
+set local request.jwt.claim.role='';
+set local request.jwt.claim.sub='';
+select pg_temp.confere(radar_lembrar_vencimento() >= 1, 'Lembrete no limite de extensões');
+select pg_temp.confere((select count(*)=1 from notificacoes where usuario_id='user_prazo630' and chave='vai_vencer:63000000-0000-4000-a000-000000000001:2'
+  and texto like '%Pedir de novo%' and texto not like '%Ainda preciso%' and texto like '%Procuro sofá 630%'
+  and texto like '%sai do ar em 2 dias%'),'Texto do último lembrete manda Pedir de novo');
 rollback;

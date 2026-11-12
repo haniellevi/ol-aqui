@@ -18,7 +18,9 @@ insert into public.configuracoes (chave, valor, grupo, publico, descricao) value
   ('radar.aviso.vai_vencer.titulo', '"Seu pedido vence em 2 dias"', 'radar', false,
      'Aviso ao comprador: título do lembrete de pedido perto de vencer'),
   ('radar.aviso.vai_vencer.texto', '"Você achou “{pedido}”? Se ainda precisa, toque em Ainda preciso e ele fica mais 15 dias."', 'radar', false,
-     'Aviso ao comprador: texto do lembrete de pedido perto de vencer. Pode usar {pedido}')
+     'Aviso ao comprador: texto do lembrete de pedido perto de vencer. Pode usar {pedido}'),
+  ('radar.aviso.vai_vencer_ultimo.texto', '"Você achou “{pedido}”? Ele sai do ar em 2 dias. Se ainda precisa, toque em Pedir de novo."', 'radar', false,
+     'Aviso ao comprador: texto do lembrete quando o pedido já foi estendido o máximo de vezes (não tem mais Ainda preciso). Pode usar {pedido}')
 on conflict do nothing;
 
 -- Acrescenta o aviso novo às listas sem mexer no que a equipe já editou.
@@ -263,8 +265,11 @@ begin
      limit 500
      for update of p skip locked
   loop
+    -- no limite de extensões não existe mais "Ainda preciso": o texto manda pedir de novo
     perform public.radar_aviso(r.comprador_id, 'vai_vencer', r.microrregiao_id,
-      jsonb_build_object('pedido', r.titulo), '/radar/pedido/' || r.id, 'vai_vencer:' || r.id || ':' || r.extensoes);
+      jsonb_build_object('pedido', r.titulo), '/radar/pedido/' || r.id, 'vai_vencer:' || r.id || ':' || r.extensoes,
+      case when r.extensoes >= coalesce(public.numero_ou_nulo(public.config('radar.extensoes_max', r.microrregiao_id, '2'))::int, 2)
+           then 'radar.aviso.vai_vencer_ultimo.texto' end);
     perform set_config('olaki.sistema', '1', true);
     update public.radar_pedidos set lembrete_em = now() where id = r.id;
     perform set_config('olaki.sistema', sistema_anterior, true);
@@ -391,3 +396,254 @@ as $$
 $$;
 revoke all on function public.radar_pedido(uuid) from public, anon;
 grant execute on function public.radar_pedido(uuid) to authenticated;
+
+-- =====================================================================
+-- RADAR v2, tarefa 5: "Com quem você resolveu?", nota 👍/👎 e "Eu sei onde tem".
+-- Seção "resolução".
+-- =====================================================================
+
+-- ---------------------------------------------------------------------
+-- 6. Colunas, configurações e avisos
+-- ---------------------------------------------------------------------
+alter table public.radar_pedidos
+  add column resolvido_proposta_id uuid references public.radar_propostas(id) on delete set null,
+  add column resolvido_fora boolean not null default false,
+  add column avaliacao smallint check (avaliacao in (-1, 1));
+
+insert into public.configuracoes (chave, valor, grupo, publico, descricao) values
+  ('radar.indicacoes_por_dia', '10', 'radar', true,
+     'Quantos anúncios uma pessoa pode indicar por dia em pedidos abertos a todos ("Eu sei onde tem")'),
+  ('radar.aviso.indicacao.titulo', '"Alguém sabe onde tem"', 'radar', false,
+     'Aviso ao comprador: título de quando alguém indica um anúncio para o pedido'),
+  ('radar.aviso.indicacao.texto', '"Indicaram um anúncio para “{pedido}”. Toque para ver."', 'radar', false,
+     'Aviso ao comprador: texto de quando alguém indica um anúncio para o pedido. Pode usar {pedido}')
+on conflict do nothing;
+
+update public.configuracoes
+   set valor = valor || '["indicacao"]'::jsonb
+ where chave in ('radar.avisos_ligados', 'radar.avisos_escolha')
+   and jsonb_typeof(valor) = 'array' and not (valor ? 'indicacao');
+
+-- O comprador não grava as colunas novas direto (mesma função de antes + 3 linhas).
+create or replace function public.proteger_radar_v4()
+returns trigger language plpgsql
+set search_path = public, extensions
+as $$
+begin
+  if public.acesso_sistema() then
+    return new;
+  end if;
+  new.comprador_id    := old.comprador_id;
+  new.expira_em       := old.expira_em;
+  new.propostas_ate   := old.propostas_ate;
+  new.prazo_horas     := old.prazo_horas;
+  new.max_propostas   := old.max_propostas;
+  new.modo_contato    := old.modo_contato;     -- trocar para WhatsApp revelaria o número sem o comprador querer
+  new.origem          := old.origem;
+  new.criado_em       := old.criado_em;
+  new.fechado_em      := old.fechado_em;
+  new.fechado_motivo  := old.fechado_motivo;
+  new.moderado_motivo := old.moderado_motivo;
+  new.resumo_enviado_em := old.resumo_enviado_em;
+  new.visibilidade    := old.visibilidade;
+  new.cidades_ids     := old.cidades_ids;
+  new.cidade          := old.cidade;
+  new.extensoes       := old.extensoes;        -- só "Ainda preciso" (estender_pedido_radar) conta extensões
+  new.lembrete_em     := old.lembrete_em;
+  new.resolvido_proposta_id := old.resolvido_proposta_id;   -- só resolver_pedido_radar / avaliar_pedido_radar gravam
+  new.resolvido_fora  := old.resolvido_fora;
+  new.avaliacao       := old.avaliacao;
+  if new.status is distinct from old.status then
+    if old.status <> 'aberto' or new.status not in ('atendido', 'encerrado') then
+      raise exception 'Este pedido não pode mudar assim. Use os botões da tela do pedido.' using errcode = '42501';
+    end if;
+    new.fechado_em := now();
+    new.fechado_motivo := case when new.status = 'atendido' then 'resolvido' else 'cancelado' end;
+  elsif old.status <> 'aberto'
+        and (new.titulo is distinct from old.titulo or new.detalhes is distinct from old.detalhes
+             or new.categoria_id is distinct from old.categoria_id
+             or new.preco_min_centavos is distinct from old.preco_min_centavos
+             or new.preco_max_centavos is distinct from old.preco_max_centavos) then
+    raise exception 'Pedido fechado não pode ser alterado.' using errcode = '42501';
+  end if;
+  return new;
+end $$;
+
+-- ---------------------------------------------------------------------
+-- 7. "Já resolvi" dizendo com quem (ou fora do Olaki)
+-- ---------------------------------------------------------------------
+create function public.resolver_pedido_radar(p_id uuid, p_proposta_id uuid default null, p_fora boolean default false)
+returns void language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare
+  uid text := public.usuario_id();
+  p   public.radar_pedidos;
+  sistema_anterior text := coalesce(current_setting('olaki.sistema', true), '');
+begin
+  if uid is null then
+    raise exception 'Entre na sua conta para continuar.' using errcode = '42501';
+  end if;
+  select * into p from public.radar_pedidos x where x.id = p_id for update;
+  if p.id is null or p.comprador_id is distinct from uid then
+    raise exception 'Pedido não encontrado.' using errcode = '42501';
+  end if;
+  if p_proposta_id is not null and coalesce(p_fora, false) then
+    raise exception 'Escolha uma loja ou "Resolvi fora do Olaki", não as duas.' using errcode = '23514', detail = 'campo:proposta';
+  end if;
+  if p.status <> 'aberto' then
+    raise exception 'Este pedido já está fechado.' using errcode = 'P0001';
+  end if;
+  if p_proposta_id is not null and not exists (
+       select 1 from public.radar_propostas rp
+        where rp.id = p_proposta_id and rp.pedido_id = p.id and rp.status = 'ativa') then
+    raise exception 'Escolha uma loja que mandou oferta para este pedido.' using errcode = '23514', detail = 'campo:proposta';
+  end if;
+
+  perform set_config('olaki.sistema', '1', true);   -- as colunas novas só mudam por aqui
+  update public.radar_pedidos x
+     set status = 'atendido', fechado_em = now(), fechado_motivo = 'resolvido',
+         resolvido_proposta_id = p_proposta_id, resolvido_fora = coalesce(p_fora, false)
+   where x.id = p.id;
+  perform set_config('olaki.sistema', sistema_anterior, true);
+end $$;
+revoke all on function public.resolver_pedido_radar(uuid, uuid, boolean) from public, anon;
+grant execute on function public.resolver_pedido_radar(uuid, uuid, boolean) to authenticated;
+
+create function public.avaliar_pedido_radar(p_id uuid, p_avaliacao smallint)
+returns void language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare
+  uid text := public.usuario_id();
+  p   public.radar_pedidos;
+  sistema_anterior text := coalesce(current_setting('olaki.sistema', true), '');
+begin
+  if uid is null then
+    raise exception 'Entre na sua conta para continuar.' using errcode = '42501';
+  end if;
+  select * into p from public.radar_pedidos x where x.id = p_id for update;
+  if p.id is null or p.comprador_id is distinct from uid then
+    raise exception 'Pedido não encontrado.' using errcode = '42501';
+  end if;
+  if p_avaliacao is null or p_avaliacao not in (-1, 1) then
+    raise exception 'Escolha 👍 ou 👎.' using errcode = '23514', detail = 'campo:avaliacao';
+  end if;
+  if p.status <> 'atendido' or p.resolvido_proposta_id is null then
+    raise exception 'Só dá para avaliar um pedido resolvido com uma loja do Olaki.' using errcode = 'P0001';
+  end if;
+  perform set_config('olaki.sistema', '1', true);
+  update public.radar_pedidos x set avaliacao = p_avaliacao where x.id = p.id;
+  perform set_config('olaki.sistema', sistema_anterior, true);
+end $$;
+revoke all on function public.avaliar_pedido_radar(uuid, smallint) from public, anon;
+grant execute on function public.avaliar_pedido_radar(uuid, smallint) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 8. "Eu sei onde tem": qualquer pessoa da região indica um anúncio
+-- ---------------------------------------------------------------------
+create table public.radar_indicacoes (
+  id         uuid primary key default gen_random_uuid(),
+  pedido_id  uuid not null references public.radar_pedidos(id) on delete cascade,
+  autor_id   text not null,
+  anuncio_id uuid not null references public.anuncios(id) on delete cascade,
+  criado_em  timestamptz not null default now(),
+  unique (pedido_id, anuncio_id)
+);
+create index radar_indicacoes_autor_idx on public.radar_indicacoes (autor_id, criado_em desc);
+
+alter table public.radar_indicacoes enable row level security;
+create policy "indicacoes leitura" on public.radar_indicacoes
+  for select using (
+    autor_id = public.usuario_id()
+    or exists (select 1 from public.radar_pedidos p where p.id = pedido_id and p.comprador_id = public.usuario_id())
+    or public.e_admin());
+revoke all on public.radar_indicacoes from anon, authenticated;
+grant select on public.radar_indicacoes to authenticated;   -- ninguém grava pela API: só indicar_anuncio_radar
+
+create function public.indicar_anuncio_radar(p_pedido uuid, p_anuncio uuid)
+returns uuid language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare
+  uid     text := public.usuario_id();
+  regiao  uuid;
+  p       public.radar_pedidos;
+  a       public.anuncios;
+  dono    text;
+  existente uuid;
+  lim     integer;
+  total   integer;
+  novo    uuid;
+  hoje    timestamptz := date_trunc('day', now() at time zone 'America/Fortaleza') at time zone 'America/Fortaleza';
+begin
+  if uid is null then
+    raise exception 'Entre na sua conta para continuar.' using errcode = '42501';
+  end if;
+  select pf.microrregiao_id into regiao from public.perfis pf where pf.id = uid;
+  if regiao is null then
+    raise exception 'Complete o seu cadastro para indicar.' using errcode = '42501';
+  end if;
+  select * into p from public.radar_pedidos x where x.id = p_pedido;
+  if p.id is null or p.microrregiao_id <> regiao or p.status <> 'aberto' or p.expira_em <= now() then
+    raise exception 'Este pedido não está mais aberto.' using errcode = 'P0002';
+  end if;
+  if p.comprador_id = uid then
+    raise exception 'Este pedido é seu.' using errcode = '42501';
+  end if;
+  if p.visibilidade <> 'todos' then
+    raise exception 'Este pedido é só para lojas.' using errcode = '42501';
+  end if;
+  select * into a from public.anuncios x where x.id = p_anuncio;
+  if a.id is null or a.status <> 'ativo' or a.microrregiao_id <> p.microrregiao_id then
+    raise exception 'Este anúncio não está disponível.' using errcode = 'P0002';
+  end if;
+  select v.dono_id into dono from public.vitrines_lojas v where v.id = a.vitrine_id;
+  if dono = uid then
+    if public.pode_atender_radar(uid) then
+      raise exception 'Use "Mandar oferta" para os seus anúncios.' using errcode = 'P0001';
+    end if;
+    raise exception 'Indique um anúncio de outra pessoa.' using errcode = 'P0001';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext('radar_indicacao:' || uid));
+  select i.id into existente from public.radar_indicacoes i where i.pedido_id = p.id and i.anuncio_id = a.id;
+  if existente is not null then return existente; end if;
+
+  lim := coalesce(public.numero_ou_nulo(public.config('radar.indicacoes_por_dia', p.microrregiao_id, '10'))::int, 10);
+  select count(*) into total from public.radar_indicacoes i where i.autor_id = uid and i.criado_em >= hoje;
+  if total >= lim then
+    raise exception 'Você já indicou % anúncios hoje. Amanhã você pode indicar mais.', total using errcode = 'P0001';
+  end if;
+
+  insert into public.radar_indicacoes (pedido_id, autor_id, anuncio_id)
+  values (p.id, uid, a.id) returning id into novo;
+
+  perform public.radar_aviso(p.comprador_id, 'indicacao', p.microrregiao_id,
+    jsonb_build_object('pedido', p.titulo), '/radar/pedido/' || p.id, 'indicacao:' || p.id || ':' || a.id);
+  return novo;
+end $$;
+revoke all on function public.indicar_anuncio_radar(uuid, uuid) from public, anon;
+grant execute on function public.indicar_anuncio_radar(uuid, uuid) to authenticated;
+
+-- O comprador (e a equipe) vê o que indicaram, sem saber quem indicou.
+create function public.indicacoes_do_pedido(p_pedido uuid)
+returns table (anuncio_id uuid, titulo text, preco_centavos bigint, foto text, vitrine_nome text, criado_em timestamptz)
+language plpgsql stable security definer
+set search_path = public, extensions
+as $$
+begin
+  if not (public.e_admin() or exists (
+        select 1 from public.radar_pedidos p where p.id = p_pedido and p.comprador_id = public.usuario_id())) then
+    raise exception 'Pedido não encontrado.' using errcode = '42501';
+  end if;
+  return query
+    select a.id, a.titulo, a.preco_centavos, a.fotos[1], v.nome, i.criado_em
+      from public.radar_indicacoes i
+      join public.anuncios a on a.id = i.anuncio_id and a.status = 'ativo'
+      join public.vitrines_lojas v on v.id = a.vitrine_id
+     where i.pedido_id = p_pedido
+     order by i.criado_em desc, i.id;
+end $$;
+revoke all on function public.indicacoes_do_pedido(uuid) from public, anon;
+grant execute on function public.indicacoes_do_pedido(uuid) to authenticated;
