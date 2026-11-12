@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Tags } from "lucide-react";
-import { exigirAdmin } from "@/lib/admin/auth";
+import { eSuperAdmin, exigirAdmin } from "@/lib/admin/auth";
 import { lerCategorias, lerCategoriasSugeridas, maesPossiveis, nomeAdmin } from "@/lib/admin/cadastros";
 import { inteiro } from "@/lib/admin/formato";
 import { LINK_ADMIN_CATEGORIAS } from "@/lib/rotas";
@@ -38,7 +38,7 @@ function mensagemDecisao(sp: Busca): string {
 export default async function CategoriasSugeridasPage({ searchParams }: { searchParams: Promise<Busca> }) {
   const sp = await searchParams;
   const { supabase } = await exigirAdmin();
-  const [{ grupos, falhou }, { todas }] = await Promise.all([lerCategoriasSugeridas(supabase), lerCategorias(supabase)]);
+  const [{ grupos, falhou }, { todas }, podeDecidir] = await Promise.all([lerCategoriasSugeridas(supabase), lerCategorias(supabase), eSuperAdmin(supabase)]);
 
   const porId = new Map(todas.map((c) => [c.id, c]));
   // Categoria "no ar": ela e as de cima estão ligadas. Final = sem subcategoria ligada (só essas recebem anúncio).
@@ -89,6 +89,7 @@ export default async function CategoriasSugeridasPage({ searchParams }: { search
       </Titulo>
 
       {sp.feito && <Aviso tipo="ok">{mensagemDecisao(sp)}</Aviso>}
+      {!podeDecidir && grupos.length > 0 && <p className="mb-4 text-sm text-texto-suave">Só o super admin cria, junta ou recusa categorias. Você pode ver os pedidos.</p>}
 
       {falhou ? (
         <Vazio titulo="Não conseguimos abrir as sugestões" texto="Confira a internet e tente de novo.">
@@ -105,7 +106,7 @@ export default async function CategoriasSugeridasPage({ searchParams }: { search
       ) : (
         <div className="space-y-4">
           {itens.map((item) => (
-            <CartaoSugestao key={item.grupo.texto_norm} item={item} maes={maes} finais={finais} />
+            <CartaoSugestao key={item.grupo.texto_norm} item={item} maes={maes} finais={finais} podeDecidir={podeDecidir} />
           ))}
         </div>
       )}

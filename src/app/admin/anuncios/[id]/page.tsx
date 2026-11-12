@@ -9,10 +9,15 @@ import { LINK_ADMIN_ANUNCIOS, linkAdminAnuncio } from "@/lib/rotas";
 import type { MeuAnuncio } from "@/lib/tipos";
 import { abrirAtendimento, administrarAnuncio, delegarAtendimento } from "./actions";
 import { Badge } from "@/components/ui/badge";
+import { eSuperAdmin } from "@/lib/admin/auth";
+import { lerHistorico } from "@/lib/dados/historico";
+import { ListaHistorico } from "@/components/conta/lista-historico";
+import { FormApagarDeVez, FormLixeiraAnuncio } from "../../lixeira/formularios";
 
 export const metadata = { title: "Gerenciar anúncio" };
 
 type AnuncioAdmin = Pick<MeuAnuncio, "id" | "slug" | "titulo" | "cidade" | "status" | "descricao" | "fotos" | "motivo_analise" | "preco_centavos" | "atualizado_em"> & {
+  excluido_com_loja: boolean;
   vitrines_lojas: { nome: string; dono_id: string } | null;
 };
 
@@ -24,7 +29,7 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
   if (!ehUuid(id)) notFound();
   const { antes, erro, ok } = await searchParams;
   const { data: a, error } = await supabase.from("anuncios")
-    .select("id, slug, titulo, cidade, status, descricao, fotos, motivo_analise, preco_centavos, atualizado_em, vitrines_lojas(nome, dono_id)")
+    .select("id, slug, titulo, cidade, status, descricao, fotos, motivo_analise, preco_centavos, atualizado_em, excluido_com_loja, vitrines_lojas(nome, dono_id)")
     .eq("id", id).maybeSingle<AnuncioAdmin>();
   if (error) return <Aviso tipo="erro">Não foi possível carregar o anúncio. Atualize a página para tentar novamente.</Aviso>;
   if (!a) notFound();
@@ -35,6 +40,8 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
     supabase.rpc("admin_whatsapp_anunciante", { p_anuncio: id }),
   ]) : [{ data: null, error: null }, { data: null, error: null }];
   const conversa = conversaR.data;
+  // Etapa P5a: lixeira e "apagar de vez" só para o super admin; histórico para quem é administrador.
+  const [superAdmin, historico] = await Promise.all([eSuperAdmin(supabase), lerHistorico({ anuncio: id }, 20).catch(() => null)]);
   const whatsapp = typeof contatoR.data === "string" ? contatoR.data.replace(/\D/g, "") : "";
   const titulo = a.titulo?.trim() || "Anúncio sem título";
   const situacao = ROTULO_ANUNCIO[a.status];
@@ -98,6 +105,17 @@ export default async function GerenciarAnuncioPage({ params, searchParams }: {
         {conversa.aguarda_equipe && " Há mensagem aguardando atendimento."}
       </p>}
     </Cartao>}
+    {superAdmin && !a.excluido_com_loja && <Cartao aria-labelledby="acoes-super-admin" className="space-y-3">
+      <h2 id="acoes-super-admin" className="text-lg text-beringela">Ações do super admin</h2>
+      {a.status === "excluido"
+        ? <FormApagarDeVez tipo="anuncio" id={id} nome={titulo} />
+        : <FormLixeiraAnuncio id={id} />}
+    </Cartao>}
+
+    {historico && <section aria-labelledby="historico-anuncio" className="space-y-3">
+      <h2 id="historico-anuncio" className="text-lg text-beringela">Histórico</h2>
+      <ListaHistorico linhas={historico} vazio="As mudanças aparecem aqui depois que o anúncio for publicado." />
+    </section>}
     {conversa && <ConversaAtendimento id={conversa.id} caminho={linkAdminAnuncio(id)} antes={antes} equipe aki={conversa.aki_ativo} />}
   </div>;
 }

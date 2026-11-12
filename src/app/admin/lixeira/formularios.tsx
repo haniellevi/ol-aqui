@@ -3,7 +3,7 @@
 import { Botao } from "@/components/ui/botao";
 import { Cartao } from "@/components/admin/ui";
 import { useGestaoForm, CampoGestao, MotivoGestao, RetornoGestao } from "@/components/admin/form-gestao";
-import { apagarDeVez, lixeiraConta, lixeiraLoja } from "./actions";
+import { apagarDeVez, lixeiraAnuncioEquipe, lixeiraConta, lixeiraLoja } from "./actions";
 
 type Tipo = "conta" | "loja";
 
@@ -17,8 +17,8 @@ export function FormRestaurar({ tipo, id }: { tipo: Tipo; id: string }) {
   </form>;
 }
 
-/** Apagar de vez agora, sem esperar os 30 dias. Exige o nome exato. */
-export function FormApagarDeVez({ tipo, id, nome }: { tipo: Tipo; id: string; nome: string }) {
+/** Apagar de vez agora, sem esperar os 30 dias. Exige o nome exato. Só o super admin vê (o banco confere). */
+export function FormApagarDeVez({ tipo, id, nome }: { tipo: Tipo | "anuncio"; id: string; nome: string }) {
   const [estado, acao, pendente] = useGestaoForm(apagarDeVez);
   return <details className="rounded-card border border-perigo p-3">
     <summary className="cursor-pointer text-sm font-semibold text-perigo">Apagar de vez agora</summary>
@@ -61,4 +61,19 @@ export function FormLixeiraLoja({ id, naLixeira, comConta }: { id: string; naLix
       <RetornoGestao estado={estado} />
     </form>}
   </Cartao>;
+}
+
+/** Super admin: manda o anúncio de outra pessoa para a lixeira. O dono é avisado e pode restaurar em 30 dias. */
+export function FormLixeiraAnuncio({ id }: { id: string }) {
+  const [estado, acao, pendente] = useGestaoForm(lixeiraAnuncioEquipe);
+  return <details className="rounded-card border border-perigo p-3">
+    <summary className="cursor-pointer text-sm font-semibold text-perigo">Mandar para a lixeira</summary>
+    <p className="mt-2 text-sm">O anúncio sai do ar. O dono recebe um aviso com o motivo e pode restaurar em Meus anúncios em até 30 dias.</p>
+    <form onSubmit={acao} className="mt-3 space-y-3">
+      <input type="hidden" name="id" value={id} />
+      <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="confirmar" required className="mt-1 size-5 shrink-0" />Li o efeito e quero tirar este anúncio do ar.</label>
+      <MotivoGestao /><Botao type="submit" variante="perigo" carregando={pendente}>Mandar para a lixeira</Botao>
+      <RetornoGestao estado={estado} />
+    </form>
+  </details>;
 }

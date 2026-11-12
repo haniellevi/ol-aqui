@@ -18,3 +18,16 @@ export async function exigirAdmin() {
   if (admin !== true) notFound(); // não revela que a área existe
   return { supabase, userId };
 }
+
+/** O admin logado é super admin (Etapa P5a)? Só para mostrar ou esconder botões: o banco confere de novo. */
+export async function eSuperAdmin(supabase: Awaited<ReturnType<typeof createClient>>): Promise<boolean> {
+  const { data, error } = await supabase.rpc("e_super_admin");
+  return !error && data === true;
+}
+
+/** Ação só do super admin: quem não é recebe 404, como em exigirAdmin. */
+export async function exigirSuperAdmin() {
+  const r = await exigirAdmin();
+  if (!(await eSuperAdmin(r.supabase))) notFound();
+  return r;
+}
