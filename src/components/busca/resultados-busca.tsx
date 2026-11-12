@@ -154,7 +154,7 @@ export function ResultadosBusca({
             </Link>
           </div>
         ) : (
-          <GradeAnuncios anuncios={anuncios} vazio={vazio} />
+          <GradeAnuncios anuncios={anuncios} vazio={vazio} medirEm={caminho === "/busca" ? "busca" : "categoria"} />
         )}
 
         {paginas > 1 && <Paginacao caminho={caminho} sp={sp} pagina={estado.pagina} paginas={paginas} />}

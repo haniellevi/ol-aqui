@@ -9,6 +9,7 @@ import { garantirPerfil } from "@/lib/perfil";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import type { Resultado, TipoEvento } from "@/lib/tipos";
+import { normalizarTermo } from "@/lib/metricas/termos";
 
 // Ações da página do anúncio: contar visita/clique, favoritar e denunciar.
 // Quem decide o que vale é o banco (registrar_evento, RLS de favoritos e denúncias).
@@ -19,7 +20,7 @@ const TIPOS: TipoEvento[] = ["visualizacao", "clique_whatsapp", "compartilhar"];
  * Conta uma visualização ou clique no WhatsApp. O banco ignora repetição do mesmo visitante,
  * o próprio dono e anúncio fora do ar. Nunca lança erro (a pessoa não precisa saber).
  */
-export async function registrarEvento(anuncioId: string, tipo: TipoEvento): Promise<boolean> {
+export async function registrarEvento(anuncioId: string, tipo: TipoEvento, termo?: string | null): Promise<boolean> {
   if (!ehUuid(anuncioId) || !TIPOS.includes(tipo)) return false;
   try {
     const h = await headers();
@@ -33,6 +34,8 @@ export async function registrarEvento(anuncioId: string, tipo: TipoEvento): Prom
       tipo,
       visitante: ip || null,
       usuario: userId ?? null,
+      // Palavra da busca: só conta junto com a visualização (o banco normaliza de novo).
+      termo: tipo === "visualizacao" ? normalizarTermo(termo) : null,
     });
     return !error && data === true;
   } catch {

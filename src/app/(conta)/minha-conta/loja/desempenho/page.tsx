@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { ChartNoAxesColumn, ChevronRight, Eye, Heart, ImageOff, Lightbulb, MapPin, MessageCircle, Sparkles, Store } from "lucide-react";
 import { melhoriaIAAtiva, minhaVitrineCompleta, vitrineNovaAtiva } from "@/lib/dados/vitrine-completa";
 import { meuDesempenhoLoja, minhasDicasLoja, type MotivoDica, type NumerosLoja } from "@/lib/dados/painel-loja";
+import { meusNumerosProdutos, type PeriodoProdutos } from "@/lib/dados/metricas-produtos";
+import { NumerosProdutos } from "./numeros-produtos";
 import { inteiro } from "@/lib/formato";
 import { LINK_MINHA_LOJA, linkMelhorarComIA } from "@/lib/rotas";
 import { urlPasso } from "@/components/anunciar/passos";
@@ -20,7 +22,7 @@ export const dynamic = "force-dynamic";
 // Vitrine com IA, etapa 5a: quantas pessoas viram a loja e os produtos, quantas chamaram no WhatsApp,
 // os produtos mais vistos e dicas simples (por regra, sem IA). Só com a vitrine nova ligada.
 
-type Props = { searchParams: Promise<{ dias?: string | string[] }> };
+type Props = { searchParams: Promise<{ dias?: string | string[]; produtos?: string | string[] }> };
 
 const CARTOES: { chave: keyof NumerosLoja; titulo: string; icone: ReactNode }[] = [
   { chave: "visitas", titulo: "Visitas na loja", icone: <Store /> },
@@ -57,7 +59,14 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
   if (!(await vitrineNovaAtiva(v.microrregiao_id).catch(() => false))) notFound();
   const sp = await searchParams;
   const dias = (Array.isArray(sp.dias) ? sp.dias[0] : sp.dias) === "30" ? 30 : 7;
-  const [d, dicas, comIA] = await Promise.all([meuDesempenhoLoja(v.id, dias), minhasDicasLoja(v.id), melhoriaIAAtiva(v.microrregiao_id).catch(() => false)]);
+  const produtosParam = Array.isArray(sp.produtos) ? sp.produtos[0] : sp.produtos;
+  const periodoProdutos: PeriodoProdutos = produtosParam === "7" ? 7 : produtosParam === "90" ? 90 : 30;
+  const [d, dicas, comIA, produtos] = await Promise.all([
+    meuDesempenhoLoja(v.id, dias),
+    minhasDicasLoja(v.id),
+    melhoriaIAAtiva(v.microrregiao_id).catch(() => false),
+    meusNumerosProdutos(v.id, periodoProdutos),
+  ]);
 
   return (
     <PaginaConta>
@@ -69,8 +78,8 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
       />
 
       <nav aria-label="Período" className="flex flex-wrap gap-2">
-        <Chip href="?dias=7" ativo={dias === 7}>Últimos 7 dias</Chip>
-        <Chip href="?dias=30" ativo={dias === 30}>Últimos 30 dias</Chip>
+        <Chip href={`?dias=7&produtos=${periodoProdutos}`} ativo={dias === 7}>Últimos 7 dias</Chip>
+        <Chip href={`?dias=30&produtos=${periodoProdutos}`} ativo={dias === 30}>Últimos 30 dias</Chip>
       </nav>
 
       <section aria-labelledby="titulo-numeros" className="flex flex-col gap-3">
@@ -95,6 +104,8 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
           </ul>
         )}
       </section>
+
+      <NumerosProdutos lista={produtos} periodo={periodoProdutos} diasDaLoja={dias} />
 
       {d !== null && (
         <section aria-labelledby="titulo-mais-vistos" className="flex flex-col gap-3">

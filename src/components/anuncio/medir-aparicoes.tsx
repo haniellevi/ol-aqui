@@ -1,0 +1,33 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { registrarAparicoes } from "@/lib/metricas/acoes";
+import type { PaginaAparicao } from "@/lib/metricas/aparicoes";
+
+// Conta as aparições da lista uma vez por visita à página, só com a aba visível.
+// Não renderiza nada, não atrasa a tela e ignora erros.
+export function MedirAparicoes({ pagina, ids }: { pagina: PaginaAparicao; ids: string[] }) {
+  const enviado = useRef<string | null>(null);
+  const chave = ids.join(",");
+  useEffect(() => {
+    if (!chave || enviado.current === chave) return;
+    const lista = chave.split(",");
+    const enviar = () => {
+      if (enviado.current === chave) return;
+      enviado.current = chave;
+      void registrarAparicoes(pagina, lista).catch(() => undefined);
+    };
+    if (document.visibilityState === "visible") {
+      enviar();
+      return;
+    }
+    const aoMudar = () => {
+      if (document.visibilityState !== "visible") return;
+      document.removeEventListener("visibilitychange", aoMudar);
+      enviar();
+    };
+    document.addEventListener("visibilitychange", aoMudar);
+    return () => document.removeEventListener("visibilitychange", aoMudar);
+  }, [pagina, chave]);
+  return null;
+}

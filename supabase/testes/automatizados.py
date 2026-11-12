@@ -57,6 +57,8 @@ try:
     print('PASS: categorias sugeridas: normalização, grupo, parecidas, aprovar, juntar, recusar e aviso', flush=True)
     checked(sql((root/'supabase/testes/530_slug_anuncios.sql').read_text()))
     print('PASS: link curto do anúncio: endereço fixo, formato, resolvedor, busca, backfill e redirecionamento', flush=True)
+    checked(sql((root/'supabase/testes/540_metricas_anuncios.sql').read_text()))
+    print('PASS: métricas do produto: números diários, termos normalizados, aparições, favoritar, tempo até sair e permissões', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
