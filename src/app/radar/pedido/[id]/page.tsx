@@ -1,5 +1,6 @@
 // /radar/pedido/[id]: o comprador vê o próprio pedido e compara as propostas.
 // Só o dono abre esta tela (o banco devolve sou_comprador); para os outros é "não encontrado".
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, ChevronLeft, Hourglass, MessageCircle, ShieldAlert } from "lucide-react";
@@ -68,7 +69,7 @@ export default async function MeuPedidoPage({
           <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
           {arquivado && <Badge variant="secondary">Arquivado</Badge>}
         </div>
-        <h1 className="text-xl leading-7 font-bold break-words">{pedido.titulo}</h1>
+        <h1 className="text-xl leading-7 font-bold break-words">{formatarNome(pedido.titulo)}</h1>
         {pedido.detalhes && <p className="text-base break-words whitespace-pre-line text-texto-suave">{pedido.detalhes}</p>}
         <p className="text-base font-semibold">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
         <p className="flex flex-wrap items-center gap-x-2 text-sm text-texto-suave">

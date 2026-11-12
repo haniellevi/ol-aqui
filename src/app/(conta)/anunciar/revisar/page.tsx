@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { AlertTriangle, Info } from "lucide-react";
@@ -69,7 +70,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
       passo: "categoria",
       falta: !anuncio.categoria_id || categoriaSumiu,
     },
-    { rotulo: "Título", valor: titulo || "Falta escrever", passo: "detalhes", falta: titulo.length < 5 },
+    { rotulo: "Título", valor: formatarNome(titulo) || "Falta escrever", passo: "detalhes", falta: titulo.length < 5 },
     ...campos.map<Linha>((c) => {
       const v = valorDoCampo(c, anuncio.atributos[c.chave]);
       return { rotulo: c.rotulo, valor: v || (c.obrigatorio ? "Falta preencher" : "Não informado"), passo: "detalhes", falta: c.obrigatorio && !v };
@@ -106,13 +107,13 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
           anuncio={{
             id: anuncio.id,
             slug: null, // rascunho: o endereço só nasce ao publicar
-            titulo: titulo || "Seu anúncio",
+            titulo: formatarNome(titulo) || "Seu anúncio",
             preco_centavos: anuncio.preco_centavos,
             cidade: anuncio.cidade ?? v.cidade,
             capa: anuncio.fotos[0] ?? null,
             criado_em: anuncio.publicado_em ?? new Date().toISOString(),
             destaque: publico?.destaque ?? false,
-            vitrine_nome: publico?.vitrine_nome ?? v.nome,
+            vitrine_nome: formatarNome(publico?.vitrine_nome ?? v.nome),
             vitrine_selo: publico?.vitrine_selo ?? v.selo_loja_verificada,
             vitrine_tipo: publico?.vitrine_tipo ?? v.tipo,
             preco_antes_centavos: extra?.preco_antes_centavos ?? null,

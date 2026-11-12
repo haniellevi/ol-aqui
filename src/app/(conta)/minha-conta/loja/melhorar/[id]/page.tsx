@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -43,7 +44,7 @@ export default async function PaginaMelhorarComIA({ params }: Props) {
     <PaginaConta>
       <TopoConta
         titulo="Melhorar com IA"
-        texto={t.anuncio.titulo}
+        texto={formatarNome(t.anuncio.titulo)}
         voltar={LINK_LOJA_DESEMPENHO}
         textoVoltar="Desempenho da loja"
       />

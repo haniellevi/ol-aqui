@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const fora = id ? await anuncioForaDoAr(id) : null;
     return { title: fora ? "Anúncio fora do ar" : "Anúncio não encontrado", robots: { index: false } };
   }
-  const titulo = a.titulo || "Anúncio";
+  const titulo = formatarNome(a.titulo) || "Anúncio";
   const caminho = linkAnuncio(a.id, a.titulo, a.slug);
   const resumo = `${preco(a.preco_centavos)}${a.cidade ? ` em ${a.cidade}` : ""}. ${(a.descricao ?? "").replace(/\s+/g, " ").slice(0, 140)}`.trim();
   return {

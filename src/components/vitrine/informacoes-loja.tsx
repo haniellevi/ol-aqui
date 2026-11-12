@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import { telefone as formatarTelefone } from "@/lib/formato";
 import type { ReactNode } from "react";
 import { Clock, CreditCard, Instagram, MapPin, Navigation, Store, Truck } from "lucide-react";
@@ -33,7 +34,7 @@ export function InformacoesLoja({ v, agora, mapa = false }: { v: VitrinePublica;
       {(v.endereco || comoChegar) && (
         <Bloco icone={<MapPin />} titulo="Endereço">
           <p className="text-base break-words">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>
-          {pino && <MapaLoja lat={pino.lat} lng={pino.lng} nome={v.nome} />}
+          {pino && <MapaLoja lat={pino.lat} lng={pino.lng} nome={formatarNome(v.nome)} />}
           {comoChegar && (
             <a href={comoChegar} data-medir="mapa" target="_blank" rel="noopener noreferrer" aria-label="Como chegar à loja (abre em nova aba)" className={classesBotao("secundario", false, "mt-1 w-full sm:w-fit")}>
               <Navigation className="size-5" aria-hidden />

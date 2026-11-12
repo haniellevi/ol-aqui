@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -32,7 +33,7 @@ export default async function GerenciarLoja({ params }: { params: Promise<{ id: 
     if (!dados) notFound();
     return (
       <PaginaConta>
-        <TopoConta titulo={loja.nome} texto="Edite endereço, horários, descrição e entrega da vitrine." voltar={voltar} textoVoltar="Minhas lojas" />
+        <TopoConta titulo={formatarNome(loja.nome)} texto="Edite endereço, horários, descrição e entrega da vitrine." voltar={voltar} textoVoltar="Minhas lojas" />
         <FormInformacoes dados={{ ...dados, instagram: null, formas_pagamento: [] }}
           formasDoPainel={[]} salvarComoGerente={salvarVitrineGerenciada.bind(null, id)} />
       </PaginaConta>
@@ -43,7 +44,7 @@ export default async function GerenciarLoja({ params }: { params: Promise<{ id: 
   const convites = (equipe ?? []) as Convite[];
   return (
     <PaginaConta>
-      <TopoConta titulo={`Equipe de ${loja.nome}`} voltar={voltar} textoVoltar="Minhas lojas"
+      <TopoConta titulo={`Equipe de ${formatarNome(loja.nome)}`} voltar={voltar} textoVoltar="Minhas lojas"
         texto="Gerentes cuidam dos anúncios da loja (criar, editar, publicar, pausar e lixeira) e da Minha loja: capa, logo, cidade, endereço, horários, seções, produtos no topo e desempenho. Nome e WhatsApp da loja, acessos, plano, cobrança, Destacar, excluir a loja e o que usa IA ficam com o dono." />
       <FormConvidarGerente loja={id} />
       <section className="flex flex-col gap-3">

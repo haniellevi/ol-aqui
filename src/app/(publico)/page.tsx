@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -106,7 +107,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const salvosLidos = await favoritosEntre([...normais, ...destaques].map((a) => a.id), userId);
   const salvos = salvosLidos ?? new Set<string>(); // falha de leitura: corações vazios, salvar continua funcionando
   const coracao = (a: Pick<AnuncioCard, "id" | "titulo">) => (
-    <CoracaoCard anuncioId={a.id} titulo={a.titulo} logado={logado} inicial={salvos.has(a.id)} />
+    <CoracaoCard anuncioId={a.id} titulo={formatarNome(a.titulo)} logado={logado} inicial={salvos.has(a.id)} />
   );
 
   const ativos = blocos.filter((b) => b.ativo);
@@ -186,7 +187,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             <div role="group" aria-label="Filtros rápidos" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
               {cidade && (
                 <Chip href={linkFiltros({ ...filtros, minha: !filtros.minha })} ativo={filtros.minha} icone={<MapPin />} scroll={false}>
-                  Só em {cidade}
+                  Só em {formatarNome(cidade)}
                 </Chip>
               )}
               <Chip href={linkFiltros({ ...filtros, ate: !filtros.ate })} ativo={filtros.ate} scroll={false}>

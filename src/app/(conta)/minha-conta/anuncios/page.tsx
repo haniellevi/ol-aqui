@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -200,7 +201,7 @@ function LinhaAnuncio({
   mudanca?: LinhaHistorico;
   podeDestacar?: boolean;
 }) {
-  const titulo = a.titulo?.trim() || "Anúncio sem título";
+  const titulo = formatarNome(a.titulo) || "Anúncio sem título";
   const rotulo = ROTULO[a.status];
   const publico = a.status === "ativo" || a.status === "vendido";
   const pago = !!a.pago_ate && new Date(a.pago_ate).getTime() > Date.now();

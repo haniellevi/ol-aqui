@@ -2,6 +2,7 @@
 // Server Component: busca os pedidos e decide, NO SERVIDOR, o que o usuário pode ver.
 // Quem não tem acesso ao Radar nunca recebe detalhes nem nome do comprador no HTML.
 // Preços dos planos vêm da tabela `planos` (editável no painel), nunca do código.
+import { formatarNome } from "@/lib/formatar-nome";
 import { auth } from "@clerk/nextjs/server";
 import { Radar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -133,7 +134,7 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
     souComprador: p.sou_comprador,
     // Bloqueio real: o banco já devolve null para quem não tem acesso; aqui reforçamos.
     detalhes: temAcesso || p.sou_comprador ? p.detalhes : null,
-    compradorNome: temAcesso ? p.comprador_primeiro_nome : null,
+    compradorNome: temAcesso ? formatarNome(p.comprador_primeiro_nome) || null : null,
   }));
 
   function linkPagina(n: number) {

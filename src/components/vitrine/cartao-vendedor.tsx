@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
@@ -14,7 +15,7 @@ type Dados = Pick<
 // Cartão do vendedor na página do anúncio: loja leva à vitrine; pessoa física ao perfil (só o primeiro nome).
 export function CartaoVendedor({ v }: { v: Dados }) {
   const loja = v.vitrine_tipo === "loja";
-  const nome = loja ? v.vitrine_nome : primeiroNome(v.vitrine_nome);
+  const nome = loja ? formatarNome(v.vitrine_nome) : primeiroNome(v.vitrine_nome);
   const href = loja ? linkLoja(v.vitrine_slug) : linkVendedor(v.vitrine_id);
   const desdeTexto = desde(v.vitrine_desde);
 

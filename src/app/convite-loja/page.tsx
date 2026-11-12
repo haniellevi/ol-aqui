@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { SignOutButton } from "@clerk/nextjs";
@@ -46,7 +47,7 @@ export default async function ConviteLoja({ searchParams }: { searchParams: Prom
 
   return (
     <PaginaConta>
-      <TopoConta titulo={data ? `Gerenciar ${data.nome}` : "Convite para gerenciar uma loja"} voltar={null} />
+      <TopoConta titulo={data ? `Gerenciar ${formatarNome(data.nome)}` : "Convite para gerenciar uma loja"} voltar={null} />
       {error ? <Aviso tipo="erro">Não foi possível consultar o convite. Atualize a página para tentar novamente.</Aviso>
         : data ? (
           <>

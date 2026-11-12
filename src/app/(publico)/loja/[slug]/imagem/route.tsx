@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import { ImageResponse } from "next/og";
 import { vitrinePublica } from "@/lib/dados/vitrine-completa";
 import { corDoTextoSobre, corSegura } from "@/components/vitrine/regras";
@@ -14,7 +15,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const headers = { "Cache-Control": "private, no-store" };
   if (v === undefined) return new Response("Imagem temporariamente indisponível", { status: 503, headers });
   if (!v || v.status !== "ativa") return new Response("Loja não encontrada", { status: 404, headers });
-  const nome = v?.nome ?? "Loja no Mercado da Região";
+  const nome = formatarNome(v?.nome) || "Loja no Mercado da Região";
   const fundo = corSegura(v?.banner_cor);
   const texto = corDoTextoSobre(fundo);
   const cidade = v ? [v.bairro, v.cidade].filter(Boolean).join(", ") : "";

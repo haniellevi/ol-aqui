@@ -1,5 +1,6 @@
 "use client";
 
+import { formatarNome } from "@/lib/formatar-nome";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ImageOff, Save } from "lucide-react";
@@ -92,7 +93,7 @@ export function EscolherProdutos({
                   )}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="line-clamp-2 text-base leading-5">{a.titulo}</span>
+                  <span className="line-clamp-2 text-base leading-5">{formatarNome(a.titulo)}</span>
                   <span className="text-base font-bold">{preco(a.preco_centavos)}</span>
                   {a.status === "pausado" && <span className="text-legenda text-texto-suave">Pausado: só aparece quando voltar ao ar</span>}
                 </span>

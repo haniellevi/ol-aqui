@@ -1,5 +1,6 @@
 "use client";
 
+import { formatarNome } from "@/lib/formatar-nome";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search, ShieldCheck } from "lucide-react";
@@ -108,7 +109,7 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
                       <ShieldCheck className="absolute -right-1 -bottom-1 size-5 rounded-full bg-cartao p-0.5 text-verde-escuro" aria-label="Loja verificada" role="img" />
                     )}
                   </span>
-                  <span className="line-clamp-2 max-w-full hyphens-auto break-words">{l.nome}</span>
+                  <span className="line-clamp-2 max-w-full hyphens-auto break-words">{formatarNome(l.nome)}</span>
                 </Link>
               </li>
             ))}

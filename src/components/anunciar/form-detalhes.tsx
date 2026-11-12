@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
+import { avisoComoVaiAparecer } from "@/lib/formatar-nome";
 import { salvarDetalhes } from "@/app/(conta)/anunciar/actions";
 import type { Atributos, CampoCategoria } from "@/lib/tipos";
 import { AvisoErro } from "./aviso-erro";
@@ -51,6 +52,7 @@ export function FormDetalhes({
 }) {
   const [estado, onSubmit, enviando, enviar] = useEnvioAnuncio(salvarDetalhes);
   const [titulo, setTitulo] = useState(tituloInicial);
+  const comoAparece = avisoComoVaiAparecer(titulo);
   const [descricao, setDescricao] = useState(descricaoInicial);
   const [valores, setValores] = useState<Record<string, string>>(() =>
     Object.fromEntries(campos.map((c) => [c.chave, paraTexto(c, atributos[c.chave])])),
@@ -77,7 +79,7 @@ export function FormDetalhes({
         placeholder="Ex.: Moto Titan 150 2015"
         aria-required
         erro={erroDe("titulo")}
-        dica={`${titulo.trim().length} de 90 letras. Diga o que é, a marca e o modelo.`}
+        dica={`${titulo.trim().length} de 90 letras. Diga o que é, a marca e o modelo.${comoAparece ? ` ${comoAparece}` : ""}`}
       />
 
       {campos.map((c) => {

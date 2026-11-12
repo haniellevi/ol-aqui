@@ -1,3 +1,4 @@
+import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -116,7 +117,7 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
           )}
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-base font-semibold">{anuncio.titulo || "Anúncio sem título"}</span>
+          <span className="truncate text-base font-semibold">{formatarNome(anuncio.titulo) || "Anúncio sem título"}</span>
           <span className="text-sm text-texto-suave">{preco(anuncio.preco_centavos)}</span>
         </span>
       </section>
