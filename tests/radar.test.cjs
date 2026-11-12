@@ -117,3 +117,60 @@ test('v2: leitura de indicações e pedido bloqueado',async()=>{
  await assert.rejects(mk(null).indicacoesDoPedido(id),/Não foi possível/);
  assert.equal((await mk([{id,bloqueado:true}]).pedidoRadar(id)).bloqueado,true);
 });
+test('v2 telas: cada campo de erro volta ao passo dele',()=>{
+ const {passoDoCampo}=carregar('src/components/radar/passos-pedido.ts');
+ for(const c of ['titulo','detalhes','categoria','preco','preco_min_centavos','preco_max_centavos']) assert.equal(passoDoCampo(c),1);
+ assert.equal(passoDoCampo('cidades'),2);assert.equal(passoDoCampo('cidade'),2);
+ assert.equal(passoDoCampo('visibilidade'),3);
+ for(const c of ['prazo','whatsapp','celular',undefined,null]) assert.equal(passoDoCampo(c),4);
+});
+test('v2 telas: o passo só confere o que pergunta',()=>{
+ const {erroDoPasso}=carregar('src/components/radar/passos-pedido.ts');
+ const c1='80000000-0000-4000-a000-0000000000c1',c2='80000000-0000-4000-a000-0000000000c2';
+ const e={chaveEnvio:id,titulo:'Procuro mesa de madeira',modo:'propostas_prazo',prazoHoras:null,cidadesIds:[],visibilidade:'lojas'};
+ // passo 1 não reclama do prazo (passo 4), mas reclama do título e do preço
+ assert.equal(erroDoPasso(1,e,[c1]),null);
+ assert.equal(erroDoPasso(1,{...e,titulo:'abc'},[c1]).campo,'titulo');
+ assert.equal(erroDoPasso(1,{...e,precoMin:'20',precoMax:'10'},[c1]).campo,'preco_max_centavos');
+ // passo 2: só cidades da lista; vazio = região toda
+ assert.equal(erroDoPasso(2,e,[c1]),null);
+ assert.equal(erroDoPasso(2,{...e,cidadesIds:[c1]},[c1]),null);
+ assert.equal(erroDoPasso(2,{...e,cidadesIds:[c2]},[c1]).campo,'cidades');
+ assert.equal(erroDoPasso(3,{...e,visibilidade:'x'},[c1]).campo,'visibilidade');
+ assert.equal(erroDoPasso(3,{...e,visibilidade:'todos'},[c1]),null);
+ // passo 4 confere tudo
+ assert.equal(erroDoPasso(4,e,[c1]).campo,'prazo');
+ assert.equal(erroDoPasso(4,{...e,prazoHoras:72},[c1]),null);
+});
+test('v2 telas: área vira lista sem repetidas e texto do resumo',()=>{
+ const {cidadesParaEnvio,textoArea}=carregar('src/components/radar/passos-pedido.ts');
+ const cs=[{id:'a',nome:'Corrente'},{id:'b',nome:'Gilbués'}];
+ assert.deepEqual(cidadesParaEnvio([]),[]);
+ assert.deepEqual(cidadesParaEnvio(['a','b','a']),['a','b']);
+ assert.equal(textoArea([],cs),'Toda a região');
+ assert.equal(textoArea(['b','a'],cs),'Corrente, Gilbués');
+});
+test('v2 telas: a fala preenche o título vazio ou soma aos detalhes',()=>{
+ const {juntarFala}=carregar('src/components/radar/passos-pedido.ts');
+ assert.deepEqual(juntarFala('','','  geladeira  usada '),{titulo:'geladeira usada',detalhes:''});
+ assert.deepEqual(juntarFala('Geladeira','branca','de 2 portas'),{titulo:'Geladeira',detalhes:'branca de 2 portas'});
+ assert.deepEqual(juntarFala('Geladeira','','  '),{titulo:'Geladeira',detalhes:''});
+ assert.equal(juntarFala('','','a'.repeat(200)).titulo.length,120);
+});
+test('v2 telas: vencimento e quando mostrar Pedir de novo',()=>{
+ const {diasParaVencer,textoVencimento,mostrarPedirDeNovo}=carregar('src/components/radar/passos-pedido.ts');
+ const agora=Date.parse('2026-11-12T12:00:00Z');
+ assert.equal(diasParaVencer('2026-11-13T11:00:00Z',agora),1);
+ assert.equal(diasParaVencer('2026-11-26T12:00:00Z',agora),14);
+ assert.equal(diasParaVencer('2026-11-10T12:00:00Z',agora),0);
+ assert.equal(diasParaVencer('lixo',agora),0);
+ assert.equal(textoVencimento(0),'Vence hoje');assert.equal(textoVencimento(1),'Vence em 1 dia');assert.equal(textoVencimento(9),'Vence em 9 dias');
+ const base={situacao:'aberto',fechado_motivo:null,pode_estender:false,extensoes:2,diasRestantes:1};
+ assert.equal(mostrarPedirDeNovo(base),true);
+ assert.equal(mostrarPedirDeNovo({...base,pode_estender:true}),false);
+ assert.equal(mostrarPedirDeNovo({...base,extensoes:0}),false);
+ assert.equal(mostrarPedirDeNovo({...base,diasRestantes:10}),false);
+ assert.equal(mostrarPedirDeNovo({...base,situacao:'fechado',fechado_motivo:'resolvido'}),true);
+ assert.equal(mostrarPedirDeNovo({...base,situacao:'fechado',fechado_motivo:'moderacao'}),false);
+ assert.equal(mostrarPedirDeNovo({...base,situacao:'prazo_acabou'}),false);
+});

@@ -3,17 +3,61 @@ import { useRef, useState, useTransition } from "react";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
-import { Archive, ArchiveRestore, CheckCircle2, XCircle } from "lucide-react";
+import { Archive, ArchiveRestore, CalendarPlus, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
-import { fecharPedido, mudarArquivoPedido } from "@/app/radar/actions";
+import { estenderPedido, fecharPedido, mudarArquivoPedido } from "@/app/radar/actions";
+import { FolhaResolver, type LojaComProposta } from "./folha-resolver";
+import { dataHoraCurta } from "./util";
 
-type Acao = "resolvido" | "cancelado" | "arquivar" | "desarquivar";
+type Acao = "cancelado" | "arquivar" | "desarquivar";
+const BOTAO_GRANDE = "min-h-12! text-lg!";
+
+/** Cartão de destaque perto do vencimento: "Ainda preciso" (mais um prazo) ou "Já resolvi". */
+export function DestaquePrazo({ pedidoId, propostas, vencimento }: { pedidoId: string; propostas: LojaComProposta[]; vencimento: string }) {
+  const router = useRouter();
+  const trava = useRef(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [feito, setFeito] = useState<string | null>(null);
+  const [pendente, iniciar] = useTransition();
+
+  function aindaPreciso() {
+    if (trava.current) return;
+    trava.current = true;
+    setErro(null);
+    iniciar(async () => {
+      try {
+        const r = await estenderPedido(pedidoId);
+        if (!r.ok) { setErro(r.erro); return; }
+        setFeito(`Pronto! Seu pedido fica no ar até ${dataHoraCurta(r.expiraEm)}.`);
+        router.refresh();
+      } catch { setErro("Não conseguimos salvar. Tente novamente."); }
+      finally { trava.current = false; }
+    });
+  }
+
+  if (feito) {
+    return <p role="status" className="rounded-card bg-sucesso-fundo p-4 text-lg font-semibold text-verde-escuro">{feito}</p>;
+  }
+  return (
+    <section aria-labelledby="titulo-achou" className="flex flex-col gap-3 rounded-card border border-laranja-escuro bg-cartao p-4 shadow-1">
+      <h2 id="titulo-achou" className="text-2xl font-semibold text-beringela">Você achou o que procurava?</h2>
+      <p className="text-lg text-texto">{vencimento}. Se ainda precisa, ele fica mais 15 dias no ar.</p>
+      <Botao larguraTotal icone={<CalendarPlus />} carregando={pendente} textoCarregando="Salvando..." onClick={aindaPreciso} className={BOTAO_GRANDE}>
+        Ainda preciso
+      </Botao>
+      <FolhaResolver pedidoId={pedidoId} propostas={propostas} />
+      {erro && <p role="alert" className="text-lg font-semibold text-perigo">{erro}</p>}
+    </section>
+  );
+}
 
 export function AcoesPedido({
-  pedidoId, podeResolver, podeCancelar, podeArquivar, arquivado, aberto,
+  pedidoId, podeResolver, propostas = [], podeCancelar, podeArquivar, arquivado, aberto,
 }: {
   pedidoId: string;
+  /** "Já resolvi" aqui embaixo (fica fora quando o cartão "Você achou o que procurava?" já mostra). */
   podeResolver: boolean;
+  propostas?: LojaComProposta[];
   podeCancelar: boolean;
   podeArquivar: boolean;
   arquivado: boolean;
@@ -39,7 +83,7 @@ export function AcoesPedido({
       try {
         const r = acao === "arquivar" || acao === "desarquivar"
           ? await mudarArquivoPedido(pedidoId, acao === "arquivar")
-          : await fecharPedido(pedidoId, acao);
+          : await fecharPedido(pedidoId, "cancelado");
         if (!r.ok) { setErro(r.erro); return; }
         setJanela(false);
         router.refresh();
@@ -51,11 +95,6 @@ export function AcoesPedido({
   if (!(podeResolver || podeCancelar || podeArquivar)) return null;
 
   const textos = {
-    resolvido: {
-      titulo: "Já encontrou o que procurava?",
-      detalhe: "O pedido ficará como resolvido e deixará de receber propostas. Você poderá consultar as ofertas recebidas. Para pedir novamente, será preciso criar outro pedido.",
-      botao: "Sim, já resolvi",
-    },
     cancelado: {
       titulo: "Cancelar este pedido?",
       detalhe: "O pedido sairá do Radar e o acesso aos contatos será encerrado. Para pedir novamente, será preciso criar outro pedido.",
@@ -76,14 +115,14 @@ export function AcoesPedido({
   }[acao];
 
   return <section className="flex flex-col gap-2 border-t border-borda pt-4" aria-label="Ações do pedido">
-    {podeResolver && <Botao variante="secundario" larguraTotal icone={<CheckCircle2 />} disabled={pendente} onClick={() => abrir("resolvido")}>Já resolvi</Botao>}
+    {podeResolver && <FolhaResolver pedidoId={pedidoId} propostas={propostas} />}
     {podeArquivar && (
-      <Botao variante="secundario" larguraTotal icone={arquivado ? <ArchiveRestore /> : <Archive />} disabled={pendente}
+      <Botao variante="secundario" larguraTotal icone={arquivado ? <ArchiveRestore /> : <Archive />} disabled={pendente} className={BOTAO_GRANDE}
         onClick={() => abrir(arquivado ? "desarquivar" : "arquivar")}>
         {arquivado ? "Retirar do arquivo" : aberto ? "Encerrar e arquivar" : "Arquivar pedido"}
       </Botao>
     )}
-    {podeCancelar && <Botao variante="texto" icone={<XCircle />} disabled={pendente} onClick={() => abrir("cancelado")}>Cancelar pedido</Botao>}
+    {podeCancelar && <Botao variante="texto" icone={<XCircle />} disabled={pendente} onClick={() => abrir("cancelado")} className={BOTAO_GRANDE}>Cancelar pedido</Botao>}
     <AlertDialog open={janela} onOpenChange={(abrir) => { if (!abrir && !trava.current) setJanela(false); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -92,8 +131,8 @@ export function AcoesPedido({
         </AlertDialogHeader>
         {erro && <Alert variant="destructive">{erro}</Alert>}
         <AlertDialogFooter>
-          <Botao variante="secundario" disabled={pendente} onClick={() => setJanela(false)}>Voltar</Botao>
-          <Botao variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar}>{textos.botao}</Botao>
+          <Botao variante="secundario" disabled={pendente} onClick={() => setJanela(false)} className={BOTAO_GRANDE}>Voltar</Botao>
+          <Botao variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar} className={BOTAO_GRANDE}>{textos.botao}</Botao>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

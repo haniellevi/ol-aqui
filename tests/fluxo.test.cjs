@@ -271,21 +271,24 @@ test('perfil sem sessão mantém o destino original ao pedir login',async()=>{
   });
   await assert.rejects(pagina.default({searchParams:Promise.resolve({redirect_url:'/radar/pedir?q=Bicicleta'})}),e=>e.message==='/entrar?redirect_url=%2Fradar%2Fpedir%3Fq%3DBicicleta');
 });
-test('pedido usa cidade da busca, cidade escolhida ou sede e nunca a primeira alfabética',async()=>{
-  for (const [busca,selecionada,esperado] of [['',null,'Corrente'],['','Bom Jesus','Bom Jesus'],['Corrente','Bom Jesus','Corrente'],['Outra região',null,null]]) {
+test('pedido começa em Toda a região, manda as cidades com id e avisa cidade de fora',async()=>{
+  for (const [busca,selecionada,avisa] of [['',null,false],['','Bom Jesus',false],['Corrente','Bom Jesus',false],['Outra região',null,true]]) {
     const pagina=carregar('src/app/radar/pedir/page.tsx',{
       'next/link':{},'lucide-react':{},
       '@clerk/nextjs/server':{currentUser:async()=>({id:'user_teste'})},
       '@/lib/perfil':{garantirPerfil:async()=>{},sincronizarPerfil:async()=>{}},
       '@/lib/dados/conta':{meuPerfilEVitrine:async()=>({perfil:{microrregiao_id:'r',cidade:null}})},
       '@/lib/dados/categorias':{listarCategorias:async()=>[]},
-      '@/lib/dados/regiao':{listarCidades:async()=>['Avelino Lopes','Bom Jesus','Corrente'].map(nome=>({nome})),regiaoAtual:async()=>({id:'r',cidade:selecionada,cidadeSede:'Corrente'})},
+      '@/lib/dados/regiao':{listarCidades:async()=>['Avelino Lopes','Bom Jesus','Corrente'].map((nome,i)=>({id:`c${i}`,nome,uf:'PI'})),regiaoAtual:async()=>({id:'r',cidade:selecionada,cidadeSede:'Corrente'})},
       '@/lib/dados/radar':{exigeCelularConfirmado:async()=>false,regrasRadar:async()=>({})},
-      '@/components/ui/botao':{},'@/components/ui/vazio':{},'@/components/radar/form-pedido':{FormPedido:'FormPedido'},
+      '@/components/ui/botao':{},'@/components/ui/vazio':{},'@/components/ui/alert':{Alert:'Alert'},'@/components/radar/form-pedido':{FormPedido:'FormPedido'},
     });
     const tela=await pagina.default({searchParams:Promise.resolve({cidade:busca})});
     const formulario=tela.props.children.find(e=>typeof e.type==='function');
     const campos=await formulario.type(formulario.props);
-    assert.equal(campos.props.children.find(e=>e.type==='FormPedido').props.cidadeInicial,esperado);
+    const form=campos.props.children.find(e=>e&&e.type==='FormPedido');
+    assert.equal(form.props.cidadesIniciais,undefined);
+    assert.deepEqual(form.props.cidades,[{id:'c0',nome:'Avelino Lopes'},{id:'c1',nome:'Bom Jesus'},{id:'c2',nome:'Corrente'}]);
+    assert.equal(campos.props.children.some(e=>e&&e.type==='Alert'),avisa);
   }
 });
