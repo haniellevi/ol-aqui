@@ -100,7 +100,7 @@ export function BarraContato({
               aria-label={favorito === null ? "Favorito indisponível" : favorito ? "Tirar dos favoritos" : "Salvar nos favoritos"}
               className={CORACAO}
             >
-              <Heart className={`size-6 ${favorito ? "fill-laranja-escuro text-laranja-escuro" : ""}`} aria-hidden />
+              <Heart className={`size-6 ${favorito ? "fill-coracao text-coracao" : ""}`} aria-hidden />
             </button>
           ) : (
             <Link href={entrarHref} aria-label="Entre para salvar nos favoritos" className={CORACAO}>

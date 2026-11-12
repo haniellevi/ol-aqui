@@ -20,6 +20,7 @@
   --color-aviso-fundo: #fffbeb;
   --color-patrocinado-fundo: #ffe4d1;
   --color-perigo-fundo: #fef2f2; /* perigo sobre ele: 5,9:1 */
+  --color-coracao: #e11d48; /* coração de favorito salvo: 4,7:1 sobre branco */
   --color-sucesso-fundo: #ecf8f1; /* verde-escuro sobre ele: 5,0:1 */
 
   --font-sans: var(--font-poppins), system-ui, sans-serif;
