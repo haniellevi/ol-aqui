@@ -95,6 +95,26 @@ test('enderecoBate: regras', () => {
   assert.equal(enderecoBate({ logradouro: 'Rua das Flores', cidade: 'Anápolis' }, cad), false);
   assert.equal(enderecoBate({ logradouro: 'Rua das Flores', cidade: null }, cad), false);
 });
+test('enderecoBate: ruas só com número ou ruído não aprovam por engano', () => {
+  const cad = (endereco) => ({ nome: 'x', cidade: 'Goiânia', endereco });
+  assert.equal(enderecoBate({ logradouro: 'Rua 7', cidade: 'Goiânia' }, cad('Rua 8')), false);
+  assert.equal(enderecoBate({ logradouro: 'Rua 7', cidade: 'Goiânia' }, cad('Avenida Brasil')), false);
+  assert.equal(enderecoBate({ logradouro: 'Avenida Brasil', cidade: 'Goiânia' }, cad('Rua 7')), false);
+  assert.equal(enderecoBate({ logradouro: 'Rua 7', cidade: 'Goiânia' }, cad('Rua 7')), true);
+  assert.equal(enderecoBate({ logradouro: 'R. 7', cidade: 'Goiânia' }, cad('Rua 7')), true);
+  assert.equal(enderecoBate({ logradouro: 'Rua 7', cidade: 'Goiânia' }, cad('   ')), true);
+  assert.equal(enderecoBate({ logradouro: '  ', cidade: 'Goiânia' }, cad('Rua 7')), true);
+});
+test('logradouro nulo ou vazio no comprovante → equipe[ia_duvida], não aprova só pela cidade', () => {
+  for (const logradouro of [null, '', '   ']) {
+    const d = decidir(base({ comprovante: comprovante({ logradouro }) }));
+    assert.equal(d.decisao, 'equipe'); assert.ok(d.motivosEquipe.includes('ia_duvida'));
+  }
+});
+test('rua só com número: 7 contra 8 vai à equipe como endereço diferente', () => {
+  const d = decidir(base({ comprovante: comprovante({ logradouro: 'Rua 7' }), cadastro: { nome: 'Pão Dourado', cidade: 'Goiânia', endereco: 'Rua 8' } }));
+  assert.equal(d.decisao, 'equipe'); assert.deepEqual(d.motivosEquipe, ['endereco_diferente']);
+});
 test('nome diferente → equipe[nome_diferente]', () => {
   const d = decidir(base({ comprovante: comprovante({ titular: 'Carlos Pereira' }) }));
   assert.equal(d.decisao, 'equipe'); assert.deepEqual(d.motivosEquipe, ['nome_diferente']);
@@ -140,4 +160,10 @@ test('injeção (RF 3): texto do documento nunca aprova e não vai ao parecer', 
 test('parecer de aprovação também não traz dados do documento', () => {
   const j = JSON.stringify(decidir(base()).parecer);
   for (const s of ['Maria', 'Flores', 'DOURADO', 'Goiânia', '74000000']) assert.ok(!j.includes(s), s);
+});
+
+test('todo item de parecer que o código grava tem nome para a equipe (inclui "analise")', () => {
+  const { textoItemParecerVerificacaoLoja } = carregar('src/lib/verificacao-loja/constantes.ts');
+  assert.equal(textoItemParecerVerificacaoLoja('analise'), 'Análise automática');
+  assert.equal(textoItemParecerVerificacaoLoja('qualquer_coisa_nova'), 'Outra conferência');
 });

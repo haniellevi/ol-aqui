@@ -6,7 +6,7 @@ const { carregar } = require('./carregar.cjs');
 
 // Tarefa 8: página "Verificar minha loja" (assistente de 4 passos) e o botão na página da loja.
 const CNPJ_OK = '11.222.333/0001-81';
-const AVISO_IA = 'Uma inteligência artificial confere os seus documentos. Eles não ficam guardados: são apagados assim que a conferência termina.';
+const AVISO_IA = 'Uma inteligência artificial confere os seus documentos. Eles não ficam guardados: são apagados quando a conferência termina (no máximo em 7 dias, se a equipe precisar rever).';
 const arquivo = (nome = 'conta.pdf', size = 1000, type = 'application/pdf') => ({ name: nome, size, type });
 const passos = carregar('src/components/conta/passos-verificacao-loja.ts');
 

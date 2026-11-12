@@ -51,6 +51,7 @@ export const ITENS_PARECER_VERIFICACAO_LOJA: Record<string, string> = {
   regiao: "Cidade na região",
   fachada: "Fachada",
   revisao_humana: "Revisão da equipe",
+  analise: "Análise automática",
 };
 
 /** Texto do motivo para a equipe; código novo e desconhecido cai numa frase neutra. */

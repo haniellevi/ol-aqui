@@ -5,6 +5,8 @@
 begin;
 reset role;
 select id as reg from microrregioes where slug='corrente-pi' \gset
+-- A reconferência é desligada de fábrica; este teste liga a chave (o caso desligado está no teste 760).
+update configuracoes set valor = 'true'::jsonb where chave = 'verificacao.reconferencia_ativa' and microrregiao_id is null;
 
 create function pg_temp.confere(ok boolean, caso text) returns void language plpgsql as $$
 begin

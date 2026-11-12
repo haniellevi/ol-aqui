@@ -31,7 +31,8 @@ export function decidir(ctx: Contexto): Decisao {
   const add = (m: MotivoEquipe) => { if (!motivos.includes(m)) motivos.push(m); };
 
   const duvida = !(comprovante.confianca >= CONFIANCA_MINIMA) || comprovante.tipoDocumento === "outro"
-    || comprovante.titular === null || comprovante.cidade === null;
+    || comprovante.titular === null || comprovante.cidade === null
+    || comprovante.logradouro === null || comprovante.logradouro.trim() === "";
   if (duvida) add("ia_duvida");
   parecer.push({ item: "leitura", ok: !duvida, ...(duvida ? { nota: "leitura com dúvida" } : {}) });
 

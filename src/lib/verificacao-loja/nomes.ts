@@ -20,12 +20,25 @@ export function nomesBatem(a: string, b: string): boolean {
   return comum >= 2 && (comum === ta.size || comum === tb.size);
 }
 
-// Cidade tem de ser igual. Rua: pelo menos 50 % das palavras em comum (sobre a maior lista). Dado faltando → só a cidade conta.
+function vazio(texto: string | null | undefined): boolean {
+  return texto === null || texto === undefined || texto.trim() === "";
+}
+// Rua inteira sem o tipo ("Rua", "R.", "Av."), mas com os números: "Rua 7" e "R. 7" viram "7".
+function ruaCompleta(texto: string): string {
+  const todas = normalizar(texto).split(" ").filter(Boolean);
+  const sem = todas.filter((t) => !RUIDO_RUA.has(t));
+  return (sem.length ? sem : todas).join(" ");
+}
+
+// Cidade tem de ser igual. Rua: pelo menos 50 % das palavras em comum (sobre a maior lista).
+// Só a falta de texto (nulo/vazio) significa "sem dado" e deixa a cidade decidir sozinha. Rua com texto mas sem palavras
+// (só número, como "Rua 7") é comparada inteira, com os números: "Rua 7" ≠ "Rua 8" e "Rua 7" ≠ "Avenida Brasil".
 export function enderecoBate(leitura: Pick<LeituraComprovante, "logradouro" | "cidade">, cadastro: Cadastro): boolean {
   if (!leitura.cidade || normalizar(leitura.cidade) !== normalizar(cadastro.cidade)) return false;
-  if (!leitura.logradouro || !cadastro.endereco) return true;
-  const ra = tokens(leitura.logradouro, RUIDO_RUA), rb = tokens(cadastro.endereco, RUIDO_RUA);
-  if (ra.size === 0 || rb.size === 0) return true;
+  if (vazio(leitura.logradouro) || vazio(cadastro.endereco)) return true;
+  const la = leitura.logradouro as string, lb = cadastro.endereco as string;
+  const ra = tokens(la, RUIDO_RUA), rb = tokens(lb, RUIDO_RUA);
+  if (ra.size === 0 || rb.size === 0) return ruaCompleta(la) === ruaCompleta(lb);
   const comum = [...ra].filter((t) => rb.has(t)).length;
   return comum / Math.max(ra.size, rb.size) >= 0.5;
 }

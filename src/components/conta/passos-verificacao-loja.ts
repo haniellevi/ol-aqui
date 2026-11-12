@@ -13,7 +13,7 @@ export const PERGUNTAS: Record<NumeroPasso, string> = {
   4: "Confira e envie",
 };
 
-export const AVISO_IA = "Uma inteligência artificial confere os seus documentos. Eles não ficam guardados: são apagados assim que a conferência termina.";
+export const AVISO_IA = "Uma inteligência artificial confere os seus documentos. Eles não ficam guardados: são apagados quando a conferência termina (no máximo em 7 dias, se a equipe precisar rever).";
 export const ACEITA_ARQUIVO = "application/pdf,image/jpeg,image/png";
 const TIPOS = ["application/pdf", "image/jpeg", "image/png"];
 
