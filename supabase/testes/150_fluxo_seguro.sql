@@ -23,9 +23,12 @@ insert into perfis (id,microrregiao_id,nome,whatsapp,whatsapp_verificado_em,cida
 insert into vitrines_lojas (dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo,plano,plano_expira_em) values
  ('user_loja',:'reg','loja-teste','Loja teste','Corrente','5589999990002','loja','full',now()+interval '30 days'),
  ('user_distante',:'distante','loja-distante','Loja distante','Outra cidade','5577999990004','loja','full',now()+interval '30 days');
-insert into vitrines_lojas (dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo,plano,teste_expira_em) values
- ('user_cota',:'reg','cota-teste','Cota teste','Corrente','5589999990003','loja','teste',now()+interval '10 days');
-update planos set propostas_radar_mes=3, limite_anuncios=1 where codigo='teste';
+insert into vitrines_lojas (dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo,plano,plano_expira_em) values
+ ('user_cota',:'reg','cota-teste','Cota teste','Corrente','5589999990003','loja','slim',now()+interval '10 days');
+-- Radar v2: só loja verificada com plano pago atende; a loja da cota agora usa o Slim com 3 propostas.
+update vitrines_lojas set verificacao_estado='aprovada', selo_loja_verificada=true where dono_id in ('user_loja','user_distante','user_cota');
+update planos set limite_anuncios=1 where codigo='teste';
+update planos set propostas_radar_mes=3, limite_anuncios=1 where codigo='slim';
 update configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 update configuracoes set valor='true' where chave='radar.exigir_celular_confirmado' and microrregiao_id is null;
 update configuracoes set valor='100' where chave in ('radar.pedidos_por_dia','radar.pedidos_abertos_max') and microrregiao_id is null;
