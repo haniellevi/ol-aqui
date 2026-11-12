@@ -54,7 +54,7 @@ export async function enderecoEntendido(sp: ParametrosUrl, original: string): Pr
     let q = restante;
     if (q) {
       const { total } = await buscarAnuncios({
-        q, categoria: folha?.categoria.slug ?? null, precoMax: precoTexto ? centavosDoTexto(precoTexto) : null,
+        q, categoria: folha?.categoria.slug ?? null, cidade: typeof sp.cidade === "string" ? sp.cidade : null, precoMax: precoTexto ? centavosDoTexto(precoTexto) : null,
         filtros: estado && campo ? { estado: [opcao!] } : undefined, limite: 1,
       });
       if (total === 0) q = "";

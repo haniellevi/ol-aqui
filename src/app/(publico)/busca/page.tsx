@@ -52,6 +52,7 @@ export default async function PaginaBusca({ searchParams }: Props) {
         sp={sp}
         categoria={categoria}
         categoriaPeloEndereco={false}
+        termoDigitado={entendeu ? q : undefined}
         topo={
           <>
             <h1 className="text-titulo font-semibold">{q ? `Resultados para “${q}”` : "Buscar anúncios"}</h1>

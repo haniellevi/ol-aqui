@@ -160,7 +160,7 @@ export function ResultadosBusca({
         {paginas > 1 && <Paginacao caminho={caminho} sp={sp} pagina={estado.pagina} paginas={paginas} />}
       </section>
 
-      <FolhaFiltros key={comParametros(caminho, sp)} caminho={caminho} estado={estado} campos={campos} facetas={facetas} cidades={cidades} categorias={categorias} />
+      <FolhaFiltros key={comParametros(caminho, sp)} caminho={caminho} estado={estado} campos={campos} facetas={facetas} cidades={cidades} categorias={categorias} ia={(Array.isArray(sp.ia) ? sp.ia[0] : sp.ia) || undefined} />
     </>
   );
 }

@@ -37,7 +37,7 @@ export function numerosDoTexto(texto: string): NumeroBusca[] {
   const saida: NumeroBusca[] = [];
   for (const m of texto.matchAll(RE_NUMERO)) {
     const inteiro = m[1].replace(/\./g, "");
-    const reais = Number(`${inteiro}${m[2] ? `.${m[2]}` : ""}`) * (m[3] ? 1000 : 1);
+    const reais = Math.round(Number(`${inteiro}${m[2] ? `.${m[2]}` : ""}`) * (m[3] ? 1000 : 1) * 100) / 100;
     if (!Number.isFinite(reais) || reais <= 0 || reais > MAX_REAIS) continue;
     saida.push({ reais, inicio: m.index ?? 0, fim: (m.index ?? 0) + m[0].length });
     if (saida.length >= MAX_NUMEROS) break;

@@ -33,7 +33,10 @@ export function FolhaFiltros({
   facetas,
   cidades,
   categorias,
+  ia,
 }: {
+  /** Frase original da busca que entende (ia=...): segue ao aplicar filtros, para não perder o texto nem reinterpretar. */
+  ia?: string;
   /** Para onde o formulário vai (a própria página). */
   caminho: string;
   estado: EstadoBusca;
@@ -159,6 +162,7 @@ export function FolhaFiltros({
 
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-4 py-4">
             {estado.q && <input type="hidden" name="q" value={estado.q} />}
+            {ia && <input type="hidden" name="ia" value={ia} />}
 
             {categorias && (
               <fieldset id="filtro-categoria" className="scroll-mt-4">

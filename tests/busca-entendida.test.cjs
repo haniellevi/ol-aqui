@@ -35,6 +35,7 @@ test('números do texto: preço possível, sem pegar 150cc, ps5 nem a4', () => {
   assert.deepEqual(n('casa 2 quartos até 900').map((x) => x.reais), [2, 900]);
   assert.equal(n('1 2 3 4 5').length, 3);
   assert.deepEqual(n('0 reais'), []);
+  assert.deepEqual(n('tv até 8,03 mil').map((x) => x.reais), [8030]);
 });
 
 test('opções: só categorias finais e a saída "nenhuma"', () => {
