@@ -21,7 +21,7 @@ export default async function HistoricoLojaPage() {
   return (
     <PaginaConta>
       <TopoConta titulo="Histórico da loja" texto="Quem mudou nome, textos, fotos, contato ou endereço da loja." voltar={LINK_MINHA_LOJA} textoVoltar="Minha loja" />
-      <ListaHistorico linhas={linhas} vazio="Quando alguém mudar os dados da loja, a mudança aparece aqui." />
+      <ListaHistorico alvo="loja" linhas={linhas} vazio="Quando alguém mudar os dados da loja, a mudança aparece aqui." />
     </PaginaConta>
   );
 }
