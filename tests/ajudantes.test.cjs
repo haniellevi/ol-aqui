@@ -86,20 +86,47 @@ test('histórico vazio de anúncio publicado não fala em "depois de publicar"',
   assert.match(render(await pagina('rascunho')), /depois que o anúncio for publicado/);
 });
 
-test('apagar foto: ajudante apaga só na pasta do dono da loja escolhida', async () => {
+test('apagar foto: ajudante apaga só na pasta do dono de uma loja que ajuda', async () => {
   const url = (dono) => `https://abc.supabase.co/storage/v1/object/public/anuncios/${dono}/${id}/1.webp`;
-  const rodar = async (dono, loja) => {
+  const rodar = async (dono, lojas) => {
     let removidas = 0;
-    const q = { select() { return q; }, contains() { return q; }, or() { return q; }, eq() { return q; }, async limit() { return { data: [] }; }, async maybeSingle() { return { data: { id, vitrines_lojas: { dono_id: 'user_dono' } } }; } };
+    const q = { select() { return q; }, contains() { return q; }, or() { return q; }, eq() { return q; }, in() { return q; }, async limit() { return { data: [] }; }, async maybeSingle() { return { data: { id, vitrines_lojas: { dono_id: 'user_dono' } } }; } };
     const { apagarFoto } = carregar('src/lib/dados/fotos.ts', {
       '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_ajudante' }) },
-      '@/lib/dados/loja-ativa': { lojaEscolhida: async () => loja },
+      '@/lib/dados/loja-ativa': { lojasQueCuido: async () => lojas },
       '@/lib/supabase/server': { createClient: async () => ({ from: () => q, storage: { from: () => ({ getPublicUrl: () => ({ data: { publicUrl: url(dono) } }), remove: async () => { removidas++; return { error: null }; } }) } }) },
     });
     const r = await apagarFoto(url(dono));
     return { ok: r.ok, removidas };
   };
-  assert.deepEqual(await rodar('user_dono', ajudada), { ok: true, removidas: 1 });
-  assert.deepEqual(await rodar('user_outro', ajudada), { ok: false, removidas: 0 });
-  assert.deepEqual(await rodar('user_dono', propria), { ok: false, removidas: 0 });
+  assert.deepEqual(await rodar('user_dono', [propria, ajudada]), { ok: true, removidas: 1 });
+  assert.deepEqual(await rodar('user_outro', [propria, ajudada]), { ok: false, removidas: 0 });
+  assert.deepEqual(await rodar('user_dono', [propria]), { ok: false, removidas: 0 });
+});
+
+test('passo do anúncio usa a loja do próprio anúncio (rascunho do Merc com outra loja escolhida)', async () => {
+  const pedidas = [];
+  const contaDe = (loja, ajudante) => ({ perfil: {}, vitrine: { id: loja, tipo: 'loja', microrregiao_id: 'r' }, podePublicar: true, ...(ajudante ? { ajudante: true } : {}) });
+  const { carregarPasso } = carregar('src/app/(conta)/anunciar/_carregar.ts', {
+    'next/navigation': { notFound: () => { throw Error('404'); }, redirect: (u) => { throw Error('redirect:' + u); } },
+    '@/lib/dados/conta': { contaDaLoja: async (_e, loja) => { pedidas.push(loja); return loja ? contaDe(loja, false) : contaDe(ajudada.id, true); } },
+    '@/lib/dados/anuncios': { anuncioDaLoja: async () => ({ id, status: 'rascunho', vitrine_id: propria.id, fotos: [] }) },
+  });
+  const r = await carregarPasso(Promise.resolve({ rascunho: id }));
+  assert.equal(r.conta.vitrine.id, propria.id);
+  assert.equal(r.conta.ajudante, undefined);
+  assert.deepEqual(pedidas, [undefined, propria.id]);
+});
+
+test('passo Fotos: ajudante não vê "Cadastrar com o Merc pela foto"', async () => {
+  const pagina = (ajudante) => carregar('src/app/(conta)/anunciar/fotos/page.tsx', {
+    '../_carregar': { carregarPasso: async () => ({ anuncio: { id, fotos: [] }, editar: false, conta: { vitrine: { tipo: 'loja', microrregiao_id: 'r' }, ...(ajudante ? { ajudante: true } : {}) } }) },
+    '@/lib/dados/config': { lerConfigNumero: async () => 1 },
+    '@/components/anunciar/cabecalho-passo': { CabecalhoPasso: () => null },
+    '@/components/anunciar/barra-continuar': { CorpoPasso: ({ children }) => React.createElement('div', null, children) },
+    '@/components/anunciar/envio-fotos': { EnvioFotos: () => null },
+    '@/components/aki/botao-abrir-aki': { BotaoAbrirAki: ({ children }) => React.createElement('button', null, children) },
+  }).default({ searchParams: Promise.resolve({}) });
+  assert.match(render(await pagina(false)), /Cadastrar com o Merc/);
+  assert.doesNotMatch(render(await pagina(true)), /Cadastrar com o Merc/);
 });

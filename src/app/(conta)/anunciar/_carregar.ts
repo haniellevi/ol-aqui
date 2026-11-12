@@ -24,12 +24,15 @@ export async function carregarPasso(searchParams: ParamsPasso): Promise<DadosPas
   const id = um(sp.rascunho);
   if (!ehUuid(id)) redirect("/anunciar");
 
-  const conta = await contaDaLoja();
-  if (!conta) redirect("/entrar?redirect_url=/anunciar");
-  if (!conta.vitrine) redirect("/quero-vender");
+  const escolhida = await contaDaLoja();
+  if (!escolhida) redirect("/entrar?redirect_url=/anunciar");
+  if (!escolhida.vitrine) redirect("/quero-vender");
 
   const anuncio = await anuncioDaLoja(id);
   if (!anuncio || (anuncio.status === "congelado" || anuncio.status === "excluido")) notFound();
+  // O anúncio pode ser de outra loja que a pessoa cuida (ex.: rascunho do Merc na loja própria).
+  const conta = anuncio.vitrine_id === escolhida.vitrine.id ? escolhida : await contaDaLoja(false, anuncio.vitrine_id);
+  if (!conta?.vitrine) notFound();
 
   // anúncio já publicado abre sempre no modo edição
   const editar = um(sp.editar) === "1" || anuncio.status !== "rascunho";

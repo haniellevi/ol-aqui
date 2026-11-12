@@ -30,15 +30,18 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
   const p = um(sp.p);
   if (!ehUuid(id)) redirect("/anunciar");
 
-  const conta = await contaDaLoja();
-  if (!conta) redirect(`/entrar?redirect_url=${encodeURIComponent(`/anunciar/avulso?id=${id}`)}`);
-  if (!conta.vitrine) redirect("/quero-vender");
-  // P5b: pagamento é do dono da loja; o ajudante volta para o Anunciar.
-  if (conta.ajudante) redirect("/anunciar");
-  const vitrine = conta.vitrine;
+  const escolhida = await contaDaLoja();
+  if (!escolhida) redirect(`/entrar?redirect_url=${encodeURIComponent(`/anunciar/avulso?id=${id}`)}`);
+  if (!escolhida.vitrine) redirect("/quero-vender");
 
   const anuncio = await anuncioDaLoja(id);
   if (!anuncio || anuncio.status === "congelado") notFound();
+  // Conta da loja do anúncio (pode não ser a escolhida no seletor).
+  const conta = anuncio.vitrine_id === escolhida.vitrine.id ? escolhida : await contaDaLoja(false, anuncio.vitrine_id);
+  if (!conta?.vitrine) notFound();
+  // P5b: pagamento é do dono da loja; o ajudante volta para o Anunciar.
+  if (conta.ajudante) redirect("/anunciar");
+  const vitrine = conta.vitrine;
   const editar = anuncio.status !== "rascunho";
   const revisar = urlPasso("revisar", anuncio.id, editar);
 

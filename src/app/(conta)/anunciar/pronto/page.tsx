@@ -26,7 +26,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   if (anuncio.status !== "ativo" && anuncio.status !== "em_analise") redirect(urlPasso("revisar", anuncio.id, anuncio.status !== "rascunho"));
 
   // P5b: Destacar é pago e fica com o dono da loja.
-  const ajudante = (await contaDaLoja())?.ajudante === true;
+  const ajudante = (await contaDaLoja(false, anuncio.vitrine_id))?.ajudante === true;
   const emAnalise = anuncio.status === "em_analise"; // o banco decide (?status=analise só deixa o link legível)
 
   if (emAnalise) {

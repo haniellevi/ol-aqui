@@ -210,7 +210,7 @@ test('foto ainda referenciada ou consulta indisponível nunca é apagada do Stor
     const q = { select() { return q; }, contains() { return q; }, or() { return q; }, eq() { return q; }, async limit() { return resposta; } };
     const { apagarFoto } = carregar('src/lib/dados/fotos.ts', {
       '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_loja' }) },
-      '@/lib/dados/loja-ativa': { lojaEscolhida: async () => ({ id: 'loja', nome: 'Loja', dono: true }) },
+      '@/lib/dados/loja-ativa': { lojasQueCuido: async () => [{ id: 'loja', nome: 'Loja', dono: true }] },
       '@/lib/supabase/server': { createClient: async () => ({ from: () => q, storage: { from: () => ({ getPublicUrl: () => ({ data: { publicUrl: url } }), remove: async () => { removidas++; return { error: null }; } }) } }) },
     });
     const r = await apagarFoto(url);

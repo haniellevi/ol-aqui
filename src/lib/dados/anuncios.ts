@@ -1,5 +1,5 @@
 import "server-only";
-import { lojaEscolhida } from "@/lib/dados/loja-ativa";
+import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
 import { cache } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
@@ -181,14 +181,15 @@ export const meuAnuncio = cache(async (id: string): Promise<MeuAnuncio | null> =
 });
 
 /**
- * Etapa P5b: um anúncio da loja escolhida no seletor (a própria ou uma que a pessoa ajuda).
+ * Etapa P5b: um anúncio de qualquer loja que a pessoa cuida (a própria ou uma que ela ajuda), não só
+ * da escolhida no seletor: o Merc cria rascunhos na loja própria mesmo com outra loja escolhida.
  * Usado em Meus anúncios e Anunciar. A RLS confere de novo quem pode ver.
  */
 export const anuncioDaLoja = cache(async (id: string): Promise<MeuAnuncio | null> => {
-  const loja = await lojaEscolhida();
-  if (!loja || !ehUuid(id)) return null;
+  const lojas = (await lojasQueCuido()).map((l) => l.id);
+  if (!lojas.length || !ehUuid(id)) return null;
   const db = await createClient();
-  const { data, error } = await db.from("anuncios").select(COLUNAS_LOJA).eq("id", id).eq("vitrine_id", loja.id).maybeSingle();
+  const { data, error } = await db.from("anuncios").select(COLUNAS_LOJA).eq("id", id).in("vitrine_id", lojas).maybeSingle();
   if (error) throw new Error("Não foi possível carregar seu rascunho. Tente de novo.");
   return data ? semDono(data as unknown as MeuAnuncio) : null;
 });
