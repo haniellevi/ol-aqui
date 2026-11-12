@@ -7,13 +7,15 @@ import type { ComponentProps, ReactNode } from "react";
 // (ações dentro de cards, listas e tabelas). Texto 13px (12px no pequeno).
 // Largura total só no celular: do tablet para cima o botão para em 320px.
 // Principal = laranja com texto beringela (nunca branco no laranja).
+// grande = Modo fácil do Radar: 48px e letra 18px em qualquer tela (não encolhe com mouse).
 
 export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | "texto";
-export type TamanhoBotao = "normal" | "pequeno";
+export type TamanhoBotao = "normal" | "pequeno" | "grande";
 
 const TAMANHOS: Record<TamanhoBotao, string> = {
   normal: "olaki-controle min-h-10 px-4 text-sm leading-5",
   pequeno: "olaki-controle-pequeno min-h-8 px-3 text-legenda leading-4",
+  grande: "min-h-12 px-5 text-facil leading-6",
 };
 
 const BASE =
@@ -33,7 +35,7 @@ type Comum = {
   variante?: VarianteBotao;
   /** Largura cheia no celular; do tablet para cima, no máximo 320px. */
   larguraTotal?: boolean;
-  /** "pequeno" para ações dentro de cards, listas e tabelas. */
+  /** "pequeno" para ações dentro de cards, listas e tabelas; "grande" para o Modo fácil (48px, 18px). */
   tamanho?: TamanhoBotao;
   /** Mostra a bolinha girando, troca o texto e trava o botão (evita toque duplo). */
   carregando?: boolean;

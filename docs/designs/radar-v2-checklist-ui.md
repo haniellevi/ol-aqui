@@ -11,8 +11,9 @@ candidatos em `src/app/radar` + `src/components/radar` (fora: `actions.ts`, `uti
 
 - [ ] Volta ao topo — link `-ml-2 inline-flex min-h-10 … text-base font-semibold text-laranja-escuro` com
       `ChevronLeft` + texto — 3 de 3 páginas do Radar (busca `ChevronLeft` em `src/app/radar`).
-- [ ] Título da página — `h1 text-titulo font-semibold text-beringela` — 4 de 6 h1 do Radar; a pergunta de
-      cada passo vira `h2` (uma pergunta por tela, Global Constraints).
+- [ ] Título da página — `h1 font-semibold text-beringela` (o desenho dos 4 de 6 h1 do Radar), em
+      `text-facil-titulo` (24px, Modo fácil, decisão do controlador na revisão); a pergunta de cada passo é
+      `h2 text-3xl` (20px), sempre maior que o corpo (uma pergunta por tela, Global Constraints).
 - [ ] Indicador de passo — "Passo N de 4 · Nome" em `text-sm font-semibold text-texto-suave` + barrinhas
       `h-1.5 rounded-full bg-laranja | bg-borda` e `aria-current="step"` — o mecanismo e os valores de
       `CabecalhoPasso` (peça do anunciar, 7 páginas); não reutilizável aqui (preso às rotas do anúncio), então
@@ -27,8 +28,9 @@ candidatos em `src/app/radar` + `src/components/radar` (fora: `actions.ts`, `uti
 - [ ] Cidades — `Chip` de `src/components/ui/chip` (botão com `aria-pressed` e ✓ quando marcado) — a peça
       compartilhada, já usada pela referência para cidade e prazo.
 - [ ] Botões — `Botao` de `src/components/ui/botao`, um só laranja por tela (DESIGN.md "Um Laranja"),
-      `larguraTotal`; altura 48px por `min-h-12!` (o `.olaki-controle` fora de camada baixa para 36px no mouse)
-      — peça compartilhada, 12 arquivos do Radar; 48px é o Modo fácil (`docs/designs/radar-v2.md`).
+      `larguraTotal`, `tamanho="grande"` (48px e 18px em qualquer tela, sem o `.olaki-controle`); `Chip`,
+      `Campo` e `Seletor` também com `tamanho="grande"` — peça compartilhada, 12 arquivos do Radar; 48px é o
+      Modo fácil (`docs/designs/radar-v2.md`).
 - [ ] Folha — `Folha/FolhaContent/FolhaHeader/FolhaTitle` de `src/components/ui/folha` (gaveta no celular,
       janela no computador) para "Já resolvi" — a peça compartilhada, como `folha-propor`.
 - [ ] Erros — de campo: `erro` do `Campo` ou `<p role="alert" class="text-sm font-semibold text-perigo">`;
@@ -37,11 +39,10 @@ candidatos em `src/app/radar` + `src/components/radar` (fora: `actions.ts`, `uti
 - [ ] Cartões de conteúdo — `rounded-card bg-cartao p-4 shadow-1`; aviso/destaque `rounded-card bg-fundo p-4`
       — 3 de 3 telas de detalhe.
 - [ ] Texto e cor pelo tema (`text-beringela`, `text-texto-suave`, `text-laranja-escuro` em link); nunca
-      branco sobre `laranja`; corpo das telas tocadas em `text-lg` (ver aviso abaixo).
+      branco sobre `laranja`; corpo das telas tocadas em `text-facil` (18px, token novo em `globals.css`).
 - [ ] Não copiado da referência: o `CartaoModo` com `button aria-pressed` (vira rádio), o rótulo de grupo em
       `text-base`, o único botão "Pedir no Radar" (vira Voltar/Continuar + "Publicar pedido").
 
-**Aviso (decisão para uma pessoa):** no tema (`src/app/globals.css`) `text-lg` = 14px e `text-2xl` = 18px.
-O plano diz "`text-lg` (18px)"; o produto diz "texto do corpo 18px". As telas seguem a classe escrita no plano
-(`text-lg`); se o corpo deve mesmo ter 18px, a troca é `text-lg` → `text-2xl` (ou um token novo) nas telas do
-Radar.
+**Tamanho (decidido na revisão da Task 7a):** no tema `text-lg` = 14px. Para o corpo de 18px do Modo fácil
+foram criados `--text-facil` (18px) e `--text-facil-titulo` (24px) em `src/app/globals.css` (e no `cn`,
+`src/lib/utils.ts`), e as variantes aditivas `tamanho="grande"` em `Botao`, `Chip`, `Campo` e `Seletor`.

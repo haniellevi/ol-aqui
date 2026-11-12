@@ -24,6 +24,7 @@ import {
   erroDoPasso,
   juntarFala,
   passoDoCampo,
+  podePublicar,
   textoArea,
   type NumeroPasso,
 } from "./passos-pedido";
@@ -58,15 +59,16 @@ const PERGUNTAS: Record<NumeroPasso, string> = {
 
 // Erros que aparecem embaixo do próprio campo; o resto vai para o aviso geral.
 const CAMPOS_COM_ERRO = ["titulo", "detalhes", "categoria", "preco", "preco_min_centavos", "preco_max_centavos", "cidade", "cidades", "visibilidade", "prazo", "whatsapp"];
-const ROTULO_GRUPO = "text-lg font-semibold text-texto";
-const BOTAO_GRANDE = "min-h-12! text-lg!";
-const TEXTO_ERRO = "text-lg font-semibold text-perigo";
+const ROTULO_GRUPO = "text-facil font-semibold text-texto";
+const TEXTO_ERRO = "text-facil font-semibold text-perigo";
 
 export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "" }: Props) {
   const router = useRouter();
   const formulario = useRef<HTMLFormElement>(null);
   const pergunta = useRef<HTMLHeadingElement>(null);
   const trocouPasso = useRef(false);
+  /** Quando o passo 4 apareceu: o toque duplo em "Continuar" não pode publicar sem a pessoa ver o resumo. */
+  const chegouNoPasso4 = useRef<number | null>(null);
   const trava = useRef(false);
   const chaveEnvio = useRef<string | null>(null);
   const [passo, setPasso] = useState<NumeroPasso>(1);
@@ -109,6 +111,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
 
   function irPara(n: NumeroPasso) {
     trocouPasso.current = true;
+    chegouNoPasso4.current = n === TOTAL_PASSOS_PEDIDO ? Date.now() : null;
     setPasso(n);
   }
 
@@ -130,7 +133,10 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
 
   function mostrarErro(texto: string, campo?: string, celular?: boolean) {
     const destino = campo && CAMPOS_COM_ERRO.includes(campo) ? passoDoCampo(campo) : passo;
-    if (destino !== passo) setPasso(destino);
+    if (destino !== passo) {
+      chegouNoPasso4.current = null;
+      setPasso(destino);
+    }
     setErro({ texto, campo, celular });
   }
 
@@ -147,7 +153,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   }
 
   function enviar() {
-    if (trava.current) return;
+    if (trava.current || !podePublicar(chegouNoPasso4.current, Date.now())) return;
     setErro(null);
     const dados = entrada();
     const invalida = erroDoPasso(4, dados, idsValidos);
@@ -185,13 +191,14 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
     <form ref={formulario} onSubmit={aoEnviarFormulario} noValidate>
       <fieldset disabled={enviando} className="flex min-w-0 flex-col gap-6">
         <IndicadorPasso passo={passo} />
-        <h2 ref={pergunta} id="pergunta-passo" tabIndex={-1} className="text-2xl font-semibold text-beringela outline-none">
+        <h2 ref={pergunta} id="pergunta-passo" tabIndex={-1} className="text-3xl font-semibold text-beringela outline-none">
           {PERGUNTAS[passo]}
         </h2>
 
         {passo === 1 && (
           <div className="flex flex-col gap-6">
             <Campo
+              tamanho="grande"
               rotulo="Em poucas palavras"
               name="titulo"
               value={titulo}
@@ -209,6 +216,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
               }}
             />
             <Campo
+              tamanho="grande"
               rotulo="Detalhes"
               name="detalhes"
               multilinha
@@ -224,12 +232,13 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
                 Quanto quer pagar? <span className="font-normal text-texto-suave">(opcional)</span>
               </legend>
               <div className="grid grid-cols-2 gap-3">
-                <Campo rotulo="De" name="preco_min" prefixo="R$" inputMode="decimal" value={precoMin} onChange={(e) => setPrecoMin(e.target.value)} placeholder="0" erro={erroDe("preco_min_centavos")} />
-                <Campo rotulo="Até" name="preco_max" prefixo="R$" inputMode="decimal" value={precoMax} onChange={(e) => setPrecoMax(e.target.value)} placeholder="0" erro={erroDe("preco_max_centavos", "preco")} />
+                <Campo tamanho="grande" rotulo="De" name="preco_min" prefixo="R$" inputMode="decimal" value={precoMin} onChange={(e) => setPrecoMin(e.target.value)} placeholder="0" erro={erroDe("preco_min_centavos")} />
+                <Campo tamanho="grande" rotulo="Até" name="preco_max" prefixo="R$" inputMode="decimal" value={precoMax} onChange={(e) => setPrecoMax(e.target.value)} placeholder="0" erro={erroDe("preco_max_centavos", "preco")} />
               </div>
             </fieldset>
             {categorias.length > 0 && (
               <Seletor
+                tamanho="grande"
                 rotulo="Categoria (opcional)"
                 name="categoria"
                 value={categoriaId ?? ""}
@@ -286,10 +295,10 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
                   ajuda="Você compara preço e foto e só chama quem quiser. Seu número fica escondido."
                 >
                   <div className="flex flex-col gap-2">
-                    <span className="text-lg font-semibold text-beringela">Receber propostas por</span>
+                    <span className="text-facil font-semibold text-beringela">Receber propostas por</span>
                     <div role="group" aria-label="Receber propostas por" className="flex flex-wrap gap-2">
                       {regras.prazosHoras.map((h) => (
-                        <Chip key={h} ativo={prazo === h} onClick={() => setPrazo(h)} className={BOTAO_GRANDE}>
+                        <Chip key={h} ativo={prazo === h} onClick={() => setPrazo(h)} tamanho="grande">
                           {rotuloPrazo(h)}
                         </Chip>
                       ))}
@@ -302,6 +311,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
 
             {pedirWhatsapp && (
               <Campo
+              tamanho="grande"
                 rotulo="Seu WhatsApp"
                 name="whatsapp"
                 {...whatsapp.campo}
@@ -311,8 +321,8 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
             )}
 
             <section aria-labelledby="titulo-resumo" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-              <h3 id="titulo-resumo" className="text-xl font-semibold text-beringela">Seu pedido</h3>
-              <dl className="flex flex-col gap-3 text-lg">
+              <h3 id="titulo-resumo" className="text-facil font-bold text-beringela">Seu pedido</h3>
+              <dl className="flex flex-col gap-3 text-facil">
                 <LinhaResumo rotulo="O que" valor={titulo.trim()} passo={1} irPara={irPara} />
                 <LinhaResumo rotulo="Quanto" valor={precoTexto} passo={1} irPara={irPara} />
                 <LinhaResumo rotulo="Onde" valor={textoArea(area, cidades)} passo={2} irPara={irPara} />
@@ -323,7 +333,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         )}
 
         {erroGeral && (
-          <Alert variant="destructive" role="alert" tabIndex={-1} className="flex flex-col gap-2 text-lg">
+          <Alert variant="destructive" role="alert" tabIndex={-1} className="flex flex-col gap-2 text-facil">
             <span>{erroGeral.texto}</span>
             {erroGeral.celular && (
               <Link href="/confirmar-celular?destino=%2Fradar%2Fpedir" className="min-h-12 content-center underline underline-offset-4">
@@ -336,22 +346,22 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         <div className="flex flex-col gap-2">
           <div className={`grid gap-3 ${passo > 1 ? "grid-cols-[auto_1fr]" : "grid-cols-1"}`}>
             {passo > 1 && (
-              <Botao variante="secundario" icone={<ArrowLeft />} onClick={voltar} className={BOTAO_GRANDE}>
+              <Botao variante="secundario" icone={<ArrowLeft />} onClick={voltar} tamanho="grande">
                 Voltar
               </Botao>
             )}
             {passo < TOTAL_PASSOS_PEDIDO ? (
-              <Botao type="submit" icone={<ArrowRight />} className={`w-full ${BOTAO_GRANDE}`}>
+              <Botao key="continuar" type="submit" icone={<ArrowRight />} tamanho="grande" className="w-full">
                 Continuar
               </Botao>
             ) : (
-              <Botao type="submit" carregando={enviando} textoCarregando="Publicando..." icone={<Megaphone />} className={`w-full ${BOTAO_GRANDE}`}>
+              <Botao key="publicar" type="submit" carregando={enviando} textoCarregando="Publicando..." icone={<Megaphone />} tamanho="grande" className="w-full">
                 Publicar pedido
               </Botao>
             )}
           </div>
           {passo === TOTAL_PASSOS_PEDIDO && regras.pedidosAbertosMax != null && (
-            <p className="text-center text-lg text-texto-suave">Você pode ter até {regras.pedidosAbertosMax} pedidos no ar ao mesmo tempo.</p>
+            <p className="text-center text-facil text-texto-suave">Você pode ter até {regras.pedidosAbertosMax} pedidos no ar ao mesmo tempo.</p>
           )}
         </div>
       </fieldset>
@@ -363,7 +373,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
 function IndicadorPasso({ passo }: { passo: NumeroPasso }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-lg font-semibold text-texto-suave">
+      <p className="text-facil font-semibold text-texto-suave">
         Passo {passo} de {TOTAL_PASSOS_PEDIDO} · {NOMES_PASSOS_PEDIDO[passo - 1]}
       </p>
       <ol className="flex gap-1" aria-hidden>
@@ -382,7 +392,7 @@ function LinhaResumo({ rotulo, valor, passo, irPara }: { rotulo: string; valor: 
         <dt className="text-texto-suave">{rotulo}</dt>
         <dd className="font-semibold break-words text-texto">{valor || "—"}</dd>
       </div>
-      <Botao variante="texto" onClick={() => irPara(passo)} className={BOTAO_GRANDE}>
+      <Botao variante="texto" onClick={() => irPara(passo)} tamanho="grande">
         Alterar<span className="sr-only"> {rotulo.toLowerCase()}</span>
       </Botao>
     </div>

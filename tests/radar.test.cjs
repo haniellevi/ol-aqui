@@ -174,3 +174,45 @@ test('v2 telas: vencimento e quando mostrar Pedir de novo',()=>{
  assert.equal(mostrarPedirDeNovo({...base,situacao:'fechado',fechado_motivo:'moderacao'}),false);
  assert.equal(mostrarPedirDeNovo({...base,situacao:'prazo_acabou'}),false);
 });
+test('v2 telas: toque duplo em Continuar não publica antes de mostrar o resumo',()=>{
+ const {podePublicar,ESPERA_PUBLICAR_MS}=carregar('src/components/radar/passos-pedido.ts');
+ assert.equal(ESPERA_PUBLICAR_MS,600);
+ assert.equal(podePublicar(null,10_000),false); // passo 4 ainda não apareceu
+ assert.equal(podePublicar(10_000,10_000),false); // mesmo instante do Continuar
+ assert.equal(podePublicar(10_000,10_599),false);
+ assert.equal(podePublicar(10_000,10_600),true);
+ assert.equal(podePublicar(10_000,20_000),true);
+});
+function folhaResolver(estado=[]){
+ const React=require('react');const {renderToStaticMarkup}=require('react-dom/server');
+ const log={acoes:[],estado:[],refresh:0,botoes:{}};let fila=[...estado];
+ const reactMock={...React,cache:f=>f,
+  useState:(ini)=>{const v=fila.length?fila.shift():ini;return [v,(n)=>log.estado.push(n)];},
+  useTransition:()=>[false,(cb)=>{log.ultima=cb();}],useRef:(v)=>({current:v})};
+ const Inline=({children})=>React.createElement('div',null,children);
+ const texto=(c)=>React.Children.toArray(c).map(x=>typeof x==='string'?x:'').join('').trim();
+ const {FolhaResolver}=carregar('src/components/radar/folha-resolver.tsx',{
+  react:reactMock,'next/navigation':{useRouter:()=>({refresh:()=>log.refresh++})},
+  '@/app/radar/actions':{resolverPedido:async(...a)=>{log.acoes.push(['resolver',...a]);return {ok:true};},avaliarPedido:async(...a)=>{log.acoes.push(['avaliar',...a]);return {ok:true};}},
+  '@/components/ui/folha':{Folha:Inline,FolhaContent:Inline,FolhaHeader:Inline,FolhaTitle:Inline,FolhaDescription:Inline},
+  '@/components/ui/botao':{Botao:({children,onClick})=>{log.botoes[texto(children)]=onClick;return React.createElement('button',null,children);}},
+  '@/components/ui/alert':{Alert:Inline},
+ });
+ const html=renderToStaticMarkup(React.createElement(FolhaResolver,{pedidoId:id,propostas:[{propostaId:'p1',lojaNome:'Eletro Corrente'}]}));
+ return {html,log};
+}
+test('v2 telas: FolhaResolver — Outro lugar resolve fora e fecha; loja vai para Como foi',async()=>{
+ const um=folhaResolver([true,1,null,null]);
+ assert.match(um.html,/Com quem você resolveu\?/);assert.match(um.html,/Eletro Corrente/);assert.match(um.html,/Outro lugar/);
+ um.log.botoes['Outro lugar']();await um.log.ultima;
+ assert.deepEqual(um.log.acoes,[['resolver',id,null,true]]);
+ assert.ok(um.log.estado.includes(false));assert.equal(um.log.refresh,1); // fechou e atualizou
+ const loja=folhaResolver([true,1,null,null]);
+ loja.log.botoes['Eletro Corrente']();await loja.log.ultima;
+ assert.deepEqual(loja.log.acoes,[['resolver',id,'p1',false]]);
+ assert.ok(loja.log.estado.includes(2));assert.ok(loja.log.estado.includes('Eletro Corrente')); // vai para "Como foi?"
+ const dois=folhaResolver([true,2,'Eletro Corrente',null]);
+ assert.match(dois.html,/Como foi\?/);assert.match(dois.html,/Foi bom/);assert.match(dois.html,/Não foi bom/);assert.match(dois.html,/Pular/);
+ dois.log.botoes['Não foi bom']();await dois.log.ultima;
+ assert.deepEqual(dois.log.acoes,[['avaliar',id,-1]]);
+});

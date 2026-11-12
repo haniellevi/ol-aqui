@@ -9,7 +9,7 @@ import { createCn } from "cn/config"
 export const cn = createCn({
   extend: {
     theme: {
-      text: ["titulo", "legenda", "rotulo"],
+      text: ["titulo", "legenda", "rotulo", "facil", "facil-titulo"],
       radius: ["card", "campo", "folha"],
       spacing: ["controle", "controle-pequeno", "toque"],
       shadow: ["1", "2"],

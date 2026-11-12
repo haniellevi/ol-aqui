@@ -39,7 +39,7 @@ export function PropostasRecebidas({
         titulo="Nenhuma proposta ainda"
         texto={modoPrazo ? "Quando uma loja mandar oferta, ela aparece aqui e avisamos você." : "As lojas que se interessarem vão te chamar no WhatsApp."}
       >
-        <Botao href="/busca" variante="secundario" larguraTotal>
+        <Botao tamanho="grande" href="/busca" variante="secundario" larguraTotal>
           Procurar nos anúncios
         </Botao>
       </Vazio>
@@ -49,15 +49,15 @@ export function PropostasRecebidas({
   return (
     <section className="flex flex-col gap-3" aria-labelledby="titulo-propostas">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="titulo-propostas" className="text-lg font-bold">
+        <h2 id="titulo-propostas" className="text-facil font-bold">
           {propostas.length === 1 ? "1 proposta" : `${propostas.length} propostas`}
         </h2>
         {propostas.length > 1 && (
           <div className="flex gap-2">
-            <Chip ativo={ordem === "preco"} onClick={() => setOrdem("preco")}>
+            <Chip tamanho="grande" ativo={ordem === "preco"} onClick={() => setOrdem("preco")}>
               Menor preço
             </Chip>
-            <Chip ativo={ordem === "novas"} onClick={() => setOrdem("novas")}>
+            <Chip tamanho="grande" ativo={ordem === "novas"} onClick={() => setOrdem("novas")}>
               Mais novas
             </Chip>
           </div>
@@ -122,13 +122,13 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
         )}
         <div className="flex min-w-0 flex-1 flex-col">
           {p.loja_slug ? (
-            <Link href={linkLoja(p.loja_slug)} className="text-base font-semibold break-words underline-offset-4 hover:underline">
+            <Link href={linkLoja(p.loja_slug)} className="text-facil font-semibold break-words underline-offset-4 hover:underline">
               {p.loja_nome}
             </Link>
           ) : (
-            <span className="text-base font-semibold break-words">{p.loja_nome}</span>
+            <span className="text-facil font-semibold break-words">{p.loja_nome}</span>
           )}
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-legenda text-texto-suave">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-facil text-texto-suave">
             {p.loja_selo && (
               <span className="inline-flex items-center gap-0.5 font-semibold text-verde-escuro">
                 <BadgeCheck className="size-4" aria-hidden />
@@ -152,10 +152,10 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
           <img src={foto} alt={p.anuncio_titulo ?? "Foto da oferta"} width={96} height={96} className="size-24 shrink-0 rounded-campo bg-borda object-cover" />
         )}
         <div className="flex min-w-40 flex-1 flex-col gap-1">
-          <span className="text-xl font-bold break-words text-beringela">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</span>
-          {p.mensagem && <p className="text-base leading-6 break-words whitespace-pre-line text-texto">{p.mensagem}</p>}
+          <span className="text-3xl font-bold break-words text-beringela">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</span>
+          {p.mensagem && <p className="text-facil leading-6 break-words whitespace-pre-line text-texto">{p.mensagem}</p>}
           {p.anuncio_id && p.anuncio_titulo && (
-            <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} className="min-h-10 content-center text-base leading-6 font-semibold text-laranja-escuro underline underline-offset-4">
+            <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} className="min-h-12 content-center text-facil leading-6 font-semibold text-laranja-escuro underline underline-offset-4">
               Ver anúncio: {p.anuncio_titulo}
             </Link>
           )}
@@ -163,13 +163,13 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
       </div>
 
       {podeEscolher && (
-        <Botao variante="whatsapp" larguraTotal icone={<MessageCircle />} onClick={chamar} carregando={abrindo} textoCarregando="Abrindo o WhatsApp...">
+        <Botao tamanho="grande" variante="whatsapp" larguraTotal icone={<MessageCircle />} onClick={chamar} carregando={abrindo} textoCarregando="Abrindo o WhatsApp...">
           Chamar no WhatsApp
         </Botao>
       )}
-      {podeEscolher && linkContato && <Botao href={linkContato} target="_blank" rel="noopener noreferrer" variante="secundario" larguraTotal>Continuar no WhatsApp</Botao>}
+      {podeEscolher && linkContato && <Botao tamanho="grande" href={linkContato} target="_blank" rel="noopener noreferrer" variante="secundario" larguraTotal>Continuar no WhatsApp</Botao>}
       {erro && (
-        <p role="alert" className="text-sm font-semibold text-perigo">
+        <p role="alert" className="text-facil font-semibold text-perigo">
           {erro}
         </p>
       )}

@@ -8,7 +8,6 @@ import { Alert } from "@/components/ui/alert";
 import { Folha, FolhaContent, FolhaDescription, FolhaHeader, FolhaTitle } from "@/components/ui/folha";
 import { avaliarPedido, resolverPedido } from "@/app/radar/actions";
 
-const BOTAO_GRANDE = "min-h-12! text-lg!";
 
 export type LojaComProposta = { propostaId: string; lojaNome: string };
 
@@ -84,7 +83,7 @@ export function FolhaResolver({
 
   return (
     <>
-      <Botao variante={variante} larguraTotal icone={<CheckCircle2 />} onClick={abrir} className={BOTAO_GRANDE}>
+      <Botao variante={variante} larguraTotal icone={<CheckCircle2 />} onClick={abrir} tamanho="grande">
         Já resolvi
       </Botao>
       <Folha open={aberta} onOpenChange={(v) => (v ? setAberta(true) : fechar())}>
@@ -92,16 +91,16 @@ export function FolhaResolver({
           {passo === 1 ? (
             <>
               <FolhaHeader>
-                <FolhaTitle className="text-2xl">Com quem você resolveu?</FolhaTitle>
-                <FolhaDescription className="text-lg">O pedido sai do Radar e as lojas param de ver.</FolhaDescription>
+                <FolhaTitle className="text-3xl">Com quem você resolveu?</FolhaTitle>
+                <FolhaDescription className="text-facil">O pedido sai do Radar e as lojas param de ver.</FolhaDescription>
               </FolhaHeader>
               <div className="flex flex-col gap-2">
                 {propostas.map((p) => (
-                  <Botao key={p.propostaId} variante="secundario" larguraTotal icone={<Store />} disabled={pendente} onClick={() => escolherLoja(p)} className={`${BOTAO_GRANDE} sm:max-w-none`}>
+                  <Botao key={p.propostaId} variante="secundario" larguraTotal icone={<Store />} disabled={pendente} onClick={() => escolherLoja(p)} tamanho="grande" className="sm:max-w-none">
                     {p.lojaNome}
                   </Botao>
                 ))}
-                <Botao variante="secundario" larguraTotal disabled={pendente} onClick={outroLugar} className={`${BOTAO_GRANDE} sm:max-w-none`}>
+                <Botao variante="secundario" larguraTotal disabled={pendente} onClick={outroLugar} tamanho="grande" className="sm:max-w-none">
                   Outro lugar
                 </Botao>
               </div>
@@ -109,23 +108,23 @@ export function FolhaResolver({
           ) : (
             <>
               <FolhaHeader>
-                <FolhaTitle className="text-2xl">Como foi?</FolhaTitle>
-                <FolhaDescription className="text-lg">Sua compra com {loja}.</FolhaDescription>
+                <FolhaTitle className="text-3xl">Como foi?</FolhaTitle>
+                <FolhaDescription className="text-facil">Sua compra com {loja}.</FolhaDescription>
               </FolhaHeader>
               <div className="flex flex-col gap-2">
-                <Botao variante="secundario" larguraTotal disabled={pendente} onClick={() => avaliar(1)} className={`${BOTAO_GRANDE} sm:max-w-none`}>
+                <Botao variante="secundario" larguraTotal disabled={pendente} onClick={() => avaliar(1)} tamanho="grande" className="sm:max-w-none">
                   <span aria-hidden>👍</span> Foi bom
                 </Botao>
-                <Botao variante="secundario" larguraTotal disabled={pendente} onClick={() => avaliar(-1)} className={`${BOTAO_GRANDE} sm:max-w-none`}>
+                <Botao variante="secundario" larguraTotal disabled={pendente} onClick={() => avaliar(-1)} tamanho="grande" className="sm:max-w-none">
                   <span aria-hidden>👎</span> Não foi bom
                 </Botao>
-                <Botao variante="texto" larguraTotal disabled={pendente} onClick={fechar} className={`${BOTAO_GRANDE} sm:max-w-none`}>
+                <Botao variante="texto" larguraTotal disabled={pendente} onClick={fechar} tamanho="grande" className="sm:max-w-none">
                   Pular
                 </Botao>
               </div>
             </>
           )}
-          {erro && <Alert variant="destructive" role="alert" className="text-lg">{erro}</Alert>}
+          {erro && <Alert variant="destructive" role="alert" className="text-facil">{erro}</Alert>}
         </FolhaContent>
       </Folha>
     </>

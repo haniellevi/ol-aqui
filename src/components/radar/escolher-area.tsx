@@ -50,13 +50,13 @@ export function EscolherArea({
         <div className="flex flex-col gap-2">
           <div role="group" aria-label="Cidades" className="flex flex-wrap gap-2">
             {cidades.map((c) => (
-              <Chip key={c.id} ativo={valor.includes(c.id)} onClick={() => alternar(c.id)} className="min-h-12! text-lg!">
+              <Chip key={c.id} ativo={valor.includes(c.id)} onClick={() => alternar(c.id)} tamanho="grande">
                 {c.nome}
               </Chip>
             ))}
           </div>
           {valor.length === 0 && (
-            <p role="status" className="text-lg text-beringela">
+            <p role="status" className="text-facil text-beringela">
               Marque uma ou mais cidades. Sem nenhuma marcada, o pedido vale para toda a região.
             </p>
           )}

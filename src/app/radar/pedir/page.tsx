@@ -33,16 +33,16 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
       <header className="flex flex-col gap-1">
-        <Link href={LINK_RADAR} className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 px-2 text-lg font-semibold text-laranja-escuro">
+        <Link href={LINK_RADAR} className="-ml-2 inline-flex min-h-12 w-fit items-center gap-1 px-2 text-facil font-semibold text-laranja-escuro">
           <ChevronLeft className="size-5" aria-hidden />
           Radar
         </Link>
-        <h1 className="text-titulo font-semibold text-beringela">Estou procurando…</h1>
-        <p className="text-lg text-texto-suave">Diga o que precisa. As lojas da região te respondem.</p>
+        <h1 className="text-facil-titulo font-semibold text-beringela">Estou procurando…</h1>
+        <p className="text-facil text-texto-suave">Diga o que precisa. As lojas da região te respondem.</p>
       </header>
       {!conta ? (
         <Vazio titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
-          <Botao href="/radar/pedir" larguraTotal>
+          <Botao href="/radar/pedir" larguraTotal tamanho="grande">
             Tentar de novo
           </Botao>
         </Vazio>
@@ -52,10 +52,10 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
           titulo="Confirme seu celular primeiro"
           texto="As lojas falam com você pelo WhatsApp. Para pedir no Radar, seu celular precisa estar confirmado."
         >
-          <Botao href="/confirmar-celular?destino=%2Fradar%2Fpedir" larguraTotal>
+          <Botao href="/confirmar-celular?destino=%2Fradar%2Fpedir" larguraTotal tamanho="grande">
             Confirmar meu celular
           </Botao>
-          <Botao href={LINK_RADAR} variante="texto">
+          <Botao href={LINK_RADAR} variante="texto" tamanho="grande">
             Voltar ao Radar
           </Botao>
         </Vazio>
@@ -96,7 +96,7 @@ async function Formulario({
   const cidadeFora = !!cidadeEscolhida && !cidades.some((c) => c.nome === cidadeEscolhida);
   return (
     <>
-      {cidadeFora && <Alert variant="warning" role="status" className="text-lg">A cidade da busca fica fora da região do seu cadastro. Seu pedido vai para as lojas da região do seu cadastro.</Alert>}
+      {cidadeFora && <Alert variant="warning" role="status" className="text-facil">A cidade da busca fica fora da região do seu cadastro. Seu pedido vai para as lojas da região do seu cadastro.</Alert>}
       <FormPedido
         textoInicial={texto.slice(0, 120)}
         categorias={categorias.map((c) => ({ id: c.id, nome: c.nome, filhas: c.filhas.map(({ id, nome }) => ({ id, nome })) }))}

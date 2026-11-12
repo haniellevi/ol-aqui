@@ -7,19 +7,19 @@ import { Archive, ArchiveRestore, CalendarPlus, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { estenderPedido, fecharPedido, mudarArquivoPedido } from "@/app/radar/actions";
 import { FolhaResolver, type LojaComProposta } from "./folha-resolver";
-import { dataHoraCurta } from "./util";
+import { linkMeuPedidoRadar } from "@/lib/rotas";
 
 type Acao = "cancelado" | "arquivar" | "desarquivar";
-const BOTAO_GRANDE = "min-h-12! text-lg!";
 
 /** Cartão de destaque perto do vencimento: "Ainda preciso" (mais um prazo) ou "Já resolvi". */
 export function DestaquePrazo({ pedidoId, propostas, vencimento }: { pedidoId: string; propostas: LojaComProposta[]; vencimento: string }) {
   const router = useRouter();
   const trava = useRef(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [feito, setFeito] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
 
+  // Depois de estender, o cartão some (pode_estender vira false). A confirmação fica na página,
+  // num lugar que não some: ?estendido=1 (ver radar/pedido/[id]/page.tsx).
   function aindaPreciso() {
     if (trava.current) return;
     trava.current = true;
@@ -28,25 +28,22 @@ export function DestaquePrazo({ pedidoId, propostas, vencimento }: { pedidoId: s
       try {
         const r = await estenderPedido(pedidoId);
         if (!r.ok) { setErro(r.erro); return; }
-        setFeito(`Pronto! Seu pedido fica no ar até ${dataHoraCurta(r.expiraEm)}.`);
+        router.replace(`${linkMeuPedidoRadar(pedidoId)}?estendido=1`, { scroll: false });
         router.refresh();
       } catch { setErro("Não conseguimos salvar. Tente novamente."); }
       finally { trava.current = false; }
     });
   }
 
-  if (feito) {
-    return <p role="status" className="rounded-card bg-sucesso-fundo p-4 text-lg font-semibold text-verde-escuro">{feito}</p>;
-  }
   return (
     <section aria-labelledby="titulo-achou" className="flex flex-col gap-3 rounded-card border border-laranja-escuro bg-cartao p-4 shadow-1">
-      <h2 id="titulo-achou" className="text-2xl font-semibold text-beringela">Você achou o que procurava?</h2>
-      <p className="text-lg text-texto">{vencimento}. Se ainda precisa, ele fica mais 15 dias no ar.</p>
-      <Botao larguraTotal icone={<CalendarPlus />} carregando={pendente} textoCarregando="Salvando..." onClick={aindaPreciso} className={BOTAO_GRANDE}>
+      <h2 id="titulo-achou" className="text-3xl font-semibold text-beringela">Você achou o que procurava?</h2>
+      <p className="text-facil text-texto">{vencimento}. Se ainda precisa, ele fica mais 15 dias no ar.</p>
+      <Botao larguraTotal icone={<CalendarPlus />} carregando={pendente} textoCarregando="Salvando..." onClick={aindaPreciso} tamanho="grande">
         Ainda preciso
       </Botao>
       <FolhaResolver pedidoId={pedidoId} propostas={propostas} />
-      {erro && <p role="alert" className="text-lg font-semibold text-perigo">{erro}</p>}
+      {erro && <p role="alert" className="text-facil font-semibold text-perigo">{erro}</p>}
     </section>
   );
 }
@@ -117,22 +114,22 @@ export function AcoesPedido({
   return <section className="flex flex-col gap-2 border-t border-borda pt-4" aria-label="Ações do pedido">
     {podeResolver && <FolhaResolver pedidoId={pedidoId} propostas={propostas} />}
     {podeArquivar && (
-      <Botao variante="secundario" larguraTotal icone={arquivado ? <ArchiveRestore /> : <Archive />} disabled={pendente} className={BOTAO_GRANDE}
+      <Botao variante="secundario" larguraTotal icone={arquivado ? <ArchiveRestore /> : <Archive />} disabled={pendente} tamanho="grande"
         onClick={() => abrir(arquivado ? "desarquivar" : "arquivar")}>
         {arquivado ? "Retirar do arquivo" : aberto ? "Encerrar e arquivar" : "Arquivar pedido"}
       </Botao>
     )}
-    {podeCancelar && <Botao variante="texto" icone={<XCircle />} disabled={pendente} onClick={() => abrir("cancelado")} className={BOTAO_GRANDE}>Cancelar pedido</Botao>}
+    {podeCancelar && <Botao variante="texto" icone={<XCircle />} disabled={pendente} onClick={() => abrir("cancelado")} tamanho="grande">Cancelar pedido</Botao>}
     <AlertDialog open={janela} onOpenChange={(abrir) => { if (!abrir && !trava.current) setJanela(false); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{textos.titulo}</AlertDialogTitle>
-          <AlertDialogDescription>{textos.detalhe}</AlertDialogDescription>
+          <AlertDialogTitle className="text-3xl">{textos.titulo}</AlertDialogTitle>
+          <AlertDialogDescription className="text-facil">{textos.detalhe}</AlertDialogDescription>
         </AlertDialogHeader>
-        {erro && <Alert variant="destructive">{erro}</Alert>}
+        {erro && <Alert variant="destructive" className="text-facil">{erro}</Alert>}
         <AlertDialogFooter>
-          <Botao variante="secundario" disabled={pendente} onClick={() => setJanela(false)} className={BOTAO_GRANDE}>Voltar</Botao>
-          <Botao variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar} className={BOTAO_GRANDE}>{textos.botao}</Botao>
+          <Botao variante="secundario" disabled={pendente} onClick={() => setJanela(false)} tamanho="grande">Voltar</Botao>
+          <Botao variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar} tamanho="grande">{textos.botao}</Botao>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

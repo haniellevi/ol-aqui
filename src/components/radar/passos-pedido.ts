@@ -46,6 +46,14 @@ export function erroDoPasso(passo: NumeroPasso, e: EntradaPedido, cidadesValidas
   return validarPedido(e) ?? erroDoPasso(2, e, cidadesValidas);
 }
 
+/** Tempo em que "Publicar pedido" ignora o toque depois de chegar ao passo 4 (evita o toque duplo em Continuar). */
+export const ESPERA_PUBLICAR_MS = 600;
+
+/** true = pode publicar: já se passou a espera desde que o passo 4 apareceu. */
+export function podePublicar(chegouNoPasso4Em: number | null, agora: number, espera = ESPERA_PUBLICAR_MS): boolean {
+  return chegouNoPasso4Em !== null && agora - chegouNoPasso4Em >= espera;
+}
+
 /** Área escolhida → o que vai para o servidor: lista vazia = região toda; sem repetidas. */
 export function cidadesParaEnvio(valor: string[]): string[] {
   return [...new Set(valor)];

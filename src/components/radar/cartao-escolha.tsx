@@ -43,11 +43,11 @@ export function CartaoEscolha({
           {marcado && <Check className="size-4" />}
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-1 text-beringela">
-          <span className="flex items-center gap-2 text-lg font-semibold [&>svg]:size-5 [&>svg]:shrink-0">
+          <span className="flex items-center gap-2 text-facil font-semibold [&>svg]:size-5 [&>svg]:shrink-0">
             {icone && <span className="inline-flex [&>svg]:size-5" aria-hidden>{icone}</span>}
             {titulo}
           </span>
-          {ajuda && <span className="text-lg">{ajuda}</span>}
+          {ajuda && <span className="text-facil">{ajuda}</span>}
         </span>
       </label>
       {marcado && children}
