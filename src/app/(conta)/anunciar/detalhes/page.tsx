@@ -14,7 +14,7 @@ const FORM = "form-detalhes";
 
 // T19 · Passo 3: título, descrição e os campos da subcategoria (vindos do banco).
 export default async function PassoDetalhes({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, editar } = await carregarPasso(searchParams);
+  const { anuncio, editar, equipe } = await carregarPasso(searchParams);
   // nunca esteve no ar: só categoria visível (escondida no painel = escolhe outra); já esteve: a dele, mesmo escondida
   const nuncaNoAr = !anuncio.publicado_em;
   const achada = anuncio.categoria_id
@@ -28,7 +28,7 @@ export default async function PassoDetalhes({ searchParams }: { searchParams: Pa
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso
+      <CabecalhoPasso equipe={equipe}
         passo="detalhes"
         id={anuncio.id}
         editar={editar}

@@ -88,12 +88,13 @@ test('histórico vazio de anúncio publicado não fala em "depois de publicar"',
 
 test('apagar foto: ajudante apaga só na pasta do dono de uma loja que ajuda', async () => {
   const url = (dono) => `https://abc.supabase.co/storage/v1/object/public/anuncios/${dono}/${id}/1.webp`;
-  const rodar = async (dono, lojas) => {
+  const rodar = async (dono, lojas, equipe = null) => {
     let removidas = 0;
     const q = { select() { return q; }, contains() { return q; }, or() { return q; }, eq() { return q; }, in() { return q; }, async limit() { return { data: [] }; }, async maybeSingle() { return { data: { id, vitrines_lojas: { dono_id: 'user_dono' } } }; } };
     const { apagarFoto } = carregar('src/lib/dados/fotos.ts', {
       '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_ajudante' }) },
       '@/lib/dados/loja-ativa': { lojasQueCuido: async () => lojas },
+      '@/lib/dados/edicao-admin': { edicaoAdmin: async () => equipe },
       '@/lib/supabase/server': { createClient: async () => ({ from: () => q, storage: { from: () => ({ getPublicUrl: () => ({ data: { publicUrl: url(dono) } }), remove: async () => { removidas++; return { error: null }; } }) } }) },
     });
     const r = await apagarFoto(url(dono));
@@ -102,6 +103,9 @@ test('apagar foto: ajudante apaga só na pasta do dono de uma loja que ajuda', a
   assert.deepEqual(await rodar('user_dono', [propria, ajudada]), { ok: true, removidas: 1 });
   assert.deepEqual(await rodar('user_outro', [propria, ajudada]), { ok: false, removidas: 0 });
   assert.deepEqual(await rodar('user_dono', [propria]), { ok: false, removidas: 0 });
+  // P5b-2a: super admin com a edição aberta apaga na pasta do dono do anúncio.
+  assert.deepEqual(await rodar('user_dono', [propria], { motivo: 'Ajuste', expira_em: '2026-11-14T15:00:00Z' }), { ok: true, removidas: 1 });
+  assert.deepEqual(await rodar('user_outro', [propria], { motivo: 'Ajuste', expira_em: '2026-11-14T15:00:00Z' }), { ok: false, removidas: 0 });
 });
 
 test('passo do anúncio usa a loja do próprio anúncio (rascunho do Merc com outra loja escolhida)', async () => {
@@ -129,4 +133,59 @@ test('passo Fotos: ajudante não vê "Cadastrar com o Merc pela foto"', async ()
   }).default({ searchParams: Promise.resolve({}) });
   assert.match(render(await pagina(false)), /Cadastrar com o Merc/);
   assert.doesNotMatch(render(await pagina(true)), /Cadastrar com o Merc/);
+});
+
+// Etapa P5b-2a: super admin edita o anúncio de outra pessoa.
+const edicao = { motivo: 'Preço errado', expira_em: '2026-11-14T15:30:00Z' };
+
+test('passo do anúncio da equipe traz motivo e prazo; sem edição aberta é 404', async () => {
+  const montar = (aberta) => carregar('src/app/(conta)/anunciar/_carregar.ts', {
+    'next/navigation': { notFound: () => { throw Error('404'); }, redirect: (u) => { throw Error('redirect:' + u); } },
+    '@/lib/dados/conta': { contaDaLoja: async (_e, loja) => loja ? { perfil: {}, vitrine: { id: loja, tipo: 'loja', microrregiao_id: 'r' }, podePublicar: true, ajudante: true, equipe: true } : { perfil: {}, vitrine: { id: propria.id, tipo: 'loja' }, podePublicar: true } },
+    '@/lib/dados/anuncios': { anuncioDaLoja: async () => ({ id, status: 'ativo', vitrine_id: '57000000-0000-4000-a000-000000000077', fotos: ['f'] }) },
+    '@/lib/dados/edicao-admin': { edicaoAdmin: async () => aberta },
+  }).carregarPasso(Promise.resolve({ rascunho: id, editar: '1' }));
+  const r = await montar(edicao);
+  assert.deepEqual(r.equipe, edicao);
+  assert.equal(r.conta.ajudante, true);
+  await assert.rejects(montar(null), /404/);
+});
+
+test('cabeçalho da equipe avisa que o anúncio é de outra pessoa e sai para o painel', () => {
+  const { CabecalhoPasso } = carregar('src/components/anunciar/cabecalho-passo.tsx', {});
+  const html = render(React.createElement(CabecalhoPasso, { passo: 'fotos', id, editar: true, titulo: 'Fotos', equipe: edicao }));
+  assert.match(html, /Este anúncio é de outra pessoa/);
+  assert.match(html, /Motivo: Preço errado/);
+  assert.match(html, /Vale até 12:30/);
+  assert.match(html, new RegExp(`href="/admin/anuncios/${id}"`));
+  const dono = render(React.createElement(CabecalhoPasso, { passo: 'fotos', id, editar: true, titulo: 'Fotos' }));
+  assert.doesNotMatch(dono, /outra pessoa/);
+  assert.doesNotMatch(dono, /\/admin\//);
+});
+
+test('botão Editar anúncio do painel: motivo obrigatório e abre a edição pelo banco', async () => {
+  const chamadas = [];
+  const { editarComoEquipe } = carregar('src/app/admin/anuncios/[id]/actions.ts', {
+    'next/navigation': { notFound: () => { throw Error('404'); }, redirect: (u) => { throw Error('redirect:' + u); } },
+    'next/cache': { revalidatePath() {} },
+    '@/lib/admin/equipe': { exigirTela: async () => ({ supabase: { rpc: async (n, a) => { chamadas.push([n, a]); return { data: edicao.expira_em, error: null }; } } }) },
+  });
+  const form = (m) => { const f = new FormData(); f.set('motivo', m); return f; };
+  await assert.rejects(editarComoEquipe(id, form(' x ')), /redirect:\/admin\/anuncios\/[^?]+\?erro=/);
+  assert.equal(chamadas.length, 0);
+  await assert.rejects(editarComoEquipe(id, form('  Preço   errado ')), new RegExp(`redirect:/anunciar/fotos\\?rascunho=${id}&editar=1`));
+  assert.deepEqual(chamadas, [['admin_abrir_edicao_anuncio', { p_anuncio: id, p_motivo: 'Preço errado' }]]);
+});
+
+test('super admin sem loja própria abre o passo do anúncio com a edição aberta', async () => {
+  const montar = (anuncio) => carregar('src/app/(conta)/anunciar/_carregar.ts', {
+    'next/navigation': { notFound: () => { throw Error('404'); }, redirect: (u) => { throw Error('redirect:' + u); } },
+    '@/lib/dados/conta': { contaDaLoja: async (_e, loja) => loja ? { perfil: {}, vitrine: { id: loja, tipo: 'loja' }, podePublicar: true, ajudante: true, equipe: true } : { perfil: {}, vitrine: null, podePublicar: false } },
+    '@/lib/dados/anuncios': { anuncioDaLoja: async () => anuncio },
+    '@/lib/dados/edicao-admin': { edicaoAdmin: async () => edicao },
+  }).carregarPasso(Promise.resolve({ rascunho: id, editar: '1' }));
+  const r = await montar({ id, status: 'em_analise', vitrine_id: ajudada.id, fotos: [] });
+  assert.equal(r.conta.vitrine.id, ajudada.id);
+  assert.deepEqual(r.equipe, edicao);
+  await assert.rejects(montar(null), /redirect:\/quero-vender/);
 });

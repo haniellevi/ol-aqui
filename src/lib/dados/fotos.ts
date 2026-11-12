@@ -6,6 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { ehUuid } from "@/lib/formato";
 import { lojasQueCuido } from "@/lib/dados/loja-ativa";
+import { edicaoAdmin } from "@/lib/dados/edicao-admin";
 import type { Resultado } from "@/lib/tipos";
 
 const BUCKET = "anuncios";
@@ -41,7 +42,8 @@ export async function criarUrlEnvioFoto(anuncioId: string, formato: "webp" | "jp
   // P5b: anúncio da própria loja ou de uma loja que a pessoa ajuda.
   const lojas = await lojasQueCuido();
   const dono = (anuncio?.vitrines_lojas as { dono_id?: string } | null)?.dono_id;
-  if (!anuncio || !dono || !lojas.some((l) => l.id === anuncio.vitrine_id)) return { ok: false, erro: { mensagem: "Anúncio não encontrado." } };
+  // P5b-2a: ou super admin com a edição aberta neste anúncio.
+  if (!anuncio || !dono || !(lojas.some((l) => l.id === anuncio.vitrine_id) || (await edicaoAdmin(anuncioId)))) return { ok: false, erro: { mensagem: "Anúncio não encontrado." } };
   if (((anuncio.fotos as string[] | null)?.length ?? 0) >= MAX_FOTOS) {
     return { ok: false, erro: { mensagem: `Você já colocou ${MAX_FOTOS} fotos. Tire uma para pôr outra.`, campo: "fotos" } };
   }
@@ -82,9 +84,12 @@ export async function apagarFoto(urlOuCaminho: string): Promise<Resultado> {
 async function pastaDaLojaAjudada(db: Awaited<ReturnType<typeof createClient>>, caminho: string): Promise<boolean> {
   const partes = caminho.split("/");
   const ajudadas = (await lojasQueCuido()).filter((l) => !l.dono).map((l) => l.id);
-  if (partes.length !== 3 || !ehUuid(partes[1]) || !ajudadas.length) return false;
-  const { data } = await db.from("anuncios").select("id, vitrines_lojas!inner(dono_id)")
-    .eq("id", partes[1]).in("vitrine_id", ajudadas).maybeSingle();
+  if (partes.length !== 3 || !ehUuid(partes[1])) return false;
+  // P5b-2a: super admin com a edição aberta no anúncio também apaga na pasta do dono.
+  const equipe = !!(await edicaoAdmin(partes[1]));
+  if (!ajudadas.length && !equipe) return false;
+  const busca = db.from("anuncios").select("id, vitrines_lojas!inner(dono_id)").eq("id", partes[1]);
+  const { data } = await (equipe ? busca : busca.in("vitrine_id", ajudadas)).maybeSingle();
   return (data?.vitrines_lojas as { dono_id?: string } | null | undefined)?.dono_id === partes[0];
 }
 

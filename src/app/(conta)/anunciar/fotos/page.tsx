@@ -12,7 +12,7 @@ const MAX_FOTOS_BANCO = 12; // check de anuncios.fotos no banco
 
 // T17 · Passo 1: fotos (tirar ou escolher, até o máximo, a primeira é a capa).
 export default async function PassoFotos({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, conta, editar } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, equipe } = await carregarPasso(searchParams);
   const regiao = conta.vitrine.microrregiao_id;
   const [minimo, maximoConfig] = await Promise.all([
     lerConfigNumero("anuncio.fotos_minimo", regiao),
@@ -22,7 +22,7 @@ export default async function PassoFotos({ searchParams }: { searchParams: Param
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso
+      <CabecalhoPasso equipe={equipe}
         passo="fotos"
         formId="form-fotos"
         id={anuncio.id}

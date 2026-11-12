@@ -16,13 +16,13 @@ const FORM = "form-categoria";
 
 // T18 · Passo 2: categoria em até 3 níveis (grande → sub → tipo), com busca.
 export default async function PassoCategoria({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, editar } = await carregarPasso(searchParams);
+  const { anuncio, editar, equipe } = await carregarPasso(searchParams);
   const arvore = await listarCategorias();
   const sugestao = await minhaSugestaoCategoria(anuncio.id);
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso
+      <CabecalhoPasso equipe={equipe}
         passo="categoria"
         id={anuncio.id}
         editar={editar}
