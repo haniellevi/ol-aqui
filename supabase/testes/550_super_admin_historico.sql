@@ -42,6 +42,17 @@ do $$ begin
     update perfis set e_admin = false where id = 'user_super550';
   exception when sqlstate '42501' then null; end;
 end $$;
+-- Pelas funções da tela Equipe (rodam como dono do banco) também não.
+do $$ begin
+  begin
+    perform equipe_desativar('user_super550', 'Teste');
+    assert false, 'Admin desativou o super admin pela Equipe';
+  exception when sqlstate '42501' then null; end;
+  begin
+    perform equipe_salvar('user_super550', 'moderador');
+    assert false, 'Admin rebaixou o super admin pela Equipe';
+  exception when sqlstate '42501' then null; end;
+end $$;
 reset role;
 do $$ begin
   assert not (select e_super_admin from perfis where id = 'user_adm550'), 'Admin se fez super admin';
