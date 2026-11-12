@@ -16,6 +16,8 @@ function lerPlano(form: FormData) {
     periodo_dias: dias ?? 30,
     limite_anuncios: inteiroOuNulo(form.get("limite_anuncios")),
     acesso_radar: form.get("acesso_radar") === "on",
+    // Aviso na hora de pedido novo só faz sentido em plano com Radar.
+    aviso_radar_na_hora: form.get("aviso_radar_na_hora") === "on" && form.get("acesso_radar") === "on",
     propostas_radar_mes: inteiroOuNulo(form.get("propostas_radar_mes")),
     ordem: inteiroOuNulo(form.get("ordem")) ?? 0,
     ativo: form.get("ativo") === "on",
