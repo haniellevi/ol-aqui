@@ -180,6 +180,32 @@ Cada etapa vira um PR próprio, com testes do banco (`supabase/testes`) e da tel
   - Super admin editando anúncio de outra pessoa não vê o botão: usa a lixeira do painel, que avisa o dono.
   - Dono e ajudante podem descartar (a função do banco confere quem cuida da loja).
 
+### Categorias, Etapa 2 — IA sugere a categoria ao anunciar
+- Teste de 12/11/2026 com 80 títulos (50 fáceis e 30 difíceis):
+  - JEV (TypeSafe) acertou 78 de 80 na 1ª opção. Gemini Decisions acertou 80 de 80.
+  - Os dois acertaram 80 de 80 entre as 3 primeiras opções.
+  - O JEV foi mais rápido e mais barato. O Raniel escolheu o JEV como principal.
+- Como funciona:
+  - Em `/anunciar/categoria`, 0,5 s depois que a pessoa para de digitar em "O que você está anunciando?", o servidor pergunta ao JEV.
+  - Até 3 categorias finais (com chance de 5% ou mais) vão para o topo da lista "categorias parecidas", sem repetir a busca local.
+  - Se a busca local não acha nada, "Sugerir a categoria" e Outros › Diversos continuam aparecendo.
+- O que vai para a IA:
+  - só o texto digitado (até 90 letras);
+  - as categorias finais com o caminho;
+  - uma dica para Serviços e Empregos;
+  - as palavras de exemplo da P1 (`src/lib/categorias-palavras.ts`).
+- Arquivos: `src/lib/sugestao-categoria-ia.ts` e a ação `categoriasSugeridasIA`.
+- Limites:
+  - só com login;
+  - 30 pedidos por minuto por pessoa e 300 no total, em cada servidor;
+  - a lista de categorias fica guardada por 5 min em cada servidor (categoria nova entra na IA em até 5 min);
+  - prazo de 2,5 s;
+  - liga com `TYPESAFE_API_KEY`. Sem a chave, ou com qualquer falha, fica só a busca local, sem aviso.
+- Falta:
+  - guardar o que a IA sugeriu e o que a pessoa escolheu;
+  - um painel no admin mostrando onde a IA erra;
+  - Gemini como reserva, se o JEV ficar fora do ar.
+
 ## Riscos e pontos em aberto
 - **Troca da árvore** mexe em todos os anúncios. Antes de rodar em produção:
   - fazer uma cópia da tabela;

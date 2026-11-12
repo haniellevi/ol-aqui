@@ -7,7 +7,8 @@ import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { anuncioDaLoja } from "@/lib/dados/anuncios";
 import { contaDaLoja } from "@/lib/dados/conta";
-import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
+import { categoriaDoAnuncio, categoriaPorId, listarCategorias } from "@/lib/dados/categorias";
+import { arvoreParaIA, categoriasMaisProvaveis, dentroDoLimite, limparTextoBusca } from "@/lib/sugestao-categoria-ia";
 import { listarCidades } from "@/lib/dados/regiao";
 import { lerConfigNumero } from "@/lib/dados/config";
 import { avulsoParaMim } from "@/lib/dados/cobranca";
@@ -259,6 +260,22 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
   const falha = await sugerirCategoria(c.id, sugestao);
   if (falha) return falha;
   redirect(destino("categoria", c));
+}
+
+/**
+ * Etapa 2: até 3 categorias finais (ids) que a IA acha mais prováveis para o que a pessoa escreveu
+ * em "O que você está anunciando?". Só com login. Sem chave, fora do limite ou com falha: lista vazia,
+ * e a tela fica só com a busca local.
+ */
+export async function categoriasSugeridasIA(texto: string): Promise<string[]> {
+  if (!process.env.TYPESAFE_API_KEY || !limparTextoBusca(texto)) return [];
+  const { userId } = await auth();
+  if (!userId || !dentroDoLimite(userId)) return [];
+  try {
+    return (await categoriasMaisProvaveis(await arvoreParaIA(listarCategorias), texto)).map((s) => s.id);
+  } catch {
+    return [];
+  }
 }
 
 /** O vendedor desiste da sugestão pendente deste anúncio (a equipe não recebe mais o pedido). */
