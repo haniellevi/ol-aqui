@@ -102,6 +102,8 @@ function paraCard(a: AnuncioVitrine, v: VitrinePublica): CardAnuncioProps["anunc
     vitrine_nome: formatarNome(v.nome),
     vitrine_selo: v.selo,
     vitrine_tipo: "loja",
+    preco_antes_centavos: a.preco_antes_centavos ?? null,
+    uf: a.uf ?? null,
   };
 }
 

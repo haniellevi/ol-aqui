@@ -25,7 +25,11 @@ const STATUS_PREVIA: Partial<Record<StatusAnuncio, string>> = {
 
 const publico = (a: AnuncioPublico) => a.status === "ativo" || a.status === "vendido";
 
-export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: AnuncioPublico; favorito: boolean | null; logado: boolean; parecidos: AnuncioCard[] }) {
+export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra }: {
+  a: AnuncioPublico; favorito: boolean | null; logado: boolean; parecidos: AnuncioCard[];
+  /** Preço antes e UF (card de "Você viu há pouco"); sem eles o card mostra só cidade e preço. */
+  extra?: { preco_antes_centavos?: number | null; uf?: string | null };
+}) {
   const caminho = linkAnuncio(a.id, a.titulo, a.slug);
   const titulo = formatarNome(a.titulo) || "Anúncio sem título";
   const ativo = a.status === "ativo";
@@ -71,6 +75,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos }: { a: Anuncio
             id: a.id, slug: a.slug ?? null, titulo, preco_centavos: a.preco_centavos, cidade: a.cidade ?? "", capa: a.fotos[0] ?? null,
             criado_em: a.criado_em, destaque: a.destaque, vitrine_nome: a.vitrine_tipo === "pf" ? primeiroNome(a.vitrine_nome) : formatarNome(a.vitrine_nome),
             vitrine_selo: a.vitrine_selo, vitrine_tipo: a.vitrine_tipo,
+            preco_antes_centavos: extra?.preco_antes_centavos ?? null, uf: extra?.uf ?? null,
           }}
         />
       )}
