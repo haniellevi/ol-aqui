@@ -82,7 +82,15 @@ end $$;
 
 set local role authenticated;
 set local request.jwt.claim.sub='user_loja320';
+-- Instagram novo não derruba o selo: a loja segue aprovada e a equipe recebe um aviso.
 update vitrines_lojas set instagram='comercio.novo' where slug='vitrine-revisao-320';
+do $$ begin
+  assert (select estado='aprovada' from minha_verificacao_loja());
+  assert (select instagram='comercio.novo' from meus_contatos_vitrine());
+  assert (select selo_loja_verificada from vitrines_lojas where slug='vitrine-revisao-320');
+end $$;
+-- Endereço novo derruba o selo e reabre a revisão.
+update vitrines_lojas set endereco='Rua Nova, 320' where slug='vitrine-revisao-320';
 do $$ begin
   assert (select estado='pendente' from minha_verificacao_loja());
   assert (select instagram='comercio.novo' from meus_contatos_vitrine());

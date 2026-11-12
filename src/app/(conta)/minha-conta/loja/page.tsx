@@ -8,7 +8,7 @@ import { minhasSugestoesCategoria } from "@/lib/dados/categorias-ia";
 import { lerHistorico } from "@/lib/dados/historico";
 import { fraseHistorico } from "@/lib/historico";
 import { linkLoja, preco, urlAbsoluta } from "@/lib/formato";
-import { LINK_DESTACAR_LOJA, LINK_LOJA_BANNER, LINK_LOJA_CATEGORIAS, LINK_LOJA_DESEMPENHO, LINK_LOJA_FIXADOS, LINK_LOJA_HISTORICO, LINK_LOJA_INFORMACOES, LINK_LOJA_SECOES, linkDestacarLoja } from "@/lib/rotas";
+import { LINK_DESTACAR_LOJA, LINK_LOJA_BANNER, LINK_LOJA_CATEGORIAS, LINK_LOJA_DESEMPENHO, LINK_LOJA_FIXADOS, LINK_LOJA_HISTORICO, LINK_LOJA_INFORMACOES, LINK_LOJA_SECOES, LINK_LOJA_VERIFICAR, linkDestacarLoja } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
@@ -25,18 +25,11 @@ import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
 import { SeletorLoja } from "@/components/conta/seletor-loja";
 import { FormTerminarRecebimento } from "@/app/receber-loja/form-receber";
 import { prontosPendentes } from "@/lib/dados/montagem";
+import { textoMotivoVerificacaoLoja } from "@/lib/verificacao-loja/constantes";
 
 type ExclusaoLoja = { na_lixeira: boolean; apagar_apos: string | null; pode_restaurar: boolean | null; tem_pagamentos: boolean };
 
 export const metadata: Metadata = { title: "Minha loja" };
-
-const ORIENTACOES_VERIFICACAO: Record<string, string> = {
-  dados_inconsistentes: "Confira e corrija o nome, a cidade e o endereço da loja.",
-  link_invalido: "Revise o Instagram em Horários e informações. Para corrigir o link da vitrine, fale com a equipe.",
-  contato_nao_confirmado: "Confira o WhatsApp da loja e informe um número cujo acesso você possa comprovar.",
-  titularidade: "Fale com a equipe para comprovar que você representa esta loja.",
-  outro: "Fale com a equipe para saber o que precisa ser corrigido.",
-};
 
 // T38 · Minha loja (só para lojas): dados e logo aqui; banner, informações, seções próprias e
 // produtos no topo em telas próprias (vitrine completa). O que o plano libera vem do banco.
@@ -60,12 +53,13 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
   }
   // P5b-2b: o ajudante não vê verificação, Destacar, destaques, exclusão nem a revisão de categorias pela IA (são do dono).
   const ajudante = v.ajudante === true;
-  const [cidades, recursos, planos, destaques, verificacaoR, exclusaoR, lojas, lojaAtual, prontos] = await Promise.all([
+  const [cidades, recursos, planos, destaques, verificacaoR, envioR, exclusaoR, lojas, lojaAtual, prontos] = await Promise.all([
     listarCidades(v.microrregiao_id),
     meusRecursosVitrine(true),
     planosPublicos(),
     ajudante ? Promise.resolve([]) : resultadosDestaques(),
     ajudante ? Promise.resolve(null) : createClient().then((db) => db.rpc("minha_verificacao_loja")),
+    ajudante ? Promise.resolve(null) : createClient().then((db) => db.rpc("minha_verificacao_loja_envio")),
     ajudante ? Promise.resolve(null) : createClient().then((db) => db.rpc("minha_loja_exclusao")),
     lojasQueCuido(),
     lojaEscolhida(),
@@ -89,6 +83,12 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
   const verificacao = verificacaoR && !verificacaoR.error && Array.isArray(verificacaoR.data)
     ? verificacaoR.data[0] as { estado: string; motivo: string | null } | undefined
     : undefined;
+  // Situação do último envio de documentos (nao_enviada, conferindo, equipe, ...). Sem ela, não oferecemos o botão em "pendente".
+  const envioStatus = envioR && !envioR.error && Array.isArray(envioR.data)
+    ? (envioR.data[0] as { status?: string } | undefined)?.status
+    : undefined;
+  const podeVerificar = verificacao?.estado === "correcao" || verificacao?.estado === "recusada"
+    || (verificacao?.estado === "pendente" && (envioStatus === "nao_enviada" || envioStatus === "obsoleta"));
   const completa = v;
   const destaquesLoja = destaques.filter((d) => d.tipo === "loja");
   const lojaPendente = destaquesLoja.find((d) => d.status === "aguardando_pagamento" && d.pagamento_status === "pendente");
@@ -149,11 +149,15 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
       ) : verificacao?.estado === "aprovada" ? (
         <Aviso tipo="ok">Loja verificada.</Aviso>
       ) : verificacao?.estado === "pendente" ? (
-        <Aviso tipo="info">Verificação pendente. A equipe vai conferir os dados, os links e o contato da loja.</Aviso>
+        <Aviso tipo="info">
+          Verificação pendente. A equipe vai conferir os dados, os links e o contato da loja.
+          {podeVerificar && <BotaoVerificar />}
+        </Aviso>
       ) : verificacao?.estado === "correcao" || verificacao?.estado === "recusada" ? (
         <Aviso tipo="atencao">
           {verificacao.estado === "correcao" ? "A loja precisa de correções." : "A verificação da loja foi recusada."}
-          <p className="font-normal">{ORIENTACOES_VERIFICACAO[verificacao.motivo ?? ""] ?? ORIENTACOES_VERIFICACAO.outro}</p>
+          <p className="font-normal">{textoMotivoVerificacaoLoja(verificacao.motivo ?? "outro")}</p>
+          <BotaoVerificar />
           <Link href="/ajuda" className="w-fit underline">Ajuda e segurança</Link>
         </Aviso>
       ) : (
@@ -258,6 +262,14 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
         </section>
       )}
     </PaginaConta>
+  );
+}
+
+function BotaoVerificar() {
+  return (
+    <Botao href={LINK_LOJA_VERIFICAR} className="mt-2 w-fit font-semibold">
+      Verificar minha loja
+    </Botao>
   );
 }
 

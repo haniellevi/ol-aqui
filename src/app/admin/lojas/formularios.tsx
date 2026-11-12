@@ -3,7 +3,8 @@
 import { useActionState, useState } from "react";
 import { Aviso, estiloCampo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
-import { acaoLoja, analisarVerificacao, revisarLoja, decidirVerificacaoPf, revogarVendedorPf } from "./actions";
+import { acaoLoja, analisarVerificacao, revisarLoja, decidirVerificacaoPf, decidirVerificacaoLoja, resolverAvisoVerificacaoLoja, revogarVendedorPf } from "./actions";
+import { MOTIVOS_VERIFICACAO_LOJA } from "@/lib/verificacao-loja/constantes";
 import { MOTIVOS_VERIFICACAO_PF } from "@/lib/verificacao-vendedor";
 import type { AcaoLoja, LojaAdmin } from "@/lib/tipos-cobranca";
 
@@ -257,6 +258,67 @@ export function FormDecidirVerificacaoPf({ id, dadosAtuais }: { id: string; dado
       </div>
       <Retorno estado={estadoAprovar} />
       <Retorno estado={estadoRecusar} />
+    </form>
+  );
+}
+
+type DecisaoPedidoLoja = "aprovar" | "correcao" | "recusar" | "confirmar" | "tirar_selo";
+
+/** Decisão da equipe sobre um pedido de verificação de loja. `equipe`: aprovar, pedir correção ou recusar; `revisao_amostra`: confirmar ou tirar o selo. */
+export function FormDecidirVerificacaoLoja({ id, status }: { id: string; status: "equipe" | "revisao_amostra" }) {
+  const [estado, acao, pendente] = useActionState(decidirVerificacaoLoja, null);
+  const [decisao, setDecisao] = useState<DecisaoPedidoLoja>("aprovar");
+  const [motivo, setMotivo] = useState("");
+  const [conferido, setConferido] = useState(false);
+  const amostra = status === "revisao_amostra";
+  const botao = (valor: DecisaoPedidoLoja) => ({ name: "decisao", value: valor, onClick: () => setDecisao(valor), carregando: pendente && decisao === valor, textoCarregando: "Salvando..." });
+  return (
+    <form action={acao} className="mt-3 flex flex-col gap-3">
+      <input type="hidden" name="id" value={id} />
+      {!amostra && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 font-semibold">Conferências para aprovar</legend>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" name="conferido" checked={conferido} onChange={(e) => setConferido(e.target.checked)}
+              className="mt-0.5 size-5 shrink-0 accent-laranja-escuro" />
+            Conferi o comprovante de endereço e o CNPJ da loja.
+          </label>
+        </fieldset>
+      )}
+      <label className="text-sm font-medium">
+        {amostra ? "Motivo para tirar o selo" : "Motivo para pedir correção ou recusar"}
+        <select name="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} className={estiloCampo}>
+          <option value="">Selecione o motivo</option>
+          {Object.entries(MOTIVOS_VERIFICACAO_LOJA).map(([valor, texto]) => <option key={valor} value={valor}>{texto}</option>)}
+        </select>
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {amostra ? (
+          <>
+            <Botao type="submit" disabled={pendente} {...botao("confirmar")}>Confirmar aprovação</Botao>
+            <Botao type="submit" variante="secundario" disabled={pendente || !motivo} {...botao("tirar_selo")}>Tirar o selo</Botao>
+          </>
+        ) : (
+          <>
+            <Botao type="submit" disabled={pendente || !conferido} {...botao("aprovar")}>Aprovar e conceder selo</Botao>
+            <Botao type="submit" variante="secundario" disabled={pendente || !motivo} {...botao("correcao")}>Pedir correção</Botao>
+            <Botao type="submit" variante="perigo" disabled={pendente || !motivo} {...botao("recusar")}>Recusar verificação</Botao>
+          </>
+        )}
+      </div>
+      <Retorno estado={estado} />
+    </form>
+  );
+}
+
+/** "Visto" num aviso da equipe sobre uma loja verificada. */
+export function FormAvisoVerificacaoLoja({ id }: { id: string }) {
+  const [estado, acao, pendente] = useActionState(resolverAvisoVerificacaoLoja, null);
+  return (
+    <form action={acao}>
+      <input type="hidden" name="id" value={id} />
+      <Botao type="submit" variante="texto" tamanho="pequeno" carregando={pendente}>Visto</Botao>
+      {estado?.erro && <p role="alert" className="mt-1 text-legenda text-perigo">{estado.erro}</p>}
     </form>
   );
 }

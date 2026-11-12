@@ -32,6 +32,8 @@ type Props = {
   nome?: string | null;
   /** Endereço da prévia (imagem escolhida ou já salva). */
   previa?: string | null;
+  /** "grande" = Modo fácil: rótulo, avisos e botões em 18px e 48px. Sem isso, o visual de sempre. */
+  tamanho?: "normal" | "grande";
   className?: string;
 };
 
@@ -43,8 +45,10 @@ function tamanhoLegivel(bytes: number) {
 export function CampoArquivo({
   rotulo, name, accept, required, disabled, opcional, dica, erro,
   textoBotao = "Escolher arquivo", textoTrocar = "Trocar arquivo", onEscolher, onRemover, textoRemover = "Tirar arquivo",
-  nome, previa, className = "",
+  nome, previa, tamanho: porte = "normal", className = "",
 }: Props) {
+  const grande = porte === "grande";
+  const letra = grande ? "text-facil" : "text-sm";
   const id = useId();
   const entrada = useRef<HTMLInputElement>(null);
   const [local, setLocal] = useState<{ nome: string; tamanho: number } | null>(null);
@@ -70,7 +74,7 @@ export function CampoArquivo({
 
   return (
     <div className={`flex min-w-0 flex-col gap-2 ${className}`}>
-      <span id={`${id}-rotulo`} className="text-rotulo font-semibold text-texto">
+      <span id={`${id}-rotulo`} className={`${grande ? "text-facil" : "text-rotulo"} font-semibold text-texto`}>
         {rotulo}
         {opcional && <span className="ml-1 font-normal text-texto-suave">(opcional)</span>}
       </span>
@@ -89,19 +93,19 @@ export function CampoArquivo({
         onChange={(e) => aoEscolher(e.target.files?.[0])}
       />
       <div className="flex flex-wrap items-center gap-2">
-        <Botao variante="secundario" icone={<Paperclip />} disabled={disabled} onClick={() => entrada.current?.click()}>
+        <Botao variante="secundario" tamanho={grande ? "grande" : "normal"} icone={<Paperclip />} disabled={disabled} onClick={() => entrada.current?.click()}>
           {nomeAtual ? textoTrocar : textoBotao}
         </Botao>
         {nomeAtual && onRemover && (
-          <Botao variante="texto" icone={<Trash2 />} disabled={disabled} onClick={tirar}>
+          <Botao variante="texto" tamanho={grande ? "grande" : "normal"} icone={<Trash2 />} disabled={disabled} onClick={tirar}>
             {textoRemover}
           </Botao>
         )}
       </div>
       <div aria-live="polite">
         {nomeAtual ? (
-          <p role="status" className="flex min-w-0 items-center gap-2 rounded-campo bg-sucesso-fundo px-3 py-2 text-sm font-semibold text-verde-escuro">
-            <CheckCircle2 className="size-4 shrink-0" aria-hidden />
+          <p role="status" className={`flex min-w-0 items-center gap-2 rounded-campo bg-sucesso-fundo px-3 py-2 ${letra} font-semibold text-verde-escuro`}>
+            <CheckCircle2 className={grande ? "size-5 shrink-0" : "size-4 shrink-0"} aria-hidden />
             {previa && (
               // eslint-disable-next-line @next/next/no-img-element -- prévia local de arquivo escolhido
               <img src={previa} alt="" width={32} height={32} className="size-8 shrink-0 rounded-campo bg-cartao object-contain" />
@@ -109,11 +113,11 @@ export function CampoArquivo({
             <span className="min-w-0 truncate">Escolhido: {nomeAtual}{tamanho ? ` (${tamanho})` : ""}</span>
           </p>
         ) : (
-          <p className="text-sm text-texto-suave">{required ? "Nenhum arquivo escolhido ainda." : "Nenhum arquivo escolhido."}</p>
+          <p className={`${letra} text-texto-suave`}>{required ? "Nenhum arquivo escolhido ainda." : "Nenhum arquivo escolhido."}</p>
         )}
       </div>
-      {dica && !erro && <p className="text-sm text-texto-suave">{dica}</p>}
-      {erro && <p id={idErro} role="alert" className="text-sm font-semibold text-perigo">{erro}</p>}
+      {dica && !erro && <p className={`${letra} text-texto-suave`}>{dica}</p>}
+      {erro && <p id={idErro} role="alert" className={`${letra} font-semibold text-perigo`}>{erro}</p>}
     </div>
   );
 }

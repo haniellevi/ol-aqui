@@ -4,11 +4,13 @@ const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 const { carregar } = require('./carregar.cjs');
 
-function banco({ falha, vencidas = [], testes = [], lojas = [], atendimentos = 0 } = {}) {
+function banco({ falha, vencidas = [], testes = [], lojas = [], atendimentos = 0, filaLojas = [], falhaFilaLojas = false } = {}) {
   const consultas = [];
   return {
     consultas,
-    rpc: async () => ({ data: [], error: null }),
+    rpc: async (nome) => nome === 'admin_fila_verificacao_loja'
+      ? (falhaFilaLojas ? { data: null, error: { code: '42501', message: 'offline' } } : { data: filaLojas, error: null })
+      : { data: [], error: null },
     from(tabela) {
       const filtros = [];
       let colunas = '', opcoes;
@@ -79,4 +81,38 @@ test('Hoje não anuncia ausência de pendências quando a consulta falha', async
   const html = renderToStaticMarkup(await Page());
   assert.doesNotMatch(html, /Nada pendente agora|Tudo feito por hoje/);
   assert.match(html, /não|Não/);
+});
+
+test('Hoje junta as lojas esperando a equipe numa tarefa só, que não se adia', async () => {
+  const r = await tarefasDeHoje(banco({ filaLojas: [{ id: 'a', atrasada: false }, { id: 'b', atrasada: false }] }), agora);
+  const t = r.tarefas.find(t => t.tipo === 'verificacao_loja');
+  assert.ok(t);
+  assert.equal(t.adiavel, false);
+  assert.equal(t.acao.href, '/admin/lojas#fila-lojas');
+  assert.match(t.titulo, /^2 /);
+  assert.notEqual(t.urgente, true);
+  assert.equal(r.erro, false);
+});
+
+test('Hoje marca como urgente quando há loja atrasada e fala no singular com uma só', async () => {
+  const r = await tarefasDeHoje(banco({ filaLojas: [{ id: 'a', atrasada: true }] }), agora);
+  const t = r.tarefas.find(t => t.tipo === 'verificacao_loja');
+  assert.equal(t.urgente, true);
+  assert.match(t.titulo, /^1 loja /);
+  assert.match(t.detalhe, /atrasad/i);
+});
+
+test('Hoje não cria tarefa de loja com a fila vazia e tem nome para o tipo', async () => {
+  const r = await tarefasDeHoje(banco(), agora);
+  assert.equal(r.tarefas.some(t => t.tipo === 'verificacao_loja'), false);
+  const { NOME_TIPO } = carregar('src/lib/admin/hoje.ts');
+  assert.ok(NOME_TIPO.verificacao_loja);
+});
+
+test('Hoje avisa quando não deu para conferir as lojas em verificação, sem perder as outras tarefas', async () => {
+  const r = await tarefasDeHoje(banco({ falhaFilaLojas: true, atendimentos: 1 }), agora);
+  assert.equal(r.erro, true);
+  assert.ok(r.falhas.includes('Lojas em verificação'));
+  assert.ok(r.tarefas.some(t => t.tipo === 'atendimento'));
+  assert.equal(r.tarefas.some(t => t.tipo === 'verificacao_loja'), false);
 });
