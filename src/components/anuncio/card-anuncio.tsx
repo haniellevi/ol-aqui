@@ -28,9 +28,9 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
         href={linkAnuncio(a.id, a.titulo)}
         className="flex flex-1 flex-col focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
       >
-        <div className="relative aspect-[4/3] w-full bg-borda">
+        <div className={`relative aspect-[4/3] w-full ${a.capa ? "bg-white" : "bg-borda"}`}>
           {a.capa ? (
-            // Foto do Storage sai otimizada (AVIF/WebP, só o tamanho que a tela precisa); outras vão como estão.
+            // Foto inteira (sem cortar) sobre fundo branco. Foto do Storage sai otimizada (AVIF/WebP, só o tamanho que a tela precisa); outras vão como estão.
             <Image
               src={a.capa}
               alt={`Foto de ${a.titulo}`}
@@ -38,7 +38,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
               sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
               priority={prioridade}
               unoptimized={!podeOtimizar(a.capa)}
-              className="object-cover"
+              className="object-contain"
             />
           ) : (
             <span className="absolute inset-0 grid place-items-center text-texto-suave" aria-label="Sem foto">

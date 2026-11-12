@@ -75,7 +75,8 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
           Ver anúncio
         </Botao>
         <BotaoNovoRascunho variante="secundario" texto="Anunciar outro" />
-        <div className="flex flex-col gap-1 rounded-card bg-cartao p-3 shadow-1">
+        {/* Mesma largura dos outros botões: sem caixa em volta, só a dica embaixo. */}
+        <div className="flex flex-col gap-1">
           <Botao href={linkDestacar(anuncio.id)} variante="secundario" larguraTotal icone={<Sparkles />} aria-describedby="destacar-dica">
             Destacar
           </Botao>

@@ -98,7 +98,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
       <ul
         ref={trilho}
         onScroll={(e) => aoRolar(e.currentTarget)}
-        className="flex aspect-[4/3] w-full snap-x snap-mandatory overflow-x-auto bg-beringela [scrollbar-width:none] md:rounded-card"
+        className="flex aspect-[4/3] w-full snap-x snap-mandatory overflow-x-auto bg-white [scrollbar-width:none] md:rounded-card"
       >
         {fotos.map((f, i) => (
           <li key={f + i} className="relative h-full w-full shrink-0 snap-center">
