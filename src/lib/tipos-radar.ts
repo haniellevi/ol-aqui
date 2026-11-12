@@ -76,6 +76,8 @@ export type PedidoRadarDetalhe = {
   bloqueado?: boolean;
   extensoes?: number;
   pode_estender?: boolean;
+  /** Atende o Radar e está na área deste pedido: pode mandar oferta (senão, só "Eu sei onde tem"). */
+  pode_propor?: boolean;
   resolvido_proposta_id?: string | null;
   resolvido_fora?: boolean;
   avaliacao?: 1 | -1 | null;

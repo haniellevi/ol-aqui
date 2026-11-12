@@ -33,6 +33,11 @@ function textoPreco(p: PlanoPublico): { valor: string; periodo: string | null } 
   return { valor: preco(p.preco_centavos), periodo: p.periodo_dias === 30 ? "por mês" : `a cada ${p.periodo_dias} dias` };
 }
 
+/** Mesma regra do banco (pode_atender_radar): só plano pago com Radar atende. */
+function temRadar(p: PlanoPublico): boolean {
+  return p.acesso_radar && !p.e_teste && p.preco_centavos > 0;
+}
+
 function quantos(n: number | null, um: string, varios: string): string {
   return n === null ? `${varios.charAt(0).toUpperCase()}${varios.slice(1)} sem limite` : `Até ${n} ${n === 1 ? um : varios}`;
 }
@@ -70,10 +75,9 @@ export default async function PaginaPlanos({ searchParams }: Props) {
         )}
         {origem === "radar" && (
           <p className="rounded-card bg-fundo p-3 text-base font-semibold">
-            Para ver os pedidos do Radar e mandar propostas, escolha um plano com Radar.
+            Para ver os pedidos do Radar e mandar propostas, escolha um plano com Radar. A loja também precisa ser verificada.
           </p>
         )}
-        <p className="text-base text-texto-suave">Para responder no Radar, a loja precisa ser verificada.</p>
       </header>
 
       {planos.length === 0 ? (
@@ -115,16 +119,15 @@ export default async function PaginaPlanos({ searchParams }: Props) {
 
                 <ul className="flex flex-col gap-2 text-base">
                   <Item sim>{p.limite_anuncios === null ? "Anúncios sem limite" : quantos(p.limite_anuncios, "anúncio no ar", "anúncios no ar")}</Item>
-                  <Item sim={p.acesso_radar}>
-                    {p.acesso_radar
+                  {/* Só plano pago atende o Radar (pode_atender_radar): teste e grátis não prometem Radar. */}
+                  <Item sim={temRadar(p)}>
+                    {temRadar(p)
                       ? p.propostas_radar_mes === null
                         ? "Radar de Negócios: propostas sem limite"
-                        : `Radar de Negócios: ${p.propostas_radar_mes} ${p.propostas_radar_mes === 1 ? "proposta" : "propostas"}${p.e_teste ? "" : " por mês"}`
+                        : `Radar de Negócios: ${p.propostas_radar_mes} ${p.propostas_radar_mes === 1 ? "proposta" : "propostas"} por mês`
                       : "Sem Radar de Negócios"}
                   </Item>
-                  {p.acesso_radar && !p.e_teste && p.preco_centavos > 0 && (
-                    <Item sim>{p.aviso_radar_na_hora ? "Aviso na hora de pedido novo no Radar" : "Vê e responde pedidos do Radar"}</Item>
-                  )}
+                  {temRadar(p) && p.aviso_radar_na_hora && <Item sim>Aviso na hora de pedido novo no Radar</Item>}
                   {p.publico !== "pf" && (
                     <>
                       <Item sim>Vitrine da loja com banner modelo e informações</Item>

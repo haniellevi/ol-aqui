@@ -1,6 +1,9 @@
 // Textos e formatos do Radar (servem no servidor e no navegador).
 import { preco } from "@/lib/formato";
 import type { MotivoFechamento, SituacaoPedido } from "@/lib/tipos-radar";
+import type { MinhaConta } from "@/lib/tipos";
+import { LINK_MINHA_LOJA } from "@/lib/rotas";
+import { LINK_VERIFICACAO_VENDEDOR } from "@/lib/verificacao-vendedor";
 import type { TomSelo } from "@/components/ui/badge";
 
 const FUSO = "America/Fortaleza";
@@ -62,3 +65,15 @@ export function resumoPropostas(total: number, menor: number | null): string {
 
 /** Valor editável em reais, preservando os centavos. */
 export const textoPrecoProposta = (centavos: number | null) => centavos === null ? "" : (centavos / 100).toFixed(2).replace(".", ",");
+
+/**
+ * Loja (ou PF) ativa com plano pago que tem Radar, mas sem acesso: o que falta é a verificação,
+ * não um plano. Devolve a página de verificação; null quando o caminho é mesmo "Ver planos".
+ */
+export function linkVerificarParaRadar(conta: Pick<MinhaConta, "vitrine" | "plano"> | null | undefined, temAcesso: boolean): string | null {
+  const v = conta?.vitrine;
+  const p = conta?.plano;
+  if (temAcesso || !v || v.status !== "ativa" || !p) return null;
+  if (!p.acesso_radar || p.e_teste || p.preco_centavos <= 0) return null;
+  return v.tipo === "pf" ? LINK_VERIFICACAO_VENDEDOR : LINK_MINHA_LOJA;
+}

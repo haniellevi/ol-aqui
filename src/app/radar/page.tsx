@@ -17,6 +17,7 @@ import { AbasRadar, type AbaRadar } from "@/components/radar/abas-radar";
 import { ExplicacaoRadar } from "@/components/radar/explicacao-radar";
 import { AtualizarRadar } from "@/components/radar/atualizar-radar";
 import { ListaMeusPedidos, ListaMinhasPropostas } from "@/components/radar/listas-radar";
+import { linkVerificarParaRadar } from "@/components/radar/util";
 
 export const metadata = {
   title: "Radar de Negócios",
@@ -46,6 +47,7 @@ type LinhaFeed = {
   sou_comprador: boolean;
   area_texto: string | null;
   visibilidade: PedidoRadar["visibilidade"];
+  pode_propor?: boolean;
 };
 
 type ParametrosRadar = Promise<{ aba?: string; q?: string; nicho?: string; pagina?: string; arquivo?: string }>;
@@ -75,12 +77,12 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
     return (
       <Moldura titulo={arquivados ? "Pedidos arquivados" : "Meus pedidos"} abas={navAbas}>
         <nav aria-label="Histórico de pedidos" className="flex flex-wrap gap-2">
-          <Chip href="/radar?aba=meus" ativo={!arquivados}>Pedidos</Chip>
-          <Chip href="/radar?aba=meus&arquivo=1" ativo={arquivados}>Arquivados</Chip>
+          <Chip href="/radar?aba=meus" ativo={!arquivados} tamanho="grande">Pedidos</Chip>
+          <Chip href="/radar?aba=meus&arquivo=1" ativo={arquivados} tamanho="grande">Arquivados</Chip>
         </nav>
         {!arquivados && pedidos.length > 0 && (
-          <Botao href={linkPedir} larguraTotal>
-            Pedir outra coisa
+          <Botao href={linkPedir} larguraTotal tamanho="grande">
+            Estou procurando outra coisa
           </Botao>
         )}
         <ListaMeusPedidos pedidos={pedidos} linkPedir={linkPedir} arquivados={arquivados} />
@@ -135,6 +137,7 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
     souComprador: p.sou_comprador,
     areaTexto: p.area_texto,
     visibilidade: p.visibilidade,
+    podeProporAqui: typeof p.pode_propor === "boolean" ? p.pode_propor : undefined,
     // Bloqueio real: o banco já devolve null para quem não tem acesso; aqui reforçamos.
     // pedido "Todo mundo" mostra os detalhes a qualquer pessoa da região (o nome do comprador, não)
     detalhes: temAcesso || p.sou_comprador || p.visibilidade === "todos" ? p.detalhes : null,
@@ -163,6 +166,7 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
       emTeste={conta.plano?.e_teste === true}
       planos={planos.map((p) => ({ codigo: p.codigo, nome: p.nome, preco_centavos: p.preco_centavos, periodo_dias: p.periodo_dias }))}
       abas={navAbas}
+      linkVerificar={linkVerificarParaRadar(conta, temAcesso)}
     />
   );
 }
@@ -172,13 +176,13 @@ function Moldura({ titulo, abas, children }: { titulo: string; abas: React.React
     <main className="mx-auto min-h-dvh max-w-xl bg-fundo pb-28">
       <header className="sticky top-13 z-10 border-b border-borda bg-cartao/95 px-4 pt-4 pb-3 backdrop-blur md:top-14">
         <div className="flex items-center gap-2">
-          <Radar className="size-6 text-laranja-escuro" aria-hidden />
-          <h1 className="text-titulo font-semibold text-beringela">Radar de Negócios</h1>
+          <Radar className="size-7 text-laranja-escuro" aria-hidden />
+          <h1 className="text-facil-titulo font-semibold text-beringela">Radar de Negócios</h1>
         </div>
-        <p className="mt-0.5 text-sm text-texto-suave">{titulo}</p>
+        <p className="mt-0.5 text-facil text-texto-suave">{titulo}</p>
         {abas}
       </header>
-      <div className="flex flex-col gap-4 px-4 pt-4"><div className="flex justify-end"><AtualizarRadar /></div>{children}</div>
+      <div className="flex flex-col gap-4 px-4 pt-4"><div className="flex justify-end"><AtualizarRadar tamanho="grande" /></div>{children}</div>
     </main>
   );
 }

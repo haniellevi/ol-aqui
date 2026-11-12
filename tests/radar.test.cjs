@@ -265,3 +265,23 @@ test('v2 tela do pedido: quem não atende num pedido "todos" vê detalhes e "Eu 
  const fechado=await telaPedido({...baseTela,status:'encerrado',situacao:'fechado'},{temAcesso:false,restantes:0},{perfil:{},vitrine:null});
  assert.doesNotMatch(fechado,/Eu sei onde tem/);
 });
+test('v2 tela do pedido: loja que atende, mas de fora da área de um pedido "todos", vê a área e "Eu sei onde tem" (RF3)',async()=>{
+ const html=await telaPedido({...baseTela,area_texto:'Corrente',pode_propor:false,tem_acesso:true},{temAcesso:true,restantes:null},{perfil:{microrregiao_id:'m'},vitrine:{id:'v',status:'ativa',tipo:'loja'},plano:{acesso_radar:true,e_teste:false,preco_centavos:9900}});
+ assert.match(html,/Este pedido é para lojas de Corrente\./);assert.match(html,/Eu sei onde tem/);
+ assert.doesNotMatch(html,/Mandar oferta|Ver planos|você chama o comprador/);
+ const dentro=await telaPedido({...baseTela,pode_propor:true,tem_acesso:true},{temAcesso:true,restantes:null},{perfil:{microrregiao_id:'m'},vitrine:{id:'v',status:'ativa',tipo:'loja'},plano:{acesso_radar:true,e_teste:false,preco_centavos:9900}});
+ assert.doesNotMatch(dentro,/Este pedido é para lojas de|Eu sei onde tem/);
+});
+test('v2 tela do pedido: plano pago sem selo vê "Verificar minha loja" no lugar de "Ver planos"',async()=>{
+ const conta={perfil:{microrregiao_id:'m'},vitrine:{id:'v',status:'ativa',tipo:'loja'},plano:{acesso_radar:true,e_teste:false,preco_centavos:4990}};
+ const bloq=await telaPedido({...baseTela,bloqueado:true,titulo:null,detalhes:null,visibilidade:'lojas'},{temAcesso:false,restantes:0},conta);
+ assert.match(bloq,/Verificar minha loja/);assert.match(bloq,/href="\/minha-conta\/loja"/);assert.doesNotMatch(bloq,/Ver planos/);
+ const pf=await telaPedido({...baseTela,bloqueado:true,titulo:null,detalhes:null,visibilidade:'lojas'},{temAcesso:false,restantes:0},{...conta,vitrine:{id:'v',status:'ativa',tipo:'pf'}});
+ assert.match(pf,/href="\/minha-conta\/verificacao"/);
+ const teste=await telaPedido({...baseTela,bloqueado:true,titulo:null,detalhes:null,visibilidade:'lojas'},{temAcesso:false,restantes:0},{...conta,plano:{acesso_radar:true,e_teste:true,preco_centavos:0}});
+ assert.match(teste,/Ver planos/);assert.doesNotMatch(teste,/Verificar minha loja/);
+});
+test('Aki: pedido sem cidade vale para a região toda',()=>{
+ const {validarPedidoRadar}=carregar('src/lib/aki/validar.ts');
+ const r=validarPedidoRadar({titulo:'Procuro mesa de jantar'});assert.equal(r.ok,true);assert.equal(r.dados.cidade,null);
+});
