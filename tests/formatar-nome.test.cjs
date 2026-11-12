@@ -6,7 +6,7 @@ const { formatarNome } = carregar('src/lib/formatar-nome.ts');
 const casos = [
   // Caixa alta vira cada palavra com a primeira maiúscula
   ['TESTE', 'Teste'],
-  ['RVS TECNOLOGIA', 'RVS Tecnologia'], // sigla sem vogal continua maiúscula
+  ['RVS TECNOLOGIA', 'Rvs Tecnologia'], // sem exceção para sigla sem vogal
   ['GELADEIRA BRASTEMP USADA', 'Geladeira Brastemp Usada'],
   ['CASA DA ANA', 'Casa da Ana'],
   ['PÃES E DOCES DO ZÉ', 'Pães e Doces do Zé'],
@@ -16,12 +16,12 @@ const casos = [
   ['JOÃO DA SILVA', 'João da Silva'],
   ['AUTO-PEÇAS CORRENTE', 'Auto-Peças Corrente'],
   ['(NOVO) FOGÃO 4 BOCAS', '(Novo) Fogão 4 Bocas'],
-  ['TV LG 32 POLEGADAS', 'TV LG 32 Polegadas'],
+  ['TV LG 32 POLEGADAS', 'Tv Lg 32 Polegadas'],
   ['CHAVEIRO DIA E NOITE', 'Chaveiro Dia e Noite'],
   ['COLEÇÃO PARTE II', 'Coleção Parte II'],
   ['ÁGUA D\'ÁGUA', 'Água D\'água'],
   // Números e unidades ficam como foram digitados
-  ['MOTO HONDA CG 160CC 2015', 'Moto Honda CG 160CC 2015'],
+  ['MOTO HONDA CG 160CC 2015', 'Moto Honda Cg 160CC 2015'],
   ['MOTO TITAN 160cc', 'Moto Titan 160cc'],
   ['RAÇÃO 15KG', 'Ração 15KG'],
   ['PS5 COM 2 CONTROLES', 'PS5 com 2 Controles'],
@@ -76,7 +76,7 @@ test('formatar duas vezes dá o mesmo resultado', () => {
 const { avisoComoVaiAparecer } = carregar('src/lib/formatar-nome.ts');
 
 test('aviso "Vai aparecer assim" só quando muda o que aparece', () => {
-  assert.equal(avisoComoVaiAparecer('RVS TECNOLOGIA'), 'Vai aparecer assim: “RVS Tecnologia”.');
+  assert.equal(avisoComoVaiAparecer('RVS TECNOLOGIA'), 'Vai aparecer assim: “Rvs Tecnologia”.');
   assert.equal(avisoComoVaiAparecer('TESTE'), 'Vai aparecer assim: “Teste”.');
   assert.equal(avisoComoVaiAparecer('Loja RVS'), undefined);
   assert.equal(avisoComoVaiAparecer('  Loja   RVS '), undefined); // espaço sobrando não é motivo de aviso
