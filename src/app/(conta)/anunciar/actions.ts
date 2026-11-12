@@ -7,7 +7,8 @@ import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
 import { anuncioDaLoja } from "@/lib/dados/anuncios";
 import { contaDaLoja } from "@/lib/dados/conta";
-import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
+import { categoriaDoAnuncio, categoriaPorId, listarCategorias } from "@/lib/dados/categorias";
+import { arvoreParaIA, dentroDoLimite, limparTextoBusca, perguntarCategorias } from "@/lib/sugestao-categoria-ia";
 import { listarCidades } from "@/lib/dados/regiao";
 import { lerConfigNumero } from "@/lib/dados/config";
 import { avulsoParaMim } from "@/lib/dados/cobranca";
@@ -222,6 +223,7 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
   // anúncio que já esteve no ar (no ar, pausado...) e continua na mesma categoria (mesmo escondida no painel): segue sem mudar nada
   const sugestao = limparSugestao(form.get("sugestao_categoria"));
   if (categoriaId === anuncio.categoria_id && anuncio.publicado_em) {
+    await registrarEscolhaIA(c.id, form.get("texto_ia"));
     const falha = await sugerirCategoria(c.id, sugestao);
     if (falha) return falha;
     redirect(destino("categoria", c));
@@ -256,9 +258,57 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
     const r = await gravar(c.id, { titulo: tituloInicial }, undefined, anuncio.atualizado_em);
     if (r) return r;
   }
+  await registrarEscolhaIA(c.id, form.get("texto_ia"));
   const falha = await sugerirCategoria(c.id, sugestao);
   if (falha) return falha;
   redirect(destino("categoria", c));
+}
+
+/**
+ * Para medir os acertos da IA: guarda a categoria que ficou no anúncio (o banco lê do próprio anúncio)
+ * ao lado da última sugestão da IA, se ela for do mesmo texto que estava na tela. Senão, o banco não faz nada. Erro aqui nunca
+ * atrapalha quem anuncia.
+ */
+async function registrarEscolhaIA(id: string, textoIA: FormDataEntryValue | null): Promise<void> {
+  // Texto cujas sugestões da IA estavam na tela ao salvar. Sem ele, a pessoa não viu sugestão: nada a medir.
+  const texto = limparTextoBusca(textoIA);
+  if (!texto) return;
+  try {
+    const db = await createClient();
+    await db.rpc("registrar_escolha_categoria_ia", { p_anuncio: id, p_texto: texto });
+  } catch {
+    // Sem registro desta vez.
+  }
+}
+
+/**
+ * Etapa 2: até 3 categorias finais (ids) que a IA acha mais prováveis para o que a pessoa escreveu
+ * em "O que você está anunciando?". Só com login. Sem chave, fora do limite ou com falha: lista vazia,
+ * e a tela fica só com a busca local. Com o id do anúncio, a resposta fica guardada para o painel
+ * "Acertos da IA" (texto, até 3 categorias e a chance de cada).
+ */
+export async function categoriasSugeridasIA(texto: string, anuncioId?: string): Promise<string[]> {
+  const limpo = limparTextoBusca(texto);
+  if (!process.env.TYPESAFE_API_KEY || !limpo) return [];
+  const { userId } = await auth();
+  if (!userId || !dentroDoLimite(userId)) return [];
+  let sugestoes: Awaited<ReturnType<typeof perguntarCategorias>>;
+  try {
+    sugestoes = await perguntarCategorias(await arvoreParaIA(listarCategorias), texto);
+  } catch {
+    return [];
+  }
+  if (!sugestoes) return [];
+  // Guarda o que a IA respondeu para este anúncio (o banco confere se a pessoa cuida dele). Erro: segue sem guardar.
+  if (anuncioId && ehUuid(anuncioId)) {
+    try {
+      const db = await createClient();
+      await db.rpc("registrar_sugestao_categoria_ia", { p_anuncio: anuncioId, p_texto: limpo, p_sugestoes: sugestoes });
+    } catch {
+      // Sem registro desta vez.
+    }
+  }
+  return sugestoes.map((s) => s.id);
 }
 
 /** O vendedor desiste da sugestão pendente deste anúncio (a equipe não recebe mais o pedido). */

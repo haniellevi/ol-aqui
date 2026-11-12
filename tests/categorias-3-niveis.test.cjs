@@ -102,16 +102,17 @@ test('página de categoria: grande abre; sub e tipo vão para o endereço com o 
 });
 
 // ---------- Escolha de categoria (anúncio) ----------
-function escolha({ abertas = [], filhaId = null, busca = '' } = {}) {
-  // Ordem dos useState: EscolhaCategoria (filhaId, busca, sugestão) e depois ArvoreCategorias (abertas, recentes).
+function escolha({ abertas = [], filhaId = null, busca = '', ia = { texto: '', ids: [] } } = {}) {
+  // Ordem dos useState: EscolhaCategoria (filhaId, busca, sugestão, ia) e depois ArvoreCategorias (abertas, recentes).
   let indice = 0;
-  const valores = [filhaId, busca, null, abertas, []];
+  const valores = [filhaId, busca, null, ia, abertas, []];
   const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
     react: {
       ...React,
       useState: (ini) => [indice < valores.length ? valores[indice++] : typeof ini === 'function' ? ini() : ini, () => {}],
       useMemo: (fn) => fn(),
       useEffect: () => {},
+      useRef: (v) => ({ current: v }),
     },
     './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
     '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
@@ -146,10 +147,28 @@ test('busca em qualquer nível mostra o caminho completo e só folhas são escol
   assert.doesNotMatch(html, /value="p2"/);
 });
 
+test('sugestões da IA vão para o topo da lista, sem repetir, e só valem para o texto em que vieram', async () => {
+  const valores = (html) => [...html.matchAll(/name="escolha-categoria" value="([^"]+)"/g)].map((x) => x[1]);
+  const com = await escolha({ busca: 'racao', ia: { texto: 'racao', ids: ['c2', 'p3', 'p1', 'nao-existe'] } })();
+  // c2 (sugerida) primeiro, p3 não se repete; mãe (p1) e id desconhecido não entram
+  assert.deepEqual(valores(com), ['c2', 'p3']);
+  assert.match(com, /2 categorias parecidas/);
+  // texto mudou: a sugestão antiga some e fica só a busca local
+  assert.deepEqual(valores(await escolha({ busca: 'racao premium', ia: { texto: 'racao', ids: ['c2'] } })()), ['p3']);
+  // busca local sem nada: a sugestão da IA aparece e "Sugerir a categoria" continua lá
+  const nada = await escolha({ busca: 'xyz abc', ia: { texto: 'xyz abc', ids: ['p3'] } })();
+  assert.deepEqual(valores(nada), ['p3']);
+  assert.match(nada, /1 categoria parecida/);
+  assert.match(nada, /Sugerir a categoria/);
+  // com sugestão da IA em cima, o texto não manda "tentar uma palavra mais simples"
+  assert.match(nada, /Se nenhuma servir, veja a lista de categorias\./);
+  assert.doesNotMatch(nada, /Tente uma palavra mais simples/);
+});
+
 test('escolha mostra a categoria já escolhida com o caminho', async () => {
   const html = render(await (async () => {
     const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
-      react: { ...React, useState: (i) => [typeof i === 'function' ? i() : i, () => {}], useMemo: (fn) => fn(), useEffect: () => {} },
+      react: { ...React, useState: (i) => [typeof i === 'function' ? i() : i, () => {}], useMemo: (fn) => fn(), useEffect: () => {}, useRef: (v) => ({ current: v }) },
       './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
       '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
     });

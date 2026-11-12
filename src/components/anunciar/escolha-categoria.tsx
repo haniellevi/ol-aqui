@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
-import { salvarCategoria } from "@/app/(conta)/anunciar/actions";
+import { categoriasSugeridasIA, salvarCategoria } from "@/app/(conta)/anunciar/actions";
 import { ArvoreCategorias } from "@/components/categorias/arvore-categorias";
 import { nomeCaminho, percorrerLeve, type NoLeve } from "@/lib/categorias-arvore";
 import type { CategoriaComFilhas } from "@/lib/tipos";
@@ -15,9 +15,14 @@ import { classesCampo } from "@/components/ui/input";
 // Passo 2 · Categoria em até 3 níveis: Grande › Sub › Tipo. Só a folha (sem filhas) recebe o anúncio.
 // No topo, "O que você está anunciando?": ao digitar, as categorias mais parecidas aparecem na hora
 // (busca local, sem IA) e o texto já vira o começo do título, se o anúncio ainda não tem título.
+// Etapa 2: 0,5 s depois que a pessoa para de digitar, a IA (JEV) sugere até 3 categorias, que vão para
+// o topo dessa lista. Se a IA não responder, fica só a busca local, sem aviso.
 // Embaixo, as usadas há pouco e a lista que abre no próprio lugar (ArvoreCategorias).
 
 const MAX_TITULO = 90; // mesmo limite do banco (anuncios_titulo_check)
+const ESPERA_IA_MS = 500;
+const MIN_TEXTO_IA = 3;
+const textoDaBusca = (t: string) => t.replace(/\s+/g, " ").trim().slice(0, MAX_TITULO);
 
 export function EscolhaCategoria({
   id,
@@ -39,9 +44,31 @@ export function EscolhaCategoria({
   const [busca, setBusca] = useState("");
   // Categoria sugerida pela pessoa (quando a busca não acha nada). Vai junto ao salvar a categoria.
   const [sugestao, setSugestao] = useState<string | null>(null);
+  // Sugestões da IA e o texto para o qual vieram (só valem enquanto o texto for o mesmo).
+  const [ia, setIa] = useState<{ texto: string; ids: string[] }>({ texto: "", ids: [] });
+  const rodada = useRef(0);
+
+  useEffect(() => {
+    const minha = ++rodada.current;
+    const texto = textoDaBusca(busca);
+    if (texto.length < MIN_TEXTO_IA) return;
+    const t = setTimeout(async () => {
+      try {
+        const ids = await categoriasSugeridasIA(texto, id);
+        if (minha === rodada.current) setIa({ texto, ids });
+      } catch {
+        // Sem IA agora: fica a busca local.
+      }
+    }, ESPERA_IA_MS);
+    return () => clearTimeout(t);
+  }, [busca, id]);
 
   const todos = useMemo(() => percorrerLeve(arvore), [arvore]);
   const escolhida = useMemo(() => todos.find((x) => x.no.id === filhaId) ?? null, [filhaId, todos]);
+  const daIA = useMemo(
+    () => (ia.texto && ia.texto === textoDaBusca(busca) ? ia.ids.map((i) => todos.find((x) => x.no.id === i)).filter((x): x is NoLeve => !!x) : []),
+    [ia, busca, todos],
+  );
   const outros = arvore.find((p) => p.slug === "outros");
   const diversos = outros?.filhas.find((f) => f.slug === "diversos");
   const temTitulo = !!tituloAtual?.trim();
@@ -53,7 +80,9 @@ export function EscolhaCategoria({
   const semResultado = (
     <div className="flex flex-col gap-2">
       <p className="text-sm text-texto-suave">
-        {diversos ? "Tente uma palavra mais simples, como “moto” ou “sofá”. Se nenhuma servir, escolha Outros › Diversos." : "Tente uma palavra mais simples ou veja a lista de categorias."}
+        {daIA.length
+          ? diversos ? "Se nenhuma servir, escolha Outros › Diversos." : "Se nenhuma servir, veja a lista de categorias."
+          : diversos ? "Tente uma palavra mais simples, como “moto” ou “sofá”. Se nenhuma servir, escolha Outros › Diversos." : "Tente uma palavra mais simples ou veja a lista de categorias."}
       </p>
       {busca.trim().length >= 2 && (
         <Botao
@@ -67,7 +96,7 @@ export function EscolhaCategoria({
       <Botao variante="texto" className="self-start" onClick={() => setBusca("")}>
         Ver todas as categorias
       </Botao>
-      {outros && diversos && (
+      {outros && diversos && !daIA.some((x) => x.no.id === diversos.id) && (
         <ul>
           <li>
             <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-card border border-borda bg-cartao p-3 text-base font-semibold hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro">
@@ -93,6 +122,8 @@ export function EscolhaCategoria({
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
       <input type="hidden" name="categoria_id" value={filhaId ?? ""} />
       <input type="hidden" name="sugestao_categoria" value={sugestao ?? ""} />
+      {/* Texto cujas sugestões da IA estão na tela: o servidor só mede o acerto quando bate com a resposta guardada. */}
+      <input type="hidden" name="texto_ia" value={ia.texto && ia.texto === textoDaBusca(busca) ? ia.texto : ""} />
       {!temTitulo && <input type="hidden" name="titulo_inicial" value={busca.trim().slice(0, MAX_TITULO)} />}
 
       <AvisoErro mensagem={estado?.erro?.mensagem} />
@@ -149,6 +180,7 @@ export function EscolhaCategoria({
         selecionadaId={filhaId}
         aoEscolher={escolher}
         semResultado={semResultado}
+        primeiras={daIA}
       />
 
       <BarraContinuar>
