@@ -47,6 +47,8 @@ function um(v: string | string[] | undefined): string {
 
 /** Só filtros conhecidos seguem ao trocar o termo; a nova busca começa na primeira página. */
 export function manterFiltros(sp: ParametrosUrl): ParametrosUrl {
+  // Filtros marcados pela busca que entende (ia=...) valiam só para aquela frase: uma busca nova começa limpa.
+  if (sp.ia) return {};
   return Object.fromEntries(Object.entries(sp).filter(([k]) =>
     ["categoria", "cidade", "preco_min", "preco_max", "ordem"].includes(k) || /^c_[a-z0-9_]+$/.test(k),
   ));

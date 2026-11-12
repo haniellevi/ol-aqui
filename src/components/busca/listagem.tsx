@@ -21,6 +21,7 @@ export async function Listagem({
   categoria,
   categoriaPeloEndereco,
   topo,
+  termoDigitado,
 }: {
   /** Endereço da própria página (para onde vão os filtros e a paginação). */
   caminho: string;
@@ -31,6 +32,8 @@ export async function Listagem({
   categoriaPeloEndereco: boolean;
   /** Título, campo de busca etc. (fica acima dos chips). */
   topo: ReactNode;
+  /** Frase que a pessoa digitou quando a busca foi "entendida" (o q do endereço fica só com o que sobrou): é ela que conta na demanda. */
+  termoDigitado?: string;
 }) {
   const campos = categoria && !categoria.filhas.length ? categoria.categoria.campos.filter((c) => c.filtro) : [];
   const estado = lerEstadoBusca(sp, campos, !categoriaPeloEndereco);
@@ -59,8 +62,8 @@ export async function Listagem({
   if (!temErro && !anuncios.length && estado.pagina > 1) redirect(comParametros(caminho, sp));
 
   // Conta a busca digitada (só a 1ª página), depois de responder: alimenta o alerta de demanda.
-  if (!temErro && estado.q && estado.pagina === 1) {
-    const termo = estado.q;
+  if (!temErro && (termoDigitado || estado.q) && estado.pagina === 1) {
+    const termo = termoDigitado || estado.q;
     after(() => registrarBusca(termo, regiao?.id ?? null, slugCategoria, total));
   }
 
