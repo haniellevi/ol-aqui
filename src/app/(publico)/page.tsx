@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
-import { ArrowDownWideNarrow, Clock, Heart, LayoutGrid, MapPin, Plus, Radar, Store, Tag } from "lucide-react";
+import { ArrowDownWideNarrow, Clock, Heart, LayoutGrid, MapPin, Tag } from "lucide-react";
 import { listarCategorias, totaisCategorias } from "@/lib/dados/categorias";
 import { arvoreComAnuncios, enxugarArvore } from "@/lib/categorias-arvore";
 import { FaixaCategorias } from "@/components/categorias/faixa-categorias";
@@ -24,26 +24,24 @@ import { Vazio } from "@/components/ui/vazio";
 import { LojasDaRegiao } from "@/components/vitrine/lojas-da-regiao";
 import { LojasEmDestaque } from "@/components/destaques/lojas-em-destaque";
 import { linkCategoria } from "@/lib/formato";
-import { blocosHome, minimoAnunciosInicio } from "@/lib/dados/paginas";
-import { PortasInicio } from "@/components/paginas/portas-inicio";
+import { blocosHome } from "@/lib/dados/paginas";
+import { AcoesInicio } from "@/components/paginas/acoes-inicio";
 import { RodapeInicio } from "@/components/paginas/rodape-inicio";
 import { linkPedirRadar } from "@/lib/rotas";
 import type { AnuncioCard } from "@/lib/tipos";
 import type { BlocoHome } from "@/lib/tipos-paginas";
 import estilos from "./inicio.module.css";
 
-// T2 · Início em 3 colunas (computador) e 1 coluna (celular), pensado para quem procura.
-// Esquerda: categorias e atalhos. Meio: título curto, filtros rápidos, destaques pagos,
-// "Você viu há pouco" e os anúncios em grade. Direita: Anunciar, Radar e lojas.
+// T2 · Início em 2 colunas (computador) e 1 coluna (celular), pensado para quem procura.
+// Esquerda: categorias e atalhos. Meio (o feed): lojas da região numa fileira no topo, título curto,
+// filtros rápidos, uma faixa fina com "Pedir no Radar" e "Anunciar", destaques pagos,
+// "Você viu há pouco" e os anúncios em grade, que são o assunto principal.
 // Filtros vão pelo endereço (?cidade=minha&ate=100&ordem=menor_preco): funcionam sem JavaScript.
 // A ordem, o liga/desliga e os textos dos blocos seguem vindo do painel (tabela home_blocos).
 // Todo lugar pago mostra "Patrocinado". Os blocos pagos e os "mais recentes" não desligam.
 
 const POR_VEZ = 24;
 const ATE_CENTAVOS = 10000; // "Até R$ 100"
-/** Abaixo deste total de anúncios a home fica "no começo" (duas portas no lugar da prateleira vazia).
- *  Pode mudar pela configuração pública "home.comeco_min_anuncios". */
-const MIN_ANUNCIOS_PADRAO = 8;
 
 type Filtros = { minha: boolean; ate: boolean; menorPreco: boolean };
 type Params = { pagina?: string; cidade?: string; ate?: string; ordem?: string; salvar?: string };
@@ -105,12 +103,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
     anunciosCatalogo(regiao, "patrocinados", 12),
   ]) : [[], []];
   const total = Number(normais[0]?.total ?? 0);
-  const [salvosLidos, minimoLido] = await Promise.all([
-    favoritosEntre([...normais, ...destaques].map((a) => a.id), userId),
-    regiao ? minimoAnunciosInicio(regiao.id) : Promise.resolve(null),
-  ]);
+  const salvosLidos = await favoritosEntre([...normais, ...destaques].map((a) => a.id), userId);
   const salvos = salvosLidos ?? new Set<string>(); // falha de leitura: corações vazios, salvar continua funcionando
-  const comeco = !filtrando && pagina === 1 && total < (minimoLido ?? MIN_ANUNCIOS_PADRAO);
   const coracao = (a: Pick<AnuncioCard, "id" | "titulo">) => (
     <CoracaoCard anuncioId={a.id} titulo={a.titulo} logado={logado} inicial={salvos.has(a.id)} />
   );
@@ -118,7 +112,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const ativos = blocos.filter((b) => b.ativo);
   const radar = ativos.find((b) => b.chave === "radar");
   const recentes = ativos.find((b) => b.chave === "recentes");
-  const exibeLojasDaRegiao = regiao && ativos.some((b) => b.chave === "lojas_regiao");
+  const blocoLojas = regiao ? ativos.find((b) => b.chave === "lojas_regiao") : undefined;
   const linkPagina = (n: number) => {
     const base = linkFiltros(filtros);
     if (n <= 1) return `${base}#anuncios`;
@@ -132,7 +126,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
         <CampoBusca id="busca-inicio" />
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-4 py-4 lg:grid-cols-[13rem_minmax(0,1fr)] xl:grid-cols-[13rem_minmax(0,1fr)_18rem]">
+      <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-4 py-4 lg:grid-cols-[13rem_minmax(0,1fr)]">
         {/* Coluna da esquerda: categorias e atalhos (só no computador). */}
         <aside className="sticky top-20 hidden flex-col gap-4 lg:flex">
           {categorias.length > 0 && (
@@ -168,10 +162,17 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
         </aside>
 
         {/* Meio: o feed. */}
-        <main className="flex min-w-0 flex-col gap-6">
+        <main className="flex min-w-0 flex-col gap-5">
           <Suspense fallback={null}>
             <SalvarAoVoltar logado={logado} />
           </Suspense>
+
+          {/* Lojas no topo do feed (bloco "lojas_regiao" do painel). Desligado: fica só o acesso ao catálogo. */}
+          {regiao && blocoLojas ? (
+            <LojasDaRegiao regiao={regiao} lugar={lugar} arvore={enxugarArvore(todasCategorias)} titulo={textoDe(blocoLojas.titulo, "Lojas de {lugar}", lugar)} />
+          ) : (
+            <Botao href="/lojas" variante="secundario" className="self-start">Ver todas as lojas</Botao>
+          )}
 
           <FaixaCategorias arvore={categorias} soComAnuncios={!!totais} className="lg:hidden" />
 
@@ -202,22 +203,13 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             </div>
           </div>
 
-          {!exibeLojasDaRegiao && (
-            <Botao href="/lojas" variante="secundario" className="self-start xl:hidden">Ver todas as lojas</Botao>
-          )}
-
-          {comeco && (
-            <PortasInicio
-              radar={radar ? {
-                titulo: textoDe(radar.titulo, "Procurando alguma coisa?", lugar),
-                texto: textoDe(radar.texto, "Peça no Radar. As lojas da região respondem e você escolhe com quem conversar.", lugar),
-                botao: textoDe(radar.botao, "Pedir no Radar", lugar),
-              } : null}
-              textoVender={textoDe(recentes?.texto ?? null, "Seu anúncio aparece para quem mora perto, e a conversa chega no seu WhatsApp.", lugar)}
-              cidade={cidade}
-              venderPrimeiro={Boolean(radar && recentes && ativos.indexOf(recentes) < ativos.indexOf(radar))}
-            />
-          )}
+          <AcoesInicio
+            radar={radar ? {
+              chamada: textoDe(radar.titulo, "Não achou?", lugar),
+              botao: textoDe(radar.botao, "Pedir no Radar", lugar),
+            } : null}
+            venderPrimeiro={Boolean(radar && recentes && ativos.indexOf(recentes) < ativos.indexOf(radar))}
+          />
 
           {ativos.map((bloco) => {
             switch (bloco.chave) {
@@ -245,37 +237,15 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                 ) : null;
 
               case "radar":
-                // No computador largo o Radar fica na coluna da direita; aqui só no celular e tablet.
-                // No começo, o Radar já está na primeira tela (porta "comprar").
-                return comeco ? null : (
-                  <section
-                    key={bloco.chave}
-                    aria-labelledby="titulo-radar"
-                    className="flex flex-col gap-4 rounded-card bg-beringela p-5 text-white sm:flex-row sm:items-center sm:p-6 xl:hidden"
-                  >
-                    <div className="flex flex-1 gap-3">
-                      <Radar className="mt-0.5 size-7 shrink-0 text-laranja" aria-hidden />
-                      <div className="flex flex-col gap-1">
-                        <h2 id="titulo-radar" className="text-lg font-semibold">
-                          {textoDe(bloco.titulo, "Não achou o que queria?", lugar)}
-                        </h2>
-                        <p className="text-pretty text-base text-white/85">{textoDe(bloco.texto, "Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.", lugar)}</p>
-                      </div>
-                    </div>
-                    <Botao href={linkPedirRadar()} className="focus-visible:outline-white sm:w-auto sm:shrink-0" larguraTotal>
-                      {textoDe(bloco.botao, "Pedir no Radar", lugar)}
-                    </Botao>
-                  </section>
-                );
+                // O Radar é a faixa fina acima dos anúncios (AcoesInicio): o painel liga/desliga e dá os textos.
+                return null;
 
               case "lojas_regiao":
-                return regiao ? (
-                  <LojasDaRegiao key={bloco.chave} regiao={regiao} lugar={lugar} titulo={textoDe(bloco.titulo, "Lojas de {lugar}", lugar)} />
-                ) : null;
+                // As lojas ficam no topo do feed (acima); o painel liga/desliga e dá o título.
+                return null;
 
               case "recentes":
-                // No começo, sem nenhum anúncio, a porta "vender" faz o papel da tela vazia.
-                return comeco && normais.length === 0 ? null : (
+                return (
                   <div key={bloco.chave} className="flex flex-col gap-6">
                     {!filtrando && <VistosRecentemente />}
                     <section id="anuncios" aria-labelledby="titulo-recentes" className="flex scroll-mt-20 flex-col gap-3">
@@ -330,36 +300,6 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
           <RodapeInicio />
         </main>
-
-        {/* Coluna da direita: para quem quer vender (só em tela larga). */}
-        <aside aria-label="Anunciar e Radar" className="sticky top-20 hidden flex-col gap-4 xl:flex">
-          {!comeco && (
-          <section aria-labelledby="titulo-anunciar-lado" className="flex flex-col gap-2 rounded-card bg-beringela p-4 text-white">
-            <h2 id="titulo-anunciar-lado" className="text-lg font-semibold leading-snug">Tem algo parado em casa?</h2>
-            <p className="text-sm text-white/85">Anuncie grátis. Quem é da região vê e chama você no WhatsApp.</p>
-            <Botao href="/anunciar" icone={<Plus />} larguraTotal className="mt-1 focus-visible:outline-white">Anunciar grátis</Botao>
-          </section>
-          )}
-
-          {radar && !comeco && (
-            <section aria-labelledby="titulo-radar-lado" className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-4">
-              <div className="flex items-center gap-2">
-                <Radar className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
-                <h2 id="titulo-radar-lado" className="text-base font-semibold text-beringela">{textoDe(radar.titulo, "Não achou o que queria?", lugar)}</h2>
-              </div>
-              <p className="text-sm text-texto-suave">{textoDe(radar.texto, "Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.", lugar)}</p>
-              <Botao href={linkPedirRadar()} variante="secundario" larguraTotal className="mt-1">{textoDe(radar.botao, "Pedir no Radar", lugar)}</Botao>
-            </section>
-          )}
-
-          <Link href="/lojas" className="flex items-center gap-3 rounded-card border border-borda bg-cartao p-4 hover:border-laranja-escuro focus-visible:outline-3 focus-visible:outline-laranja-escuro">
-            <Store className="size-6 shrink-0 text-beringela" aria-hidden />
-            <span className="flex min-w-0 flex-col">
-              <span className="font-semibold text-beringela">Lojas de {lugar}</span>
-              <span className="text-sm text-texto-suave">Veja quem vende perto de você</span>
-            </span>
-          </Link>
-        </aside>
       </div>
     </div>
   );
