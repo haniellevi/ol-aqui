@@ -84,10 +84,11 @@ select pg_temp.confere((select cnpj_conferido_em = :'antes3'::timestamptz and no
    from vitrines_lojas where id = pg_temp.vid(3)), 'dono não muda cnpj_conferido_em; outros campos mudam e o selo fica (nome não reabre)');
 
 -- [3] Revisão manual antiga fecha o pedido aberto, apaga os arquivos e não manda aviso errado.
-select pg_temp.nova(10) as ped10 \gset                       -- enviada
-select pg_temp.nova(11) as ped11 \gset                       -- analisando
-select pg_temp.nova(12) as ped12 \gset                       -- equipe
-select pg_temp.nova(13) as ped13 \gset                       -- revisao_amostra (loja com selo)
+-- ped10 fica enviada, ped11 analisando, ped12 equipe e ped13 revisao_amostra (loja com selo).
+select pg_temp.nova(10) as ped10 \gset
+select pg_temp.nova(11) as ped11 \gset
+select pg_temp.nova(12) as ped12 \gset
+select pg_temp.nova(13) as ped13 \gset
 update verificacoes_loja set status = 'analisando', reserva = gen_random_uuid(), iniciado_em = now() where id = :'ped11';
 select reserva as reserva11 from verificacoes_loja where id = :'ped11' \gset
 update verificacoes_loja set status = 'equipe', motivos_equipe = '{ia_duvida}', encaminhada_em = now(), prazo_em = now() + interval '24 hours' where id = :'ped12';
@@ -130,18 +131,21 @@ select pg_temp.confere(enviar_verificacao_loja('user_760x13', '11222333000013', 
 select pg_temp.confere(enviar_verificacao_loja('user_760x12', '11222333000012', pg_temp.pdf('novo 12'), null) = 'verificada', 'loja 12 aprovada já tem o selo');
 
 -- [4] Aviso de "dados mudaram" ao virar obsoleta: só com a loja esperando novo envio (sem selo e pendente).
-select pg_temp.nova(20) as ped20 \gset                       -- loja pendente, sem selo
+-- loja pendente, sem selo
+select pg_temp.nova(20) as ped20 \gset
 update verificacoes_loja set status = 'analisando', reserva = gen_random_uuid(), iniciado_em = now() where id = :'ped20';
 update verificacoes_loja set status = 'obsoleta', motivo = 'dados_mudaram', reserva = null, comprovante = null, tipo_comprovante = null,
        fachada = null, tipo_fachada = null where id = :'ped20';
 select pg_temp.confere(pg_temp.avisos(20, 'verificacao_falta_algo') = 1, 'obsoleta com loja pendente e sem selo: avisa uma vez');
-select pg_temp.nova(21) as ped21 \gset                       -- loja que ganhou o selo no meio
+-- loja que ganhou o selo no meio
+select pg_temp.nova(21) as ped21 \gset
 update verificacoes_loja set status = 'analisando', reserva = gen_random_uuid(), iniciado_em = now() where id = :'ped21';
 select verificacao_loja_definir(pg_temp.vid(21), 'aprovada', null, 'verificacao_aprovada', null, null);
 update verificacoes_loja set status = 'obsoleta', motivo = 'dados_mudaram', reserva = null, comprovante = null, tipo_comprovante = null,
        fachada = null, tipo_fachada = null where id = :'ped21';
 select pg_temp.confere(pg_temp.avisos(21, 'verificacao_falta_algo') = 0, 'obsoleta com a loja já com selo: sem aviso');
-select pg_temp.nova(22) as ped22 \gset                       -- loja que recebeu decisão final (recusada) no meio
+-- loja que recebeu decisão final (recusada) no meio
+select pg_temp.nova(22) as ped22 \gset
 update verificacoes_loja set status = 'analisando', reserva = gen_random_uuid(), iniciado_em = now() where id = :'ped22';
 select verificacao_loja_definir(pg_temp.vid(22), 'recusada', 'titularidade', 'verificacao_revisada', null, null);
 update verificacoes_loja set status = 'obsoleta', motivo = 'dados_mudaram', reserva = null, comprovante = null, tipo_comprovante = null,
@@ -165,11 +169,16 @@ select pg_temp.confere(pg_temp.avisos(30, 'verificacao_selo_removido') = 1 and p
 select pg_temp.confere(enviar_verificacao_loja('user_760x30', '11222333000030', pg_temp.pdf('novo 30'), null) = 'enviada', 'loja 30 envia de novo');
 
 -- [6] Rede de segurança: pedido parado em "Conferindo" por mais de 30 minutos vai para a equipe (IA ligada ou não).
-select pg_temp.nova(40) as ped40 \gset                       -- enviada há 31 min
-select pg_temp.nova(41) as ped41 \gset                       -- enviada há 5 min
-select pg_temp.nova(42) as ped42 \gset                       -- analisando há 31 min
-select pg_temp.nova(43) as ped43 \gset                       -- analisando há 5 min
-select pg_temp.nova(44) as ped44 \gset                       -- enviada, antiga, mas com nova tentativa marcada para daqui a pouco
+-- enviada há 31 min
+select pg_temp.nova(40) as ped40 \gset
+-- enviada há 5 min
+select pg_temp.nova(41) as ped41 \gset
+-- analisando há 31 min
+select pg_temp.nova(42) as ped42 \gset
+-- analisando há 5 min
+select pg_temp.nova(43) as ped43 \gset
+-- enviada, antiga, mas com nova tentativa marcada para daqui a pouco
+select pg_temp.nova(44) as ped44 \gset
 update verificacoes_loja set criado_em = now() - interval '31 minutes', proxima_em = now() - interval '31 minutes' where id = :'ped40';
 update verificacoes_loja set criado_em = now() - interval '5 minutes', proxima_em = now() - interval '5 minutes' where id = :'ped41';
 update verificacoes_loja set status = 'analisando', reserva = gen_random_uuid(), iniciado_em = now() - interval '31 minutes', criado_em = now() - interval '40 minutes' where id = :'ped42';
