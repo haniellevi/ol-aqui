@@ -64,7 +64,7 @@ Fonte: documentação oficial (`/docs/guides/overview/multimodal/pdfs` e `/docs/
 **Extrair o texto do PDF no nosso servidor com `unpdf` e mandar só texto à IA.** Nenhum PDF/arquivo vai ao OpenRouter, então nenhum motor de PDF de terceiros entra. A documentação não mostrou que o nativo respeita ZDR, então a decisão padrão se mantém.
 
 Configuração da chamada (igual a `src/lib/moderacao-ia.ts`): `provider: { data_collection: "deny", zdr: true, allow_fallbacks: false, require_parameters: true }`, modelo `openai/gpt-4.1-mini`, só mensagens de texto.
-Efeito colateral: PDF **escaneado (só imagem)** devolve texto vazio. Tratar texto vazio/muito curto como "não deu para ler o documento" (vai para revisão humana), não como reprovação.
+Efeito colateral: PDF **escaneado (só imagem)** devolve texto vazio. Regra: texto vazio ou muito curto (menos de 40 caracteres úteis) devolve `pdf_sem_texto` **sem chamar a IA**, e a loja é pedida a enviar um arquivo NOVO (`pedir_novo` / `arquivo_ilegivel`). Não vai para a equipe e não é reprovação.
 Se `zdr: true` não achar provedor para o modelo, a chamada falha (`allow_fallbacks:false`): tratar como falha temporária. Não testamos chamada real (sem chave neste ambiente).
 
 ## 3. `unpdf` — extração de texto
@@ -78,7 +78,7 @@ Se `zdr: true` não achar provedor para o modelo, a chamada falha (`allow_fallba
   const doc = await getDocumentProxy(new Uint8Array(buffer));
   const { totalPages, text } = await extractText(doc, { mergePages: true });
   ```
-- **Atenção:** `unpdf` declara `engines.node >= 22`, mas o `package.json` do projeto diz `>=20.9.0`. Conferir que a Vercel do projeto está em Node 22 (ou subir o `engines`). Não alterei isso nesta tarefa.
+- **Atenção:** `unpdf` declara `engines.node >= 22`, mas o `package.json` do projeto diz `>=20.9.0`. O `engines.node` do projeto foi subido para `>=22` (Task 5). **Conferir que o projeto na Vercel está em Node 22 antes de publicar.**
 
 ## 4. Linha de base de testes (antes de qualquer código)
 
