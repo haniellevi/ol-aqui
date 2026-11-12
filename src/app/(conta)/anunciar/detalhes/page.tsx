@@ -4,6 +4,7 @@ import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
 import { nomeCaminho } from "@/lib/categorias-arvore";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
+import { DescartarAnuncio } from "@/components/anunciar/descartar-anuncio";
 import { FormDetalhes } from "@/components/anunciar/form-detalhes";
 import { urlPasso } from "@/components/anunciar/passos";
 import { carregarPasso, type ParamsPasso } from "../_carregar";
@@ -46,6 +47,7 @@ export default async function PassoDetalhes({ searchParams }: { searchParams: Pa
         campos={campos}
         atributos={anuncio.atributos}
       />
+      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho />}
     </CorpoPasso>
   );
 }

@@ -3,6 +3,7 @@ import { faixaPreco } from "@/lib/dados/anuncios";
 import { precoFalado } from "@/lib/formato";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
+import { DescartarAnuncio } from "@/components/anunciar/descartar-anuncio";
 import { FormPreco } from "@/components/anunciar/form-preco";
 import { carregarPasso, type ParamsPasso } from "../_carregar";
 
@@ -35,6 +36,7 @@ export default async function PassoPreco({ searchParams }: { searchParams: Param
         aceitaTrocaInicial={anuncio.aceita_troca}
         dicaFaixa={dica}
       />
+      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho />}
     </CorpoPasso>
   );
 }

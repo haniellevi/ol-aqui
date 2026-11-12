@@ -10,6 +10,7 @@ import { preco, valorDoCampo } from "@/lib/formato";
 import { CardAnuncio } from "@/components/anuncio/card-anuncio";
 import { CabecalhoPasso } from "@/components/anunciar/cabecalho-passo";
 import { CorpoPasso } from "@/components/anunciar/barra-continuar";
+import { DescartarAnuncio } from "@/components/anunciar/descartar-anuncio";
 import { BotaoPublicar } from "@/components/anunciar/botao-publicar";
 import { STATUS_PUBLICADO, urlPasso, type SlugPasso } from "@/components/anunciar/passos";
 import { carregarPasso, type ParamsPasso } from "../_carregar";
@@ -196,6 +197,9 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
           ))}
         </dl>
       </section>
+
+      {/* P6: rascunho → "Descartar rascunho"; publicado (fim da edição) → "Excluir anúncio". A equipe usa a lixeira do painel. */}
+      {!equipe && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho={anuncio.status === "rascunho"} temPagamento={Boolean(pagoAte)} />}
 
       <BotaoPublicar id={anuncio.id} editar={editar} formId={FORM} modo={modo} linkAvulso={hrefAvulso} />
     </CorpoPasso>
