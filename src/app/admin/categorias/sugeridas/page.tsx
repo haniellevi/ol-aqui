@@ -41,15 +41,21 @@ export default async function CategoriasSugeridasPage({ searchParams }: { search
   const [{ grupos, falhou }, { todas }] = await Promise.all([lerCategoriasSugeridas(supabase), lerCategorias(supabase)]);
 
   const porId = new Map(todas.map((c) => [c.id, c]));
-  const maes = maesPossiveis(todas).map((m) => ({ id: m.id, nome: m.nome }));
   // Categoria "no ar": ela e as de cima estão ligadas. Final = sem subcategoria ligada (só essas recebem anúncio).
   const noAr = (id: string) => {
     for (let c = porId.get(id); c; c = c.pai_id ? porId.get(c.pai_id) : undefined) if (!c.ativa) return false;
     return true;
   };
+  const porNome = (a: { nome: string }, b: { nome: string }) => a.nome.localeCompare(b.nome, "pt-BR");
+  // A categoria nova só pode ficar dentro de uma que está no ar (o banco recusa as desligadas).
+  const maes = maesPossiveis(todas)
+    .filter((m) => noAr(m.id))
+    .map((m) => ({ id: m.id, nome: m.nome }))
+    .sort(porNome);
   const finais = todas
     .filter((c) => noAr(c.id) && !todas.some((f) => f.pai_id === c.id && f.ativa))
-    .map((c) => ({ id: c.id, nome: nomeAdmin(porId, c) }));
+    .map((c) => ({ id: c.id, nome: nomeAdmin(porId, c) }))
+    .sort(porNome);
   const quantidadePorTexto = new Map(grupos.map((g) => [g.texto_norm, g]));
 
   const itens: ItemSugestao[] = grupos.map((g) => {
