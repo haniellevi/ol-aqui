@@ -85,3 +85,8 @@ Avisos ("Visto"):
 - [ ] Prazo/atraso: mostrar em texto ("Atrasada") + `Badge destructive`, não só cor; o funil usa `text-perigo` + a palavra "Atrasado" (funil/page.tsx:134) — mesmo princípio. Tempo relativo com as helpers `quandoAcaba`/`hojeLocal` (hoje.ts:73-80), fuso America/Fortaleza.
 
 Decisões a dizer ao entregar: (1) painel não é Modo fácil, por isso tamanho normal; (2) fila de 1 ou 2 colunas; (3) ✓/✗ sem componente existente, só texto+token; (4) texto novo ("Visto", "Atrasada", rótulos de motivo) é cópia nova para revisão.
+
+Decisões a contar na entrega:
+- O painel não é Modo fácil: botões de tamanho normal.
+- A fila é uma lista de 1 coluna (o cartão é largo).
+- ✓/✗ sempre vêm com a palavra do resultado, nunca só o símbolo.

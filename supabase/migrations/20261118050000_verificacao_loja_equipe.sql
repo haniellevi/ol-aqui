@@ -45,7 +45,8 @@ begin
   select encode(case when p_tipo = 'fachada' then v.fachada else v.comprovante end, 'base64'),
          case when p_tipo = 'fachada' then v.tipo_fachada else v.tipo_comprovante end
     from public.verificacoes_loja v
-   where v.id = p_id and v.status in ('equipe', 'revisao_amostra') and p_tipo in ('comprovante', 'fachada');
+   where v.id = p_id and v.status in ('equipe', 'revisao_amostra') and p_tipo in ('comprovante', 'fachada')
+     and (case when p_tipo = 'fachada' then v.fachada else v.comprovante end) is not null;
 end $$;
 
 -- ---------------------------------------------------------------------
@@ -142,7 +143,7 @@ begin
     perform public.verificacao_loja_definir(l.id, 'aprovada', null, 'verificacao_revisada', ator,
       jsonb_build_object('pedido', v.id, 'origem', 'amostra'));
     update public.verificacoes_loja
-       set status = 'aprovada', decidido_por = ator, reserva = null,
+       set status = 'aprovada', decidido_em = now(), decidido_por = ator, reserva = null,
            parecer = parecer || jsonb_build_array(jsonb_build_object('item', 'revisao_humana', 'ok', true)),
            comprovante = null, tipo_comprovante = null, fachada = null, tipo_fachada = null
      where id = v.id;
@@ -152,7 +153,7 @@ begin
     if not atual then raise exception '%', mudou using errcode = 'P0001'; end if;
     -- O pedido muda de status aqui: o gatilho do WhatsApp/sino já avisa a loja ("falta algo"). A equipe ganha só o aviso da lista.
     update public.verificacoes_loja
-       set status = 'correcao', motivo = v_motivo, decidido_por = ator, reserva = null,
+       set status = 'correcao', motivo = v_motivo, decidido_em = now(), decidido_por = ator, reserva = null,
            parecer = parecer || jsonb_build_array(jsonb_build_object('item', 'revisao_humana', 'ok', false, 'nota', 'selo removido')),
            comprovante = null, tipo_comprovante = null, fachada = null, tipo_fachada = null
      where id = v.id;

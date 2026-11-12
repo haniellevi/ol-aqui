@@ -200,18 +200,12 @@ begin
   begin perform admin_decidir_verificacao_loja(pg_temp.req(1), null, null, true); raise exception 'Decisão nula';
   exception when sqlstate '22023' then null; end;
   -- Decisão que não vale para o status do pedido.
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(1), 'confirmar', null, null); raise exception 'Confirmar pedido da equipe';
-  exception when sqlstate 'P0001' then null; end;
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(1), 'tirar_selo', 'outro', null); raise exception 'Tirar selo de pedido da equipe';
-  exception when sqlstate 'P0001' then null; end;
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(3), 'aprovar', null, true); raise exception 'Aprovar pedido de amostra';
-  exception when sqlstate 'P0001' then null; end;
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(3), 'recusar', 'outro', null); raise exception 'Recusar pedido de amostra';
-  exception when sqlstate 'P0001' then null; end;
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(4), 'aprovar', null, true); raise exception 'Aprovar pedido ainda enviado';
-  exception when sqlstate 'P0001' then null; end;
-  begin perform admin_decidir_verificacao_loja(gen_random_uuid(), 'aprovar', null, true); raise exception 'Aprovar pedido que não existe';
-  exception when sqlstate 'P0001' then null; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(1), 'confirmar', null, null); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Confirmar pedido da equipe'; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(1), 'tirar_selo', 'outro', null); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Tirar selo de pedido da equipe'; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(3), 'aprovar', null, true); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Aprovar pedido de amostra'; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(3), 'recusar', 'outro', null); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Recusar pedido de amostra'; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(4), 'aprovar', null, true); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Aprovar pedido ainda enviado'; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(gen_random_uuid(), 'aprovar', null, true); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Aprovar pedido que não existe'; end;
 end $$;
 reset role;
 select pg_temp.confere((select count(*) = 2 and bool_and(status = 'equipe' and comprovante is not null) from verificacoes_loja where id in (pg_temp.req(1), pg_temp.req(2))), 'nada mudou nos pedidos da equipe');
@@ -234,10 +228,8 @@ select pg_temp.confere((select count(*) = 1 from vitrines_acoes_admin where vitr
 set local role authenticated;
 set local request.jwt.claim.sub='user_740adm';
 do $$ begin
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(1), 'recusar', 'outro', null); raise exception 'Decidiu pedido já decidido';
-  exception when sqlstate 'P0001' then null; end;
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(1), 'aprovar', null, true); raise exception 'Aprovou duas vezes';
-  exception when sqlstate 'P0001' then null; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(1), 'recusar', 'outro', null); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Decidiu pedido já decidido'; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(1), 'aprovar', null, true); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Aprovou duas vezes'; end;
 end $$;
 reset role;
 select pg_temp.confere((select selo_loja_verificada from vitrines_lojas where id = pg_temp.vid(1)), 'a segunda decisão não mexeu no selo');
@@ -276,8 +268,7 @@ update vitrines_lojas set endereco = 'Outra rua, 99' where id = pg_temp.vid(6);
 set local role authenticated;
 set local request.jwt.claim.sub='user_740sup';
 do $$ begin
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(6), 'aprovar', null, true); raise exception 'Aprovou cadastro que mudou';
-  exception when sqlstate 'P0001' then null; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(6), 'aprovar', null, true); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Aprovou cadastro que mudou'; end;
 end $$;
 reset role;
 select pg_temp.confere((select status = 'equipe' and comprovante is not null from verificacoes_loja where id = pg_temp.req(6))
@@ -302,10 +293,12 @@ select pg_temp.confere((select status = 'equipe' and comprovante is not null fro
   and (select not selo_loja_verificada and cnpj is null from vitrines_lojas where id = pg_temp.vid(7)), 'CNPJ duplicado: nada foi aprovado nem gravado');
 
 -- [8] Revisão por amostra: confirmar apaga os arquivos e mantém o selo.
+update verificacoes_loja set decidido_em = now() - interval '2 days' where id = pg_temp.req(3);
 set local role authenticated;
 set local request.jwt.claim.sub='user_740sup';
 select admin_decidir_verificacao_loja(pg_temp.req(3), 'confirmar', null, null);
 reset role;
+select pg_temp.confere((select decidido_em > now() - interval '1 day' from verificacoes_loja where id = pg_temp.req(3)), 'confirmar: decidido_em é o da equipe');
 select pg_temp.confere((select status = 'aprovada' and decidido_por = 'user_740sup' and comprovante is null and fachada is null
     and tipo_comprovante is null and tipo_fachada is null and parecer @> '[{"item":"revisao_humana","ok":true}]'::jsonb
     from verificacoes_loja where id = pg_temp.req(3)), 'confirmar: pedido aprovado, arquivos apagados, parecer');
@@ -314,8 +307,7 @@ select pg_temp.confere((select count(*) = 1 from vitrines_acoes_admin where vitr
 set local role authenticated;
 set local request.jwt.claim.sub='user_740adm';
 do $$ begin
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(3), 'tirar_selo', 'outro', null); raise exception 'Mexeu em amostra já revisada';
-  exception when sqlstate 'P0001' then null; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(3), 'tirar_selo', 'outro', null); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Mexeu em amostra já revisada'; end;
 end $$;
 reset role;
 
@@ -323,10 +315,12 @@ reset role;
 select pg_temp.nova(8, true) \gset
 select pg_temp.amostra(8, interval '7 days');
 select pg_temp.confere((select selo_loja_verificada from vitrines_lojas where id = pg_temp.vid(8)), 'preparo: loja 8 com selo da IA');
+update verificacoes_loja set decidido_em = now() - interval '2 days' where id = pg_temp.req(8);
 set local role authenticated;
 set local request.jwt.claim.sub='user_740sup';
 select admin_decidir_verificacao_loja(pg_temp.req(8), 'tirar_selo', 'titularidade', null);
 reset role;
+select pg_temp.confere((select decidido_em > now() - interval '1 day' from verificacoes_loja where id = pg_temp.req(8)), 'tirar selo: decidido_em é o da equipe');
 select pg_temp.confere((select not selo_loja_verificada and verificacao_estado = 'correcao' and verificacao_motivo = 'titularidade'
     from vitrines_lojas where id = pg_temp.vid(8)), 'tirar selo: a loja perde o selo e pede correção');
 select pg_temp.confere((select status = 'correcao' and motivo = 'titularidade' and decidido_por = 'user_740sup'
@@ -348,10 +342,8 @@ select pg_temp.confere((select not selo_loja_verificada from vitrines_lojas wher
 set local role authenticated;
 set local request.jwt.claim.sub='user_740sup';
 do $$ begin
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(9), 'confirmar', null, null); raise exception 'Confirmou amostra sem selo';
-  exception when sqlstate 'P0001' then null; end;
-  begin perform admin_decidir_verificacao_loja(pg_temp.req(9), 'tirar_selo', 'outro', null); raise exception 'Tirou selo que já caiu';
-  exception when sqlstate 'P0001' then null; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(9), 'confirmar', null, null); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Confirmou amostra sem selo'; end;
+  declare ok boolean := false; begin begin perform admin_decidir_verificacao_loja(pg_temp.req(9), 'tirar_selo', 'outro', null); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Tirou selo que já caiu'; end;
 end $$;
 reset role;
 
@@ -370,10 +362,8 @@ begin
   perform admin_resolver_aviso_verificacao(erro);
   assert not exists (select 1 from admin_avisos_verificacao_loja() x where x.id = erro), 'resolvido sai da lista';
   assert exists (select 1 from admin_avisos_verificacao_loja() x where x.id = mudou), 'o outro continua';
-  begin perform admin_resolver_aviso_verificacao(erro); raise exception 'Resolveu duas vezes';
-  exception when sqlstate 'P0001' then null; end;
-  begin perform admin_resolver_aviso_verificacao(gen_random_uuid()); raise exception 'Resolveu aviso que não existe';
-  exception when sqlstate 'P0001' then null; end;
+  declare ok boolean := false; begin begin perform admin_resolver_aviso_verificacao(erro); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Resolveu duas vezes'; end;
+  declare ok boolean := false; begin begin perform admin_resolver_aviso_verificacao(gen_random_uuid()); exception when sqlstate 'P0001' then ok := true; end; assert ok, 'Resolveu aviso que não existe'; end;
 end $$;
 reset role;
 select pg_temp.confere((select resolvido_em is not null and resolvido_por = 'user_740sup' from verificacao_loja_avisos
