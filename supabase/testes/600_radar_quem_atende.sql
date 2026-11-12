@@ -46,8 +46,14 @@ update perfis set selo_negociador_certificado=true where id='user_q600pfsem';
 select v.id as vit_cort from vitrines_lojas v where v.slug='q600-cort' \gset
 select v.id as vit_full from vitrines_lojas v where v.slug='q600-full' \gset
 
-set local role authenticated;
 set local request.jwt.claim.role='authenticated';
+
+-- as contas internas não abrem para a API (só funções do banco chamam)
+set local role authenticated;
+select pg_temp.recusa($q$select pode_atender_radar('user_q600full')$q$,'42501');
+select pg_temp.recusa($q$select recebe_aviso_radar_na_hora('user_q600full')$q$,'42501');
+select pg_temp.recusa(format($q$select radar_cortesia_ativa(%L)$q$, :'vit_full'),'42501');
+reset role;
 
 select pg_temp.confere(pode_atender_radar('user_q600full') and recebe_aviso_radar_na_hora('user_q600full'),'Loja verificada + Full atende e recebe aviso na hora');
 select pg_temp.confere(pode_atender_radar('user_q600slim') and not recebe_aviso_radar_na_hora('user_q600slim'),'Loja verificada + Slim atende mas sem aviso na hora');
@@ -56,6 +62,7 @@ select pg_temp.confere(not pode_atender_radar('user_q600teste'),'Loja verificada
 select pg_temp.confere(pode_atender_radar('user_q600pf') and not recebe_aviso_radar_na_hora('user_q600pf'),'PF verificada + Slim atende');
 select pg_temp.confere(not pode_atender_radar('user_q600pfsem'),'PF sem verificacao_pf_em não atende');
 select pg_temp.confere(not pode_atender_radar('user_q600inexistente'),'Quem não tem loja não atende');
+set local role authenticated;
 
 set local request.jwt.claim.sub='user_q600naover';
 select pg_temp.confere(not tem_plano_pago(),'tem_plano_pago segue pode_atender_radar');
@@ -65,7 +72,7 @@ select pg_temp.confere(tem_plano_pago(),'tem_plano_pago true para verificada + p
 
 -- cortesia
 set local request.jwt.claim.sub='user_q600cort';
-select pg_temp.confere(not pode_atender_radar() and propostas_restantes() = 0,'Antes da cortesia: sem plano pago não atende');
+select pg_temp.confere(not tem_plano_pago() and propostas_restantes() = 0,'Antes da cortesia: sem plano pago não atende');
 select pg_temp.recusa(format($q$select dar_cortesia_radar(%L, current_date + 5, 'Motivo válido')$q$, :'vit_cort'),'42501');
 
 set local request.jwt.claim.sub='user_q600adm';
@@ -75,7 +82,10 @@ select pg_temp.recusa(format($q$select dar_cortesia_radar(%L, (now() at time zon
 select dar_cortesia_radar(:'vit_cort', (now() at time zone 'America/Fortaleza')::date + 1, 'Parceira do lançamento');
 
 set local request.jwt.claim.sub='user_q600cort';
-select pg_temp.confere(pode_atender_radar() and recebe_aviso_radar_na_hora('user_q600cort'),'Cortesia ativa atende e recebe aviso');
+select pg_temp.confere(tem_plano_pago(),'Cortesia ativa atende');
+reset role;
+select pg_temp.confere(pode_atender_radar('user_q600cort') and recebe_aviso_radar_na_hora('user_q600cort'),'Cortesia ativa atende e recebe aviso');
+set local role authenticated;
 select pg_temp.confere(propostas_restantes() is null,'Cortesia ativa = propostas ilimitadas');
 
 reset role;
@@ -94,8 +104,8 @@ select pg_temp.recusa(format($q$select tirar_cortesia_radar(%L)$q$, :'vit_cort')
 select pg_temp.recusa($q$select * from radar_cortesias$q$,'42501');
 set local request.jwt.claim.sub='user_q600adm';
 select tirar_cortesia_radar(:'vit_cort');
-select pg_temp.confere(not pode_atender_radar('user_q600cort'),'Sem cortesia volta a não atender');
 reset role;
+select pg_temp.confere(not pode_atender_radar('user_q600cort'),'Sem cortesia volta a não atender');
 select pg_temp.confere((select count(*)=1 from logs_atividade where tabela='radar_cortesias' and registro_id=:'vit_cort' and acao='DELETE'),'Retirada registrada no log');
 
 rollback;

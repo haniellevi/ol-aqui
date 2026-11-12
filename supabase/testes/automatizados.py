@@ -79,6 +79,8 @@ try:
     print('PASS: pedido do Radar avisa 2 dias antes de vencer e o comprador estende com Ainda preciso até 2 vezes', flush=True)
     checked(sql((root/'supabase/testes/640_radar_resolver_indicar.sql').read_text()))
     print('PASS: Radar pergunta com quem resolveu, guarda a nota 👍/👎 e aceita indicação de anúncio (Eu sei onde tem)', flush=True)
+    checked(sql((root/'supabase/testes/650_radar_ajustes_finais.sql').read_text()))
+    print('PASS: Radar devolve pode_propor, loja de fora da área indica, loja ativa nas indicações, aviso com a região e contas internas fechadas', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin
