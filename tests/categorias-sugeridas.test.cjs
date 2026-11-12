@@ -14,14 +14,15 @@ const ARVORE = [{ id: 'p1', slug: 'pet', nome: 'Pet', icone: 'paw-print', pai_id
 
 // ---------- Escolha de categoria: botão e aviso ----------
 function escolhaSugerida({ busca = '', sugestao = null } = {}) {
-  const valores = [[], null, busca, sugestao];
+  // Ordem dos useState: EscolhaCategoria (filhaId, busca, sugestão) e depois ArvoreCategorias (abertas, recentes).
+  const valores = [null, busca, sugestao, [], []];
   let i = 0;
   const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
-    react: { ...React, useState: (inicial) => [i < valores.length ? valores[i++] : inicial, () => {}], useMemo: (fn) => fn() },
+    react: { ...React, useState: (inicial) => [i < valores.length ? valores[i++] : inicial, () => {}], useMemo: (fn) => fn(), useEffect: () => {} },
     './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
     '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
   });
-  return render(EscolhaCategoria({ id: ID, editar: false, formId: 'f', arvore: ARVORE, selecionadaId: null }));
+  return render(EscolhaCategoria({ id: ID, editar: false, formId: 'f', arvore: ARVORE, selecionadaId: null, tituloAtual: null }));
 }
 
 test('botão Sugerir aparece só quando a busca não acha nada', () => {

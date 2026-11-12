@@ -27,12 +27,12 @@ export default async function PassoCategoria({ searchParams }: { searchParams: P
         id={anuncio.id}
         editar={editar}
         formId={arvore.length ? FORM : undefined}
-        titulo="O que você está vendendo?"
-        subtitulo="Escolha a categoria. Assim quem procura acha seu anúncio."
+        titulo="Qual é a categoria?"
+        subtitulo="Assim quem procura acha seu anúncio."
       />
       {sugestao && <SugestaoPendente id={anuncio.id} editar={editar} texto={sugestao.texto} />}
       {arvore.length ? (
-        <EscolhaCategoria id={anuncio.id} editar={editar} formId={FORM} arvore={arvore} selecionadaId={anuncio.categoria_id} />
+        <EscolhaCategoria id={anuncio.id} editar={editar} formId={FORM} arvore={arvore} selecionadaId={anuncio.categoria_id} tituloAtual={anuncio.titulo} />
       ) : (
         <Vazio titulo="Não conseguimos abrir as categorias" texto="Confira sua internet e tente de novo. O que você já fez está salvo.">
           <Botao href={urlPasso("categoria", anuncio.id, editar)} larguraTotal>

@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
-import { ArrowDownWideNarrow, Clock, Ellipsis, Heart, LayoutGrid, MapPin, Plus, Radar, Store, Tag } from "lucide-react";
-import { listarCategorias } from "@/lib/dados/categorias";
+import { ArrowDownWideNarrow, Clock, Heart, LayoutGrid, MapPin, Plus, Radar, Store, Tag } from "lucide-react";
+import { listarCategorias, totaisCategorias } from "@/lib/dados/categorias";
+import { arvoreComAnuncios, enxugarArvore } from "@/lib/categorias-arvore";
+import { FaixaCategorias } from "@/components/categorias/faixa-categorias";
 import { anunciosCatalogo } from "@/lib/dados/catalogo";
 import { buscarAnuncios } from "@/lib/dados/anuncios";
 import { favoritosEntre } from "@/lib/dados/favoritos";
@@ -15,7 +17,7 @@ import { CoracaoCard } from "@/components/anuncio/coracao-card";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { SalvarAoVoltar } from "@/components/anuncio/salvar-ao-voltar";
 import { VistosRecentemente } from "@/components/anuncio/vistos-recentemente";
-import { CirculoCategoria, IconeCategoria } from "@/components/ui/icone-categoria";
+import { IconeCategoria } from "@/components/ui/icone-categoria";
 import { Botao } from "@/components/ui/botao";
 import { Chip } from "@/components/ui/chip";
 import { Vazio } from "@/components/ui/vazio";
@@ -70,9 +72,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Inicio({ searchParams }: { searchParams: Promise<Params> }) {
-  const [regiao, categorias, blocos, params, { userId }] = await Promise.all([
+  const [regiao, todasCategorias, blocos, params, { userId }] = await Promise.all([
     regiaoAtual(), listarCategorias(), blocosHome(), searchParams, auth(),
   ]);
+  // Para quem procura: só categorias com anúncio na região, as com mais anúncios primeiro.
+  // Sem a contagem (banco fora do ar), mostra todas na ordem do painel.
+  // Região sem nenhum anúncio ainda: esconder tudo não ajuda, então mostra todas.
+  const contagem = regiao ? await totaisCategorias(regiao.id) : null;
+  const totais = contagem?.size ? contagem : null;
+  const categorias = enxugarArvore(arvoreComAnuncios(todasCategorias, totais));
   const logado = !!userId;
   const pagina = typeof params.pagina === "string" && /^\d{1,4}$/.test(params.pagina) ? Math.max(1, Number(params.pagina)) : 1;
   const lugar = lugarDaRegiao(regiao);
@@ -165,34 +173,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             <SalvarAoVoltar logado={logado} />
           </Suspense>
 
-          {categorias.length > 0 && (
-            <nav aria-label="Categorias" className="lg:hidden">
-              <ul className="grid grid-cols-4 gap-x-1 gap-y-2 min-[400px]:grid-cols-5">
-                {categorias.map((c) => (
-                  <li key={c.id} className="min-w-0">
-                    <Link
-                      href={linkCategoria(c.slug)}
-                      className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-[13px] font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
-                    >
-                      <CirculoCategoria nome={c.icone} className={estilos.categoria} />
-                      <span className="max-w-full hyphens-auto break-words">{c.nome}</span>
-                    </Link>
-                  </li>
-                ))}
-                <li className="min-w-0">
-                  <Link
-                    href="/categorias"
-                    className="flex h-full flex-col items-center gap-1 rounded-card px-1 py-1.5 text-center text-[13px] font-semibold leading-[18px] hover:bg-cartao focus-visible:outline-3 focus-visible:outline-laranja-escuro"
-                  >
-                    <span className="grid size-12 place-items-center rounded-full border-2 border-borda bg-cartao text-beringela">
-                      <Ellipsis className="size-6" aria-hidden />
-                    </span>
-                    <span>Todas</span>
-                  </Link>
-                </li>
-              </ul>
-            </nav>
-          )}
+          <FaixaCategorias arvore={categorias} soComAnuncios={!!totais} className="lg:hidden" />
 
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">

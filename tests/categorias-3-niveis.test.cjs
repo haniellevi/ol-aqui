@@ -103,23 +103,33 @@ test('página de categoria: grande abre; sub e tipo vão para o endereço com o 
 
 // ---------- Escolha de categoria (anúncio) ----------
 function escolha({ abertas = [], filhaId = null, busca = '' } = {}) {
+  // Ordem dos useState: EscolhaCategoria (filhaId, busca, sugestão) e depois ArvoreCategorias (abertas, recentes).
   let indice = 0;
-  const valores = [abertas, filhaId, busca];
+  const valores = [filhaId, busca, null, abertas, []];
   const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
-    react: { ...React, useState: () => [valores[indice++], () => {}], useMemo: (fn) => fn() },
+    react: {
+      ...React,
+      useState: (ini) => [indice < valores.length ? valores[indice++] : typeof ini === 'function' ? ini() : ini, () => {}],
+      useMemo: (fn) => fn(),
+      useEffect: () => {},
+    },
     './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
     '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
   });
-  return async () => render(EscolhaCategoria({ id: 'an1', editar: false, formId: 'f', arvore: await cats.listarCategorias(), selecionadaId: null }));
+  return async () => render(EscolhaCategoria({ id: 'an1', editar: false, formId: 'f', arvore: await cats.listarCategorias(), selecionadaId: null, tituloAtual: null }));
 }
 
 test('escolha de categoria: começa nas grandes; grande com filhas abre a lista; só folha vira opção', async () => {
   const topo = await escolha()();
-  assert.match(topo, /Escolha a categoria/); assert.match(topo, />Pet</); assert.match(topo, /value="m1"/);
+  assert.match(topo, /O que você está anunciando\?/); assert.match(topo, /Ou escolha na lista/);
+  assert.match(topo, />Pet</); assert.match(topo, /value="m1"/);
   assert.doesNotMatch(topo, /value="p3"/);
+  // sem título ainda: o texto digitado vai junto para virar o começo do título
+  assert.match(topo, /name="titulo_inicial"/);
 
   const pet = await escolha({ abertas: ['p1'] })();
-  assert.match(pet, /Qual destes em Pet\?/);
+  assert.match(pet, /id="titulo-aberta"[^>]*>Pet</);
+  assert.match(pet, /Todas as categorias/);
   assert.match(pet, /value="p6"/);
   assert.doesNotMatch(pet, /value="p3"/);
 
@@ -131,20 +141,23 @@ test('escolha de categoria: começa nas grandes; grande com filhas abre a lista;
 test('busca em qualquer nível mostra o caminho completo e só folhas são escolhíveis', async () => {
   const html = await escolha({ busca: 'racao' })();
   assert.match(html, /name="escolha-categoria" value="p3"/);
-  assert.match(html, /Pet › Produtos para pets › Ração/);
+  assert.match(html, /Ração<\/span><span[^>]*>Pet › Produtos para pets</);
+  assert.doesNotMatch(html, /value="c2"/); // "Decoração" não é "ração"
   assert.doesNotMatch(html, /value="p2"/);
 });
 
 test('escolha mostra a categoria já escolhida com o caminho', async () => {
   const html = render(await (async () => {
     const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
-      react: { ...React, useState: (i) => [i, () => {}], useMemo: (fn) => fn() },
+      react: { ...React, useState: (i) => [typeof i === 'function' ? i() : i, () => {}], useMemo: (fn) => fn(), useEffect: () => {} },
       './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
       '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
     });
-    return EscolhaCategoria({ id: 'an1', editar: false, formId: 'f', arvore: await cats.listarCategorias(), selecionadaId: 'p3' });
+    return EscolhaCategoria({ id: 'an1', editar: false, formId: 'f', arvore: await cats.listarCategorias(), selecionadaId: 'p3', tituloAtual: 'Ração 15kg' });
   })());
   assert.match(html, /Escolhida: <strong>Pet › Produtos para pets › Ração<\/strong>/);
+  assert.doesNotMatch(html, /name="titulo_inicial"/); // já tem título: não mexe nele
+  assert.match(html, /id="titulo-aberta"[^>]*>Produtos para pets</); // abre no nível da escolhida
 });
 
 // ---------- Painel: níveis e pais possíveis ----------
@@ -161,4 +174,32 @@ test('painel: mães possíveis respeitam o máximo de 3 níveis e não incluem a
   assert.ok(sub.includes('Pet') && sub.includes('Móveis'));
   assert.ok(!sub.includes('Pet › Produtos para pets'));
   assert.ok(!sub.includes('Pet › Outros animais') && sub.every((n) => !n.includes('›')));
+});
+
+test('painel novo: busca pelo título inteiro acha a categoria final, sem acento e no plural', async () => {
+  const { sugerirPorTexto } = carregar('src/lib/categorias-arvore.ts');
+  const arvore = await cats.listarCategorias();
+  // nome da própria categoria vale mais que o da mãe
+  assert.deepEqual(sugerirPorTexto(arvore, 'Ração Golden 15kg').map((x) => x.no.slug), ['racao']);
+  assert.deepEqual(sugerirPorTexto(arvore, 'coleiras de couro').map((x) => x.no.slug), ['coleiras']);
+  // palavra só da mãe traz as filhas dela
+  assert.deepEqual(sugerirPorTexto(arvore, 'produtos pet').map((x) => x.no.slug), ['racao', 'coleiras', 'outros-animais']);
+  // palavras curtas não contam; nada parecido → vazio
+  assert.deepEqual(sugerirPorTexto(arvore, 'de um'), []);
+  assert.deepEqual(sugerirPorTexto(arvore, 'trator'), []);
+  assert.deepEqual(sugerirPorTexto(arvore, 'ração', 1).length, 1);
+});
+
+test('painel novo: para quem procura some a vazia e a com mais anúncios vem primeiro', async () => {
+  const { arvoreComAnuncios, enxugarArvore } = carregar('src/lib/categorias-arvore.ts');
+  const arvore = await cats.listarCategorias();
+  const totais = new Map([['p1', 2], ['p2', 2], ['p3', 2], ['c1', 5], ['c2', 5]]);
+  const r = arvoreComAnuncios(arvore, totais);
+  assert.deepEqual(r.map((c) => c.slug), ['casa-e-moveis', 'pet']);
+  assert.deepEqual(r[1].filhas.map((c) => c.slug), ['produtos-para-pets']);
+  assert.deepEqual(r[1].filhas[0].filhas.map((c) => c.slug), ['racao']);
+  // sem contagem: tudo como veio
+  assert.equal(arvoreComAnuncios(arvore, null), arvore);
+  // a versão leve leva só o que o painel usa
+  assert.deepEqual(Object.keys(enxugarArvore(arvore)[0]).sort(), ['filhas', 'icone', 'id', 'nome', 'slug']);
 });
