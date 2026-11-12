@@ -11,8 +11,9 @@ export const maxDuration = 60;
 // O servidor do WhatsApp fica atrás de um nginx que deixa 12 pedidos por minuto (cada envio faz 2): 1,5 s entre mensagens.
 const INTERVALO_MS = 1500;
 const POR_RODADA = 5;
-// A função tem 60 s: depois de 45 s não começa envio novo (cada envio pode levar até ~25 s).
-const PRAZO_MS = 45000;
+// A função tem 60 s: depois de 30 s não começa envio novo (cada envio pode levar até ~25 s:
+// 8 s de checagem + 15 s de envio + pausa), então o último termina antes do limite.
+const PRAZO_MS = 30000;
 
 type Linha = { id: string; numero: string; texto: string; link: string | null };
 
