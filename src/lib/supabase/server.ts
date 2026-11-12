@@ -13,6 +13,20 @@ const chavePublica =
 
 export async function createClient() {
   return criar(process.env.NEXT_PUBLIC_SUPABASE_URL!, chavePublica!, {
-    accessToken: async () => (await auth()).getToken(),
+    accessToken: tokenDoClerk,
   });
+}
+
+/**
+ * Token do Clerk, ou null (visitante sem login). Endereços que o middleware não cobre (ex.: um
+ * /favicon.ico ou .png inexistente, que cai na página "não encontrada") fazem o auth() do Clerk
+ * lançar erro; aí a consulta seguia como erro do banco ("Não foi possível carregar sua região").
+ * Sem token, o banco usa o papel anon, que tem menos acesso, então tratar como visitante é seguro.
+ */
+async function tokenDoClerk(): Promise<string | null> {
+  try {
+    return await (await auth()).getToken();
+  } catch {
+    return null;
+  }
 }
