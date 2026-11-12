@@ -12,7 +12,7 @@ function inicio({ regiao = { id: 'r', cidadeSede: 'Corrente', nome: 'Extremo Sul
     '@/lib/dados/categorias': { listarCategorias: async () => [
       { id: 'c1', slug: 'veiculos', nome: 'Veículos', icone: 'car', filhas: [] },
       { id: 'c2', slug: 'casa-e-moveis', nome: 'Casa e decoração', icone: 'sofa', filhas: [] },
-    ] },
+    ], totaisCategorias: async () => null },
     '@/lib/dados/catalogo': {
       lojasCatalogo: async () => lojas,
       anunciosCatalogo: async (r, modo, limite) => {

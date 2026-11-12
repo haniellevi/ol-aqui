@@ -30,13 +30,14 @@ function form(valores = {}) { const f = new FormData(); for (const [k, v] of Obj
 test('busca sem categoria oferece Diversos ativo sem selecionar automaticamente', () => {
   let indice = 0;
   const { EscolhaCategoria } = carregar('src/components/anunciar/escolha-categoria.tsx', {
-    react: { ...React, useState: inicial => [indice++ === 2 ? 'Desenho para colorir' : inicial, () => {}], useMemo: fn => fn() },
+    // 2º useState de EscolhaCategoria = texto digitado em "O que você está anunciando?"
+    react: { ...React, useState: inicial => [indice++ === 1 ? 'Desenho para colorir' : typeof inicial === 'function' ? inicial() : inicial, () => {}], useMemo: fn => fn(), useEffect: () => {} },
     './enviar': { useEnvioAnuncio: () => [null, () => {}, false, () => {}] },
     '@/app/(conta)/anunciar/actions': { salvarCategoria() {} },
   });
   const diversos = { id: 'tipo-diversos', slug: 'diversos', nome: 'Diversos' };
   const arvore = [{ id: 'grupo-outros', slug: 'outros', nome: 'Outros', filhas: [diversos] }];
-  const html = render(EscolhaCategoria({ id, editar: false, formId: 'categoria', arvore, selecionadaId: null }));
+  const html = render(EscolhaCategoria({ id, editar: false, formId: 'categoria', arvore, selecionadaId: null, tituloAtual: null }));
   assert.match(html, /Ver todas as categorias/);
   assert.match(html, /name="escolha-categoria" value="tipo-diversos"/);
   assert.match(html, /name="categoria_id" value=""/);

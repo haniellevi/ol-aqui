@@ -201,6 +201,12 @@ async function sugerirCategoria(id: string, texto: string): Promise<EstadoForm> 
   return { erro: { mensagem: `Categoria salva. A sugestão não foi enviada: ${traduzirErro(error).mensagem}` } };
 }
 
+/** Texto do campo "O que você está anunciando?": sem espaços sobrando, até 90 letras (limite do banco). */
+function limparTituloInicial(valor: FormDataEntryValue | null): string | null {
+  const t = String(valor ?? "").replace(/\s+/g, " ").trim().slice(0, 90);
+  return t.length >= 2 ? t : null;
+}
+
 export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promise<EstadoForm> {
   const c = lerComum(form);
   const anuncio = await abrir(c.id);
@@ -211,6 +217,8 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
     if (c.parcial && !publicado(anuncio)) redirect(c.ir ? destino("categoria", c) : DESTINO_SAIR);
     return { erro: { mensagem: "Escolha a categoria do anúncio.", campo: "categoria" } };
   }
+  // "O que você está anunciando?" vira o começo do título, só se o anúncio ainda não tem título.
+  const tituloInicial = anuncio.titulo?.trim() ? null : limparTituloInicial(form.get("titulo_inicial"));
   // anúncio que já esteve no ar (no ar, pausado...) e continua na mesma categoria (mesmo escondida no painel): segue sem mudar nada
   const sugestao = limparSugestao(form.get("sugestao_categoria"));
   if (categoriaId === anuncio.categoria_id && anuncio.publicado_em) {
@@ -231,6 +239,7 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
     const r = await gravar(c.id, {
       categoria_id: categoriaId,
       atributos: filtrarAtributos(anuncio.atributos, achada.categoria.campos, origem?.categoria.campos ?? []),
+      ...(tituloInicial ? { titulo: tituloInicial } : {}),
     }, undefined, anuncio.atualizado_em);
     if (r) {
       if (publicado(anuncio) && r.erro?.campo && r.erro.campo !== "categoria") {
@@ -243,6 +252,9 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
       const db = await createClient();
       await db.rpc("cancelar_sugestao_categoria", { p_anuncio: c.id });
     }
+  } else if (tituloInicial) {
+    const r = await gravar(c.id, { titulo: tituloInicial }, undefined, anuncio.atualizado_em);
+    if (r) return r;
   }
   const falha = await sugerirCategoria(c.id, sugestao);
   if (falha) return falha;

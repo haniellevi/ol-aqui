@@ -26,6 +26,24 @@ async function lerArvore(): Promise<CategoriaComFilhas[]> {
   return montarArvore(data as Categoria[]);
 }
 
+/**
+ * Anúncios no ar por categoria na região (somando para as de cima), para ordenar e esconder vazias.
+ * Falhou (função ainda não aplicada no banco, rede) → null: a tela mostra todas, na ordem do painel.
+ */
+export const totaisCategorias = cache(async (regiaoId: string): Promise<Map<string, number> | null> =>
+  seguro(async () => {
+    const db = await createClient();
+    const { data, error } = await db.rpc("contagem_categorias_regiao", { p_regiao: regiaoId });
+    if (error || !Array.isArray(data)) return null;
+    const totais = new Map<string, number>();
+    for (const l of data as { categoria_id: unknown; total: unknown }[]) {
+      const n = Number(l.total);
+      if (typeof l.categoria_id === "string" && Number.isSafeInteger(n) && n > 0) totais.set(l.categoria_id, n);
+    }
+    return totais;
+  }, null),
+);
+
 export type CategoriaEncontrada = {
   categoria: CategoriaComFilhas;
   /** Pai imediato, com as irmãs dentro (null quando a própria categoria é grande). */
