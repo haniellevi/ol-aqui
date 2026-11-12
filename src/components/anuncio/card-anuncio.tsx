@@ -1,5 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { podeOtimizar } from "@/lib/imagem";
 import { ImageOff, ShieldCheck } from "lucide-react";
 import { linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
 import type { AnuncioCard } from "@/lib/tipos";
@@ -28,16 +30,15 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao }: CardAnunci
       >
         <div className="relative aspect-[4/3] w-full bg-borda">
           {a.capa ? (
-            // eslint-disable-next-line @next/next/no-img-element -- img simples: leve no 3G e funciona com qualquer host do Storage
-            <img
+            // Foto do Storage sai otimizada (AVIF/WebP, só o tamanho que a tela precisa); outras vão como estão.
+            <Image
               src={a.capa}
               alt={`Foto de ${a.titulo}`}
-              width={400}
-              height={300}
-              loading={prioridade ? "eager" : "lazy"}
-              fetchPriority={prioridade ? "high" : undefined}
-              decoding="async"
-              className="absolute inset-0 size-full object-cover"
+              fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              priority={prioridade}
+              unoptimized={!podeOtimizar(a.capa)}
+              className="object-cover"
             />
           ) : (
             <span className="absolute inset-0 grid place-items-center text-texto-suave" aria-label="Sem foto">
