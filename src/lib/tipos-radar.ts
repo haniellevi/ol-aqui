@@ -55,6 +55,12 @@ export type PedidoRadarDetalhe = {
   moderado_motivo: string | null;
   /** Só para o dono (e a equipe): por que o pedido fechou. */
   fechado_motivo: MotivoFechamento;
+  /** "lojas" = só lojas que atendem; "todos" = qualquer pessoa da região. */
+  visibilidade?: "lojas" | "todos";
+  /** Onde o pedido vale: "Toda a região" ou os nomes das cidades. */
+  area_texto?: string | null;
+  /** Pedido "só lojas" aberto por quem não atende: vem sem título nem detalhes. */
+  bloqueado?: boolean;
 };
 
 /** Linha de propostas_do_pedido(id): o que o comprador compara (sem contato). */

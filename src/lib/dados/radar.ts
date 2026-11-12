@@ -101,7 +101,9 @@ export const pedidoRadar = cache(async (id: string): Promise<PedidoRadarDetalhe 
   const db = await createClient();
   const { data, error } = await db.rpc("radar_pedido", { p_id: id });
   if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar este pedido.");
-  return (Array.isArray(data) ? data[0] : data) as PedidoRadarDetalhe | null ?? null;
+  const linha = (Array.isArray(data) ? data[0] : data) as PedidoRadarDetalhe | null ?? null;
+  // Pedido "só lojas" de quem não atende vem bloqueado (sem título); a tela nova explica isso (Radar v2).
+  return linha?.bloqueado ? null : linha;
 });
 
 export async function propostasDoPedido(id: string): Promise<PropostaRecebida[]> {

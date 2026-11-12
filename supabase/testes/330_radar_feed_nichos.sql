@@ -21,6 +21,9 @@ values ('33000000-0000-4000-a000-000000000001','user_comprador',:'regiao',:'moto
        ('33000000-0000-4000-a000-000000000003','user_comprador',:'regiao',:'veiculos',
         'Veículo sem nicho específico',null,'Corrente',now()-interval '2 days');
 
+-- Radar v2: quem não atende só vê pedido "todos"; este é o pedido aberto a todo mundo da região.
+update radar_pedidos set visibilidade='todos' where id='33000000-0000-4000-a000-000000000001';
+
 -- Mais de uma página de pedidos de um nicho vizinho, todos mais recentes.
 insert into radar_pedidos(comprador_id,microrregiao_id,categoria_id,titulo,cidade,criado_em)
 select 'user_comprador',:'regiao',:'carros','Pedido de carro de teste '||n,'Corrente',now()

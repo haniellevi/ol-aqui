@@ -71,6 +71,8 @@ try:
     print('PASS: super admin monta loja escondida e o dono recebe pelo convite; fotos mudam de pasta e prontos vão ao ar', flush=True)
     checked(sql((root/'supabase/testes/600_radar_quem_atende.sql').read_text()))
     print('PASS: Radar só atende loja verificada e paga (ou cortesia da equipe); aviso na hora só no Full', flush=True)
+    checked(sql((root/'supabase/testes/610_radar_area_visibilidade.sql').read_text()))
+    print('PASS: pedido do Radar com várias cidades, visibilidade só lojas ou todos, área da loja e até 5 lojas', flush=True)
     migracao_home = (root/'supabase/migrations/20261109165907_texto_radar_inicio.sql').read_text()
     checked(sql("""begin;
       do $$ begin
