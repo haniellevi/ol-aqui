@@ -2,7 +2,8 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { COOKIE_MANUTENCAO, PAGINA_MANUTENCAO, decidirManutencao, liberacaoValida, manutencaoLigada } from "@/lib/manutencao";
 
-// Login pelo Clerk. Áreas que exigem conta: painel, Radar (menos a página que explica)
+// Login pelo Clerk. Áreas que exigem conta: painel, Radar (menos a página que explica e o
+// "Estou procurando…", que se escreve antes de entrar; publicar continua exigindo conta)
 // e a área da conta (anunciar, quero vender, minha conta, destacar). O resto do site é público.
 const exigeLogin = createRouteMatcher([
   "/admin(.*)",
@@ -13,10 +14,11 @@ const exigeLogin = createRouteMatcher([
   "/minha-conta(.*)",
   "/destacar(.*)",
 ]);
+const pedidoAberto = createRouteMatcher(["/radar/pedir"]);
 
 const comClerk = clerkMiddleware(
   async (auth, req) => {
-    if (exigeLogin(req)) await auth.protect();
+    if (exigeLogin(req) && !pedidoAberto(req)) await auth.protect();
   },
   // padrão no código: a integração do Clerk não cria NEXT_PUBLIC_CLERK_SIGN_IN_URL
   { signInUrl: "/entrar", signUpUrl: "/entrar" },

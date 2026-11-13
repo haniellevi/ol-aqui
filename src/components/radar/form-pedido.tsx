@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Hourglass, Megaphone, MessageCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Hourglass, LogIn, Megaphone, MessageCircle } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
 import { Seletor } from "@/components/conta/seletor";
 import { Chip } from "@/components/ui/chip";
@@ -14,6 +14,7 @@ import { iaDoPedido } from "@/app/radar/ia-actions";
 import { comPrazo } from "@/lib/radar-ia/prazo";
 import type { ParecidoIA, PerguntaIA } from "@/lib/radar-ia/tipos";
 import { linkMeuPedidoRadar } from "@/lib/rotas";
+import { guardarRascunho, lerRascunho, limparRascunho, LINK_RETOMAR_PEDIDO } from "@/lib/rascunho-radar";
 import { centavosDoTexto } from "@/lib/formato";
 import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import type { ModoContato, RegrasRadar, Visibilidade } from "@/lib/tipos-radar";
@@ -23,6 +24,9 @@ import {
   NOMES_PASSOS_PEDIDO,
   TEXTO_VISIBILIDADE,
   TOTAL_PASSOS_PEDIDO,
+  cidadesDoRascunho,
+  estadoRetomada,
+  type EstadoRetomada,
   cidadesParaEnvio,
   erroDoPasso,
   juntarFala,
@@ -58,6 +62,10 @@ type Props = {
   whatsappInicial?: string;
   /** Perguntas ou parecidos da IA ligados no painel. Desligado: o "Continuar" nem vai ao servidor. */
   iaNoPedido?: boolean;
+  /** Sem login: o último botão guarda o rascunho no aparelho e manda entrar (não publica). */
+  anonimo?: boolean;
+  /** Voltou do login (?retomar=1): abre o rascunho guardado já no resumo. */
+  retomar?: boolean;
 };
 
 // Uma pergunta por tela (Modo fácil, docs/designs/radar-v2.md).
@@ -75,7 +83,7 @@ const ESPERA_IA_MS = 5000;
 const ROTULO_GRUPO = "text-facil font-semibold text-texto";
 const TEXTO_ERRO = "text-facil font-semibold text-perigo";
 
-export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", detalhesInicial = "", visibilidadeInicial = "lojas", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "", iaNoPedido = false }: Props) {
+export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", detalhesInicial = "", visibilidadeInicial = "lojas", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "", iaNoPedido = false, anonimo = false, retomar = false }: Props) {
   const router = useRouter();
   const formulario = useRef<HTMLFormElement>(null);
   const pergunta = useRef<HTMLHeadingElement>(null);
@@ -108,10 +116,34 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   // A data final depende da hora do aparelho: calculada só no navegador (evita diferença com o servidor).
   const [agora, setAgora] = useState<number | null>(null);
   useEffect(() => setAgora(Date.now()), []);
+  // Volta do login: o rascunho só existe no aparelho, então é lido depois de montar.
+  const [retomado, setRetomado] = useState<EstadoRetomada | null>(null);
 
   const temPrazos = regras.prazosHoras.length > 0;
   const fimPrazo = agora && prazo ? dataHoraCurta(new Date(agora + prazo * 3600_000)) : null;
   const idsValidos = cidades.map((c) => c.id);
+
+  useEffect(() => {
+    const r = lerRascunho();
+    // O ?retomar=1 sai do endereço: recarregar ou voltar depois de publicar não mostra "não achamos".
+    if (retomar) window.history.replaceState(null, "", window.location.pathname);
+    const area = r ? cidadesDoRascunho(r.cidadesIds, cidades.map((c) => c.id)) : null;
+    const estado = estadoRetomada({ retomar, anonimo, temRascunho: !!r, perdeuCidades: !!area?.perdeu });
+    setRetomado(estado);
+    if (!r || !area || !estado || estado === "sem_rascunho") return;
+    setTitulo(r.titulo);
+    setDetalhes(r.detalhes);
+    setCategoriaId(r.categoriaId);
+    setPrecoMin(r.precoMin);
+    setPrecoMax(r.precoMax);
+    setArea(area.ids);
+    setVisibilidade(r.visibilidade);
+    setModo(r.modo);
+    if (r.prazoHoras != null && regras.prazosHoras.includes(r.prazoHoras)) setPrazo(r.prazoHoras);
+    irPara(TOTAL_PASSOS_PEDIDO);
+    // Só na montagem: o rascunho é lido uma vez (e só sai do aparelho ao publicar).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Ao trocar de passo, o foco vai para a pergunta (leitor de tela lê a tela nova).
   useEffect(() => {
@@ -228,6 +260,12 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
     if (modo === "propostas_prazo" && !regras.prazosHoras.includes(prazo ?? 0)) return mostrarErro("Escolha um prazo da lista.", "prazo");
     if (pedirWhatsapp && !whatsapp.valido) return mostrarErro("Digite seu WhatsApp com DDD, por exemplo (89) 99999-0000.", "whatsapp");
     trava.current = true;
+    if (anonimo) {
+      // Só o pedido: sem chave de envio nem telefone.
+      guardarRascunho({ titulo, detalhes, categoriaId, precoMin, precoMax, cidadesIds: dados.cidadesIds ?? [], visibilidade, modo, prazoHoras: prazo });
+      router.push(`/entrar?redirect_url=${encodeURIComponent(LINK_RETOMAR_PEDIDO)}`);
+      return;
+    }
     iniciar(async () => {
       try {
         const r = await criarPedido(dados);
@@ -235,6 +273,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           mostrarErro(r.erro, r.campo, r.precisaCelular);
           return;
         }
+        limparRascunho();
         router.push(`${linkMeuPedidoRadar(r.id)}?novo=1`);
       } catch {
         setErro({ texto: "Não conseguimos confirmar o envio. Seus dados continuam aqui; tente novamente." });
@@ -258,6 +297,14 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   return (
     <form ref={formulario} onSubmit={aoEnviarFormulario} noValidate>
       <fieldset disabled={enviando || pensando} className="flex min-w-0 flex-col gap-6">
+        {retomado === "sem_rascunho" ? (
+          <Alert variant="warning" role="status" className="text-facil">Não achamos o pedido que você começou. Escreva de novo, é rápido.</Alert>
+        ) : retomado && passo === TOTAL_PASSOS_PEDIDO ? (
+          <Alert variant="success" role="status" className="text-facil">
+            {retomado === "continua" ? "Seu pedido continua aqui. Confira e toque em Entrar para publicar." : "Pronto, você entrou. Confira seu pedido e toque em Publicar."}
+            {retomado === "perdeu_cidades" && " Algumas cidades ficam fora da sua região e saíram do pedido."}
+          </Alert>
+        ) : null}
         <IndicadorPasso passo={passo} />
         <h2 ref={pergunta} id="pergunta-passo" tabIndex={-1} className="text-3xl font-semibold text-beringela outline-none">
           {etapaIA?.tipo === "pergunta" ? perguntasIA[etapaIA.indice]?.pergunta : etapaIA?.tipo === "parecidos" ? TITULO_PARECIDOS : PERGUNTAS[passo]}
@@ -427,13 +474,20 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
               <Botao key="continuar" type="submit" icone={<ArrowRight />} tamanho="grande" className="w-full" carregando={pensando} textoCarregando="Um momento...">
                 Continuar
               </Botao>
+            ) : anonimo ? (
+              <Botao key="entrar" type="submit" icone={<LogIn />} tamanho="grande" className="w-full">
+                Entrar para publicar
+              </Botao>
             ) : (
               <Botao key="publicar" type="submit" carregando={enviando} textoCarregando="Publicando..." icone={<Megaphone />} tamanho="grande" className="w-full">
                 Publicar pedido
               </Botao>
             )}
           </div>
-          {passo === TOTAL_PASSOS_PEDIDO && regras.pedidosAbertosMax != null && (
+          {passo === TOTAL_PASSOS_PEDIDO && anonimo && (
+            <p className="text-center text-facil text-texto-suave">Falta só entrar com seu celular. Seu pedido fica guardado.</p>
+          )}
+          {passo === TOTAL_PASSOS_PEDIDO && !anonimo && regras.pedidosAbertosMax != null && (
             <p className="text-center text-facil text-texto-suave">Você pode ter até {regras.pedidosAbertosMax} pedidos no ar ao mesmo tempo.</p>
           )}
         </div>

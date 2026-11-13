@@ -273,7 +273,7 @@ test('Pedir de novo leva detalhes, categoria, preço, área e quem vê para o fo
   assert.equal(u.searchParams.get('cidades'),'c1,c2');assert.equal(u.searchParams.get('quem'),'todos');assert.equal(u.searchParams.get('preco_max'),'20');
   const pagina=carregar('src/app/radar/pedir/page.tsx',{
     'next/link':{},'lucide-react':{},
-    '@clerk/nextjs/server':{currentUser:async()=>({id:'user_teste'})},
+    '@clerk/nextjs/server':{auth:async()=>({userId:'user_teste'}),currentUser:async()=>({id:'user_teste'})},
     '@/lib/perfil':{garantirPerfil:async()=>{},sincronizarPerfil:async()=>{}},
     '@/lib/dados/conta':{meuPerfilEVitrine:async()=>({perfil:{microrregiao_id:'r',cidade:null}})},
     '@/lib/dados/categorias':{listarCategorias:async()=>[{id:'cat1',slug:'mesas',nome:'Mesas',filhas:[]}]},
@@ -282,17 +282,46 @@ test('Pedir de novo leva detalhes, categoria, preço, área e quem vê para o fo
     '@/components/ui/botao':{},'@/components/ui/vazio':{},'@/components/ui/alert':{Alert:'Alert'},'@/components/radar/form-pedido':{FormPedido:'FormPedido'},
   });
   const tela=await pagina.default({searchParams:Promise.resolve({q:'Procuro mesa',detalhes:'Madeira',categoria_id:'cat1',cidades:'c1,c9',quem:'todos',preco_min:'10'})});
-  const formulario=tela.props.children.find(e=>typeof e.type==='function');
+  const formulario=tela.props.children;
   const campos=await formulario.type(formulario.props);
   const form=campos.props.children.find(e=>e&&e.type==='FormPedido');
   assert.equal(form.props.detalhesInicial,'Madeira');assert.equal(form.props.categoriaInicial,'cat1');
   assert.deepEqual(form.props.cidadesIniciais,['c1']);assert.equal(form.props.visibilidadeInicial,'todos');assert.equal(form.props.precoMinInicial,'10');
 });
+test('sem login: escreve o pedido na região do visitante, sem IA, sem WhatsApp e sem retomar',async()=>{
+  let perfil=0;
+  const dados=(logado)=>carregar('src/app/radar/pedir/page.tsx',{
+    'next/link':{},'lucide-react':{},
+    '@clerk/nextjs/server':{auth:async()=>({userId:logado?'user_teste':null}),currentUser:async()=>({id:'user_teste'})},
+    '@/lib/perfil':{garantirPerfil:async()=>{perfil++;},sincronizarPerfil:async()=>{}},
+    '@/lib/dados/conta':{meuPerfilEVitrine:async()=>({perfil:{microrregiao_id:'r-conta',whatsapp:'89999990000',whatsapp_verificado_em:'2026-11-01'}})},
+    '@/lib/dados/categorias':{listarCategorias:async()=>[]},
+    '@/lib/dados/regiao':{listarCidades:async(id)=>[{id:`${id}-c`,nome:'Corrente',uf:'PI'}],regiaoAtual:async()=>({id:'r-visita',cidade:null,cidadeSede:'Corrente'})},
+    '@/lib/dados/radar':{exigeCelularConfirmado:async()=>false,regrasRadar:async()=>({})},
+    '@/lib/radar-ia/uso':{estadoRadarIA:async()=>({perguntas:true,parecidos:true})},
+    '@/components/ui/botao':{},'@/components/ui/vazio':{},'@/components/ui/alert':{Alert:'Alert'},'@/components/radar/form-pedido':{FormPedido:'FormPedido'},
+  });
+  const abrir=async(logado)=>{
+    const tela=await dados(logado).default({searchParams:Promise.resolve({q:'Mesa',retomar:'1'})});
+    const formulario=tela.props.children;
+    const campos=await formulario.type(formulario.props);
+    return campos.props.children.find(e=>e&&e.type==='FormPedido').props;
+  };
+  const anonimo=await abrir(false);
+  assert.equal(perfil,0);
+  assert.equal(anonimo.anonimo,true);assert.equal(anonimo.retomar,false);assert.equal(anonimo.iaNoPedido,false);
+  assert.equal(anonimo.pedirWhatsapp,false);assert.equal(anonimo.textoInicial,'Mesa');
+  assert.deepEqual(anonimo.cidades,[{id:'r-visita-c',nome:'Corrente'}]);
+  const logado=await abrir(true);
+  assert.equal(perfil,1);
+  assert.equal(logado.anonimo,false);assert.equal(logado.retomar,true);assert.equal(logado.iaNoPedido,true);
+  assert.deepEqual(logado.cidades,[{id:'r-conta-c',nome:'Corrente'}]);
+});
 test('pedido começa em Toda a região, manda as cidades com id e avisa cidade de fora',async()=>{
   for (const [busca,selecionada,avisa] of [['',null,false],['','Bom Jesus',false],['Corrente','Bom Jesus',false],['Outra região',null,true]]) {
     const pagina=carregar('src/app/radar/pedir/page.tsx',{
       'next/link':{},'lucide-react':{},
-      '@clerk/nextjs/server':{currentUser:async()=>({id:'user_teste'})},
+      '@clerk/nextjs/server':{auth:async()=>({userId:'user_teste'}),currentUser:async()=>({id:'user_teste'})},
       '@/lib/perfil':{garantirPerfil:async()=>{},sincronizarPerfil:async()=>{}},
       '@/lib/dados/conta':{meuPerfilEVitrine:async()=>({perfil:{microrregiao_id:'r',cidade:null}})},
       '@/lib/dados/categorias':{listarCategorias:async()=>[]},
@@ -301,7 +330,7 @@ test('pedido começa em Toda a região, manda as cidades com id e avisa cidade d
       '@/components/ui/botao':{},'@/components/ui/vazio':{},'@/components/ui/alert':{Alert:'Alert'},'@/components/radar/form-pedido':{FormPedido:'FormPedido'},
     });
     const tela=await pagina.default({searchParams:Promise.resolve({cidade:busca})});
-    const formulario=tela.props.children.find(e=>typeof e.type==='function');
+    const formulario=tela.props.children;
     const campos=await formulario.type(formulario.props);
     const form=campos.props.children.find(e=>e&&e.type==='FormPedido');
     assert.equal(form.props.cidadesIniciais,undefined);
