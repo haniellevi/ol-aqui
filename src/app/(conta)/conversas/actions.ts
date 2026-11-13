@@ -2,11 +2,14 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import { linkConversa } from "@/lib/rotas";
 import { DETALHES_MAX, ehMotivoDenuncia, validarMensagem } from "@/components/conversas/validacao";
+import { temPalavraDeCompra } from "@/components/conversas/palavras-compra";
+import { verificarJaComprei } from "@/lib/radar-ia/ja-comprei";
 import type { ErroTela, Resultado } from "@/lib/tipos";
 import type { MensagemConversa } from "@/lib/tipos-conversas";
 
@@ -52,6 +55,9 @@ export async function enviarMensagem(conversaId: string, texto: string): Promise
   const { data, error } = await chamar("enviar_mensagem", { p_conversa: conversaId, p_texto: texto.trim() });
   if (error) return { ok: false, erro: erroDe(error) };
   if (typeof data !== "string" || !ehUuid(data)) return { ok: false, erro: traduzirErro(null) };
+  // "Já comprei" (IA do Radar): só mensagem com palavra de compra, depois da resposta (não atrasa o envio).
+  // O banco confere o resto (chave, lado do cliente, pedido aberto); desligada, nada sai do site.
+  if (temPalavraDeCompra(texto)) after(() => verificarJaComprei(data).catch(() => false));
   return { ok: true, dados: { id: data } };
 }
 
@@ -93,4 +99,14 @@ export async function denunciar(conversaId: string, motivo: string, detalhes: st
   const det = typeof detalhes === "string" ? detalhes.trim() : "";
   if (det.length > DETALHES_MAX) return { ok: false, erro: { mensagem: "Escreva os detalhes em até 1.000 letras.", campo: "detalhes" } };
   return acaoSimples(conversaId, "denunciar_conversa", { p_motivo: motivo, p_detalhes: det || null });
+}
+
+/** "Não, ainda preciso": a IA nunca mais pergunta sobre este pedido. */
+export async function jaCompreiRecusar(conversaId: string, pedidoId: string): Promise<Resultado<null>> {
+  if (!(await logado())) return { ok: false, erro: SEM_LOGIN };
+  if (!ehUuid(conversaId) || !ehUuid(pedidoId)) return { ok: false, erro: INVALIDO };
+  const { error } = await chamar("recusar_ja_comprei", { p_pedido: pedidoId });
+  if (error) return { ok: false, erro: erroDe(error) };
+  revalidatePath(linkConversa(conversaId));
+  return { ok: true, dados: null };
 }

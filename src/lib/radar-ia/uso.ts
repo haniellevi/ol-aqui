@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 // Toda chamada à IA do Radar passa pelo livro-caixa: o banco decide se pode (chaves, 20 usos por dia,
 // teto do mês) e guarda a reserva; no fim gravamos o custo real. Sem reserva, a IA nem é chamada.
 
-export type ParteIA = "perguntas" | "parecidos" | "vitrine" | "novidades";
+export type ParteIA = "perguntas" | "parecidos" | "vitrine" | "novidades" | "ja_comprei";
 export type RodadaIA<T> = { valor: T; custoUsd: number | null; tokensEntrada: number; tokensSaida: number; falha: string | null };
 
 function idDoUso(v: unknown): number | null {
@@ -40,7 +40,7 @@ export async function comReserva<T>(usuario: string | null, parte: ParteIA, fn: 
 }
 
 export type EstadoIA = Record<ParteIA, boolean>;
-const DESLIGADA: EstadoIA = { perguntas: false, parecidos: false, vitrine: false, novidades: false };
+const DESLIGADA: EstadoIA = { perguntas: false, parecidos: false, vitrine: false, novidades: false, ja_comprei: false };
 
 /** Quais partes da IA estão ligadas (chave geral E chave da parte). Qualquer erro: tudo desligado. */
 export async function estadoRadarIA(): Promise<EstadoIA> {
@@ -48,7 +48,7 @@ export async function estadoRadarIA(): Promise<EstadoIA> {
     const { data, error } = await supabaseAdmin().rpc("radar_ia_estado");
     if (error || !data || typeof data !== "object") return DESLIGADA;
     const d = data as Record<string, unknown>;
-    return { perguntas: d.perguntas === true, parecidos: d.parecidos === true, vitrine: d.vitrine === true, novidades: d.novidades === true };
+    return { perguntas: d.perguntas === true, parecidos: d.parecidos === true, vitrine: d.vitrine === true, novidades: d.novidades === true, ja_comprei: d.ja_comprei === true };
   } catch {
     return DESLIGADA;
   }
