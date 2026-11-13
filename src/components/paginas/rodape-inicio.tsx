@@ -14,7 +14,7 @@ const LINKS = [
 
 export function RodapeInicio() {
   return (
-    <footer className="flex flex-col gap-3 border-t border-borda pt-4 md:flex-row md:items-start md:justify-between">
+    <footer className="flex flex-col gap-3 border-t border-borda pt-4 max-md:order-last md:flex-row md:items-start md:justify-between">
       <div className="flex flex-col gap-1">
         <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={98} height={36} className="h-7 w-auto self-start" />
         <p className="text-base text-texto-suave">aqui a sua cidade aparece.</p>

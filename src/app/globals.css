@@ -253,12 +253,14 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
   .publico:has([data-comprador]) .cidade-cabecalho {
     height: auto;
     min-height: 3rem;
+    max-width: 100%;
     margin-left: 0;
     padding-inline: 0.25rem;
     border: 0;
   }
 
   .publico:has([data-comprador]) .cidade-cabecalho-nome {
+    min-width: 0;
     overflow: visible;
     white-space: normal;
     overflow-wrap: anywhere;
