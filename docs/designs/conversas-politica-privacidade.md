@@ -29,5 +29,20 @@ bloqueio e denúncia) e para saber se você já resolveu o que procurava no Rada
 **Inteligência artificial.** Hoje nenhuma inteligência artificial lê as conversas. Quando isso mudar, esta política
 será atualizada antes, dizendo o que é lido e para quê.
 
+> **Texto novo para quando ligar o "já comprei"** (`radar_ia.ja_comprei_ativa`). Publicar em `/admin/textos`
+> **antes** de ligar a chave, no lugar do parágrafo acima:
+>
+> **Inteligência artificial.** Uma inteligência artificial lê **só algumas mensagens do cliente**, para saber se ele
+> já resolveu o que pediu no Radar. Ela só lê quando as três coisas acontecem juntas: a mensagem foi escrita pelo
+> cliente (nunca pela loja); a conversa tem uma oferta de um pedido dele que ainda está aberto no Radar; e a mensagem
+> tem uma palavra como "comprei", "achei", "consegui" ou "resolvi". Vão para a TypeSafe (serviço de inteligência
+> artificial contratado sem guardar os dados nem usá-los para treinar modelos) apenas o texto dessa mensagem — com
+> links, e-mails e números de telefone apagados antes — e o título do pedido. Não enviamos seu nome, seu telefone,
+> o nome da loja nem as outras mensagens. Se a inteligência artificial achar que você já resolveu, aparece só para
+> você uma pergunta: "Posso tirar o pedido do Radar?". O pedido só sai do ar se você confirmar. Se responder "Não,
+> ainda preciso", não perguntamos de novo sobre aquele pedido. Guardamos apenas que a mensagem foi lida, se a pergunta
+> foi feita e a sua resposta "não"; não guardamos o que a inteligência artificial respondeu, só o custo de cada uso.
+> A loja não vê nada disso.
+
 **Bloquear e denunciar.** Você pode bloquear uma loja ou um cliente a qualquer momento (e desbloquear depois).
 Ao denunciar, a conversa também fica bloqueada.

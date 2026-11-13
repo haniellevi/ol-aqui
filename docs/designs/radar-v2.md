@@ -54,7 +54,8 @@ usável por idoso ou criança sem ser infantil.
 - **Feito (13/11/2026, desligado):** perguntas do pedido vago, "Achamos isso na região", os 3 da vitrine e o aviso de anúncio novo.
   IA mista: o JEV (TypeSafe) julga, o Gemini 2.5 Flash-Lite escreve. Teto próprio de R$ 30/mês, 20 usos por dia por pessoa.
   Detalhes e como ligar: `docs/radar-ia.md`. Plano: `docs/superpowers/plans/2026-11-13-radar-v2-fase3-ia.md`.
-- **Falta:** a IA que lê o chat (fase 2) e pergunta "já comprou?" — PR separado depois que o chat entrar na main.
+- **Feito (13/11/2026, desligado):** a IA que lê o chat e pergunta "Posso tirar o pedido do Radar?" — chave
+  `radar_ia.ja_comprei_ativa`; plano `docs/superpowers/plans/2026-11-13-radar-ja-comprei.md`.
 
 ## Onde o Radar aparece
 - Busca sem resultado, topo da home ("Estou procurando…"), Merc ("Quer que eu peça para as lojas?"), favoritos e anúncio vendido.
