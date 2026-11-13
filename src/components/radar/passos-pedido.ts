@@ -59,6 +59,12 @@ export function cidadesParaEnvio(valor: string[]): string[] {
   return [...new Set(valor)];
 }
 
+/** Rascunho escrito antes do login: fica só com as cidades da região da conta; avisa se alguma saiu. */
+export function cidadesDoRascunho(ids: string[], validas: string[]): { ids: string[]; perdeu: boolean } {
+  const ficam = ids.filter((id) => validas.includes(id));
+  return { ids: ficam, perdeu: ficam.length < ids.length };
+}
+
 /** Texto da área para o resumo: "Toda a região" ou os nomes marcados. */
 export function textoArea(valor: string[], cidades: { id: string; nome: string }[]): string {
   if (valor.length === 0) return "Toda a região";

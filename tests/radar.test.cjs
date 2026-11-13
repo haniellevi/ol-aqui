@@ -285,3 +285,10 @@ test('Aki: pedido sem cidade vale para a região toda',()=>{
  const {validarPedidoRadar}=carregar('src/lib/aki/validar.ts');
  const r=validarPedidoRadar({titulo:'Procuro mesa de jantar'});assert.equal(r.ok,true);assert.equal(r.dados.cidade,null);
 });
+
+test('cidadesDoRascunho: fica só com as da região e avisa se perdeu',()=>{
+ const {cidadesDoRascunho}=carregar('src/components/radar/passos-pedido.ts');
+ assert.deepEqual(cidadesDoRascunho(['a','b'],['a','c']),{ids:['a'],perdeu:true});
+ assert.deepEqual(cidadesDoRascunho(['a'],['a']),{ids:['a'],perdeu:false});
+ assert.deepEqual(cidadesDoRascunho([],['a']),{ids:[],perdeu:false});
+});
