@@ -302,6 +302,9 @@ test('estadoRetomada: quando mostrar o rascunho e qual aviso',()=>{
  // Sem login: Voltar do navegador na tela de entrar traz o pedido de volta; sem rascunho, nada
  assert.equal(estadoRetomada({retomar:false,anonimo:true,temRascunho:true,perdeuCidades:false}),'continua');
  assert.equal(estadoRetomada({retomar:false,anonimo:true,temRascunho:false,perdeuCidades:false}),null);
- // Logado sem ?retomar=1: não mexe
- assert.equal(estadoRetomada({retomar:false,anonimo:false,temRascunho:true,perdeuCidades:false}),null);
+ // Logado sem ?retomar=1 (recarregou o resumo depois da volta): o rascunho guardado volta até ser publicado
+ assert.equal(estadoRetomada({retomar:false,anonimo:false,temRascunho:true,perdeuCidades:false}),'ok');
+ assert.equal(estadoRetomada({retomar:false,anonimo:false,temRascunho:true,perdeuCidades:true}),'perdeu_cidades');
+ // Logado sem ?retomar=1 e sem rascunho: formulário normal, sem aviso
+ assert.equal(estadoRetomada({retomar:false,anonimo:false,temRascunho:false,perdeuCidades:false}),null);
 });

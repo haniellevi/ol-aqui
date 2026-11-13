@@ -124,7 +124,6 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   const idsValidos = cidades.map((c) => c.id);
 
   useEffect(() => {
-    if (!retomar && !anonimo) return;
     const r = lerRascunho();
     // O ?retomar=1 sai do endereço: recarregar ou voltar depois de publicar não mostra "não achamos".
     if (retomar) window.history.replaceState(null, "", window.location.pathname);
@@ -142,7 +141,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
     setModo(r.modo);
     if (r.prazoHoras != null && regras.prazosHoras.includes(r.prazoHoras)) setPrazo(r.prazoHoras);
     irPara(TOTAL_PASSOS_PEDIDO);
-    // Só na montagem: o rascunho é lido uma vez.
+    // Só na montagem: o rascunho é lido uma vez (e só sai do aparelho ao publicar).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
