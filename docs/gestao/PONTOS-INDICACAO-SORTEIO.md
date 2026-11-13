@@ -114,10 +114,18 @@ Conta quando o amigo:
 
 - **Um sorteio por região** (cada uma com seu registro, prêmios e parceiros). Começa só por Corrente.
 - O ganhador sai da **1ª extração da Loteria Federal do 1º sábado depois do fechamento**.
-- **Regra "igual ou o próximo acima":** usa os últimos dígitos do 1º prêmio, tantos quantos o registro precisar
-  (ex.: registro com 800 números usa os 3 últimos; resultado 48.217 → 217). Ganha o número 217; se não existir,
-  o próximo acima (218, 219…); depois do último número, volta ao 00001.
-  Com mais de um prêmio, os seguintes vão para os próximos números da sequência.
+- **Regra de chance igual para cada número** (corrigida em 13/11/2026: a regra antiga, "igual ou o próximo acima",
+  dava ao número 00001 muito mais chance quando o registro não enchia todos os dígitos):
+  1. No fechamento, a **lista congelada** recebe posições de 1 a N **só com os números que concorrem**
+     (os que ficaram fora pelo antifraude não entram). Cada número vira uma posição.
+  2. Junta os 5 dígitos do **1º prêmio** com os 5 do **2º prêmio** da Loteria e forma um número R de 10 dígitos
+     (ex.: 1º = 48.217 e 2º = 03.951 → R = 4821703951).
+  3. **Posição ganhadora = parte inteira de (R × N ÷ 10.000.000.000) + 1.**
+     Ex.: N = 800 → 4821703951 × 800 ÷ 10.000.000.000 = 385,7 → posição 386.
+  4. Assim cada número tem a mesma chance (a diferença é menor que 1 em 10 milhões), não importa quantos números
+     o registro tenha nem quais ficaram fora.
+  Com mais de um prêmio, os seguintes vão para as próximas posições da lista (387, 388…; depois da última, volta à 1).
+  A fórmula entra no regulamento; o advogado e a SPA conferem antes do primeiro sorteio.
 - Live/post nas redes **só para anunciar** o resultado; quem decide é a Loteria.
 - **Prêmios variam a cada mês**, sem teto fixo: o Raniel define o valor e o número de ganhadores (ex.: 3).
   A taxa e o imposto (20%) mudam com o valor. Perguntar ao advogado se dá para fazer um pedido para o ano inteiro
