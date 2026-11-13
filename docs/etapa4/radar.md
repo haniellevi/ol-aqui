@@ -103,3 +103,21 @@ A migração agenda `olaki-radar-prazos` sozinha quando o pg_cron está ligado. 
 - No modo "Podem me chamar" a proposta pode ir sem foto/anúncio (a loja chama no WhatsApp); no modo prazo pede preço e anúncio ou foto (o comprador compara).
 - "Remover" apaga de vez (o log guarda a cópia); "Ocultar" pode ser desfeito com "Devolver".
 - Aviso de pedido novo vai também para loja sem plano com Radar (ela vê só o título e os planos): é o gancho de venda.
+
+## 5. IA do Radar (fase 3, 13/11/2026)
+Migração `supabase/migrations/20261121010000_radar_ia.sql` · Teste `supabase/testes/790_radar_ia.sql` · Código `src/lib/radar-ia/*`,
+`src/app/radar/ia-actions.ts`, `src/components/radar/ia/*`, `src/app/api/interno/radar-novidades/route.ts`. Como ligar: `docs/radar-ia.md`.
+
+| Chave (grupo `radar`) | Padrão | Uso |
+|---|---|---|
+| `radar_ia.ativa` | `false` | chave geral |
+| `radar_ia.perguntas_ativa` / `parecidos_ativa` / `vitrine_ativa` / `novidades_ativa` | `false` | uma por parte |
+| `radar_ia.orcamento_mensal_centavos` | 3000 | teto do mês só do Radar (livro-caixa `robo_uso`, tipo `radar`) |
+| `radar_ia.usos_por_dia` | 20 | chamadas de IA por pessoa por dia |
+| `radar_ia.novidades_por_rodada` | 50 | pedidos conferidos por hora |
+| `radar.aviso.radar_novidade.titulo` / `.texto` | textos simples | aviso "Chegou algo parecido com “{pedido}”" (`{pedido}`, `{anuncio}`) |
+
+Funções (só `service_role`): `radar_ia_reservar(usuario, parte)`, `radar_ia_concluir(uso, custo_usd, tokens…, erro)`,
+`radar_novidades_candidatos(limite)`, `radar_avisar_novidade(pedido, anuncio)`, `radar_ia_novidades_disparar()`.
+Rotina `olaki-radar-novidades` (`7 * * * *`) chama `/api/interno/radar-novidades` com o segredo da moderação, só com as chaves ligadas.
+Tabela `radar_novidades_conferido` guarda até onde a rotina olhou cada pedido (fora de `radar_pedidos` para não encher o log).
