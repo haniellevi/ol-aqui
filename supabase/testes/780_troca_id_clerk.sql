@@ -4,6 +4,8 @@
 -- estrangeira, histórico em jsonb, fotos e Storage para o ID novo; desfaz com os IDs invertidos;
 -- nega anon/authenticated; recusa ID novo que já existe; religa os gatilhos; não mexe em ID parecido.
 begin;
+-- foto_do_olaki() só aceita fotos do Storage configurado em fotos.origem (vazio num banco novo);
+-- os endereços abaixo usam este. O rollback do fim desfaz.
 update public.configuracoes set valor = '"https://x.supabase.co"' where chave = 'fotos.origem' and microrregiao_id is null;
 
 create function pg_temp.confere(ok boolean, caso text) returns void language plpgsql as $$
