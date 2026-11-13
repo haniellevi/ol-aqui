@@ -91,7 +91,16 @@ Nada desta fase muda o site: ele continua com as chaves de teste. Tudo é feito 
 ## Fase 4 — A virada (janela combinada, com o site em manutenção)
 
 1. **Backup completo** do banco do Supabase (e anotar a hora). Sem backup, não começa.
-2. Colocar o site em manutenção (ninguém grava durante a troca).
+2. Colocar o site em manutenção (ninguém grava durante a troca). Na Vercel, ambiente **Production**:
+   - `MANUTENCAO` = `1`;
+   - `MANUTENCAO_CODIGO` = um código **novo** com 16 caracteres ou mais (não reaproveitar de outra manutenção:
+     o cookie da equipe vale 12 horas e seria aceito de novo).
+
+   Publicar de novo (`vercel redeploy` do último deploy de produção): a variável só vale no próximo deploy.
+   Conferir: o site mostra "Estamos fazendo uma melhoria"; em **Sou da equipe**, o código abre o site.
+   Se aparecer "código da equipe não está configurado", corrigir a variável e publicar antes de seguir.
+   Durante a manutenção, todas as APIs respondem 503 (webhooks e rotas do pg_cron tentam de novo depois),
+   menos o aviso do Asaas (`/api/asaas/webhook`).
 3. Aplicar a migração `20261119010000_troca_id_clerk.sql` (se ainda não foi).
 4. Fotos: nada a fazer (ficam na pasta antiga; ver Fase 3, passo 8). Conferir que ninguém está na lixeira
    (`lixeira_contas`): a limpeza diária das 04:00 UTC apagaria um perfil ainda não trocado.
@@ -116,9 +125,13 @@ Nada desta fase muda o site: ele continua com as chaves de teste. Tudo é feito 
 
    Criar o **webhook de produção** no Clerk (`user.created`, `user.updated`, `user.deleted` → `/api/webhooks/clerk`)
    e **publicar** o site (novo build: a `pk_live` é embutida no build). Todos vão precisar entrar de novo.
-7. Testar com 2 contas reais: entrar, ver Minha conta, a loja, os anúncios com foto, os avisos, e (admin) o painel.
-8. Tirar o site da manutenção. Desligar o webhook do Clerk de **desenvolvimento** (se ele ficar ligado, apagar
-   um usuário de teste no Clerk de desenvolvimento pode apagar perfil no banco real).
+7. Testar com 2 contas reais (a equipe entra pelo código da manutenção): entrar, ver Minha conta, a loja, os anúncios
+   com foto, os avisos, e (admin) o painel. **Não apagar usuário no Clerk de produção** durante os testes.
+8. Antes de abrir: conferir de novo que ninguém está em `lixeira_contas` e ver quantos itens há em `whatsapp_fila`
+   (o que se acumulou sai de uma vez quando o site abrir).
+9. Tirar o site da manutenção: apagar `MANUTENCAO` (ou pôr `0`) na Vercel e publicar de novo. Desligar o webhook do
+   Clerk de **desenvolvimento** (se ele ficar ligado, apagar um usuário de teste no Clerk de desenvolvimento pode
+   apagar perfil no banco real).
 
 ### Como voltar atrás
 
@@ -159,5 +172,5 @@ Nada desta fase muda o site: ele continua com as chaves de teste. Tudo é feito 
 - ~~Confirmar no Supabase real que o dono da função pode desligar os gatilhos~~ **feito** 12/11: função e tabelas são do `postgres`.
 - Ensaiar a função num **clone** do banco de produção antes da virada (nunca ensaiar direto na produção).
 - Definir a janela de manutenção e quem avisa os usuários.
-- **Como pôr o site em manutenção**: o site ainda não tem modo de manutenção. Preparar antes da Fase 4
-  (sem ele, alguém pode entrar entre a troca das chaves e a troca dos IDs e ganhar perfil vazio).
+- ~~Modo de manutenção~~ **feito**: `MANUTENCAO=1` + `MANUTENCAO_CODIGO` (ver Fase 4, passo 2;
+  código em `src/lib/manutencao.ts`, `src/middleware.ts` e `src/app/manutencao/`).
