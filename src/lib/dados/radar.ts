@@ -214,6 +214,7 @@ const NOMES_AVISO: Record<string, { nome: string; explicacao: string }> = {
   categorias_revisar: { nome: "Sugestões de categoria", explicacao: "Para lojas: a IA sugeriu categorias melhores para seus produtos." },
   resumo_semanal: { nome: "Resumo semanal da loja", explicacao: "Para lojas: toda segunda, as visitas, os cliques e as dicas da semana." },
   favorito_radar: { nome: "Lembrete dos meus favoritos", explicacao: "Quando um favorito sai do ar ou fica parado, sugerimos pedir parecido no Radar." },
+  radar_novidade: { nome: "Anúncio novo parecido com meu pedido", explicacao: "No máximo 1 aviso por dia para cada pedido aberto." },
 };
 
 /** Avisos que a pessoa pode ligar ou desligar, com o que ela já escolheu (sem linha = ligado). */

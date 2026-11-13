@@ -7,6 +7,10 @@ import { Camera, Check, ImagePlus, MessageCircle, Pencil, Send } from "lucide-re
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { criarUrlFotoProposta, enviarProposta } from "@/app/radar/actions";
+import { melhoresDaVitrine } from "@/app/radar/ia-actions";
+import type { DestaqueIA } from "@/lib/radar-ia/tipos";
+import { ordenarComDestaques } from "./ia/ordenar-vitrine";
+import { SeloCombina } from "./ia/selo-combina";
 import { enviarFoto, reduzirFoto } from "@/lib/fotos";
 import { textoPrecoProposta as textoPreco } from "./util";
 import { validarProposta } from "./validacao";
@@ -48,6 +52,15 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
   const formulario = useRef<HTMLFormElement>(null);
   const [linkContato, setLinkContato] = useState<string | null>(null);
   const arquivo = useRef<HTMLInputElement>(null);
+  // IA do Radar (fase 3): na 1ª vez que a folha abre, os 3 anúncios que mais combinam sobem para o topo.
+  // Enquanto não chega (ou sem IA), a lista aparece como sempre.
+  const [destaques, setDestaques] = useState<DestaqueIA[]>([]);
+  const pediuDestaques = useRef(false);
+  useEffect(() => {
+    if (!aberta || !podeEditar || pediuDestaques.current || anuncios.length < 2) return;
+    pediuDestaques.current = true;
+    melhoresDaVitrine(pedidoId).then((r) => { if (r) setDestaques(r); }).catch(() => {});
+  }, [aberta, podeEditar, anuncios.length, pedidoId]);
 
   useEffect(() => {
     if (!erro) return;
@@ -210,7 +223,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                 </legend>
                 {anuncios.length > 0 && (
                   <ul className="flex max-h-64 flex-col gap-2 overflow-y-auto">
-                    {anuncios.map((a) => {
+                    {ordenarComDestaques(anuncios, destaques).map(({ anuncio: a, motivo }) => {
                       const ativo = anuncioId === a.id;
                       return (
                         <li key={a.id}>
@@ -233,6 +246,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                             <span className="flex min-w-0 flex-1 flex-col">
                               <span className="truncate text-base font-semibold">{formatarNome(a.titulo)}</span>
                               {a.preco_centavos != null && <span className="text-legenda text-texto-suave">{preco(a.preco_centavos)}</span>}
+                              {motivo && <SeloCombina motivo={motivo} />}
                             </span>
                             {ativo && <Check className="size-5 shrink-0 text-laranja-escuro" aria-hidden />}
                           </button>

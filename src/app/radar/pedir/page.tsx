@@ -15,6 +15,7 @@ import { LINK_RADAR } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { FormPedido } from "@/components/radar/form-pedido";
+import { estadoRadarIA } from "@/lib/radar-ia/uso";
 import { LINK_VOLTAR } from "@/components/radar/util";
 import { Alert } from "@/components/ui/alert";
 
@@ -95,7 +96,7 @@ async function Formulario({
   pedirWhatsapp: boolean;
   whatsappInicial: string;
 }) {
-  const [categorias, cidades, regras, regiao] = await Promise.all([listarCategorias(), listarCidades(microrregiaoId), regrasRadar(microrregiaoId), regiaoAtual()]);
+  const [categorias, cidades, regras, regiao, ia] = await Promise.all([listarCategorias(), listarCidades(microrregiaoId), regrasRadar(microrregiaoId), regiaoAtual(), estadoRadarIA()]);
   const opcoes = categorias.flatMap((c) => [c, ...c.filhas]);
   const categoriaInicial = opcoes.find((c) => (categoriaId && c.id === categoriaId) || (categoriaSlug && c.slug === categoriaSlug));
   // "Pedir de novo": só as cidades que ainda estão ativas na região do cadastro.
@@ -119,6 +120,7 @@ async function Formulario({
         regras={regras}
         pedirWhatsapp={pedirWhatsapp}
         whatsappInicial={whatsappInicial}
+        iaNoPedido={ia.perguntas || ia.parecidos}
       />
     </>
   );
