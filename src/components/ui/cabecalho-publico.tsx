@@ -1,5 +1,7 @@
 import Image from "next/image";
 import { SinoAvisos } from "@/components/conta/sino-avisos";
+import { IconeConversas } from "@/components/conversas/icone-conversas";
+import { conversasLigadas } from "@/lib/dados/conversas";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
@@ -30,6 +32,7 @@ async function loginLegivel(): Promise<boolean> {
 
 export async function CabecalhoPublico() {
   const [regiao, cidades, comLogin] = await Promise.all([regiaoAtual(), listarCidadesAtivas().catch(() => []), loginLegivel()]);
+  const comConversas = comLogin && (await conversasLigadas());
   const cidade = regiao?.cidade ?? regiao?.cidadeSede ?? regiao?.nome ?? null;
 
   return (
@@ -70,6 +73,7 @@ export async function CabecalhoPublico() {
                 </Link>
               </SignedOut>
               <SignedIn>
+                {comConversas && <IconeConversas />}
                 <SinoAvisos />
                 <Link href="/minha-conta" aria-label="Minha conta" className={LINK}>
                   <UserRound className="size-5" aria-hidden /> <span className="hidden sm:inline">Conta</span>
