@@ -42,3 +42,6 @@ next-env.d.ts
 
 # lixeira local (arquivos substituídos, não versionar)
 /_lixeira
+
+# Configuração pessoal do Obsidian (o cofre é a pasta docs/)
+docs/.obsidian/
