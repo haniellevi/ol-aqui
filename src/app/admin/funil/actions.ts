@@ -85,7 +85,7 @@ export async function mudarEtapa(_: EstadoForm, form: FormData): Promise<EstadoF
 /** Marca o próximo passo com um toque (amanhã, em 3 dias, próxima semana) ou limpa. */
 export async function agendarPasso(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   const { supabase, userId } = await exigirTela("funil");
-  const id = String(form.get("id") ?? "");
+  const id = String(form.get("lojista") ?? "");
   const dia = String(form.get("dia") ?? "");
   if (!ehUuid(id) || (dia && !DATA.test(dia))) return { erro: "Data inválida." };
   const { error } = await supabase.from("funil_lojistas").update({ proximo_em: dia || null, atualizado_por: userId }).eq("id", id);

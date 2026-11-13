@@ -187,7 +187,7 @@ export function FormVerificacao({ id, podeAprovar = true }: { id: string; podeAp
   const [decisao, setDecisao] = useState<"aprovar" | "recusar">("aprovar");
   return (
     <form action={acao} className="flex flex-col gap-2">
-      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="verificacao" value={id} />
       <label className="text-sm font-medium">
         Motivo (obrigatório para recusar)
         <input name="motivo" maxLength={300} className={estiloCampo} />
@@ -274,7 +274,7 @@ export function FormDecidirVerificacaoLoja({ id, status }: { id: string; status:
   const botao = (valor: DecisaoPedidoLoja) => ({ name: "decisao", value: valor, onClick: () => setDecisao(valor), carregando: pendente && decisao === valor, textoCarregando: "Salvando..." });
   return (
     <form action={acao} className="mt-3 flex flex-col gap-3">
-      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="pedido" value={id} />
       {!amostra && (
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 font-semibold">Conferências para aprovar</legend>

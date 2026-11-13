@@ -158,7 +158,7 @@ export function AgendarRapido({ id }: { id: string }) {
   const [estado, acao, pendente] = useActionState(agendarPasso, null);
   return (
     <form action={acao} className="flex flex-wrap items-center gap-1">
-      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="lojista" value={id} />
       {ATALHOS.slice(1).map((a) => (
         <Botao key={a.nome} type="submit" name="dia" value={diaDaqui(a.dias)} variante="texto" tamanho="pequeno" disabled={pendente}>{a.nome}</Botao>
       ))}

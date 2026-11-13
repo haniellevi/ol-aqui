@@ -110,7 +110,7 @@ export async function revisarLoja(_: EstadoForm, form: FormData): Promise<Estado
 export async function analisarVerificacao(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   try {
     const { supabase } = await exigirTela("lojas");
-    const id = String(form.get("id") ?? "");
+    const id = String(form.get("verificacao") ?? "");
     if (!ehUuid(id)) return { erro: "Verificação não encontrada." };
     const aprovar = form.get("decisao") === "aprovar";
     const motivo = String(form.get("motivo") ?? "").trim();
@@ -183,7 +183,7 @@ export async function decidirVerificacaoLoja(_: EstadoForm, form: FormData): Pro
   try {
     const { supabase, papel } = await exigirTela("lojas");
     if (papel !== "administrador" && papel !== "suporte") return { erro: "Seu papel não pode revisar pedidos de verificação." };
-    const id = String(form.get("id") ?? "");
+    const id = String(form.get("pedido") ?? "");
     if (!ehUuid(id)) return { erro: "Pedido não encontrado. Atualize a página." };
     const decisao = String(form.get("decisao") ?? "");
     if (!Object.hasOwn(DECISOES_VERIFICACAO_LOJA, decisao)) return { erro: "Escolha uma decisão." };
