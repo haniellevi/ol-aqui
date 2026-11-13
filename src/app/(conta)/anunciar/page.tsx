@@ -50,7 +50,7 @@ export default async function PaginaAnunciar() {
   // P5b: ajudante no limite do plano não vê avulso nem planos (pagamento é do dono).
   if (!conta.podePublicar && conta.ajudante) {
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-2.5 py-4 md:gap-5 md:px-4 md:py-6">
         {seletor}
         <Vazio titulo="A loja está no limite do plano" texto="Para pôr mais anúncios no ar, pause um anúncio da loja ou fale com o dono para trocar de plano.">
           <Botao href="/minha-conta/anuncios" variante="secundario" larguraTotal>Ver os anúncios da loja</Botao>
@@ -62,7 +62,7 @@ export default async function PaginaAnunciar() {
   if (!conta.podePublicar) {
     const avulso = await avulsoParaMim(conta.vitrine);
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-2.5 py-4 md:gap-5 md:px-4 md:py-6">
         {seletor}
         <LimiteAtingido
           conta={conta}
@@ -85,37 +85,32 @@ export default async function PaginaAnunciar() {
 
   if (rascunhos.length === 0) {
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-2.5 py-4 md:gap-5 md:px-4 md:py-6">
         {seletor}
-        <div className="flex flex-col gap-2">
-          <h1 className="text-titulo font-semibold text-beringela">O que você quer vender?</h1>
-          <p className="text-base text-texto-suave">Coloque as fotos, conte sobre o produto e escolha o preço e a cidade. Você confere tudo antes de publicar.</p>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold text-beringela">Anunciar</h1>
+          <p className="text-sm text-texto-suave md:text-base">Comece pelas fotos. O anúncio fica salvo como rascunho até você publicar.</p>
         </div>
-        <ol className="grid gap-3 rounded-card bg-cartao p-5 shadow-1">
-          <li><strong>1. Mostre o produto</strong><p className="text-texto-suave">Escolha a capa e acrescente fotos dos detalhes.</p></li>
-          <li><strong>2. Preencha as informações</strong><p className="text-texto-suave">Preço, categoria e localização, sem expor seu endereço.</p></li>
-          <li><strong>3. Confira e publique</strong><p className="text-texto-suave">Cada etapa concluída fica salva como rascunho.</p></li>
-        </ol>
         <BotaoNovoRascunho texto="Começar meu anúncio" />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-2.5 py-4 md:gap-5 md:px-4 md:py-6">
       {seletor}
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold">Continuar de onde parou?</h1>
-        <p className="text-base text-texto-suave">Você tem anúncio pela metade. Tudo o que preencheu ficou guardado.</p>
+        <h1 className="text-xl font-semibold">Seus rascunhos</h1>
+        <p className="text-sm text-texto-suave md:text-base">Escolha um anúncio para continuar.</p>
       </div>
-      <ul className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-2 md:gap-3">
         {rascunhos.slice(0, 5).map((r) => (
           <li key={r.id}>
             <Link
               href={urlPasso(r.fotos.length ? (r.categoria_id ? "detalhes" : "categoria") : "fotos", r.id)}
-              className="flex min-h-10 items-center gap-3 rounded-card bg-cartao p-3 shadow-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+              className="flex min-h-12 items-center gap-2 rounded-card bg-cartao p-2 shadow-1 md:gap-3 md:p-3 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
             >
-              <span className="relative grid size-16 shrink-0 place-items-center overflow-hidden rounded-campo bg-borda text-texto-suave">
+              <span className="relative grid size-12 shrink-0 md:size-16 place-items-center overflow-hidden rounded-campo bg-borda text-texto-suave">
                 {r.fotos[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element -- miniatura simples do Storage
                   <img src={r.fotos[0]} alt="" width={64} height={64} className="absolute inset-0 size-full object-cover" />
@@ -124,14 +119,14 @@ export default async function PaginaAnunciar() {
                 )}
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-base font-semibold">{formatarNome(r.titulo) || "Anúncio sem título"}</span>
-                <span className="flex items-center gap-1 text-sm text-texto-suave">
-                  <FileClock className="size-4" aria-hidden />
+                <span className="line-clamp-2 text-sm font-semibold [overflow-wrap:anywhere] md:text-base">{formatarNome(r.titulo) || "Anúncio sem título"}</span>
+                <span className="flex items-center gap-1 text-xs text-texto-suave md:text-sm">
+                  <FileClock className="size-4 shrink-0" aria-hidden />
                   Rascunho · mexido {tempoRelativo(r.atualizado_em)}
                 </span>
               </span>
-              <span className="text-base font-semibold text-laranja-escuro">Continuar</span>
-              <ChevronRight className="size-5 text-laranja-escuro" aria-hidden />
+              <span className="sr-only md:not-sr-only md:text-sm md:font-semibold md:text-laranja-escuro">Continuar</span>
+              <ChevronRight className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
             </Link>
           </li>
         ))}

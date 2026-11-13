@@ -98,12 +98,14 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
         id={anuncio.id}
         editar={editar}
         titulo={jaPublicado ? "Confira as mudanças" : "Confira antes de publicar"}
-        subtitulo="É assim que seu anúncio vai aparecer:"
+        subtitulo="Veja a prévia e confira os dados."
       />
 
-      <div className="mx-auto w-full max-w-[260px]">
+      <div className="mx-auto w-full md:max-w-[260px]">
         <CardAnuncio
           prioridade
+          compacto
+          semLink
           anuncio={{
             id: anuncio.id,
             slug: null, // rascunho: o endereço só nasce ao publicar
@@ -193,14 +195,14 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
         </h2>
         <dl className="divide-y divide-borda rounded-card bg-cartao shadow-1">
           {linhas.map((l) => (
-            <div key={l.rotulo} className="flex items-center gap-3 p-3">
+            <div key={l.rotulo} className="flex items-center gap-2 p-2 md:gap-3 md:p-3">
               <div className="flex min-w-0 flex-1 flex-col">
                 <dt className="text-sm text-texto-suave">{l.rotulo}</dt>
-                <dd className={`break-words text-base ${l.falta ? "font-semibold text-perigo" : ""}`}>{l.valor}</dd>
+                <dd className={`text-sm [overflow-wrap:anywhere] md:text-base ${l.falta ? "font-semibold text-perigo" : ""}`}>{l.valor}</dd>
               </div>
               <Link
                 href={urlPasso(l.passo, anuncio.id, editar)}
-                className="inline-flex min-h-10 shrink-0 items-center rounded-card px-2 text-base font-semibold text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                className="inline-flex min-h-11 shrink-0 items-center rounded-card px-2 text-sm font-semibold md:text-base text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                 aria-label={`Alterar ${l.rotulo.toLowerCase()}`}
               >
                 Alterar

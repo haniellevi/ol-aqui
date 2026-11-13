@@ -61,7 +61,7 @@ export function FormDetalhes({
   const mudar = (chave: string, v: string) => setValores((a) => ({ ...a, [chave]: v }));
 
   return (
-    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-6" noValidate>
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-6" noValidate>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="categoria_id" value={categoriaId ?? ""} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
@@ -104,7 +104,7 @@ export function FormDetalhes({
                 {rotulo}
                 {!c.obrigatorio && <span className="ml-1 font-normal text-texto-suave">(opcional)</span>}
               </legend>
-              <div className={`grid gap-2 ${opcoes.length > 4 ? "grid-cols-2" : opcoes.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+              <div className={`grid gap-2 $grid-cols-2 ${opcoes.length === 3 ? "sm:grid-cols-3" : ""}`}>
                 {opcoes.map((o) => (
                   <label key={o.valor || "nao-informar"} className={OPCAO}>
                     <input
@@ -116,7 +116,7 @@ export function FormDetalhes({
                       className="sr-only"
                     />
                     {valor === o.valor && <Check className="size-5 shrink-0" aria-hidden />}
-                    <span className={o.valor === NAO_INFORMAR ? "font-normal" : undefined}>{o.texto}</span>
+                    <span className={`min-w-0 [overflow-wrap:anywhere] ${o.valor === NAO_INFORMAR ? "font-normal" : ""}`}>{o.texto}</span>
                   </label>
                 ))}
               </div>
@@ -173,7 +173,7 @@ export function FormDetalhes({
         value={descricao}
         onChange={(e) => setDescricao(e.target.value)}
         maxLength={4000}
-        rows={5}
+        rows={3}
         opcional
         placeholder="Conte o estado, o tempo de uso, se tem nota ou garantia..."
         erro={erroDe("descricao")}

@@ -29,8 +29,8 @@ type Item = {
 };
 
 const BOTAO_FOTO =
-  "flex min-h-24 flex-1 flex-col items-center justify-center gap-2 rounded-card border-2 border-beringela bg-cartao px-3 py-4 " +
-  "text-base font-semibold text-beringela hover:bg-fundo active:bg-borda disabled:cursor-not-allowed disabled:opacity-60 " +
+  "flex min-h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-card border border-beringela bg-cartao px-2 py-2 text-center md:min-h-16 md:gap-2 md:px-3 " +
+  "text-sm font-semibold text-beringela md:text-base hover:bg-fundo active:bg-borda disabled:cursor-not-allowed disabled:opacity-60 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 const BOTAO_MINI =
@@ -280,14 +280,14 @@ export function EnvioFotos({
       e.preventDefault();
       const botao = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
       void continuar(botao?.value === "sair");
-    }} aria-busy={travado} className="flex flex-col gap-4">
-      <div className="flex gap-3">
+    }} aria-busy={travado} className="flex flex-col gap-2 md:gap-4">
+      <div className="flex gap-2 md:gap-3">
         <button type="button" className={BOTAO_FOTO} onClick={() => camera.current?.click()} disabled={vagas <= 0 || travado}>
-          <Camera className="size-8" aria-hidden />
+          <Camera className="size-5 shrink-0" aria-hidden />
           Tirar foto
         </button>
         <button type="button" className={BOTAO_FOTO} onClick={() => galeria.current?.click()} disabled={vagas <= 0 || travado}>
-          <ImagePlus className="size-8" aria-hidden />
+          <ImagePlus className="size-5 shrink-0" aria-hidden />
           Escolher da galeria
         </button>
       </div>
@@ -318,19 +318,12 @@ export function EnvioFotos({
         }}
       />
 
-      <p className="text-base text-texto-suave">
-        {itens.length} de {maximo} fotos. A primeira é a capa. Você pode mudar a ordem abaixo.
-      </p>
-
-      {/* Mesmo formato em todo o site: card, loja e galeria mostram a foto quadrada (1:1), inteira, sobre branco. */}
-      <div className="flex flex-col gap-1 rounded-card bg-fundo p-3 text-sm text-texto-suave">
-        <p className="font-semibold text-beringela">Dica para a foto ficar boa em todo lugar</p>
-        <ul className="list-disc pl-5">
-          <li>Foto quadrada, de preferência 1080 × 1080 (no celular, use o modo quadrado da câmera).</li>
-          <li>Produto no centro, com fundo claro e boa luz.</li>
-          <li>Foto em pé ou deitada também vale: ela aparece inteira, com bordas brancas.</li>
-          <li>Até 20 MB por foto.</li>
-        </ul>
+      <div className="grid grid-cols-2 items-start gap-x-2 text-sm text-texto-suave">
+        <p className="py-3">{itens.length} de {maximo} fotos{minimo > 0 && ` · Mín. ${minimo}`}</p>
+        <details className="text-right open:col-span-2 open:-mt-2 open:text-left">
+          <summary className="min-h-11 cursor-pointer rounded-campo py-3 font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro">Dicas para fotos</summary>
+          <p className="rounded-campo bg-selecao p-2">Use boa luz e centralize o produto. Prefira fotos quadradas de 1080 × 1080, com até 20 MB cada.</p>
+        </details>
       </div>
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
@@ -423,7 +416,7 @@ export function EnvioFotos({
           aplicar={(url) => { void usarFotoAki(url); }} fechar={() => setFotoAki(null)} />
       )}
 
-      <BarraContinuar aviso="Fotos confirmadas ficam salvas no seu rascunho.">
+      <BarraContinuar>
         <Botao type="submit" name="acao" value="seguir" larguraTotal carregando={indo} textoCarregando="Salvando..." disabled={travado}>
           {ocupado ? "Enviando fotos..." : "Continuar"}
         </Botao>

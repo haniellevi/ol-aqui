@@ -28,8 +28,8 @@ export default async function PassoFotos({ searchParams }: { searchParams: Param
         formId="form-fotos"
         id={anuncio.id}
         editar={editar}
-        titulo={editar ? "Fotos do anúncio" : "Tire fotos do que você quer vender"}
-        subtitulo="Escolha fotos nítidas. A primeira será a capa do anúncio."
+        titulo={editar ? "Fotos do anúncio" : "Adicione fotos"}
+        subtitulo="A primeira foto será a capa do anúncio."
       />
       {/* O Merc só cadastra na loja própria (P5b): o ajudante não vê o botão. */}
       {!editar && !conta.ajudante && (

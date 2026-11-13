@@ -26,15 +26,15 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   // P5c: produto de loja em montagem fica pronto (rascunho) até o dono aceitar a loja.
   if (anuncio.status === "rascunho" && anuncio.pronto_em) {
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-4 py-8 text-center">
-        <span className="grid size-20 place-items-center rounded-full bg-aviso-fundo text-aviso" aria-hidden>
-          <Clock className="size-10" />
+      <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 px-2.5 py-5 text-center md:gap-5 md:px-4 md:py-8">
+        <span className="grid size-12 place-items-center md:size-16 rounded-full bg-aviso-fundo text-aviso" aria-hidden>
+          <Clock className="size-6 md:size-8" />
         </span>
-        <h1 className="text-titulo font-semibold text-beringela">Produto pronto</h1>
-        <p className="max-w-sm text-base text-texto-suave">
+        <h1 className="text-xl font-semibold text-beringela">Produto pronto</h1>
+        <p className="max-w-sm text-sm text-texto-suave md:text-base">
           A loja ainda está em montagem. Este produto vai ao ar quando o dono aceitar a loja, depois da conferência de sempre.
         </p>
-        <div className="flex w-full max-w-sm flex-col gap-3">
+        <div className="flex w-full max-w-xs flex-col gap-2">
           <Botao href="/minha-conta/anuncios" larguraTotal>
             Ver produtos da loja
           </Botao>
@@ -52,12 +52,12 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
 
   if (emAnalise) {
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-4 py-8 text-center">
-        <span className="grid size-20 place-items-center rounded-full bg-aviso-fundo text-aviso" aria-hidden>
-          <Clock className="size-10" />
+      <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 px-2.5 py-5 text-center md:gap-5 md:px-4 md:py-8">
+        <span className="grid size-12 place-items-center md:size-16 rounded-full bg-aviso-fundo text-aviso" aria-hidden>
+          <Clock className="size-6 md:size-8" />
         </span>
-        <h1 className="text-titulo font-semibold text-beringela">Seu anúncio está em análise</h1>
-        <p className="max-w-sm text-base text-texto-suave">
+        <h1 className="text-xl font-semibold text-beringela">Seu anúncio está em análise</h1>
+        <p className="max-w-sm text-sm text-texto-suave md:text-base">
           A equipe precisa conferir este anúncio antes de ele aparecer. Você pode acompanhar a situação em Meus anúncios.
         </p>
         {anuncio.motivo_analise && (
@@ -65,7 +65,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
             <strong>Motivo:</strong> {anuncio.motivo_analise}
           </Alert>
         )}
-        <div className="flex w-full max-w-sm flex-col gap-3">
+        <div className="flex w-full max-w-xs flex-col gap-2">
           <Botao href="/minha-conta/anuncios" larguraTotal>
             Ver meus anúncios
           </Botao>
@@ -83,32 +83,26 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Olha o que estou vendendo no Mercado da Região: *${titulo}* ${url}`)}`;
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-4 py-8 text-center">
-      <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
-        <CheckCircle2 className="size-10" />
+    <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 px-2.5 py-5 text-center md:gap-5 md:px-4 md:py-8">
+      <span className="grid size-12 place-items-center md:size-16 rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
+        <CheckCircle2 className="size-6 md:size-8" />
       </span>
-      <h1 className="text-titulo font-semibold text-beringela">Seu anúncio está no ar!</h1>
-      <p className="max-w-sm text-base text-texto-suave">
-        Mande para seus contatos e grupos do WhatsApp. Quem vê o anúncio fala com você direto no WhatsApp.
+      <h1 className="text-xl font-semibold text-beringela">Seu anúncio está no ar!</h1>
+      <p className="max-w-sm text-sm text-texto-suave md:text-base">
+        Seu anúncio já pode ser visto e compartilhado.
       </p>
-      <div className="flex w-full max-w-sm flex-col gap-3">
-        <Botao href={compartilhar} variante="whatsapp" larguraTotal icone={<MessageCircle />} target="_blank" rel="noopener noreferrer">
-          Compartilhar no WhatsApp
-        </Botao>
-        <Botao href={linkAnuncio(anuncio.id, anuncio.titulo, anuncio.slug)} variante="secundario" larguraTotal icone={<Eye />}>
+      <div className="flex w-full max-w-xs flex-col gap-2">
+        <Botao href={linkAnuncio(anuncio.id, anuncio.titulo, anuncio.slug)} larguraTotal icone={<Eye />}>
           Ver anúncio
         </Botao>
+        <Botao href={compartilhar} variante="secundario" larguraTotal icone={<MessageCircle />} target="_blank" rel="noopener noreferrer">
+          Compartilhar no WhatsApp
+        </Botao>
         <BotaoNovoRascunho variante="secundario" texto="Anunciar outro" />
-        {/* Mesma largura dos outros botões: sem caixa em volta, só a dica embaixo. Destacar é do dono (P5b). */}
         {!ajudante && (
-          <div className="flex flex-col gap-1">
-            <Botao href={linkDestacar(anuncio.id)} variante="secundario" larguraTotal icone={<Sparkles />} aria-describedby="destacar-dica">
-              Destacar
-            </Botao>
-            <p id="destacar-dica" className="text-sm text-texto-suave">
-              Quer que mais gente veja? Destacar põe seu anúncio na frente.
-            </p>
-          </div>
+          <Botao href={linkDestacar(anuncio.id)} variante="texto" larguraTotal icone={<Sparkles />}>
+            Destacar anúncio
+          </Botao>
         )}
       </div>
     </main>
