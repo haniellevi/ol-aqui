@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Heart, MessageCircle } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
 import { alternarFavorito, registrarEvento } from "./actions";
+import { BotaoConversar } from "@/components/conversas/botao-conversar";
 
 // Barra fixa embaixo (T7, item 10): "Chamar no WhatsApp" verde + coração.
 // No computador vira uma caixa normal ao lado das fotos.
@@ -22,6 +23,7 @@ export function BarraContato({
   favoritoInicial,
   logado,
   entrarHref,
+  conversar = false,
 }: {
   anuncioId: string;
   /** Link wa.me com a mensagem pronta (null = vendedor sem WhatsApp). */
@@ -31,6 +33,8 @@ export function BarraContato({
   logado: boolean;
   /** /entrar com a volta para este anúncio. */
   entrarHref: string;
+  /** Botão "Conversar" (conversas ligadas e a barra só aparece para quem não é o dono). */
+  conversar?: boolean;
 }) {
   const router = useRouter();
   const [favorito, setFavorito] = useState(favoritoInicial);
@@ -86,8 +90,9 @@ export function BarraContato({
             Chamar no WhatsApp
           </a>
         ) : (
-          <p className="flex min-h-10 min-w-0 flex-1 items-center text-base text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
+          !conversar && <p className="flex min-h-10 min-w-0 flex-1 items-center text-base text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
         )}
+        {conversar && <BotaoConversar anuncioId={anuncioId} logado={logado} entrarHref={entrarHref} onErro={(m) => mostrar(m, true)} />}
 
         {podeFavoritar &&
           (logado ? (

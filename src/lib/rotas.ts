@@ -114,3 +114,9 @@ export const LINK_ADMIN_CATEGORIAS_IA = `${LINK_ADMIN_CATEGORIAS}/ia`;
 /** Painel: telas 13 (mensagens automáticas) e 15 (relatórios). */
 export const LINK_ADMIN_MENSAGENS = "/admin/mensagens";
 export const LINK_ADMIN_RELATORIOS = "/admin/relatorios";
+
+/** Conversas entre cliente e loja (Radar v2, fase 2). */
+export const LINK_CONVERSAS = "/conversas";
+export const linkConversa = (id: string) => `/conversas/${id}`;
+/** Leitura de conversa denunciada pela equipe. */
+export const linkAdminConversa = (id: string) => `/admin/conversas/${id}`;

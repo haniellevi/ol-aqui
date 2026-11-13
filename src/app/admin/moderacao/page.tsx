@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { exigirTela } from "@/lib/admin/equipe";
 import { quando, reais } from "@/lib/admin/formato";
-import { LINK_ADMIN_ANUNCIOS } from "@/lib/rotas";
+import { LINK_ADMIN_ANUNCIOS, linkAdminConversa } from "@/lib/rotas";
 import { Aviso, Cartao, Titulo, estiloBotaoAprovar, estiloBotaoPerigo, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { decidirAnuncio, decidirPedido, resolverDenuncia, tirarFotoBanner } from "./actions";
 import { BotaoDecisao } from "./botao-decisao";
@@ -207,6 +207,7 @@ export default async function ModeracaoPage({
               <p>
                 <strong>{MOTIVOS[d.motivo] ?? d.motivo}</strong> · {d.alvo_tipo} <span className="font-mono text-legenda text-texto-suave">{d.alvo_id.slice(0, 8)}</span>
               </p>
+              {d.alvo_tipo === "conversa" && <Link href={linkAdminConversa(d.alvo_id)} className="font-semibold text-laranja-escuro underline underline-offset-4">Ler conversa</Link>}
               {d.detalhes && <p className="text-texto-suave">{d.detalhes}</p>}
               <p className="text-legenda text-texto-suave">{quando(d.criado_em)}</p>
             </div>

@@ -11,6 +11,7 @@ import type { AnuncioPublico } from "@/lib/tipos";
 import { anuncioForaDoAr } from "@/lib/dados/paginas";
 import { AnuncioForaDoAr } from "@/components/paginas/anuncio-fora-do-ar";
 import { ConteudoAnuncio } from "./conteudo-anuncio";
+import { conversasLigadas } from "@/lib/dados/conversas";
 
 type Props = { params: Promise<{ idslug: string }> };
 
@@ -84,12 +85,13 @@ export default async function PaginaAnuncio({ params }: Props) {
   if (!a.slug && decodificar(idslug) !== `${a.id}-${slugDoTitulo(a.titulo)}`) redirect(caminho);
 
   const { userId } = await auth();
-  const [favorito, parecidosBusca, [extra]] = await Promise.all([
+  const [favorito, parecidosBusca, [extra], conversas] = await Promise.all([
     a.status === "ativo" ? ehFavorito(a.id, userId).catch(() => null) : Promise.resolve(false),
     // Recomendações são secundárias: sua falha não deve impedir o contato do anúncio aberto.
     a.categoria_slug ? seguro(() => buscarAnuncios({ categoria: a.categoria_slug!, limite: 9 }), null) : Promise.resolve(null),
     completarCards([{ id: a.id }]), // preço antes e UF para o card de "Você viu há pouco"
+    conversasLigadas(),
   ]);
   const parecidos = (parecidosBusca?.anuncios ?? []).filter((p) => p.id !== a.id).slice(0, 8);
-  return <ConteudoAnuncio key={a.id} a={a} favorito={favorito} logado={!!userId} parecidos={parecidos} extra={extra} />;
+  return <ConteudoAnuncio key={a.id} a={a} favorito={favorito} logado={!!userId} parecidos={parecidos} extra={extra} conversas={conversas} />;
 }
