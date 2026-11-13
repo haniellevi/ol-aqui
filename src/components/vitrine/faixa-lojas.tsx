@@ -63,7 +63,7 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
       </div>
 
       {lojas.length > 0 && (
-        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+        <div className="-mx-2.5 md:-mx-4 flex items-center gap-2 overflow-x-auto px-2.5 pb-1 md:px-4 [scrollbar-width:none]">
           <div role="search" className="relative w-40 shrink-0 sm:w-56">
             <label htmlFor="busca-loja" className="sr-only">Buscar loja</label>
             <Search className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
@@ -99,7 +99,7 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
               <ChevronLeft className="size-5" aria-hidden />
             </button>
           )}
-          <ul ref={fila} className="-mx-4 flex snap-x gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+          <ul ref={fila} className="-mx-2.5 md:-mx-4 flex snap-x gap-1 overflow-x-auto px-2.5 pb-1 md:px-4 [scrollbar-width:none]">
             {visiveis.map((l) => (
               <li key={l.id} className="shrink-0 snap-start">
                 <Link href={linkLoja(l.slug)} className={ITEM}>
