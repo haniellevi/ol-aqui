@@ -41,6 +41,7 @@ usável por idoso ou criança sem ser infantil.
 ## Chat "Conversas" (fase 2)
 - Ícone "Conversas" no menu com bolinha de não lidas; separado do Merc.
 - 2a: chat do Radar (pedido ↔ loja, anúncios como cartões). 2b: botão "Conversar" em todo anúncio.
+- **Feito (13/11/2026):** ver `docs/superpowers/plans/2026-11-13-radar-v2-fase2-conversas.md` (decisões do Raniel na tabela do plano). A IA que lê o chat continua na fase 3.
 - Aviso fixo no topo: "O Mercado da Região acompanha esta conversa para sua segurança e para saber se você já resolveu."
 - A IA lê só esse chat; ao perceber "já comprei", pergunta ao cliente se pode tirar o pedido; só tira com a confirmação.
 - Contra golpe: aviso "Nunca pague adiantado sem ver o produto", Bloquear, Denunciar, telefone escondido até o cliente aceitar.

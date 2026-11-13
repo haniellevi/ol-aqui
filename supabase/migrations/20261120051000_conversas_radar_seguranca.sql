@@ -135,8 +135,9 @@ language plpgsql security definer
 set search_path = public, extensions
 as $$
 begin
-  if not public.e_admin() then
-    raise exception 'Só a equipe pode ler conversas.' using errcode = '42501';
+  -- mesma equipe que resolve denúncias (resolver_denuncia)
+  if not public.tem_papel('moderador') then
+    raise exception 'Só a equipe de moderação pode ler conversas.' using errcode = '42501';
   end if;
   if not exists (select 1 from public.denuncias d where d.alvo_tipo = 'conversa' and d.alvo_id = p_conversa) then
     raise exception 'Só dá para ler conversa denunciada.' using errcode = '42501';

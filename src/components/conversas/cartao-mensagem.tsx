@@ -30,7 +30,7 @@ export function CartaoMensagem({ m, meuLado, autorNome }: { m: MensagemConversa;
     return <li className={`flex flex-col gap-1 ${alinhamento}`}>
       <span className="sr-only">{quem}:</span>
       <div className="flex w-full max-w-md flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <p className="text-sm font-semibold text-texto-suave">{proposta ? "Proposta da loja" : "Anúncio"}</p>
+        <p className="text-sm font-semibold text-texto-suave">{proposta ? (meu ? "Sua proposta" : "Proposta da loja") : "Anúncio"}</p>
         {proposta && m.pedido_titulo && <p className="text-facil font-semibold text-beringela">Para: {m.pedido_titulo}</p>}
         {m.anuncio_id && <div className="flex items-center gap-3">
           {m.anuncio_foto

@@ -31,7 +31,7 @@ export default async function PaginaConversa({ params }: { params: Promise<{ id:
       texto={d.papel === "cliente" ? "Conversa com a loja." : "Conversa com um cliente da sua loja."}>
       <div className="mt-2"><MenuSeguranca conversaId={d.id} eu_bloqueei={d.eu_bloqueei} nomeOutro={d.outro_nome} /></div>
     </TopoConta>
-    <div className="sticky top-14 z-10 flex gap-3 rounded-card border border-borda bg-cartao p-3 text-base shadow-1 md:top-16">
+    <div role="note" className="flex gap-3 rounded-card border border-borda bg-cartao p-4 text-facil shadow-1">
       <ShieldCheck className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
       <div className="flex flex-col gap-1">
         <p>{AVISO_ACOMPANHA}</p>
