@@ -81,6 +81,7 @@ export const NOMES_GRUPO: Record<string, string> = {
   cobranca: "Cobrança",
   robo: "Robô Merc",
   aki_lojistas: "Merc para lojistas",
+  conversas: "Conversas",
   geral: "Geral",
 };
 
