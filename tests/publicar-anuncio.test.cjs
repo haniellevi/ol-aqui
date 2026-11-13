@@ -121,6 +121,22 @@ test('fotos rejeitam origem, dono, duplicata e limite regional antes da gravaç�
     assert.ok(filtros.some(f => f[0] === 'fotos' && f[1] === 'eq' && f[2] === '{}'));
   } finally { if (anterior === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL; else process.env.NEXT_PUBLIC_SUPABASE_URL = anterior; }
 });
+test('foto na pasta do ID antigo (troca do Clerk): dono põe, tira e reordena; foto antiga de fora continua recusada', async () => {
+  const anterior = process.env.NEXT_PUBLIC_SUPABASE_URL; process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://abc.supabase.co';
+  try {
+    const velha1 = url.replace('user_loja', 'user_antigo'), velha2 = velha1.replace('1.webp', '2.webp'), nova = url.replace('1.webp', '3.webp');
+    const op = { anuncio: { fotos: [velha1, velha2] } };
+    for (const [caso, fotos] of [['reordenar', [velha2, velha1]], ['tirar', [velha2]], ['pôr foto nova (limite de 2 no teste)', [velha1, nova]], ['nova na capa', [nova, velha1]]]) {
+      const { a, gravacoes } = fronteiras(op);
+      const r = await a.salvarFotos(id, fotos, [velha1, velha2]);
+      assert.equal(r.ok, true, caso); assert.deepEqual(gravacoes, [{ fotos }], caso);
+    }
+    for (const fotos of [[velha1, velha1.replace('1.webp', '9.webp')], [velha1, url.replace('user_loja', 'user_outro')]]) {
+      const { a, gravacoes } = fronteiras(op);
+      assert.equal((await a.salvarFotos(id, fotos, [velha1, velha2])).ok, false); assert.equal(gravacoes.length, 0);
+    }
+  } finally { if (anterior === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL; else process.env.NEXT_PUBLIC_SUPABASE_URL = anterior; }
+});
 test('fotos concorrentes retornam a lista atual e resposta perdida pode ser repetida', async () => {
   const anterior = process.env.NEXT_PUBLIC_SUPABASE_URL; process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://abc.supabase.co';
   try {

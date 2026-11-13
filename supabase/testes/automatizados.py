@@ -111,6 +111,8 @@ try:
     print('PASS: IA do Radar: chaves desligadas, 20 usos por dia, teto do mês próprio, livro-caixa e aviso de anúncio novo parecido 1 vez por dia', flush=True)
     checked(sql((root/'supabase/testes/810_radar_ja_comprei.sql').read_text()))
     print('PASS: IA do Radar "já comprei": chave própria desligada, só mensagem do cliente com pedido dele aberto, pergunta só para o cliente, "não" vale para sempre naquele pedido e só o servidor lê', flush=True)
+    checked(sql((root/'supabase/testes/820_fotos_pasta_antiga.sql').read_text()))
+    print('PASS: fotos na pasta do ID antigo após a troca do Clerk: dono reordena, tira e põe foto nova; foto antiga fora do anúncio, em outro anúncio ou de outra pessoa continua recusada', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin
