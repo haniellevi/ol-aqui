@@ -141,7 +141,12 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
   const prefixo = `/storage/v1/object/public/anuncios/${conta.vitrine.dono_id}/`;
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const origemOlaki = base ? new URL(base) : null;
+  // Foto que já está salva neste anúncio continua valendo: depois da troca de ID do Clerk ela pode
+  // estar na pasta do ID antigo (o banco aceita pelo mesmo motivo, ver 20261124010000_fotos_pasta_antiga).
+  // Assim o dono consegue reordenar, tirar e pôr foto nova. Foto que entra agora vai para a pasta atual.
+  const jaNoAnuncio = new Set(Array.isArray(anuncio.fotos) ? anuncio.fotos : []);
   const valida = (u: unknown) => {
+    if (typeof u === "string" && jaNoAnuncio.has(u)) return true;
     if (typeof u !== "string" || u.length > 500 || !origemOlaki) return false;
     try {
       const url = new URL(u);
