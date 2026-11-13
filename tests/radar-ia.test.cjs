@@ -387,3 +387,22 @@ test('tela da pergunta: um botão grande por opção e "Pular"', () => {
   cliques['Pular']();
   assert.deepEqual(escolhas, ['42', 'pulou']);
 });
+
+// ---------- Task 6: os 3 da vitrine no topo da folha "Propor" ----------
+test('ordem da vitrine: destaques da IA primeiro, resto na ordem original, sem repetir', () => {
+  const { ordenarComDestaques } = carregar('src/components/radar/ia/ordenar-vitrine.ts');
+  const a = { id: 'a', titulo: 'A', preco_centavos: 1, capa: null };
+  const b = { id: 'b', titulo: 'B', preco_centavos: 1, capa: null };
+  const c = { id: 'c', titulo: 'C', preco_centavos: 1, capa: null };
+  const r = ordenarComDestaques([a, b, c], [{ id: 'c', motivo: 'Mesmo modelo' }, { id: 'zz', motivo: 'Não existe' }, { id: 'a', motivo: 'Mesma cor' }]);
+  assert.deepEqual(r.map((x) => [x.anuncio.id, x.motivo]), [['c', 'Mesmo modelo'], ['a', 'Mesma cor'], ['b', null]]);
+  assert.deepEqual(ordenarComDestaques([a, b], []).map((x) => x.anuncio.id), ['a', 'b']);
+});
+
+test('selo "Combina com o pedido": texto visível e a frase da IA', () => {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const { SeloCombina } = carregar('src/components/radar/ia/selo-combina.tsx');
+  const s = renderToStaticMarkup(React.createElement(SeloCombina, { motivo: 'Mesmo modelo que o cliente pediu' }));
+  assert.match(s, /Combina com o pedido/);
+  assert.match(s, /Mesmo modelo que o cliente pediu/);
+});
