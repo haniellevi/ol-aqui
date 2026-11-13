@@ -54,11 +54,12 @@ function lerComum(form: FormData): Comum {
 const publicado = (a: MeuAnuncio) => (STATUS_PUBLICADO as readonly string[]).includes(a.status);
 
 /** Para onde ir depois de salvar: "Salvar e sair" → Meus anúncios; etapa tocada → ela; senão → próximo passo. */
-function destino(passo: SlugPasso, c: Comum): string {
-  if (c.sair) return `${DESTINO_SAIR}?salvo=${encodeURIComponent(c.id)}`;
-  if (c.ir) return urlPasso(c.ir, c.id, c.editar);
+function seguirDepoisDeSalvar(passo: SlugPasso, c: Comum): EstadoForm {
+  if (c.sair) redirect(`${DESTINO_SAIR}?salvo=${encodeURIComponent(c.id)}`);
+  // Confirme a gravação antes de o navegador carregar a outra etapa.
+  if (c.ir) return { irPara: urlPasso(c.ir, c.id, c.editar) };
   const prox = proximoPasso(passo);
-  return prox ? urlPasso(prox, c.id, c.editar) : DESTINO_SAIR;
+  redirect(prox ? urlPasso(prox, c.id, c.editar) : DESTINO_SAIR);
 }
 
 async function abrir(id: string): Promise<MeuAnuncio | null> {
@@ -220,7 +221,10 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
 
   const categoriaId = String(form.get("categoria_id") ?? "");
   if (!categoriaId) {
-    if (c.parcial && !publicado(anuncio)) redirect(c.ir ? destino("categoria", c) : DESTINO_SAIR);
+    if (c.parcial && !publicado(anuncio)) {
+      if (c.ir) return seguirDepoisDeSalvar("categoria", c);
+      redirect(DESTINO_SAIR);
+    }
     return { erro: { mensagem: "Escolha a categoria do anúncio.", campo: "categoria" } };
   }
   // "O que você está anunciando?" vira o começo do título, só se o anúncio ainda não tem título.
@@ -231,7 +235,7 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
     await registrarEscolhaIA(c.id, form.get("texto_ia"));
     const falha = await sugerirCategoria(c.id, sugestao);
     if (falha) return falha;
-    redirect(destino("categoria", c));
+    return seguirDepoisDeSalvar("categoria", c);
   }
   const achada = ehUuid(categoriaId) ? await categoriaPorId(categoriaId) : null;
   if (!achada) return { erro: { mensagem: "Essa categoria não está mais disponível. Escolha outra.", campo: "categoria" } };
@@ -266,7 +270,7 @@ export async function salvarCategoria(_antes: EstadoForm, form: FormData): Promi
   await registrarEscolhaIA(c.id, form.get("texto_ia"));
   const falha = await sugerirCategoria(c.id, sugestao);
   if (falha) return falha;
-  redirect(destino("categoria", c));
+  return seguirDepoisDeSalvar("categoria", c);
 }
 
 /**
@@ -376,7 +380,7 @@ export async function salvarDetalhes(_antes: EstadoForm, form: FormData): Promis
     if (r.erro?.campo) r.campos = { [r.erro.campo === "titulo" || r.erro.campo === "descricao" ? r.erro.campo : `attr_${r.erro.campo}`]: r.erro.mensagem };
     return r;
   }
-  redirect(destino("detalhes", c));
+  return seguirDepoisDeSalvar("detalhes", c);
 }
 
 /* ------------------------------- Preço ------------------------------- */
@@ -417,7 +421,7 @@ export async function salvarPreco(_antes: EstadoForm, form: FormData): Promise<E
 
   const r = await gravar(c.id, colunas, anuncio);
   if (r) return r;
-  redirect(destino("preco", c));
+  return seguirDepoisDeSalvar("preco", c);
 }
 
 /* ------------------------------- Local ------------------------------- */
@@ -445,7 +449,7 @@ export async function salvarLocal(_antes: EstadoForm, form: FormData): Promise<E
 
   const r = await gravar(c.id, { cidade: cidade || null, bairro: bairro || null });
   if (r) return r;
-  redirect(destino("local", c));
+  return seguirDepoisDeSalvar("local", c);
 }
 
 /* ------------------------------ Publicar ----------------------------- */

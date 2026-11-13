@@ -18,8 +18,14 @@ export function useEnvioAnuncio(acao: (antes: EstadoForm, dados: FormData) => Pr
   const ocupado = useRef(false);
   const formulario = useRef<HTMLFormElement | null>(null);
   const [estado, enviar, enviando] = useActionState<EstadoForm, FormData>(async (antes, dados) => {
-    try { return await envioRecuperavel(acao, antes, dados); }
-    finally { ocupado.current = false; }
+    try {
+      const resultado = await envioRecuperavel(acao, antes, dados);
+      // A página de destino lê o rascunho já salvo em uma requisição própria.
+      if (resultado?.irPara) window.location.assign(resultado.irPara);
+      return resultado;
+    } finally {
+      ocupado.current = false;
+    }
   }, null);
   useEffect(() => {
     if (!estado?.erro) return;

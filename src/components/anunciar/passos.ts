@@ -50,6 +50,8 @@ export function passoDoCampo(campo: string | undefined): SlugPasso | null {
 export const STATUS_PUBLICADO = ["ativo", "em_analise", "vendido"] as const;
 
 export type EstadoForm = {
+  /** Etapa para abrir após confirmar a gravação. */
+  irPara?: string;
   /** Mensagem de sucesso (ex.: ação que não muda de tela). */
   ok?: string;
   erro?: { mensagem: string; campo?: string; codigo?: string };
