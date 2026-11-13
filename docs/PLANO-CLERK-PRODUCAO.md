@@ -101,7 +101,9 @@ Nada desta fase muda o site: ele continua com as chaves de teste. Tudo é feito 
    Se aparecer "código da equipe não está configurado", corrigir a variável e publicar antes de seguir.
    Durante a manutenção, todas as APIs respondem 503 (webhooks e rotas do pg_cron tentam de novo depois),
    menos o aviso do Asaas (`/api/asaas/webhook`).
-3. Aplicar a migração `20261119010000_troca_id_clerk.sql` (se ainda não foi).
+3. Aplicar a migração `20261119010000_troca_id_clerk.sql` (se ainda não foi) e, **depois dela e antes do passo 5**,
+   `20261123010000_troca_clerk_chave_whatsapp.sql`: a troca passa a levar junto as chaves dos avisos da equipe na
+   `whatsapp_fila`, para um aviso já enviado não voltar à fila. Sem ela, a troca roda com a função antiga.
 4. Fotos: nada a fazer (ficam na pasta antiga; ver Fase 3, passo 8). Conferir que ninguém está na lixeira
    (`lixeira_contas`): a limpeza diária das 04:00 UTC apagaria um perfil ainda não trocado.
 5. Rodar a troca de **todas** as pessoas numa só transação (se uma falhar, nenhuma muda). Exemplo, no editor SQL do Supabase:
