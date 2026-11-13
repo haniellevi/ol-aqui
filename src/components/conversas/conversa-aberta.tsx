@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { MessageCircle, Phone, Send } from "lucide-react";
 import { Botao, classesBotao } from "@/components/ui/botao";
@@ -10,17 +10,20 @@ import { CartaoMensagem } from "@/components/conversas/cartao-mensagem";
 import { juntar, reconciliar } from "@/components/conversas/juntar";
 import { EVENTO_CONVERSAS } from "@/components/conversas/icone-conversas";
 import { MENSAGEM_MAX, validarMensagem } from "@/components/conversas/validacao";
+import { temPalavraDeCompra } from "@/components/conversas/palavras-compra";
 import { enviarMensagem, marcarLida, mensagensDepois, mostrarMeuWhatsapp } from "@/app/(conta)/conversas/actions";
 import type { MensagemConversa, PapelConversa } from "@/lib/tipos-conversas";
 
 const INTERVALO_MS = 10_000;
 /** A cada quantas buscas a página inteira é recarregada (WhatsApp liberado, bloqueio, cartões retirados). */
 const BUSCAS_POR_RECARGA = 6;
+/** "Já comprei": a IA tem até 3 s depois do envio; recarregamos um pouco depois para a pergunta aparecer. */
+const ESPERA_JA_COMPREI_MS = 4_500;
 
 // Conversa aberta: mensagens, envio e (cliente) "Mostrar meu WhatsApp" / (loja) "Chamar no WhatsApp".
 // Busca mensagens novas a cada 10 s com a aba visível e marca como lida ao abrir e ao chegar mensagem.
 // Recarrega a página (dados da conversa e cartões ao vivo) quando chega mensagem nova e a cada minuto.
-export function ConversaAberta({ conversaId, papel, mensagensIniciais, bloqueada, whatsappLiberado, whatsappHref, nomeOutro }: {
+export function ConversaAberta({ conversaId, papel, mensagensIniciais, bloqueada, whatsappLiberado, whatsappHref, nomeOutro, depoisDasMensagens }: {
   conversaId: string;
   papel: PapelConversa;
   mensagensIniciais: MensagemConversa[];
@@ -29,6 +32,8 @@ export function ConversaAberta({ conversaId, papel, mensagensIniciais, bloqueada
   /** Link wa.me montado no servidor (só para a loja, depois que o cliente mostrou o número). */
   whatsappHref: string | null;
   nomeOutro: string;
+  /** Logo abaixo da última mensagem, à vista depois da rolagem (a faixa do "já comprei"). */
+  depoisDasMensagens?: ReactNode;
 }) {
   const router = useRouter();
   const confirmar = useConfirmar();
@@ -83,6 +88,7 @@ export function ConversaAberta({ conversaId, papel, mensagensIniciais, bloqueada
       try {
         const r = await enviarMensagem(conversaId, texto);
         if (!r.ok) { setErro(r.erro.mensagem); return; }
+        if (papel === "cliente" && temPalavraDeCompra(texto)) window.setTimeout(() => router.refresh(), ESPERA_JA_COMPREI_MS);
         setTexto("");
         await buscarNovas();
       } catch { setErro("Não foi possível enviar. Tente novamente."); }
@@ -106,6 +112,7 @@ export function ConversaAberta({ conversaId, papel, mensagensIniciais, bloqueada
     <ol className="flex flex-col gap-3" aria-label="Mensagens" aria-live="polite">
       {mensagens.map((m) => <CartaoMensagem key={m.id} m={m} meuLado={papel} />)}
     </ol>
+    {depoisDasMensagens}
     <div ref={fim} />
 
     {bloqueada ? <p className="rounded-card bg-fundo p-4 text-facil text-texto-suave">Conversa bloqueada.</p> : <div className="flex flex-col gap-3">

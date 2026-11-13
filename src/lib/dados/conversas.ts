@@ -65,3 +65,16 @@ export async function lerConversaAdmin(id: string): Promise<{ ok: true; mensagen
   if (error) return { ok: false, erro: error.code === "42501" ? "Só dá para ler conversa denunciada." : "Não foi possível abrir a conversa agora." };
   return { ok: true, mensagens: Array.isArray(data) ? (data as MensagemConversaAdmin[]) : [] };
 }
+
+/** "Já comprei" (IA do Radar): a pergunta pendente desta conversa. Só o cliente recebe; erro = sem faixa. */
+export async function jaCompreiPendente(id: string): Promise<{ pedido_id: string; pedido_titulo: string } | null> {
+  const { userId } = await auth();
+  if (!userId || !ehUuid(id)) return null;
+  return seguro(async () => {
+    const db = await createClient();
+    const { data, error } = await db.rpc("ja_comprei_pendente", { p_conversa: id });
+    const linha = !error && Array.isArray(data) ? data[0] : null;
+    return linha && typeof linha.pedido_id === "string" && ehUuid(linha.pedido_id) && typeof linha.pedido_titulo === "string"
+      ? { pedido_id: linha.pedido_id, pedido_titulo: linha.pedido_titulo } : null;
+  }, null);
+}

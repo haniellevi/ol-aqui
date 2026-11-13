@@ -6,7 +6,9 @@ import { JanelaConfirmar } from "@/components/ui/confirmar";
 import { ConversaAberta } from "@/components/conversas/conversa-aberta";
 import { MenuSeguranca } from "@/components/conversas/menu-seguranca";
 import { ALERTA_GOLPE, AVISO_ACOMPANHA } from "@/components/conversas/cartao-mensagem";
-import { conversasLigadas, detalheConversa, mensagensDaConversa } from "@/lib/dados/conversas";
+import { FaixaJaComprei } from "@/components/conversas/faixa-ja-comprei";
+import { conversasLigadas, detalheConversa, jaCompreiPendente, mensagensDaConversa } from "@/lib/dados/conversas";
+import { propostasDoPedido } from "@/lib/dados/radar";
 import { LINK_CONVERSAS } from "@/lib/rotas";
 
 export const metadata: Metadata = { title: "Conversa" };
@@ -26,6 +28,12 @@ export default async function PaginaConversa({ params }: { params: Promise<{ id:
   const [d, mensagens] = await Promise.all([detalheConversa(id), mensagensDaConversa(id)]);
   if (!d) notFound();
   const bloqueada = d.eu_bloqueei || d.fui_bloqueado;
+  // "Já comprei" (IA do Radar): só o cliente; as lojas são as que mandaram oferta no pedido (folha "Com quem você resolveu?").
+  const jaComprei = d.papel === "cliente" && !bloqueada ? await jaCompreiPendente(d.id) : null;
+  const lojasDoPedido = jaComprei
+    ? await propostasDoPedido(jaComprei.pedido_id).then((ps) => ps.filter((p) => p.status === "ativa")
+        .map((p) => ({ propostaId: p.id, lojaNome: p.loja_nome }))).catch(() => null)
+    : null;
   return <PaginaConta>
     <TopoConta titulo={d.outro_nome} voltar={LINK_CONVERSAS} textoVoltar="Conversas"
       texto={d.papel === "cliente" ? "Conversa com a loja." : "Conversa com um cliente da sua loja."}>
@@ -41,7 +49,9 @@ export default async function PaginaConversa({ params }: { params: Promise<{ id:
     {d.fui_bloqueado && !d.eu_bloqueei && <p className="text-base text-texto-suave">{d.papel === "cliente" ? "A loja bloqueou esta conversa." : "O cliente bloqueou esta conversa."}</p>}
     <ConversaAberta conversaId={d.id} papel={d.papel} mensagensIniciais={mensagens} bloqueada={bloqueada}
       whatsappLiberado={d.whatsapp_liberado} nomeOutro={d.outro_nome}
-      whatsappHref={d.papel === "loja" ? linkWhatsappCliente(d.whatsapp_cliente, d.outro_nome) : null} />
+      whatsappHref={d.papel === "loja" ? linkWhatsappCliente(d.whatsapp_cliente, d.outro_nome) : null}
+      depoisDasMensagens={jaComprei && lojasDoPedido ? <FaixaJaComprei key={jaComprei.pedido_id} conversaId={d.id} pedidoId={jaComprei.pedido_id}
+        pedidoTitulo={jaComprei.pedido_titulo} lojas={lojasDoPedido} /> : null} />
     <JanelaConfirmar />
   </PaginaConta>;
 }

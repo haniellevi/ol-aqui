@@ -8,11 +8,21 @@ Tudo chega **desligado**. Nada muda para o cliente até alguém ligar as chaves 
 3. **Folha "Propor" da loja**: os 3 anúncios da vitrine que mais combinam com o pedido sobem para o topo, com o selo "Combina com o pedido".
 4. **Anúncio novo parecido**: de hora em hora, o cliente com pedido aberto recebe no sino, no máximo 1 aviso por dia por pedido.
    A pessoa pode desligar em Minha conta > Notificações ("Anúncio novo parecido com meu pedido").
+5. **"Já comprei" na conversa** (chave `radar_ia.ja_comprei_ativa`, PR separado): quando o cliente escreve numa
+   conversa com proposta de um pedido dele ainda aberto uma mensagem com palavra de compra ("comprei", "achei",
+   "consegui", "resolvi"…), o JEV julga se ele já resolveu. Se sim, aparece só para o cliente, logo abaixo das
+   mensagens: "Parece que você já resolveu “{pedido}”. Posso tirar o pedido do Radar?" [Sim, pode tirar]
+   [Não, ainda preciso]. "Sim" abre a folha "Com quem você resolveu?"; o pedido só sai do ar quando ele escolhe.
+   "Não" vale para sempre naquele pedido. Mensagem da loja e conversa sem pedido aberto nunca vão para a IA.
+   Vão só o texto da mensagem e os títulos dos pedidos abertos daquela conversa (até 5; o JEV escolhe de qual a
+   mensagem fala), sem links, e-mails e telefones. Plano:
+   `docs/superpowers/plans/2026-11-13-radar-ja-comprei.md`. Texto da política: `docs/designs/conversas-politica-privacidade.md`.
 
 Qual IA: o **JEV** (TypeSafe) julga (o pedido está vago? o anúncio novo combina?) e o **Gemini 2.5 Flash-Lite** (OpenRouter,
 sem guardar dados, `zdr`) escreve as perguntas e as frases. Falhou ou demorou mais de 3 segundos: o Radar segue igual a hoje, sem aviso.
 
 ## Custo e limites
+- O "já comprei" entra no mesmo teto de R$ 30 e nos mesmos 20 usos por dia por pessoa (parte `ja_comprei` no `radar_ia_uso`).
 - Teto do mês **só do Radar**: R$ 30 (`radar_ia.orcamento_mensal_centavos = 3000`). Acabou, segue sem IA até o mês seguinte. Não mexe no teto do Aki.
 - Cada pessoa usa a IA do Radar até 20 vezes por dia (`radar_ia.usos_por_dia`).
 - Cada chamada fica no livro-caixa próprio `radar_ia_uso` (custo real do OpenRouter; JEV estimado em US$ 0,0002). É separado do `robo_uso` para o gasto do Radar não apertar o teto do Aki e das outras IAs.
@@ -41,3 +51,12 @@ Acrescentar na seção sobre inteligência artificial:
 
 Antes de publicar, conferir se a política já fala da TypeSafe e do OpenRouter em outra seção (a versão 4 cita a TypeSafe) e
 juntar o texto para não repetir.
+
+## Como ligar o "já comprei" (cada passo só com "sim" do Raniel)
+1. Juntar o PR na `main`.
+2. Aplicar a migração `20261122010000_radar_ja_comprei.sql` no Supabase (ensaio com rollback antes).
+3. Publicar em `/admin/textos` o parágrafo novo de "Inteligência artificial" das Conversas
+   (`docs/designs/conversas-politica-privacidade.md`) **antes** de ligar.
+4. Ligar `radar_ia.ja_comprei_ativa` (a chave geral `radar_ia.ativa` e `conversas.ativa` já estão ligadas).
+5. Testar com conta de teste: pedido aberto, loja manda oferta, cliente escreve "já comprei" na conversa → a faixa
+   aparece em uns 5 segundos; "Não, ainda preciso" → some e não volta.
