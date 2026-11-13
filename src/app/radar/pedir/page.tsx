@@ -2,8 +2,10 @@
 // O celular confirmado vem do Clerk: sincronizamos antes de mostrar o formulário.
 // Enquanto o painel não exige o código (radar.exigir_celular_confirmado = false), quem não
 // confirmou digita o WhatsApp no próprio formulário.
+// Sem login a pessoa também escreve o pedido (região do visitante, sem IA); no fim o formulário
+// guarda o rascunho e manda entrar. Volta por ?retomar=1 já no resumo (src/lib/rascunho-radar.ts).
 import Link from "next/link";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { ChevronLeft, Smartphone } from "lucide-react";
 import { garantirPerfil, sincronizarPerfil } from "@/lib/perfil";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
@@ -21,9 +23,31 @@ import { Alert } from "@/components/ui/alert";
 
 export const metadata = { title: "Estou procurando…" };
 
-export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; categoria_id?: string; cidade?: string; preco_min?: string; preco_max?: string; detalhes?: string; cidades?: string; quem?: string }> }) {
+export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; categoria_id?: string; cidade?: string; preco_min?: string; preco_max?: string; detalhes?: string; cidades?: string; quem?: string; retomar?: string }> }) {
   const params = await searchParams;
   const textoParametro = (v: unknown, max = 120) => typeof v === "string" ? v.slice(0, max) : "";
+  const { userId } = await auth();
+  const filtros = {
+    texto: textoParametro(params.q),
+    categoriaSlug: textoParametro(params.categoria),
+    categoriaId: textoParametro(params.categoria_id, 36),
+    detalhes: textoParametro(params.detalhes, 1000),
+    cidadesIds: textoParametro(params.cidades, 20 * 37).split(",").slice(0, 20),
+    visibilidade: params.quem === "todos" ? ("todos" as const) : ("lojas" as const),
+    cidadeBusca: textoParametro(params.cidade),
+    precoMin: textoParametro(params.preco_min),
+    precoMax: textoParametro(params.preco_max),
+  };
+
+  if (!userId) {
+    const regiao = await regiaoAtual();
+    return (
+      <Moldura>
+        {regiao ? <Formulario microrregiaoId={regiao.id} {...filtros} pedirWhatsapp={false} whatsappInicial="" anonimo /> : <ErroConta />}
+      </Moldura>
+    );
+  }
+
   await garantirPerfil();
   const u = await currentUser();
   if (!u) throw new Error("Não foi possível confirmar sua sessão.");
@@ -33,21 +57,9 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
   const exigeCodigo = conta && !confirmado ? await exigeCelularConfirmado(conta.perfil.microrregiao_id) : false;
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
-      <header className="flex flex-col gap-1">
-        <Link href={LINK_RADAR} className={LINK_VOLTAR}>
-          <ChevronLeft className="size-5" aria-hidden />
-          Radar
-        </Link>
-        <h1 className="text-facil-titulo font-semibold text-beringela">Estou procurando…</h1>
-        <p className="text-facil text-texto-suave">Diga o que precisa. As lojas da região te respondem.</p>
-      </header>
+    <Moldura>
       {!conta ? (
-        <Vazio tamanho="grande" titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
-          <Botao href="/radar/pedir" larguraTotal tamanho="grande">
-            Tentar de novo
-          </Botao>
-        </Vazio>
+        <ErroConta />
       ) : exigeCodigo ? (
         <Vazio
           tamanho="grande"
@@ -65,20 +77,39 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
       ) : (
         <Formulario
           microrregiaoId={conta.perfil.microrregiao_id}
-          texto={textoParametro(params.q)}
-          categoriaSlug={textoParametro(params.categoria)}
-          categoriaId={textoParametro(params.categoria_id, 36)}
-          detalhes={textoParametro(params.detalhes, 1000)}
-          cidadesIds={textoParametro(params.cidades, 20 * 37).split(",").slice(0, 20)}
-          visibilidade={params.quem === "todos" ? "todos" : "lojas"}
-          cidadeBusca={textoParametro(params.cidade)}
-          precoMin={textoParametro(params.preco_min)}
-          precoMax={textoParametro(params.preco_max)}
+          {...filtros}
           pedirWhatsapp={!confirmado}
           whatsappInicial={conta.perfil.whatsapp ? telefone(conta.perfil.whatsapp) : ""}
+          retomar={params.retomar === "1"}
         />
       )}
+    </Moldura>
+  );
+}
+
+function Moldura({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+      <header className="flex flex-col gap-1">
+        <Link href={LINK_RADAR} className={LINK_VOLTAR}>
+          <ChevronLeft className="size-5" aria-hidden />
+          Radar
+        </Link>
+        <h1 className="text-facil-titulo font-semibold text-beringela">Estou procurando…</h1>
+        <p className="text-facil text-texto-suave">Diga o que precisa. As lojas da região te respondem.</p>
+      </header>
+      {children}
     </main>
+  );
+}
+
+function ErroConta() {
+  return (
+    <Vazio tamanho="grande" titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
+      <Botao href="/radar/pedir" larguraTotal tamanho="grande">
+        Tentar de novo
+      </Botao>
+    </Vazio>
   );
 }
 
@@ -88,6 +119,8 @@ async function Formulario({
   categoriaSlug, categoriaId, detalhes, cidadesIds, visibilidade, cidadeBusca, precoMin, precoMax,
   pedirWhatsapp,
   whatsappInicial,
+  anonimo = false,
+  retomar = false,
 }: {
   microrregiaoId: string;
   texto: string;
@@ -95,6 +128,10 @@ async function Formulario({
   cidadeBusca: string; precoMin: string; precoMax: string;
   pedirWhatsapp: boolean;
   whatsappInicial: string;
+  /** Sem login: escreve o pedido e entra no fim. */
+  anonimo?: boolean;
+  /** Voltou do login: abre o rascunho guardado no aparelho. */
+  retomar?: boolean;
 }) {
   const [categorias, cidades, regras, regiao, ia] = await Promise.all([listarCategorias(), listarCidades(microrregiaoId), regrasRadar(microrregiaoId), regiaoAtual(), estadoRadarIA()]);
   const opcoes = categorias.flatMap((c) => [c, ...c.filhas]);
@@ -120,7 +157,9 @@ async function Formulario({
         regras={regras}
         pedirWhatsapp={pedirWhatsapp}
         whatsappInicial={whatsappInicial}
-        iaNoPedido={ia.perguntas || ia.parecidos}
+        iaNoPedido={!anonimo && (ia.perguntas || ia.parecidos)}
+        anonimo={anonimo}
+        retomar={retomar}
       />
     </>
   );
