@@ -35,7 +35,7 @@ const MAX_PRECO_CENTAVOS = 100_000_000_000; // R$ 1 bilhão: acima disso é erro
 
 /** `ir`: etapa tocada no topo ("ir:preco"); salva o passo atual e vai direto para ela.
  *  `parcial`: rascunho pode ficar incompleto (Salvar e sair, ou pular para outra etapa). */
-type Comum = { id: string; editar: boolean; sair: boolean; ir: SlugPasso | null; parcial: boolean };
+type Comum = { id: string; editar: boolean; sair: boolean; salvar: boolean; salvarRevisao: boolean; ir: SlugPasso | null; parcial: boolean };
 
 function lerComum(form: FormData): Comum {
   const acao = String(form.get("acao") ?? "");
@@ -46,6 +46,8 @@ function lerComum(form: FormData): Comum {
     id: String(form.get("id") ?? ""),
     editar: form.get("editar") === "1",
     sair,
+    salvar: acao === "salvar",
+    salvarRevisao: acao === "salvar-revisao",
     ir,
     parcial: sair || ir !== null,
   };
@@ -53,9 +55,11 @@ function lerComum(form: FormData): Comum {
 
 const publicado = (a: MeuAnuncio) => (STATUS_PUBLICADO as readonly string[]).includes(a.status);
 
-/** Para onde ir depois de salvar: "Salvar e sair" → Meus anúncios; etapa tocada → ela; senão → próximo passo. */
+/** Define o destino após gravar o passo. */
 function seguirDepoisDeSalvar(passo: SlugPasso, c: Comum): EstadoForm {
   if (c.sair) redirect(`${DESTINO_SAIR}?salvo=${encodeURIComponent(c.id)}`);
+  if (c.salvar) return { irPara: `${DESTINO_SAIR}?salvo=${encodeURIComponent(c.id)}` };
+  if (c.salvarRevisao) return { irPara: urlPasso("revisar", c.id, c.editar) };
   // Confirme a gravação antes de o navegador carregar a outra etapa.
   if (c.ir) return { irPara: urlPasso(c.ir, c.id, c.editar) };
   const prox = proximoPasso(passo);

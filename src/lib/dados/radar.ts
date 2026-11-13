@@ -177,17 +177,17 @@ export async function meusAnunciosNoAr(): Promise<AnuncioParaProposta[]> {
 /* ------------------------------ Avisos ------------------------------ */
 
 export const AVISOS_POR_PAGINA = 30;
-export async function minhasNotificacoes(pagina = 1, somenteNaoLidas = false): Promise<{ avisos: Notificacao[]; total: number }> {
+export async function minhasNotificacoes(pagina = 1, somenteNaoLidas = false, porPagina = AVISOS_POR_PAGINA): Promise<{ avisos: Notificacao[]; total: number }> {
   const { userId } = await auth();
   if (!userId) throw new Error("Entre na sua conta para acessar seus avisos.");
   const db = await createClient();
-  const inicio = (Math.max(1, Math.min(10000, Number.isSafeInteger(pagina) ? pagina : 1)) - 1) * AVISOS_POR_PAGINA;
+  const inicio = (Math.max(1, Math.min(10000, Number.isSafeInteger(pagina) ? pagina : 1)) - 1) * porPagina;
   let consulta = db.from("notificacoes")
     .select("id, tipo, titulo, texto, link, lida_em, criado_em", { count: "exact" })
     .eq("usuario_id", userId).eq("canal", "app")
     .order("criado_em", { ascending: false }).order("id", { ascending: false });
   if (somenteNaoLidas) consulta = consulta.is("lida_em", null);
-  const { data, error, count } = await consulta.range(inicio, inicio + AVISOS_POR_PAGINA - 1);
+  const { data, error, count } = await consulta.range(inicio, inicio + porPagina - 1);
   if (error || !Array.isArray(data) || typeof count !== "number" || count < 0) throw new Error("Não foi possível carregar seus avisos.");
   return { avisos: data as Notificacao[], total: count };
 }

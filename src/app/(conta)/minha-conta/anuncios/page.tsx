@@ -164,9 +164,9 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
           </Botao>
         </Vazio>
       ) : (
-        <ul className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-3 md:auto-rows-fr md:grid-cols-2 md:gap-4">
           {lista.map((a) => (
-            <li key={a.id}>
+            <li key={a.id} className="flex min-w-0">
               <LinhaAnuncio
                 anuncio={a}
                 destaque={ultimoDestaque.get(a.id)}
@@ -211,7 +211,7 @@ function LinhaAnuncio({
   const foto = <FotoMeuAnuncio key={a.fotos[0] ?? "sem-foto"} src={a.fotos[0]} />;
 
   return (
-    <article aria-label={titulo} className="flex min-w-0 flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
+    <article aria-label={titulo} className="flex w-full min-w-0 flex-col gap-2 rounded-card bg-cartao p-3 shadow-1 md:p-4">
       <div className="flex gap-3">
         {publico ? (
           <Link href={linkAnuncio(a.id, a.titulo, a.slug)} aria-hidden tabIndex={-1}>
@@ -237,7 +237,7 @@ function LinhaAnuncio({
               titulo
             )}
           </h2>
-          <p className="text-lg leading-6 font-bold">{preco(a.preco_centavos)}</p>
+          <p className="text-sm leading-5 font-semibold text-beringela">{preco(a.preco_centavos)}</p>
           {a.cidade && <p className="text-sm break-words text-texto-suave">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</p>}
           {quando && <p className="text-legenda text-texto-suave">{a.status === "rascunho" ? `Salvo ${quando}` : quando}</p>}
           {mudanca && (
@@ -290,14 +290,16 @@ function LinhaAnuncio({
         </Alert>
       )}
 
-      <AcoesAnuncio
-        id={a.id}
-        status={a.status}
-        titulo={titulo}
-        temPagamento={pago || destaque || !!p}
-        podeDestacar={podeDestacar}
-        maisAcoes={a.status !== "excluido" && mostrarFixar && (a.status === "ativo" || fixado) ? <BotaoFixar anuncioId={a.id} fixado={fixado} comoItemDeMenu /> : undefined}
-      />
+      <div className="mt-auto pt-1">
+        <AcoesAnuncio
+          id={a.id}
+          status={a.status}
+          titulo={titulo}
+          temPagamento={pago || destaque || !!p}
+          podeDestacar={podeDestacar}
+          maisAcoes={a.status !== "excluido" && mostrarFixar && (a.status === "ativo" || fixado) ? <BotaoFixar anuncioId={a.id} fixado={fixado} comoItemDeMenu /> : undefined}
+        />
+      </div>
     </article>
   );
 }

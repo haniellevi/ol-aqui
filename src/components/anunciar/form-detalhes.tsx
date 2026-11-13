@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { Check } from "lucide-react";
-import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { avisoComoVaiAparecer } from "@/lib/formatar-nome";
 import { salvarDetalhes } from "@/app/(conta)/anunciar/actions";
 import type { Atributos, CampoCategoria } from "@/lib/tipos";
 import { AvisoErro } from "./aviso-erro";
 import { useEnvioAnuncio } from "./enviar";
-import { BarraContinuar } from "./barra-continuar";
+import { BarraContinuar, BotaoPasso } from "./barra-continuar";
 import { nomeAtributo } from "./atributos";
 
 // Passo 3 · Detalhes: título, descrição e só os campos da categoria.
@@ -35,6 +34,7 @@ export function FormDetalhes({
   id,
   categoriaId,
   editar,
+  daRevisao,
   formId,
   tituloInicial,
   descricaoInicial,
@@ -44,6 +44,7 @@ export function FormDetalhes({
   id: string;
   categoriaId: string | null;
   editar: boolean;
+  daRevisao?: boolean;
   formId: string;
   tituloInicial: string;
   descricaoInicial: string;
@@ -180,9 +181,7 @@ export function FormDetalhes({
       />
 
       <BarraContinuar>
-        <Botao type="submit" name="acao" value="seguir" larguraTotal carregando={enviando} textoCarregando="Salvando...">
-          Continuar
-        </Botao>
+        <BotaoPasso editar={editar} daRevisao={daRevisao} salvando={enviando} />
       </BarraContinuar>
     </form>
   );

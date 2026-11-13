@@ -4,12 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Camera, ImagePlus, Loader2, RotateCw, Sparkles, X } from "lucide-react";
 import { FotoProdutoAki } from "@/components/aki/foto-produto-aki";
-import { Botao } from "@/components/ui/botao";
 import { reduzirFoto, enviarFoto, MAX_FOTO_ORIGINAL } from "@/lib/fotos";
 import { apagarFoto, criarUrlEnvioFoto } from "@/lib/dados/fotos";
 import { salvarFotos } from "@/app/(conta)/anunciar/actions";
 import { AvisoErro } from "./aviso-erro";
-import { BarraContinuar } from "./barra-continuar";
+import { BarraContinuar, BotaoPasso } from "./barra-continuar";
 import { DESTINO_SAIR, urlPasso } from "./passos";
 import { EVENTO_FOTO_AKI, type FotoGuardadaAki } from "@/components/aki/abrir";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +42,7 @@ const novaChave = () => `f${Date.now()}-${contador++}`;
 export function EnvioFotos({
   id,
   editar,
+  daRevisao,
   fotosIniciais,
   maximo,
   minimo,
@@ -51,6 +51,7 @@ export function EnvioFotos({
 }: {
   id: string;
   editar: boolean;
+  daRevisao?: boolean;
   fotosIniciais: string[];
   maximo: number;
   minimo: number;
@@ -234,7 +235,8 @@ export function EnvioFotos({
     await alterar(lista, `Foto movida para a posição ${j + 1}${j === 0 ? ", agora é a capa" : ""}.`);
   }
 
-  async function continuar(sair: boolean) {
+  async function continuar(acao: FormDataEntryValue | null) {
+    const sair = acao === "sair";
     if (operacao.current || indo) return;
     setErro(null);
     if (ocupado || itens.some((i) => i.estado === "erro")) {
@@ -252,7 +254,9 @@ export function EnvioFotos({
       setIndo(false);
       return;
     }
-    router.push(sair ? DESTINO_SAIR : urlPasso("categoria", id, editar));
+    if (acao === "salvar-revisao") window.location.assign(urlPasso("revisar", id, editar));
+    else if (acao === "salvar") window.location.assign(`${DESTINO_SAIR}?salvo=${encodeURIComponent(id)}`);
+    else router.push(sair ? DESTINO_SAIR : urlPasso("categoria", id, editar));
   }
 
   async function usarFotoAki(url: string) {
@@ -276,10 +280,10 @@ export function EnvioFotos({
   }
 
   return (
-    <form id={formId} action={async (dados) => continuar(dados.get("acao") === "sair")} onSubmit={(e) => {
+    <form id={formId} action={async (dados) => continuar(dados.get("acao"))} onSubmit={(e) => {
       e.preventDefault();
       const botao = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
-      void continuar(botao?.value === "sair");
+      void continuar(botao?.value ?? null);
     }} aria-busy={travado} className="flex flex-col gap-2 md:gap-4">
       <div className="flex gap-2 md:gap-3">
         <button type="button" className={BOTAO_FOTO} onClick={() => camera.current?.click()} disabled={vagas <= 0 || travado}>
@@ -417,9 +421,7 @@ export function EnvioFotos({
       )}
 
       <BarraContinuar>
-        <Botao type="submit" name="acao" value="seguir" larguraTotal carregando={indo} textoCarregando="Salvando..." disabled={travado}>
-          {ocupado ? "Enviando fotos..." : "Continuar"}
-        </Botao>
+        <BotaoPasso editar={editar} daRevisao={daRevisao} salvando={indo} disabled={travado} enviandoFotos={ocupado} />
       </BarraContinuar>
     </form>
   );

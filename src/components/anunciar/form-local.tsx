@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { salvarLocal } from "@/app/(conta)/anunciar/actions";
 import { AvisoErro } from "./aviso-erro";
 import { useEnvioAnuncio } from "./enviar";
-import { BarraContinuar } from "./barra-continuar";
+import { BarraContinuar, BotaoPasso } from "./barra-continuar";
 import { classesCampo } from "@/components/ui/input";
 
 // Passo 5 · Local: cidade (lista da região) e bairro, já preenchidos do perfil.
@@ -16,6 +15,7 @@ import { classesCampo } from "@/components/ui/input";
 export function FormLocal({
   id,
   editar,
+  daRevisao,
   formId,
   cidades,
   cidadeInicial,
@@ -23,6 +23,7 @@ export function FormLocal({
 }: {
   id: string;
   editar: boolean;
+  daRevisao?: boolean;
   formId: string;
   cidades: { nome: string; uf: string }[];
   cidadeInicial: string;
@@ -91,9 +92,7 @@ export function FormLocal({
       />
 
       <BarraContinuar>
-        <Botao type="submit" name="acao" value="seguir" disabled={!cidades.length} larguraTotal carregando={enviando} textoCarregando="Salvando...">
-          Continuar
-        </Botao>
+        <BotaoPasso editar={editar} daRevisao={daRevisao} salvando={enviando} disabled={!cidades.length} />
       </BarraContinuar>
     </form>
   );
