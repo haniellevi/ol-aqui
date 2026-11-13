@@ -392,7 +392,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
 
   // telas com barra fixa embaixo (passos do anúncio, página do anúncio): o balão sobe para não cobrir
   const elevado = caminho.startsWith("/anunciar/") || caminho.startsWith("/anuncio/");
-  const semAtalhoMovel = caminho.startsWith(`${LINK_ATENDIMENTO}/`) ? "max-md:hidden" : "";
+  const semAtalhoMovel = caminho.startsWith(`${LINK_ATENDIMENTO}/`) || caminho.startsWith("/anunciar/") ? "max-md:hidden" : "";
   const posicao = elevado
     ? "bottom-[calc(8rem+env(safe-area-inset-bottom))] md:bottom-28"
     : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6";

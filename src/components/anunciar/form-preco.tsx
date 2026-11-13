@@ -50,7 +50,7 @@ export function FormPreco({
   const mostrarAntes = editar && precoAntesInicial !== undefined;
 
   return (
-    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-5" noValidate>
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-5" noValidate>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
 
@@ -63,14 +63,14 @@ export function FormPreco({
         value={aCombinar ? "" : preco}
         onChange={(e) => setPreco(e.target.value)}
         maxLength={30}
-        dica="Ex.: 1.500,50. Confira o valor antes de continuar."
+        dica="Ex.: 1.500,50"
         inputMode="decimal"
         autoComplete="off"
         enterKeyHint="done"
         placeholder={aCombinar ? "A combinar" : "0"}
         disabled={aCombinar}
         erro={estado?.campos?.preco}
-        className="[&_input]:text-xl [&_input]:font-bold"
+        className="[&_input]:font-semibold md:[&_input]:text-xl"
       />
 
       {mostrarAntes && (
@@ -96,7 +96,7 @@ export function FormPreco({
       )}
 
       {dicaFaixa && (
-        <p className="flex gap-2 rounded-card bg-fundo p-3 text-base">
+        <p className="flex gap-2 rounded-card bg-selecao p-2 text-sm md:p-3">
           <Lightbulb className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
           <span>
             Parecidos na região: <strong>{dicaFaixa}</strong>

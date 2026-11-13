@@ -280,5 +280,12 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
     display: contents;
   }
 
-  html:has([data-detalhe-anuncio]) { scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+  body:has(#conteudo > [data-passo-anuncio]) > .cabecalho-publico,
+  #conteudo:has(> [data-passo-anuncio]) ~ .navegacao-inferior {
+    display: none;
+  }
+
+  #conteudo:has(> [data-passo-anuncio]) { padding-bottom: 0; }
+
+  html:has([data-detalhe-anuncio], [data-passo-anuncio]) { scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
 }

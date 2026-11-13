@@ -20,7 +20,7 @@ export default async function PassoLocal({ searchParams }: { searchParams: Param
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso equipe={equipe} passo="local" id={anuncio.id} editar={editar} formId={FORM} titulo="Onde está?" subtitulo="Ajuda quem mora perto a achar seu anúncio." />
+      <CabecalhoPasso equipe={equipe} passo="local" id={anuncio.id} editar={editar} formId={FORM} titulo="Onde está?" />
       <FormLocal
         id={anuncio.id}
         editar={editar}

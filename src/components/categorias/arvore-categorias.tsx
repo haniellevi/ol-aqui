@@ -94,7 +94,7 @@ export function ArvoreCategorias({ arvore, busca, modo, selecionadaId = null, ao
     const icone = <CirculoCategoria nome={no.icone || caminho[0].icone} />;
     const nome = (
       <span className="flex min-w-0 flex-1 flex-col">
-        <span>{no.nome}</span>
+        <span className="[overflow-wrap:anywhere]">{no.nome}</span>
         {mostrarCaminho && caminho.length > 1 && (
           <span className="text-sm font-normal text-texto-suave">{nomeCaminho(caminho.slice(0, -1))}</span>
         )}
@@ -212,7 +212,7 @@ export function ArvoreCategorias({ arvore, busca, modo, selecionadaId = null, ao
           <h2 id="titulo-recentes" className="text-base font-semibold">
             Usadas há pouco
           </h2>
-          <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none]">
+          <ul className={`flex gap-2 overflow-x-auto py-1 [scrollbar-width:none] ${modo === "escolher" ? "-mx-2.5 px-2.5 md:-mx-4 md:px-4" : "-mx-4 px-4"}`}>
             {recentes.map((x) => (
               <li key={x.no.id}>
                 {modo === "navegar" ? (

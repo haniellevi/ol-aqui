@@ -76,6 +76,15 @@ for (const preco of ['', '0', '-1', 'abc', '12,345', '1e5', '1000000001']) test(
   const { a, gravacoes } = fronteiras(); const r = await a.salvarPreco(null, form({ preco }));
   assert.ok(r.campos.preco); assert.equal(gravacoes.length, 0);
 });
+test('Voltar do preço salva a edição antes de abrir os detalhes', async () => {
+  const { a, gravacoes } = fronteiras();
+  const { CabecalhoPasso } = carregar('src/components/anunciar/cabecalho-passo.tsx');
+  const html = render(React.createElement(CabecalhoPasso, { passo: 'preco', id, editar: false, formId: 'form-preco', titulo: 'Preço' }));
+  assert.match(html, /<button(?=[^>]*type="submit")(?=[^>]*form="form-preco")(?=[^>]*name="acao")(?=[^>]*value="ir:detalhes")[^>]*>(?:(?!<\/button>).)*Voltar<\/button>/);
+  await assert.rejects(a.salvarPreco(null, form({ preco: '93,50', acao: 'ir:detalhes' })), /redirect:\/anunciar\/detalhes/);
+  assert.deepEqual(gravacoes[0], { preco_centavos: 9350, aceita_troca: false });
+});
+
 test('a combinar e troca são escolhas explícitas e salvar e sair mantém destino', async () => {
   const { a, gravacoes } = fronteiras();
   await assert.rejects(a.salvarPreco(null, form({ a_combinar: 'on', aceita_troca: 'on', acao: 'sair' })), /redirect:\/minha-conta\/anuncios/);

@@ -17,7 +17,7 @@ function horaCurta(iso: string) {
 }
 
 const LINK_TOPO =
-  "inline-flex min-h-10 items-center gap-1 rounded-card px-2 text-base font-semibold text-laranja-escuro " +
+  "inline-flex min-h-11 items-center gap-1 rounded-card px-2 text-sm font-semibold text-beringela md:min-h-10 md:text-base md:text-laranja-escuro " +
   "hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 export function CabecalhoPasso({
@@ -45,12 +45,12 @@ export function CabecalhoPasso({
   const anterior = passoAnterior(passo);
   // P5b-2a: a equipe volta para a ficha do anúncio no painel.
   const sair = equipe ? linkAdminAnuncio(id) : DESTINO_SAIR;
-  const voltar = anterior ? urlPasso(anterior, id, editar) : editar ? sair : "/";
+  const voltar = anterior ? urlPasso(anterior, id, editar) : editar ? sair : "/anunciar";
   // Fotos salvam sozinhas ao enviar e a revisão não tem campos: lá a etapa é só um link.
   const salvaAoIr = Boolean(formId) && passo !== "fotos" && passo !== "revisar";
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2 md:gap-3">
       {equipe && (
         <p role="note" className="rounded-card border border-aviso bg-aviso-fundo p-3 text-sm break-words">
           <strong>Este anúncio é de outra pessoa.</strong> Você está editando como {MARCA_EQUIPE}. Motivo: {equipe.motivo}.
@@ -58,10 +58,17 @@ export function CabecalhoPasso({
         </p>
       )}
       <div className="flex items-center justify-between gap-2">
-        <Link href={voltar} className={`${LINK_TOPO} -ml-2`}>
-          <ArrowLeft className="size-5" aria-hidden />
-          Voltar
-        </Link>
+        {salvaAoIr && anterior ? (
+          <button type="submit" form={formId} name="acao" value={`ir:${anterior}`} className={`${LINK_TOPO} -ml-2`}>
+            <ArrowLeft className="size-4 md:size-5" aria-hidden />
+            Voltar
+          </button>
+        ) : (
+          <Link href={voltar} className={`${LINK_TOPO} -ml-2`}>
+            <ArrowLeft className="size-4 md:size-5" aria-hidden />
+            Voltar
+          </Link>
+        )}
         {formId ? (
           <button type="submit" form={formId} name="acao" value="sair" className={`${LINK_TOPO} -mr-2`}>
             Salvar e sair
@@ -72,7 +79,7 @@ export function CabecalhoPasso({
           </Link>
         )}
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col md:gap-2">
         <p className="text-sm font-semibold text-texto-suave">
           Passo {n} de {TOTAL_PASSOS} · {nome}
           {editar && <span className="ml-1 font-normal">(editando)</span>}
@@ -80,15 +87,15 @@ export function CabecalhoPasso({
         <EtapasTocaveis passo={passo} id={id} editar={editar} formId={salvaAoIr ? formId : undefined} />
       </div>
       <div className="flex flex-col gap-1">
-        <h1 className="text-titulo font-semibold text-beringela">{titulo}</h1>
-        {subtitulo && <p className="text-base text-texto-suave">{subtitulo}</p>}
+        <h1 className="text-xl font-semibold leading-tight text-beringela [overflow-wrap:anywhere] md:text-titulo">{titulo}</h1>
+        {subtitulo && <p className="text-sm text-texto-suave [overflow-wrap:anywhere] md:text-base">{subtitulo}</p>}
       </div>
     </div>
   );
 }
 
 const ETAPA =
-  "flex min-h-10 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-campo px-1 py-1 text-legenda leading-tight " +
+  "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-campo px-1 py-1 text-legenda leading-tight md:min-h-10 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 function EtapasTocaveis({ passo, id, editar, formId }: { passo: SlugPasso; id: string; editar: boolean; formId?: string }) {
@@ -103,8 +110,9 @@ function EtapasTocaveis({ passo, id, editar, formId }: { passo: SlugPasso; id: s
           const liberada = !ehAtual && (editar || feita);
           const marca = (
             <>
-              <span aria-hidden className={`h-1.5 w-full rounded-full ${ehAtual || feita ? "bg-laranja" : "bg-borda"}`} />
-              <span className={ehAtual ? "font-semibold text-beringela" : liberada ? "font-semibold text-laranja-escuro" : "text-texto-suave"}>{p.titulo}</span>
+              <span aria-hidden className={`grid size-7 place-items-center rounded-full text-xs font-semibold md:hidden ${ehAtual ? "bg-laranja text-beringela" : feita ? "bg-selecao text-beringela" : "border border-borda text-texto-suave"}`}>{n}</span>
+              <span aria-hidden className={`hidden h-1.5 w-full rounded-full md:block ${ehAtual || feita ? "bg-laranja" : "bg-borda"}`} />
+              <span className={`max-md:sr-only ${ehAtual ? "font-semibold text-beringela" : liberada ? "font-semibold text-laranja-escuro" : "text-texto-suave"}`}>{p.titulo}</span>
             </>
           );
           return (

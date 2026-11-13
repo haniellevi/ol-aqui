@@ -117,7 +117,7 @@ export function EscolhaCategoria({
   );
 
   return (
-    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-5">
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-5">
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
       <input type="hidden" name="categoria_id" value={filhaId ?? ""} />
@@ -144,11 +144,11 @@ export function EscolhaCategoria({
             enterKeyHint="search"
             maxLength={MAX_TITULO}
             aria-describedby="ajuda-busca-categoria"
-            className={`${classesCampo} h-10 pl-10`}
+            className={`${classesCampo} h-11 pl-10 md:h-10`}
           />
         </div>
         <p id="ajuda-busca-categoria" className="text-sm text-texto-suave">
-          {temTitulo ? "Escreva o que é e toque na categoria certa." : "Escreva o que é e toque na categoria certa. O texto já vira o começo do título."}
+          {temTitulo ? "Escreva o que é e toque na categoria certa." : "O texto vira o começo do título."}
         </p>
       </div>
 

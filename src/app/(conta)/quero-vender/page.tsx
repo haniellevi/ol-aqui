@@ -28,35 +28,35 @@ export default async function PaginaQueroVender() {
   const [pf, teste] = await Promise.all([planoInicialPf(regiao), testeGratis(regiao)]);
   const textoPf =
     pf?.limite_anuncios != null
-      ? `Não pede mais nada. Você pode ter até ${pf.limite_anuncios} anúncios no ar de graça.`
-      : "Não pede mais nada. Você já pode anunciar.";
+      ? `Até ${pf.limite_anuncios} anúncios grátis no ar.`
+      : "Comece a anunciar com sua conta atual.";
   const partesTeste = [
     teste.dias ? `${teste.dias} dias grátis para testar` : "Teste grátis",
     teste.limite != null ? `até ${teste.limite} anúncios` : null,
   ].filter(Boolean);
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-2.5 py-4 md:gap-5 md:px-4 md:py-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-titulo font-semibold text-beringela">Como você quer vender?</h1>
-        <p className="text-base text-texto-suave">Escolha uma opção. Dá para virar loja depois, sem perder seus anúncios.</p>
+        <h1 className="text-xl font-semibold text-beringela">Como você quer vender?</h1>
+        <p className="text-sm text-texto-suave md:text-base">Você pode criar uma loja depois e manter seus anúncios.</p>
       </div>
 
-      <section aria-labelledby="titulo-pf" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h2 id="titulo-pf" className="text-lg font-semibold">Vender minhas coisas</h2>
-        <p className="text-base text-texto-suave">{textoPf}</p>
+      <section aria-labelledby="titulo-pf" className="flex flex-col gap-2 rounded-card bg-cartao p-3 md:gap-3 md:p-4 shadow-1">
+        <h2 id="titulo-pf" className="text-base font-semibold md:text-lg">Vender minhas coisas</h2>
+        <p className="text-sm text-texto-suave md:text-base">{textoPf}</p>
         <BotaoVenderCoisas />
       </section>
 
-      <section aria-labelledby="titulo-loja" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
+      <section aria-labelledby="titulo-loja" className="flex flex-col gap-2 rounded-card bg-cartao p-3 md:gap-3 md:p-4 shadow-1">
         <div className="flex items-start gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
+          <span className="grid size-8 shrink-0 md:size-10 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
             <Store className="size-6" />
           </span>
           <div className="flex flex-col gap-1">
-            <h2 id="titulo-loja" className="text-lg font-semibold">Tenho uma loja ou negócio</h2>
-            <p className="text-base text-texto-suave">
-              Vitrine própria com link para divulgar no Instagram e no WhatsApp, e o Radar de Negócios. {partesTeste.join(", ")}.
+            <h2 id="titulo-loja" className="text-base font-semibold md:text-lg">Tenho uma loja ou negócio</h2>
+            <p className="text-sm text-texto-suave md:text-base">
+              Vitrine para divulgar seus anúncios e acesso ao Radar. {partesTeste.join(", ")}.
             </p>
           </div>
         </div>

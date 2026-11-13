@@ -35,7 +35,7 @@ export default async function PassoDetalhes({ searchParams }: { searchParams: Pa
         editar={editar}
         formId={FORM}
         titulo="Conte como é"
-        subtitulo={nome ? `Categoria: ${nome}. Os campos sem "(opcional)" são obrigatórios.` : 'Os campos sem "(opcional)" são obrigatórios.'}
+        subtitulo={nome ?? undefined}
       />
       <FormDetalhes
         id={anuncio.id}

@@ -34,7 +34,7 @@ export function FormLocal({
   const erroCidade = estado?.campos?.cidade;
 
   return (
-    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-5" noValidate>
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-5" noValidate>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
 
@@ -53,7 +53,7 @@ export function FormLocal({
               onChange={(e) => setCidade(e.target.value)}
               aria-invalid={erroCidade ? true : undefined}
               aria-describedby={erroCidade ? "campo-cidade-erro" : undefined}
-              className={`${classesCampo} h-10 appearance-none pr-10`}
+              className={`${classesCampo} h-11 appearance-none pr-10 md:h-10`}
             >
               <option value="">Escolha a cidade</option>
               {cidades.map((c) => (
