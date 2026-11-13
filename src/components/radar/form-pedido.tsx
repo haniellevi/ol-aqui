@@ -25,6 +25,8 @@ import {
   TEXTO_VISIBILIDADE,
   TOTAL_PASSOS_PEDIDO,
   cidadesDoRascunho,
+  estadoRetomada,
+  type EstadoRetomada,
   cidadesParaEnvio,
   erroDoPasso,
   juntarFala,
@@ -115,17 +117,21 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   const [agora, setAgora] = useState<number | null>(null);
   useEffect(() => setAgora(Date.now()), []);
   // Volta do login: o rascunho só existe no aparelho, então é lido depois de montar.
-  const [retomado, setRetomado] = useState<null | "ok" | "perdeu_cidades" | "sem_rascunho">(null);
+  const [retomado, setRetomado] = useState<EstadoRetomada | null>(null);
 
   const temPrazos = regras.prazosHoras.length > 0;
   const fimPrazo = agora && prazo ? dataHoraCurta(new Date(agora + prazo * 3600_000)) : null;
   const idsValidos = cidades.map((c) => c.id);
 
   useEffect(() => {
-    if (!retomar) return;
+    if (!retomar && !anonimo) return;
     const r = lerRascunho();
-    if (!r) return setRetomado("sem_rascunho");
-    const area = cidadesDoRascunho(r.cidadesIds, cidades.map((c) => c.id));
+    // O ?retomar=1 sai do endereço: recarregar ou voltar depois de publicar não mostra "não achamos".
+    if (retomar) window.history.replaceState(null, "", window.location.pathname);
+    const area = r ? cidadesDoRascunho(r.cidadesIds, cidades.map((c) => c.id)) : null;
+    const estado = estadoRetomada({ retomar, anonimo, temRascunho: !!r, perdeuCidades: !!area?.perdeu });
+    setRetomado(estado);
+    if (!r || !area || !estado || estado === "sem_rascunho") return;
     setTitulo(r.titulo);
     setDetalhes(r.detalhes);
     setCategoriaId(r.categoriaId);
@@ -135,7 +141,6 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
     setVisibilidade(r.visibilidade);
     setModo(r.modo);
     if (r.prazoHoras != null && regras.prazosHoras.includes(r.prazoHoras)) setPrazo(r.prazoHoras);
-    setRetomado(area.perdeu ? "perdeu_cidades" : "ok");
     irPara(TOTAL_PASSOS_PEDIDO);
     // Só na montagem: o rascunho é lido uma vez.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -297,7 +302,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           <Alert variant="warning" role="status" className="text-facil">Não achamos o pedido que você começou. Escreva de novo, é rápido.</Alert>
         ) : retomado && passo === TOTAL_PASSOS_PEDIDO ? (
           <Alert variant="success" role="status" className="text-facil">
-            Pronto, você entrou. Confira seu pedido e toque em Publicar.
+            {retomado === "continua" ? "Seu pedido continua aqui. Confira e toque em Entrar para publicar." : "Pronto, você entrou. Confira seu pedido e toque em Publicar."}
             {retomado === "perdeu_cidades" && " Algumas cidades ficam fora da sua região e saíram do pedido."}
           </Alert>
         ) : null}

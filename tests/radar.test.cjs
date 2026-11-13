@@ -292,3 +292,16 @@ test('cidadesDoRascunho: fica só com as da região e avisa se perdeu',()=>{
  assert.deepEqual(cidadesDoRascunho(['a'],['a']),{ids:['a'],perdeu:false});
  assert.deepEqual(cidadesDoRascunho([],['a']),{ids:[],perdeu:false});
 });
+
+test('estadoRetomada: quando mostrar o rascunho e qual aviso',()=>{
+ const {estadoRetomada}=carregar('src/components/radar/passos-pedido.ts');
+ // Voltou do login
+ assert.equal(estadoRetomada({retomar:true,anonimo:false,temRascunho:true,perdeuCidades:false}),'ok');
+ assert.equal(estadoRetomada({retomar:true,anonimo:false,temRascunho:true,perdeuCidades:true}),'perdeu_cidades');
+ assert.equal(estadoRetomada({retomar:true,anonimo:false,temRascunho:false,perdeuCidades:false}),'sem_rascunho');
+ // Sem login: Voltar do navegador na tela de entrar traz o pedido de volta; sem rascunho, nada
+ assert.equal(estadoRetomada({retomar:false,anonimo:true,temRascunho:true,perdeuCidades:false}),'continua');
+ assert.equal(estadoRetomada({retomar:false,anonimo:true,temRascunho:false,perdeuCidades:false}),null);
+ // Logado sem ?retomar=1: não mexe
+ assert.equal(estadoRetomada({retomar:false,anonimo:false,temRascunho:true,perdeuCidades:false}),null);
+});

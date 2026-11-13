@@ -65,6 +65,20 @@ export function cidadesDoRascunho(ids: string[], validas: string[]): { ids: stri
   return { ids: ficam, perdeu: ficam.length < ids.length };
 }
 
+export type EstadoRetomada = "ok" | "perdeu_cidades" | "sem_rascunho" | "continua";
+
+/**
+ * Rascunho do pedido ao abrir o formulário. Com login e ?retomar=1 (volta do login): "ok",
+ * "perdeu_cidades" ou "sem_rascunho". Sem login, com rascunho guardado (Voltar do navegador na
+ * tela de entrar): "continua". Nos outros casos, null (formulário normal).
+ */
+export function estadoRetomada(e: { retomar: boolean; anonimo: boolean; temRascunho: boolean; perdeuCidades: boolean }): EstadoRetomada | null {
+  if (e.anonimo) return e.temRascunho ? "continua" : null;
+  if (!e.retomar) return null;
+  if (!e.temRascunho) return "sem_rascunho";
+  return e.perdeuCidades ? "perdeu_cidades" : "ok";
+}
+
 /** Texto da área para o resumo: "Toda a região" ou os nomes marcados. */
 export function textoArea(valor: string[], cidades: { id: string; nome: string }[]): string {
   if (valor.length === 0) return "Toda a região";
