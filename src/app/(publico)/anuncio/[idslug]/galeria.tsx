@@ -84,7 +84,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
 
   if (total === 0) {
     return (
-      <div className="grid aspect-square w-full place-items-center bg-borda text-texto-suave md:rounded-card">
+      <div className="grid aspect-square max-h-48 w-full rounded-card md:max-h-none place-items-center bg-borda text-texto-suave md:rounded-card">
         <span className="flex flex-col items-center gap-2">
           <ImageOff className="size-10" aria-hidden />
           Anúncio sem foto
@@ -98,7 +98,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
       <ul
         ref={trilho}
         onScroll={(e) => aoRolar(e.currentTarget)}
-        className="flex aspect-square w-full snap-x snap-mandatory overflow-x-auto bg-white [scrollbar-width:none] md:rounded-card"
+        className="flex aspect-square max-h-48 w-full rounded-card md:max-h-none snap-x snap-mandatory overflow-x-auto bg-white [scrollbar-width:none] md:rounded-card"
       >
         {fotos.map((f, i) => (
           <li key={f + i} className="relative h-full w-full shrink-0 snap-center">

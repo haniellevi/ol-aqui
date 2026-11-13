@@ -13,7 +13,6 @@ import { favoritosEntre } from "@/lib/dados/favoritos";
 import { regiaoAtual } from "@/lib/dados/regiao";
 import { CampoBusca } from "@/components/busca/campo-busca";
 import { lugarDaRegiao } from "@/components/busca/parametros";
-import { CardAnuncio } from "@/components/anuncio/card-anuncio";
 import { CoracaoCard } from "@/components/anuncio/coracao-card";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { SalvarAoVoltar } from "@/components/anuncio/salvar-ao-voltar";
@@ -114,20 +113,21 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const radar = ativos.find((b) => b.chave === "radar");
   const recentes = ativos.find((b) => b.chave === "recentes");
   const blocoLojas = regiao ? ativos.find((b) => b.chave === "lojas_regiao") : undefined;
+  const base = linkFiltros(filtros);
+  const voltarHref = pagina > 1 ? `${base}${base.includes("?") ? "&" : "?"}pagina=${pagina}` : base;
   const linkPagina = (n: number) => {
-    const base = linkFiltros(filtros);
     if (n <= 1) return `${base}#anuncios`;
     return `${base}${base.includes("?") ? "&" : "?"}pagina=${n}#anuncios`;
   };
 
   return (
-    <div className={estilos.fundo}>
+    <div data-comprador className={estilos.fundo}>
       {/* Celular: a busca gruda logo abaixo do cabeçalho (no computador ela está no próprio cabeçalho). */}
-      <div className="sticky top-13 z-20 border-b border-borda bg-cartao/95 px-4 py-2 backdrop-blur md:hidden">
-        <CampoBusca id="busca-inicio" />
+      <div className="border-b border-borda bg-cartao px-2.5 py-2 md:hidden">
+        <CampoBusca id="busca-inicio" toqueAmplo />
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-4 py-4 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-2.5 py-2 md:px-4 md:py-4 lg:grid-cols-[13rem_minmax(0,1fr)]">
         {/* Coluna da esquerda: categorias e atalhos (só no computador). */}
         <aside className="sticky top-20 hidden flex-col gap-4 lg:flex">
           {categorias.length > 0 && (
@@ -163,19 +163,34 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
         </aside>
 
         {/* Meio: o feed. */}
-        <main className="flex min-w-0 flex-col gap-5">
+        <main className="flex min-w-0 flex-col gap-3 md:gap-5">
           <Suspense fallback={null}>
             <SalvarAoVoltar logado={logado} />
           </Suspense>
 
           {/* Lojas no topo do feed (bloco "lojas_regiao" do painel). Desligado: fica só o acesso ao catálogo. */}
+          <div className="min-w-0 max-md:order-3">
           {regiao && blocoLojas ? (
             <LojasDaRegiao regiao={regiao} lugar={lugar} arvore={enxugarArvore(todasCategorias)} titulo={textoDe(blocoLojas.titulo, "Lojas de {lugar}", lugar)} />
           ) : (
             <Botao href="/lojas" variante="secundario" className="self-start">Ver todas as lojas</Botao>
           )}
 
-          <FaixaCategorias arvore={categorias} soComAnuncios={!!totais} className="lg:hidden" />
+          </div>
+          <FaixaCategorias arvore={categorias} soComAnuncios={!!totais} className="hidden md:block lg:hidden" />
+          <nav aria-label="Categorias" className="md:hidden">
+            <ul className="flex flex-wrap gap-x-2">
+              <li><Link href="/categorias" className={estilos.atalhoCategoria}><LayoutGrid className="size-4 shrink-0" aria-hidden /> Todas</Link></li>
+              {categorias.slice(0, 2).map((c) => (
+                <li key={c.id} className="min-w-0 max-w-full">
+                  <Link href={linkCategoria(c.slug)} className={estilos.atalhoCategoria}>
+                    <IconeCategoria nome={c.icone} className="size-4 shrink-0" aria-hidden />
+                    <span className="[overflow-wrap:anywhere]">{c.nome}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -184,7 +199,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
               </h1>
               {total > 0 && <p className="text-legenda text-texto-suave">{total.toLocaleString("pt-BR")} {total === 1 ? "anúncio" : "anúncios"}</p>}
             </div>
-            <div role="group" aria-label="Filtros rápidos" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
+            <div role="group" aria-label="Filtros rápidos" className={`flex flex-wrap gap-2 ${filtrando ? "" : "max-md:hidden"}`}>
               {cidade && (
                 <Chip href={linkFiltros({ ...filtros, minha: !filtros.minha })} ativo={filtros.minha} icone={<MapPin />} scroll={false}>
                   Só em {formatarNome(cidade)}
@@ -204,6 +219,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             </div>
           </div>
 
+          <div className="max-md:order-4">
           <AcoesInicio
             radar={radar ? {
               chamada: textoDe(radar.titulo, "Não achou?", lugar),
@@ -212,29 +228,23 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             venderPrimeiro={Boolean(radar && recentes && ativos.indexOf(recentes) < ativos.indexOf(radar))}
           />
 
+          </div>
+
           {ativos.map((bloco) => {
             switch (bloco.chave) {
               case "destaques":
                 return destaques.length > 0 ? (
-                  <section key={bloco.chave} aria-labelledby="titulo-destaques" className={`flex flex-col gap-3 ${estilos.faixaPaga}`}>
+                  <section key={bloco.chave} aria-labelledby="titulo-destaques" className={`flex flex-col gap-2 max-md:order-1 ${estilos.faixaPaga}`}>
                     <h2 id="titulo-destaques" className="text-lg font-semibold">
                       {textoDe(bloco.titulo, "Destaques perto de você", lugar)}
                     </h2>
-                    <ul className="-mx-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3 pb-1 [scrollbar-width:none]">
-                      {destaques.map((a, i) => (
-                        <li key={a.id} className="flex w-[46%] max-w-56 shrink-0 snap-start sm:w-52">
-                          <div className="flex w-full flex-col [&>article]:flex-1">
-                            <CardAnuncio anuncio={a} prioridade={i < 2} acao={coracao(a)} />
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                    <GradeAnuncios anuncios={destaques} acao={coracao} compacto voltarHref={voltarHref} className={estilos.trilhoDestaques} />
                   </section>
                 ) : null;
 
               case "lojas_destaque":
                 return regiao ? (
-                  <LojasEmDestaque key={bloco.chave} regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} />
+                  <div key={bloco.chave} className="min-w-0 max-md:order-3"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
                 ) : null;
 
               case "radar":
@@ -247,10 +257,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
               case "recentes":
                 return (
-                  <div key={bloco.chave} className="flex flex-col gap-6">
-                    {!filtrando && <VistosRecentemente />}
+                  <div key={bloco.chave} className="flex flex-col gap-3 max-md:order-2 md:gap-6">
+                    {!filtrando && <div className="max-md:order-last"><VistosRecentemente voltarHref={voltarHref} /></div>}
                     <section id="anuncios" aria-labelledby="titulo-recentes" className="flex scroll-mt-20 flex-col gap-3">
-                      <h2 id="titulo-recentes" className="text-lg font-semibold">
+                      <h2 id="titulo-recentes" className={`text-lg font-semibold ${filtrando ? "" : "max-md:sr-only"}`}>
                         {filtrando
                           ? filtros.menorPreco ? "Menor preço primeiro" : "Anúncios com esses filtros"
                           : textoDe(bloco.titulo, "Mais recentes em {lugar}", lugar)}
@@ -260,6 +270,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                         prioridade={destaques.length ? 0 : 2}
                         acao={coracao}
                         medirEm="inicio"
+                        compacto
+                        voltarHref={voltarHref}
                         className="xl:grid-cols-4"
                         vazio={
                           filtrando ? (

@@ -241,3 +241,42 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
   --sidebar-border: var(--color-borda);
   --sidebar-ring: var(--color-laranja-escuro);
 }
+
+@media (width < 48rem) {
+  .publico:has([data-comprador]) .linha-cabecalho {
+    height: auto;
+    min-height: 3rem;
+    justify-content: space-between;
+    padding-inline: 0.625rem;
+  }
+
+  .publico:has([data-comprador]) .cidade-cabecalho {
+    height: auto;
+    min-height: 3rem;
+    margin-left: 0;
+    padding-inline: 0.25rem;
+    border: 0;
+  }
+
+  .publico:has([data-comprador]) .cidade-cabecalho-nome {
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .publico:has([data-comprador]) :is(.assistente-publico, .conta-cabecalho),
+  .publico:has([data-detalhe-anuncio]) > :is(.cabecalho-publico, .navegacao-inferior) {
+    display: none;
+  }
+
+  .publico:has([data-detalhe-anuncio]) > #conteudo { padding-bottom: 0; }
+  .publico:has([data-comprador]) .navegacao-inferior ul { height: 3.5rem; }
+  .publico:has([data-comprador]) .navegacao-inferior a { font-size: 0.75rem; }
+  .publico:has([data-comprador]) .navegacao-inferior svg { width: 1.25rem; height: 1.25rem; }
+
+  .publico:has([data-comprador]) .icone-anunciar {
+    display: contents;
+  }
+
+  html:has([data-detalhe-anuncio]) { scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+}

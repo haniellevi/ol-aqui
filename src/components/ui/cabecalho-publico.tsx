@@ -36,11 +36,11 @@ export async function CabecalhoPublico() {
   const cidade = regiao?.cidade ?? regiao?.cidadeSede ?? regiao?.nome ?? null;
 
   return (
-    <header className="olaki-material sticky top-0 z-30">
+    <header className="cabecalho-publico olaki-material sticky top-0 z-30">
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-4 focus:z-50 focus:rounded-card focus:bg-laranja focus:px-4 focus:py-3 focus:font-bold focus:text-beringela">
         Pular para o conteúdo
       </a>
-      <div className="mx-auto flex h-13 max-w-7xl items-center gap-2 px-4 md:h-14">
+      <div className="linha-cabecalho mx-auto flex h-13 max-w-7xl items-center gap-2 px-4 md:h-14">
         <Link href="/" className="flex h-10 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="Mercado da Região, página inicial">
           <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={98} height={36} priority className="h-7 w-auto sm:h-8" />
         </Link>
@@ -60,7 +60,7 @@ export async function CabecalhoPublico() {
           </Link>
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center md:ml-1">
+        <div className="conta-cabecalho ml-auto flex shrink-0 items-center md:ml-1">
           {!comLogin ? (
             <Link href="/entrar" className={LINK}>
               <UserRound className="size-5" aria-hidden /> Entrar

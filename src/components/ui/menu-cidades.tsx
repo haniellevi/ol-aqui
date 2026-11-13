@@ -15,11 +15,11 @@ export function MenuCidades({ cidade, regiao, cidades }: { cidade: string | null
   const itens = (
     <>
       <MapPin className="size-4 shrink-0" aria-hidden />
-      <span className="truncate">{rotulo}</span>
+      <span className="cidade-cabecalho-nome truncate">{rotulo}</span>
       <ChevronDown className="size-4 shrink-0" aria-hidden />
     </>
   );
-  if (!cidades.length) return <Link href="/cidades" className={estilo} aria-label="Escolher cidade">{itens}</Link>;
+  if (!cidades.length) return <Link href="/cidades" className={`cidade-cabecalho ${estilo}`} aria-label="Escolher cidade">{itens}</Link>;
 
   return <form action={escolherCidade} className="min-w-0">
     <OpcoesCidade cidade={cidade} regiao={regiao} cidades={cidades} rotulo={rotulo}>{itens}</OpcoesCidade>
@@ -35,7 +35,7 @@ function OpcoesCidade({ cidade, regiao, cidades, rotulo, children }: {
     <>
       <input ref={id} type="hidden" name="cidade" />
       <DropdownMenu>
-        <DropdownMenuTrigger className={`${estilo} max-w-[calc(100%-0.25rem)]`} disabled={pending} aria-busy={pending || undefined}
+        <DropdownMenuTrigger className={`cidade-cabecalho ${estilo} max-w-[calc(100%-0.25rem)]`} disabled={pending} aria-busy={pending || undefined}
           aria-label={cidade ? `Cidade: ${cidade}. Trocar cidade` : rotulo}>
           {children}
         </DropdownMenuTrigger>

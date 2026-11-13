@@ -20,11 +20,13 @@ export function EntradaComSugestoes({
   valor,
   autoFocus,
   className,
+  placeholder = "Ex.: moto, geladeira, casa",
 }: {
   id: string;
   valor: string;
   autoFocus: boolean;
   className: string;
+  placeholder?: string;
 }) {
   const router = useRouter();
   const lista = useId();
@@ -91,7 +93,7 @@ export function EntradaComSugestoes({
         type="search"
         name="q"
         value={texto}
-        placeholder="Ex.: moto, geladeira, casa"
+        placeholder={placeholder}
         enterKeyHint="search"
         autoComplete="off"
         maxLength={120}

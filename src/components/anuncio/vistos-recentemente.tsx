@@ -5,7 +5,7 @@ import { CardAnuncio } from "@/components/anuncio/card-anuncio";
 import { lerVistos, limparVistos, type AnuncioVisto } from "@/lib/vistos";
 
 // Faixa "Você viu há pouco": lê os anúncios abertos neste aparelho. Lista vazia = faixa some.
-export function VistosRecentemente() {
+export function VistosRecentemente({ voltarHref }: { voltarHref?: string } = {}) {
   const [vistos, setVistos] = useState<AnuncioVisto[]>([]);
   useEffect(() => setVistos(lerVistos()), []);
   if (vistos.length === 0) return null;
@@ -22,11 +22,11 @@ export function VistosRecentemente() {
           Limpar
         </button>
       </div>
-      <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:px-0">
+      <ul className="flex flex-col gap-1.5 md:-mx-4 md:flex-row md:snap-x md:snap-mandatory md:gap-3 md:overflow-x-auto md:px-4 md:pb-1 md:[scrollbar-width:none] lg:mx-0 lg:px-0">
         {vistos.map((a) => (
-          <li key={a.id} className="flex w-[40%] max-w-44 shrink-0 snap-start sm:w-44">
+          <li key={a.id} className="flex md:w-44 md:shrink-0 md:snap-start">
             <div className="flex w-full flex-col [&>article]:flex-1">
-              <CardAnuncio anuncio={a} />
+              <CardAnuncio anuncio={a} compacto voltarHref={voltarHref} />
             </div>
           </li>
         ))}

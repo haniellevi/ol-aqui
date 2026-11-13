@@ -13,7 +13,7 @@ import { AnuncioForaDoAr } from "@/components/paginas/anuncio-fora-do-ar";
 import { ConteudoAnuncio } from "./conteudo-anuncio";
 import { conversasLigadas } from "@/lib/dados/conversas";
 
-type Props = { params: Promise<{ idslug: string }> };
+type Props = { params: Promise<{ idslug: string }>; searchParams?: Promise<{ voltar?: string | string[] }> };
 
 /**
  * Acha o anúncio pelo endereço da URL: link curto (/anuncio/<slug>) ou antigo (/anuncio/<id>-<titulo>).
@@ -68,7 +68,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function PaginaAnuncio({ params }: Props) {
+function destinoDeVolta(voltar: string | string[] | undefined) {
+  if (typeof voltar !== "string" || voltar.length > 8192) return "/busca";
+  if (!/^\/(?:busca)?(?:\?[^#]*)?$/.test(voltar) || /[\\\u0000-\u001f]/.test(voltar)) return "/busca";
+  return voltar;
+}
+
+export default async function PaginaAnuncio({ params, searchParams }: Props) {
+  const voltarHref = destinoDeVolta((await searchParams)?.voltar);
+
   const { idslug } = await params;
   const { id, a, antigo } = await localizar(idslug);
   if (!a) {
@@ -80,9 +88,13 @@ export default async function PaginaAnuncio({ params }: Props) {
 
   const caminho = linkAnuncio(a.id, a.titulo, a.slug);
   // Link antigo (uuid-titulo) de anúncio que já tem endereço curto: 308 para o curto.
-  if (a.slug && antigo) permanentRedirect(caminho);
+  const destinoCanonico = voltarHref === "/busca" ? caminho : `${caminho}?${new URLSearchParams({ voltar: voltarHref })}`;
+  if (a.slug && antigo) {
+    if (destinoCanonico !== caminho) redirect(destinoCanonico);
+    permanentRedirect(caminho);
+  }
   // Anúncio sem endereço curto: o link antigo certo é o próprio id-titulo; outro texto → corrige.
-  if (!a.slug && decodificar(idslug) !== `${a.id}-${slugDoTitulo(a.titulo)}`) redirect(caminho);
+  if (!a.slug && decodificar(idslug) !== `${a.id}-${slugDoTitulo(a.titulo)}`) redirect(destinoCanonico);
 
   const { userId } = await auth();
   const [favorito, parecidosBusca, [extra], conversas] = await Promise.all([
@@ -93,5 +105,5 @@ export default async function PaginaAnuncio({ params }: Props) {
     conversasLigadas(),
   ]);
   const parecidos = (parecidosBusca?.anuncios ?? []).filter((p) => p.id !== a.id).slice(0, 8);
-  return <ConteudoAnuncio key={a.id} a={a} favorito={favorito} logado={!!userId} parecidos={parecidos} extra={extra} conversas={conversas} />;
+  return <ConteudoAnuncio voltarHref={voltarHref} key={a.id} a={a} favorito={favorito} logado={!!userId} parecidos={parecidos} extra={extra} conversas={conversas} />;
 }

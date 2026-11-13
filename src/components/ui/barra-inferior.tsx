@@ -24,7 +24,7 @@ export function BarraInferior() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="olaki-material fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="navegacao-inferior olaki-material fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <ul className="mx-auto grid h-14 max-w-lg grid-cols-5">
         {ITENS.map(({ href, rotulo, Icone, ativo }) => {
@@ -40,7 +40,7 @@ export function BarraInferior() {
                 }`}
               >
                 {anunciar ? (
-                  <span className="-mt-4 grid size-10 place-items-center rounded-card bg-laranja text-beringela shadow-2">
+                  <span className="icone-anunciar -mt-4 grid size-10 place-items-center rounded-card bg-laranja text-beringela shadow-2">
                     <Icone className="size-5" strokeWidth={2.5} aria-hidden />
                   </span>
                 ) : (

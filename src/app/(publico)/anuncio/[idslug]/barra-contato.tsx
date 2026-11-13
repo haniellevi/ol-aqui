@@ -8,7 +8,7 @@ import { classesBotao } from "@/components/ui/botao";
 import { alternarFavorito, registrarEvento } from "./actions";
 import { BotaoConversar } from "@/components/conversas/botao-conversar";
 
-// Barra fixa embaixo (T7, item 10): "Chamar no WhatsApp" verde + coração.
+// No celular, a barra fixa tem apenas o WhatsApp.
 // No computador vira uma caixa normal ao lado das fotos.
 // O WhatsApp é um link comum: funciona sem JavaScript; com JavaScript também conta o clique.
 
@@ -75,20 +75,22 @@ export function BarraContato({
   }
 
   return (
-    <div className="olaki-material fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 px-4 py-2 md:static md:z-auto md:bg-transparent md:p-0 md:shadow-none md:backdrop-filter-none">
+    <div className="flex flex-col">
       <div className="mx-auto flex max-w-6xl items-center gap-2">
         {whatsappHref ? (
+          <div role="region" aria-label="Contato com o vendedor" className="fixed inset-x-0 bottom-0 z-30 border-t border-borda bg-cartao px-2.5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2 md:static md:flex-1 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
           <a
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => void registrarEvento(anuncioId, "clique_whatsapp").catch(() => undefined)}
             aria-label="Chamar o vendedor no WhatsApp (abre em nova aba)"
-            className={classesBotao("whatsapp", false, "min-w-0 flex-1 px-3")}
+            className={classesBotao("primario", true, "min-h-12 px-3")}
           >
             <MessageCircle className="size-5" aria-hidden />
             Chamar no WhatsApp
           </a>
+          </div>
         ) : (
           !conversar && <p className="flex min-h-10 min-w-0 flex-1 items-center text-base text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
         )}

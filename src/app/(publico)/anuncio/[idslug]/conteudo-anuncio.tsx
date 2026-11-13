@@ -1,6 +1,6 @@
 import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
-import { ChevronRight, Clock, Eye, MapPin, Repeat, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ChevronRight, Clock, Eye, MapPin, Repeat, ShieldAlert } from "lucide-react";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { CartaoVendedor } from "@/components/vitrine/cartao-vendedor";
 import { primeiroNome } from "@/components/vitrine/util";
@@ -25,18 +25,20 @@ const STATUS_PREVIA: Partial<Record<StatusAnuncio, string>> = {
 
 const publico = (a: AnuncioPublico) => a.status === "ativo" || a.status === "vendido";
 
-export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, conversas = false }: {
+export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, conversas = false, voltarHref = "/busca" }: {
   a: AnuncioPublico; favorito: boolean | null; logado: boolean; parecidos: AnuncioCard[];
   /** Preço antes e UF (card de "Você viu há pouco"); sem eles o card mostra só cidade e preço. */
   extra?: { preco_antes_centavos?: number | null; uf?: string | null };
   /** Conversas ligadas no painel: mostra o botão "Conversar". */
   conversas?: boolean;
+  voltarHref?: string;
 }) {
   const caminho = linkAnuncio(a.id, a.titulo, a.slug);
   const titulo = formatarNome(a.titulo) || "Anúncio sem título";
   const ativo = a.status === "ativo";
   const vendido = a.status === "vendido";
-  const entrarHref = `/entrar?redirect_url=${encodeURIComponent(caminho)}`;
+  const caminhoComVolta = voltarHref === "/busca" ? caminho : `${caminho}?${new URLSearchParams({ voltar: voltarHref })}`;
+  const entrarHref = `/entrar?redirect_url=${encodeURIComponent(caminhoComVolta)}`;
 
   const detalhes = a.campos
     .map((c) => ({ c, texto: valorDoCampo(c, a.atributos[c.chave]) }))
@@ -66,7 +68,10 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
     : null;
 
   return (
-    <main className={`mx-auto w-full max-w-6xl md:px-4 md:py-4 ${mostrarBarra ? "pb-56 md:pb-8" : "pb-8"}`}>
+    <main data-comprador data-detalhe-anuncio className={`mx-auto w-full max-w-6xl px-2.5 md:px-4 md:py-4 ${whatsappHref ? "pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-8" : "pb-8"}`}>
+      <Link href={voltarHref} className="inline-flex min-h-12 items-center gap-2 rounded-campo px-1 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro">
+        <ArrowLeft className="size-5" aria-hidden /> Voltar
+      </Link>
       {jsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       )}
@@ -83,7 +88,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
       )}
 
       {a.categoria_pai_slug && a.categoria_slug && (
-        <nav aria-label="Você está em" className="px-4 text-base text-texto-suave md:px-0">
+        <nav aria-label="Você está em" className="hidden text-base text-texto-suave md:block">
           <ol className="flex flex-wrap items-center gap-1">
             <li>
               <Link href={linkCategoria(a.categoria_pai_slug)} className="inline-flex min-h-10 items-center underline-offset-4 hover:underline">
@@ -127,15 +132,16 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
         </Alert>
       )}
 
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] md:gap-6">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] md:gap-6">
         <div className={`min-w-0 ${vendido ? "opacity-80" : ""}`}>
           <Galeria key={a.id} fotos={a.fotos} titulo={titulo} />
         </div>
 
-        <aside className="min-w-0 px-4 md:row-span-2 md:px-0">
-          <div className="flex flex-col gap-2 md:sticky md:top-20">
+        <aside className="min-w-0 md:row-span-2">
+          <div className="flex flex-col gap-1.5 md:sticky md:top-20 md:gap-2">
+            <h1 className="text-[17px] leading-snug font-semibold text-beringela [overflow-wrap:anywhere] md:text-xl">{titulo}</h1>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xl font-bold tabular-nums">{preco(a.preco_centavos)}</p>
+              <p className="text-titulo font-bold text-beringela tabular-nums">{preco(a.preco_centavos)}</p>
               {vendido && <span className="rounded-full bg-beringela px-3 py-0.5 text-legenda font-bold text-white">Vendido</span>}
               {a.destaque && ativo && (
                 <span className="rounded-full bg-patrocinado-fundo px-3 py-0.5 text-legenda font-bold text-beringela">Patrocinado</span>
@@ -146,7 +152,6 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
                 <Repeat className="size-5" aria-hidden /> Aceita troca
               </p>
             )}
-            <h1 className="text-xl leading-6 font-semibold break-words">{titulo}</h1>
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-legenda text-texto-suave">
               {a.cidade && (
                 <span className="inline-flex max-w-full min-w-0 items-center gap-1">
@@ -197,7 +202,16 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-5 px-4 md:px-0">
+        <div className="flex min-w-0 flex-col gap-3 md:gap-5">
+          {descricao && (
+            <section aria-labelledby="titulo-descricao" className="flex flex-col gap-2">
+              <h2 id="titulo-descricao" className="text-lg font-semibold">
+                Descrição
+              </h2>
+              <DescricaoAnuncio texto={descricao} />
+            </section>
+          )}
+
           {detalhes.length > 0 && (
             <section aria-labelledby="titulo-detalhes" className="flex flex-col gap-2">
               <h2 id="titulo-detalhes" className="text-lg font-semibold">
@@ -214,15 +228,6 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
             </section>
           )}
 
-          {descricao && (
-            <section aria-labelledby="titulo-descricao" className="flex flex-col gap-2">
-              <h2 id="titulo-descricao" className="text-lg font-semibold">
-                Descrição
-              </h2>
-              <DescricaoAnuncio texto={descricao} />
-            </section>
-          )}
-
           <Alert variant="warning" role="note" aria-label="Dica de segurança" className="flex gap-3">
             <ShieldAlert className="mt-0.5 size-6 shrink-0 text-aviso" aria-hidden />
             <p>
@@ -236,7 +241,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
               <h2 id="titulo-parecidos" className="text-lg font-semibold">
                 Parecidos na região
               </h2>
-              <GradeAnuncios anuncios={parecidos} prioridade={0} />
+              <GradeAnuncios anuncios={parecidos} prioridade={0} compacto voltarHref={voltarHref} />
               {a.categoria_pai_slug && a.categoria_slug && (
                 <Link
                   href={linkCategoria(a.categoria_pai_slug, a.categoria_slug)}

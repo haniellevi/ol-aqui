@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
+import { ArrowDownUp, ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
 import { classesChip } from "@/components/ui/chip";
 import { classesBotao } from "@/components/ui/botao";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
@@ -12,6 +12,8 @@ import { Alert } from "@/components/ui/alert";
 
 // Corpo comum da busca (T5) e das listas de categoria (T4):
 // chips de filtro, "N anúncios em ...", grade, paginação e a folha de filtros.
+
+const controle = "inline-flex min-h-12 items-center gap-1.5 rounded-campo px-2 text-sm font-semibold text-beringela hover:bg-selecao focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
 
 export function ResultadosBusca({
   caminho,
@@ -62,19 +64,22 @@ export function ResultadosBusca({
       : c.tipo === "sim_nao" ? (valores[0] === "sim" ? "Sim" : "Não") : [valores[0]].flat().join(", ");
     ativos.push({ rotulo: `${c.rotulo}: ${texto}`, parametros });
   }
-  if (estado.ordem !== "relevancia" && ordem) ativos.push({ rotulo: `Ordem: ${ordem.rotulo}`, parametros: ["ordem"] });
+  const compacto = caminho === "/busca";
+  if (!compacto && estado.ordem !== "relevancia" && ordem) ativos.push({ rotulo: `Ordem: ${ordem.rotulo}`, parametros: ["ordem"] });
+  const voltarHref = compacto ? comParametros(caminho, sp, { pagina: estado.pagina > 1 ? String(estado.pagina) : null }) : undefined;
   const limpar = comParametros(caminho, { q: estado.q });
 
   return (
     <>
       <nav aria-label="Filtros da busca">
-        <ul className="flex flex-wrap gap-2 py-1">
+        <ul className={compacto ? "flex items-center justify-between gap-2 border-b border-borda" : "flex flex-wrap gap-2 py-1"}>
           <li>
-            <a href={`#${ID_FOLHA}`} className={classesChip(estado.quantos > 0)}>
+            <a href={`#${ID_FOLHA}`} className={compacto ? controle : classesChip(estado.quantos > 0)}>
               <SlidersHorizontal className="size-4" aria-hidden />
-              Filtros{estado.quantos > 0 ? ` (${estado.quantos})` : ""}
+              Filtros{(compacto ? ativos.length : estado.quantos) > 0 ? ` (${compacto ? ativos.length : estado.quantos})` : ""}
             </a>
           </li>
+          {!compacto && <>
           <li>
             <a href="#filtro-cidade" className={classesChip(!!estado.cidade)}>
               Cidade
@@ -96,29 +101,31 @@ export function ResultadosBusca({
               </Link>
             )}
           </li>
+          </>}
           <li>
-            <a href="#filtro-ordem" className={classesChip(estado.ordem !== "relevancia")}>
-              Ordenar
+            <a href="#filtro-ordem" className={compacto ? controle : classesChip(estado.ordem !== "relevancia")}>
+              {compacto && <ArrowDownUp className="size-4" aria-hidden />}
+              {compacto && estado.ordem !== "relevancia" ? ordem?.rotulo : "Ordenar"}
             </a>
           </li>
         </ul>
       </nav>
 
       {ativos.length > 0 && (
-        <nav aria-label="Filtros ativos" className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-3">
-          <div className="flex flex-wrap items-center justify-between gap-x-4">
+        <nav aria-label="Filtros ativos" className={compacto ? undefined : "flex flex-col gap-2 rounded-card border border-borda bg-cartao p-3"}>
+          {!compacto && <div className="flex flex-wrap items-center justify-between gap-x-4">
             <p className="text-sm font-semibold">Sua busca está filtrada</p>
-            <Link href={limpar} className="inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro">Limpar filtros</Link>
-          </div>
-          <ul className="flex flex-wrap gap-2">
+            <Link href={limpar} className="inline-flex min-h-12 items-center text-sm font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro">Limpar filtros</Link>
+          </div>}
+          <ul className={compacto ? `grid gap-1 ${ativos.length === 1 ? "grid-cols-1" : ativos.length === 2 ? "grid-cols-2" : "grid-cols-3"} sm:flex sm:flex-wrap` : "flex flex-wrap gap-2"}>
             {ativos.map((a) => (
               <li key={a.parametros[0]} className="max-w-full">
                 <Link
                   href={comParametros(caminho, sp, Object.fromEntries(a.parametros.map((p) => [p, null])))}
                   aria-label={`Remover filtro: ${a.rotulo}`}
-                  className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-campo border border-laranja-escuro bg-selecao px-3 py-2 text-sm text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                  className={compacto ? "flex h-full min-h-12 w-full items-center justify-between gap-1 rounded-campo bg-selecao px-1.5 py-1 text-xs leading-tight text-beringela hover:bg-borda focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro sm:w-auto sm:gap-2 sm:px-3" : "inline-flex min-h-12 max-w-full items-center gap-2 rounded-campo border border-laranja-escuro bg-selecao px-3 py-2 text-sm text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"}
                 >
-                  <span className="min-w-0 break-words">{a.rotulo}</span><X className="size-4 shrink-0" aria-hidden />
+                  <span className="min-w-0 [overflow-wrap:anywhere]">{compacto ? a.rotulo.replace(/^(Cidade|Preço): /, "") : a.rotulo}</span><X className="size-3 shrink-0" aria-hidden />
                 </Link>
               </li>
             ))}
@@ -154,7 +161,7 @@ export function ResultadosBusca({
             </Link>
           </div>
         ) : (
-          <GradeAnuncios anuncios={anuncios} vazio={vazio} medirEm={caminho === "/busca" ? "busca" : "categoria"} />
+          <GradeAnuncios anuncios={anuncios} vazio={vazio} compacto={compacto} voltarHref={voltarHref} medirEm={caminho === "/busca" ? "busca" : "categoria"} />
         )}
 
         {paginas > 1 && <Paginacao caminho={caminho} sp={sp} pagina={estado.pagina} paginas={paginas} />}

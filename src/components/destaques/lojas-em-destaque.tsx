@@ -19,7 +19,7 @@ export async function LojasEmDestaque({ regiao, titulo = "Lojas em destaque" }: 
         {titulo}
         <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-xs font-semibold text-beringela">Patrocinado</span>
       </h2>
-      <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+      <ul className="flex md:-mx-4 snap-x gap-3 overflow-x-auto md:px-4 pb-1 [scrollbar-width:none]">
         {lojas.map((l) => (
           <li key={l.id} className="w-28 shrink-0 snap-start">
             <Link

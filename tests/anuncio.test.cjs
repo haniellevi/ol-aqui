@@ -38,6 +38,16 @@ test('vendido e prévia do dono não oferecem contato para uma venda indisponív
   assert.match(dono, /Prévia: só você vê/); assert.match(dono, /Este anúncio é seu/);
   assert.doesNotMatch(dono, /https:\/\/wa.me\/|Copiar link|application\/ld\+json/);
 });
+test('anúncio volta à mesma busca com filtros repetidos, ordenação e página', async () => {
+  const { default: Pagina } = carregar(caminho + 'page.tsx', { ...mocks, '@clerk/nextjs/server': { auth: async () => ({ userId: null }) }, '@/lib/supabase/server': {}, '@/lib/dados/paginas': {}, '@/lib/dados/anuncios': { anuncioPublico: async () => anuncio, buscarAnuncios: async () => ({ anuncios: [] }) } });
+  const idslug = linkAnuncio(anuncio.id, anuncio.titulo).split('/').pop();
+  const voltar = '/busca?q=bike&cidade=Corrente&c_estado=Novo&c_estado=Usado&ordem=menor_preco&pagina=2';
+  for (const [entrada, esperado] of [[voltar, voltar], ['//fora.example/busca', '/busca'], ['/busca\\fora', '/busca']]) {
+    const html = render(await Pagina({ params: Promise.resolve({ idslug }), searchParams: Promise.resolve({ voltar: entrada }) }));
+    assert.ok(html.includes('href="' + esperado.replaceAll('&', '&amp;') + '"'), esperado);
+  }
+});
+
 test('galeria vazia e descrição curta são legíveis sem controles desnecessários', () => {
   const html = conteudo({ fotos: [], descricao: 'Descrição curta.' });
   assert.match(html, /Anúncio sem foto/); assert.match(html, /Descrição curta/);

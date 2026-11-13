@@ -16,6 +16,7 @@ export function CampoBusca({
   caminho = "/busca",
   sugestoes = false,
   regiao = "",
+  toqueAmplo = false,
 }: {
   valor?: string;
   /** Mostra o rótulo como título acima (Início). Senão fica só para o leitor de tela. */
@@ -29,6 +30,7 @@ export function CampoBusca({
   sugestoes?: boolean;
   /** Cidade escolhida: ao trocar, o campo recomeça e esquece as sugestões da cidade anterior. */
   regiao?: string;
+  toqueAmplo?: boolean;
 }) {
   return (
     <form action={caminho} method="get" role="search" className="flex flex-col gap-2">
@@ -38,17 +40,17 @@ export function CampoBusca({
       {Object.entries(manterFiltros(manter)).flatMap(([k, v]) =>
         (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean).map((valor, i) => <input key={`${k}-${i}`} type="hidden" name={k} value={valor} />),
       )}
-      <div className="relative flex h-12 items-center gap-2 rounded-card border-2 border-beringela bg-cartao pr-1 pl-3 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro md:h-10">
+      <div className={`relative flex items-center gap-2 rounded-card bg-cartao pl-3 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${toqueAmplo ? "h-[50px] border border-borda-campo md:h-10 md:pr-1" : "h-12 border-2 border-beringela pr-1 md:h-10"}`}>
         <Search className="size-5 shrink-0 text-beringela" aria-hidden />
         {sugestoes ? (
-          <EntradaComSugestoes key={`${regiao}|${valor}`} id={id} valor={valor} autoFocus={autoFocus} className={ESTILO_ENTRADA} />
+          <EntradaComSugestoes key={`${regiao}|${valor}`} id={id} valor={valor} autoFocus={autoFocus} className={ESTILO_ENTRADA} placeholder={toqueAmplo ? "Buscar anúncios" : undefined} />
         ) : (
           <input
             id={id}
             type="search"
             name="q"
             defaultValue={valor}
-            placeholder="Ex.: moto, geladeira, casa"
+            placeholder={toqueAmplo ? "Buscar anúncios" : "Ex.: moto, geladeira, casa"}
             enterKeyHint="search"
             autoComplete="off"
             maxLength={120}
@@ -58,7 +60,7 @@ export function CampoBusca({
         )}
         <button
           type="submit"
-          className="inline-flex h-8 shrink-0 items-center rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela hover:brightness-95 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro active:brightness-90 md:h-7"
+          className={`inline-flex shrink-0 items-center rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela hover:brightness-95 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro active:brightness-90 md:h-7 ${toqueAmplo ? "h-12 max-md:rounded-s-none" : "h-8"}`}
         >
           Buscar
         </button>

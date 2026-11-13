@@ -55,8 +55,8 @@ export default async function PaginaBusca({ searchParams }: Props) {
         termoDigitado={entendeu ? q : undefined}
         topo={
           <>
-            <h1 className="text-titulo font-semibold">{q ? `Resultados para “${q}”` : "Buscar anúncios"}</h1>
-            <CampoBusca valor={q} manter={sp} sugestoes />
+            <h1 className="sr-only md:not-sr-only md:text-titulo md:font-semibold">{q ? `Resultados para “${q}”` : "Buscar anúncios"}</h1>
+            <CampoBusca valor={q} manter={sp} sugestoes toqueAmplo />
             {entendeu && (
               <p className="text-sm text-texto-suave">
                 Entendi sua busca e já marquei os filtros abaixo. Toque num filtro para tirar.{" "}

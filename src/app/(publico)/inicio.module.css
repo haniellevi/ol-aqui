@@ -33,3 +33,37 @@
   border-radius: var(--radius-card);
   background: linear-gradient(180deg, var(--color-patrocinado-fundo), var(--color-fundo) 85%);
 }
+
+.atalhoCategoria {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 3rem;
+  padding-inline: 0.375rem;
+  border-radius: var(--radius-campo);
+  color: var(--color-beringela);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.atalhoCategoria:focus-visible {
+  outline: 3px solid var(--color-laranja-escuro);
+  outline-offset: -3px;
+}
+
+@media (width >= 48rem) {
+  .trilhoDestaques[class] {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0 0.75rem 0.25rem;
+    margin-inline: -0.75rem;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .trilhoDestaques > li {
+    flex: 0 0 13rem;
+    scroll-snap-align: start;
+  }
+}
