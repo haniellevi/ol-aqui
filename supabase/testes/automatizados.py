@@ -107,6 +107,8 @@ try:
     print('PASS: conversas: abrir pelo anúncio, enviar, ler por lado, limites, alerta de golpe, telefone escondido até o cliente mostrar e acesso só de quem participa', flush=True)
     checked(sql((root/'supabase/testes/800_conversas_radar_seguranca.sql').read_text()))
     print('PASS: conversas: proposta do Radar abre a conversa com cartão, bloquear, denunciar já bloqueia, admin só lê denunciada (registrado) e limpeza em 180 dias', flush=True)
+    checked(sql((root/'supabase/testes/790_radar_ia.sql').read_text()))
+    print('PASS: IA do Radar: chaves desligadas, 20 usos por dia, teto do mês próprio, livro-caixa e aviso de anúncio novo parecido 1 vez por dia', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin

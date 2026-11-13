@@ -29,21 +29,60 @@ Se só trocarmos as chaves, todo mundo "perde" a conta. Por isso a troca é feit
 4. Anotar as chaves de produção: `pk_live_...` e `sk_live_...` (guardar em lugar seguro; não colar em chat).
 5. **Não** criar o webhook agora (veja a Fase 3, passo 3).
 
-## Fase 3 — Criar as pessoas na produção e montar o mapa
+**Situação em 13/11/2026:** feita. Instância Production criada, DNS verificado, credenciais Google prontas, login
+com Google testado no portal do Clerk de produção e as duas chaves guardadas pelo Raniel. Na Vercel continuam só as
+chaves de teste (conferido 13/11) e o site segue com `pk_test`.
 
-1. Criar na produção cada pessoa que já existe (Clerk: importação em lote ou API de criar usuário), pelo **mesmo e-mail**.
-2. Montar o **mapa antigo → novo por e-mail**: uma lista com `user_ANTIGO`, `user_NOVO`, e-mail. Conferir à mão:
-   sem e-mail repetido, nenhum ID faltando, nenhum par trocado.
-3. **Webhook novo só depois da virada.** O site cria o perfil quando o webhook `user.created` chega
-   (`/api/webhooks/clerk`). Se o webhook de produção já estiver ligado ao criar os usuários, o perfil com o
-   ID novo nasce vazio e a troca recusa ("O ID novo já existe"). Deixe o webhook de produção para o passo 6 da Fase 4.
-4. Supabase: em **Authentication → Sign In / Providers → Third-Party Auth**, adicionar o Clerk de produção
-   (o emissor/domínio da instância de produção). O de desenvolvimento continua lá até a virada terminar.
-5. Vercel, separar as chaves por ambiente (**ainda sem publicar**):
-   - **Production**: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` = `pk_live_...`, `CLERK_SECRET_KEY` = `sk_live_...`,
-     `CLERK_WEBHOOK_SIGNING_SECRET` da produção.
-   - **Preview** e **Development**: continuam com `pk_test_...` / `sk_test_...` e o segredo do webhook de teste.
-6. Fotos (Storage): as fotos ficam em pastas com o ID da pessoa (`anuncios/user_ANTIGO/...`). **Plano escolhido:
+## Fase 3 — Preparar o Clerk de produção e montar o mapa (sem tocar no site)
+
+Nada desta fase muda o site: ele continua com as chaves de teste. Tudo é feito nos painéis do Clerk e do Supabase.
+
+### O que o código espera (conferido na main em 13/11/2026)
+
+- O Supabase recebe o **session token nativo** do Clerk (`accessToken: auth().getToken()`, sem template JWT).
+  O banco só lê duas claims: `sub` (vira `perfis.id`) e `role` (precisa ser `authenticated`). Sem `role`, toda
+  consulta de quem está logado falha. Admin vem de `perfis.e_admin` no banco, não de metadata do Clerk.
+- O código não lê `publicMetadata` nem claims personalizadas e não tem domínio do Clerk escrito (sem CSP).
+  O domínio de produção vem da própria `pk_live`.
+- Login do site: Google ou celular com código. O e-mail **não** fica no banco, só no Clerk.
+- Criam perfil sozinhos (`garantirPerfil` / `sincronizarPerfil`): o webhook `user.created`/`user.updated`,
+  o layout de `(conta)`, `/admin`, `/radar`, `/completar-perfil`, `/confirmar-celular`, convites e `/api/aki`.
+  Por isso ninguém pode usar o site com a chave de produção antes da troca (ver Fase 4).
+- Webhook e limpeza da lixeira: se o Clerk ligado responde 404 para um ID, o site chama `apagarConta`.
+  Com as chaves de produção ligadas, todo ID antigo ainda não trocado dá 404.
+
+### Banco em 13/11/2026 (só contagem)
+
+6 perfis, 1 admin, nenhuma conta na lixeira nem revogada, nenhum WhatsApp confirmado pelo Clerk
+(os 3 confirmados vieram pela Evolution e não dependem do Clerk).
+
+### Passos (Raniel, nos painéis)
+
+1. **Clerk de produção = Clerk de desenvolvimento.** Abrir os dois lado a lado e deixar igual:
+   - User & Authentication: os mesmos métodos (Google, celular com código, e-mail) e "verificar no cadastro" ligado.
+   - **Integrations → Supabase: ativar** na instância de produção. Isso põe `role: authenticated` no token.
+     Anotar o "Clerk domain" que ele mostra.
+   - Sessions → Customize session token: copiar o que houver na de desenvolvimento.
+   - Paths: login e cadastro em `/entrar`; site `https://mercadodaregiao.com.br`.
+   - Webhooks: **nenhum** na produção por enquanto.
+2. **Supabase:** Authentication → Sign In / Providers → Third-Party Auth → adicionar um Clerk com o domínio de
+   produção do passo 1. **Não remover** o de desenvolvimento. A doc do Supabase não diz se aceita dois Clerk
+   ao mesmo tempo; se o painel recusar, parar: a troca do domínio passa para dentro da Fase 4 e a manutenção
+   precisa cobrir isso. Fazer pelo menos 1 hora antes da virada (o Supabase pode levar até 30 min para valer).
+3. **Lista das 6 pessoas no Clerk de desenvolvimento:** para cada uma, anotar o ID (`user_...`), o e-mail,
+   o celular e como entra (Google ou celular).
+4. **Criar as pessoas no Clerk de produção** (Users → Create user), com o **mesmo e-mail** (e o mesmo celular de
+   quem entra por celular). O e-mail precisa ficar verificado: é isso que faz o Google ligar a conta em vez de
+   criar outra. A conta do Raniel já existe na produção (teste do Google): não criar de novo.
+   Sem senha. Sem webhook ligado, criar usuário não mexe no site.
+5. Conferir que a produção tem **exatamente 6** usuários, sem repetido.
+6. **Mapa:** 6 linhas `user_ANTIGO user_NOVO` (só os IDs; e-mail não precisa ir para o chat). Antes da virada,
+   conferir no banco: os 6 antigos existem em `perfis` e nenhum novo existe em `perfis`, `contas_revogadas` ou
+   `whatsapp_vinculos` (a função recusa nesses casos).
+7. **Vercel: não mexer agora.** As chaves de produção entram só na Fase 4, com o site em manutenção. Se entrarem
+   antes, o próximo PR juntado publica o site com o Clerk novo, as pessoas ganham perfil vazio e a limpeza pode
+   apagar perfis antigos (404).
+8. Fotos (Storage): as fotos ficam em pastas com o ID da pessoa (`anuncios/user_ANTIGO/...`). **Plano escolhido:
    não mover nada.** Com o padrão (`p_mover_arquivos = false`) a função não mexe em arquivo nem nos endereços
    gravados, então as fotos antigas continuam aparecendo. Fotos novas vão para a pasta do ID novo.
    Efeito: a pessoa não consegue apagar pelo app uma foto antiga que ficou na pasta velha (a equipe consegue).
@@ -54,7 +93,8 @@ Se só trocarmos as chaves, todo mundo "perde" a conta. Por isso a troca é feit
 1. **Backup completo** do banco do Supabase (e anotar a hora). Sem backup, não começa.
 2. Colocar o site em manutenção (ninguém grava durante a troca).
 3. Aplicar a migração `20261119010000_troca_id_clerk.sql` (se ainda não foi).
-4. Fotos: nada a fazer (ficam na pasta antiga; ver Fase 3, passo 6).
+4. Fotos: nada a fazer (ficam na pasta antiga; ver Fase 3, passo 8). Conferir que ninguém está na lixeira
+   (`lixeira_contas`): a limpeza diária das 04:00 UTC apagaria um perfil ainda não trocado.
 5. Rodar a troca de **todas** as pessoas numa só transação (se uma falhar, nenhuma muda). Exemplo, no editor SQL do Supabase:
 
    ```sql
@@ -69,8 +109,13 @@ Se só trocarmos as chaves, todo mundo "perde" a conta. Por isso a troca é feit
    ```
 
    Cada linha do resultado mostra quantas linhas mudaram em cada tabela. Conferir que **todas** as pessoas aparecem.
-6. Vercel: ligar as chaves de produção (Fase 3, passo 5), criar o **webhook de produção** no Clerk
-   (`user.created`, `user.updated`, `user.deleted` → `/api/webhooks/clerk`) e **publicar** o site.
+6. Vercel, separar as chaves por ambiente (as três juntas, da mesma instância):
+   - **Production**: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` = `pk_live_...`, `CLERK_SECRET_KEY` = `sk_live_...`,
+     `CLERK_WEBHOOK_SIGNING_SECRET` do webhook de produção.
+   - **Preview** e **Development**: continuam com `pk_test_...` / `sk_test_...`.
+
+   Criar o **webhook de produção** no Clerk (`user.created`, `user.updated`, `user.deleted` → `/api/webhooks/clerk`)
+   e **publicar** o site (novo build: a `pk_live` é embutida no build). Todos vão precisar entrar de novo.
 7. Testar com 2 contas reais: entrar, ver Minha conta, a loja, os anúncios com foto, os avisos, e (admin) o painel.
 8. Tirar o site da manutenção. Desligar o webhook do Clerk de **desenvolvimento** (se ele ficar ligado, apagar
    um usuário de teste no Clerk de desenvolvimento pode apagar perfil no banco real).
@@ -111,6 +156,8 @@ Se só trocarmos as chaves, todo mundo "perde" a conta. Por isso a troca é feit
   `src/lib/conta-exclusao.ts` lê o par antigo → novo em `admin_gestao_eventos` (`acao = 'troca_id_clerk'`)
   e a exclusão põe na fila e apaga as duas pastas (nunca a de um ID antigo que voltou a ser perfil).
 - (Opcional) Script de mover fotos no Storage pela API (`move`) por pessoa, para usar `p_mover_arquivos = true`.
-- Confirmar no Supabase real que o dono da função pode desligar os gatilhos das tabelas (`alter table ... disable trigger`).
+- ~~Confirmar no Supabase real que o dono da função pode desligar os gatilhos~~ **feito** 12/11: função e tabelas são do `postgres`.
 - Ensaiar a função num **clone** do banco de produção antes da virada (nunca ensaiar direto na produção).
 - Definir a janela de manutenção e quem avisa os usuários.
+- **Como pôr o site em manutenção**: o site ainda não tem modo de manutenção. Preparar antes da Fase 4
+  (sem ele, alguém pode entrar entre a troca das chaves e a troca dos IDs e ganhar perfil vazio).
