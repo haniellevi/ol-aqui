@@ -27,15 +27,16 @@ export async function apagarConta(id: string) {
   // A conta já não existe no Clerk. Revoga também JWT emitido antes da exclusão,
   // sem depender de manter o perfil e sem renovar a data quando o evento se repete.
   ok(await db.rpc("revogar_conta_definitivamente", { p_id: id }));
-  // A pasta entra na fila antes de apagar o perfil: se o Storage falhar, a limpeza tenta de novo.
-  if (/^[A-Za-z0-9_]+$/.test(id)) {
-    ok(await db.from("limpeza_arquivos").upsert({ pasta: id }, { onConflict: "pasta", ignoreDuplicates: true }));
+  // As pastas entram na fila antes de apagar o perfil: se o Storage falhar, a limpeza tenta de novo.
+  const pastas = await pastasDaConta(db, id);
+  for (const pasta of pastas) {
+    ok(await db.from("limpeza_arquivos").upsert({ pasta }, { onConflict: "pasta", ignoreDuplicates: true }));
   }
 
   const apagou = await db.from("perfis").delete().eq("id", id);
   if (!apagou.error) {
     // O banco já confirmou a cascata. Se o Storage falhar, a pasta continua na fila.
-    await apagarPasta(db, id);
+    for (const pasta of pastas) await apagarPasta(db, pasta);
     return;
   }
 
@@ -130,7 +131,36 @@ export async function apagarConta(id: string) {
       .eq("id", id),
   );
   // As fotos das provas ficam: só sai o que nenhum registro usa mais.
-  await apagarPasta(db, id);
+  for (const pasta of pastas) await apagarPasta(db, pasta);
+}
+
+/**
+ * Pastas de arquivos da conta: a do ID atual e as dos IDs antigos do Clerk. Na troca do Clerk de
+ * desenvolvimento para o de produção (admin_trocar_id_usuario, docs/PLANO-CLERK-PRODUCAO.md) as
+ * fotos ficam na pasta do ID antigo; o par antigo → novo fica em admin_gestao_eventos.
+ * Segue a cadeia inteira (A → B → C: excluir C limpa C, B e A), sem repetir nem entrar em ciclo.
+ * Um ID antigo que voltou a ser perfil de alguém (troca desfeita) nunca entra, nem os anteriores a ele.
+ */
+export async function pastasDaConta(db: Db, id: string): Promise<string[]> {
+  const valido = (p: unknown): p is string => typeof p === "string" && /^user_[A-Za-z0-9]+$/.test(p);
+  if (!/^[A-Za-z0-9_]+$/.test(id)) return [];
+  const pastas = [id];
+  const vistos = new Set([id]);
+  let atuais = [id];
+  for (let volta = 0; atuais.length && volta < 20; volta++) {
+    const trocas = await db.from("admin_gestao_eventos").select("detalhes").eq("acao", "troca_id_clerk").in("alvo", atuais);
+    ok(trocas);
+    const antigos = [...new Set((trocas.data ?? []).map((t) => (t.detalhes as { id_antigo?: unknown } | null)?.id_antigo).filter(valido))]
+      .filter((p) => !vistos.has(p));
+    antigos.forEach((p) => vistos.add(p));
+    if (!antigos.length) break;
+    const vivos = await db.from("perfis").select("id").in("id", antigos);
+    ok(vivos);
+    const emUso = new Set((vivos.data ?? []).map((p) => p.id as string));
+    atuais = antigos.filter((p) => !emUso.has(p));
+    pastas.push(...atuais);
+  }
+  return pastas;
 }
 
 /** Apaga a pasta da pessoa (só o que ninguém usa mais) e tira da fila. */
