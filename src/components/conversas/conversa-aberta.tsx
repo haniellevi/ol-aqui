@@ -7,21 +7,19 @@ import { Botao, classesBotao } from "@/components/ui/botao";
 import { Textarea } from "@/components/ui/textarea";
 import { useConfirmar } from "@/components/ui/confirmar";
 import { CartaoMensagem } from "@/components/conversas/cartao-mensagem";
+import { juntar, reconciliar } from "@/components/conversas/juntar";
 import { EVENTO_CONVERSAS } from "@/components/conversas/icone-conversas";
 import { MENSAGEM_MAX, validarMensagem } from "@/components/conversas/validacao";
 import { enviarMensagem, marcarLida, mensagensDepois, mostrarMeuWhatsapp } from "@/app/(conta)/conversas/actions";
 import type { MensagemConversa, PapelConversa } from "@/lib/tipos-conversas";
 
 const INTERVALO_MS = 10_000;
-
-function juntar(atuais: MensagemConversa[], novas: MensagemConversa[]): MensagemConversa[] {
-  if (novas.length === 0) return atuais;
-  const vistos = new Set(atuais.map((m) => m.id));
-  return [...atuais, ...novas.filter((m) => !vistos.has(m.id))];
-}
+/** A cada quantas buscas a página inteira é recarregada (WhatsApp liberado, bloqueio, cartões retirados). */
+const BUSCAS_POR_RECARGA = 6;
 
 // Conversa aberta: mensagens, envio e (cliente) "Mostrar meu WhatsApp" / (loja) "Chamar no WhatsApp".
-// Atualiza sozinha a cada 10 s com a aba visível e marca como lida ao abrir e ao chegar mensagem.
+// Busca mensagens novas a cada 10 s com a aba visível e marca como lida ao abrir e ao chegar mensagem.
+// Recarrega a página (dados da conversa e cartões ao vivo) quando chega mensagem nova e a cada minuto.
 export function ConversaAberta({ conversaId, papel, mensagensIniciais, bloqueada, whatsappLiberado, whatsappHref, nomeOutro }: {
   conversaId: string;
   papel: PapelConversa;
@@ -43,6 +41,8 @@ export function ConversaAberta({ conversaId, papel, mensagensIniciais, bloqueada
   const ultimaRef = useRef<string | null>(mensagensIniciais.at(-1)?.criado_em ?? null);
 
   useEffect(() => { ultimaRef.current = mensagens.at(-1)?.criado_em ?? null; }, [mensagens]);
+  // página recarregada: a lista do servidor atualiza os cartões que já estavam na tela
+  useEffect(() => { setMensagens((atuais) => reconciliar(mensagensIniciais, atuais)); }, [mensagensIniciais]);
 
   const marcar = useCallback(() => {
     void marcarLida(conversaId).then((r) => { if (r.ok) window.dispatchEvent(new Event(EVENTO_CONVERSAS)); }).catch(() => undefined);
@@ -53,21 +53,27 @@ export function ConversaAberta({ conversaId, papel, mensagensIniciais, bloqueada
     if (!r.ok || r.dados.length === 0) return;
     setMensagens((atuais) => juntar(atuais, r.dados));
     if (r.dados.some((m) => m.lado !== papel)) marcar();
-  }, [conversaId, papel, marcar]);
+    router.refresh();
+  }, [conversaId, papel, marcar, router]);
 
   useEffect(() => { marcar(); }, [marcar]);
   useEffect(() => { fim.current?.scrollIntoView({ block: "end" }); }, [mensagens.length]);
   useEffect(() => {
     let emCurso = false;
+    let buscas = 0;
     const tick = async () => {
       if (document.visibilityState !== "visible" || emCurso) return;
       emCurso = true;
-      try { await buscarNovas(); } catch { /* tenta de novo no próximo intervalo */ } finally { emCurso = false; }
+      try {
+        await buscarNovas();
+        buscas += 1;
+        if (buscas % BUSCAS_POR_RECARGA === 0) router.refresh();
+      } catch { /* tenta de novo no próximo intervalo */ } finally { emCurso = false; }
     };
     const id = window.setInterval(tick, INTERVALO_MS);
     document.addEventListener("visibilitychange", tick);
     return () => { window.clearInterval(id); document.removeEventListener("visibilitychange", tick); };
-  }, [buscarNovas]);
+  }, [buscarNovas, router]);
 
   function enviar() {
     const invalida = validarMensagem(texto);

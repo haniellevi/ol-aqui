@@ -19,7 +19,8 @@ denúncia. Cada leitura da equipe fica registrada com o nome de quem leu e a hor
 "Mostrar meu WhatsApp". Depois de mostrado, não dá para esconder de novo, porque a loja já viu.
 
 **Por quanto tempo.** Uma conversa sem mensagem nova há 180 dias é apagada sozinha, com todas as mensagens.
-Conversa com denúncia ainda em análise fica guardada até a equipe decidir a denúncia. O registro de que a equipe
+Conversa com denúncia ainda em análise fica guardada até a equipe decidir a denúncia. Conversa bloqueada fica
+guardada enquanto estiver bloqueada, para você poder desbloquear depois. O registro de que a equipe
 leu uma conversa denunciada continua guardado depois que a conversa é apagada.
 
 **Para que usamos.** Para levar as mensagens de um lado para o outro, para a sua segurança (avisos contra golpe,

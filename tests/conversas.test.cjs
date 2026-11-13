@@ -75,3 +75,16 @@ test('mensagens novas: lista do banco ou vazio',async()=>{
  assert.deepEqual(chamadas[0],['conversa_mensagens_de',{p_conversa:id,p_depois:'2026-11-13T09:00:00.000Z'}]);
  assert.deepEqual(await ambiente({data:null,error:null}).a.mensagensDepois(id,null),{ok:true,dados:[]});
 });
+
+test('conversa aberta: lista do servidor substitui os cartões e mantém só as mensagens mais novas que ela',()=>{
+ const {juntar,reconciliar}=carregar('src/components/conversas/juntar.ts');
+ const m=(id,t,extra={})=>({id,criado_em:`2026-11-13T10:00:0${t}Z`,texto:'x',...extra});
+ const tela=[m('a',1,{texto:'proposta velha'}),m('b',2),m('c',3)];
+ const servidor=[m('a',1,{texto:null,proposta_retirada:true}),m('b',2)];
+ const r=reconciliar(servidor,tela);
+ assert.deepEqual(r.map(x=>x.id),['a','b','c']);
+ assert.equal(r[0].texto,null);
+ assert.equal(r[0].proposta_retirada,true);
+ assert.deepEqual(reconciliar([],tela).map(x=>x.id),['a','b','c']);
+ assert.deepEqual(juntar(tela,[m('c',3),m('d',4)]).map(x=>x.id),['a','b','c','d']);
+});

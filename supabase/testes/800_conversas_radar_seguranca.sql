@@ -158,7 +158,13 @@ select pg_temp.confere(not exists (select 1 from conversas where id = :'conv2') 
 select pg_temp.confere(exists (select 1 from conversas where id = :'conv'), 'conversa com denúncia aberta fica');
 update denuncias set status = 'improcedente' where id = :'den';
 set local role service_role;
-select pg_temp.confere(conversas_limpar() = 1, 'depois de decidida, a denúncia não segura mais');
+select pg_temp.confere(conversas_limpar() = 0, 'conversa bloqueada fica (senão não daria mais para desbloquear)');
+reset role;
+select pg_temp.confere(exists (select 1 from conversa_bloqueios b join conversas c on c.cliente_id = b.cliente_id and c.vitrine_id = b.vitrine_id
+  where c.id = :'conv'), 'bloqueio continua junto da conversa');
+delete from conversa_bloqueios b using conversas c where c.id = :'conv' and b.cliente_id = c.cliente_id and b.vitrine_id = c.vitrine_id;
+set local role service_role;
+select pg_temp.confere(conversas_limpar() = 1, 'sem bloqueio e com a denúncia decidida, a conversa velha some');
 reset role;
 select pg_temp.confere(not exists (select 1 from conversas where id = :'conv'), 'apagada');
 

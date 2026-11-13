@@ -176,7 +176,7 @@ end $$;
 
 -- ---------------------------------------------------------------------
 -- 5. Limpeza: conversa sem mensagem há conversas.guarda_dias some (com as mensagens),
---    a não ser que tenha denúncia aberta.
+--    a não ser que tenha denúncia aberta ou esteja bloqueada.
 -- ---------------------------------------------------------------------
 create or replace function public.conversas_limpar()
 returns integer language plpgsql security definer
@@ -187,7 +187,10 @@ begin
   delete from public.conversas c
    where c.ultima_msg_em < now() - make_interval(days => public.config_inteiro('conversas.guarda_dias', 180, 30, 3650))
      and not exists (select 1 from public.denuncias d
-                      where d.alvo_tipo = 'conversa' and d.alvo_id = c.id and d.status = 'aberta');
+                      where d.alvo_tipo = 'conversa' and d.alvo_id = c.id and d.status = 'aberta')
+     -- conversa bloqueada fica: desbloquear só existe pela conversa (bloquear_conversa)
+     and not exists (select 1 from public.conversa_bloqueios b
+                      where b.cliente_id = c.cliente_id and b.vitrine_id = c.vitrine_id);
   get diagnostics n = row_count;
   return n;
 end $$;
