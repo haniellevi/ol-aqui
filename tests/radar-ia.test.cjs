@@ -327,3 +327,63 @@ test('novidades: avisa só quando o JEV confirma com folga', async () => {
     assert.equal(banco.chamadas.find((c) => c.nome === 'radar_novidades_candidatos').args.p_limite, 50);
   });
 });
+
+// ---------- Task 5: telas do pedido ----------
+test('fluxo das telas da IA: pergunta 1 → 2 → parecidos → fim, pulando o que está vazio', () => {
+  const { proximaEtapaIA, respostaAindaVale } = fluxo();
+  const p = [{ rotulo: 'A', pergunta: 'A?', opcoes: ['1', '2'] }, { rotulo: 'B', pergunta: 'B?', opcoes: ['1', '2'] }];
+  const parecido = [{ id: 'x' }];
+  assert.deepEqual(proximaEtapaIA(null, p, []), { tipo: 'pergunta', indice: 0 });
+  assert.deepEqual(proximaEtapaIA({ tipo: 'pergunta', indice: 0 }, p, []), { tipo: 'pergunta', indice: 1 });
+  assert.equal(proximaEtapaIA({ tipo: 'pergunta', indice: 1 }, p, []), null);
+  assert.deepEqual(proximaEtapaIA({ tipo: 'pergunta', indice: 1 }, p, parecido), { tipo: 'parecidos' });
+  assert.deepEqual(proximaEtapaIA(null, [], parecido), { tipo: 'parecidos' });
+  assert.equal(proximaEtapaIA({ tipo: 'parecidos' }, p, parecido), null);
+  assert.equal(proximaEtapaIA(null, [], []), null);
+  assert.deepEqual(proximaEtapaIA({ tipo: 'pergunta', indice: 0 }, p.slice(0, 1), parecido), { tipo: 'parecidos' });
+  assert.equal(respostaAindaVale(1, 2), false);
+  assert.equal(respostaAindaVale(2, 2), true);
+});
+
+function telaIA(arquivo) {
+  const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
+  const cliques = {};
+  const texto = (c) => React.Children.toArray(c).map((x) => (typeof x === 'string' ? x : '')).join('').trim();
+  const mod = carregar(arquivo, {
+    '@/components/ui/botao': { Botao: ({ children, onClick, href, tamanho, variante }) => {
+      cliques[texto(children)] = onClick;
+      return React.createElement(href ? 'a' : 'button', { href, 'data-tamanho': tamanho, 'data-variante': variante }, children);
+    } },
+  });
+  return { mod, cliques, html: (el) => renderToStaticMarkup(el), React };
+}
+
+test('tela "Achamos isso na região": cartões com preço, frase e link; botão para continuar', () => {
+  const { mod, cliques, html, React } = telaIA('src/components/radar/ia/parecidos-ia.tsx');
+  let continuou = 0;
+  const s = html(React.createElement(mod.ParecidosIA, { parecidos: [
+    { id: 'a', titulo: 'Bicicleta aro 29', preco_centavos: 90000, capa: null, vitrine_nome: 'Loja Boa', link: '/anuncio/bicicleta-ab12', motivo: 'Aro 29 como você pediu' },
+  ], onContinuar: () => continuou++ }));
+  assert.match(s, /Bicicleta aro 29/);
+  assert.match(s, /R\$\s?900/);
+  assert.match(s, /Aro 29 como você pediu/);
+  assert.match(s, /Loja Boa/);
+  assert.match(s, /href="\/anuncio\/bicicleta-ab12"/);
+  assert.match(s, /data-tamanho="grande"[^>]*>Ver anúncio/);
+  assert.match(s, />Não achei, continuar pedido</);
+  cliques['Não achei, continuar pedido']();
+  assert.equal(continuou, 1);
+});
+
+test('tela da pergunta: um botão grande por opção e "Pular"', () => {
+  const { mod, cliques, html, React } = telaIA('src/components/radar/ia/perguntas-ia.tsx');
+  const escolhas = [];
+  const s = html(React.createElement(mod.PerguntasIA, { pergunta: { rotulo: 'Tamanho', pergunta: 'Qual tamanho?', opcoes: ['40', '42'] },
+    onResponder: (o) => escolhas.push(o), onPular: () => escolhas.push('pulou') }));
+  assert.equal((s.match(/data-tamanho="grande"/g) || []).length, 3);
+  assert.match(s, />40</);
+  assert.match(s, />Pular</);
+  cliques['42']();
+  cliques['Pular']();
+  assert.deepEqual(escolhas, ['42', 'pulou']);
+});

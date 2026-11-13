@@ -10,6 +10,8 @@ import { Chip } from "@/components/ui/chip";
 import { Botao } from "@/components/ui/botao";
 import { Alert } from "@/components/ui/alert";
 import { criarPedido } from "@/app/radar/actions";
+import { parecidosParaPedido, perguntasParaPedido } from "@/app/radar/ia-actions";
+import type { ParecidoIA, PerguntaIA } from "@/lib/radar-ia/tipos";
 import { linkMeuPedidoRadar } from "@/lib/rotas";
 import { centavosDoTexto } from "@/lib/formato";
 import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
@@ -32,6 +34,9 @@ import { BotaoFalar } from "./botao-falar";
 import { EscolherArea } from "./escolher-area";
 import { EscolherVisibilidade } from "./escolher-visibilidade";
 import { CartaoEscolha } from "./cartao-escolha";
+import { PerguntasIA } from "./ia/perguntas-ia";
+import { ParecidosIA } from "./ia/parecidos-ia";
+import { juntarResposta, proximaEtapaIA, respostaAindaVale, type EtapaIA } from "./ia/fluxo-ia";
 
 type Props = {
   textoInicial: string;
@@ -62,6 +67,7 @@ const PERGUNTAS: Record<NumeroPasso, string> = {
 
 // Erros que aparecem embaixo do próprio campo; o resto vai para o aviso geral.
 const CAMPOS_COM_ERRO = ["titulo", "detalhes", "categoria", "preco", "preco_min_centavos", "preco_max_centavos", "cidade", "cidades", "visibilidade", "prazo", "whatsapp"];
+const TITULO_PARECIDOS = "Achamos isso na região. Quer ver?";
 const ROTULO_GRUPO = "text-facil font-semibold text-texto";
 const TEXTO_ERRO = "text-facil font-semibold text-perigo";
 
@@ -87,6 +93,14 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   const [prazo, setPrazo] = useState<number | null>(regras.prazosHoras[1] ?? regras.prazosHoras[0] ?? null);
   const [erro, setErro] = useState<{ texto: string; campo?: string; celular?: boolean } | null>(null);
   const [enviando, iniciar] = useTransition();
+  // IA do Radar (fase 3): perguntas para pedido vago e anúncios parecidos, entre o passo 1 e o 2.
+  // Sem IA (desligada, teto, demora, erro) as ações devolvem null e o pedido segue direto para "Onde?".
+  const [etapaIA, setEtapaIA] = useState<EtapaIA>(null);
+  const [perguntasIA, setPerguntasIA] = useState<PerguntaIA[]>([]);
+  const [parecidosIA, setParecidosIA] = useState<ParecidoIA[]>([]);
+  const [pensando, setPensando] = useState(false);
+  const pedidoIA = useRef(0);
+  const tituloComIA = useRef<string | null>(null);
   // A data final depende da hora do aparelho: calculada só no navegador (evita diferença com o servidor).
   const [agora, setAgora] = useState<number | null>(null);
   useEffect(() => setAgora(Date.now()), []);
@@ -100,7 +114,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
     if (!trocouPasso.current) return;
     trocouPasso.current = false;
     pergunta.current?.focus();
-  }, [passo]);
+  }, [passo, etapaIA]);
 
   // Com erro, o foco vai para o campo do erro (ou para o aviso).
   useEffect(() => {
@@ -147,11 +161,56 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
     setErro(null);
     const invalida = erroDoPasso(passo, entrada(), idsValidos);
     if (invalida) return mostrarErro(invalida.erro, invalida.campo);
+    if (passo === 1) return perguntarIA();
     if (passo < TOTAL_PASSOS_PEDIDO) irPara((passo + 1) as NumeroPasso);
+  }
+
+  /** Depois do passo 1: a IA olha o pedido uma vez por título (voltar e continuar de novo não gasta outra vez). */
+  function perguntarIA() {
+    if (pensando) return;
+    const t = titulo.trim();
+    if (tituloComIA.current === t) return irPara(2);
+    const n = ++pedidoIA.current;
+    setPensando(true);
+    const seguro = <T,>(p: Promise<T | null>) => p.catch(() => null);
+    Promise.all([seguro(perguntasParaPedido(titulo, detalhes)), seguro(parecidosParaPedido(titulo, detalhes))]).then(([p, a]) => {
+      if (!respostaAindaVale(n, pedidoIA.current)) return;
+      setPensando(false);
+      tituloComIA.current = t;
+      const perguntas = p ?? [];
+      const parecidos = a ?? [];
+      setPerguntasIA(perguntas);
+      setParecidosIA(parecidos);
+      const proxima = proximaEtapaIA(null, perguntas, parecidos);
+      if (proxima) {
+        trocouPasso.current = true;
+        setEtapaIA(proxima);
+      } else irPara(2);
+    });
+  }
+
+  function avancarIA() {
+    const proxima = proximaEtapaIA(etapaIA, perguntasIA, parecidosIA);
+    trocouPasso.current = true;
+    if (proxima) return setEtapaIA(proxima);
+    setEtapaIA(null);
+    irPara(2);
+  }
+
+  function responderIA(opcao: string) {
+    if (etapaIA?.tipo !== "pergunta") return;
+    const p = perguntasIA[etapaIA.indice];
+    if (p) setDetalhes((d) => juntarResposta(d, p.rotulo, opcao));
+    avancarIA();
   }
 
   function voltar() {
     setErro(null);
+    if (etapaIA) {
+      trocouPasso.current = true;
+      setEtapaIA(null);
+      return;
+    }
     if (passo > 1) irPara((passo - 1) as NumeroPasso);
   }
 
@@ -182,6 +241,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
 
   function aoEnviarFormulario(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (etapaIA) return;
     if (passo < TOTAL_PASSOS_PEDIDO) continuar();
     else enviar();
   }
@@ -195,10 +255,15 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
       <fieldset disabled={enviando} className="flex min-w-0 flex-col gap-6">
         <IndicadorPasso passo={passo} />
         <h2 ref={pergunta} id="pergunta-passo" tabIndex={-1} className="text-3xl font-semibold text-beringela outline-none">
-          {PERGUNTAS[passo]}
+          {etapaIA?.tipo === "pergunta" ? perguntasIA[etapaIA.indice]?.pergunta : etapaIA?.tipo === "parecidos" ? TITULO_PARECIDOS : PERGUNTAS[passo]}
         </h2>
 
-        {passo === 1 && (
+        {etapaIA?.tipo === "pergunta" && perguntasIA[etapaIA.indice] && (
+          <PerguntasIA pergunta={perguntasIA[etapaIA.indice]} onResponder={responderIA} onPular={avancarIA} />
+        )}
+        {etapaIA?.tipo === "parecidos" && <ParecidosIA parecidos={parecidosIA} onContinuar={avancarIA} />}
+
+        {passo === 1 && !etapaIA && (
           <div className="flex flex-col gap-6">
             <Campo
               tamanho="grande"
@@ -347,14 +412,14 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         )}
 
         <div className="flex flex-col gap-2">
-          <div className={`grid gap-3 ${passo > 1 ? "grid-cols-[auto_1fr]" : "grid-cols-1"}`}>
-            {passo > 1 && (
+          <div className={`grid gap-3 ${passo > 1 && !etapaIA ? "grid-cols-[auto_1fr]" : "grid-cols-1"}`}>
+            {(passo > 1 || etapaIA) && (
               <Botao variante="secundario" icone={<ArrowLeft />} onClick={voltar} tamanho="grande">
                 Voltar
               </Botao>
             )}
-            {passo < TOTAL_PASSOS_PEDIDO ? (
-              <Botao key="continuar" type="submit" icone={<ArrowRight />} tamanho="grande" className="w-full">
+            {etapaIA ? null : passo < TOTAL_PASSOS_PEDIDO ? (
+              <Botao key="continuar" type="submit" icone={<ArrowRight />} tamanho="grande" className="w-full" carregando={pensando} textoCarregando="Um momento...">
                 Continuar
               </Botao>
             ) : (
