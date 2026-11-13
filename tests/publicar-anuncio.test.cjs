@@ -230,6 +230,24 @@ test('formulários renderizam ação segura, preço legível e localização sem
   assert.match(local, /Não há cidades disponíveis/); assert.match(local, /type="hidden" name="cidade"/); assert.match(local, /disabled/);
 });
 
+test('Detalhes usa duas colunas no celular e três em telas maiores quando há três opções', () => {
+  const { FormDetalhes } = carregar('src/components/anunciar/form-detalhes.tsx', {
+    '@/app/(conta)/anunciar/actions': { salvarDetalhes: async () => null },
+  });
+  const campos = [
+    { chave: 'garantia', rotulo: 'Garantia', tipo: 'sim_nao', obrigatorio: true },
+    { chave: 'entrega', rotulo: 'Entrega', tipo: 'lista', obrigatorio: false, opcoes: ['Retirada', 'Envio'] },
+    { chave: 'material', rotulo: 'Material', tipo: 'lista', obrigatorio: true, opcoes: ['Madeira', 'Metal', 'Vidro', 'Plástico'] },
+  ];
+  const html = render(React.createElement(FormDetalhes, {
+    id, categoriaId: null, editar: false, formId: 'detalhes', tituloInicial: '', descricaoInicial: '', campos, atributos: {},
+  }));
+  const grades = [...html.matchAll(/<div class="(grid gap-2[^"]*)"><label/g)].map(([, classes]) => classes.trim().split(/\s+/));
+  assert.equal(grades.length, 3);
+  for (const grade of grades) assert.ok(grade.includes('grid-cols-2'));
+  assert.deepEqual(grades.map(grade => grade.includes('sm:grid-cols-3')), [false, true, false]);
+});
+
 test('Carros e Casas mostram e validam seus próprios detalhes', async () => {
   const carro = '60000000-0000-4000-a000-000000000011';
   const casa = '60000000-0000-4000-a000-000000000012';
