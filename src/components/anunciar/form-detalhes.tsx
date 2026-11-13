@@ -105,7 +105,7 @@ export function FormDetalhes({
                 {rotulo}
                 {!c.obrigatorio && <span className="ml-1 font-normal text-texto-suave">(opcional)</span>}
               </legend>
-              <div className={`grid gap-2 $grid-cols-2 ${opcoes.length === 3 ? "sm:grid-cols-3" : ""}`}>
+              <div className={`grid gap-2 grid-cols-2 ${opcoes.length === 3 ? "sm:grid-cols-3" : ""}`}>
                 {opcoes.map((o) => (
                   <label key={o.valor || "nao-informar"} className={OPCAO}>
                     <input
