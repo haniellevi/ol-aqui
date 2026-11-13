@@ -103,6 +103,8 @@ try:
     print('PASS: cortesia de lançamento do Radar: 30 dias só para loja e PF pagas sem selo, uma vez só, aviso ao dono, vale até o prazo, aviso de fim uma vez e permissões', flush=True)
     checked(sql((root/'supabase/testes/780_troca_id_clerk.sql').read_text()))
     print('PASS: troca de ID do Clerk: perfil, loja, anúncio, tabelas sem chave estrangeira, histórico em jsonb, fotos e Storage vão ao ID novo; desfazer com IDs invertidos; só service_role executa; erro no meio não deixa nada pela metade', flush=True)
+    checked(sql((root/'supabase/testes/790_conversas_base.sql').read_text()))
+    print('PASS: conversas: abrir pelo anúncio, enviar, ler por lado, limites, alerta de golpe, telefone escondido até o cliente mostrar e acesso só de quem participa', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin
