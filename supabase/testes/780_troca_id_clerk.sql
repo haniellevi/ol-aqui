@@ -4,6 +4,7 @@
 -- estrangeira, histórico em jsonb, fotos e Storage para o ID novo; desfaz com os IDs invertidos;
 -- nega anon/authenticated; recusa ID novo que já existe; religa os gatilhos; não mexe em ID parecido.
 begin;
+update public.configuracoes set valor = '"https://x.supabase.co"' where chave = 'fotos.origem' and microrregiao_id is null;
 
 create function pg_temp.confere(ok boolean, caso text) returns void language plpgsql as $$
 begin
@@ -86,6 +87,14 @@ insert into storage.objects(bucket_id, name, owner_id) values
   ('outro', 'user_antigoteste/fica.webp', null);
 insert into contas_revogadas(usuario_id) values ('user_antigoteste');
 
+insert into whatsapp_fila(usuario_id, numero, texto, chave, estado, enviada_em) values
+  ('user_antigoteste', '5589999780001', 'Aviso enviado', 'verificacao_equipe_chamada:pedido:user_antigoteste', 'enviada', now()),
+  ('user_antigoteste', '5589999780001', 'Lembrete pendente', 'atraso:pedido:2026-11-13:user_antigoteste', 'pendente', null),
+  ('user_antigoteste', '5589999780001', 'Selo removido', 'verificacao_selo_removido_equipe:loja:1:user_antigoteste', 'pendente', null),
+  ('user_antigoteste', '5589999780001', 'Chave sem usuário', 'verificacao_aprovada:pedido', 'pendente', null),
+  ('user_antigotesteoutro', '5589999780002', 'Outro destinatário', 'verificacao_equipe_chamada:pedido:user_antigotesteoutro', 'pendente', null);
+
+
 select pg_temp.confere((select count(*) = 0 from pg_trigger where not tgisinternal and tgenabled <> 'O'), 'antes: todos os gatilhos ligados');
 select pg_temp.confere(exists (select 1 from whatsapp_vinculos where numero = '5589999780001' and dono_id = 'user_antigoteste'), 'antes: vínculo do WhatsApp no ID antigo');
 
@@ -118,6 +127,19 @@ do $$ begin
 end $$;
 select pg_temp.confere(exists (select 1 from perfis where id = 'user_antigoteste') and not exists (select 1 from perfis where id = 'user_novoteste'),
   'erros não mudam nada');
+
+-- A chave única também protege contra um destino que já tenha o mesmo aviso.
+insert into whatsapp_fila(usuario_id, numero, texto, chave) values
+  ('user_adm780', '5589999780003', 'Colisão de chave', 'verificacao_equipe_chamada:pedido:user_novoteste');
+do $$ begin
+  begin
+    perform public.admin_trocar_id_usuario('user_antigoteste', 'user_novoteste');
+    raise exception 'aceitou colisão da chave do WhatsApp';
+  exception when unique_violation then null; end;
+end $$;
+select pg_temp.confere((select usuario_id = 'user_antigoteste' and estado = 'enviada'
+  from whatsapp_fila where chave = 'verificacao_equipe_chamada:pedido:user_antigoteste'), 'colisão preserva o aviso original');
+delete from whatsapp_fila where texto = 'Colisão de chave';
 
 -- A troca (como service_role, que é quem vai chamar de verdade)
 set local role service_role;
@@ -163,6 +185,18 @@ select pg_temp.confere((select array_agg(bucket_id || ':' || name order by bucke
     'verificacoes:user_novoteste/doc.jpg'] from storage.objects), 'Storage: pastas dos buckets anuncios e verificacoes mudaram, o resto não');
 select pg_temp.confere((select owner_id = 'user_novoteste' from storage.objects where name = 'user_novoteste/loja/logo.webp'), 'dono do objeto');
 
+select pg_temp.confere((:'resumo'::jsonb)->>'whatsapp_fila.chave' = '3', 'resumo conta as chaves da equipe');
+select pg_temp.confere((select usuario_id = 'user_novoteste' and estado = 'enviada' and enviada_em is not null
+  from whatsapp_fila where chave = 'verificacao_equipe_chamada:pedido:user_novoteste'), 'aviso enviado preserva o estado');
+select pg_temp.confere(not public.whatsapp_enfileirar('user_novoteste', 'Aviso duplicado', null,
+  'verificacao_equipe_chamada:pedido:user_novoteste'), 'aviso enviado não volta à fila');
+select pg_temp.confere((select count(*) = 2 from whatsapp_fila where usuario_id = 'user_novoteste' and chave in (
+  'atraso:pedido:2026-11-13:user_novoteste', 'verificacao_selo_removido_equipe:loja:1:user_novoteste')), 'outras chaves da equipe migraram');
+select pg_temp.confere((select usuario_id = 'user_novoteste' from whatsapp_fila
+  where chave = 'verificacao_aprovada:pedido'), 'chave sem usuário preservada');
+select pg_temp.confere((select usuario_id = 'user_antigotesteoutro' from whatsapp_fila
+  where chave = 'verificacao_equipe_chamada:pedido:user_antigotesteoutro'), 'chave do outro destinatário preservada');
+
 select pg_temp.confere(pg_temp.sobras('user_antigoteste') = '{}'::jsonb, 'nada sobrou com o ID antigo: ' || pg_temp.sobras('user_antigoteste')::text);
 select pg_temp.confere(exists (select 1 from admin_gestao_eventos where acao = 'troca_id_clerk' and alvo = 'user_novoteste'
     and detalhes->>'id_antigo' = 'user_antigoteste' and detalhes->>'id_novo' = 'user_novoteste'), 'registro da troca gravado com os dois IDs');
@@ -189,6 +223,8 @@ select pg_temp.confere((select dono_id = 'user_antigoteste' and logo_url like '%
 select pg_temp.confere((select fotos[2] like '%/anuncios/user_antigoteste/78000000%/2.webp' from anuncios where id = '78000000-0000-4000-a000-000000000001'), 'desfazer: fotos');
 select pg_temp.confere((select dados_antes = '{"id":"user_antigoteste","quem":"user_antigoteste"}'::jsonb from logs_atividade where acao = 'UPDATE' and tabela = 'perfis' and registro_id = 'user_antigoteste'), 'desfazer: jsonb de histórico');
 select pg_temp.confere((select count(*) = 4 from storage.objects where name like 'user\_antigoteste/%'), 'desfazer: Storage');
+select pg_temp.confere((select usuario_id = 'user_antigoteste' and estado = 'enviada'
+  from whatsapp_fila where chave = 'verificacao_equipe_chamada:pedido:user_antigoteste'), 'desfazer: chave do aviso restaurada');
 select pg_temp.confere(pg_temp.sobras('user_novoteste') = '{}'::jsonb, 'desfazer: nada sobrou com o ID novo: ' || pg_temp.sobras('user_novoteste')::text);
 select pg_temp.confere((select count(*) = 2 from admin_gestao_eventos where acao = 'troca_id_clerk'), 'as duas trocas ficam registradas');
 select pg_temp.confere(exists (select 1 from admin_gestao_eventos where acao = 'troca_id_clerk' and alvo = 'user_novoteste' and detalhes->>'id_antigo' = 'user_antigoteste'),
