@@ -15,7 +15,8 @@ function contexto({ papel = 'suporte', erro = null } = {}) {
     } }) },
   });
   const form = new FormData();
-  form.set('id', id);
+  form.set('id', id); // resolverAvisoVerificacaoLoja
+  form.set('pedido', id); // decidirVerificacaoLoja (campo "id" no form fazia o React perder o botão apertado)
   return { actions, calls, form };
 }
 const rpcs = (calls) => calls.filter(c => c.nome !== 'revalidatePath');
@@ -60,7 +61,7 @@ test('decidirVerificacaoLoja: repassa os argumentos certos de cada decisão', as
 
 test('decidirVerificacaoLoja: confere o que dá antes de chamar o banco', async () => {
   const falhas = [
-    [{ id: 'abc', decisao: 'recusar', motivo: 'outro' }, /não encontrad/i],
+    [{ pedido: 'abc', decisao: 'recusar', motivo: 'outro' }, /não encontrad/i],
     [{ decisao: 'apagar', motivo: 'outro' }, /decisão/i],
     [{ decisao: '' }, /decisão/i],
     [{ decisao: 'aprovar' }, /conferi/i],
@@ -76,6 +77,35 @@ test('decidirVerificacaoLoja: confere o que dá antes de chamar o banco', async 
     assert.match(r.erro, erro, JSON.stringify(campos));
     assert.deepEqual(calls, [], JSON.stringify(campos));
   }
+});
+
+test('decidirVerificacaoLoja: lê o pedido do campo "pedido" (não mais de "id")', async () => {
+  const { actions, calls, form } = contexto();
+  form.delete('pedido');
+  form.set('decisao', 'recusar');
+  form.set('motivo', 'outro');
+  assert.match((await actions.decidirVerificacaoLoja(null, form)).erro, /não encontrad/i);
+  assert.deepEqual(calls, []);
+});
+
+test('analisarVerificacao: lê a verificação do campo "verificacao" e respeita o botão apertado', async () => {
+  const montar = (campos) => {
+    const calls = [];
+    const actions = carregar('src/app/admin/lojas/actions.ts', {
+      'next/cache': { revalidatePath() {} },
+      'next/navigation': { unstable_rethrow(e) { throw e; } },
+      '@/lib/admin/equipe': { exigirTela: async () => ({ papel: 'suporte', supabase: { rpc: async (nome, args) => { calls.push({ nome, args }); return { error: null }; } } }) },
+    });
+    const form = new FormData();
+    for (const [k, v] of Object.entries(campos)) form.set(k, v);
+    return { actions, calls, form };
+  };
+  const aprovar = montar({ verificacao: id, decisao: 'aprovar', motivo: 'documento legível' });
+  assert.equal((await aprovar.actions.analisarVerificacao(null, aprovar.form)).ok, 'Aprovada.');
+  assert.deepEqual(aprovar.calls, [{ nome: 'admin_analisar_verificacao', args: { p_id: id, p_aprovar: true, p_motivo: 'documento legível' } }]);
+  const antigo = montar({ id, decisao: 'aprovar' });
+  assert.match((await antigo.actions.analisarVerificacao(null, antigo.form)).erro, /não encontrada/);
+  assert.deepEqual(antigo.calls, []);
 });
 
 test('decidirVerificacaoLoja: devolve o erro do banco traduzido, sem atualizar a tela', async () => {
