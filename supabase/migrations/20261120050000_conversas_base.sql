@@ -244,7 +244,7 @@ as $$
          case when c.meu_papel = 'cliente' then v.nome else public.mensagem_primeiro_nome(c.cliente_id) end,
          c.vitrine_id,
          case u.tipo when 'texto' then u.texto
-                     when 'anuncio' then 'Anúncio: ' || coalesce(a.titulo, '')
+                     when 'anuncio' then case when a.status in ('ativo', 'vendido') then 'Anúncio: ' || a.titulo else 'Anúncio fora do ar' end
                      when 'proposta' then 'Proposta: ' || coalesce(p.titulo, '')
                      else u.texto end,
          c.ultima_msg_em,
@@ -293,17 +293,27 @@ $$;
 create or replace function public.conversa_mensagens_ler(p_conversa uuid, p_depois timestamptz default null)
 returns table (id uuid, lado text, tipo text, texto text, alerta_golpe boolean, criado_em timestamptz,
                anuncio_id uuid, anuncio_titulo text, anuncio_preco_centavos bigint, anuncio_foto text, anuncio_link text,
-               pedido_id uuid, pedido_titulo text, proposta_preco_centavos bigint, autor_id text)
+               pedido_id uuid, pedido_titulo text, proposta_preco_centavos bigint, autor_id text,
+               proposta_id_ref uuid, proposta_retirada boolean)
 language sql stable security definer
 set search_path = public, extensions
 as $$
+  -- Cartões leem anúncio e proposta ao vivo: texto editado aparece; o que a equipe tirou (proposta oculta)
+  -- ou o anúncio fora do ar some do cartão.
   select * from (
-    select m.id, m.lado, m.tipo, m.texto, m.alerta_golpe, m.criado_em,
-           m.anuncio_id, a.titulo, a.preco_centavos, a.fotos[1],
-           case when a.id is null then null when a.slug is not null then '/anuncio/' || a.slug else '/anuncio/' || a.id end,
-           m.pedido_id, p.titulo, rp.preco_centavos, m.autor_id
+    select m.id, m.lado, m.tipo,
+           case when m.tipo = 'proposta' then (case when rp.status = 'ativa' then left(nullif(btrim(rp.mensagem), ''), 1000) end)
+                else m.texto end,
+           m.alerta_golpe, m.criado_em,
+           m.anuncio_id,
+           case when a.vivo then a.titulo end, case when a.vivo then a.preco_centavos end, case when a.vivo then a.fotos[1] end,
+           case when not a.vivo then null when a.slug is not null then '/anuncio/' || a.slug else '/anuncio/' || a.id end,
+           m.pedido_id, p.titulo, case when rp.status = 'ativa' then rp.preco_centavos end, m.autor_id,
+           m.proposta_id,
+           (m.tipo = 'proposta' and coalesce(rp.status, '') <> 'ativa')
       from public.conversa_mensagens m
-      left join public.anuncios a on a.id = m.anuncio_id
+      left join lateral (select x.*, x.status in ('ativo', 'vendido') as vivo
+                           from public.anuncios x where x.id = m.anuncio_id) a on true
       left join public.radar_pedidos p on p.id = m.pedido_id
       left join public.radar_propostas rp on rp.id = m.proposta_id
      where m.conversa_id = p_conversa and (p_depois is null or m.criado_em > p_depois)
@@ -315,12 +325,14 @@ $$;
 create or replace function public.conversa_mensagens_de(p_conversa uuid, p_depois timestamptz default null)
 returns table (id uuid, lado text, tipo text, texto text, alerta_golpe boolean, criado_em timestamptz,
                anuncio_id uuid, anuncio_titulo text, anuncio_preco_centavos bigint, anuncio_foto text, anuncio_link text,
-               pedido_id uuid, pedido_titulo text, proposta_preco_centavos bigint)
+               pedido_id uuid, pedido_titulo text, proposta_preco_centavos bigint,
+               proposta_id_ref uuid, proposta_retirada boolean)
 language sql stable security definer
 set search_path = public, extensions
 as $$
   select l.id, l.lado, l.tipo, l.texto, l.alerta_golpe, l.criado_em, l.anuncio_id, l.anuncio_titulo,
-         l.anuncio_preco_centavos, l.anuncio_foto, l.anuncio_link, l.pedido_id, l.pedido_titulo, l.proposta_preco_centavos
+         l.anuncio_preco_centavos, l.anuncio_foto, l.anuncio_link, l.pedido_id, l.pedido_titulo, l.proposta_preco_centavos,
+         l.proposta_id_ref, l.proposta_retirada
     from public.conversa_mensagens_ler(p_conversa, p_depois) l
    where public.conversa_papel(p_conversa) is not null and public.conversas_ligadas()
 $$;

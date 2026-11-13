@@ -63,6 +63,27 @@ insert into radar_propostas(id, pedido_id, vitrine_id, mensagem) values
 select pg_temp.confere((select count(*) = 1 from conversas where cliente_id = 'user_q800cli'), 'outro pedido do mesmo cliente: mesma conversa');
 select pg_temp.confere((select count(*) = 2 from conversa_mensagens where conversa_id = :'conv' and tipo = 'proposta'), 'dois cartões de proposta');
 
+-- cartão lê a proposta e o anúncio ao vivo: texto editado aparece; moderação tira o conteúdo do chat
+update configuracoes set valor = 'true' where chave = 'conversas.ativa' and microrregiao_id is null;
+set local role authenticated;
+set local request.jwt.claim.role='authenticated';
+set local request.jwt.claim.sub='user_q800cli';
+select pg_temp.confere((select texto = 'Tenho uma mesa, faço por 480' and not proposta_retirada from conversa_mensagens_de(:'conv')
+  where proposta_id_ref = '80000000-0000-4000-c000-000000000002'), 'cartão mostra o texto editado da proposta');
+reset role;
+update radar_propostas set status = 'oculta' where id = '80000000-0000-4000-c000-000000000002';
+set local role authenticated;
+select pg_temp.confere((select proposta_retirada and texto is null and proposta_preco_centavos is null from conversa_mensagens_de(:'conv')
+  where proposta_id_ref = '80000000-0000-4000-c000-000000000002'), 'proposta oculta pela equipe some do cartão');
+reset role;
+update radar_propostas set status = 'ativa' where id = '80000000-0000-4000-c000-000000000002';
+update anuncios set status = 'pausado' where id = '80000000-0000-4000-b000-000000000001';
+set local role authenticated;
+select pg_temp.confere((select anuncio_titulo is null and anuncio_foto is null and anuncio_link is null and anuncio_preco_centavos is null
+  from conversa_mensagens_de(:'conv') where proposta_id_ref = '80000000-0000-4000-c000-000000000002'), 'anúncio fora do ar não mostra título, foto nem preço');
+reset role;
+update anuncios set status = 'ativo' where id = '80000000-0000-4000-b000-000000000001';
+
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_q800cli';
@@ -99,6 +120,16 @@ select pg_temp.recusa(format($q$insert into denuncias(alvo_tipo, alvo_id, denunc
 reset role;
 select pg_temp.confere((select alvo_tipo = 'conversa' and alvo_id = :'conv' and denunciante_id = 'user_q800dono' and status = 'aberta'
   from denuncias where id = :'den'), 'denúncia na fila da equipe');
+-- ninguém troca o alvo de uma denúncia (senão a equipe "criaria" denúncia para ler qualquer conversa)
+insert into denuncias(id, alvo_tipo, alvo_id, denunciante_id, motivo) values
+  ('80000000-0000-4000-d000-000000000001', 'anuncio', '80000000-0000-4000-b000-000000000001', 'user_q800cli2', 'falso');
+set local role authenticated;
+set local request.jwt.claim.sub='user_q800adm';
+select pg_temp.recusa($q$update denuncias set alvo_tipo = 'conversa', alvo_id = gen_random_uuid() where id = '80000000-0000-4000-d000-000000000001'$q$, '42501');
+select pg_temp.recusa($q$update denuncias set denunciante_id = 'user_q800adm' where id = '80000000-0000-4000-d000-000000000001'$q$, '42501');
+update denuncias set status = 'improcedente' where id = '80000000-0000-4000-d000-000000000001';
+reset role;
+select pg_temp.confere((select status = 'improcedente' from denuncias where id = '80000000-0000-4000-d000-000000000001'), 'equipe ainda decide a denúncia');
 
 -- leitura do admin: só conversa denunciada, e registrada
 insert into perfis(id, microrregiao_id, nome, whatsapp, whatsapp_verificado_em, cidade, tipo_pessoa) values

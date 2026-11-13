@@ -82,6 +82,26 @@ drop policy if exists "denunciar" on public.denuncias;
 create policy "denunciar" on public.denuncias for insert
   with check (denunciante_id = public.usuario_id() and status = 'aberta' and alvo_tipo <> 'conversa');
 
+-- Alvo e autor de uma denúncia não mudam depois de criada: senão a equipe "criaria" uma denúncia de conversa
+-- trocando o alvo de outra e leria qualquer conversa. A equipe continua decidindo (status, nota, etc.).
+create or replace function public.denuncias_alvo_fixo()
+returns trigger language plpgsql security definer
+set search_path = public, extensions
+as $$
+begin
+  if new.alvo_tipo is distinct from old.alvo_tipo or new.alvo_id is distinct from old.alvo_id then
+    raise exception 'O alvo de uma denúncia não pode ser trocado.' using errcode = '42501';
+  end if;
+  -- denunciante só muda pela troca de ID do Clerk (on update cascade): aí o ID antigo já saiu de perfis
+  if new.denunciante_id is distinct from old.denunciante_id
+     and exists (select 1 from public.perfis pf where pf.id = old.denunciante_id) then
+    raise exception 'Quem denunciou não pode ser trocado.' using errcode = '42501';
+  end if;
+  return new;
+end $$;
+create trigger denuncias_alvo_fixo before update on public.denuncias
+  for each row execute function public.denuncias_alvo_fixo();
+
 create or replace function public.denunciar_conversa(p_conversa uuid, p_motivo text, p_detalhes text default null)
 returns uuid language plpgsql security definer
 set search_path = public, extensions
@@ -130,7 +150,8 @@ revoke all on public.conversa_leituras_admin from public, anon, authenticated;
 create or replace function public.admin_ler_conversa(p_conversa uuid)
 returns table (id uuid, lado text, tipo text, texto text, alerta_golpe boolean, criado_em timestamptz,
                anuncio_id uuid, anuncio_titulo text, anuncio_preco_centavos bigint, anuncio_foto text, anuncio_link text,
-               pedido_id uuid, pedido_titulo text, proposta_preco_centavos bigint, autor_nome text)
+               pedido_id uuid, pedido_titulo text, proposta_preco_centavos bigint, autor_nome text,
+               proposta_id_ref uuid, proposta_retirada boolean)
 language plpgsql security definer
 set search_path = public, extensions
 as $$
@@ -147,7 +168,8 @@ begin
     select l.id, l.lado, l.tipo, l.texto, l.alerta_golpe, l.criado_em, l.anuncio_id, l.anuncio_titulo,
            l.anuncio_preco_centavos, l.anuncio_foto, l.anuncio_link, l.pedido_id, l.pedido_titulo,
            l.proposta_preco_centavos,
-           case when l.lado = 'sistema' then 'Sistema' else pf.nome end
+           case when l.lado = 'sistema' then 'Sistema' else pf.nome end,
+           l.proposta_id_ref, l.proposta_retirada
       from public.conversa_mensagens_ler(p_conversa, null) l
       left join public.perfis pf on pf.id = l.autor_id;
 end $$;
@@ -179,7 +201,7 @@ end $$;
 -- ---------------------------------------------------------------------
 -- 6. Permissões
 -- ---------------------------------------------------------------------
-revoke all on function public.conversas_ao_propor(), public.conversas_bloqueio_proposta(),
+revoke all on function public.conversas_ao_propor(), public.conversas_bloqueio_proposta(), public.denuncias_alvo_fixo(),
   public.bloquear_conversa(uuid, boolean), public.denunciar_conversa(uuid, text, text),
   public.admin_ler_conversa(uuid), public.conversas_limpar()
   from public, anon, authenticated;

@@ -42,6 +42,7 @@ export function CartaoMensagem({ m, meuLado, autorNome }: { m: MensagemConversa;
             {m.anuncio_titulo && <span className="text-base font-semibold">{preco(m.anuncio_preco_centavos)}</span>}
           </div>
         </div>}
+        {proposta && m.proposta_retirada && <p className="text-facil text-texto-suave">Esta proposta não está mais disponível.</p>}
         {proposta && m.proposta_preco_centavos != null && <p className="text-facil">Preço da proposta: <strong>{preco(m.proposta_preco_centavos)}</strong></p>}
         {proposta && m.texto && <p className="whitespace-pre-line break-words text-facil">{m.texto}</p>}
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-base">

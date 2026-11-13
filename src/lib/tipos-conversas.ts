@@ -44,6 +44,9 @@ export type MensagemConversa = {
   pedido_id: string | null;
   pedido_titulo: string | null;
   proposta_preco_centavos: number | null;
+  proposta_id_ref: string | null;
+  /** Proposta tirada pela equipe ou apagada: o cartão fica sem texto nem preço. */
+  proposta_retirada: boolean;
 };
 
 /** Linha de admin_ler_conversa(): a mensagem com o nome de quem escreveu. */
