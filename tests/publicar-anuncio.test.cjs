@@ -81,7 +81,7 @@ test('Voltar do preço salva a edição antes de abrir os detalhes', async () =>
   const { CabecalhoPasso } = carregar('src/components/anunciar/cabecalho-passo.tsx');
   const html = render(React.createElement(CabecalhoPasso, { passo: 'preco', id, editar: false, formId: 'form-preco', titulo: 'Preço' }));
   assert.match(html, /<button(?=[^>]*type="submit")(?=[^>]*form="form-preco")(?=[^>]*name="acao")(?=[^>]*value="ir:detalhes")[^>]*>(?:(?!<\/button>).)*Voltar<\/button>/);
-  await assert.rejects(a.salvarPreco(null, form({ preco: '93,50', acao: 'ir:detalhes' })), /redirect:\/anunciar\/detalhes/);
+  assert.deepEqual(await a.salvarPreco(null, form({ preco: '93,50', acao: 'ir:detalhes' })), { irPara: `/anunciar/detalhes?rascunho=${id}` });
   assert.deepEqual(gravacoes[0], { preco_centavos: 9350, aceita_troca: false });
 });
 
