@@ -198,3 +198,132 @@ test('escreverPerguntas: Gemini devolve até 2 perguntas válidas', async () => 
     assert.match(pedidos[0].corpo.messages[0].content, /DADOS/);
   });
 });
+
+// ---------- Task 4: ações do servidor e rotina ----------
+function bancoFalso({ reserva = 7, candidatos = [], aviso = true, config = null } = {}) {
+  const chamadas = [];
+  const db = {
+    rpc: async (nome, args) => {
+      chamadas.push({ nome, args });
+      if (nome === 'radar_ia_reservar') return { data: reserva, error: null };
+      if (nome === 'radar_ia_concluir') return { data: null, error: null };
+      if (nome === 'radar_novidades_candidatos') return { data: candidatos, error: null };
+      if (nome === 'radar_avisar_novidade') return { data: aviso, error: null };
+      return { data: null, error: { message: 'x' } };
+    },
+    from: (tabela) => {
+      const q = { select: () => q, eq: () => q, is: () => q, maybeSingle: async () => {
+        chamadas.push({ nome: `from:${tabela}` });
+        if (tabela === 'microrregioes') return { data: { slug: 'corrente-pi' }, error: null };
+        if (tabela === 'configuracoes') return { data: config === null ? null : { valor: config }, error: null };
+        return { data: null, error: null };
+      } };
+      return q;
+    },
+  };
+  return { db, chamadas };
+}
+
+function acoes({ usuario = 'user_1', banco = bancoFalso(), busca = [], minhaVitrine = 'minha-loja', pedido = null, acesso = true, meus = [] } = {}) {
+  const buscas = [];
+  const mocks = {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: usuario }) },
+    '@/lib/supabase/admin': { supabaseAdmin: () => banco.db },
+    '@/lib/supabase/server': { createClient: async () => banco.db },
+    '@/lib/dados/anuncios': { buscarAnuncios: async (p) => { buscas.push(p); return { anuncios: busca, total: busca.length }; } },
+    '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ perfil: { microrregiao_id: 'r1' }, vitrine: minhaVitrine ? { slug: minhaVitrine } : null }) },
+    '@/lib/dados/radar': { pedidoRadar: async () => pedido, acessoRadar: async () => ({ temAcesso: acesso, restantes: null }), meusAnunciosNoAr: async () => meus },
+  };
+  return { m: carregar('src/app/radar/ia-actions.ts', mocks), buscas };
+}
+const card = (id, vitrine = 'outra-loja') => ({ id, slug: `${id}-abcd`, titulo: `Bicicleta ${id}`, preco_centavos: 1000, capa: null, vitrine_nome: 'Loja', vitrine_slug: vitrine });
+const jevResposta = (p) => new Response(JSON.stringify({ answers: { resposta: { probabilities: p } } }), { status: 200 });
+
+test('comReserva: sem reserva nem chama a IA; erro dentro conclui com falha', async () => {
+  const banco = bancoFalso({ reserva: null });
+  const { comReserva } = carregar('src/lib/radar-ia/uso.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => banco.db } });
+  let rodou = false;
+  assert.equal(await comReserva('u', 'parecidos', async () => { rodou = true; return { valor: 1, custoUsd: 0, tokensEntrada: 0, tokensSaida: 0, falha: null }; }), null);
+  assert.equal(rodou, false);
+  const banco2 = bancoFalso();
+  const m2 = carregar('src/lib/radar-ia/uso.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => banco2.db } });
+  assert.equal(await m2.comReserva('u', 'parecidos', async () => { throw new Error('quebrou'); }), null);
+  const fim = banco2.chamadas.find((c) => c.nome === 'radar_ia_concluir');
+  assert.equal(fim.args.p_uso, 7);
+  assert.ok(fim.args.p_erro);
+  const banco3 = bancoFalso();
+  const m3 = carregar('src/lib/radar-ia/uso.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => banco3.db } });
+  assert.equal(await m3.comReserva('u', 'vitrine', async () => ({ valor: 'ok', custoUsd: 0.0003, tokensEntrada: 9, tokensSaida: 2, falha: null })), 'ok');
+  assert.deepEqual(banco3.chamadas.find((c) => c.nome === 'radar_ia_concluir').args, { p_uso: 7, p_custo_usd: 0.0003, p_tokens_entrada: 9, p_tokens_saida: 2, p_erro: null });
+});
+
+test('parecidos: sem login → null; busca vazia → [] sem reserva; anúncio próprio não vai para a IA', async () => {
+  await comFetch(respostaGemini({ escolhidos: [] }), async (pedidos) => {
+    assert.equal(await acoes({ usuario: null }).m.parecidosParaPedido('bicicleta', ''), null);
+    const banco = bancoFalso();
+    assert.deepEqual(await acoes({ banco }).m.parecidosParaPedido('bicicleta', ''), []);
+    assert.equal(banco.chamadas.some((c) => c.nome === 'radar_ia_reservar'), false);
+    const banco2 = bancoFalso();
+    assert.deepEqual(await acoes({ banco: banco2, busca: [card('a', 'minha-loja')] }).m.parecidosParaPedido('bicicleta', ''), []);
+    assert.equal(pedidos.length, 0);
+  });
+});
+
+test('parecidos: a IA escolhe e a tela recebe cartão com link e frase', async () => {
+  await comFetch(() => respostaGemini({ escolhidos: [{ id: 'b', motivo: 'Aro 29 como pediu' }] }), async (pedidos) => {
+    const { m, buscas } = acoes({ busca: [card('a', 'minha-loja'), card('b'), card('c')] });
+    const r = await m.parecidosParaPedido('bicicleta aro 29', 'vermelha');
+    assert.equal(buscas[0].limite, 20);
+    assert.equal(buscas[0].regiao, 'corrente-pi');
+    assert.equal(r.length, 1);
+    assert.equal(r[0].id, 'b');
+    assert.equal(r[0].motivo, 'Aro 29 como pediu');
+    assert.equal(r[0].link, '/anuncio/b-abcd');
+    const texto = pedidos[0].corpo.messages[1].content;
+    assert.ok(!texto.includes('id a:'));
+  });
+});
+
+test('perguntas: pedido claro → [] sem chamar o Gemini; vago → perguntas', async () => {
+  await comFetch(() => jevResposta({ claro: 0.9, vago: 0.1 }), async (pedidos) => {
+    assert.deepEqual(await acoes().m.perguntasParaPedido('geladeira duplex 400 litros', ''), []);
+    assert.equal(pedidos.filter((p) => p.url.includes('openrouter')).length, 0);
+  });
+  let n = 0;
+  await comFetch(() => (n++ === 0 ? jevResposta({ claro: 0.2, vago: 0.8 }) : respostaGemini({ perguntas: [{ rotulo: 'Tipo', pergunta: 'Qual tipo?', opcoes: ['A', 'B'] }] })), async () => {
+    const r = await acoes().m.perguntasParaPedido('celular', '');
+    assert.deepEqual(r, [{ rotulo: 'Tipo', pergunta: 'Qual tipo?', opcoes: ['A', 'B'] }]);
+  });
+  assert.equal(await acoes().m.perguntasParaPedido('ab', ''), null);
+});
+
+test('vitrine: só para loja que pode propor; devolve até 3 com frase', async () => {
+  const pedido = { id: '11111111-1111-4111-8111-111111111111', titulo: 'bicicleta', detalhes: null, situacao: 'aberto', sou_comprador: false, bloqueado: false };
+  const meus = [{ id: 'm1', titulo: 'Bicicleta aro 29', preco_centavos: 1, capa: null }, { id: 'm2', titulo: 'Capacete', preco_centavos: 1, capa: null }];
+  await comFetch(() => respostaGemini({ escolhidos: [{ id: 'm1', motivo: 'É bicicleta' }] }), async () => {
+    assert.equal(await acoes({ pedido, meus, acesso: false }).m.melhoresDaVitrine(pedido.id), null);
+    assert.equal(await acoes({ pedido: { ...pedido, sou_comprador: true }, meus }).m.melhoresDaVitrine(pedido.id), null);
+    assert.equal(await acoes({ pedido: { ...pedido, situacao: 'fechado' }, meus }).m.melhoresDaVitrine(pedido.id), null);
+    assert.equal(await acoes({ pedido, meus: meus.slice(0, 1) }).m.melhoresDaVitrine(pedido.id), null);
+    assert.equal(await acoes({ pedido, meus }).m.melhoresDaVitrine('x'), null);
+    assert.deepEqual(await acoes({ pedido, meus }).m.melhoresDaVitrine(pedido.id), [{ id: 'm1', motivo: 'É bicicleta' }]);
+  });
+});
+
+test('novidades: avisa só quando o JEV confirma com folga', async () => {
+  const candidatos = [
+    { pedido_id: 'p1', titulo: 'bicicleta', detalhes: '', anuncios: [{ id: 'a1', titulo: 'Bicicleta', preco_centavos: 1000 }] },
+    { pedido_id: 'p2', titulo: 'fogão', detalhes: '', anuncios: [{ id: 'a2', titulo: 'Fogão', preco_centavos: 1000 }] },
+  ];
+  const banco = bancoFalso({ candidatos, config: 50 });
+  const m = carregar('src/lib/radar-ia/novidades.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => banco.db } });
+  let n = 0;
+  await comFetch(() => (n++ === 0 ? jevResposta({ a1: 0.8, _nenhum: 0.2 }) : jevResposta({ a2: 0.3, _nenhum: 0.7 })), async (pedidos) => {
+    const r = await m.processarNovidades();
+    assert.deepEqual(r, { pedidos: 2, avisos: 1 });
+    assert.ok('_nenhum' in pedidos[0].corpo.questions.resposta.criteria);
+    const avisos = banco.chamadas.filter((c) => c.nome === 'radar_avisar_novidade');
+    assert.deepEqual(avisos.map((a) => a.args), [{ p_pedido: 'p1', p_anuncio: 'a1' }]);
+    assert.equal(banco.chamadas.find((c) => c.nome === 'radar_novidades_candidatos').args.p_limite, 50);
+  });
+});
