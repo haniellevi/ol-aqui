@@ -38,12 +38,12 @@ select pg_temp.confere((select count(*) = 4 from configuracoes where chave in ('
 select pg_temp.confere((select valor = '3000'::jsonb from configuracoes where chave = 'radar_ia.orcamento_mensal_centavos' and microrregiao_id is null), 'Teto R$ 30');
 select pg_temp.confere((select valor = '20'::jsonb from configuracoes where chave = 'radar_ia.usos_por_dia' and microrregiao_id is null), '20 usos por dia');
 select pg_temp.confere(radar_ia_reservar('user_q790a', 'parecidos') is null, 'Geral desligada: sem reserva');
-select pg_temp.confere(radar_ia_estado() = '{"perguntas": false, "parecidos": false, "vitrine": false, "novidades": false}'::jsonb, 'Estado: tudo desligado');
+select pg_temp.confere(radar_ia_estado() = '{"perguntas": false, "parecidos": false, "vitrine": false, "novidades": false, "ja_comprei": false}'::jsonb, 'Estado: tudo desligado');
 update configuracoes set valor = 'true' where chave = 'radar_ia.ativa' and microrregiao_id is null;
 select pg_temp.confere(radar_ia_reservar('user_q790a', 'parecidos') is null, 'Parte desligada: sem reserva');
 update configuracoes set valor = 'true' where chave in ('radar_ia.parecidos_ativa', 'radar_ia.novidades_ativa') and microrregiao_id is null;
 select pg_temp.recusa($q$select radar_ia_reservar('user_q790a', 'outra')$q$, '22023');
-select pg_temp.confere(radar_ia_estado() = '{"perguntas": false, "parecidos": true, "vitrine": false, "novidades": true}'::jsonb, 'Estado: só as partes ligadas');
+select pg_temp.confere(radar_ia_estado() = '{"perguntas": false, "parecidos": true, "vitrine": false, "novidades": true, "ja_comprei": false}'::jsonb, 'Estado: só as partes ligadas');
 
 -- ===== Reserva e conclusão =====
 select radar_ia_reservar('user_q790a', 'parecidos') as uso1 \gset
