@@ -60,8 +60,8 @@ select pg_temp.confere(ja_comprei_candidato(:'m1') is null, 'Chave desligada: se
 update configuracoes set valor = 'true' where chave in ('radar_ia.ativa', 'radar_ia.ja_comprei_ativa') and microrregiao_id is null;
 select pg_temp.confere(radar_ia_estado()->>'ja_comprei' = 'true', 'Estado: ja_comprei ligado');
 select ja_comprei_candidato(:'m1') as cand \gset
-select pg_temp.confere((:'cand'::jsonb)->>'pedido_id' = '81000000-0000-4000-a000-000000000001'
-  and (:'cand'::jsonb)->>'pedido_titulo' = 'bicicleta aro 29' and (:'cand'::jsonb)->>'texto' = 'já comprei, obrigado'
+select pg_temp.confere((:'cand'::jsonb)->'pedidos' = '[{"id": "81000000-0000-4000-a000-000000000001", "titulo": "bicicleta aro 29"}]'::jsonb
+  and (:'cand'::jsonb)->>'texto' = 'já comprei, obrigado'
   and (:'cand'::jsonb)->>'usuario_id' = 'user_q810cli' and (:'cand'::jsonb)->>'mensagem_id' = :'m1', 'Candidato: pedido aberto do cliente');
 
 update configuracoes set valor = 'false' where chave = 'radar_ia.ativa' and microrregiao_id is null;
@@ -141,7 +141,8 @@ select pg_temp.confere(not ja_comprei_registrar(pg_temp.msg(:'conv', 'cliente', 
 insert into radar_propostas(id, pedido_id, vitrine_id, mensagem) values
   ('81000000-0000-4000-c000-000000000002','81000000-0000-4000-a000-000000000002',:'vit', 'Tenho capacete');
 select pg_temp.msg(:'conv', 'cliente', 'achei o capacete') as m3 \gset
-select pg_temp.confere(ja_comprei_candidato(:'m3')->>'pedido_id' = '81000000-0000-4000-a000-000000000002', 'Pedido novo pode perguntar');
+select pg_temp.confere(ja_comprei_candidato(:'m3')->'pedidos' = '[{"id": "81000000-0000-4000-a000-000000000002", "titulo": "capacete de bike"}]'::jsonb,
+  'Pedido novo pode perguntar (o recusado fica de fora)');
 select pg_temp.confere(ja_comprei_registrar(:'m3', '81000000-0000-4000-a000-000000000002', true), 'Pergunta do pedido novo');
 
 -- resolver o pedido tira a faixa
@@ -155,5 +156,27 @@ reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
 select pg_temp.confere(ja_comprei_candidato(pg_temp.msg(:'conv', 'cliente', 'comprei')) is null, 'Pedido fechado: a IA não lê');
+
+-- dois pedidos abertos com a mesma loja: a IA recebe os dois e a pergunta é sobre o que ela escolheu (não o mais novo)
+insert into radar_pedidos(id, comprador_id, microrregiao_id, titulo, cidade, modo_contato, visibilidade, categoria_id) values
+  ('81000000-0000-4000-a000-000000000004','user_q810cli',:'regiao','bomba de pneu','Corrente','whatsapp_direto','lojas',:'moveis'),
+  ('81000000-0000-4000-a000-000000000005','user_q810cli',:'regiao','luva de ciclismo','Corrente','whatsapp_direto','lojas',:'moveis');
+insert into radar_propostas(id, pedido_id, vitrine_id, mensagem) values
+  ('81000000-0000-4000-c000-000000000004','81000000-0000-4000-a000-000000000004',:'vit', 'Tenho bomba');
+insert into radar_propostas(id, pedido_id, vitrine_id, mensagem) values
+  ('81000000-0000-4000-c000-000000000005','81000000-0000-4000-a000-000000000005',:'vit', 'Tenho luva');
+select pg_temp.msg(:'conv', 'cliente', 'já comprei a bomba') as m4 \gset
+select pg_temp.confere((select jsonb_agg(x->>'id') from jsonb_array_elements(ja_comprei_candidato(:'m4')->'pedidos') x)
+  = '["81000000-0000-4000-a000-000000000005", "81000000-0000-4000-a000-000000000004"]'::jsonb, 'Os dois pedidos abertos vão para a IA');
+select pg_temp.confere(ja_comprei_registrar(:'m4', '81000000-0000-4000-a000-000000000004', true), 'Pergunta sobre o pedido que a IA escolheu');
+select pg_temp.confere(not ja_comprei_registrar(pg_temp.msg(:'conv', 'cliente', 'comprei'), '81000000-0000-4000-a000-000000000001', true),
+  'Pedido fora da lista (recusado) não vira pergunta');
+set local role authenticated;
+set local request.jwt.claim.role='authenticated';
+set local request.jwt.claim.sub='user_q810cli';
+select pg_temp.confere((select pedido_titulo = 'bomba de pneu' from ja_comprei_pendente(:'conv')), 'Faixa fala da bomba, não da luva');
+reset role;
+set local request.jwt.claim.role='';
+set local request.jwt.claim.sub='';
 
 rollback;

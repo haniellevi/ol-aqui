@@ -9,7 +9,8 @@ const PED = '81000000-0000-4000-a000-000000000001';
 const CONV = '81000000-0000-4000-d000-000000000009';
 
 test('filtro: só mensagem com palavra de compra vai para a IA', () => {
-  for (const t of ['Já comprei, obrigado', 'Comprei!', 'consegui em outro lugar', 'ACHEI', 'já resolvi', 'Não preciso mais', 'ja tenho', 'peguei ontem'])
+  for (const t of ['Já comprei, obrigado', 'Comprei!', 'consegui em outro lugar', 'ACHEI', 'já resolvi', 'Não preciso mais', 'ja tenho', 'peguei ontem',
+    'já encontrei em outra loja, valeu', 'achamos aqui perto', 'não preciso, obrigado'])
     assert.equal(temPalavraDeCompra(t), true, t);
   for (const t of ['tem azul?', 'você comprou?', 'quanto custa', 'compra garantida', 'acho que sim', '', null, 42])
     assert.equal(temPalavraDeCompra(t), false, String(t));
@@ -24,7 +25,9 @@ test('máscara: link, e-mail e telefone não vão para a IA; corta em 300', () =
 });
 
 // ---------- verificarJaComprei ----------
-function bancoFalso({ candidato = { mensagem_id: MSG, usuario_id: 'user_cli', texto: 'comprei, me liga 89 99999-0000', pedido_id: PED, pedido_titulo: 'bicicleta aro 29' }, reserva = 7 } = {}) {
+const PED2 = '81000000-0000-4000-a000-000000000002';
+const UM_PEDIDO = { mensagem_id: MSG, usuario_id: 'user_cli', texto: 'comprei, me liga 89 99999-0000', pedidos: [{ id: PED, titulo: 'bicicleta aro 29 tel 89 98888-7777' }] };
+function bancoFalso({ candidato = UM_PEDIDO, reserva = 7 } = {}) {
   const chamadas = [];
   const db = { rpc: async (nome, args) => {
     chamadas.push({ nome, args });
@@ -50,7 +53,7 @@ const modulo = (banco) => carregar('src/lib/radar-ia/ja-comprei.ts', { '@/lib/su
 const registrar = (banco) => banco.chamadas.find((c) => c.nome === 'ja_comprei_registrar');
 
 test('sem candidato (chave desligada, loja, pedido fechado): JEV não é chamado', async () => {
-  await comFetch(jev({ ja_resolveu: 0.9, ainda_procura: 0.1 }), async (pedidos) => {
+  await comFetch(jev({ [PED]: 0.9, ainda_procura: 0.1 }), async (pedidos) => {
     const banco = bancoFalso({ candidato: null });
     assert.equal(await modulo(banco).verificarJaComprei(MSG), false);
     assert.equal(pedidos.length, 0);
@@ -59,7 +62,7 @@ test('sem candidato (chave desligada, loja, pedido fechado): JEV não é chamado
 });
 
 test('sem reserva (teto do mês, 20 usos do dia): JEV não é chamado', async () => {
-  await comFetch(jev({ ja_resolveu: 0.9, ainda_procura: 0.1 }), async (pedidos) => {
+  await comFetch(jev({ [PED]: 0.9, ainda_procura: 0.1 }), async (pedidos) => {
     const banco = bancoFalso({ reserva: null });
     assert.equal(await modulo(banco).verificarJaComprei(MSG), false);
     assert.equal(pedidos.length, 0);
@@ -68,23 +71,33 @@ test('sem reserva (teto do mês, 20 usos do dia): JEV não é chamado', async ()
 });
 
 test('JEV diz que já resolveu: grava a pergunta; o telefone não vai para a IA', async () => {
-  await comFetch(jev({ ja_resolveu: 0.9, ainda_procura: 0.1 }), async (pedidos) => {
+  await comFetch(jev({ [PED]: 0.9, ainda_procura: 0.1 }), async (pedidos) => {
     const banco = bancoFalso();
     assert.equal(await modulo(banco).verificarJaComprei(MSG), true);
     assert.equal(pedidos.length, 1);
-    assert.doesNotMatch(pedidos[0].corpo, /99999|0000/);
+    assert.doesNotMatch(pedidos[0].corpo, /99999|98888|7777/);
     const corpo = JSON.parse(pedidos[0].corpo);
     assert.equal(corpo.model, 'jev-latest');
-    assert.deepEqual(Object.keys(corpo.state).sort(), ['mensagem', 'pedido']);
-    assert.equal(corpo.state.pedido, 'bicicleta aro 29');
+    assert.deepEqual(Object.keys(corpo.state), ['mensagem']);
+    assert.deepEqual(Object.keys(corpo.questions.resposta.criteria).sort(), [PED, 'ainda_procura'].sort());
+    assert.match(corpo.questions.resposta.criteria[PED], /bicicleta aro 29 tel \[removido\]/);
     assert.deepEqual(banco.chamadas.find((c) => c.nome === 'radar_ia_reservar').args, { p_usuario: 'user_cli', p_parte: 'ja_comprei' });
     assert.deepEqual(registrar(banco).args, { p_mensagem: MSG, p_pedido: PED, p_resolveu: true });
     assert.equal(banco.chamadas.find((c) => c.nome === 'radar_ia_concluir').args.p_erro, null);
   });
 });
 
+test('dois pedidos abertos: pergunta sobre o que o JEV escolheu', async () => {
+  const dois = { ...UM_PEDIDO, texto: 'já comprei o capacete', pedidos: [{ id: PED, titulo: 'bicicleta' }, { id: PED2, titulo: 'capacete' }] };
+  await comFetch(jev({ [PED]: 0.05, [PED2]: 0.9, ainda_procura: 0.05 }), async () => {
+    const banco = bancoFalso({ candidato: dois });
+    assert.equal(await modulo(banco).verificarJaComprei(MSG), true);
+    assert.deepEqual(registrar(banco).args, { p_mensagem: MSG, p_pedido: PED2, p_resolveu: true });
+  });
+});
+
 test('JEV em dúvida: marca lida sem perguntar', async () => {
-  await comFetch(jev({ ja_resolveu: 0.5, ainda_procura: 0.5 }), async () => {
+  await comFetch(jev({ [PED]: 0.5, ainda_procura: 0.5 }), async () => {
     const banco = bancoFalso();
     assert.equal(await modulo(banco).verificarJaComprei(MSG), false);
     assert.deepEqual(registrar(banco).args, { p_mensagem: MSG, p_pedido: PED, p_resolveu: false });

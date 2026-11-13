@@ -29,7 +29,7 @@ export default async function PaginaConversa({ params }: { params: Promise<{ id:
   if (!d) notFound();
   const bloqueada = d.eu_bloqueei || d.fui_bloqueado;
   // "Já comprei" (IA do Radar): só o cliente; as lojas são as que mandaram oferta no pedido (folha "Com quem você resolveu?").
-  const jaComprei = d.papel === "cliente" ? await jaCompreiPendente(d.id) : null;
+  const jaComprei = d.papel === "cliente" && !bloqueada ? await jaCompreiPendente(d.id) : null;
   const lojasDoPedido = jaComprei
     ? await propostasDoPedido(jaComprei.pedido_id).then((ps) => ps.filter((p) => p.status === "ativa")
         .map((p) => ({ propostaId: p.id, lojaNome: p.loja_nome }))).catch(() => null)

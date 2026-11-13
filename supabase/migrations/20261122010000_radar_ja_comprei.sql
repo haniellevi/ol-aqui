@@ -104,13 +104,15 @@ create index conversa_ja_comprei_conversa_idx on public.conversa_ja_comprei (con
 alter table public.conversa_ja_comprei enable row level security;
 revoke all on public.conversa_ja_comprei from public, anon, authenticated;
 
--- Pedido do cliente desta conversa que a IA ainda pode perguntar: aberto, no prazo, com cartão de proposta
--- nesta conversa e sem pergunta (pendente ou recusada). O do cartão mais recente.
-create function public.ja_comprei_pedido_da_conversa(p_conversa uuid)
-returns uuid language sql stable security definer
+-- Pedidos do cliente desta conversa que a IA ainda pode perguntar: abertos, no prazo, com cartão de proposta
+-- nesta conversa e sem pergunta (pendente ou recusada). Até 5, do cartão mais recente para o mais antigo.
+-- Vão todos para a IA, que escolhe de qual deles a mensagem fala.
+create function public.ja_comprei_pedidos_da_conversa(p_conversa uuid)
+returns table (id uuid, titulo text)
+language sql stable security definer
 set search_path = public, extensions
 as $$
-  select p.id
+  select p.id, p.titulo
     from public.conversas c
     join public.conversa_mensagens m on m.conversa_id = c.id and m.tipo = 'proposta'
     join public.radar_pedidos p on p.id = m.pedido_id
@@ -118,8 +120,9 @@ as $$
      and p.comprador_id = c.cliente_id
      and p.status = 'aberto' and p.expira_em > now()
      and not exists (select 1 from public.conversa_ja_comprei j where j.pedido_id = p.id)
-   order by m.criado_em desc, m.id desc
-   limit 1
+   group by p.id, p.titulo
+   order by max(m.criado_em) desc, p.id
+   limit 5
 $$;
 
 -- Servidor: a mensagem pode ir para a IA? Devolve o mínimo que vai para o JEV, ou null.
@@ -129,8 +132,8 @@ set search_path = public, extensions
 as $$
 declare
   m public.conversa_mensagens;
-  c public.conversas;
-  v_pedido uuid;
+  v_cliente text;
+  v_pedidos jsonb;
 begin
   if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
     raise exception 'Acesso restrito.' using errcode = '42501';
@@ -142,11 +145,11 @@ begin
   if m.id is null or m.tipo <> 'texto' or m.lado <> 'cliente' or m.ia_lida_em is not null then
     return null;
   end if;
-  select * into c from public.conversas x where x.id = m.conversa_id;
-  v_pedido := public.ja_comprei_pedido_da_conversa(c.id);
-  if v_pedido is null then return null; end if;
-  return jsonb_build_object('mensagem_id', m.id, 'usuario_id', c.cliente_id, 'texto', m.texto,
-    'pedido_id', v_pedido, 'pedido_titulo', (select titulo from public.radar_pedidos where id = v_pedido));
+  select c.cliente_id into v_cliente from public.conversas c where c.id = m.conversa_id;
+  select jsonb_agg(jsonb_build_object('id', x.id, 'titulo', x.titulo)) into v_pedidos
+    from public.ja_comprei_pedidos_da_conversa(m.conversa_id) x;
+  if v_pedidos is null then return null; end if;
+  return jsonb_build_object('mensagem_id', m.id, 'usuario_id', v_cliente, 'texto', m.texto, 'pedidos', v_pedidos);
 end $$;
 
 -- Servidor: grava que a IA leu a mensagem e, se ela achou que já resolveu, a pergunta pendente.
@@ -165,7 +168,7 @@ begin
    where id = p_mensagem and tipo = 'texto' and lado = 'cliente'
   returning conversa_id into v_conv;
   if v_conv is null or not coalesce(p_resolveu, false)
-     or public.ja_comprei_pedido_da_conversa(v_conv) is distinct from p_pedido then
+     or not exists (select 1 from public.ja_comprei_pedidos_da_conversa(v_conv) x where x.id = p_pedido) then
     return false;
   end if;
   insert into public.conversa_ja_comprei (pedido_id, conversa_id, mensagem_id, estado)
@@ -207,7 +210,7 @@ end $$;
 -- ---------------------------------------------------------------------
 -- 3. Permissões
 -- ---------------------------------------------------------------------
-revoke all on function public.ja_comprei_pedido_da_conversa(uuid), public.ja_comprei_candidato(uuid),
+revoke all on function public.ja_comprei_pedidos_da_conversa(uuid), public.ja_comprei_candidato(uuid),
   public.ja_comprei_registrar(uuid, uuid, boolean), public.ja_comprei_pendente(uuid), public.recusar_ja_comprei(uuid)
   from public, anon, authenticated;
 grant execute on function public.ja_comprei_candidato(uuid), public.ja_comprei_registrar(uuid, uuid, boolean) to service_role;

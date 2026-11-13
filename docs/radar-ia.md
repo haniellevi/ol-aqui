@@ -14,7 +14,8 @@ Tudo chega **desligado**. Nada muda para o cliente até alguém ligar as chaves 
    mensagens: "Parece que você já resolveu “{pedido}”. Posso tirar o pedido do Radar?" [Sim, pode tirar]
    [Não, ainda preciso]. "Sim" abre a folha "Com quem você resolveu?"; o pedido só sai do ar quando ele escolhe.
    "Não" vale para sempre naquele pedido. Mensagem da loja e conversa sem pedido aberto nunca vão para a IA.
-   Vão só o título do pedido e o texto da mensagem, sem links, e-mails e telefones. Plano:
+   Vão só o texto da mensagem e os títulos dos pedidos abertos daquela conversa (até 5; o JEV escolhe de qual a
+   mensagem fala), sem links, e-mails e telefones. Plano:
    `docs/superpowers/plans/2026-11-13-radar-ja-comprei.md`. Texto da política: `docs/designs/conversas-politica-privacidade.md`.
 
 Qual IA: o **JEV** (TypeSafe) julga (o pedido está vago? o anúncio novo combina?) e o **Gemini 2.5 Flash-Lite** (OpenRouter,

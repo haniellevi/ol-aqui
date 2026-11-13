@@ -1,10 +1,10 @@
 // "Já comprei" (IA do Radar): só mensagem com palavra de compra vai para a IA (decisão do Raniel, 13/11/2026).
 // Sem "server-only": a tela usa o filtro para saber quando recarregar e mostrar a pergunta.
 
-const PALAVRAS = /\b(comprei|compramos|achei|consegui|conseguimos|resolvi|resolvido|resolvida|peguei|fechei|fechamos|adquiri|ganhei|ja tenho|nao preciso mais)\b/;
+const PALAVRAS = /\b(comprei|compramos|achei|achamos|encontrei|encontramos|consegui|conseguimos|resolvi|resolvido|resolvida|peguei|fechei|fechamos|adquiri|ganhei|ja tenho|nao preciso)\b/;
 
 function normalizar(t: string): string {
-  return t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 export function temPalavraDeCompra(texto: unknown): boolean {

@@ -33,6 +33,7 @@
 - Config (grupo `radar`, `where not exists` como em `20261121010000`): `radar_ia.ja_comprei_ativa` = `false`, descrição "IA do Radar: percebe \"já comprei\" na conversa e pergunta ao cliente se pode tirar o pedido".
 - `radar_ia_uso.parte` passa a aceitar `'ja_comprei'` (drop + add do check, nome do constraint pelo catálogo). `radar_ia_reservar` e `radar_ia_estado` recriadas (`create or replace`, mesmo corpo) aceitando/devolvendo `ja_comprei`; `ja_comprei` usa provedor `typesafe`, modelo `jev-latest`.
 - Para o JEV vão só: título do pedido (até 120 letras) e o texto da mensagem (até 300), com link e sequência de 8+ dígitos trocados por `[removido]`. Nada de nome, telefone, loja ou outras mensagens. Custo gravado: `CUSTO_JEV_USD` (US$ 0,0002).
+- **Ajuste da revisão final:** com mais de um pedido aberto na mesma conversa, o candidato traz até 5 (`pedidos: [{id, titulo}]`) e o JEV escolhe de qual a mensagem fala (uma opção por pedido + `ainda_procura`); os títulos também passam por `mascararParaIA`. A faixa não aparece em conversa bloqueada.
 - O que fica guardado: só a pergunta pendente/recusada por pedido (tabela `conversa_ja_comprei`) e `conversa_mensagens.ia_lida_em`; nada da resposta da IA além disso.
 - JEV com chance `ja_resolveu` ≥ 0,7 = perguntar. Falha, demora (3 s), sem reserva: nada acontece, sem aviso.
 - Copy exata (acima, tabela "Texto"). Modo fácil: botões `min-h-12` (`tamanho="grande"`), corpo `text-facil`, nenhum ícone sem texto. Componentes de `src/components/ui/`. Rodar `ui-consistency:finding-patterns` antes da Task 3.

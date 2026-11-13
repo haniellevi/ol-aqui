@@ -36,8 +36,9 @@ será atualizada antes, dizendo o que é lido e para quê.
 > já resolveu o que pediu no Radar. Ela só lê quando as três coisas acontecem juntas: a mensagem foi escrita pelo
 > cliente (nunca pela loja); a conversa tem uma oferta de um pedido dele que ainda está aberto no Radar; e a mensagem
 > tem uma palavra como "comprei", "achei", "consegui" ou "resolvi". Vão para a TypeSafe (serviço de inteligência
-> artificial contratado sem guardar os dados nem usá-los para treinar modelos) apenas o texto dessa mensagem — com
-> links, e-mails e números de telefone apagados antes — e o título do pedido. Não enviamos seu nome, seu telefone,
+> artificial contratado sem guardar os dados nem usá-los para treinar modelos) apenas o texto dessa mensagem e o título
+> dos seus pedidos abertos que aquela loja respondeu — com links, e-mails e números de telefone apagados antes. Não
+> enviamos seu nome, seu telefone,
 > o nome da loja nem as outras mensagens. Se a inteligência artificial achar que você já resolveu, aparece só para
 > você uma pergunta: "Posso tirar o pedido do Radar?". O pedido só sai do ar se você confirmar. Se responder "Não,
 > ainda preciso", não perguntamos de novo sobre aquele pedido. Guardamos apenas que a mensagem foi lida, se a pergunta
