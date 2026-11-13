@@ -31,7 +31,7 @@ No site não há pagamento de produto. O lojista continua pagando o plano.
 
 ## Ordem das etapas
 
-1. Pedir antes do login → `docs/superpowers/plans/2026-11-13-radar-pedido-antes-login.md`
+1. Pedir antes do login → `docs/superpowers/plans/2026-11-13-radar-pedido-antes-login.md` (código feito no ramo `claude/radar-pedido-antes-login`; falta testar na prévia e juntar)
 2. Cartaz com QR e recompensa para a loja
 3. Botão "Vou procurar"
 4. Total de contatos para o grátis e cortesia de 30 dias no primeiro anúncio

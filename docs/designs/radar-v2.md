@@ -10,7 +10,7 @@ usável por idoso ou criança sem ser infantil.
 - Nome continua **Radar**. Botão: **"Estou procurando…"**. Frase: **"Diga o que precisa. As lojas da região te respondem."**
 
 ## Quem pede
-- Só com conta e celular confirmado (como hoje).
+- Publicar: só com conta e celular confirmado. Escrever o pedido: qualquer pessoa, mesmo sem conta. No fim, "Entrar para publicar" guarda o rascunho no aparelho (2 horas), e a pessoa volta ao resumo pronto para publicar (`docs/designs/crescimento-radar-lojista.md`, decisão 9).
 - Escreve ou **fala** (botão "Falar em vez de digitar"). Sem foto nesta versão.
 - Se o pedido estiver vago, a IA faz no máximo 2 perguntas com botões (fase 3).
 - Antes de publicar, a IA mostra até 3 anúncios parecidos da região: "Achamos isso na região. Quer ver?" (fase 3).
