@@ -58,10 +58,17 @@ export function CabecalhoPasso({
         </p>
       )}
       <div className="flex items-center justify-between gap-2">
-        <Link href={voltar} className={`${LINK_TOPO} -ml-2`}>
-          <ArrowLeft className="size-4 md:size-5" aria-hidden />
-          Voltar
-        </Link>
+        {salvaAoIr && anterior ? (
+          <button type="submit" form={formId} name="acao" value={`ir:${anterior}`} className={`${LINK_TOPO} -ml-2`}>
+            <ArrowLeft className="size-4 md:size-5" aria-hidden />
+            Voltar
+          </button>
+        ) : (
+          <Link href={voltar} className={`${LINK_TOPO} -ml-2`}>
+            <ArrowLeft className="size-4 md:size-5" aria-hidden />
+            Voltar
+          </Link>
+        )}
         {formId ? (
           <button type="submit" form={formId} name="acao" value="sair" className={`${LINK_TOPO} -mr-2`}>
             Salvar e sair
