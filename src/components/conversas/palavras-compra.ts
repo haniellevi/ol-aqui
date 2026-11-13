@@ -17,6 +17,7 @@ export function mascararParaIA(texto: string): string {
     .replace(/https?:\/\/\S+/gi, "[removido]")
     .replace(/www\.\S+/gi, "[removido]")
     .replace(/[^\s@]+@[^\s@]+/g, "[removido]")
+    .replace(/\b(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/\S*)?/gi, "[removido]") // link sem http nem www (loja.com.br/x)
     .replace(/\(?\+?(?:\d[\s().-]*){7,}\d/g, "[removido]")
     .replace(/\s+/g, " ")
     .trim()

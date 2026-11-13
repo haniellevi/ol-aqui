@@ -22,6 +22,11 @@ test('máscara: link, e-mail e telefone não vão para a IA; corta em 300', () =
   assert.match(r, /^comprei, me liga \[removido\]/);
   assert.equal(mascararParaIA('comprei ' + 'a'.repeat(400)).length, 300);
   assert.equal(mascararParaIA('comprei 2 bicicletas'), 'comprei 2 bicicletas');
+  // link sem http nem www
+  const semEsquema = mascararParaIA('Já comprei em loja.com.br/pedido/token-secreto e loja.shop, obrigado. Valeu!');
+  assert.doesNotMatch(semEsquema, /loja|token|shop/);
+  assert.equal(semEsquema, 'Já comprei em [removido] e [removido], obrigado. Valeu!');
+  assert.equal(mascararParaIA('comprei a bike aro 29. Valeu'), 'comprei a bike aro 29. Valeu');
 });
 
 // ---------- verificarJaComprei ----------
