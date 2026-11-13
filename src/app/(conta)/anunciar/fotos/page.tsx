@@ -13,7 +13,7 @@ const MAX_FOTOS_BANCO = 12; // check de anuncios.fotos no banco
 
 // T17 · Passo 1: fotos (tirar ou escolher, até o máximo, a primeira é a capa).
 export default async function PassoFotos({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, conta, editar, equipe } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, daRevisao, equipe } = await carregarPasso(searchParams);
   const regiao = conta.vitrine.microrregiao_id;
   const [minimo, maximoConfig] = await Promise.all([
     lerConfigNumero("anuncio.fotos_minimo", regiao),
@@ -23,7 +23,7 @@ export default async function PassoFotos({ searchParams }: { searchParams: Param
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso equipe={equipe}
+      <CabecalhoPasso equipe={equipe} daRevisao={daRevisao}
         passo="fotos"
         formId="form-fotos"
         id={anuncio.id}
@@ -35,7 +35,7 @@ export default async function PassoFotos({ searchParams }: { searchParams: Param
       {!editar && !conta.ajudante && (
         <BotaoAbrirAki pedido={{ foto: true, rascunhoId: anuncio.id }}>Cadastrar com o Merc pela foto</BotaoAbrirAki>
       )}
-      <EnvioFotos id={anuncio.id} editar={editar} fotosIniciais={anuncio.fotos} maximo={maximo} minimo={minimo ?? 0} podeEditarComAki={conta.vitrine.tipo === "loja" && !conta.ajudante} />
+      <EnvioFotos id={anuncio.id} editar={editar} daRevisao={daRevisao} fotosIniciais={anuncio.fotos} maximo={maximo} minimo={minimo ?? 0} podeEditarComAki={conta.vitrine.tipo === "loja" && !conta.ajudante} />
       {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho />}
     </CorpoPasso>
   );

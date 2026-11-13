@@ -14,7 +14,7 @@ const FORM = "form-preco";
 
 // T20 · Passo 4: preço, "A combinar", "Aceito troca" e a faixa dos parecidos na região.
 export default async function PassoPreco({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, conta, editar, equipe } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, daRevisao, equipe } = await carregarPasso(searchParams);
   const [faixa, extra] = await Promise.all([
     anuncio.categoria_id ? faixaPreco(anuncio.categoria_id, conta.vitrine.microrregiao_id) : null,
     // "Preço antes" só na edição; sem a coluna no banco (migração não aplicada) o campo não aparece.
@@ -31,10 +31,11 @@ export default async function PassoPreco({ searchParams }: { searchParams: Param
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso equipe={equipe} passo="preco" id={anuncio.id} editar={editar} formId={FORM} titulo="Quanto você quer?" />
+      <CabecalhoPasso equipe={equipe} daRevisao={daRevisao} passo="preco" id={anuncio.id} editar={editar} formId={FORM} titulo="Quanto você quer?" />
       <FormPreco
         id={anuncio.id}
         editar={editar}
+        daRevisao={daRevisao}
         formId={FORM}
         precoInicial={anuncio.preco_centavos}
         aCombinarInicial={anuncio.preco_centavos == null && jaPassou}

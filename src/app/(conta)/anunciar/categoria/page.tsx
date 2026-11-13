@@ -17,13 +17,13 @@ const FORM = "form-categoria";
 
 // T18 · Passo 2: categoria em até 3 níveis (grande → sub → tipo), com busca.
 export default async function PassoCategoria({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, editar, equipe } = await carregarPasso(searchParams);
+  const { anuncio, editar, daRevisao, equipe } = await carregarPasso(searchParams);
   const arvore = await listarCategorias();
   const sugestao = await minhaSugestaoCategoria(anuncio.id);
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso equipe={equipe}
+      <CabecalhoPasso equipe={equipe} daRevisao={daRevisao}
         passo="categoria"
         id={anuncio.id}
         editar={editar}
@@ -33,10 +33,10 @@ export default async function PassoCategoria({ searchParams }: { searchParams: P
       />
       {sugestao && <SugestaoPendente id={anuncio.id} editar={editar} texto={sugestao.texto} />}
       {arvore.length ? (
-        <EscolhaCategoria id={anuncio.id} editar={editar} formId={FORM} arvore={arvore} selecionadaId={anuncio.categoria_id} tituloAtual={anuncio.titulo} />
+        <EscolhaCategoria id={anuncio.id} editar={editar} daRevisao={daRevisao} formId={FORM} arvore={arvore} selecionadaId={anuncio.categoria_id} tituloAtual={anuncio.titulo} />
       ) : (
         <Vazio titulo="Não conseguimos abrir as categorias" texto="Confira sua internet e tente de novo. O que você já fez está salvo.">
-          <Botao href={urlPasso("categoria", anuncio.id, editar)} larguraTotal>
+          <Botao href={urlPasso("categoria", anuncio.id, editar, daRevisao)} larguraTotal>
             Tentar de novo
           </Botao>
         </Vazio>

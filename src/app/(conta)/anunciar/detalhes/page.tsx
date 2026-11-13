@@ -15,21 +15,21 @@ const FORM = "form-detalhes";
 
 // T19 · Passo 3: título, descrição e os campos da subcategoria (vindos do banco).
 export default async function PassoDetalhes({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, editar, equipe } = await carregarPasso(searchParams);
+  const { anuncio, editar, daRevisao, equipe } = await carregarPasso(searchParams);
   // nunca esteve no ar: só categoria visível (escondida no painel = escolhe outra); já esteve: a dele, mesmo escondida
   const nuncaNoAr = !anuncio.publicado_em;
   const achada = anuncio.categoria_id
     ? await (nuncaNoAr ? categoriaPorId(anuncio.categoria_id) : categoriaDoAnuncio(anuncio.categoria_id))
     : null;
   // sem categoria (ou com uma que sumiu): os campos dependem dela, então escolhe primeiro
-  if (!achada && nuncaNoAr) redirect(urlPasso("categoria", anuncio.id, editar));
+  if (!achada && nuncaNoAr) redirect(urlPasso("categoria", anuncio.id, editar, daRevisao));
 
   const campos = achada?.pai ? achada.categoria.campos : [];
   const nome = achada ? nomeCaminho(achada.caminho) : null;
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso equipe={equipe}
+      <CabecalhoPasso equipe={equipe} daRevisao={daRevisao}
         passo="detalhes"
         id={anuncio.id}
         editar={editar}
@@ -41,6 +41,7 @@ export default async function PassoDetalhes({ searchParams }: { searchParams: Pa
         id={anuncio.id}
         categoriaId={anuncio.categoria_id}
         editar={editar}
+        daRevisao={daRevisao}
         formId={FORM}
         tituloInicial={anuncio.titulo ?? ""}
         descricaoInicial={anuncio.descricao ?? ""}

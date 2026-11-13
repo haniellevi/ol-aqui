@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Botao } from "@/components/ui/botao";
 
 // A barra fixa reserva a parte de baixo da tela para a ação principal do passo.
 export function BarraContinuar({ children, aviso }: { children: ReactNode; aviso?: ReactNode }) {
@@ -9,6 +10,21 @@ export function BarraContinuar({ children, aviso }: { children: ReactNode; aviso
         {aviso && <p className="text-center text-xs text-texto-suave">{aviso}</p>}
       </div>
     </div>
+  );
+}
+
+export function BotaoPasso({ editar, daRevisao, salvando, disabled, enviandoFotos }: {
+  editar: boolean;
+  daRevisao?: boolean;
+  salvando: boolean;
+  disabled?: boolean;
+  enviandoFotos?: boolean;
+}) {
+  const acao = daRevisao ? "salvar-revisao" : editar ? "salvar" : "seguir";
+  return (
+    <Botao type="submit" name="acao" value={acao} larguraTotal carregando={salvando} textoCarregando="Salvando..." disabled={disabled}>
+      {enviandoFotos ? "Enviando fotos..." : acao === "seguir" ? "Continuar" : "Salvar alterações"}
+    </Botao>
   );
 }
 

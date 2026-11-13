@@ -24,6 +24,7 @@ export function CabecalhoPasso({
   passo,
   id,
   editar,
+  daRevisao,
   formId,
   titulo,
   subtitulo,
@@ -32,6 +33,7 @@ export function CabecalhoPasso({
   passo: SlugPasso;
   id: string;
   editar: boolean;
+  daRevisao?: boolean;
   /** id do <form> do passo; sem ele o "Salvar e sair" é só um link. */
   formId?: string;
   /** Frase grande da tela, ex.: "Tire fotos do que você quer vender". */
@@ -42,7 +44,7 @@ export function CabecalhoPasso({
 }) {
   const n = numeroPasso(passo);
   const nome = PASSOS[n - 1].titulo;
-  const anterior = passoAnterior(passo);
+  const anterior = daRevisao ? "revisar" : passoAnterior(passo);
   // P5b-2a: a equipe volta para a ficha do anúncio no painel.
   const sair = equipe ? linkAdminAnuncio(id) : DESTINO_SAIR;
   const voltar = anterior ? urlPasso(anterior, id, editar) : editar ? sair : "/anunciar";
@@ -69,11 +71,11 @@ export function CabecalhoPasso({
             Voltar
           </Link>
         )}
-        {formId ? (
+        {formId && !editar ? (
           <button type="submit" form={formId} name="acao" value="sair" className={`${LINK_TOPO} -mr-2`}>
             Salvar e sair
           </button>
-        ) : (
+        ) : !formId && (
           <Link href={sair} className={`${LINK_TOPO} -mr-2`}>
             Salvar e sair
           </Link>

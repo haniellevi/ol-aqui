@@ -9,7 +9,7 @@ import { nomeCaminho, percorrerLeve, type NoLeve } from "@/lib/categorias-arvore
 import type { CategoriaComFilhas } from "@/lib/tipos";
 import { AvisoErro } from "./aviso-erro";
 import { useEnvioAnuncio } from "./enviar";
-import { BarraContinuar } from "./barra-continuar";
+import { BarraContinuar, BotaoPasso } from "./barra-continuar";
 import { classesCampo } from "@/components/ui/input";
 
 // Passo 2 · Categoria em até 3 níveis: Grande › Sub › Tipo. Só a folha (sem filhas) recebe o anúncio.
@@ -27,6 +27,7 @@ const textoDaBusca = (t: string) => t.replace(/\s+/g, " ").trim().slice(0, MAX_T
 export function EscolhaCategoria({
   id,
   editar,
+  daRevisao,
   formId,
   arvore,
   selecionadaId,
@@ -34,6 +35,7 @@ export function EscolhaCategoria({
 }: {
   id: string;
   editar: boolean;
+  daRevisao?: boolean;
   formId: string;
   arvore: CategoriaComFilhas[];
   selecionadaId: string | null;
@@ -184,9 +186,7 @@ export function EscolhaCategoria({
       />
 
       <BarraContinuar>
-        <Botao type="submit" name="acao" value="seguir" larguraTotal carregando={enviando} textoCarregando="Salvando...">
-          Continuar
-        </Botao>
+        <BotaoPasso editar={editar} daRevisao={daRevisao} salvando={enviando} />
       </BarraContinuar>
     </form>
   );

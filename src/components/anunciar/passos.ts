@@ -16,9 +16,9 @@ export const TOTAL_PASSOS = PASSOS.length;
 /** Número do passo (1 a 6). */
 export const numeroPasso = (slug: SlugPasso) => PASSOS.findIndex((p) => p.slug === slug) + 1;
 
-/** Endereço de um passo: /anunciar/<passo>?rascunho=<id>[&editar=1]. */
-export function urlPasso(slug: SlugPasso, id: string, editar = false): string {
-  return `/anunciar/${slug}?rascunho=${encodeURIComponent(id)}${editar ? "&editar=1" : ""}`;
+/** Endereço do passo e, ao corrigir pelo resumo, sua origem. */
+export function urlPasso(slug: SlugPasso, id: string, editar = false, daRevisao = false): string {
+  return `/anunciar/${slug}?rascunho=${encodeURIComponent(id)}${editar ? "&editar=1" : ""}${daRevisao ? "&origem=revisao" : ""}`;
 }
 
 /** Passo seguinte (null no último). */

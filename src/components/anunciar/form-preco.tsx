@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { Lightbulb } from "lucide-react";
-import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { salvarPreco } from "@/app/(conta)/anunciar/actions";
 import { AvisoErro } from "./aviso-erro";
 import { useEnvioAnuncio } from "./enviar";
-import { BarraContinuar } from "./barra-continuar";
+import { BarraContinuar, BotaoPasso } from "./barra-continuar";
 
 // Passo 4 · Preço: teclado de número com "R$" fixo, "A combinar" e "Aceito troca".
 // A dica "Parecidos na região" só aparece quando o banco tem anúncios suficientes.
@@ -24,6 +23,7 @@ function paraTexto(centavos: number | null): string {
 export function FormPreco({
   id,
   editar,
+  daRevisao,
   formId,
   precoInicial,
   aCombinarInicial,
@@ -33,6 +33,7 @@ export function FormPreco({
 }: {
   id: string;
   editar: boolean;
+  daRevisao?: boolean;
   formId: string;
   precoInicial: number | null;
   aCombinarInicial: boolean;
@@ -128,9 +129,7 @@ export function FormPreco({
       </div>
 
       <BarraContinuar>
-        <Botao type="submit" name="acao" value="seguir" larguraTotal carregando={enviando} textoCarregando="Salvando...">
-          Continuar
-        </Botao>
+        <BotaoPasso editar={editar} daRevisao={daRevisao} salvando={enviando} />
       </BarraContinuar>
     </form>
   );

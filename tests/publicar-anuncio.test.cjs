@@ -85,6 +85,25 @@ test('Voltar do preço salva a edição antes de abrir os detalhes', async () =>
   assert.deepEqual(gravacoes[0], { preco_centavos: 9350, aceita_troca: false });
 });
 
+test('salvar alterações no preço grava apenas a etapa e volta a Meus anúncios', async () => {
+  const { a, gravacoes } = fronteiras({ anuncio: { status: 'pausado' } });
+  assert.deepEqual(await a.salvarPreco(null, form({ preco: '93,50', acao: 'salvar', editar: '1' })), {
+    irPara: `/minha-conta/anuncios?salvo=${id}`,
+  });
+  assert.deepEqual(gravacoes, [{ preco_centavos: 9350, aceita_troca: false }]);
+});
+
+test('corrigir pelo resumo volta à revisão depois de gravar e mantém a validação', async () => {
+  const { a, gravacoes } = fronteiras();
+  const invalido = await a.salvarPreco(null, form({ acao: 'salvar-revisao', preco: '' }));
+  assert.ok(invalido.campos.preco);
+  assert.deepEqual(gravacoes, []);
+  assert.deepEqual(await a.salvarPreco(null, form({ preco: '93,50', acao: 'salvar-revisao' })), {
+    irPara: `/anunciar/revisar?rascunho=${id}`,
+  });
+  assert.deepEqual(gravacoes, [{ preco_centavos: 9350, aceita_troca: false }]);
+});
+
 test('a combinar e troca são escolhas explícitas e salvar e sair mantém destino', async () => {
   const { a, gravacoes } = fronteiras();
   await assert.rejects(a.salvarPreco(null, form({ a_combinar: 'on', aceita_troca: 'on', acao: 'sair' })), /redirect:\/minha-conta\/anuncios/);

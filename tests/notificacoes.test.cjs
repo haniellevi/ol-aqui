@@ -73,6 +73,14 @@ test('lista pagina sem perder avisos antigos e filtra não lidos no servidor', a
   assert.deepEqual(await d.minhasNotificacoes(3, true), { avisos: [], total: 65 });
   for (const esperado of [['range',60,89],['eq','usuario_id','user_comprador'],['eq','canal','app'],['is','lida_em',null],['order','id',{ascending:false}]]) assert.ok(chamadas.some(c => JSON.stringify(c) === JSON.stringify(esperado)));
 });
+test('prévia busca só os cinco avisos mais recentes do usuário, inclusive os lidos', async () => {
+  const { d, chamadas } = dados({ data: [{ id }], error: null, count: 10 });
+  assert.deepEqual(await d.minhasNotificacoes(1, false, 5), { avisos: [{ id }], total: 10 });
+  for (const esperado of [['range',0,4],['eq','usuario_id','user_comprador'],['eq','canal','app'],['order','criado_em',{ascending:false}]]) {
+    assert.ok(chamadas.some(c => JSON.stringify(c) === JSON.stringify(esperado)));
+  }
+  assert.ok(!chamadas.some(([acao]) => acao === 'is'));
+});
 test('falhas na lista, contagem e preferências não viram caixa vazia ou opções ligadas', async () => {
   for (const resposta of [{ data:null, count:null }, { data:[], count:null }, { data:[], count:0, error:{message:'Falha'} }]) {
     await assert.rejects(dados(resposta).d.minhasNotificacoes());
@@ -84,11 +92,21 @@ test('falhas na lista, contagem e preferências não viram caixa vazia ou opçõ
   assert.equal(preferencias[0].ligado,false); assert.equal(preferencias[1].ligado,true);
 });
 test('resumo exige login, não usa cache público e distingue falha de zero', async () => {
-  function rota(login, count) { return carregar('src/app/api/notificacoes/resumo/route.ts', {
+  function rota(login, count, minhasNotificacoes) { return carregar('src/app/api/notificacoes/resumo/route.ts', {
     '@clerk/nextjs/server': { auth: async () => ({userId:login?'user_teste':null}) },
-    '@/lib/dados/radar': { avisosNaoLidos: async () => { if(count === null) throw new Error('Falha'); return count; } },
+    '@/lib/dados/radar': { minhasNotificacoes, avisosNaoLidos: async () => { if(count === null) throw new Error('Falha'); return count; } },
   }); }
-  assert.equal((await rota(false,5).GET()).status,401);
-  assert.equal((await rota(true,null).GET()).status,503);
-  const r = await rota(true,0).GET(); assert.equal(r.status,200); assert.equal(r.headers.get('cache-control'),'private, no-store'); assert.deepEqual(await r.json(),{naoLidas:0});
+  const resumo = new Request('http://localhost/api/notificacoes/resumo');
+  const previa = new Request(resumo.url + '?previa=1');
+  assert.equal((await rota(false,5).GET(resumo)).status,401);
+  assert.equal((await rota(false,5).GET(previa)).status,401);
+  assert.equal((await rota(true,null).GET(resumo)).status,503);
+  const r = await rota(true,0).GET(resumo); assert.equal(r.status,200); assert.equal(r.headers.get('cache-control'),'private, no-store'); assert.deepEqual(await r.json(),{naoLidas:0});
+  const p = await rota(true,null, async (...args) => {
+    assert.deepEqual(args, [1, false, 5]);
+    return { avisos: [{ id }], total: 7 };
+  }).GET(previa);
+  assert.equal(p.status, 200);
+  assert.equal(p.headers.get('cache-control'), 'private, no-store');
+  assert.deepEqual(await p.json(), { avisos: [{ id }] });
 });

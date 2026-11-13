@@ -6,12 +6,13 @@ import { ehUuid } from "@/lib/formato";
 import { edicaoAdmin, type EdicaoEquipe } from "@/lib/dados/edicao-admin";
 import type { MeuAnuncio, MinhaConta, MinhaVitrine } from "@/lib/tipos";
 
-export type ParamsPasso = Promise<{ rascunho?: string | string[]; editar?: string | string[] }>;
+export type ParamsPasso = Promise<{ rascunho?: string | string[]; editar?: string | string[]; origem?: string | string[] }>;
 
 export type DadosPasso = {
   anuncio: MeuAnuncio;
   conta: MinhaConta & { vitrine: MinhaVitrine };
   editar: boolean;
+  daRevisao: boolean;
   /** P5b-2a: super admin editando anúncio de outra pessoa (motivo e prazo para a faixa de aviso). */
   equipe: EdicaoEquipe | null;
 };
@@ -41,5 +42,5 @@ export async function carregarPasso(searchParams: ParamsPasso): Promise<DadosPas
   const editar = um(sp.editar) === "1" || anuncio.status !== "rascunho";
   const equipe = conta.equipe ? await edicaoAdmin(anuncio.id) : null;
   if (conta.equipe && !equipe) notFound();
-  return { anuncio, conta: conta as DadosPasso["conta"], editar, equipe };
+  return { anuncio, conta: conta as DadosPasso["conta"], editar, daRevisao: um(sp.origem) === "revisao", equipe };
 }

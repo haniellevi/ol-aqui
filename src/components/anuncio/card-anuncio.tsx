@@ -34,14 +34,14 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
   const pfVerificado = a.vendedor_pago && a.vitrine_tipo === "pf" && a.vendedor_pf_verificado;
   const conteudo = (
     <>
-      <div className={`relative aspect-square w-full ${compacto ? "max-md:aspect-auto max-md:w-19 max-md:shrink-0" : ""} ${a.capa ? "bg-white" : "bg-borda"}`}>
+      <div className={`relative aspect-square w-full ${compacto ? "max-md:aspect-auto max-md:w-17 max-md:shrink-0" : ""} ${a.capa ? "bg-white" : "bg-borda"}`}>
         {a.capa ? (
           // Foto inteira (sem cortar) sobre fundo branco. Foto do Storage sai otimizada (AVIF/WebP, só o tamanho que a tela precisa); outras vão como estão.
           <Image
             src={a.capa}
             alt={compacto ? "" : `Foto de ${formatarNome(a.titulo)}`}
             fill
-            sizes={compacto ? "(max-width: 767px) 76px, (min-width: 1024px) 25vw, 33vw" : "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"}
+            sizes={compacto ? "(max-width: 767px) 68px, (min-width: 1024px) 25vw, 33vw" : "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"}
             priority={prioridade}
             unoptimized={!podeOtimizar(a.capa)}
             className="object-contain"
@@ -57,8 +57,8 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
           </Badge>
         )}
       </div>
-      <div className={`flex min-w-0 flex-1 flex-col p-3 ${compacto ? "max-md:justify-center max-md:px-2 max-md:py-1.5" : ""}`}>
-        <h3 className={`line-clamp-2 text-lg leading-5 font-semibold text-texto [overflow-wrap:anywhere] ${compacto ? "max-md:text-sm max-md:leading-[18px] max-md:font-normal" : ""}`}>{formatarNome(a.titulo)}</h3>
+      <div className={`flex min-w-0 flex-1 flex-col p-3 ${compacto ? "max-md:justify-center max-md:px-2 max-md:py-1" : ""}`}>
+        <h3 className={`line-clamp-2 text-lg leading-5 font-semibold text-texto [overflow-wrap:anywhere] ${compacto ? "max-md:text-[13px] max-md:leading-4 max-md:font-normal" : ""}`}>{formatarNome(a.titulo)}</h3>
         <p className={`mt-1.5 flex flex-col ${compacto ? "max-md:mt-0.5 max-md:flex-row max-md:flex-wrap max-md:items-baseline max-md:gap-x-1.5" : ""}`}>
           {antes != null && (
             <s className="text-legenda leading-4 text-texto-suave tabular-nums">
@@ -66,12 +66,12 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
               {preco(antes)}
             </s>
           )}
-          <span className={`text-2xl font-bold tabular-nums ${compacto ? "max-md:text-[16px] max-md:leading-5 max-md:text-beringela" : ""}`}>
+          <span className={`text-2xl font-bold tabular-nums ${compacto ? "max-md:text-sm max-md:leading-[18px] max-md:text-beringela" : ""}`}>
             {antes != null && <span className="sr-only">Agora: </span>}
             {preco(a.preco_centavos)}
           </span>
         </p>
-        <span className={`mt-auto pt-1.5 text-legenda leading-[18px] text-texto-suave [overflow-wrap:anywhere] ${compacto ? "max-md:mt-0 max-md:pt-0 max-md:text-xs" : ""}`}>
+        <span className={`mt-auto pt-1.5 text-legenda leading-[18px] text-texto-suave [overflow-wrap:anywhere] ${compacto ? "max-md:mt-0 max-md:pt-0 max-md:text-[11px] max-md:leading-[14px]" : ""}`}>
           {quando && (compacto ? (
             <span className="hidden md:inline">
               <time dateTime={a.criado_em} suppressHydrationWarning>{quando}</time>
@@ -104,7 +104,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
       </div>
     </>
   );
-  const layout = `flex flex-1 flex-col ${compacto ? "max-md:min-h-21 max-md:flex-row" : ""}`;
+  const layout = `flex flex-1 flex-col ${compacto ? "max-md:min-h-18 max-md:flex-row" : ""}`;
 
   return (
     <article className="olaki-toque relative flex flex-col overflow-hidden rounded-card bg-cartao shadow-1">
