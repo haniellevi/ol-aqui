@@ -150,3 +150,51 @@ test('escolherTres: lista vazia não chama a IA; manda até 20 e devolve só os 
     assert.match(pedidos[0].corpo.messages[0].content, /DADOS/);
   });
 });
+
+// ---------- Task 3: pedido vago → até 2 perguntas ----------
+const perguntas = () => carregar('src/lib/radar-ia/perguntas.ts');
+const fluxo = () => carregar('src/components/radar/ia/fluxo-ia.ts');
+
+test('perguntas: no máximo 2, cada uma com 2 a 4 opções curtas e sem contato', () => {
+  const { validarPerguntas } = perguntas();
+  const boa = (r) => ({ rotulo: r, pergunta: `Qual ${r.toLowerCase()}?`, opcoes: ['A', 'B'] });
+  assert.deepEqual(validarPerguntas({ perguntas: [boa('Tamanho'), boa('Cor'), boa('Marca')] }).map((p) => p.rotulo), ['Tamanho', 'Cor']);
+  const r = validarPerguntas({ perguntas: [
+    { rotulo: 'Uma', pergunta: 'Só uma opção?', opcoes: ['A'] },
+    { rotulo: 'Cinco', pergunta: 'Cinco opções?', opcoes: ['A', 'B', 'C', 'D', 'E'] },
+    { rotulo: 'Link', pergunta: 'Qual?', opcoes: ['A', 'veja www.x.test'] },
+    { rotulo: 'Longa', pergunta: 'x'.repeat(81), opcoes: ['A', 'B'] },
+    { rotulo: 'Tamanho', pergunta: 'Qual tamanho?', opcoes: [' 40 ', '42', '42', '44'] },
+  ] });
+  assert.deepEqual(r, [{ rotulo: 'Tamanho', pergunta: 'Qual tamanho?', opcoes: ['40', '42', '44'] }]);
+  assert.deepEqual(validarPerguntas(null), []);
+  assert.deepEqual(validarPerguntas({ perguntas: [{ rotulo: 'x'.repeat(21), pergunta: 'Qual?', opcoes: ['A', 'B'] }] }), []);
+});
+
+test('resposta entra nos detalhes', () => {
+  const { juntarResposta } = fluxo();
+  assert.equal(juntarResposta('', 'Tamanho', '42'), 'Tamanho: 42.');
+  assert.equal(juntarResposta('Preto.', 'Tamanho', '42'), 'Preto. Tamanho: 42.');
+  assert.equal(juntarResposta('x'.repeat(995), 'Tamanho', '42').length, 1000);
+});
+
+test('pedido vago: JEV decide com folga (≥ 0,6); fora do ar → null', async () => {
+  const m = perguntas();
+  const jevResp = (p) => () => new Response(JSON.stringify({ answers: { resposta: { probabilities: p } } }), { status: 200 });
+  await comFetch(jevResp({ claro: 0.3, vago: 0.7 }), async (pedidos) => {
+    assert.equal(await m.pedidoEhVago('celular', ''), true);
+    assert.deepEqual(Object.keys(pedidos[0].corpo.questions.resposta.criteria).sort(), ['claro', 'vago']);
+  });
+  await comFetch(jevResp({ claro: 0.5, vago: 0.5 }), async () => assert.equal(await m.pedidoEhVago('celular', ''), false));
+  await comFetch(() => new Response('x', { status: 503 }), async () => assert.equal(await m.pedidoEhVago('celular', ''), null));
+});
+
+test('escreverPerguntas: Gemini devolve até 2 perguntas válidas', async () => {
+  const m = perguntas();
+  await comFetch(() => respostaGemini({ perguntas: [{ rotulo: 'Tipo', pergunta: 'Para que uso?', opcoes: ['Trabalho', 'Jogos'] }] }), async (pedidos) => {
+    const r = await m.escreverPerguntas('notebook', '');
+    assert.deepEqual(r.perguntas, [{ rotulo: 'Tipo', pergunta: 'Para que uso?', opcoes: ['Trabalho', 'Jogos'] }]);
+    assert.equal(r.falha, null);
+    assert.match(pedidos[0].corpo.messages[0].content, /DADOS/);
+  });
+});
