@@ -1,6 +1,7 @@
 -- Radar v2, fase 3 (IA) — docs/superpowers/plans/2026-11-13-radar-v2-fase3-ia.md
 -- 1. Chaves (todas desligadas), limite por pessoa e teto do mês só do Radar.
--- 2. Reserva no livro-caixa do robô (robo_uso, tipo 'radar') antes de cada chamada à IA; o servidor conclui com o custo real.
+-- 2. Reserva num livro-caixa próprio (radar_ia_uso) antes de cada chamada à IA; o servidor conclui com o custo real.
+--    Próprio de propósito: os tetos do Aki, da moderação e das outras IAs somam robo_uso inteiro; o Radar não pode apertá-los.
 -- 3. Anúncio novo parecido com pedido aberto: candidatos para a IA conferir e aviso no sino, no máximo 1 por dia por pedido.
 -- Nada do que a IA escolhe é guardado; só o custo.
 
@@ -17,7 +18,7 @@ select x.chave, x.valor, 'radar', false, x.descricao
     ('radar_ia.novidades_ativa',          'false'::jsonb, 'IA do Radar: avisa o cliente quando entra anúncio novo parecido com o pedido (1 por dia por pedido)'),
     ('radar_ia.orcamento_mensal_centavos', '3000'::jsonb, 'IA do Radar: teto de gasto do mês, em centavos (R$ 30,00 = 3000). Acabou, o Radar segue sem IA até o mês seguinte'),
     ('radar_ia.usos_por_dia',             '20'::jsonb,    'IA do Radar: quantas vezes cada pessoa usa a IA do Radar por dia'),
-    ('radar_ia.novidades_por_rodada',     '50'::jsonb,    'IA do Radar: quantos pedidos a rotina de anúncio novo confere por hora, no máximo'),
+    ('radar_ia.novidades_por_rodada',     '15'::jsonb,    'IA do Radar: quantos pedidos a rotina de anúncio novo confere por hora, no máximo'),
     ('radar.aviso.radar_novidade.titulo', '"Chegou algo parecido com “{pedido}”"'::jsonb,
        'Aviso ao comprador: título quando entra anúncio parecido com o pedido. Pode usar {pedido}'),
     ('radar.aviso.radar_novidade.texto',  '"Uma loja da região anunciou “{anuncio}”. Toque para ver."'::jsonb,
@@ -30,9 +31,25 @@ update public.configuracoes
  where chave in ('radar.avisos_ligados', 'radar.avisos_escolha')
    and jsonb_typeof(valor) = 'array' and not (valor ? 'radar_novidade');
 
-alter table public.robo_uso drop constraint robo_uso_tipo_check;
-alter table public.robo_uso add constraint robo_uso_tipo_check
-  check (tipo in ('conversa', 'foto', 'teste', 'moderacao', 'categorizacao', 'melhoria', 'verificacao', 'radar'));
+create table public.radar_ia_uso (
+  id              bigint generated always as identity primary key,
+  usuario_id      text references public.perfis(id) on delete set null on update cascade,
+  microrregiao_id uuid references public.microrregioes(id) on delete set null,
+  parte           text not null check (parte in ('perguntas', 'parecidos', 'vitrine', 'novidades')),
+  provedor        text not null,
+  modelo          text not null,
+  tokens_entrada  integer not null default 0 check (tokens_entrada >= 0),
+  tokens_saida    integer not null default 0 check (tokens_saida >= 0),
+  custo_centavos  numeric(14,4) not null default 0 check (custo_centavos >= 0),
+  cotacao_dolar   numeric(10,4),
+  erro            text check (char_length(erro) <= 300),
+  criado_em       timestamptz not null default now()
+);
+create index radar_ia_uso_usuario_idx on public.radar_ia_uso (usuario_id, criado_em desc);
+create index radar_ia_uso_criado_idx on public.radar_ia_uso (criado_em);
+alter table public.radar_ia_uso enable row level security;
+create policy "radar ia uso admin" on public.radar_ia_uso for select using (public.e_admin());
+revoke all on public.radar_ia_uso from anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- 2. Reserva e conclusão (só o servidor, com a chave secreta)
@@ -70,16 +87,15 @@ begin
   reserva := round(0.001 * cot * 100, 4);
 
   perform pg_advisory_xact_lock(hashtext('robo_uso:radar'));
-  if p_usuario is not null and (select count(*) from public.robo_uso u
-       where u.usuario_id = p_usuario and u.tipo = 'radar' and u.criado_em >= public.robo_inicio('dia')) >= coalesce(limite, 0) then
+  if p_usuario is not null and (select count(*) from public.radar_ia_uso u
+       where u.usuario_id = p_usuario and u.criado_em >= public.robo_inicio('dia')) >= coalesce(limite, 0) then
     return null;
   end if;
-  select coalesce(sum(custo_centavos), 0) into gasto from public.robo_uso
-   where tipo = 'radar' and criado_em >= public.robo_inicio('mes');
+  select coalesce(sum(custo_centavos), 0) into gasto from public.radar_ia_uso where criado_em >= public.robo_inicio('mes');
   if gasto + reserva > orc then return null; end if;
 
-  insert into public.robo_uso (usuario_id, microrregiao_id, tipo, provedor, modelo, custo_centavos, cotacao_dolar, erro)
-  values (p_usuario, (select microrregiao_id from public.perfis where id = p_usuario), 'radar', provedor, modelo, reserva, cot, 'em_andamento')
+  insert into public.radar_ia_uso (usuario_id, microrregiao_id, parte, provedor, modelo, custo_centavos, cotacao_dolar, erro)
+  values (p_usuario, (select microrregiao_id from public.perfis where id = p_usuario), p_parte, provedor, modelo, reserva, cot, 'em_andamento')
   returning id into uid;
   return uid;
 end $$;
@@ -93,12 +109,31 @@ begin
   if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
     raise exception 'Acesso restrito.' using errcode = '42501';
   end if;
-  update public.robo_uso set
+  update public.radar_ia_uso set
     custo_centavos = case when p_custo_usd >= 0 and p_custo_usd <= 0.05 then round(p_custo_usd * cotacao_dolar * 100, 4) else custo_centavos end,
     tokens_entrada = greatest(coalesce(p_tokens_entrada, 0), 0),
     tokens_saida = greatest(coalesce(p_tokens_saida, 0), 0),
     erro = left(nullif(btrim(coalesce(p_erro, '')), ''), 300)
-   where id = p_uso and tipo = 'radar' and erro = 'em_andamento';
+   where id = p_uso and erro = 'em_andamento';
+end $$;
+
+-- Quais partes estão ligadas (a tela do pedido pula a ida ao servidor quando nada está ligado).
+create function public.radar_ia_estado()
+returns jsonb language plpgsql stable security definer
+set search_path = public, extensions
+as $$
+declare
+  geral boolean;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
+    raise exception 'Acesso restrito.' using errcode = '42501';
+  end if;
+  geral := public.config('radar_ia.ativa', null, 'false') = 'true'::jsonb;
+  return jsonb_build_object(
+    'perguntas', geral and public.config('radar_ia.perguntas_ativa', null, 'false') = 'true'::jsonb,
+    'parecidos', geral and public.config('radar_ia.parecidos_ativa', null, 'false') = 'true'::jsonb,
+    'vitrine',   geral and public.config('radar_ia.vitrine_ativa', null, 'false') = 'true'::jsonb,
+    'novidades', geral and public.config('radar_ia.novidades_ativa', null, 'false') = 'true'::jsonb);
 end $$;
 
 -- ---------------------------------------------------------------------
@@ -141,7 +176,9 @@ as $$
                         and n.chave = 'radar_novidade:' || p_pedido.id || ':' || (now() at time zone 'America/Fortaleza')::date)
 $$;
 
--- Pedidos com anúncio novo parecido (para a IA conferir). Marca todos os pedidos olhados.
+-- Pedidos com anúncio novo parecido (para a IA conferir). Pedido sem candidato já fica marcado;
+-- pedido com candidato só é marcado (radar_novidade_conferida, com o "ate" devolvido aqui) depois que a IA julga:
+-- IA fora do ar, teto do mês ou rodada cortada no meio → o pedido volta na hora seguinte.
 create function public.radar_novidades_candidatos(p_limite integer)
 returns jsonb language plpgsql security definer
 set search_path = public, extensions
@@ -176,15 +213,31 @@ begin
                             extensions.word_similarity(public.sem_acento(lower(a.titulo)), public.sem_acento(lower((r.pedido).titulo)))) >= 0.3)
          order by sim desc, a.publicado_em desc
          limit 5) x;
-    insert into public.radar_novidades_conferido (pedido_id, conferido_em) values ((r.pedido).id, now())
-    on conflict (pedido_id) do update set conferido_em = excluded.conferido_em;
-    if lista is not null then
+    if lista is null then
+      insert into public.radar_novidades_conferido (pedido_id, conferido_em) values ((r.pedido).id, now())
+      on conflict (pedido_id) do update set conferido_em = excluded.conferido_em;
+    else
       saida := saida || jsonb_build_array(jsonb_build_object(
-        'pedido_id', (r.pedido).id, 'titulo', (r.pedido).titulo,
+        'pedido_id', (r.pedido).id, 'titulo', (r.pedido).titulo, 'ate', now(),
         'detalhes', left(coalesce((r.pedido).detalhes, ''), 300), 'anuncios', lista));
     end if;
   end loop;
   return saida;
+end $$;
+
+-- A IA julgou os candidatos do pedido até `p_ate`: a próxima rodada só olha anúncios depois disso.
+create function public.radar_novidade_conferida(p_pedido uuid, p_ate timestamptz)
+returns void language plpgsql security definer
+set search_path = public, extensions
+as $$
+begin
+  if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
+    raise exception 'Acesso restrito.' using errcode = '42501';
+  end if;
+  if p_pedido is null or p_ate is null or p_ate > now() then return; end if;
+  insert into public.radar_novidades_conferido (pedido_id, conferido_em)
+  select id, p_ate from public.radar_pedidos where id = p_pedido
+  on conflict (pedido_id) do update set conferido_em = greatest(public.radar_novidades_conferido.conferido_em, excluded.conferido_em);
 end $$;
 
 create function public.radar_avisar_novidade(p_pedido uuid, p_anuncio uuid)
@@ -234,10 +287,12 @@ end $$;
 -- 4. Permissões
 -- ---------------------------------------------------------------------
 revoke all on function public.radar_ia_reservar(text, text), public.radar_ia_concluir(bigint, numeric, integer, integer, text),
+  public.radar_ia_estado(), public.radar_novidade_conferida(uuid, timestamptz),
   public.radar_novidade_combina(public.radar_pedidos, public.anuncios), public.radar_novidade_pode_avisar(public.radar_pedidos),
   public.radar_novidades_candidatos(integer), public.radar_avisar_novidade(uuid, uuid), public.radar_ia_novidades_disparar()
   from public, anon, authenticated;
 grant execute on function public.radar_ia_reservar(text, text), public.radar_ia_concluir(bigint, numeric, integer, integer, text),
+  public.radar_ia_estado(), public.radar_novidade_conferida(uuid, timestamptz),
   public.radar_novidades_candidatos(integer), public.radar_avisar_novidade(uuid, uuid), public.radar_ia_novidades_disparar()
   to service_role;
 

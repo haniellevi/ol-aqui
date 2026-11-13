@@ -112,9 +112,9 @@ Migração `supabase/migrations/20261121010000_radar_ia.sql` · Teste `supabase/
 |---|---|---|
 | `radar_ia.ativa` | `false` | chave geral |
 | `radar_ia.perguntas_ativa` / `parecidos_ativa` / `vitrine_ativa` / `novidades_ativa` | `false` | uma por parte |
-| `radar_ia.orcamento_mensal_centavos` | 3000 | teto do mês só do Radar (livro-caixa `robo_uso`, tipo `radar`) |
+| `radar_ia.orcamento_mensal_centavos` | 3000 | teto do mês só do Radar (livro-caixa próprio `radar_ia_uso`, fora do teto do Aki) |
 | `radar_ia.usos_por_dia` | 20 | chamadas de IA por pessoa por dia |
-| `radar_ia.novidades_por_rodada` | 50 | pedidos conferidos por hora |
+| `radar_ia.novidades_por_rodada` | 15 | pedidos conferidos por hora (a rodada também para aos 45 s) |
 | `radar.aviso.radar_novidade.titulo` / `.texto` | textos simples | aviso "Chegou algo parecido com “{pedido}”" (`{pedido}`, `{anuncio}`) |
 
 Funções (só `service_role`): `radar_ia_reservar(usuario, parte)`, `radar_ia_concluir(uso, custo_usd, tokens…, erro)`,

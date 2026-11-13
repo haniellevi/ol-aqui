@@ -6,7 +6,8 @@ import { buscarAnuncios } from "@/lib/dados/anuncios";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { acessoRadar, meusAnunciosNoAr, pedidoRadar } from "@/lib/dados/radar";
 import { ehUuid, linkAnuncio } from "@/lib/formato";
-import { comReserva } from "@/lib/radar-ia/uso";
+import { comReserva, estadoRadarIA } from "@/lib/radar-ia/uso";
+import { comPrazo } from "@/lib/radar-ia/prazo";
 import { escolherTres, type Escolhido } from "@/lib/radar-ia/escolher";
 import { escreverPerguntas, pedidoEhVago } from "@/lib/radar-ia/perguntas";
 import { CUSTO_JEV_USD } from "@/lib/radar-ia/jev";
@@ -18,6 +19,26 @@ import type { DestaqueIA, ParecidoIA, PerguntaIA } from "@/lib/radar-ia/tipos";
 
 function texto(v: unknown, max: number): string {
   return typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "";
+}
+
+/** Prazo total da IA depois do "Continuar": passou disso, o pedido segue sem IA. */
+const PRAZO_PEDIDO_MS = 3500;
+
+/**
+ * Depois do passo 1 do pedido: perguntas e parecidos correm juntos aqui no servidor
+ * (duas ações chamadas pela tela rodariam uma depois da outra). Parte desligada nem começa.
+ */
+export async function iaDoPedido(titulo: string, detalhes: string): Promise<{ perguntas: PerguntaIA[] | null; parecidos: ParecidoIA[] | null }> {
+  try {
+    const estado = await estadoRadarIA();
+    const [perguntas, parecidos] = await Promise.all([
+      estado.perguntas ? comPrazo(perguntasParaPedido(titulo, detalhes), PRAZO_PEDIDO_MS) : null,
+      estado.parecidos ? comPrazo(parecidosParaPedido(titulo, detalhes), PRAZO_PEDIDO_MS) : null,
+    ]);
+    return { perguntas, parecidos };
+  } catch {
+    return { perguntas: null, parecidos: null };
+  }
 }
 
 /** Pedido vago: até 2 perguntas. Pedido claro: []. Sem IA: null. */

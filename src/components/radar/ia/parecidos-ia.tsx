@@ -1,4 +1,4 @@
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { preco } from "@/lib/formato";
 import type { ParecidoIA } from "@/lib/radar-ia/tipos";
@@ -25,7 +25,7 @@ export function ParecidosIA({ parecidos, onContinuar }: { parecidos: ParecidoIA[
               </div>
             </div>
             <p className="text-facil text-texto">{a.motivo}</p>
-            <Botao href={a.link} variante="secundario" tamanho="grande" larguraTotal icone={<ExternalLink />} className="sm:max-w-none">
+            <Botao href={a.link} variante="secundario" tamanho="grande" larguraTotal className="sm:max-w-none">
               Ver anúncio
             </Botao>
           </li>

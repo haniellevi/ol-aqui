@@ -15,7 +15,9 @@ sem guardar dados, `zdr`) escreve as perguntas e as frases. Falhou ou demorou ma
 ## Custo e limites
 - Teto do mês **só do Radar**: R$ 30 (`radar_ia.orcamento_mensal_centavos = 3000`). Acabou, segue sem IA até o mês seguinte. Não mexe no teto do Aki.
 - Cada pessoa usa a IA do Radar até 20 vezes por dia (`radar_ia.usos_por_dia`).
-- Cada chamada fica no livro-caixa `robo_uso` com tipo `radar` (custo real do OpenRouter; JEV estimado em US$ 0,0002).
+- Cada chamada fica no livro-caixa próprio `radar_ia_uso` (custo real do OpenRouter; JEV estimado em US$ 0,0002). É separado do `robo_uso` para o gasto do Radar não apertar o teto do Aki e das outras IAs.
+- Com tudo desligado, a tela do pedido nem chama o servidor. Ligada, a IA tem até 3,5 s; passou disso, o pedido segue sem IA.
+- Anúncio novo: o pedido só é marcado como conferido depois que a IA julgou. Se a IA falhar ou o teto acabar, ele volta na hora seguinte.
 - Estimativa (não medida ainda): ~US$ 0,0003 por chamada do Gemini, ~US$ 0,0002 por chamada do JEV.
 
 ## Como ligar (cada passo só com "sim" do Raniel)
@@ -24,7 +26,7 @@ sem guardar dados, `zdr`) escreve as perguntas e as frases. Falhou ou demorou ma
 3. Conferir na Vercel que `OPENROUTER_API_KEY`, `TYPESAFE_API_KEY` e `MODERACAO_IA_SECRET` estão preenchidas (já existem para outras partes).
 4. Publicar a nova versão da política de privacidade (texto abaixo) em `/admin/textos`.
 5. No painel, ligar `radar_ia.ativa` e **uma parte por vez** (comece por `radar_ia.parecidos_ativa`).
-6. No dia seguinte, ver o custo: `select date_trunc('day', criado_em), count(*), sum(custo_centavos)/100 as reais from robo_uso where tipo = 'radar' group by 1 order by 1;`
+6. No dia seguinte, ver o custo: `select date_trunc('day', criado_em), count(*), sum(custo_centavos)/100 as reais from radar_ia_uso group by 1 order by 1;`
 7. Se estiver bom, ligar a próxima parte.
 
 ## Texto para a política de privacidade (proposta, não publicada)

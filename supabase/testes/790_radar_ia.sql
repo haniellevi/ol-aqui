@@ -38,24 +38,27 @@ select pg_temp.confere((select count(*) = 4 from configuracoes where chave in ('
 select pg_temp.confere((select valor = '3000'::jsonb from configuracoes where chave = 'radar_ia.orcamento_mensal_centavos' and microrregiao_id is null), 'Teto R$ 30');
 select pg_temp.confere((select valor = '20'::jsonb from configuracoes where chave = 'radar_ia.usos_por_dia' and microrregiao_id is null), '20 usos por dia');
 select pg_temp.confere(radar_ia_reservar('user_q790a', 'parecidos') is null, 'Geral desligada: sem reserva');
+select pg_temp.confere(radar_ia_estado() = '{"perguntas": false, "parecidos": false, "vitrine": false, "novidades": false}'::jsonb, 'Estado: tudo desligado');
 update configuracoes set valor = 'true' where chave = 'radar_ia.ativa' and microrregiao_id is null;
 select pg_temp.confere(radar_ia_reservar('user_q790a', 'parecidos') is null, 'Parte desligada: sem reserva');
 update configuracoes set valor = 'true' where chave in ('radar_ia.parecidos_ativa', 'radar_ia.novidades_ativa') and microrregiao_id is null;
 select pg_temp.recusa($q$select radar_ia_reservar('user_q790a', 'outra')$q$, '22023');
+select pg_temp.confere(radar_ia_estado() = '{"perguntas": false, "parecidos": true, "vitrine": false, "novidades": true}'::jsonb, 'Estado: só as partes ligadas');
 
 -- ===== Reserva e conclusão =====
 select radar_ia_reservar('user_q790a', 'parecidos') as uso1 \gset
 select pg_temp.confere(:'uso1' is not null, 'Ligada: reserva');
-select pg_temp.confere((select tipo = 'radar' and erro = 'em_andamento' and provedor = 'openrouter' and modelo = 'google/gemini-2.5-flash-lite'
-  and custo_centavos = 0.55 and usuario_id = 'user_q790a' from robo_uso where id = :uso1), 'Reserva no livro-caixa');
+select pg_temp.confere((select parte = 'parecidos' and erro = 'em_andamento' and provedor = 'openrouter' and modelo = 'google/gemini-2.5-flash-lite'
+  and custo_centavos = 0.55 and usuario_id = 'user_q790a' from radar_ia_uso where id = :uso1), 'Reserva no livro-caixa');
 select radar_ia_concluir(:uso1, 0.0003, 900, 80, null);
-select pg_temp.confere((select erro is null and custo_centavos = 0.165 and tokens_entrada = 900 and tokens_saida = 80 from robo_uso where id = :uso1), 'Custo real gravado');
+select pg_temp.confere((select erro is null and custo_centavos = 0.165 and tokens_entrada = 900 and tokens_saida = 80 from radar_ia_uso where id = :uso1), 'Custo real gravado');
 select radar_ia_concluir(:uso1, 0.01, 1, 1, 'outra');
-select pg_temp.confere((select erro is null and custo_centavos = 0.165 from robo_uso where id = :uso1), 'Concluir 2 vezes não muda');
+select pg_temp.confere((select erro is null and custo_centavos = 0.165 from radar_ia_uso where id = :uso1), 'Concluir 2 vezes não muda');
 select radar_ia_reservar(null, 'novidades') as uso2 \gset
-select pg_temp.confere((select provedor = 'typesafe' and modelo = 'jev-latest' and usuario_id is null from robo_uso where id = :uso2), 'Novidade: JEV, sem pessoa');
+select pg_temp.confere(not exists (select 1 from robo_uso where usuario_id = 'user_q790a'), 'Radar não entra no livro-caixa do robô (teto do Aki)');
+select pg_temp.confere((select provedor = 'typesafe' and modelo = 'jev-latest' and usuario_id is null from radar_ia_uso where id = :uso2), 'Novidade: JEV, sem pessoa');
 select radar_ia_concluir(:uso2, null, 0, 0, 'tempo_esgotado');
-select pg_temp.confere((select erro = 'tempo_esgotado' and custo_centavos = 0.55 from robo_uso where id = :uso2), 'Falha mantém a reserva');
+select pg_temp.confere((select erro = 'tempo_esgotado' and custo_centavos = 0.55 from radar_ia_uso where id = :uso2), 'Falha mantém a reserva');
 
 -- ===== Limite por pessoa =====
 update configuracoes set valor = '2' where chave = 'radar_ia.usos_por_dia' and microrregiao_id is null;
@@ -78,6 +81,9 @@ set local request.jwt.claim.sub='user_q790a';
 select pg_temp.recusa($q$select radar_ia_reservar('user_q790a', 'parecidos')$q$, '42501');
 select pg_temp.recusa($q$select radar_ia_concluir(1, 0, 0, 0, null)$q$, '42501');
 select pg_temp.recusa($q$select radar_novidades_candidatos(10)$q$, '42501');
+select pg_temp.recusa($q$select radar_novidade_conferida(gen_random_uuid(), now())$q$, '42501');
+select pg_temp.recusa($q$select radar_ia_estado()$q$, '42501');
+select pg_temp.confere(not has_table_privilege('authenticated', 'radar_ia_uso', 'select'), 'Livro-caixa do Radar fechado para a API');
 select pg_temp.recusa($q$select radar_avisar_novidade(gen_random_uuid(), gen_random_uuid())$q$, '42501');
 reset role;
 set local request.jwt.claim.role='';
@@ -109,8 +115,12 @@ select pg_temp.confere((select jsonb_array_length(:'cand'::jsonb) = 1), 'Só o p
 select pg_temp.confere((select (:'cand'::jsonb)->0->>'pedido_id' = '79000000-0000-4000-a000-000000000001'), 'Pedido da bicicleta');
 select pg_temp.confere((select jsonb_agg(x->>'id') = '["79000000-0000-4000-b000-000000000001"]'::jsonb
   from jsonb_array_elements((:'cand'::jsonb)->0->'anuncios') x), 'Só o anúncio da loja (não o da compradora, nem a mesa)');
+select pg_temp.confere((select count(*) = 1 from radar_novidades_conferido where pedido_id = '79000000-0000-4000-a000-000000000002'), 'Pedido sem candidato fica marcado');
+select pg_temp.confere(not exists (select 1 from radar_novidades_conferido where pedido_id = '79000000-0000-4000-a000-000000000001'), 'Pedido com candidato só é marcado depois que a IA julga');
+select pg_temp.confere((select jsonb_array_length(radar_novidades_candidatos(50)) = 1), 'IA falhou: o pedido volta na rodada seguinte');
+select radar_novidade_conferida('79000000-0000-4000-a000-000000000001', ((:'cand'::jsonb)->0->>'ate')::timestamptz);
 select pg_temp.confere((select count(*) = 2 from radar_novidades_conferido), 'Pedido fechado não é olhado');
-select pg_temp.confere((select jsonb_array_length(radar_novidades_candidatos(50)) = 0), 'Segunda rodada não repete o anúncio');
+select pg_temp.confere((select jsonb_array_length(radar_novidades_candidatos(50)) = 0), 'Depois de julgado, não repete o anúncio');
 
 -- aviso: 1 por dia por pedido
 select pg_temp.confere(radar_avisar_novidade('79000000-0000-4000-a000-000000000001', '79000000-0000-4000-b000-000000000001'), 'Avisa a compradora');

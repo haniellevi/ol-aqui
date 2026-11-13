@@ -38,3 +38,18 @@ export async function comReserva<T>(usuario: string | null, parte: ParteIA, fn: 
   }
   return r.falha ? null : r.valor;
 }
+
+export type EstadoIA = Record<ParteIA, boolean>;
+const DESLIGADA: EstadoIA = { perguntas: false, parecidos: false, vitrine: false, novidades: false };
+
+/** Quais partes da IA estão ligadas (chave geral E chave da parte). Qualquer erro: tudo desligado. */
+export async function estadoRadarIA(): Promise<EstadoIA> {
+  try {
+    const { data, error } = await supabaseAdmin().rpc("radar_ia_estado");
+    if (error || !data || typeof data !== "object") return DESLIGADA;
+    const d = data as Record<string, unknown>;
+    return { perguntas: d.perguntas === true, parecidos: d.parecidos === true, vitrine: d.vitrine === true, novidades: d.novidades === true };
+  } catch {
+    return DESLIGADA;
+  }
+}

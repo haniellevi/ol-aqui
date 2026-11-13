@@ -10,7 +10,8 @@ import { Chip } from "@/components/ui/chip";
 import { Botao } from "@/components/ui/botao";
 import { Alert } from "@/components/ui/alert";
 import { criarPedido } from "@/app/radar/actions";
-import { parecidosParaPedido, perguntasParaPedido } from "@/app/radar/ia-actions";
+import { iaDoPedido } from "@/app/radar/ia-actions";
+import { comPrazo } from "@/lib/radar-ia/prazo";
 import type { ParecidoIA, PerguntaIA } from "@/lib/radar-ia/tipos";
 import { linkMeuPedidoRadar } from "@/lib/rotas";
 import { centavosDoTexto } from "@/lib/formato";
@@ -55,6 +56,8 @@ type Props = {
   /** Celular ainda não confirmado e o painel não exige o código: pede o WhatsApp aqui. */
   pedirWhatsapp?: boolean;
   whatsappInicial?: string;
+  /** Perguntas ou parecidos da IA ligados no painel. Desligado: o "Continuar" nem vai ao servidor. */
+  iaNoPedido?: boolean;
 };
 
 // Uma pergunta por tela (Modo fácil, docs/designs/radar-v2.md).
@@ -68,10 +71,11 @@ const PERGUNTAS: Record<NumeroPasso, string> = {
 // Erros que aparecem embaixo do próprio campo; o resto vai para o aviso geral.
 const CAMPOS_COM_ERRO = ["titulo", "detalhes", "categoria", "preco", "preco_min_centavos", "preco_max_centavos", "cidade", "cidades", "visibilidade", "prazo", "whatsapp"];
 const TITULO_PARECIDOS = "Achamos isso na região. Quer ver?";
+const ESPERA_IA_MS = 5000;
 const ROTULO_GRUPO = "text-facil font-semibold text-texto";
 const TEXTO_ERRO = "text-facil font-semibold text-perigo";
 
-export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", detalhesInicial = "", visibilidadeInicial = "lojas", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "" }: Props) {
+export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", detalhesInicial = "", visibilidadeInicial = "lojas", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "", iaNoPedido = false }: Props) {
   const router = useRouter();
   const formulario = useRef<HTMLFormElement>(null);
   const pergunta = useRef<HTMLHeadingElement>(null);
@@ -169,16 +173,17 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   function perguntarIA() {
     if (pensando) return;
     const t = titulo.trim();
-    if (tituloComIA.current === t) return irPara(2);
+    if (!iaNoPedido || tituloComIA.current === t) return irPara(2);
     const n = ++pedidoIA.current;
     setPensando(true);
-    const seguro = <T,>(p: Promise<T | null>) => p.catch(() => null);
-    Promise.all([seguro(perguntasParaPedido(titulo, detalhes)), seguro(parecidosParaPedido(titulo, detalhes))]).then(([p, a]) => {
+    // O servidor corta em 3,5 s; aqui esperamos no máximo 5 s (rede lenta) e seguimos sem IA.
+    comPrazo(iaDoPedido(titulo, detalhes), ESPERA_IA_MS).then((r) => {
       if (!respostaAindaVale(n, pedidoIA.current)) return;
       setPensando(false);
-      tituloComIA.current = t;
-      const perguntas = p ?? [];
-      const parecidos = a ?? [];
+      // Estourou o tempo: não marca o título, para o próximo "Continuar" tentar de novo.
+      if (r) tituloComIA.current = t;
+      const perguntas = r?.perguntas ?? [];
+      const parecidos = r?.parecidos ?? [];
       setPerguntasIA(perguntas);
       setParecidosIA(parecidos);
       const proxima = proximaEtapaIA(null, perguntas, parecidos);
@@ -252,7 +257,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
 
   return (
     <form ref={formulario} onSubmit={aoEnviarFormulario} noValidate>
-      <fieldset disabled={enviando} className="flex min-w-0 flex-col gap-6">
+      <fieldset disabled={enviando || pensando} className="flex min-w-0 flex-col gap-6">
         <IndicadorPasso passo={passo} />
         <h2 ref={pergunta} id="pergunta-passo" tabIndex={-1} className="text-3xl font-semibold text-beringela outline-none">
           {etapaIA?.tipo === "pergunta" ? perguntasIA[etapaIA.indice]?.pergunta : etapaIA?.tipo === "parecidos" ? TITULO_PARECIDOS : PERGUNTAS[passo]}

@@ -70,6 +70,8 @@ export function textoSeguro(v: unknown, max: number): string | null {
   if (typeof v !== "string") return null;
   const t = v.replace(/\s+/g, " ").trim();
   if (!t || t.length > max) return null;
-  if (/https?:|www\.|@|\d{8,}|\d[\d\s().-]{9,}\d/i.test(t)) return null;
+  // Sem contato nem site: link, e-mail, telefone (8+ dígitos, com ou sem traço), domínio e encurtador.
+  if (/https?:|www\.|@|wa\.me|(\d[\s().-]{0,2}){8,}/i.test(t)) return null;
+  if (/\b[a-z0-9-]+\.(com|net|org|br|me|ly|app|io|shop|store|link|site|online)\b/i.test(t)) return null;
   return t;
 }

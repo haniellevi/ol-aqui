@@ -312,8 +312,8 @@ test('vitrine: só para loja que pode propor; devolve até 3 com frase', async (
 
 test('novidades: avisa só quando o JEV confirma com folga', async () => {
   const candidatos = [
-    { pedido_id: 'p1', titulo: 'bicicleta', detalhes: '', anuncios: [{ id: 'a1', titulo: 'Bicicleta', preco_centavos: 1000 }] },
-    { pedido_id: 'p2', titulo: 'fogão', detalhes: '', anuncios: [{ id: 'a2', titulo: 'Fogão', preco_centavos: 1000 }] },
+    { pedido_id: 'p1', titulo: 'bicicleta', detalhes: '', ate: '2026-11-13T10:00:00Z', anuncios: [{ id: 'a1', titulo: 'Bicicleta', preco_centavos: 1000 }] },
+    { pedido_id: 'p2', titulo: 'fogão', detalhes: '', ate: '2026-11-13T10:00:00Z', anuncios: [{ id: 'a2', titulo: 'Fogão', preco_centavos: 1000 }] },
   ];
   const banco = bancoFalso({ candidatos, config: 50 });
   const m = carregar('src/lib/radar-ia/novidades.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => banco.db } });
@@ -325,6 +325,103 @@ test('novidades: avisa só quando o JEV confirma com folga', async () => {
     const avisos = banco.chamadas.filter((c) => c.nome === 'radar_avisar_novidade');
     assert.deepEqual(avisos.map((a) => a.args), [{ p_pedido: 'p1', p_anuncio: 'a1' }]);
     assert.equal(banco.chamadas.find((c) => c.nome === 'radar_novidades_candidatos').args.p_limite, 50);
+    const marcados = banco.chamadas.filter((c) => c.nome === 'radar_novidade_conferida').map((c) => c.args);
+    assert.deepEqual(marcados, [{ p_pedido: 'p1', p_ate: '2026-11-13T10:00:00Z' }, { p_pedido: 'p2', p_ate: '2026-11-13T10:00:00Z' }]);
+  });
+});
+
+test('novidades: sem reserva (teto ou IA desligada) para a rodada e não marca o pedido', async () => {
+  const candidatos = ['p1', 'p2', 'p3'].map((id) => ({ pedido_id: id, titulo: 'x', detalhes: '', ate: '2026-11-13T10:00:00Z', anuncios: [{ id: 'a', titulo: 'A', preco_centavos: 1 }] }));
+  const banco = bancoFalso({ candidatos, reserva: null });
+  const m = carregar('src/lib/radar-ia/novidades.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => banco.db } });
+  await comFetch(() => jevResposta({ a: 0.9, _nenhum: 0.1 }), async (pedidos) => {
+    assert.deepEqual(await m.processarNovidades(), { pedidos: 3, avisos: 0 });
+    assert.equal(pedidos.length, 0);
+    assert.equal(banco.chamadas.filter((c) => c.nome === 'radar_ia_reservar').length, 1);
+    assert.equal(banco.chamadas.some((c) => c.nome === 'radar_novidade_conferida'), false);
+  });
+});
+
+test('novidades: JEV fora do ar não marca o pedido (volta na próxima hora); padrão de 15 por rodada; para perto de 45 s', async () => {
+  const candidatos = ['p1', 'p2', 'p3'].map((id) => ({ pedido_id: id, titulo: 'x', detalhes: '', ate: '2026-11-13T10:00:00Z', anuncios: [{ id: 'a', titulo: 'A', preco_centavos: 1 }] }));
+  const banco = bancoFalso({ candidatos });
+  const m = carregar('src/lib/radar-ia/novidades.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => banco.db } });
+  await comFetch(() => new Response('erro', { status: 500 }), async () => {
+    await m.processarNovidades();
+    assert.equal(banco.chamadas.some((c) => c.nome === 'radar_novidade_conferida'), false);
+    assert.equal(banco.chamadas.find((c) => c.nome === 'radar_novidades_candidatos').args.p_limite, 15);
+  });
+  const banco2 = bancoFalso({ candidatos });
+  const m2 = carregar('src/lib/radar-ia/novidades.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => banco2.db } });
+  let agora = 0;
+  await comFetch(() => { agora += 30000; return jevResposta({ a: 0.1, _nenhum: 0.9 }); }, async (pedidos) => {
+    await m2.processarNovidades({ relogio: () => agora });
+    assert.equal(pedidos.length, 2);
+  });
+});
+
+// ---------- correções da revisão final ----------
+test('frase da IA: bloqueia telefone curto, site e encurtador', () => {
+  const { textoSeguro } = gemini();
+  for (const ruim of ['Ligue 99999-9999', 'Fixo 3333-4444', 'Veja loja.com.br', 'Clique bit.ly/abc', 'Chame wa.me/558899', 'Mais em minhaloja.shop', '(89) 9 9999 9999'])
+    assert.equal(textoSeguro(ruim, 90), null, ruim);
+  for (const bom of ['Aro 29 como você pediu', 'Preço R$ 1.200,00 dentro da faixa', 'iPhone 13 de 128 GB', 'Geladeira 400 litros'])
+    assert.equal(textoSeguro(bom, 90), bom, bom);
+});
+
+test('prazo: resposta que demora vira null; a que chega a tempo passa', async () => {
+  const { comPrazo } = carregar('src/lib/radar-ia/prazo.ts');
+  assert.equal(await comPrazo(new Promise(() => {}), 20), null);
+  assert.equal(await comPrazo(Promise.resolve('ok'), 20), 'ok');
+  assert.equal(await comPrazo(Promise.reject(new Error('x')), 20), null);
+});
+
+function bancoComEstado(estado, extra) {
+  const b = bancoFalso(extra);
+  const rpc = b.db.rpc;
+  b.db.rpc = async (nome, args) => {
+    if (nome === 'radar_ia_estado') { b.chamadas.push({ nome, args }); return { data: estado, error: null }; }
+    return rpc(nome, args);
+  };
+  return b;
+}
+
+test('iaDoPedido: com a IA desligada não busca nada nem chama a rede', async () => {
+  const banco = bancoComEstado({ perguntas: false, parecidos: false, vitrine: false, novidades: false });
+  await comFetch(() => jevResposta({ claro: 1, vago: 0 }), async (pedidos) => {
+    const { m, buscas } = acoes({ banco, busca: [card('b')] });
+    assert.deepEqual(await m.iaDoPedido('bicicleta aro 29', ''), { perguntas: null, parecidos: null });
+    assert.equal(buscas.length, 0);
+    assert.equal(pedidos.length, 0);
+    assert.equal(banco.chamadas.some((c) => c.nome === 'radar_ia_reservar'), false);
+  });
+});
+
+test('iaDoPedido: perguntas e parecidos correm juntos no servidor', async () => {
+  const banco = bancoComEstado({ perguntas: true, parecidos: true, vitrine: false, novidades: false });
+  let viuGemini; const geminiChegou = new Promise((r) => { viuGemini = r; });
+  await comFetch((op) => {
+    const corpo = JSON.parse(op.body);
+    if (corpo.questions) return Promise.race([geminiChegou, new Promise((r) => setTimeout(r, 1500))]).then(() => jevResposta({ claro: 0.9, vago: 0.1 }));
+    viuGemini();
+    return respostaGemini({ escolhidos: [{ id: 'b', motivo: 'Aro 29 como pediu' }] });
+  }, async () => {
+    const { m } = acoes({ banco, busca: [card('b')] });
+    const inicio = Date.now();
+    const r = await m.iaDoPedido('bicicleta aro 29', '');
+    assert.ok(Date.now() - inicio < 1200, 'as duas partes rodaram uma depois da outra');
+    assert.deepEqual(r.perguntas, []);
+    assert.equal(r.parecidos[0].id, 'b');
+  });
+});
+
+test('iaDoPedido: só a parte ligada roda', async () => {
+  const banco = bancoComEstado({ perguntas: false, parecidos: true, vitrine: false, novidades: false });
+  await comFetch(() => respostaGemini({ escolhidos: [] }), async (pedidos) => {
+    const r = await acoes({ banco, busca: [card('b')] }).m.iaDoPedido('bicicleta aro 29', '');
+    assert.equal(r.perguntas, null);
+    assert.deepEqual(r.parecidos, []);
+    assert.equal(pedidos.filter((p) => p.url.includes('typesafe')).length, 0);
   });
 });
 
@@ -350,9 +447,9 @@ function telaIA(arquivo) {
   const cliques = {};
   const texto = (c) => React.Children.toArray(c).map((x) => (typeof x === 'string' ? x : '')).join('').trim();
   const mod = carregar(arquivo, {
-    '@/components/ui/botao': { Botao: ({ children, onClick, href, tamanho, variante }) => {
+    '@/components/ui/botao': { Botao: ({ children, onClick, href, tamanho, variante, icone }) => {
       cliques[texto(children)] = onClick;
-      return React.createElement(href ? 'a' : 'button', { href, 'data-tamanho': tamanho, 'data-variante': variante }, children);
+      return React.createElement(href ? 'a' : 'button', { href, 'data-tamanho': tamanho, 'data-variante': variante, 'data-icone': icone ? 'sim' : undefined }, children);
     } },
   });
   return { mod, cliques, html: (el) => renderToStaticMarkup(el), React };
@@ -370,6 +467,7 @@ test('tela "Achamos isso na região": cartões com preço, frase e link; botão 
   assert.match(s, /Loja Boa/);
   assert.match(s, /href="\/anuncio\/bicicleta-ab12"/);
   assert.match(s, /data-tamanho="grande"[^>]*>Ver anúncio/);
+  assert.doesNotMatch(s, /<a [^>]*data-icone="sim"[^>]*>Ver anúncio/, 'link interno não leva ícone de site de fora');
   assert.match(s, />Não achei, continuar pedido</);
   cliques['Não achei, continuar pedido']();
   assert.equal(continuou, 1);
@@ -403,6 +501,7 @@ test('selo "Combina com o pedido": texto visível e a frase da IA', () => {
   const React = require('react'); const { renderToStaticMarkup } = require('react-dom/server');
   const { SeloCombina } = carregar('src/components/radar/ia/selo-combina.tsx');
   const s = renderToStaticMarkup(React.createElement(SeloCombina, { motivo: 'Mesmo modelo que o cliente pediu' }));
+  assert.match(s, /text-facil/, 'selo no tamanho grande do Modo fácil');
   assert.match(s, /Combina com o pedido/);
   assert.match(s, /Mesmo modelo que o cliente pediu/);
 });

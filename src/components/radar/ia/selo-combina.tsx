@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 export function SeloCombina({ motivo }: { motivo: string }) {
   return (
     <span className="flex flex-col items-start gap-1">
-      <Badge variant="success">
+      <Badge variant="success" tamanho="grande" className="whitespace-normal">
         <Sparkles aria-hidden />
         Combina com o pedido
       </Badge>
