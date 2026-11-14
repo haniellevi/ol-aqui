@@ -4,6 +4,8 @@
 import { telefoneComercialDigitado } from "@/lib/formato";
 import { dddDoPerfil, numeroComRegiao } from "@/lib/telefone-regiao";
 import { auth } from "@clerk/nextjs/server";
+import { comAssistente, linkAssistente, objetivoAssistente, tentativaAssistente } from "@/lib/assistente";
+import { guardarLojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugDisponivel } from "@/lib/dados/vitrines";
@@ -16,11 +18,23 @@ export type EstadoLoja = (NonNullable<EstadoForm> & { feito?: ResultadoQueroVend
 const SLUG = /^[a-z0-9-]{3,60}$/;
 
 /** "Vender minhas coisas": liga a conta de vendedor (pessoa física) e abre o Anunciar. */
-export async function queroVenderPf(): Promise<EstadoForm> {
+export async function queroVenderPf(assistente?: string): Promise<EstadoForm> {
   const db = await createClient();
   const { error } = await db.rpc("quero_vender", { tipo: "pf" });
   if (error) return { erro: traduzirErro(error) };
+  const tentativa = tentativaAssistente(assistente);
+  if (tentativa) await anunciarPelaVitrinePropria(tentativa, "item");
   redirect("/anunciar");
+}
+
+/** O assistente anuncia pela vitrine da própria conta, mesmo se outra estiver selecionada. */
+export async function anunciarPelaVitrinePropria(valor: string, escolha: string): Promise<void> {
+  const tentativa = tentativaAssistente(valor);
+  const objetivo = objetivoAssistente(escolha);
+  if (!tentativa || (objetivo !== "loja" && objetivo !== "item")) redirect("/anunciar");
+  const propria = (await lojasQueCuido()).find((loja) => loja.dono);
+  if (!propria || !await guardarLojaEscolhida(propria.id)) redirect(linkAssistente(objetivo, tentativa));
+  redirect(comAssistente("/anunciar", tentativa));
 }
 
 /** O endereço mercadodaregiao.com.br/loja/<slug> está livre? null = formato inválido. */

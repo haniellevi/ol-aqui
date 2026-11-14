@@ -61,7 +61,7 @@ export default async function CompletarPerfil({ searchParams }: { searchParams: 
         ))}
       </ul>
 
-      <BotaoAceitarTermos ids={pendentes.map((p) => p.id)} destino={destino} />
+      <BotaoAceitarTermos ids={pendentes.map((p) => p.id)} destino={destino} adiarHref={destino.startsWith("/assistente?") ? "/" : destino} />
     </main>
   );
 }

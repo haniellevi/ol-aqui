@@ -1,3 +1,6 @@
+import { auth } from "@clerk/nextjs/server";
+import { ConcluirAssistente } from "@/components/assistente/retomar";
+import { tentativaAssistente } from "@/lib/assistente";
 // /radar/pedido/[id]: o comprador vê o próprio pedido e compara as propostas.
 // Só o dono abre esta tela (o banco devolve sou_comprador); para os outros é "não encontrado".
 import { formatarNome } from "@/lib/formatar-nome";
@@ -24,9 +27,9 @@ export default async function MeuPedidoPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ novo?: string; estendido?: string }>;
+  searchParams: Promise<{ novo?: string; estendido?: string; assistente?: string }>;
 }) {
-  const [{ id }, { novo, estendido }] = await Promise.all([params, searchParams]);
+  const [{ id }, { novo, estendido, assistente }] = await Promise.all([params, searchParams]);
   const pedido = await pedidoRadar(id);
   if (!pedido) notFound();
   if (!pedido.sou_comprador) redirect(linkPedidoRadarLoja(id));
@@ -40,6 +43,8 @@ export default async function MeuPedidoPage({
     cidadesDoMeuPedido(id).catch((): string[] => []),
   ]);
   const s = rotuloSituacao(pedido.situacao, pedido.fechado_motivo);
+  const tentativa = novo === "1" && ["aberto", "em_analise"].includes(pedido.situacao) ? tentativaAssistente(assistente) : undefined;
+  const { userId } = tentativa ? await auth() : { userId: null };
   const fechado = pedido.situacao === "fechado";
   const menor = propostas.reduce<number | null>((m, p) => (p.preco_centavos != null && (m == null || p.preco_centavos < m) ? p.preco_centavos : m), null);
   const modoPrazo = pedido.modo_contato === "propostas_prazo";
@@ -63,6 +68,7 @@ export default async function MeuPedidoPage({
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+      {tentativa && userId && <ConcluirAssistente dono={userId} tentativa={tentativa} />}
       <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className={LINK_VOLTAR}>
         <ChevronLeft className="size-5" aria-hidden />
         {arquivado ? "Arquivados" : "Meus pedidos"}

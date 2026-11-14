@@ -1,3 +1,4 @@
+import { RegistrarAnuncio } from "@/components/assistente/retomar";
 import type { Metadata } from "next";
 import { listarCategorias } from "@/lib/dados/categorias";
 import { Botao } from "@/components/ui/botao";
@@ -17,13 +18,14 @@ const FORM = "form-categoria";
 
 // T18 · Passo 2: categoria em até 3 níveis (grande → sub → tipo), com busca.
 export default async function PassoCategoria({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, editar, daRevisao, equipe } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, daRevisao, equipe , assistente } = await carregarPasso(searchParams);
   const arvore = await listarCategorias();
   const sugestao = await minhaSugestaoCategoria(anuncio.id);
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso equipe={equipe} daRevisao={daRevisao}
+      {assistente && !editar && !equipe && <RegistrarAnuncio dono={conta.perfil.id} tentativa={assistente} id={anuncio.id} passo="categoria" />}
+      <CabecalhoPasso assistente={assistente} equipe={equipe} daRevisao={daRevisao}
         passo="categoria"
         id={anuncio.id}
         editar={editar}
@@ -36,7 +38,7 @@ export default async function PassoCategoria({ searchParams }: { searchParams: P
         <EscolhaCategoria id={anuncio.id} editar={editar} daRevisao={daRevisao} formId={FORM} arvore={arvore} selecionadaId={anuncio.categoria_id} tituloAtual={anuncio.titulo} />
       ) : (
         <Vazio titulo="Não conseguimos abrir as categorias" texto="Confira sua internet e tente de novo. O que você já fez está salvo.">
-          <Botao href={urlPasso("categoria", anuncio.id, editar, daRevisao)} larguraTotal>
+          <Botao href={urlPasso("categoria", anuncio.id, editar, daRevisao, assistente)} larguraTotal>
             Tentar de novo
           </Botao>
         </Vazio>

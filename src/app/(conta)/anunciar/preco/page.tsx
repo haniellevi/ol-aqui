@@ -1,3 +1,4 @@
+import { RegistrarAnuncio } from "@/components/assistente/retomar";
 import type { Metadata } from "next";
 import { faixaPreco } from "@/lib/dados/anuncios";
 import { completarCards } from "@/lib/dados/cards-extra";
@@ -14,7 +15,7 @@ const FORM = "form-preco";
 
 // T20 · Passo 4: preço, "A combinar", "Aceito troca" e a faixa dos parecidos na região.
 export default async function PassoPreco({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, conta, editar, daRevisao, equipe } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, daRevisao, equipe , assistente } = await carregarPasso(searchParams);
   const [faixa, extra] = await Promise.all([
     anuncio.categoria_id ? faixaPreco(anuncio.categoria_id, conta.vitrine.microrregiao_id) : null,
     // "Preço antes" só na edição; sem a coluna no banco (migração não aplicada) o campo não aparece.
@@ -31,7 +32,8 @@ export default async function PassoPreco({ searchParams }: { searchParams: Param
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso equipe={equipe} daRevisao={daRevisao} passo="preco" id={anuncio.id} editar={editar} formId={FORM} titulo="Quanto você quer?" />
+      {assistente && !editar && !equipe && <RegistrarAnuncio dono={conta.perfil.id} tentativa={assistente} id={anuncio.id} passo="preco" />}
+      <CabecalhoPasso assistente={assistente} equipe={equipe} daRevisao={daRevisao} passo="preco" id={anuncio.id} editar={editar} formId={FORM} titulo="Quanto você quer?" />
       <FormPreco
         id={anuncio.id}
         editar={editar}

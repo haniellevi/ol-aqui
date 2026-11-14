@@ -1,5 +1,7 @@
 "use client";
 
+import { tentativaAssistente } from "@/lib/assistente";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Camera, ImagePlus, Loader2, RotateCw, Sparkles, X } from "lucide-react";
 import { FotoProdutoAki } from "@/components/aki/foto-produto-aki";
@@ -245,9 +247,10 @@ export function EnvioFotos({
       return;
     }
     // Cada foto pronta já está confirmada no rascunho.
-    if (acao === "salvar-revisao") window.location.assign(urlPasso("revisar", id, editar));
+    const assistente = tentativaAssistente(new URLSearchParams(window.location.search).get("assistente"));
+    if (acao === "salvar-revisao") window.location.assign(urlPasso("revisar", id, editar, false, assistente));
     else if (acao === "salvar") window.location.assign(`${DESTINO_SAIR}?salvo=${encodeURIComponent(id)}`);
-    else window.location.assign(sair ? DESTINO_SAIR : urlPasso("categoria", id, editar));
+    else window.location.assign(sair ? DESTINO_SAIR : urlPasso("categoria", id, editar, false, assistente));
   }
 
   async function usarFotoAki(url: string) {

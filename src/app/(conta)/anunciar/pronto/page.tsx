@@ -1,3 +1,7 @@
+import { auth } from "@clerk/nextjs/server";
+import { ConcluirAssistente } from "@/components/assistente/retomar";
+import { tentativaAssistente } from "@/lib/assistente";
+import { createClient } from "@/lib/supabase/server";
 import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -13,7 +17,7 @@ import { Alert } from "@/components/ui/alert";
 
 export const metadata: Metadata = { title: "Situação do anúncio" };
 
-type Params = Promise<{ id?: string | string[]; status?: string | string[] }>;
+type Params = Promise<{ id?: string | string[]; status?: string | string[]; assistente?: string }>;
 const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 // T23 · "Seu anúncio está no ar!" (ou "em análise", quando o filtro automático segurou).
@@ -23,10 +27,16 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   if (!ehUuid(id)) notFound();
   const anuncio = await anuncioDaLoja(id);
   if (!anuncio) notFound();
+  const tentativa = tentativaAssistente(sp.assistente);
+  const { userId } = tentativa ? await auth() : { userId: null };
+  const conclusao = tentativa && userId ? <ConcluirAssistente dono={userId} tentativa={tentativa} anuncioId={id} /> : null;
+  const verificacao = userId ? await createClient().then((db) => db.rpc("minha_verificacao_loja")) : null;
+  const acompanhar = Array.isArray(verificacao?.data) && verificacao.data[0]?.estado === "pendente";
   // P5c: produto de loja em montagem fica pronto (rascunho) até o dono aceitar a loja.
   if (anuncio.status === "rascunho" && anuncio.pronto_em) {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 px-2.5 py-5 text-center md:gap-5 md:px-4 md:py-8">
+        {conclusao}
         <span className="grid size-12 place-items-center md:size-16 rounded-full bg-aviso-fundo text-aviso" aria-hidden>
           <Clock className="size-6 md:size-8" />
         </span>
@@ -35,6 +45,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
           A loja ainda está em montagem. Este produto vai ao ar quando o dono aceitar a loja, depois da conferência de sempre.
         </p>
         <div className="flex w-full max-w-xs flex-col gap-2">
+          {acompanhar && <Botao href="/minha-conta/loja" variante="secundario">Acompanhar verificação</Botao>}
           <Botao href="/minha-conta/anuncios" larguraTotal>
             Ver produtos da loja
           </Botao>
@@ -53,6 +64,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
   if (emAnalise) {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 px-2.5 py-5 text-center md:gap-5 md:px-4 md:py-8">
+        {conclusao}
         <span className="grid size-12 place-items-center md:size-16 rounded-full bg-aviso-fundo text-aviso" aria-hidden>
           <Clock className="size-6 md:size-8" />
         </span>
@@ -66,6 +78,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
           </Alert>
         )}
         <div className="flex w-full max-w-xs flex-col gap-2">
+          {acompanhar && <Botao href="/minha-conta/loja" variante="secundario">Acompanhar verificação</Botao>}
           <Botao href="/minha-conta/anuncios" larguraTotal>
             Ver meus anúncios
           </Botao>
@@ -84,6 +97,7 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col items-center gap-3 px-2.5 py-5 text-center md:gap-5 md:px-4 md:py-8">
+      {conclusao}
       <span className="grid size-12 place-items-center md:size-16 rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
         <CheckCircle2 className="size-6 md:size-8" />
       </span>
@@ -92,6 +106,8 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
         Seu anúncio já pode ser visto e compartilhado.
       </p>
       <div className="flex w-full max-w-xs flex-col gap-2">
+        {tentativa && <Botao href="/minha-conta/anuncios" variante="secundario">Meus anúncios</Botao>}
+        {acompanhar && <Botao href="/minha-conta/loja" variante="secundario">Acompanhar verificação</Botao>}
         <Botao href={linkAnuncio(anuncio.id, anuncio.titulo, anuncio.slug)} larguraTotal icone={<Eye />}>
           Ver anúncio
         </Botao>

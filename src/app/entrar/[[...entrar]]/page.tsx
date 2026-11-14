@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
 import { LINK_ENTRAR_PERFIL, LINK_PRIVACIDADE, LINK_TERMOS } from "@/lib/rotas";
+import { objetivoAssistente, tentativaAssistente } from "@/lib/assistente";
 import { caminhoInterno } from "@/lib/caminho-seguro";
 
 export const metadata = { title: "Entrar" };
@@ -47,7 +48,13 @@ function voltarPara(v: string | string[] | undefined): string {
 
 export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ redirect_url?: string | string[] }> }) {
   const destino = voltarPara((await searchParams).redirect_url);
-  const depoisDeCriar = destino === "/" ? LINK_ENTRAR_PERFIL : `${LINK_ENTRAR_PERFIL}?redirect_url=${encodeURIComponent(destino)}`;
+  const retorno = new URL(destino, "https://olaki.invalid");
+  // O assistente vincula a tentativa à conta antes de pedir as etapas pendentes do perfil.
+  const assistido = retorno.pathname === "/assistente" &&
+    objetivoAssistente(retorno.searchParams.get("objetivo")) &&
+    tentativaAssistente(retorno.searchParams.get("tentativa"));
+  const depoisDeCriar = assistido ? destino
+    : destino === "/" ? LINK_ENTRAR_PERFIL : `${LINK_ENTRAR_PERFIL}?redirect_url=${encodeURIComponent(destino)}`;
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center justify-center gap-6 px-4 py-8">
       <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região, aqui a sua cidade aparece" width={152} height={73} priority />

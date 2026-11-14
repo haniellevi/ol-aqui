@@ -1,3 +1,5 @@
+import { comAssistente, tentativaAssistente } from "@/lib/assistente";
+import { RegistrarAnuncio } from "@/components/assistente/retomar";
 import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -19,7 +21,7 @@ import { urlPasso } from "@/components/anunciar/passos";
 
 export const metadata: Metadata = { title: "Anúncio avulso" };
 
-type Params = Promise<{ id?: string | string[]; p?: string | string[] }>;
+type Params = Promise<{ id?: string | string[]; p?: string | string[]; assistente?: string }>;
 const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 // Anúncio avulso: a pessoa física chegou ao limite do plano grátis e paga para pôr ESTE anúncio no ar.
@@ -29,6 +31,7 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
   const sp = await searchParams;
   const id = um(sp.id);
   const p = um(sp.p);
+  const tentativa = tentativaAssistente(sp.assistente);
   if (!ehUuid(id)) redirect("/anunciar");
 
   const escolhida = await contaDaLoja();
@@ -44,7 +47,7 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
   if (conta.ajudante) redirect("/anunciar");
   const vitrine = conta.vitrine;
   const editar = anuncio.status !== "rascunho";
-  const revisar = urlPasso("revisar", anuncio.id, editar);
+  const revisar = urlPasso("revisar", anuncio.id, editar, false, tentativa);
 
   const pagamentoLigado = asaasConfigurado();
   const [avulso, retomado, doc] = await Promise.all([
@@ -56,7 +59,7 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
 
   // já pago e já no ar (ou em análise): a tela de pronto mostra o resultado
   if (pagamento?.status === "pago" && (anuncio.status === "ativo" || anuncio.status === "em_analise")) {
-    redirect(`/anunciar/pronto?id=${encodeURIComponent(anuncio.id)}`);
+    redirect(comAssistente(`/anunciar/pronto?id=${encodeURIComponent(anuncio.id)}`, tentativa));
   }
 
   if (vitrine.status === "suspensa") {
@@ -105,6 +108,7 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
 
   return (
     <PaginaConta>
+      {tentativa && <RegistrarAnuncio dono={conta.perfil.id} tentativa={tentativa} id={anuncio.id} passo="revisar" pagamento={pagamento?.id} />}
       <TopoConta titulo="Anúncio avulso" texto="Pague uma vez para pôr este anúncio no ar." voltar={revisar} textoVoltar="Voltar" />
 
       <section aria-label="Anúncio" className="flex items-center gap-3 rounded-card bg-cartao p-3 shadow-1">
@@ -135,6 +139,7 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
       {pagamentoLigado ? (
         <PagarAvulso
           anuncioId={anuncio.id}
+          assistente={tentativa}
           editar={editar}
           precoCentavos={valor}
           dias={dias}

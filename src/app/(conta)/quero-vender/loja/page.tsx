@@ -1,3 +1,4 @@
+import { comAssistente, tentativaAssistente } from "@/lib/assistente";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
@@ -11,18 +12,19 @@ import { testeGratis } from "../_dados";
 export const metadata: Metadata = { title: "Criar minha loja" };
 
 // T15 · Dados da loja. Pessoa física que já vende pode virar loja aqui sem perder os anúncios.
-export default async function PaginaDadosLoja() {
+export default async function PaginaDadosLoja({ searchParams }: { searchParams: Promise<{ assistente?: string }> }) {
+  const assistente = tentativaAssistente((await searchParams).assistente);
   const conta = await meuPerfilEVitrine();
   if (!conta) {
     return (
       <main className="mx-auto w-full max-w-xl px-4 py-6">
         <Vazio titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
-          <Botao href="/quero-vender/loja" larguraTotal>Tentar de novo</Botao>
+          <Botao href={comAssistente("/quero-vender/loja", assistente)} larguraTotal>Tentar de novo</Botao>
         </Vazio>
       </main>
     );
   }
-  if (conta.vitrine?.tipo === "loja") redirect("/anunciar"); // já é loja (dados da loja ficam em Minha conta)
+  if (conta.vitrine?.tipo === "loja") redirect(comAssistente("/anunciar", assistente)); // já é loja (dados da loja ficam em Minha conta)
 
   const regiao = conta.perfil.microrregiao_id;
   const [cidades, teste] = await Promise.all([listarCidades(regiao), testeGratis(regiao)]);
@@ -49,6 +51,7 @@ export default async function PaginaDadosLoja() {
         whatsappInicial={conta.perfil.whatsapp ? telefone(conta.perfil.whatsapp) : ""}
         nomeInicial=""
         avisoTeste={avisoTeste}
+        assistente={assistente}
       />
     </main>
   );

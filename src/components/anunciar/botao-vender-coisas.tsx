@@ -8,8 +8,8 @@ import { AvisoErro } from "./aviso-erro";
 import type { EstadoForm } from "./passos";
 
 // "Vender minhas coisas": liga a conta de vendedor e já abre o Anunciar.
-export function BotaoVenderCoisas() {
-  const [estado, acao, enviando] = useActionState<EstadoForm, FormData>(async () => queroVenderPf(), null);
+export function BotaoVenderCoisas({ assistente }: { assistente?: string } = {}) {
+  const [estado, acao, enviando] = useActionState<EstadoForm, FormData>(async () => queroVenderPf(assistente), null);
   return (
     <form action={acao} className="flex flex-col gap-2">
       <AvisoErro mensagem={estado?.erro?.mensagem} />

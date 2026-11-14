@@ -1,3 +1,4 @@
+import { RegistrarAnuncio } from "@/components/assistente/retomar";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { categoriaDoAnuncio, categoriaPorId } from "@/lib/dados/categorias";
@@ -15,21 +16,22 @@ const FORM = "form-detalhes";
 
 // T19 · Passo 3: título, descrição e os campos da subcategoria (vindos do banco).
 export default async function PassoDetalhes({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, editar, daRevisao, equipe } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, daRevisao, equipe , assistente } = await carregarPasso(searchParams);
   // nunca esteve no ar: só categoria visível (escondida no painel = escolhe outra); já esteve: a dele, mesmo escondida
   const nuncaNoAr = !anuncio.publicado_em;
   const achada = anuncio.categoria_id
     ? await (nuncaNoAr ? categoriaPorId(anuncio.categoria_id) : categoriaDoAnuncio(anuncio.categoria_id))
     : null;
   // sem categoria (ou com uma que sumiu): os campos dependem dela, então escolhe primeiro
-  if (!achada && nuncaNoAr) redirect(urlPasso("categoria", anuncio.id, editar, daRevisao));
+  if (!achada && nuncaNoAr) redirect(urlPasso("categoria", anuncio.id, editar, daRevisao, assistente));
 
   const campos = achada?.pai ? achada.categoria.campos : [];
   const nome = achada ? nomeCaminho(achada.caminho) : null;
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso equipe={equipe} daRevisao={daRevisao}
+      {assistente && !editar && !equipe && <RegistrarAnuncio dono={conta.perfil.id} tentativa={assistente} id={anuncio.id} passo="detalhes" />}
+      <CabecalhoPasso assistente={assistente} equipe={equipe} daRevisao={daRevisao}
         passo="detalhes"
         id={anuncio.id}
         editar={editar}

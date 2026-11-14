@@ -1,3 +1,4 @@
+import { AbrirRadarAssistido } from "@/components/assistente/retomar";
 import { Radar } from "lucide-react";
 import { Vazio } from "@/components/ui/vazio";
 import { Botao } from "@/components/ui/botao";
@@ -8,11 +9,13 @@ import { linkPedirRadar, type FiltrosPedido } from "@/lib/rotas";
 // Busca sem resultado: nunca beco sem saída (USABILIDADE.md, regra 10).
 // Oferece o Radar já preenchido com o que a pessoa procurou e o Merc (quando ligado).
 export function VazioBusca({
+  dono,
   termo,
   filtros,
   limparHref,
   outrasHref = "/categorias",
 }: {
+  dono?: string | null;
   termo?: string | null;
   filtros?: FiltrosPedido;
   /** Link para tirar os filtros (só quando há filtro ligado). */
@@ -26,9 +29,9 @@ export function VazioBusca({
       titulo={t ? `Não achamos “${t}” por aqui ainda.` : "Ainda não tem anúncio aqui."}
       texto="Não achou? Diga o que procura e as lojas da região te respondem."
     >
-      <Botao href={pedido} tamanho="grande" larguraTotal icone={<Radar />}>
-        Estou procurando…
-      </Botao>
+      {dono === undefined ? (
+        <Botao href={pedido} tamanho="grande" larguraTotal icone={<Radar />}>Estou procurando…</Botao>
+      ) : <AbrirRadarAssistido busca={{ ...filtros, q: t }} dono={dono} texto="Estou procurando…" />}
       <BotaoAbrirAki pedido={{ texto: t ? `Procuro ${t}` : "" }}>Perguntar ao Merc</BotaoAbrirAki>
       <DicaAki texto="Não achou? Pergunta pro Merc" pedido={{ texto: t ? `Procuro ${t}` : "" }} />
       {limparHref ? (

@@ -2,6 +2,7 @@
 
 import { startTransition, useActionState, useEffect, useRef, type FormEvent } from "react";
 import { unstable_rethrow } from "next/navigation";
+import { tentativaAssistente } from "@/lib/assistente";
 import type { EstadoForm } from "./passos";
 
 /** Mantém os campos na tela e permite repetir uma ação cuja resposta se perdeu. */
@@ -53,6 +54,8 @@ export function aoEnviar(acao: (dados: FormData) => void) {
     e.preventDefault();
     const dados = new FormData(e.currentTarget);
     const botao = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const assistente = tentativaAssistente(new URLSearchParams(window.location.search).get("assistente"));
+    if (assistente) dados.set("assistente", assistente);
     if (botao?.name) dados.set(botao.name, botao.value);
     startTransition(() => acao(dados));
   };

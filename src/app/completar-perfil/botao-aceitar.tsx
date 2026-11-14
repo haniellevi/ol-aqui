@@ -7,7 +7,7 @@ import { aceitarTermos } from "@/app/(publico)/termos/actions";
 import { Alert } from "@/components/ui/alert";
 
 // "Aceitar e continuar" (um botão laranja na tela) + "Agora não" (a faixa lembra depois).
-export function BotaoAceitarTermos({ ids, destino }: { ids: string[]; destino: string }) {
+export function BotaoAceitarTermos({ ids, destino, adiarHref }: { ids: string[]; destino: string; adiarHref: string }) {
   const router = useRouter();
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export function BotaoAceitarTermos({ ids, destino }: { ids: string[]; destino: s
       <Botao larguraTotal carregando={enviando} textoCarregando="Entrando…" onClick={() => void aceitar()}>
         Aceitar e continuar
       </Botao>
-      <Botao href={destino} variante="texto">
+      <Botao href={adiarHref} variante="texto">
         Agora não
       </Botao>
     </div>
