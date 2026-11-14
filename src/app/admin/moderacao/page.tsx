@@ -11,10 +11,6 @@ import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Moderação" };
 
-// Banners com foto da fachada mais recentes (para a equipe conferir). Só a lista da tela: a regra
-// de quem pode tirar a foto e o histórico ficam no banco (moderar_banner_vitrine + logs_atividade).
-const BANNERS_NA_TELA = 30;
-
 const MOTIVOS: Record<string, string> = {
   golpe: "Golpe",
   proibido: "Item proibido",
@@ -41,17 +37,11 @@ export default async function ModeracaoPage({
       .order("criado_em"),
     supabase.from("radar_pedidos").select("id, titulo, detalhes, cidade, motivo_analise, criado_em").eq("status", "em_analise").order("criado_em"),
     supabase.from("denuncias").select("id, alvo_tipo, alvo_id, motivo, detalhes, criado_em").eq("status", "aberta").order("criado_em"),
-    supabase
-      .from("vitrines_lojas")
-      .select("id, nome, slug, cidade, banner_url, atualizado_em")
-      .eq("banner_tipo", "foto")
-      .not("banner_url", "is", null)
-      .order("atualizado_em", { ascending: false })
-      .limit(BANNERS_NA_TELA),
+    supabase.rpc("banners_para_moderacao"),
     supabase.from("moderacao_ia").select("anuncio_id, estado, motivo, concluido_em, criado_em").order("criado_em", { ascending: false }).limit(100),
     supabase.rpc("moderacao_ia_ligada"),
   ]);
-  const banners = bannersR.data ?? [];
+  const banners = (bannersR.data ?? []) as { id: string; nome: string; slug: string; cidade: string; banner_url: string; atualizado_em: string }[];
   const anuncios = anunciosR.data ?? [];
   const pedidos = pedidosR.data ?? [];
   const denuncias = denunciasR.data ?? [];
@@ -59,7 +49,7 @@ export default async function ModeracaoPage({
   const denunciasSoltas = denuncias.filter((d) => !idsEmAnalise.has(d.alvo_id)); // alvo ainda no ar
   const denunciasDe = (id: string) => denuncias.filter((d) => d.alvo_id === id);
   const analisesIA = iaR.data ?? [];
-  const erroFila = anunciosR.error || pedidosR.error || denunciasR.error;
+  const erroFila = anunciosR.error || pedidosR.error || denunciasR.error || bannersR.error;
   const vazio = !erroFila && anuncios.length + pedidos.length + denunciasSoltas.length === 0;
 
   return (

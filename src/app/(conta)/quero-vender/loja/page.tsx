@@ -8,12 +8,15 @@ import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { FormLoja } from "@/components/anunciar/form-loja";
 import { testeGratis } from "../_dados";
+import { createClient } from "@/lib/supabase/server";
+import { abrirRascunho } from "./criar-com-ia/actions";
 
 export const metadata: Metadata = { title: "Criar minha loja" };
 
 // T15 · Dados da loja. Pessoa física que já vende pode virar loja aqui sem perder os anúncios.
-export default async function PaginaDadosLoja({ searchParams }: { searchParams: Promise<{ assistente?: string }> }) {
-  const assistente = tentativaAssistente((await searchParams).assistente);
+export default async function PaginaDadosLoja({ searchParams }: { searchParams: Promise<{ manual?: string; assistente?: string }> }) {
+  const { manual, assistente: tentativa } = await searchParams;
+  const assistente = tentativaAssistente(tentativa);
   const conta = await meuPerfilEVitrine();
   if (!conta) {
     return (
@@ -26,6 +29,17 @@ export default async function PaginaDadosLoja({ searchParams }: { searchParams: 
   }
   if (conta.vitrine?.tipo === "loja") redirect(comAssistente("/anunciar", assistente)); // já é loja (dados da loja ficam em Minha conta)
 
+  const db = await createClient();
+  const { data: autorizado } = await db.rpc("loja_ia_piloto_autorizado");
+  if (autorizado === true && manual !== "1") {
+    return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+      <h1 className="text-titulo font-semibold text-beringela">Criar minha loja</h1>
+      <p>Prepare um rascunho com suas informações e revise tudo antes de criar sua loja.</p>
+      <form action={abrirRascunho}><Botao type="submit">Criar com IA</Botao></form>
+      <Botao href={comAssistente("/quero-vender/loja?manual=1", assistente)} variante="secundario">Preencher manualmente</Botao>
+      <Botao href="/minha-conta/lojas" variante="texto">Agora não</Botao>
+    </main>;
+  }
   const regiao = conta.perfil.microrregiao_id;
   const [cidades, teste] = await Promise.all([listarCidades(regiao), testeGratis(regiao)]);
   const sugerida = conta.vitrine?.cidade ?? conta.perfil.cidade ?? "";

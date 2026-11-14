@@ -25,6 +25,46 @@ try:
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+    checked(sql((root/'supabase/testes/880_loja_ia_rascunhos.sql').read_text()))
+    checked(sql("""insert into perfis(id,microrregiao_id,nome,cidade)
+      select 'user_ia880conc',id,'IA concorrente','Corrente' from microrregioes where slug='corrente-pi';
+      insert into loja_ia_convites(usuario_id) values ('user_ia880conc');"""))
+    def abrir_ia(_):
+        return sql("begin; set local role authenticated; set local request.jwt.claim.sub='user_ia880conc'; select loja_ia_abrir_coleta()->>'id'; select pg_sleep(0.2); commit;")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        aberturas=list(pool.map(abrir_ia,range(2)))
+    for resultado in aberturas: checked(resultado)
+    ids=[re.search(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', resultado.stdout).group(0) for resultado in aberturas]
+    assert ids[0] == ids[1], ids
+    checked(sql("do $$ begin assert (select count(*)=1 from loja_ia_rascunhos where dono_id='user_ia880conc'), 'aberturas duplicadas'; end $$;"))
+    print('PASS: duas aberturas simultâneas retornam o mesmo rascunho', flush=True)
+    checked(sql((root/'supabase/testes/881_loja_ia_processamento.sql').read_text()))
+    checked(sql((root/'supabase/testes/882_loja_ia_whatsapp.sql').read_text()))
+    checked(sql((root/'supabase/testes/883_loja_ia_imagens.sql').read_text()))
+    checked(sql((root/'supabase/testes/884_loja_ia_publicacao.sql').read_text()))
+    checked(sql((root/'supabase/testes/885_loja_ia_modelo_capa.sql').read_text()))
+    checked(sql((root/'supabase/testes/886_loja_ia_capa_vitrine.sql').read_text()))
+    checked(sql("""insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+      select 'user_ia884conc',id,'IA concorrente','Corrente','5589999040884',now() from microrregioes where slug='corrente-pi';
+      insert into loja_ia_convites(usuario_id) values ('user_ia884conc');
+      insert into loja_ia_rascunhos(dono_id,estado) values ('user_ia884conc','pronto');"""))
+    rascunho_concorrente = sql("select id from loja_ia_rascunhos where dono_id='user_ia884conc';")
+    checked(rascunho_concorrente)
+    id_concorrente = re.search(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', rascunho_concorrente.stdout).group(0)
+    def publicar_ia(valor):
+        return sql(f"""begin; set local role authenticated;
+          set local request.jwt.claim.sub='user_ia884conc';
+          select (public.loja_ia_publicar('{id_concorrente}',0,
+            '{{"nome":"Loja teste concorrente {valor}","cidade":"Corrente","slug":"loja-teste-ia-{valor}","whatsapp":"5589999040884"}}','{{}}')).vitrine_id;
+          select pg_sleep(0.15);
+          commit;""")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        publicacoes=list(pool.map(publicar_ia,['a','b']))
+    for resultado in publicacoes: checked(resultado)
+    vitrines=[re.search(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', resultado.stdout).group(0) for resultado in publicacoes]
+    assert vitrines[0] == vitrines[1], vitrines
+    checked(sql("do $$ begin assert (select count(*)=1 from vitrines_lojas where dono_id='user_ia884conc'), 'publicações duplicadas'; end $$;"))
+    print('PASS: piloto de loja com IA, fila e edição, WhatsApp, imagens privadas, publicação e capa', flush=True)
     checked(sql((root/'supabase/testes/880_meu_marketing.sql').read_text()))
     print('PASS: Meu Marketing: permissões, ranking público, 30 dias, demanda regional por nicho, buscas antigas, caracteres literais e privacidade', flush=True)
     marca_documentos = (root/'supabase/migrations/20261110234147_marca_documentos_atuais.sql').read_text()

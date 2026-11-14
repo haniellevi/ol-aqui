@@ -39,3 +39,9 @@ Os registros de desafio com mais de dois dias são eliminados no próximo pedido
 Referências verificadas: [Evolution 2.3.7](https://github.com/evolution-foundation/evolution-api/releases/tag/2.3.7), [validação Turnstile](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/).
 
 Para reconectar: abra túnel SSH local `127.0.0.1:3110` para `127.0.0.1:8087` da VPS e execute `python3 infra/whatsapp/parear.py /caminho/privado/aplicacao.json`. Abra `http://127.0.0.1:3111/`. O QR acompanha atualizações da sessão sem reconectá-la repetidamente. Pare o servidor local e o túnel após concluir.
+
+### Perfil comercial do piloto de loja
+
+O intermediário `perfil-loja.py` é opcional e deve ser iniciado como serviço dedicado no VPS, com Python 3, escutando apenas `127.0.0.1:8090`. Configure no ambiente do processo `LOJA_IA_PERFIL_SEGREDO`, `LOJA_IA_CALLBACK_SEGREDO`, `LOJA_IA_CALLBACK_URL` (HTTPS apontando para `/api/interno/loja-ia/perfil-whatsapp`) e `EVOLUTION_API_KEY`, com segredos independentes de pelo menos 32 caracteres. Na aplicação configure `LOJA_IA_PERFIL_URL` com a origem HTTPS do VPS e os mesmos dois segredos correspondentes. Mantenha esses valores fora do repositório e do cliente.
+
+O serviço recebe somente um ticket de uso único, resgata o número no callback e chama somente `fetchProfile` da instância `olaki-verificacao` pelo endereço local. Responde apenas nome, descrição e site quando a Evolution reconhece perfil comercial. O Nginx limita requisições e não grava log de acesso. Se o serviço ou a consulta estiver indisponível, a revisão segue com as demais fontes. Configure e teste o processo em ambiente controlado antes de habilitar o piloto; sem o serviço a fonte permanece indisponível.
