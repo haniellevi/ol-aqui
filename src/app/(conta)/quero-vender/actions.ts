@@ -2,6 +2,7 @@
 // Server Actions do "Quero vender" (T14, T15). Quem cria a vitrine e decide plano e teste
 // grátis é a função quero_vender() do banco; aqui só conferimos os dados para mostrar o erro no campo.
 import { telefoneComercialDigitado } from "@/lib/formato";
+import { dddDaRegiao, numeroComRegiao } from "@/lib/telefone-regiao";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugDisponivel } from "@/lib/dados/vitrines";
@@ -33,7 +34,11 @@ export async function criarLoja(_antes: EstadoLoja, form: FormData): Promise<Est
   const nome = String(form.get("nome_loja") ?? "").replace(/\s+/g, " ").trim();
   const slug = String(form.get("slug") ?? "").trim().toLowerCase();
   const whatsapp = String(form.get("whatsapp") ?? "").trim();
-  const fone = telefoneComercialDigitado(whatsapp);
+  // Sem DDD no WhatsApp da loja, usa o DDD da região da pessoa.
+  const fone = await numeroComRegiao(whatsapp, async () => {
+    const { data: perfil } = await (await createClient()).from("perfis").select("microrregiao_id").maybeSingle();
+    return dddDaRegiao(perfil?.microrregiao_id);
+  }, telefoneComercialDigitado, true);
   const cidade = String(form.get("cidade") ?? "").trim();
   const categoria = String(form.get("categoria_loja") ?? "").trim();
   const sobre = String(form.get("sobre") ?? "").trim();

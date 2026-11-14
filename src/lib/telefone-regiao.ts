@@ -1,0 +1,55 @@
+import "server-only";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { REGEX_DDD, normalizarTelefone } from "@/lib/telefone";
+
+// DDD da região para o telefone digitado sem DDD. Só lê o DDD (nada pessoal). Sem região, sem DDD ou erro de
+// leitura → null: a tela então pede o DDD, nunca chuta um.
+
+/** DDD de uma microrregião (microrregioes.ddd). */
+export async function dddDaRegiao(microrregiaoId: string | null | undefined): Promise<string | null> {
+  if (!microrregiaoId) return null;
+  try {
+    const { data, error } = await supabaseAdmin().from("microrregioes").select("ddd").eq("id", microrregiaoId).maybeSingle();
+    return !error && typeof data?.ddd === "string" && REGEX_DDD.test(data.ddd) ? data.ddd : null;
+  } catch {
+    return null;
+  }
+}
+
+/** DDD da região da pessoa (perfis.microrregiao_id). */
+export async function dddDoPerfil(userId: string | null | undefined): Promise<string | null> {
+  if (!userId) return null;
+  try {
+    const { data, error } = await supabaseAdmin().from("perfis").select("microrregiao_id").eq("id", userId).maybeSingle();
+    return error || !data?.microrregiao_id ? null : dddDaRegiao(data.microrregiao_id);
+  } catch {
+    return null;
+  }
+}
+
+/** DDD da região de uma loja (vitrines_lojas.microrregiao_id). */
+export async function dddDaLoja(lojaId: string | null | undefined): Promise<string | null> {
+  if (!lojaId) return null;
+  try {
+    const { data, error } = await supabaseAdmin().from("vitrines_lojas").select("microrregiao_id").eq("id", lojaId).maybeSingle();
+    return error || !data?.microrregiao_id ? null : dddDaRegiao(data.microrregiao_id);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Normaliza o número com o DDD da região só quando ele faltou: quem já digitou o DDD não gera consulta.
+ * `normalizar` é uma das funções de src/lib/formato.ts ou src/lib/whatsapp/servico.ts (recebe o DDD opcional).
+ */
+export async function numeroComRegiao(
+  entrada: unknown,
+  regiao: () => Promise<string | null>,
+  normalizar: (entrada: string, ddd?: string | null) => string | null,
+  aceitaFixo = false,
+): Promise<string | null> {
+  if (typeof entrada !== "string") return null;
+  const direto = normalizar(entrada, null);
+  if (direto || normalizarTelefone(entrada, { aceitaFixo }).erro !== "sem_ddd") return direto;
+  return normalizar(entrada, await regiao());
+}

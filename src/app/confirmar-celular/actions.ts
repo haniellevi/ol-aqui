@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { garantirPerfil } from "@/lib/perfil";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ehUuid } from "@/lib/formato";
+import { dddDoPerfil, numeroComRegiao } from "@/lib/telefone-regiao";
 import { WHATSAPP_JA_VINCULADO, whatsappJaVinculado } from "@/lib/erros";
 import { configuracaoWhatsapp, enviarCodigo, novoCodigo, numeroWhatsapp, resumoCodigo, validarTurnstile } from "@/lib/whatsapp/servico";
 
@@ -12,7 +13,7 @@ export async function solicitarCodigo(numero: unknown, token: unknown): Promise<
   try {
     const { userId } = await auth();
     if (!userId) return { erro: "Entre na sua conta para confirmar o celular." };
-    const fone = numeroWhatsapp(numero);
+    const fone = await numeroComRegiao(numero, () => dddDoPerfil(userId), numeroWhatsapp);
     if (!fone) return { erro: "Informe um celular brasileiro com DDD." };
     const config = configuracaoWhatsapp();
     if (!await validarTurnstile(token, config)) return { erro: "Refaça a verificação de segurança e tente novamente." };

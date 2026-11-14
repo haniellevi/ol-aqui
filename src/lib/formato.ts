@@ -1,5 +1,8 @@
 // Formatação para as telas públicas (serve no servidor e no navegador).
 import type { CampoCategoria } from "@/lib/tipos";
+import { numeroTelefone } from "@/lib/telefone";
+
+export { telefone, exemploTelefone } from "@/lib/telefone";
 
 export { reais, inteiro, quando } from "@/lib/admin/formato";
 
@@ -160,32 +163,14 @@ export function linkWhatsApp(numero: string, titulo: string, url: string): strin
   return `https://wa.me/${numero.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
 }
 
-/** "5589999990000" → "(89) 99999-0000". */
-export function telefone(numero: string | null | undefined): string {
-  const d = String(numero ?? "").replace(/\D/g, "").replace(/^55/, "");
-  if (d.length < 10) return d;
-  return `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}`;
+/** WhatsApp digitado ("(89) 99999-0000", "89999990000", "9999-0000"...) → "5589999990000". Inválido ou sem DDD → null. Sem ddd, o número precisa ter DDD. */
+export function whatsappDigitado(texto: string | null | undefined, ddd?: string | null): string | null {
+  return numeroTelefone(texto, { ddd, aceitaFixo: false });
 }
 
-/** WhatsApp digitado ("(89) 99999-0000", "89999990000"...) → "5589999990000". Inválido → null. */
-export function whatsappDigitado(texto: string | null | undefined): string | null {
-  let d = String(texto ?? "").replace(/\D/g, "").replace(/^0+/, "");
-  if (d.length === 10 || d.length === 11) d = `55${d}`;
-  return /^55[1-9][0-9]9[0-9]{8}$/.test(d) ? d : null;
-}
-
-/** Normaliza um contato comercial para DDI + DDD + número. */
-export function telefoneComercialDigitado(entrada: unknown): string | null {
-  if (typeof entrada !== "string" || !/^[\d+().\s-]+$/.test(entrada)) return null;
-  const texto = entrada.trim();
-  const digitos = texto.replace(/\D/g, "");
-  if (texto.includes("+")) {
-    if (!/^\+55[\d().\s-]*$/.test(texto) || digitos.length < 12) return null;
-    return /^55[1-9][0-9]9?[0-9]{8}$/.test(digitos) ? digitos : null;
-  }
-  if (texto.startsWith("(") && digitos.length > 11) return null;
-  const completo = digitos.length <= 11 ? `55${digitos}` : digitos;
-  return /^55[1-9][0-9]9?[0-9]{8}$/.test(completo) ? completo : null;
+/** Contato comercial (loja, suporte, telefone público): DDI + DDD + número; aceita fixo. Sem ddd, o número precisa ter DDD. */
+export function telefoneComercialDigitado(entrada: unknown, ddd?: string | null): string | null {
+  return numeroTelefone(entrada, { ddd, aceitaFixo: true });
 }
 
 /** Máscara com DDD; aceita +55 colado e preserva excessos para a validação. */
