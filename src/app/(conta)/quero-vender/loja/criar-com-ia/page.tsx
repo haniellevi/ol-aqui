@@ -12,7 +12,7 @@ import { RevisaoLojaIa } from "@/components/anunciar/revisao-loja-ia";
 import { Aviso } from "@/components/conta/aviso";
 import { Botao } from "@/components/ui/botao";
 import { testeGratis } from "../../_dados";
-import { salvarColeta, prepararEnvio, finalizarEnvio, iniciarRascunho, salvarRevisao, retentarFonte, confirmarLojaIa, gerarCapa } from "./actions";
+import { salvarColeta, prepararEnvio, finalizarEnvio, iniciarRascunho, salvarRevisao, retentarFonte, confirmarLojaIa, gerarCapa, revogarWhatsapp } from "./actions";
 
 export const metadata: Metadata = { title: "Criar loja com IA" };
 export const dynamic = "force-dynamic";
@@ -52,5 +52,5 @@ export default async function CriarLojaIa() {
     catch { return null; }
   }));
   const imagens = Object.fromEntries(pares.filter((par): par is readonly [string, string] => par !== null));
-  return <main className="mx-auto w-full max-w-xl px-4 py-6"><RevisaoLojaIa rascunho={rascunho} cidades={cidades} whatsappInicial={conta.perfil.whatsapp ? telefone(conta.perfil.whatsapp) : ""} avisoTeste={avisoTeste} salvar={salvarRevisao} retentar={retentarFonte} confirmar={confirmarLojaIa} imagens={imagens} linkMaps={montarLinkMaps({ nome: rascunho.campos.nome.valor ?? rascunho.entrada.nome, cidade: rascunho.campos.cidade.valor ?? rascunho.entrada.cidade, endereco: rascunho.campos.endereco.valor ?? undefined })} gerarCapa={gerarCapa} /></main>;
+  return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">{(rascunho.entrada.consultarWhatsapp || rascunho.entrada.avisarWhatsapp) && <form action={revogarWhatsapp.bind(null, rascunho.id)} className="flex flex-col gap-2 rounded-card bg-fundo p-3"><p className="text-sm text-texto-suave">Você pode retirar a autorização de consulta e o pedido de aviso pelo WhatsApp.</p><Botao type="submit" variante="secundario">Retirar autorização do WhatsApp</Botao></form>}<RevisaoLojaIa rascunho={rascunho} cidades={cidades} whatsappInicial={conta.perfil.whatsapp ? telefone(conta.perfil.whatsapp) : ""} avisoTeste={avisoTeste} salvar={salvarRevisao} retentar={retentarFonte} confirmar={confirmarLojaIa} imagens={imagens} linkMaps={montarLinkMaps({ nome: rascunho.campos.nome.valor ?? rascunho.entrada.nome, cidade: rascunho.campos.cidade.valor ?? rascunho.entrada.cidade, endereco: rascunho.campos.endereco.valor ?? undefined })} gerarCapa={gerarCapa} /></main>;
 }
