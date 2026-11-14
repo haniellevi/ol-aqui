@@ -87,7 +87,7 @@ export function textoArea(valor: string[], cidades: { id: string; nome: string }
 }
 
 export const TEXTO_VISIBILIDADE: Record<Visibilidade, { titulo: string; ajuda: string }> = {
-  lojas: { titulo: "Só lojas", ajuda: "Só lojas verificadas da região veem seu pedido." },
+  lojas: { titulo: "Só lojas", ajuda: "Seu pedido fica visível para vendedores da área com acesso ao Radar." },
   todos: { titulo: "Todo mundo", ajuda: "Qualquer pessoa da região vê e pode te indicar onde tem." },
 };
 
