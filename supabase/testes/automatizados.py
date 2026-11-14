@@ -124,7 +124,7 @@ try:
     checked(sql((root/'supabase/testes/860_radar_categoria_geral.sql').read_text()))
     print('PASS: pedido do Radar em geral vira sugestão de categoria: uma por pedido, sem dado do comprador, juntar e aprovar movem o pedido, recusar não move, pedido de imóvel do Aki não entra e só o super admin decide', flush=True)
     checked(sql((root/'supabase/testes/870_whatsapp_voltar.sql').read_text()))
-    print('PASS: VOLTAR pelo WhatsApp: SAIR com texto novo, pergunta uma vez em 7 dias, SIM só com pergunta pendente, VOLTAR com chave desligada, quem nunca teve o aviso, número sem conta, limite de 3 por dia, respostas fora da janela e permissões', flush=True)
+    print('PASS: VOLTAR pelo WhatsApp: SAIR com texto novo, pergunta uma vez em 7 dias só com o Radar ligado, SIM só com pergunta pendente, mensagem repetida, sino do app desligado, VOLTAR com chave desligada, quem nunca teve o aviso, número sem conta, limite de 3 por dia, respostas fora da janela e permissões', flush=True)
     checked(sql("""
       insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
         select 'user_870conc', id, 'Loja 870 simultânea', 'Corrente', '5589999971001', now() from microrregioes where slug='corrente-pi';
@@ -132,12 +132,13 @@ try:
       insert into whatsapp_respostas(usuario_id,comando) values ('user_870conc','SAIR');
       update configuracoes set valor='true'::jsonb where chave='radar.whatsapp_ativo' and microrregiao_id is null;
     """))
+    # Cada chamada tem resumo diferente, para a trava (e não o bloqueio de repetida) é o que segura as simultâneas
     def pergunta_870(i):
-        return sql("begin; select whatsapp_mensagem_recebida('5589999971001','outra'); select pg_sleep(0.2); commit;")
+        return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','outra', encode(sha256(convert_to('pergunta{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
     def volta_870(i):
-        return sql("begin; select whatsapp_mensagem_recebida('5589999971001','sim'); select pg_sleep(0.2); commit;")
+        return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','sim', encode(sha256(convert_to('sim{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
     def voltar_870(i):
-        return sql("begin; select whatsapp_mensagem_recebida('5589999971001','voltar'); select pg_sleep(0.2); commit;")
+        return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','voltar', encode(sha256(convert_to('voltar{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:
         perguntas=list(pool.map(pergunta_870,range(4)))
     for result in perguntas: checked(result)

@@ -146,11 +146,12 @@ export function saidaSemNumeroLegivel(corpo: unknown): boolean {
 export type IntencaoMensagem = "sair" | "voltar" | "sim" | "outra";
 
 // Frase inteira, depois de tirar acento, caixa, pontuação e as palavras de cortesia. "voltar amanhã na loja" não vale.
+// "ligar" de fora: pode ser pedido de ligação. Vai junto com o SIM: só volta com pergunta pendente.
 const FRASES_VOLTAR = new Set([
-  "voltar", "volta", "quero voltar", "ativar", "ativa", "reativar", "quero receber", "quero receber de novo", "voltar a receber", "ligar", "religar",
+  "voltar", "volta", "quero voltar", "ativar", "ativa", "reativar", "quero receber", "quero receber de novo", "voltar a receber", "religar",
 ]);
-// "sim" só conta como volta quando há uma pergunta de volta pendente (decide o banco). Fora disso é outra mensagem.
-const FRASES_SIM = new Set(["sim", "s", "sim quero", "pode", "quero"]);
+// "sim" (e as parecidas) só conta como volta quando há uma pergunta de volta pendente (decide o banco). Fora disso não faz nada.
+const FRASES_SIM = new Set(["sim", "s", "sim quero", "pode", "quero", "ligar"]);
 
 function fraseDaMensagem(texto: string): string {
   return normalizarTextoSaida(texto).split(" ").filter((p) => p && !ENFEITES.has(p)).join(" ");
@@ -166,14 +167,25 @@ export function intencaoDaMensagem(texto: unknown): IntencaoMensagem {
   return "outra";
 }
 
+/**
+ * Resumo (sha256 hexa) do texto normalizado, para o banco ver se a mensagem é igual à anterior (bot que repete).
+ * O texto não sai do servidor: só este resumo vai para o banco.
+ */
+export function hashDaMensagem(texto: string): string {
+  return createHash("sha256").update(fraseDaMensagem(texto)).digest("hex");
+}
+
 export type PedidoDeMensagem =
   | { numero: string; intencao: "sair"; comando: ComandoSaida }
-  | { numero: string; intencao: "voltar" | "sim" | "outra" };
+  | { numero: string; intencao: "voltar" | "sim" | "outra"; hash: string };
 
-/** Mensagem recebida de pessoa com número legível, com a intenção dela. Mensagem nossa, de grupo ou sem número: null. */
+/**
+ * Mensagem recebida de pessoa com número legível e com texto, com a intenção dela. Mensagem nossa, de grupo, sem número
+ * ou sem texto (foto, figurinha, reação): null. Sem texto não chama o banco: não pode ser pedido de volta nem de saída.
+ */
 export function pedidoDeMensagem(corpo: unknown): PedidoDeMensagem | null {
   const msg = mensagemRecebida(corpo);
-  if (!msg) return null;
+  if (!msg || typeof msg.texto !== "string" || msg.texto.trim() === "") return null;
   const numero = numeroDaConversa(msg.key);
   if (!numero) return null;
   const intencao = intencaoDaMensagem(msg.texto);
@@ -181,5 +193,5 @@ export function pedidoDeMensagem(corpo: unknown): PedidoDeMensagem | null {
     const comando = comandoDeSaida(msg.texto);
     return comando ? { numero, intencao, comando } : null;
   }
-  return { numero, intencao };
+  return { numero, intencao, hash: hashDaMensagem(msg.texto) };
 }

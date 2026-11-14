@@ -123,7 +123,7 @@ test('rota: SAIR com segredo certo chega ao banco com número e comando; outra m
   }
   assert.deepEqual(chamadas, [
     ['whatsapp_sair', { p_numero: NUMERO, p_comando: 'SAIR' }],
-    ['whatsapp_mensagem_recebida', { p_numero: NUMERO, p_intencao: 'outra' }],
+    ['whatsapp_mensagem_recebida', { p_numero: NUMERO, p_intencao: 'outra', p_hash: lib.hashDaMensagem('quero um sofá') }],
   ]);
   assert.equal(erros.length, 0);
 });

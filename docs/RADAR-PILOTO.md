@@ -49,23 +49,29 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
 
 ## VOLTAR pelo WhatsApp (29/11/2026)
 
-- **O que a pessoa manda:** "voltar", "volta", "quero voltar", "ativar", "ativa", "reativar", "quero receber", "quero receber de novo", "voltar a receber", "ligar", "religar". Vale só a frase inteira (sem acento e sem caixa; "por favor" e "obrigado" são ignorados). "voltar amanhã na loja" é outra mensagem.
-- **SIM:** "sim", "s", "sim quero", "pode", "quero" só contam como volta quando há uma pergunta pendente: feita nos últimos 7 dias e sem resposta depois. Fora disso, SIM é outra mensagem (pode gerar a pergunta, se ainda não foi feita no período).
-- **Pergunta automática:** quem saiu pelo WhatsApp e ainda não voltou, ao mandar qualquer outra mensagem, recebe UMA pergunta a cada 7 dias: "Oi! Você pediu para não receber pedidos do Radar pelo WhatsApp. Quer voltar a receber? Responda SIM." Não pergunta a quem nunca saiu nem a número sem conta confirmada.
-- **Volta:** liga o aviso do Radar no WhatsApp e o sino do pedido novo (canal `app`), porque o WhatsApp só sai com o sino ligado. Confirma: "Pronto! Você volta a receber pedidos do Radar pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR." Fica registrada uma volta por saída.
+- **O que a pessoa manda:** "voltar", "volta", "quero voltar", "ativar", "ativa", "reativar", "quero receber", "quero receber de novo", "voltar a receber", "religar". Vale só a frase inteira (sem acento e sem caixa; "por favor" e "obrigado" são ignorados). "voltar amanhã na loja" é outra mensagem. "ligar" sozinho não volta (pode ser pedido de ligação): conta como SIM, abaixo.
+- **SIM:** "sim", "s", "sim quero", "pode", "quero" e "ligar" só contam como volta quando há uma pergunta pendente: feita nos últimos 7 dias e sem resposta depois. Fora disso, SIM não faz nada (não gera pergunta nova).
+- **Pergunta automática:** quem saiu pelo WhatsApp e ainda não voltou, ao mandar qualquer outra mensagem, recebe UMA pergunta a cada 7 dias, só com o Radar pelo WhatsApp ligado: "Oi! Você pediu para não receber pedidos do Radar pelo WhatsApp. Quer voltar a receber? Responda SIM." Não pergunta a quem nunca saiu, a número sem conta confirmada, nem a quem desligou pelo site depois da saída (quem decide por último, vale).
+- **Volta:** liga o aviso do Radar no WhatsApp. Não mexe no sino do pedido novo no app: se o sino estiver desligado, a pessoa recebe "Para voltar a receber pedidos do Radar pelo WhatsApp, ligue antes o aviso de pedido novo no app em Minha conta > Notificações. Depois responda VOLTAR." (o WhatsApp só sai com o sino ligado; ligar ou desligar o sino é decisão da pessoa). Com o sino ligado, confirma: "Pronto! Você volta a receber pedidos do Radar pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR." Fica registrada uma volta por saída.
+- **Já recebe:** "Você já recebe os pedidos do Radar pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR." Só sai quando o aviso no WhatsApp e o sino estão ligados. Com o sino desligado, sai o aviso de ligar o sino.
 - **Quem nunca teve o aviso:** não é ligado pelo WhatsApp. Recebe, uma vez por dia: "Para receber pedidos do Radar no WhatsApp, ligue em Minha conta > Notificações no Mercado da Região."
-- **Chave geral desligada (`radar.whatsapp_ativo`):** responde "No momento os avisos do Radar pelo WhatsApp estão pausados." e não liga nada.
-- **Já recebe:** responde "Você já recebe os pedidos do Radar pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR."
-- **Conta:** só conta com número confirmado (com ou sem o 9) e não revogada. Sem conta ou número não confirmado: nada é respondido e nada é registrado.
-- **Limites:** no máximo 3 respostas automáticas por número por dia (contando saída, volta, pergunta e orientação). Cada tipo sai uma vez por dia. Essas respostas saem fora da janela de 8h às 20h e o Radar nunca as cancela. Mensagem nossa, de grupo ou de status não é respondida.
-- **Onde fica:** o webhook classifica o texto em `intencaoDaMensagem` (`src/lib/whatsapp/evolution.ts`) e chama `whatsapp_mensagem_recebida` no banco, que decide tudo numa transação, com trava por conta. A resposta automática passa por `whatsapp_resposta_automatica`. O texto da mensagem não é guardado. `whatsapp_respostas` guarda só o tipo (SAIR, VOLTAR, PERGUNTA_VOLTAR), sem número e sem texto.
-- **Risco que sobra:** um bot que repete a mesma mensagem não é detectado (o texto não é guardado). Os limites acima (3 por dia, uma pergunta por semana) seguram o estrago. Dentro do mesmo dia, uma segunda volta não manda confirmação de novo (regra de uma resposta por tipo e dia).
+- **Chave geral desligada (`radar.whatsapp_ativo`):** responde "No momento os avisos do Radar pelo WhatsApp estão pausados." e não liga nada. A pergunta também não sai com a chave desligada.
+- **Mensagem repetida:** se a mensagem é igual à anterior do mesmo número, em até 1 dia, não se responde nada. Quem manda é o servidor: manda só um resumo (sha256) do texto, normalizado, e o banco guarda esse resumo de cada número por 1 dia (tabela `whatsapp_ultima_mensagem`). O texto não é guardado. Um resumo de palavra curta pode ser adivinhado; por isso ele só serve para repetição e dura 1 dia.
+- **Mensagem sem texto** (foto, figurinha, reação): não vai ao banco e não é respondida.
+- **Conta:** só conta com número confirmado (com ou sem o 9) e não revogada. Sem conta ou número não confirmado: nada é respondido e nada é registrado. O cadastro de WhatsApp é único com o número exato (`whatsapp_vinculos`), então não há duas contas com o mesmo número escrito igual.
+- **Dados que o webhook manda ao banco:** o número e a intenção (voltar, sim, outra) de toda mensagem recebida de pessoa, com texto, e o resumo do texto. Para quem não tem conta, o banco não grava nada e responde "sem_conta". Isso precisa estar na política de privacidade antes do deploy (não foi alterada aqui).
+- **Limites:** no máximo 3 respostas automáticas por número por dia (contando saída, volta, pergunta, pausado, sino e orientação). Cada tipo sai uma vez por dia. Essas respostas saem fora da janela de 8h às 20h e o Radar nunca as cancela. Se a volta acontece mas a resposta passa do limite, a volta fica registrada e a resposta não sai. Mensagem nossa, de grupo ou de status não é respondida.
+- **Onde fica:** o webhook classifica o texto em `intencaoDaMensagem` (`src/lib/whatsapp/evolution.ts`) e chama `whatsapp_mensagem_recebida(numero, intencao, resumo)` no banco, que decide tudo numa transação, com trava por conta (a saída usa a mesma trava). A resposta automática passa por `whatsapp_resposta_automatica`. O texto da mensagem não é guardado. `whatsapp_respostas` guarda só o tipo (SAIR, VOLTAR, PERGUNTA_VOLTAR), sem número e sem texto.
+- **Risco que sobra:** duas contas com números que são iguais exceto pelo 9 (com e sem o 9) não são barradas pelo cadastro; a volta vale para uma só (a de menor id). Ninguém testou ainda a Evolution real: que tipos de evento ela manda para reação, figurinha e aviso de mensagem apagada.
 
 **O que conferir no teste real (depois do SAIR):**
 1. Conta que saiu: mandar "oi" → chega a pergunta UMA vez. Mandar "oi" de novo → não chega nada.
 2. Responder "SIM" → chega a confirmação de volta, e Minha conta > Notificações mostra o aviso ligado.
 3. Número sem conta mandando "voltar" ou "oi" → não chega nada.
 4. Conta que nunca teve o aviso mandando "voltar" → chega só a orientação de ligar pelo site.
+5. Conta com o sino do pedido novo desligado no app, que saiu, mandando "voltar" → chega o aviso para ligar o sino antes; o WhatsApp não é ligado.
+6. Mandar a mesma mensagem duas vezes seguidas → só a primeira é respondida.
+7. Mandar uma reação (👍) ou uma figurinha para a conversa → não chega resposta. Se chegar, registrar o que a Evolution mandou e corrigir antes de liberar.
 
 ## Ordem para ligar o piloto (nada disso foi feito)
 
