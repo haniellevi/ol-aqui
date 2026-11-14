@@ -78,14 +78,14 @@ export async function CabecalhoPublico() {
 
         <div className="conta-cabecalho ml-auto flex shrink-0 items-center md:ml-1">
           {!comLogin ? (
-            <Link href="/entrar" className={LINK}>
-              <UserRound className="size-5" aria-hidden /> Entrar
+            <Link href="/entrar" aria-label="Entrar" className={LINK}>
+              <UserRound className="size-5 shrink-0" aria-hidden /> <span className="hidden min-[360px]:inline">Entrar</span>
             </Link>
           ) : (
             <>
               <SignedOut>
-                <Link href="/entrar" className={LINK}>
-                  <UserRound className="size-5" aria-hidden /> Entrar
+                <Link href="/entrar" aria-label="Entrar" className={LINK}>
+                  <UserRound className="size-5 shrink-0" aria-hidden /> <span className="hidden min-[360px]:inline">Entrar</span>
                 </Link>
               </SignedOut>
               <SignedIn>

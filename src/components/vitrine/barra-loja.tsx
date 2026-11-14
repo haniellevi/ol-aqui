@@ -10,7 +10,7 @@ export function BarraLoja({ whatsappHref, mapaHref }: { whatsappHref: string | n
   if (!whatsappHref && !mapaHref) return null;
   const externo = mapaHref?.startsWith("http");
   return (
-    <div className="olaki-material fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 px-4 py-2 md:hidden">
+    <div data-barra-loja className="olaki-material fixed inset-x-0 bottom-[calc(var(--spacing-barra-nav)+env(safe-area-inset-bottom))] z-20 px-4 py-2 md:hidden">
       <div className="mx-auto flex max-w-6xl items-center gap-2">
         {whatsappHref && (
           <a
@@ -19,10 +19,10 @@ export function BarraLoja({ whatsappHref, mapaHref }: { whatsappHref: string | n
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Chamar a loja no WhatsApp (abre em nova aba)"
-            className={classesBotao("whatsapp", false, "min-w-0 flex-1 px-3")}
+            className={classesBotao("whatsapp", false, "min-w-0 flex-1 px-3", "toque")}
           >
             <MessageCircle className="size-5" aria-hidden />
-            Chamar no WhatsApp
+            WhatsApp
           </a>
         )}
         {mapaHref && (
@@ -30,7 +30,7 @@ export function BarraLoja({ whatsappHref, mapaHref }: { whatsappHref: string | n
             href={mapaHref}
             data-medir="mapa"
             {...(externo ? { target: "_blank", rel: "noopener noreferrer", "aria-label": "Ver a loja no mapa (abre em nova aba)" } : {})}
-            className={classesBotao("secundario", false, whatsappHref ? "shrink-0 px-3" : "min-w-0 flex-1 px-3")}
+            className={classesBotao("secundario", false, whatsappHref ? "shrink-0 px-3" : "min-w-0 flex-1 px-3", "toque")}
           >
             <MapPin className="size-5" aria-hidden />
             Mapa

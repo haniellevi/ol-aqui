@@ -9,8 +9,8 @@ import type { CategoriaEncontrada } from "@/lib/dados/categorias";
 import { comParametros, manterFiltros, type ParametrosUrl } from "@/components/busca/parametros";
 
 // Topo da lista de categoria (T4): caminho (Categorias › Pet › Produtos para pets › Ração),
-// título, busca dentro da categoria e as filhas da categoria atual em chips (rolagem para o lado).
-const LINK = "inline-flex min-h-10 items-center underline-offset-4 hover:underline";
+// título, busca dentro da categoria e as filhas da categoria atual em chips.
+const LINK = "inline-flex min-h-11 min-w-0 items-center px-1 [overflow-wrap:anywhere] underline-offset-4 hover:underline";
 
 export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEncontrada; q?: string; sp?: ParametrosUrl }) {
   const { categoria, caminho } = achada;
@@ -24,8 +24,8 @@ export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEn
   const caminhoBusca = linkCanonico(caminho);
 
   return (
-    <div className="flex flex-col gap-3">
-      <nav aria-label="Você está em" className="text-base text-texto-suave">
+    <div className="flex min-w-0 flex-col gap-2">
+      <nav aria-label="Você está em" className="text-sm text-texto-suave">
         <ol className="flex flex-wrap items-center gap-1">
           <li>
             <Link href="/categorias" className={LINK}>
@@ -33,14 +33,14 @@ export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEn
             </Link>
           </li>
           {caminho.map((c, i) => (
-            <li key={c.id} className="flex items-center gap-1">
-              <ChevronRight className="size-4" aria-hidden />
+            <li key={c.id} className="flex max-w-full min-w-0 items-center gap-1">
+              <ChevronRight className="size-4 shrink-0" aria-hidden />
               {i < caminho.length - 1 ? (
                 <Link href={linkCanonico(caminho.slice(0, i + 1))} className={LINK}>
                   {c.nome}
                 </Link>
               ) : (
-                <span aria-current="page" className="inline-flex min-h-10 items-center text-beringela">
+                <span aria-current="page" className="min-w-0 text-beringela [overflow-wrap:anywhere]">
                   {c.nome}
                 </span>
               )}
@@ -49,24 +49,24 @@ export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEn
         </ol>
       </nav>
 
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-2">
         <CirculoCategoria nome={caminho[0].icone} />
-        <h1 className="text-titulo font-semibold">{categoria.nome}</h1>
+        <h1 className="min-w-0 text-titulo font-semibold [overflow-wrap:anywhere]">{categoria.nome}</h1>
       </div>
 
-      <CampoBusca valor={q} manter={sp} caminho={caminhoBusca} id="busca-categoria" />
+      <CampoBusca valor={q} manter={sp} caminho={caminhoBusca} id="busca-categoria" toqueAmplo />
 
       {grupo && chips.length > 0 && (
-        <nav aria-label={`Dentro de ${grupo.nome}`} className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none]">
-          <ul className="flex gap-2 py-1">
+        <nav aria-label={`Dentro de ${grupo.nome}`} className="min-w-0">
+          <ul className="flex flex-wrap gap-2 py-1">
             <li>
-              <Chip href={comParametros(linkCanonico(caminhoGrupo), { ...filtrosGerais, q })} ativo={grupo === categoria}>
+              <Chip href={comParametros(linkCanonico(caminhoGrupo), { ...filtrosGerais, q })} tamanho="toque" ativo={grupo === categoria}>
                 Tudo
               </Chip>
             </li>
             {chips.map((f) => (
-              <li key={f.id}>
-                <Chip href={linkFilha(f.slug)} ativo={f.id === categoria.id}>
+              <li key={f.id} className="max-w-full">
+                <Chip href={linkFilha(f.slug)} tamanho="toque" ativo={f.id === categoria.id} className="max-w-full">
                   {f.nome}
                 </Chip>
               </li>

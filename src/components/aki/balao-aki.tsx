@@ -420,6 +420,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
       {!aberto && dica && (
         <div
           role="status"
+          data-aki-dica
           className={`fixed right-4 z-30 flex max-w-[calc(100vw-2rem)] items-center rounded-card bg-cartao shadow-2 md:right-6 ${posicaoDica} ${semAtalhoMovel}`}
         >
           <button
@@ -439,6 +440,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
         <button
           type="button"
           onClick={() => abrir()}
+          data-aki-atalho
           className={`fixed right-4 z-30 flex h-10 items-center gap-2 rounded-full bg-cartao pl-2 pr-4 text-sm font-semibold text-beringela shadow-2 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:right-6 ${posicao} ${semAtalhoMovel}`}
           aria-haspopup="dialog"
         >
