@@ -96,7 +96,7 @@ function acoes(op={}) {
   const a=carregar('src/app/(conta)/pagar/actions.ts',{
     '@clerk/nextjs/server':{auth:async()=>({userId:op.semLogin?null:'user'})},'next/cache':{revalidatePath:()=>{}},
     '@/lib/supabase/server':{createClient:async()=>({rpc:async(n,p)=>{chamadas.push([n,p]);if(op.rede)throw Error('rede');return {data:op.semLinha?null:{pagamento_id:id,cancelados:[]},error:op.erro??null};}})},
-    '@/lib/asaas':{asaasConfigurado:()=>!op.desligado},
+    '@/lib/asaas':{pagamentoDisponivel:async()=>!op.desligado},
     '@/lib/cobranca-pagamento':{ErroCobranca,apagarCanceladasNoAsaas:async()=>{},cobrarMeuPagamento:async(pg)=>{chamadas.push(['cobrar',pg]);if(op.falha)throw new ErroCobranca('Retome este pagamento.');return {etapa:'precisa_documento',pagamentoId:pg};},situacaoMeuPagamento:async()=>{throw Error('consulta indisponível');}},
   });return {a,chamadas};
 }
@@ -121,4 +121,28 @@ test('leituras: indisponibilidade não se apresenta como ausência de assinatura
   const q={select(){return q;},eq(){return q;},maybeSingle:async()=>({data:null,error:{message:'offline'}})};
   const d=carregar('src/lib/dados/cobranca.ts',{'@/lib/supabase/server':{createClient:async()=>({rpc:async()=>({data:null,error:{message:'offline'}}),from:()=>q})}});
   await assert.rejects(d.minhaAssinatura());await assert.rejects(d.opcoesAssinatura());await assert.rejects(d.meuPagamento(id));
+});
+
+test('Asaas sandbox não fica disponível para cobrança em produção', async () => {
+  const anteriorChave = process.env.ASAAS_API_KEY;
+  const anteriorVercel = process.env.VERCEL_ENV;
+  let ambienteAtual = 'sandbox';
+  try {
+    process.env.ASAAS_API_KEY = 'chave-de-teste';
+    const asaas = carregar('src/lib/asaas.ts', {
+      '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async () => ({ data: ambienteAtual, error: null }) }) },
+    });
+    process.env.VERCEL_ENV = 'production';
+    assert.equal(await asaas.pagamentoDisponivel(), false);
+    ambienteAtual = 'producao';
+    assert.equal(await asaas.pagamentoDisponivel(), true);
+    ambienteAtual = 'sandbox';
+    process.env.VERCEL_ENV = 'preview';
+    assert.equal(await asaas.pagamentoDisponivel(), true);
+    delete process.env.ASAAS_API_KEY;
+    assert.equal(await asaas.pagamentoDisponivel(), false);
+  } finally {
+    if (anteriorChave === undefined) delete process.env.ASAAS_API_KEY; else process.env.ASAAS_API_KEY = anteriorChave;
+    if (anteriorVercel === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anteriorVercel;
+  }
 });

@@ -49,6 +49,12 @@ export async function ambienteAsaas(): Promise<AmbienteAsaas> {
   }
 }
 
+/** Em produção, cobranças de teste não devem ser oferecidas aos clientes. */
+export async function pagamentoDisponivel(): Promise<boolean> {
+  if (!asaasConfigurado()) return false;
+  return process.env.VERCEL_ENV !== "production" || (await ambienteAsaas()) === "producao";
+}
+
 async function chamar<T>(ambiente: AmbienteAsaas, caminho: string, init: RequestInit = {}): Promise<T> {
   const chave = process.env.ASAAS_API_KEY?.trim();
   if (!chave) throw new ErroAsaas("Pagamento ainda não está ligado.");

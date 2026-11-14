@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import { documentoValido } from "@/lib/cpf-cnpj";
-import { asaasConfigurado } from "@/lib/asaas";
+import { pagamentoDisponivel } from "@/lib/asaas";
 import { meuPedidoDestaque } from "@/lib/dados/destaques";
 import { ErroCobranca, cobrarPedido, situacaoPedido } from "@/lib/cobranca-destaque";
 import type { Resultado } from "@/lib/tipos";
@@ -64,7 +64,7 @@ export async function comprarDestaque(
   if (invalido) return falha(invalido);
   if (!FORMAS.includes(forma as FormaPagamento)) return falha("Escolha Pix ou cartão.");
   if (documento && !documentoValido(documento)) return falha("CPF ou CNPJ inválido. Confira os números.");
-  if (!asaasConfigurado()) return falha("Pagamento em breve. Por enquanto, use os destaques grátis do seu plano.");
+  if (!(await pagamentoDisponivel())) return falha("Pagamento em breve. Por enquanto, use os destaques grátis do seu plano.");
 
   const r = await contratar(tipo as SlugDestaque, anuncioId, false);
   if ("erro" in r) return { ok: false, erro: r.erro! };

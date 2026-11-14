@@ -96,6 +96,9 @@ export async function garantirCobranca(opcoes: {
   naoEncontrado: string;
 }): Promise<"ok" | "precisa_documento"> {
   const { amb, pg, userId, forma, documento, descricao, naoEncontrado } = opcoes;
+  if (process.env.VERCEL_ENV === "production" && amb !== "producao") {
+    throw new ErroCobranca("Pagamento em breve. Tente novamente mais tarde.");
+  }
   const db = supabaseAdmin();
   const { data: vitrine } = await db
     .from("vitrines_lojas")

@@ -116,18 +116,19 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
     );
   }
   const vitrine = conta.vitrine;
-  const pagamentoLigado = asaasConfigurado();
+  const asaasLigado = asaasConfigurado();
   const [planos, historico, assinatura, opcoes, doc, retomado, ambiente, planoRpc, cortesiaAte] = await Promise.all([
     lerPlanos(),
     lerPagamentos(vitrine.id, pagina),
     minhaAssinatura(),
     opcoesAssinatura(),
-    pagamentoLigado ? precisaDocumento(vitrine.id) : Promise.resolve(false),
+    asaasLigado ? precisaDocumento(vitrine.id) : Promise.resolve(false),
     pagamentoPedido ? meuPagamento(pagamentoPedido) : Promise.resolve(null),
-    pagamentoLigado ? ambienteAsaas() : Promise.resolve(null),
+    asaasLigado ? ambienteAsaas() : Promise.resolve(null),
     lerPlanoContratado(),
     minhaCortesiaRadar(),
   ]);
+  const pagamentoLigado = asaasLigado && (process.env.VERCEL_ENV !== "production" || ambiente === "producao");
   if (!assinatura || assinatura.vitrine_id !== vitrine.id) throw new Error("Não foi possível confirmar sua assinatura.");
   const pagamentos = historico.lista;
   const resumo = resumoPlano(conta)!;

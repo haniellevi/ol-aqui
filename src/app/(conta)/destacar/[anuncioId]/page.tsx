@@ -5,7 +5,7 @@ import { ImageOff } from "lucide-react";
 import { meuAnuncio } from "@/lib/dados/anuncios";
 import { meuPedidoDestaque, opcoesDestaque, resultadosDestaques } from "@/lib/dados/destaques";
 import { precisaDocumento } from "@/lib/cobranca-destaque";
-import { asaasConfigurado } from "@/lib/asaas";
+import { pagamentoDisponivel } from "@/lib/asaas";
 import { ehUuid, preco } from "@/lib/formato";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
@@ -77,7 +77,7 @@ export default async function PaginaDestacar({ params, searchParams }: Props) {
       <EscolherDestaque
         opcoes={opcoes}
         anuncioId={anuncio.id}
-        pagamentoLigado={asaasConfigurado()}
+        pagamentoLigado={(await pagamentoDisponivel())}
         precisaDocumento={pedirDoc}
         pedidoInicial={pedidoDoAnuncio}
         voltar={{ href: "/minha-conta/anuncios", texto: "Ver meus anúncios" }}

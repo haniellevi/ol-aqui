@@ -14,7 +14,7 @@ import { arvoreParaIA, dentroDoLimite, limparTextoBusca, perguntarCategorias } f
 import { listarCidades } from "@/lib/dados/regiao";
 import { lerConfigNumero } from "@/lib/dados/config";
 import { avulsoParaMim } from "@/lib/dados/cobranca";
-import { asaasConfigurado } from "@/lib/asaas";
+import { pagamentoDisponivel } from "@/lib/asaas";
 import { traduzirErro } from "@/lib/erros";
 import { centavosDoTexto, ehUuid } from "@/lib/formato";
 import { filtrarAtributos, lerAtributos } from "@/components/anunciar/atributos";
@@ -113,7 +113,7 @@ export async function novoRascunho(opcoes?: {
   if (conta.vitrine.status === "suspensa") redirect("/anunciar");
   // T16: limite do plano aparece ANTES do passo 1, na tela /anunciar (menos no caminho do avulso)
   if (!conta.podePublicar) {
-    const avulso = opcoes?.avulso === true && asaasConfigurado() ? await avulsoParaMim(conta.vitrine) : null;
+    const avulso = opcoes?.avulso === true && (await pagamentoDisponivel()) ? await avulsoParaMim(conta.vitrine) : null;
     if (!avulso) redirect("/anunciar");
   }
   if (opcoes?.chave && !ehUuid(opcoes.chave)) return { erro: { mensagem: "Não foi possível começar. Abra esta página novamente." } };

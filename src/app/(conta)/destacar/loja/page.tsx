@@ -4,7 +4,7 @@ import { Store } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { meuPedidoDestaque, opcoesDestaque, resultadosDestaques } from "@/lib/dados/destaques";
 import { precisaDocumento } from "@/lib/cobranca-destaque";
-import { asaasConfigurado } from "@/lib/asaas";
+import { pagamentoDisponivel } from "@/lib/asaas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
@@ -59,7 +59,7 @@ export default async function PaginaDestacarLoja({ searchParams }: { searchParam
       <EscolherDestaque
         opcoes={opcoes}
         anuncioId={null}
-        pagamentoLigado={asaasConfigurado()}
+        pagamentoLigado={(await pagamentoDisponivel())}
         precisaDocumento={pedirDoc}
         pedidoInicial={pedidoDaLoja}
         voltar={{ href: "/minha-conta/loja", texto: "Voltar para minha loja" }}
