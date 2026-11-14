@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Camera, ImagePlus, Loader2, RotateCw, Sparkles, X } from "lucide-react";
 import { FotoProdutoAki } from "@/components/aki/foto-produto-aki";
 import { reduzirFoto, enviarFoto, MAX_FOTO_ORIGINAL } from "@/lib/fotos";
@@ -58,11 +57,9 @@ export function EnvioFotos({
   podeEditarComAki?: boolean;
   formId?: string;
 }) {
-  const router = useRouter();
   const [itens, setItens] = useState<Item[]>(() => fotosIniciais.map((url) => ({ chave: novaChave(), estado: "pronta", url })));
   const [aviso, setAviso] = useState(""); // lido pelo leitor de tela (aria-live)
   const [erro, setErro] = useState<string | null>(null);
-  const [indo, setIndo] = useState(false);
   const [fotoAki, setFotoAki] = useState<string | null>(null);
   const itensRef = useRef(itens);
   itensRef.current = itens;
@@ -74,7 +71,7 @@ export function EnvioFotos({
 
   const prontas = itens.filter((i) => i.estado === "pronta");
   const ocupado = itens.some((i) => i.estado === "enviando" || i.estado === "fila");
-  const travado = ocupado || salvando || indo;
+  const travado = ocupado || salvando;
   const vagas = maximo - itens.length;
 
   const mudar = useCallback((fn: (atual: Item[]) => Item[]) => {
@@ -186,7 +183,7 @@ export function EnvioFotos({
   useEffect(() => () => itensRef.current.forEach((i) => i.previa && URL.revokeObjectURL(i.previa)), []);
 
   function escolher(arquivos: FileList | null) {
-    if (operacao.current || indo) return;
+    if (operacao.current) return;
     setErro(null);
     if (!arquivos?.length) return;
     const lista = Array.from(arquivos).filter((a) => (a.type.startsWith("image/") || a.type === "") && a.size > 0 && a.size <= MAX_FOTO_ORIGINAL);
@@ -197,13 +194,13 @@ export function EnvioFotos({
   }
 
   function tentarDeNovo(chave: string) {
-    if (operacao.current || indo) return;
+    if (operacao.current) return;
     setErro(null);
     mudar((l) => l.map((i) => i.chave === chave ? { ...i, estado: "fila", erro: undefined } : i));
   }
 
   async function alterar(lista: Item[], mensagem: string) {
-    if (operacao.current || indo || ocupado) return false;
+    if (operacao.current || ocupado) return false;
     operacao.current = true;
     setSalvando(true);
     setErro(null);
@@ -235,11 +232,11 @@ export function EnvioFotos({
     await alterar(lista, `Foto movida para a posição ${j + 1}${j === 0 ? ", agora é a capa" : ""}.`);
   }
 
-  async function continuar(acao: FormDataEntryValue | null) {
+  function continuar(acao: FormDataEntryValue | null) {
     const sair = acao === "sair";
-    if (operacao.current || indo) return;
+    if (operacao.current) return;
     setErro(null);
-    if (ocupado || itens.some((i) => i.estado === "erro")) {
+    if (itensRef.current.some((i) => i.estado !== "pronta")) {
       setErro("Espere o envio terminar. Tente novamente ou remova as fotos com erro antes de continuar.");
       return;
     }
@@ -247,16 +244,10 @@ export function EnvioFotos({
       setErro(`Coloque pelo menos ${minimo} ${minimo === 1 ? "foto" : "fotos"}.`);
       return;
     }
-    operacao.current = true;
-    setIndo(true);
-    if (!await salvar(itensRef.current)) {
-      operacao.current = false;
-      setIndo(false);
-      return;
-    }
+    // Cada foto pronta já está confirmada no rascunho.
     if (acao === "salvar-revisao") window.location.assign(urlPasso("revisar", id, editar));
     else if (acao === "salvar") window.location.assign(`${DESTINO_SAIR}?salvo=${encodeURIComponent(id)}`);
-    else router.push(sair ? DESTINO_SAIR : urlPasso("categoria", id, editar));
+    else window.location.assign(sair ? DESTINO_SAIR : urlPasso("categoria", id, editar));
   }
 
   async function usarFotoAki(url: string) {
@@ -283,7 +274,7 @@ export function EnvioFotos({
     <form id={formId} action={async (dados) => continuar(dados.get("acao"))} onSubmit={(e) => {
       e.preventDefault();
       const botao = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
-      void continuar(botao?.value ?? null);
+      continuar(botao?.value ?? null);
     }} aria-busy={travado} className="flex flex-col gap-2 md:gap-4">
       <div className="flex gap-2 md:gap-3">
         <button type="button" className={BOTAO_FOTO} onClick={() => camera.current?.click()} disabled={vagas <= 0 || travado}>
@@ -421,7 +412,7 @@ export function EnvioFotos({
       )}
 
       <BarraContinuar>
-        <BotaoPasso editar={editar} daRevisao={daRevisao} salvando={indo} disabled={travado} enviandoFotos={ocupado} />
+        <BotaoPasso editar={editar} daRevisao={daRevisao} salvando={false} disabled={travado} enviandoFotos={ocupado} />
       </BarraContinuar>
     </form>
   );
