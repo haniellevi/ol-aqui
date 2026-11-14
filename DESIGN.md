@@ -4,7 +4,7 @@ description: Shopping digital e classificados regionais, com o Radar de Negócio
 colors:
   beringela: "#4b1248"
   laranja: "#ff6a13"
-  laranja-escuro: "#c2410c"
+  laranja-escuro: "#b84010"
   verde: "#12a150"
   verde-escuro: "#0e7a3d"
   fundo: "#f7f8fa"
@@ -23,50 +23,59 @@ colors:
   coracao: "#e11d48"
 typography:
   vitrine:
-    fontFamily: "Poppins, system-ui, sans-serif"
+    fontFamily: "Figtree, system-ui, sans-serif"
     fontSize: "clamp(1.375rem, 1.1rem + 1.6vw, 2rem)"
     fontWeight: 700
     lineHeight: 1.15
     letterSpacing: "-0.02em"
+  preco-anuncio:
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 700
+    lineHeight: 1.2
+    letterSpacing: "-0.02em"
   titulo:
-    fontFamily: "Poppins, system-ui, sans-serif"
-    fontSize: "1rem"
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "1.125rem"
     fontWeight: 600
     lineHeight: 1.25
     letterSpacing: "-0.015em"
-  preco:
-    fontFamily: "Poppins, system-ui, sans-serif"
-    fontSize: "1.125rem"
-    fontWeight: 700
-    lineHeight: 1.25
-    letterSpacing: "-0.02em"
   secao:
-    fontFamily: "Poppins, system-ui, sans-serif"
-    fontSize: "0.9375rem"
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "1rem"
     fontWeight: 600
     lineHeight: 1.35
     letterSpacing: "-0.01em"
+  preco-card:
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 700
+    lineHeight: 1.25
   titulo-card:
-    fontFamily: "Poppins, system-ui, sans-serif"
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.35
+  corpo:
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.5
+  botao:
+    fontFamily: "Figtree, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 600
     lineHeight: 1.45
-  corpo:
-    fontFamily: "Poppins, system-ui, sans-serif"
-    fontSize: "0.8125rem"
-    fontWeight: 400
-    lineHeight: 1.5
   rotulo:
-    fontFamily: "Poppins, system-ui, sans-serif"
-    fontSize: "0.75rem"
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "0.8125rem"
     fontWeight: 600
     lineHeight: 1.45
   legenda:
-    fontFamily: "Poppins, system-ui, sans-serif"
-    fontSize: "0.6875rem"
+    fontFamily: "Figtree, system-ui, sans-serif"
+    fontSize: "0.75rem"
     fontWeight: 400
     lineHeight: 1.4
-    letterSpacing: "0.01em"
 rounded:
   campo: "8px"
   card: "10px"
@@ -80,65 +89,56 @@ spacing:
   "5": "20px"
   "6": "24px"
   "8": "32px"
-  controle: "40px"
-  controle-pequeno: "32px"
   toque: "44px"
+  acao-principal: "48px"
+  controle-mouse: "36px"
 components:
   button-primary:
     backgroundColor: "{colors.laranja}"
     textColor: "{colors.beringela}"
-    typography: "{typography.rotulo}"
+    typography: "{typography.botao}"
     rounded: "{rounded.campo}"
     padding: "0 16px"
-    height: "40px"
+    height: "48px"
   button-secondary:
     backgroundColor: "{colors.cartao}"
     textColor: "{colors.beringela}"
-    typography: "{typography.rotulo}"
+    typography: "{typography.botao}"
     rounded: "{rounded.campo}"
     padding: "0 16px"
-    height: "40px"
-  button-secondary-hover:
-    backgroundColor: "{colors.fundo}"
+    height: "44px"
   button-whatsapp:
     backgroundColor: "{colors.verde-escuro}"
     textColor: "{colors.cartao}"
-    typography: "{typography.rotulo}"
+    typography: "{typography.botao}"
     rounded: "{rounded.campo}"
     padding: "0 16px"
-    height: "40px"
+    height: "48px"
   button-danger:
     backgroundColor: "{colors.cartao}"
     textColor: "{colors.perigo}"
-    typography: "{typography.rotulo}"
+    typography: "{typography.botao}"
     rounded: "{rounded.campo}"
     padding: "0 16px"
-    height: "40px"
-  button-danger-hover:
-    backgroundColor: "{colors.perigo-fundo}"
+    height: "44px"
   button-text:
     textColor: "{colors.laranja-escuro}"
-    typography: "{typography.rotulo}"
-    height: "40px"
-  button-small:
-    typography: "{typography.legenda}"
-    rounded: "{rounded.campo}"
-    padding: "0 12px"
-    height: "32px"
+    typography: "{typography.botao}"
+    height: "44px"
   input:
     backgroundColor: "{colors.cartao}"
     textColor: "{colors.texto}"
     typography: "{typography.corpo}"
     rounded: "{rounded.campo}"
     padding: "0 12px"
-    height: "40px"
+    height: "44px"
   chip:
     backgroundColor: "{colors.cartao}"
     textColor: "{colors.beringela}"
-    typography: "{typography.rotulo}"
+    typography: "{typography.botao}"
     rounded: "{rounded.campo}"
     padding: "0 12px"
-    height: "40px"
+    height: "44px"
   chip-active:
     backgroundColor: "{colors.selecao}"
     textColor: "{colors.beringela}"
@@ -160,165 +160,271 @@ components:
 
 # Design System: Mercado da Região
 
-## Overview
+> **Este é o único documento que manda no visual.** Versão de 14/11/2026.
+> Marca e tom de voz: [docs/MARCA.md](docs/MARCA.md). Regras de uso para gente leiga: [docs/USABILIDADE.md](docs/USABILIDADE.md). Produto e público: [PRODUCT.md](PRODUCT.md).
+> Se outro documento disser um número diferente (tamanho, cor, altura), **vale o que está aqui**.
+> As pesquisas que sustentam cada decisão estão em [docs/design-system/pesquisa/](docs/design-system/pesquisa/). As versões antigas estão em [docs/design-system/historico/](docs/design-system/historico/).
 
-**Creative North Star: "A feira da cidade"**
+## 0. Estado: decidido, ainda não aplicado
 
-O Mercado da Região deve parecer a feira da cidade: tudo perto, conhecido e direto. Cada anúncio é uma barraca organizada, com a foto do produto de verdade, o preço à vista e o vendedor a um toque, no WhatsApp. O logo diz isso sozinho: o "M" de Mercado segura o pin laranja da Região, e a cidade aparece no mapa. Nada de vitrine de shopping nacional, nada de brilho de startup.
+As decisões abaixo foram tomadas pelo Raniel em 14/11/2026. **O código ainda está na versão anterior.** Enquanto a migração não termina:
 
-A interface é compacta e calma. Uma família de letra só (Poppins), duas cores da marca (beringela e laranja), cartões brancos sobre um fundo cinza bem claro e frio. A hierarquia vem do tamanho, do peso e do espaço, não de enfeite. Cada tela tem um botão principal laranja; o resto fica em beringela, borda ou texto. O cabeçalho e a barra de baixo flutuam como um material translúcido, e o conteúdo passa desfocado por baixo. O movimento só responde ao toque: o botão encolhe um pouco na hora em que o dedo encosta.
+| Assunto | Regra (este documento) | No código hoje |
+|---|---|---|
+| Fonte | Figtree 400/600/700 | Poppins 400/600/700 (`src/app/layout.tsx`) |
+| Texto normal | 14 px | 13 px (`--text-base`) |
+| Menor letra permitida | 12 px | 11 px (legenda, preço e meta do card) |
+| Preço no card | 16 px, peso 700 | 11 px (`card-anuncio.tsx`) |
+| Área de toque | 44 px; ação principal 48 px | 40 px (`--spacing-controle`) |
+| Laranja-escuro | `#b84010` | `#c2410c` |
+| Nome do logo | Uma linha, tudo beringela, Figtree Bold | Duas linhas, "da Região" em laranja, Poppins Bold |
 
-O sistema é feito para o celular de entrada, de 360 px, no sol e com internet fraca. A escala foi compactada de propósito em 10/11/2026 para tirar o peso das telas; contraste forte e ícone com palavra seguram a leitura.
+**Tela nova ou tela mexida segue este documento.** Tela antiga muda nas ondas da seção 11. Não misture: ao mexer numa tela, leve a tela inteira para a regra nova.
 
-**Key Characteristics:**
-- Beringela para marca, títulos e texto de ação; laranja para o único botão principal, o pin do logo e o "+ Anunciar".
-- Fundo frio `fundo` com cartões brancos; bege e laranja-claro saíram da interface.
-- Poppins em três pesos (400, 600, 700), com letras mais juntas nos títulos e um pouco abertas nas legendas.
-- Escala compacta: texto de 13 px, controles de 40 px no toque e 36 px com mouse.
-- Cabeçalho e barra de baixo translúcidos com desfoque, sólidos quando o celular pede menos transparência.
-- Componentes shadcn/ui ligados aos mesmos tokens: um componente novo já nasce com as cores da marca.
+## 1. Para quem e com que cara
 
-## Colors
+**Público que decide o visual:** o comprador da região no celular. Android de entrada, tela de 360 a 412 px, internet fraca, muitas vezes no sol, de 16 a 70 anos, vive no WhatsApp. Teste de referência: a dona Maria, 62 anos, com o celular do neto. Lojista e painel admin seguem as mesmas regras, com densidade maior só onde este documento permite.
 
-Duas cores de marca sobre neutros frios levemente arroxeados, com verde reservado ao WhatsApp e ao sucesso.
+**Tom: vizinho de confiança.** Caloroso, simples e sério, como o comércio conhecido da cidade. Sem cara de startup, sem cara de encarte de promoção.
 
-### Primary
-- **Beringela Vinho** (`beringela`): a voz da marca. "Mercado" e o M do logo, títulos, texto dos botões laranja, ícones, chip selecionado e navegação ativa. Puxa para o vinho de propósito, para não lembrar o roxo violeta do concorrente.
+**Norte criativo: "A feira da cidade".** Cada anúncio é uma barraca organizada: foto de verdade, preço à vista e o vendedor a um toque, no WhatsApp.
 
-### Secondary
-- **Laranja Pin** (`laranja`): o pin e "da Região" no logo, o botão principal e o "+ Anunciar" da barra de baixo. Com texto, sempre beringela por cima (4,95:1).
-- **Laranja Tijolo** (`laranja-escuro`): o laranja que lê sobre branco. Links dentro de frase, botão de texto, anel de foco (`ring`), cursor dos campos.
+**Só modo claro.** Não criar valores de modo escuro.
 
-### Tertiary
-- **Verde Conversa** (`verde-escuro`): só o botão "Chamar no WhatsApp" e mensagens de sucesso, com texto branco.
-- **Verde Selo** (`verde`): só ícones e selos; nunca fundo de texto (3,4:1 com branco).
+Características:
+- Beringela para marca, títulos e texto de ação; laranja para o único botão principal e para o pin do logo.
+- Fundo frio `fundo` com cartões brancos.
+- Uma família de letra (Figtree), três pesos.
+- Hierarquia por tamanho, peso e espaço, nunca por enfeite.
+- Peças do shadcn/ui (sobre Base UI) ligadas aos tokens da marca.
 
-### Neutral
-- **Cinza Manhã** (`fundo`): fundo das telas e hover dos botões claros.
-- **Papel** (`cartao`): cartões, folhas, formulários e a base das barras translúcidas.
-- **Tinta Ameixa** (`texto`): corpo de texto.
-- **Ameixa Suave** (`texto-suave`): cidade, "há 2 dias", legendas, item inativo da navegação (7,3:1 sobre branco).
-- **Linha Lavanda** (`borda`): bordas de cartão e divisórias (`border` no shadcn).
-- **Contorno de Campo** (`borda-campo`): campos, chips e controles (`input` no shadcn; 3:1 sobre branco).
-- **Lavanda Seleção** (`selecao`): navegação ativa, chip selecionado, círculo dos ícones de categoria, selo padrão e a etiqueta "Exemplo".
-- **Estados:** `perigo` sobre `perigo-fundo` (5,9:1), `verde-escuro` sobre `sucesso-fundo` (5,0:1), `aviso` sobre `aviso-fundo`, beringela sobre `patrocinado-fundo` na etiqueta "Patrocinado".
+## 2. Cores
 
-### Named Rules
-**The Laranja Calado Rule.** Texto branco nunca vai sobre o laranja (2,9:1). Sobre laranja, o texto é beringela. Onde precisar de branco, o fundo é `laranja-escuro` ou beringela.
+Os tokens ficam em `src/app/globals.css` (`@theme`). Nunca escreva cor em hexadecimal num componente.
 
-**The Um Laranja Rule.** Um botão laranja por tela. Dois laranjas brigando é erro, não destaque.
+| Token | Valor | Uso |
+|---|---|---|
+| `beringela` | `#4b1248` | Marca, nome do logo, títulos, texto sobre laranja, ícones, navegação ativa |
+| `laranja` | `#ff6a13` | Fundo do botão principal, pin do logo, "+ Anunciar". **Nunca como cor de texto** |
+| `laranja-escuro` | `#b84010` | Links, botão de texto, anel de foco, cursor dos campos |
+| `verde-escuro` | `#0e7a3d` | Só o botão "Chamar no WhatsApp" e mensagens de sucesso, com texto branco |
+| `verde` | `#12a150` | Só ícones e selos; nunca fundo de texto |
+| `fundo` | `#f7f8fa` | Fundo das telas |
+| `cartao` | `#ffffff` | Cartões, folhas, formulários |
+| `texto` | `#342b3b` | Corpo de texto |
+| `texto-suave` | `#5e5266` | Cidade, data, legendas, item inativo |
+| `borda` | `#e6e0e9` | Bordas de cartão e divisórias |
+| `borda-campo` | `#968b9e` | Contorno de campos, chips e controles |
+| `selecao` | `#f0eaf5` | Chip selecionado, navegação ativa, círculo de ícone de categoria |
+| `perigo` / `perigo-fundo` | `#b91c1c` / `#fef2f2` | Erros, apagar, denunciar |
+| `aviso` / `aviso-fundo` | `#b45309` / `#fffbeb` | "Em análise", plano vencendo |
+| `sucesso-fundo` | `#ecf8f1` | Caixa de sucesso, com texto `verde-escuro` |
+| `patrocinado-fundo` | `#ffe4d1` | Etiqueta "Patrocinado", com texto beringela |
+| `coracao` | `#e11d48` | Coração de favorito salvo |
 
-**The Lavanda Calada Rule.** Sobre `selecao`, o texto é beringela; laranja-escuro ali não passa 4,5:1 em letra pequena.
+### Contraste conferido (mínimo 4,5:1 para texto)
 
-## Typography
+| Par | Contraste | Pode? |
+|---|---|---|
+| Beringela sobre laranja | 4,95 | Sim |
+| Branco sobre laranja | 2,87 | **Não** |
+| Laranja como texto sobre branco | 2,87 | **Não** |
+| Laranja-escuro sobre branco | 5,56 | Sim |
+| Laranja-escuro sobre `fundo` | 5,23 | Sim |
+| Laranja-escuro sobre `selecao` | 4,71 | Sim |
+| Branco sobre verde-escuro | 5,43 | Sim |
+| Branco sobre verde | 3,37 | Só ícone |
+| Texto-suave sobre branco | 7,31 | Sim |
 
-**Display Font:** Poppins (com system-ui, sans-serif), carregada pelo `next/font` com `display: swap`
-**Body Font:** Poppins (mesma família)
+### Regras com nome
+- **Laranja Calado.** Sobre laranja, o texto é beringela. Branco sobre laranja é proibido.
+- **Laranja não escreve.** O laranja `#ff6a13` nunca é cor de letra. Texto laranja é sempre `laranja-escuro`.
+- **Um Laranja.** Um botão laranja por tela. A caixa de busca não é laranja.
+- **Verde é do WhatsApp.** Verde não vira cor de destaque, de preço nem de promoção.
+- Proibido: roxo violeta vivo, bege, `laranja-claro` como superfície.
 
-**Character:** uma geométrica redonda e amigável, a mesma do logo. Uma família só baixa menos dados e deixa a tela com cara de cartaz de comércio local, não de jornal.
+## 3. Letras
 
-### Hierarchy
-- **Vitrine** (700, 22 px no celular até 32 px no computador, 1,15): só o título do Início (`text-vitrine`).
-- **Título da tela** (600, 16 px no celular e 18 px a partir de 768 px, 1,25): `text-titulo`.
-- **Preço** (700, 16 a 20 px): `text-xl` no card, `text-2xl` na página do anúncio.
-- **Seção** (600, 15 px, 1,35): títulos de seção (`text-xl` / `text-lg font-semibold`).
-- **Título de card** (600, 14 px, 1,45): `text-lg`.
-- **Corpo** (400, 13 px, 1,5): texto normal (`text-base`). Campos usam 13 px; no iPhone sobem para 16 px para o Safari não dar zoom.
-- **Rótulo** (600, 12 px, 1,45): rótulos, texto de apoio e botões (`text-sm`, `text-rotulo`).
-- **Legenda** (400, 11 px, 1,4, letras um pouco abertas): cidade, data, metadados, nomes da barra de baixo e texto dos botões pequenos.
+**Família única: Figtree** (Google Fonts, gratuita), carregada por `next/font/google` com os pesos 400, 600 e 700 e `display: "swap"`. Motivos (pesquisa 04): é mais estreita que a Poppins, tem números alinhados para preço, o arquivo é pequeno e o desenho é caloroso.
 
-### Named Rules
-**The Três Pesos Rule.** Só 400, 600 e 700. O peso 700 é do preço, da vitrine e do logo; título e botão usam 600; valor de formulário e `<dd>` ficam em 400.
+```ts
+import { Figtree } from "next/font/google";
+const figtree = Figtree({ subsets: ["latin"], weight: ["400", "600", "700"], variable: "--font-figtree", display: "swap" });
+```
 
-**The Régua Rule.** Nada de tamanho escrito à mão (`text-[13px]`, `h-12`): use os nomes da régua do `globals.css`.
+### Régua de tamanhos (celular e computador)
 
-**The Zoom Livre Rule.** Tamanhos em rem e zoom nunca travado. Muita gente da região usa letra grande no celular, e a tela tem que crescer junto.
+| Papel | Tamanho | Peso | Classe |
+|---|---|---|---|
+| Vitrine (só o h1 do Início) | 22 a 32 px | 700 | `text-vitrine` |
+| Preço na página do anúncio | 24 px | 700 | `text-3xl` |
+| Título da tela | 18 px (20 px a partir de 768 px) | 600 | `text-titulo` |
+| Título de seção | 16 px | 600 | `text-lg font-semibold` |
+| Preço no card | 16 px | 700 | `text-lg font-bold` |
+| Título no card (até 2 linhas) | 14 px | 400 | `text-base` |
+| Texto normal | 14 px | 400 | `text-base` |
+| Botão | 14 px | 600 | `text-base font-semibold` |
+| Rótulo e texto de apoio | 13 px | 600 / 400 | `text-sm`, `text-rotulo` |
+| Legenda (cidade, data, barra de baixo) | 12 px | 400 | `text-legenda` |
+| Letra dentro de campo | 16 px no toque, 14 px com mouse | 400 | automático no `globals.css` |
 
-## Layout
+### Regras com nome
+- **Piso 12.** Nenhuma letra abaixo de 12 px, em lugar nenhum.
+- **Preço manda.** O preço é sempre o texto mais forte do card: peso 700, beringela, nunca menor que o título. Use `tabular-nums` em todo preço e número em coluna.
+- **Três Pesos.** Só 400, 600 e 700. O 700 é do preço, da vitrine e do logo.
+- **Régua.** Nada de tamanho escrito à mão (`text-[13px]`, `h-12`). Use os nomes da régua.
+- **Zoom Livre.** Tamanhos em rem e zoom nunca travado.
+- **Modo fácil do Radar** continua com corpo de 18 px e título de 24 px.
 
-Celular primeiro, uma coluna em 360 px, com margem lateral de 16 px. Espaçamento em múltiplos de 4 (4, 8, 12, 16, 20, 24, 32). Entre blocos da página, 20 px (`gap-5`); dentro de card, 12 px no celular e 16 px no computador. Cards de anúncio em duas colunas no celular e 4 a 5 no computador; o card inteiro é tocável.
+## 4. Toque e alturas
 
-Só três larguras de página: `max-w-md` (entrar e telas de uma ação), `max-w-xl` (formulários e leitura) e `max-w-6xl` (vitrines e listas). Botão com largura total só no celular; do tablet para cima ele para em 320 px.
+| Peça | Altura | Observação |
+|---|---|---|
+| Qualquer coisa tocável | mínimo 44 × 44 px | Vale para ícone, chip, link de lista, coração, fechar |
+| Ação principal da tela e WhatsApp | 48 px | Uma por tela |
+| Botão, campo, chip, seletor | 44 px | 36 px só com mouse, a partir de 768 px |
+| Ação pequena em card, lista ou tabela | 36 px de altura visível | A área tocável continua com 44 px |
+| Barra de busca | 44 px | |
+| Cabeçalho | 52 px (56 px a partir de 768 px) | |
+| Barra de baixo | 56 px + área segura | |
+| Espaço entre dois alvos de toque | mínimo 8 px | |
 
-No celular, a navegação fica numa barra fixa embaixo (56 px mais a área segura do iPhone). A partir de 768 px (`md`) a barra some, o cabeçalho passa de 52 para 56 px e Minha conta vira duas colunas. No painel, grades respondem à largura do próprio cartão, indicadores só passam a quatro colunas em 1280 px e tabelas largas rolam dentro da própria região. Card com no máximo duas ações à vista; o resto vai para o menu "Mais".
+Rótulo longo quebra linha e o botão cresce; nunca cortar o texto para caber.
 
-## Elevation & Depth
+## 5. Espaço, cantos e sombra
 
-Quase plano. A profundidade vem de cartão branco sobre fundo cinza, de borda discreta e do material translúcido das barras. A sombra é exceção e sempre tingida de beringela, nunca preta.
+- Espaçamento em múltiplos de 4: 4, 8, 12, 16, 20, 24, 32. Margem lateral da tela: 16. Entre blocos da página: 20 (`gap-5`). Dentro de card: 10 a 12 no celular, 16 no computador.
+- Larguras de página: `max-w-md` (entrar, uma ação), `max-w-xl` (formulário e leitura), `max-w-6xl` (vitrines e listas).
+- Botão de largura total só no celular; do tablet para cima para em 320 px.
+- Cantos: 8 px (campos, botões, chips), 10 px (cards), 20 px (topo das folhas), cheio (selos, avatar, seletor de cidade).
+- **Borda Antes.** Separe com `borda` ou com fundo/cartão. Sombra só em: card público (`shadow-1`), folhas, menus e o "+ Anunciar" (`shadow-2`). Sombra sempre tingida de beringela.
+- Cabeçalho, barra de baixo e barra de contato usam `.olaki-material` (translúcido). Viram sólidos com `prefers-reduced-transparency` ou `prefers-contrast`.
 
-### Shadow Vocabulary
-- **Sombra rasa** (`box-shadow: 0 1px 2px rgb(75 18 72 / 0.08)`): cards públicos de anúncio.
-- **Sombra de base** (`box-shadow: 0 -2px 12px rgb(75 18 72 / 0.12)`): folhas, menus e o "+ Anunciar" da barra de baixo.
-- **Fio de luz** (`box-shadow: 0 0 0 0.5px rgb(75 18 72 / 0.12)`): contorno do material translúcido (`.olaki-material`), no lugar da linha divisória dura.
+## 6. Logo
 
-### Named Rules
-**The Borda Antes Rule.** Primeiro separe com `borda` ou com o contraste fundo/cartão. Sombra só nos casos acima.
+- **Símbolo:** o M beringela segurando o pin laranja. Não muda.
+- **Nome escrito:** "Mercado da Região" em **uma linha, tudo beringela**, Figtree Bold. Em fundo escuro, tudo branco. O laranja fica só no pin.
+- No cabeçalho do celular: símbolo com 30 px de altura e nome com 17 px.
+- Abaixo de 24 px de altura, só o símbolo.
+- Não esticar, inclinar, recolorir, sombrear nem tirar o pin.
+- Demais regras (área livre, franquia por cidade, grafia): [docs/MARCA.md](docs/MARCA.md).
 
-**The Material Honesto Rule.** O desfoque (`blur(20px) saturate(180%)` sobre 74% de cartão) só vale para o que flutua sobre o conteúdo: cabeçalho, barra de baixo e barra de contato. Com `prefers-reduced-transparency` ou `prefers-contrast` ele vira sólido.
+## 7. Ícones e imagens
 
-## Shapes
+- **Lucide** (`lucide-react`), traço 2. Único pacote de ícones.
+- Ícone sempre com palavra. Sozinho só: lupa, coração, X e voltar.
+- Categorias: círculo `selecao` com ícone beringela. Faltando ícone no Lucide (animais), desenhar no mesmo traço; não trazer outro pacote.
+- Foto de anúncio: 4:3, cortada no centro, sempre real. Nada de banco de imagens na home.
+- Quadro ilustrativo leva a etiqueta "Exemplo".
 
-Cantos suaves e consistentes. Campos, botões e chips em 8 px; cartões em 10 px; folhas que sobem de baixo em 20 px no topo; selos, avatar e o seletor de cidade do cabeçalho redondos por inteiro. Fotos de anúncio em 4:3, cortadas no centro. Ícones de categoria num círculo `selecao` com o desenho em beringela. As pernas do M do logo têm pontas redondas; os botões não imitam isso.
+## 8. Bibliotecas
 
-## Components
+| Camada | Escolha | Regra |
+|---|---|---|
+| Estilo | Tailwind CSS 4 (`@theme` no `globals.css`) | Sem `tailwind.config` |
+| Peças base | shadcn/ui, estilo `base-nova`, sobre Base UI | Peça nova: `npx shadcn@latest add <nome>`, depois ajustar altura, letra e cor à régua |
+| Ícones | Lucide | Um pacote só |
+| Carrossel e galeria | CSS `scroll-snap` | Sem Embla |
+| Aviso rápido (toast) | Toast do Base UI | Sem pacote novo |
+| Folha que sobe | `Drawer` (Base UI), pela casca `Folha` | Sem Vaul |
+| Animação | CSS e `tw-animate-css` | Sem biblioteca de movimento |
+| Formulário | Peças `Field`/`Input` e validação no servidor | React Hook Form + Zod só se um formulário ficar complexo |
 
-### Buttons
-Diretos e firmes, com o texto dizendo o que acontece ("Publicar anúncio", nunca "OK").
-- **Shape:** cantos suaves (8 px). Normal: 40 px no toque e 36 px com mouse, texto de 12 px em 600. Pequeno (ações dentro de cards, listas e tabelas): 32 px no toque e 28 px com mouse, texto de 11 px.
-- **Principal:** fundo laranja, texto beringela. Um por tela.
-- **WhatsApp:** fundo verde-escuro, texto branco, ícone de conversa. Só para chamar vendedor ou comprador.
-- **Secundário:** borda beringela, fundo branco; hover em `fundo`. No painel admin, a ação padrão é a variante `discreto` (fundo `selecao`, texto beringela).
-- **Perigo:** borda e texto `perigo` sobre branco; hover em `perigo-fundo`; sempre com confirmação (`useConfirmar`, nunca `window.confirm`).
-- **Texto:** laranja-escuro, sublinha no hover. Só para "Pular", "Ver todos".
-- **Hover / Focus / Pressão:** hover clareia 5%; foco por teclado com contorno de 3 px laranja-escuro afastado 2 px; ao encostar o dedo o botão encolhe para 97% em 100 ms (`olaki-acao`), sem movimento com `prefers-reduced-motion`.
-- **Carregando:** bolinha girando, texto troca ("Publicando...") e o botão trava para não duplicar anúncio.
+**Não entram:** Radix, DaisyUI, Flowbite, MUI, Ant Design, Chakra, Headless UI, React Aria, Embla, Sonner, framer-motion, bibliotecas de aplicativo nativo. Qualquer dependência nova de interface precisa do "sim" do Raniel.
 
-Use `tamanho="toque"` for new touch-first actions, key filters and form controls. It keeps the standard type scale and a 44 px target. The Radar easy mode keeps its 48 px controls. Let translated or long labels wrap and let action rows follow keyboard order. Show a named close action on mobile sheets.
+## 9. Peças oficiais
 
-### Chips
-- **Style:** borda `borda-campo`, fundo branco, texto beringela de 12 px em 600, 40 px de altura.
-- **State:** selecionado com fundo `selecao`, borda beringela e um ✓; o estado nunca depende só da cor.
+**Regra: a peça do shadcn é a oficial.** A peça com nome em português continua existindo como **casca fina** em volta dela (mesma API, zero estilo próprio), para não reescrever centenas de arquivos de uma vez. Estilo novo entra na peça do shadcn, nunca na casca.
 
-### Cards / Containers
-- **Corner Style:** 10 px.
-- **Background:** `cartao` sobre `fundo`.
-- **Shadow Strategy:** sombra rasa nos cards públicos.
-- **Card de anúncio:** foto 4:3, coração de favorito no canto da foto, preço em 700, título em até 2 linhas, metadados em legenda, preenchimento de 10 px. Encolhe para 98% ao toque (`olaki-toque`). No máximo um selo por card; "Patrocinado" escrito.
+### Peças base (`src/components/ui/`)
 
-### Inputs / Fields
-- **Style:** uma caixa só (`classesCampo`): borda `borda-campo`, fundo branco, cantos de 8 px, 40 px de altura, texto de 13 px (16 px no iPhone).
-- **Focus:** borda laranja-escuro com anel de 2 px laranja-escuro a 30%.
-- **Error / Disabled:** borda `perigo` por `aria-invalid` e a mensagem escrita embaixo, nunca só a borda vermelha. Desativado em `fundo` com 70% de opacidade.
-- **Lista de escolha:** `select` nativo, para abrir a lista do próprio celular.
+| Função | Oficial (shadcn) | Casca em português | Não fazer |
+|---|---|---|---|
+| Botão | `button.tsx` | `botao.tsx` (`Botao`) | `<button className="...">` com estilo à mão |
+| Campo de texto | `field.tsx` + `input.tsx` + `textarea.tsx` | `campo.tsx` (`Campo`) | Borda e foco próprios num `<input>` |
+| Lista de escolha | `native-select.tsx` | `Seletor` (`src/components/conta/seletor.tsx`) | `select.tsx` em tela pública (o nativo abre a lista do celular) |
+| Selo e etiqueta | `badge.tsx` | `vitrine/selos.tsx` (`SeloLoja`) | `<span className="rounded-full bg-...">` |
+| Chip de filtro | `toggle.tsx` / `toggle-group.tsx` | `chip.tsx` (`Chip`) | Estado só por cor: selecionado leva ✓ |
+| Cartão | `card.tsx` | `Cartao` do admin | `<div>` com borda e sombra à mão |
+| Carregando | `skeleton.tsx` | `carregando.tsx` (`CarregandoGrade`, `CarregandoLista`) | Texto "Carregando…" |
+| Tela vazia | `empty.tsx` | `vazio.tsx` (`Vazio`) | Tela vazia sem saída |
+| Aviso | `alert.tsx` | `Aviso` do admin | Caixa colorida à mão |
+| Janela | `dialog.tsx` | — | Janela sem `DialogTitle` |
+| Confirmação | `alert-dialog.tsx` | `confirmar.tsx` (`useConfirmar`) | `window.confirm` |
+| Folha que sobe | `drawer.tsx` | `folha.tsx` (`Folha`) | `sheet.tsx` em tela nova |
+| Menu "Mais" | `dropdown-menu.tsx` | — | Mais de duas ações à vista num card |
+| Abas, tabela, divisória, dica | `tabs`, `table`, `separator`, `tooltip` | — | `<table>` ou `<hr>` à mão |
 
-### Navigation
-- **Barra de baixo (celular):** Início · Buscar · [+ Anunciar] · Radar · Conta, sobre o material translúcido. Ícone de 20 px com o nome embaixo em legenda e 600. Item inativo em `texto-suave`, ativo em beringela com traço mais grosso e nome sublinhado. O "+ Anunciar" é um quadrado laranja de 40 px que sobe 16 px acima da barra.
-- **Cabeçalho:** material translúcido, logo "Mercado da Região" (28 a 32 px de altura) à esquerda, seletor de cidade redondo e Entrar/Conta.
-- **Painel admin:** barra lateral que recolhe para só ícones (Ctrl+B).
+### Peças do negócio (uma por função, sempre reutilizar)
 
-### Logo
-O "M" de Mercado segurando o pin laranja, com "Mercado" em beringela e "da Região" em laranja, em Poppins Bold. Versões para fundo claro e escuro, marca sem frase para o cabeçalho, símbolo sozinho e ícone do app (M branco com pin laranja no quadrado beringela). Tamanho mínimo da marca: 24 px de altura; abaixo disso, só o símbolo. Arquivos em `public/logo/`, regras em `docs/MARCA.md`. Franquia: nome da cidade embaixo, em maiúsculas espaçadas, separado por um fio.
+| Função | Peça | Arquivo |
+|---|---|---|
+| Card de anúncio | `CardAnuncio` | `src/components/anuncio/card-anuncio.tsx` |
+| Grade de anúncios | `GradeAnuncios` | `src/components/anuncio/grade-anuncios.tsx` |
+| Busca | `CampoBusca` | `src/components/busca/campo-busca.tsx` |
+| Faixa de categorias | `FaixaCategorias` | `src/components/categorias/faixa-categorias.tsx` |
+| Lojas em destaque | `LojasDaRegiao` | `src/components/vitrine/lojas-da-regiao.tsx` |
+| Cartão do vendedor | `CartaoVendedor` | `src/components/vitrine/cartao-vendedor.tsx` |
+| Galeria de fotos | `Galeria` | `src/app/(anuncio-publico)/anuncio/[idslug]/galeria.tsx` |
+| Barra de contato (WhatsApp) | `BarraContato` | `src/app/(anuncio-publico)/anuncio/[idslug]/barra-contato.tsx` |
+| Cabeçalho | `CabecalhoPublico` | `src/components/ui/cabecalho-publico.tsx` |
+| Barra de baixo | `BarraInferior` | `src/components/ui/barra-inferior.tsx` |
+| Rodapé | `RodapeInicio` | `src/components/paginas/rodape-inicio.tsx` |
 
-### Merc
-O ajudante é um balão de conversa laranja com dois olhinhos, flutuando no canto acima da barra de baixo (botão de 40 px). É o mascote, não o logo.
+Página para ver as peças: `/admin/pecas`.
 
-## Do's and Don'ts
+### Como cada peça do negócio deve ser
 
-### Do:
-- **Do** usar um único botão laranja com texto beringela por tela.
-- **Do** escrever o nome ao lado de todo ícone importante; ícone sozinho só para lupa, coração, X e voltar.
-- **Do** usar os nomes da régua (`text-base`, `min-h-10`, `rounded-campo`) e as peças do shadcn ligadas aos tokens.
-- **Do** mostrar o preço sempre, com "a combinar" claro quando não houver valor.
-- **Do** escrever "Patrocinado" em anúncio pago e "Exemplo" em quadro ilustrativo.
-- **Do** usar fotos reais do produto anunciado.
-- **Do** dar uma saída em toda tela vazia ("Pedir no Radar", "Perguntar ao Merc").
+- **`CardAnuncio`:** foto 4:3; coração no canto da foto (alvo de 44 px); **preço 16 px em 700**; título 14 px em até 2 linhas; cidade e data em 12 px `texto-suave`; no máximo um selo; "Patrocinado" escrito; card inteiro tocável. Duas colunas no celular, 4 a 5 no computador.
+- **`CampoBusca`:** uma só por tela, 44 px, texto "O que você procura?". Fundo branco com `borda-campo`; não é laranja.
+- **`FaixaCategorias`:** uma só lista de categorias por tela, rolável na horizontal com `scroll-snap`, ícone com nome, estado ativo em `selecao` com texto beringela.
+- **Filtros rápidos:** uma linha rolável de `Chip` logo abaixo da busca.
+- **`LojasDaRegiao`:** um só bloco de lojas por tela, com logo redondo, nome, selo "Loja verificada" **com a palavra escrita**, quantidade de anúncios e acesso à vitrine.
+- **`BarraContato`:** fixa no rodapé da página do anúncio, **um** botão "Chamar no WhatsApp" de 48 px. Uma chamada de WhatsApp por tela.
+- **`BarraInferior`:** Início · Buscar · [+ Anunciar] · Radar · Conta. Ícone com nome em 12 px. Some a partir de 768 px.
+- **Tela vazia:** `Vazio` com uma frase e uma saída ("Pedir no Radar", "Anunciar").
+- **Carregando:** esqueleto no formato final da tela.
 
-### Don't:
-- **Don't** colocar texto branco sobre o laranja `#ff6a13`.
-- **Don't** usar roxo violeta vivo; o roxo da marca é só o beringela.
-- **Don't** esticar, inclinar, recolorir, sombrear ou tirar o pin do logo.
-- **Don't** voltar com bege ou `laranja-claro` como superfície.
-- **Don't** usar negrito fora de título, valor-chave, preço e botão.
-- **Don't** mostrar mais de duas ações à vista num card.
-- **Don't** usar imagem de banco de imagens na home.
-- **Don't** criar animação de entrada, movimento contínuo ou vídeo tocando sozinho.
+## 10. Movimento
+
+Só resposta ao toque: o botão encolhe para 97% em 100 ms (`olaki-acao`), o card para 98% (`olaki-toque`). Cores transitam em 150 ms. Sem animação de entrada, sem movimento contínuo, sem vídeo tocando sozinho. Tudo desligado com `prefers-reduced-motion`.
+
+## 11. Ordem da migração
+
+Cada onda é uma tarefa própria, pequena e testável. Nunca "refazer o site inteiro".
+
+0. **Base:** trocar a fonte para Figtree, atualizar os tokens do `globals.css` (régua nova, `laranja-escuro`, toque 44/48), transformar `Botao`, `Campo`, `Vazio`, `Folha` e `confirmar` em cascas das peças do shadcn, gerar os arquivos do logo novo (`docs/marca/gerar-logos.mjs`, `public/logo/`, ícones e imagem de compartilhar) e construir o conferidor ([docs/design-system/CONFERIDOR.md](docs/design-system/CONFERIDOR.md)).
+1. **Casca do site:** cabeçalho, busca única, barra de baixo, rodapé.
+2. **Início e listagens:** uma faixa de categorias, chips de filtro, `GradeAnuncios` com o card novo, um bloco de lojas.
+3. **Anúncio e conversão:** página do anúncio, galeria, barra de contato fixa.
+4. **Área logada:** anunciar, meus anúncios, minha loja, conta.
+5. **Painel admin.**
+
+## 12. Faça e não faça
+
+**Faça**
+- Um botão laranja com texto beringela por tela.
+- Nome ao lado de todo ícone importante.
+- Preço sempre visível; sem valor, escrever "a combinar".
+- "Patrocinado" escrito em anúncio pago; "Exemplo" em quadro ilustrativo.
+- "Loja verificada" escrito, não só o ícone.
+- Uma saída em toda tela vazia.
+- Reutilizar as peças da seção 9 e citar o nome delas ao pedir uma tela.
+
+**Não faça**
+- Cor em hexadecimal ou tamanho à mão num componente.
+- Letra abaixo de 12 px ou alvo de toque abaixo de 44 px.
+- Texto branco sobre laranja; laranja como cor de letra.
+- Duas buscas, duas listas de categorias ou dois blocos de lojas na mesma tela.
+- Card de anúncio fora de `CardAnuncio`.
+- Mais de uma chamada de WhatsApp por tela; mais de duas ações à vista num card.
+- Negrito fora de título, preço, valor-chave e botão.
+- Biblioteca nova de interface sem o "sim" do Raniel.
+- Modo escuro, animação de entrada, imagem de banco de imagens.
+
+## 13. Limites conhecidos
+
+- Não há pesquisa com usuários reais nem números de uso. As decisões vêm de fontes públicas e da comparação com OLX e Mercado Livre (o Facebook Marketplace exige login e não foi medido).
+- O tamanho de 14 px foi escolha do Raniel entre três opções; a pesquisa de público recomendava 16 px. **Validar com as cinco pessoas do teste de corredor** (docs/USABILIDADE.md), em especial as de mais de 50 anos. Se travarem na leitura, subir a régua um degrau.
+- Custo medido da letra maior num celular de 360 px: 3,6 anúncios visíveis sem rolar (eram 3,9 no compacto; seriam 3,3 com 16 px).
+- `.impeccable/design.json` e `.tastemaker/style-lock.md` ainda refletem a versão anterior e precisam ser regenerados na onda 0.

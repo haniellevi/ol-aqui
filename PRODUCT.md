@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Dois públicos com o mesmo peso. Cada tela decide pelo público dela (confirmado pelo Raniel em 10/11/2026).
+O **comprador da região no celular** é o público que decide o visual (decisão do Raniel em 14/11/2026; antes eram dois públicos com o mesmo peso). As telas de loja e do painel seguem as mesmas regras.
 
 - **Comprador da região:** gente de Corrente-PI, extremo sul do Piauí e Formosa do Rio Preto-BA, de 16 a 70 anos. Usa quase sempre um celular Android de entrada, muitas vezes com internet fraca. Vive no WhatsApp, lê pouco e manda áudio. Chega pelo WhatsApp ou pelo Google, procurando algo por perto, e quer chegar ao vendedor em poucos toques. Teste de referência: "dona Maria, 62 anos, vendendo uma geladeira com o celular do neto" (docs/USABILIDADE.md).
 - **Loja que paga o plano:** comerciante ou autônomo da região, ocupado, com uma mão no balcão. Usa a vitrine e o Radar para achar clientes e paga a mensalidade.
@@ -50,14 +50,14 @@ Ideia da marca (docs/MARCA.md): o site grande de classificados engole cidade peq
 ## Brand Commitments
 
 - **Nome:** Mercado da Região (decidido pelo Raniel em 10/11/2026). Escreve-se com M e R maiúsculos e "da" minúsculo; nunca sigla para o público. O robô se chama **Merc** (decidido em 11/11/2026; antes era Aki).
-- **Logo oficial:** o "M" de Mercado segurando o pin laranja da Região, com "Mercado" em beringela e "da Região" em laranja, em Poppins Bold. Arquivos em `public/logo/` e `docs/marca/`, gerados por `docs/marca/gerar-logos.mjs`. Regras completas em `docs/MARCA.md`.
+- **Logo oficial:** o "M" de Mercado segurando o pin laranja da Região, com o nome "Mercado da Região" em uma linha, todo em beringela, em Figtree Bold (decisão de 14/11/2026; os arquivos do logo ainda serão refeitos). Arquivos em `public/logo/` e `docs/marca/`, gerados por `docs/marca/gerar-logos.mjs`. Regras completas em `docs/MARCA.md`.
 - **Frase:** "aqui a sua cidade aparece." Frases de apoio: "Compre, venda e peça perto de casa." · "O que a região tem, está aqui." · "Negócio fechado com quem é daqui."
 - **Tom:** fala como um vizinho que entende de negócio: direto, simples, bem-humorado, do interior com orgulho. Trata por "você". Provoca o site grande pela ideia, nunca pelo nome. Não promete venda garantida.
 
 ## Evidence on Hand
 
 - Guia da marca: `docs/MARCA.md`. Guia de usabilidade com 12 regras: `docs/USABILIDADE.md`.
-- Sistema visual detalhado: `docs/DESIGN-SYSTEM.md`; resumo para quem desenha: `DESIGN.md`. Peças do shadcn em uso: `/admin/pecas`.
+- Sistema visual: `DESIGN.md` (único documento que manda no visual); pesquisas e histórico em `docs/design-system/`. Peças do shadcn em uso: `/admin/pecas`.
 - Telas e fluxos: `docs/TELAS-E-FLUXOS.md`; produto e contas: `docs/PRODUTO-CONTAS-ANUNCIOS-ROBO.md`; painel: `docs/PAINEL-ADMIN.md`.
 - Registros de QA e validação: `docs/QA-*.md` e `docs/VALIDACAO-*.md` (históricos).
 - Demo animada do Radar (lado da loja): `/demo/radar`.
@@ -78,4 +78,4 @@ Ideia da marca (docs/MARCA.md): o site grande de classificados engole cidade peq
 - Ícone sempre com palavra, exceto lupa, coração, X e voltar. Nenhum gesto escondido como único caminho.
 - Público com leitura lenta: escrever o mínimo, preferir botões a digitação, foto e voz antes de texto.
 - Movimento desligado com `prefers-reduced-motion`; barras translúcidas viram sólidas com `prefers-reduced-transparency` e `prefers-contrast`.
-- **Conflito em aberto:** `docs/USABILIDADE.md` pede texto mínimo de 16 px, legenda de 13 px e toque de 48 px. A escala compacta decidida em 10/11/2026 (DESIGN-SYSTEM.md, 4ª passada) usa texto de 13 px, legenda de 11 px e controles de 40 px (32 px nos botões pequenos). Validar com pessoas do piloto, em especial as mais velhas.
+- **Tamanhos (decidido em 14/11/2026, `DESIGN.md`):** texto de 14 px, nenhuma letra abaixo de 12 px, toque mínimo de 44 px e 48 px na ação principal. A pesquisa de público recomendava 16 px; validar com pessoas do piloto, em especial as mais velhas, e subir a régua se travarem na leitura.
