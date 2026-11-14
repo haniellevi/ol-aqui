@@ -139,6 +139,40 @@ test('falha de rede mantém erro recuperável e sinais de redirect continuam fun
   await assert.rejects(envioRecuperavel(async () => { throw Error('redirect:/destino'); }, null, form()), /redirect:/);
 });
 const url = `https://abc.supabase.co/storage/v1/object/public/anuncios/user_loja/${id}/1.webp`;
+test('Continuar abre Categoria sem gravar novamente uma foto já confirmada', (t) => {
+  const salvarFotos = t.mock.fn(async () => ({ ok: true }));
+  const navegar = t.mock.fn();
+  const janelaAnterior = Object.getOwnPropertyDescriptor(global, 'window');
+  Object.defineProperty(global, 'window', { value: { location: { assign: navegar } }, configurable: true });
+  t.after(() => {
+    if (janelaAnterior) Object.defineProperty(global, 'window', janelaAnterior);
+    else delete global.window;
+  });
+  const { EnvioFotos } = carregar('src/components/anunciar/envio-fotos.tsx', {
+    react: {
+      ...React,
+      useState: inicial => [typeof inicial === 'function' ? inicial() : inicial, () => {}],
+      useEffect: () => {},
+      useRef: current => ({ current }),
+      useCallback: fn => fn,
+    },
+    'next/navigation': { useRouter: () => ({ push: navegar }) },
+    '@/app/(conta)/anunciar/actions': { salvarFotos },
+    '@/lib/dados/fotos': {},
+    '@/components/aki/foto-produto-aki': {},
+  });
+  const props = { id, editar: false, maximo: 2, minimo: 1 };
+  const enviar = fotosIniciais => EnvioFotos({ ...props, fotosIniciais }).props.onSubmit({
+    preventDefault() {},
+    nativeEvent: { submitter: { value: 'seguir' } },
+  });
+  enviar([]);
+  assert.equal(navegar.mock.callCount(), 0);
+  enviar(['https://abc.supabase.co/storage/v1/object/public/anuncios/regiao/user_loja/foto.webp']);
+  assert.equal(salvarFotos.mock.callCount(), 0);
+  assert.deepEqual(navegar.mock.calls.map(chamada => chamada.arguments), [[`/anunciar/categoria?rascunho=${id}`]]);
+});
+
 test('fotos rejeitam origem, dono, duplicata e limite regional antes da gravação', async () => {
   const anterior = process.env.NEXT_PUBLIC_SUPABASE_URL; process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://abc.supabase.co';
   try {
