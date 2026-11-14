@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { ChartNoAxesColumn, ChevronRight, Clock, ExternalLink, History, Image as IconeImagem, LayoutList, Pin, Sparkles, Store, Tags } from "lucide-react";
+import { ChartNoAxesColumn, ChevronRight, Clock, ExternalLink, History, Image as IconeImagem, LayoutList, Megaphone, Pin, Sparkles, Store, Tags } from "lucide-react";
 import { listarCidades } from "@/lib/dados/regiao";
 import { meusRecursosVitrine, minhaVitrineCompleta, planosPublicos, vitrineNovaAtiva } from "@/lib/dados/vitrine-completa";
 import { minhasSugestoesCategoria } from "@/lib/dados/categorias-ia";
@@ -26,6 +26,7 @@ import { SeletorLoja } from "@/components/conta/seletor-loja";
 import { FormTerminarRecebimento } from "@/app/receber-loja/form-receber";
 import { prontosPendentes } from "@/lib/dados/montagem";
 import { textoMotivoVerificacaoLoja } from "@/lib/verificacao-loja/constantes";
+import { LINK_LOJA_MARKETING } from "@/lib/rotas";
 
 type ExclusaoLoja = { na_lixeira: boolean; apagar_apos: string | null; pode_restaurar: boolean | null; tem_pagamentos: boolean };
 
@@ -193,6 +194,7 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
           <ul className="flex flex-col divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
             <ItemMenu href={LINK_LOJA_BANNER} icone={<IconeImagem />} titulo="Capa da loja" detalhe={completa.banner_tipo === "foto" && recursos.foto_fachada ? "Foto da fachada" : "Modelo com cor"} />
             <ItemMenu href={LINK_LOJA_INFORMACOES} icone={<Store />} titulo="Horários e informações" detalhe="Endereço, Instagram, pagamento e entrega" />
+            <ItemMenu href={LINK_LOJA_MARKETING} icone={<Megaphone />} titulo="Meu Marketing" detalhe="Artes para divulgar e produtos procurados na região" />
             <ItemMenu href={LINK_LOJA_SECOES} icone={<LayoutList />} titulo="Seções próprias" detalhe={usoSecoes} />
             <ItemMenu href={LINK_LOJA_FIXADOS} icone={<Pin />} titulo="Produtos no topo" detalhe={usoFixados} />
             <ItemMenu href={LINK_LOJA_HISTORICO} icone={<History />} titulo="Histórico da loja"

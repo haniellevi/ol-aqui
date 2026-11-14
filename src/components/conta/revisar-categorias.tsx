@@ -47,7 +47,7 @@ export function Mensagens({ erro, aviso }: { erro: string | null; aviso: string 
   );
 }
 
-export function EscolherNicho({ sugestao, nichos }: { sugestao: SugestaoNicho; nichos: Nicho[] }) {
+export function EscolherNicho({ sugestao, nichos, vitrineId }: { sugestao: SugestaoNicho; nichos: Nicho[]; vitrineId?: string }) {
   const { pendente, erro, aviso, executar } = useAcao();
   const id = useId();
   const [outro, setOutro] = useState(sugestao.nicho_id ?? "");
@@ -61,11 +61,11 @@ export function EscolherNicho({ sugestao, nichos }: { sugestao: SugestaoNicho; n
           </p>
           <div className="flex flex-wrap gap-2">
             <Botao tamanho="pequeno" icone={<Check />} carregando={pendente} textoCarregando="Salvando..."
-              onClick={() => executar(() => definirNicho(sugestao.sugerido_id), `Nicho salvo: ${sugestao.sugerido_nome}.`)}>
+              onClick={() => executar(() => definirNicho(sugestao.sugerido_id, vitrineId), `Nicho salvo: ${sugestao.sugerido_nome}.`)}>
               Sim, é isso
             </Botao>
             <Botao tamanho="pequeno" variante="texto" disabled={pendente}
-              onClick={() => executar(() => definirNicho(null), "Sugestão dispensada. Escolha o nicho na lista quando quiser.")}>
+              onClick={() => executar(() => definirNicho(null, vitrineId), "Sugestão dispensada. Escolha o nicho na lista quando quiser.")}>
               Não é
             </Botao>
           </div>
@@ -77,7 +77,7 @@ export function EscolherNicho({ sugestao, nichos }: { sugestao: SugestaoNicho; n
       )}
       <form
         className="flex flex-col gap-2 sm:flex-row sm:items-end"
-        onSubmit={(e) => { e.preventDefault(); if (outro) executar(() => definirNicho(outro), `Nicho salvo: ${nomeDe(outro)}.`); }}
+        onSubmit={(e) => { e.preventDefault(); if (outro) executar(() => definirNicho(outro, vitrineId), `Nicho salvo: ${nomeDe(outro)}.`); }}
       >
         <label htmlFor={id} className="flex flex-1 flex-col gap-1 text-sm font-semibold">
           {sugestao.nicho_nome || sugestao.sugerido_id ? "Escolher outro nicho" : "Nicho"}

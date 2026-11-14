@@ -11,6 +11,7 @@ export const LINK_LOJA_SECOES = "/minha-conta/loja/secoes";
 export const LINK_LOJA_FIXADOS = "/minha-conta/loja/fixados";
 export const LINK_LOJA_CATEGORIAS = "/minha-conta/loja/categorias";
 export const LINK_LOJA_DESEMPENHO = "/minha-conta/loja/desempenho";
+export const LINK_LOJA_MARKETING = "/minha-conta/loja/marketing";
 export const LINK_LOJA_HISTORICO = "/minha-conta/loja/historico";
 /** Envio dos documentos para o selo de loja verificada. */
 export const LINK_LOJA_VERIFICAR = "/minha-conta/loja/verificar";
