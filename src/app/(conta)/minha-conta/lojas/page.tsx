@@ -6,17 +6,25 @@ import { Botao } from "@/components/ui/botao";
 import { Aviso } from "@/components/conta/aviso";
 import { Vazio } from "@/components/ui/vazio";
 import { escolherLoja } from "@/app/(conta)/_loja/actions";
+import type { RascunhoLoja } from "@/lib/loja-ia/tipos";
 
 export const metadata: Metadata = { title: "Minhas lojas" };
 export type LojaDaConta = { id: string; nome: string; dono: boolean };
 
 export default async function MinhasLojas() {
   const db = await createClient();
-  const { data, error } = await db.rpc("minhas_lojas");
+  const [{ data, error }, { data: rascunhoDados, error: erroRascunho }] = await Promise.all([db.rpc("minhas_lojas"), db.rpc("loja_ia_obter")]);
+  const rascunho = rascunhoDados as RascunhoLoja | null;
   const lojas = (data ?? []) as LojaDaConta[];
   return (
     <PaginaConta>
       <TopoConta titulo="Minhas lojas" texto="Encontre sua loja e as vitrines que você ajuda a gerenciar." />
+      {erroRascunho && <Aviso tipo="erro">Não foi possível verificar seu rascunho. Atualize a página para tentar novamente.</Aviso>}
+      {rascunho && <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
+        <div><h2 className="text-lg font-semibold">{rascunho.entrada.nome ? `Rascunho de ${formatarNome(rascunho.entrada.nome)}` : "Rascunho da loja"}</h2>
+          <p className="text-sm text-texto-suave">{rascunho.estado === "coleta" ? "Continue preenchendo as informações." : rascunho.estado === "processando" ? "Estamos preparando seu rascunho." : "Seu rascunho está pronto para revisão."}</p></div>
+        <Botao href="/quero-vender/loja/criar-com-ia">{rascunho.estado === "coleta" ? "Continuar cadastro" : "Abrir rascunho"}</Botao>
+      </section>}
       {error ? <Aviso tipo="erro">Não foi possível carregar suas lojas. Atualize a página para tentar novamente.</Aviso>
         : lojas.length ? (
           <ul className="grid gap-3">
@@ -55,11 +63,11 @@ export default async function MinhasLojas() {
               </li>
             ))}
           </ul>
-        ) : (
+        ) : !rascunho ? (
           <Vazio titulo="Você ainda não tem lojas aqui" texto="Quando você abrir uma loja ou aceitar um convite para gerenciar uma vitrine, ela aparece aqui.">
             <Botao href="/quero-vender/loja">Abrir minha loja</Botao>
           </Vazio>
-        )}
+        ) : null}
     </PaginaConta>
   );
 }
