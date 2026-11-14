@@ -84,7 +84,7 @@ select pg_temp.confere870((select ligado from preferencias_avisos where usuario_
 select pg_temp.confere870((select count(*) = 0 from preferencias_avisos where usuario_id = 'user_870saiu' and canal = 'app'), 'o sino do app não é criado nem mexido pela volta');
 select pg_temp.confere870((select count(*) = 1 from whatsapp_respostas where usuario_id = 'user_870saiu' and comando = 'VOLTAR'), 'volta registrada uma vez');
 select pg_temp.confere870((select count(*) = 1 and bool_and(texto = 'Pronto! Você volta a receber pedidos do Radar pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR.' and numero = '5589999970001')
-  from whatsapp_fila where chave like 'whatsapp_resposta:5589999970001:voltar:%'), 'confirmação da volta na fila, para o número que mandou');
+  from whatsapp_fila where chave like 'whatsapp_resposta:5589999970001:voltar%'), 'confirmação da volta na fila, para o número que mandou');
 
 -- [5] Depois de voltar, SIM sem pergunta pendente não faz nada. VOLTAR de quem já recebe responde "já recebe",
 -- mas o limite de 3 respostas do dia (saída, pergunta e volta) segura essa resposta.
