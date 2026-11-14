@@ -10,6 +10,7 @@ select loja_ia_iniciar((:'draft'::jsonb->>'id')::uuid,1);
 reset role;
 select id as trabalho, tentativa from loja_ia_pegar(10) where fonte='whatsapp' \gset
 select loja_ia_emitir_ticket(:'trabalho', :'tentativa') as ticket \gset
+select set_config('test.id', :'draft'::jsonb->>'id', true);
 select set_config('test.ticket', :'ticket', true), set_config('test.trabalho', :'trabalho', true), set_config('test.tentativa', :'tentativa', true);
 do $$ begin
   assert loja_ia_resgatar_ticket(current_setting('test.ticket')::uuid)='5589999978811', 'resgata número confirmado';
@@ -43,6 +44,15 @@ do $$ begin
 end $$;
 reset role;
 select loja_ia_emitir_ticket(:'trabalho', :'tentativa') as ticket \gset
+select set_config('test.ticket', :'ticket', true);
+insert into vitrines_lojas(dono_id,microrregiao_id,nome,slug,cidade,tipo,plano,status)
+select id,microrregiao_id,'Teste','pf-ia882','Corrente','pf','pf_gratis','suspensa' from perfis where id='user_ia882';
+do $$ begin
+  assert loja_ia_resgatar_ticket(current_setting('test.ticket')::uuid) is null, 'suspensão impede consulta';
+  assert loja_ia_emitir_ticket(current_setting('test.trabalho')::uuid,current_setting('test.tentativa')::uuid) is null, 'suspensão impede ticket';
+end $$;
+delete from vitrines_lojas where dono_id='user_ia882';
+select loja_ia_emitir_ticket(:'trabalho', :'tentativa') as ticket \gset
 delete from loja_ia_convites where usuario_id='user_ia882';
 select set_config('test.ticket', :'ticket', true);
 do $$ begin assert loja_ia_resgatar_ticket(current_setting('test.ticket')::uuid) is null, 'convite revogado'; end $$;
@@ -60,5 +70,21 @@ update perfis set whatsapp_verificado_em=null where id='user_ia882';
 do $$ declare f uuid; begin
   select id into f from whatsapp_fila where usuario_id='user_ia882';
   assert whatsapp_fila_confirmar_envio(f)='cancelada', 'verificação retirada após enfileirar';
+end $$;
+-- O dono pode retirar os opt-ins mesmo depois da coleta, sem reautorizar o restante.
+set local role authenticated;
+set local request.jwt.claim.sub='user_ia882';
+select loja_ia_revogar_whatsapp((:'draft'::jsonb->>'id')::uuid,true,false) as revogado \gset
+select 1 / case when :'revogado'::jsonb#>>'{entrada,consultarWhatsapp}'='false' and :'revogado'::jsonb#>>'{entrada,avisarWhatsapp}'='true' then 1 else 0 end;
+select loja_ia_revogar_whatsapp((:'draft'::jsonb->>'id')::uuid,false,true) as revogado \gset
+select 1 / case when :'revogado'::jsonb#>>'{entrada,avisarWhatsapp}'='false' then 1 else 0 end;
+reset role;
+update perfis set whatsapp_verificado_em=now() where id='user_ia882';
+update whatsapp_fila set estado='enviando' where usuario_id='user_ia882';
+do $$ declare f uuid; begin select id into f from whatsapp_fila where usuario_id='user_ia882'; assert whatsapp_fila_confirmar_envio(f)='cancelada', 'revogação impede envio'; end $$;
+set local role authenticated;
+set local request.jwt.claim.sub='user_outra882';
+do $$ begin
+  begin perform loja_ia_revogar_whatsapp((select current_setting('test.id')::uuid),true,true); raise exception 'outro dono revogou'; exception when insufficient_privilege then null; end;
 end $$;
 rollback;
