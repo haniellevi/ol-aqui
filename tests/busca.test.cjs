@@ -197,3 +197,27 @@ test('sugestões priorizam a categoria escolhida antes de ampliar para outras', 
   await depois[0]();
   assert.deepEqual(buscas, [['fiat', 'r', 'carros', 0]]);
 });
+
+
+test('busca interpretada sem resultados leva o termo original e filtros ao Radar', async () => {
+  const { Listagem } = carregar('src/components/busca/listagem.tsx', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: null }) },
+    '@/lib/dados/categorias': { listarCategorias: async () => [] },
+    '@/lib/dados/regiao': { regiaoAtual: async () => null },
+    '@/lib/dados/anuncios': { buscarAnuncios: async () => ({ anuncios: [], total: 0 }) },
+    '@/components/busca/vazio-busca': { VazioBusca: 'VazioBusca' },
+    '@/lib/dados/buscas': {},
+    'next/server': { after: () => {} },
+  });
+  const termoDigitado = 'geladeira inox até 500';
+  const tela = await Listagem({
+    caminho: '/busca', sp: { q: 'inox', ia: termoDigitado, preco_max: '500' },
+    categoria: null, categoriaPeloEndereco: false, topo: null, termoDigitado,
+  });
+  const vazio = tela.props.children[1].props.vazio.props;
+  assert.equal(vazio.termo, termoDigitado);
+  assert.equal(vazio.filtros.precoMax, '500');
+  const voltar = new URL(vazio.limparHref, 'https://teste.local');
+  assert.equal(voltar.searchParams.get('q'), termoDigitado);
+  assert.equal(voltar.searchParams.get('sem_ia'), '1');
+});

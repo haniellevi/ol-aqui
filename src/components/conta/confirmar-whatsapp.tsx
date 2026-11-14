@@ -1,7 +1,7 @@
 "use client";
 import Script from "next/script";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { CheckCircle2, Smartphone } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
 import { Botao } from "@/components/ui/botao";
 import { Aviso } from "./aviso";
@@ -58,30 +58,30 @@ export function ConfirmarWhatsapp({ siteKey, destino, numero = "" }: { siteKey: 
       finally { trava.current = false; }
     });
   }
-  if (estado.confirmado) return <section className="flex flex-col gap-5 rounded-card bg-cartao p-5 shadow-1" aria-live="polite">
-    <CheckCircle2 className="size-10 text-verde-escuro" aria-hidden />
-    <h2 className="text-xl font-semibold">WhatsApp confirmado</h2><p>Seu contato foi confirmado. Você já pode continuar no Mercado da Região.</p>
-    <Botao href={destino} larguraTotal>Continuar</Botao>
+  if (estado.confirmado) return <section className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1" aria-live="polite">
+    <h2 className="flex items-center gap-2 text-lg font-semibold">
+      <CheckCircle2 className="size-5 shrink-0 text-verde-escuro" aria-hidden /> WhatsApp confirmado
+    </h2>
+    <Botao href={destino} tamanho="toque" larguraTotal>Continuar</Botao>
   </section>;
-  return <section className="flex flex-col gap-5 rounded-card bg-cartao p-5 shadow-1">
-    <div className="flex items-center gap-2 font-bold text-laranja-escuro"><Smartphone aria-hidden className="size-5" />Confirmação pelo WhatsApp</div>
-    <form onSubmit={e => { e.preventDefault(); enviar(); }} className="flex flex-col gap-4">
-      <Campo rotulo="Seu WhatsApp com DDD" name="whatsapp" {...fone.campo} disabled={pendente || !!desafio} erro={fone.erro}
-        dica="Digite o DDD e o celular com 9 dígitos. O código do Brasil (+55) já está incluído." />
-      <p className="text-sm text-texto-suave">Ao solicitar, você receberá uma mensagem com um código de seis números. Ele vale por cinco minutos e pode ser usado uma vez.</p>
+  return <section className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
+    {estado.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
+    {estado.aviso && <p role="status" className="rounded-campo bg-fundo p-2 text-sm">{estado.aviso}</p>}
+    {desafio && <form onSubmit={e => { e.preventDefault(); confirmar(); }} className="flex flex-col gap-3">
+      <Campo ref={campoCodigo} rotulo="Código recebido" tamanho="toque" name="codigo" autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required value={codigo} disabled={pendente || estado.encerrado}
+        onChange={e => setCodigo(e.target.value.replace(/\D/g, "").slice(0, 6))} dica="O código mais recente vale por 5 minutos. Após três erros, peça outro." />
+      <Botao type="submit" tamanho="toque" larguraTotal carregando={pendente} textoCarregando="Conferindo..." disabled={codigo.length !== 6 || estado.encerrado}>Confirmar WhatsApp</Botao>
+    </form>}
+    <form onSubmit={e => { e.preventDefault(); enviar(); }} className={`flex flex-col gap-3${desafio ? " border-t border-borda pt-3" : ""}`}>
+      <Campo rotulo="Seu WhatsApp com DDD" tamanho="toque" name="whatsapp" {...fone.campo} disabled={pendente || !!desafio} erro={fone.erro}
+        dica={desafio ? undefined : "Digite o DDD e o celular com 9 dígitos. O +55 já está incluído."} />
+      {!desafio && <p className="text-sm text-texto-suave">Você vai receber um código de seis dígitos, válido por 5 minutos e de uso único.</p>}
       <DesafioSeguranca key={captcha} siteKey={siteKey} onToken={receberToken} />
-      <Botao type="submit" larguraTotal variante={desafio ? "secundario" : "primario"} disabled={!fone.valido || !token || restante > 0 || pendente}>
+      <Botao type="submit" tamanho="toque" larguraTotal variante={desafio ? "secundario" : "primario"} disabled={!fone.valido || !token || restante > 0 || pendente}>
         {restante ? `Novo envio em ${restante}s` : pendente ? "Aguarde..." : desafio ? "Solicitar novo código" : "Enviar código no WhatsApp"}
       </Botao>
+      {desafio && <Botao type="button" variante="texto" tamanho="toque" disabled={pendente} onClick={() => { setDesafio(""); setCodigo(""); setEstado({}); }}>Corrigir número</Botao>}
     </form>
-    {estado.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
-    {estado.aviso && <p role="status" className="rounded-campo bg-fundo p-3 text-sm">{estado.aviso}</p>}
-    {desafio && <form onSubmit={e => { e.preventDefault(); confirmar(); }} className="flex flex-col gap-3 border-t border-borda pt-5">
-      <Campo ref={campoCodigo} rotulo="Código recebido" name="codigo" autoComplete="one-time-code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required value={codigo} disabled={pendente || estado.encerrado}
-        onChange={e => setCodigo(e.target.value.replace(/\D/g, "").slice(0, 6))} dica="Após três erros, será necessário pedir outro código. Um novo envio substitui o código anterior." />
-      <Botao type="submit" larguraTotal carregando={pendente} textoCarregando="Conferindo..." disabled={codigo.length !== 6 || estado.encerrado}>Confirmar WhatsApp</Botao>
-      <Botao type="button" variante="texto" disabled={pendente} onClick={() => { setDesafio(""); setCodigo(""); setEstado({}); }}>Corrigir número</Botao>
-    </form>}
-    <p className="text-sm leading-5 text-texto-suave">Solicite o código apenas para um número seu. Nunca compartilhe o código, nem com alguém que diga fazer parte do Mercado da Região.</p>
+    <p className="text-sm text-texto-suave">Nunca compartilhe o código, nem com quem se diz do Mercado da Região.</p>
   </section>;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { Botao, type VarianteBotao } from "@/components/ui/botao";
+import { Botao, type TamanhoBotao, type VarianteBotao } from "@/components/ui/botao";
 import { MascoteAki } from "./mascote";
 import { abrirAki, akiLigado, EVENTO_ESTADO_AKI, type PedidoAbrirAki } from "./abrir";
 
@@ -11,11 +11,13 @@ export function BotaoAbrirAki({
   pedido,
   variante = "secundario",
   larguraTotal = true,
+  tamanho,
 }: {
   children: ReactNode;
   pedido?: PedidoAbrirAki;
   variante?: VarianteBotao;
   larguraTotal?: boolean;
+  tamanho?: TamanhoBotao;
 }) {
   const [ligado, setLigado] = useState(false);
   useEffect(() => {
@@ -26,7 +28,7 @@ export function BotaoAbrirAki({
   }, []);
   if (!ligado) return null;
   return (
-    <Botao variante={variante} larguraTotal={larguraTotal} icone={<MascoteAki tamanho={20} />} onClick={() => abrirAki(pedido)}>
+    <Botao variante={variante} tamanho={tamanho} larguraTotal={larguraTotal} icone={<MascoteAki tamanho={20} />} onClick={() => abrirAki(pedido)}>
       {children}
     </Botao>
   );

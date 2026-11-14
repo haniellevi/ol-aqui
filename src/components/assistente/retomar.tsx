@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Botao } from "@/components/ui/botao";
+import { Botao, type TamanhoBotao } from "@/components/ui/botao";
 import { comAssistente, destinoRadarAssistente, type BuscaAssistente, type ObjetivoAssistente } from "@/lib/assistente";
 import { linkAvulso, linkPedirRadar } from "@/lib/rotas";
 import { concluirProgresso, marcarConviteVisto, progressoAtual, salvarProgresso } from "./progresso";
@@ -46,7 +46,7 @@ export function ConcluirAssistente({ dono, tentativa, anuncioId }: { dono: strin
   return null;
 }
 
-export function AbrirRadarAssistido({ busca, dono, texto = "Publicar pedido no Radar" }: { busca: BuscaAssistente; dono: string | null; texto?: string }) {
+export function AbrirRadarAssistido({ busca, dono, texto = "Publicar pedido no Radar", tamanho = "grande" }: { busca: BuscaAssistente; dono: string | null; texto?: string; tamanho?: TamanhoBotao }) {
   function abrir(evento: React.MouseEvent<HTMLAnchorElement>) {
     if (evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey) return;
     const tentativa = crypto.randomUUID();
@@ -57,7 +57,7 @@ export function AbrirRadarAssistido({ busca, dono, texto = "Publicar pedido no R
     const params = new URLSearchParams({ objetivo: "procurar", tentativa, radar: "1" });
     window.location.assign(`/assistente?${params}`);
   }
-  return <Botao href={linkPedirRadar(busca.q, busca)} onClick={abrir} tamanho="grande" larguraTotal>{texto}</Botao>;
+  return <Botao href={linkPedirRadar(busca.q, busca)} onClick={abrir} tamanho={tamanho} larguraTotal>{texto}</Botao>;
 }
 
 export function EscolherRadar({ dono, tentativa, href }: { dono: string | null; tentativa: string; href: string }) {
