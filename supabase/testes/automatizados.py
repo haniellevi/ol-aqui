@@ -123,6 +123,36 @@ try:
     print('PASS: SAIR completo: conferência antes de cada envio com as regras de quem recebe, SAIR depois do pode, uma resposta por número e dia (fora da janela), texto com Notificações, sem conta não responde e permissões', flush=True)
     checked(sql((root/'supabase/testes/860_radar_categoria_geral.sql').read_text()))
     print('PASS: pedido do Radar em geral vira sugestão de categoria: uma por pedido, sem dado do comprador, juntar e aprovar movem o pedido, recusar não move, pedido de imóvel do Aki não entra e só o super admin decide', flush=True)
+    checked(sql((root/'supabase/testes/870_whatsapp_voltar.sql').read_text()))
+    print('PASS: VOLTAR pelo WhatsApp: SAIR com texto novo, pergunta uma vez em 7 dias, SIM só com pergunta pendente, VOLTAR com chave desligada, quem nunca teve o aviso, número sem conta, limite de 3 por dia, respostas fora da janela e permissões', flush=True)
+    checked(sql("""
+      insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+        select 'user_870conc', id, 'Loja 870 simultânea', 'Corrente', '5589999971001', now() from microrregioes where slug='corrente-pi';
+      insert into preferencias_avisos(usuario_id,tipo,canal,ligado) values ('user_870conc','pedido_novo','whatsapp',false);
+      insert into whatsapp_respostas(usuario_id,comando) values ('user_870conc','SAIR');
+      update configuracoes set valor='true'::jsonb where chave='radar.whatsapp_ativo' and microrregiao_id is null;
+    """))
+    def pergunta_870(i):
+        return sql("begin; select whatsapp_mensagem_recebida('5589999971001','outra'); select pg_sleep(0.2); commit;")
+    def volta_870(i):
+        return sql("begin; select whatsapp_mensagem_recebida('5589999971001','sim'); select pg_sleep(0.2); commit;")
+    def voltar_870(i):
+        return sql("begin; select whatsapp_mensagem_recebida('5589999971001','voltar'); select pg_sleep(0.2); commit;")
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        perguntas=list(pool.map(pergunta_870,range(4)))
+    for result in perguntas: checked(result)
+    checked(sql("do $$ begin assert (select count(*)=1 from whatsapp_respostas where usuario_id='user_870conc' and comando='PERGUNTA_VOLTAR'), 'pergunta duplicada'; end $$;"))
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        voltas=list(pool.map(volta_870,range(4)))
+    for result in voltas: checked(result)
+    checked(sql("do $$ begin assert (select count(*)=1 from whatsapp_respostas where usuario_id='user_870conc' and comando='VOLTAR'), 'volta duplicada'; assert (select ligado from preferencias_avisos where usuario_id='user_870conc' and tipo='pedido_novo' and canal='whatsapp'), 'aviso não ligou'; assert (select count(*)=1 from whatsapp_fila where chave like 'whatsapp_resposta:5589999971001:voltar:%'), 'confirmação de volta duplicada'; end $$;"))
+    print('PASS: quatro perguntas simultâneas fazem uma pergunta e quatro SIM simultâneos fazem uma volta, com uma confirmação', flush=True)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        voltas_repetidas=list(pool.map(voltar_870,range(4)))
+    for result in voltas_repetidas: checked(result)
+    checked(sql("do $$ begin assert (select count(*)=1 from whatsapp_respostas where usuario_id='user_870conc' and comando='VOLTAR'), 'volta repetida'; assert (select count(*)=1 from whatsapp_fila where chave like 'whatsapp_resposta:5589999971001:ja_ativo:%'), 'já recebe repetido'; end $$;"))
+    checked(sql("update configuracoes set valor='false'::jsonb where chave='radar.whatsapp_ativo' and microrregiao_id is null;"))
+    print('PASS: quatro VOLTAR simultâneos com o aviso já ligado mandam uma resposta de já recebe e não registram volta nova', flush=True)
     print('PASS: fotos na pasta do ID antigo após a troca do Clerk: dono reordena, tira e põe foto nova; foto antiga fora do anúncio, em outro anúncio ou de outra pessoa continua recusada', flush=True)
     checked(sql((root/'supabase/testes/830_leitura_publica_colunas.sql').read_text()))
     print('PASS: leitura pública: visitante só lê colunas das telas públicas, logado sem IP de criação e revisão interna, ID do dono fora do visitante, dona, ajudante, admin e outra pessoa', flush=True)
