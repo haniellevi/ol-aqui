@@ -97,9 +97,9 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
             <span>Vendedor individual verificado</span>
           </span>
         ) : a.vitrine_tipo === "loja" ? (
-          <span className={`flex items-center gap-1 truncate text-legenda leading-[18px] text-texto-suave ${compacto ? "max-md:hidden" : ""}`}>
+          <span className={`flex min-w-0 items-start gap-1 text-legenda leading-[18px] text-texto-suave ${compacto ? "max-md:hidden" : ""}`}>
             {a.vitrine_selo && <ShieldCheck className="size-4 shrink-0 text-verde-escuro" aria-hidden />}
-            <span className="truncate">
+            <span className="min-w-0 [overflow-wrap:anywhere]">
               {formatarNome(a.vitrine_nome)}
               {a.vitrine_selo && <span className="sr-only"> · Loja verificada</span>}
             </span>

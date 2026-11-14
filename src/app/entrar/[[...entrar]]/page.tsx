@@ -26,6 +26,7 @@ const APARENCIA_LOGIN = {
     socialButtonsBlockButton: { minHeight: "2.75rem" },
     socialButtonsBlockButtonText: { fontSize: "0.875rem", fontWeight: 600 },
     dividerText: { fontSize: "0.8125rem" },
+    formFieldRow: { flexDirection: "column", alignItems: "stretch" },
     formFieldLabel: { fontSize: "0.875rem", fontWeight: 600 },
     formButtonPrimary: { minHeight: "2.75rem", fontSize: "0.875rem" },
     footer: { background: "transparent", fontSize: "0.8125rem" },
@@ -56,7 +57,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   const depoisDeCriar = assistido ? destino
     : destino === "/" ? LINK_ENTRAR_PERFIL : `${LINK_ENTRAR_PERFIL}?redirect_url=${encodeURIComponent(destino)}`;
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center justify-center gap-6 px-4 py-8">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 px-4 py-8">
       <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região, aqui a sua cidade aparece" width={152} height={73} priority />
       <p className="max-w-xs text-center text-sm text-texto-suave">
         Vai criar uma conta? Use pelo menos 8 caracteres e escolha uma senha que você não usa em outros sites.

@@ -244,7 +244,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                               </span>
                             )}
                             <span className="flex min-w-0 flex-1 flex-col">
-                              <span className="truncate text-base font-semibold">{formatarNome(a.titulo)}</span>
+                              <span className="text-base font-semibold [overflow-wrap:anywhere]">{formatarNome(a.titulo)}</span>
                               {a.preco_centavos != null && <span className="text-legenda text-texto-suave">{preco(a.preco_centavos)}</span>}
                               {motivo && <SeloCombina motivo={motivo} />}
                             </span>

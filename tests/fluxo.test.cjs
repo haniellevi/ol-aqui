@@ -46,7 +46,7 @@ async function htmlInicio(opcoes, params = {}) {
 }
 const LOJAS = [
   { id: 'l1', slug: 'multi', nome: 'Multi', cidade: 'Corrente', logo_url: null, verificada: true },
-  { id: 'l2', slug: 'rvs', nome: 'RVS TECNOLOGIA', cidade: 'Corrente', logo_url: null, verificada: false },
+  { id: 'l2', slug: 'rvs', nome: 'RVS TECNOLOGIA E COMUNICAÇÃO DO EXTREMO SUL', cidade: 'Corrente', logo_url: null, verificada: false },
 ];
 test('início apresenta região, busca GET acessível e destinos das categorias', async () => {
   const html = await htmlInicio();
@@ -64,7 +64,7 @@ test('início mostra as lojas no topo do feed, com busca, tipo de loja e um só 
   for (const slug of ['multi', 'rvs']) assert.ok(html.includes(`href="/loja/${slug}"`));
   assert.match(html, /aria-label="Loja verificada"/);
   assert.match(html, /id="lojas-da-regiao"/);
-  assert.match(html, /w-full truncate text-xs/);
+  assert.match(html, /\[overflow-wrap:anywhere\][^>]*>Rvs Tecnologia e Comunicação do Extremo Sul<\/span>/);
   const lojasEm = html.indexOf('titulo-lojas');
   assert.ok(lojasEm < html.indexOf('titulo-inicio') && lojasEm < html.indexOf('titulo-recentes'));
   assert.doesNotMatch(html, /Ver todas as lojas/);
