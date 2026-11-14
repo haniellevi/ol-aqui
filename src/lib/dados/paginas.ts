@@ -166,7 +166,7 @@ export async function blocosHome(): Promise<BlocoHome[]> {
   return [...lidos, ...faltando];
 }
 
-/** Anúncio pausado/expirado (ou de loja fora do ar): só a categoria, para mostrar parecidos (T44). */
+/** Anúncio expirado ou de loja fora do ar: só a categoria, para mostrar parecidos (T44). */
 export const anuncioForaDoAr = cache(async (id: string): Promise<{ categoria_slug: string | null; categoria_nome: string | null } | null> =>
   {
     const db = await createClient();

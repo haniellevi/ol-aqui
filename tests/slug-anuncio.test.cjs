@@ -75,7 +75,7 @@ const fixtureAnuncio = require('./fixtures/anuncio.cjs');
 const rota = 'src/app/(anuncio-publico)/anuncio/[idslug]/page.tsx';
 const SLUG = 'geladeira-brastemp-k3x-a1b2';
 const comSlug = { ...fixtureAnuncio, slug: SLUG };
-function pagina(dados) {
+function rotaCarregada(dados, foraDoAr = null) {
   const mocks = {
     'next/navigation': {
       redirect: url => { throw Error(`redirect:${url}`); },
@@ -85,7 +85,7 @@ function pagina(dados) {
     '@clerk/nextjs/server': { auth: async () => ({ userId: null }) },
     '@/lib/dados/favoritos': { ehFavorito: async () => false },
     '@/lib/dados/seguro': { seguro: async (f, d) => { try { return await f(); } catch { return d; } } },
-    '@/lib/dados/paginas': { anuncioForaDoAr: async () => null },
+    '@/lib/dados/paginas': { anuncioForaDoAr: async () => foraDoAr },
     '@/components/paginas/anuncio-fora-do-ar': { AnuncioForaDoAr: () => null },
     './conteudo-anuncio': { ConteudoAnuncio: () => null },
     '@/lib/dados/anuncios': {
@@ -94,8 +94,9 @@ function pagina(dados) {
       buscarAnuncios: async () => ({ anuncios: [] }),
     },
   };
-  return carregar(rota, mocks).default;
+  return carregar(rota, mocks);
 }
+const pagina = dados => rotaCarregada(dados).default;
 const abrir = (Pagina, idslug) => Pagina({ params: Promise.resolve({ idslug }) });
 
 test('rota de anúncio decide o 404 antes de qualquer tela de carregamento', () => {
@@ -135,4 +136,20 @@ test('link excluído vira 404 pelo slug e pelo UUID mesmo quando o dono consegue
   for (const endereco of [SLUG, `${fixtureAnuncio.id}-${slugDoTitulo(fixtureAnuncio.titulo)}`]) {
     await assert.rejects(abrir(excluido, endereco), { message: '404' });
   }
+});
+
+test('link pausado vira 404 pelo slug e pelo UUID mesmo para quem pode editar', async () => {
+  const { default: Pagina, generateMetadata } = rotaCarregada({ ...comSlug, status: 'pausado' });
+  for (const endereco of [SLUG, `${fixtureAnuncio.id}-${slugDoTitulo(fixtureAnuncio.titulo)}`]) {
+    await assert.rejects(abrir(Pagina, endereco), { message: '404' });
+    const meta = await abrir(generateMetadata, endereco);
+    assert.equal(meta.title, 'Anúncio não encontrado');
+    assert.equal(meta.robots.index, false);
+  }
+});
+
+test('anúncio expirado ainda mostra a página fora do ar para visitantes', async () => {
+  const { default: Pagina } = rotaCarregada(null, { categoria_slug: 'moveis', categoria_nome: 'Móveis' });
+  const el = await abrir(Pagina, SLUG);
+  assert.equal(el.props.categoriaSlug, 'moveis');
 });

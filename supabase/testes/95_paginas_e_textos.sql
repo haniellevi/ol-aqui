@@ -153,7 +153,7 @@ reset role;
 select chave, ativo, pode_desligar from home_blocos where chave in ('destaques','recentes','radar') order by chave;
 update home_blocos set ativo=true, ordem=30, titulo='Não achou o que queria?', botao='Pedir no Radar' where chave='radar';
 
-\echo '[18] anuncio que saiu do ar: pausado devolve so a categoria; ativo e inexistente nao devolvem nada (visitante pode chamar)'
+\echo '[18] anuncio que saiu do ar: expirado devolve so a categoria; ativo, pausado e inexistente nao devolvem nada'
 update configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 insert into vitrines_lojas (dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo) values ('user_b95',:'reg','beto-95','Beto','Corrente','5589999995002','pf') returning id as vit_b \gset
 select id as cat_moveis from categorias where slug='sofas-e-poltronas' \gset
@@ -163,6 +163,9 @@ insert into anuncios (vitrine_id, categoria_id, titulo, cidade, preco_centavos, 
 set role anon; select set_config('request.jwt.claim.role','anon',false), set_config('request.jwt.claim.sub','',false) \g /dev/null
 select count(*) as ativo_nao_aparece from anuncio_fora_do_ar(:'anu_b');
 reset role; update anuncios set status='pausado' where id=:'anu_b';
+set role anon;
+select count(*) as pausado_nao_aparece from anuncio_fora_do_ar(:'anu_b');
+reset role; update anuncios set status='expirado' where id=:'anu_b';
 set role anon;
 select * from anuncio_fora_do_ar(:'anu_b');
 select count(*) as inexistente from anuncio_fora_do_ar(gen_random_uuid());

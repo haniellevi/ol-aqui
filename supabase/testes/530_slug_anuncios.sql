@@ -63,7 +63,8 @@ do $$ declare s1 text; sem text; pau text; achado uuid; detalhe text; begin
   select anuncio_id_por_slug(sem) into achado;
   assert achado is null, 'Anúncio em análise apareceu pelo link curto';
   select anuncio_id_por_slug(pau) into achado;
-  assert achado = '53100000-0000-4000-a000-000000000006', 'Anúncio pausado deveria cair no "fora do ar"';
+  assert achado = '53100000-0000-4000-a000-000000000006', 'O resolvedor deve reconhecer o endereço fixo do pausado';
+  assert not exists (select 1 from anuncio_fora_do_ar(achado)), 'Anúncio pausado usou a página "fora do ar"';
   select anuncio_id_por_slug('nao-existe-0000') into achado;
   assert achado is null, 'Endereço inexistente achou anúncio';
   select anuncio_id_por_slug(null) into achado;
@@ -72,6 +73,14 @@ do $$ declare s1 text; sem text; pau text; achado uuid; detalhe text; begin
   assert detalhe = s1, 'anuncio_publico não devolve o endereço';
   reset role;
 end $$;
+
+-- O aviso de fora do ar continua disponível para anúncios expirados.
+update anuncios set status='expirado' where id='53100000-0000-4000-a000-000000000006';
+set local role anon;
+do $$ begin
+  assert exists (select 1 from anuncio_fora_do_ar('53100000-0000-4000-a000-000000000006')), 'Anúncio expirado perdeu o aviso';
+end $$;
+reset role;
 
 -- [5] Busca e destaques trazem o endereço nos cartões (visitante).
 do $$ declare s1 text; achado text; begin
