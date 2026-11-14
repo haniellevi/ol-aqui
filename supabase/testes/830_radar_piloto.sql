@@ -188,6 +188,23 @@ reset role;
 select pg_temp.confere830((select count(*) = 0 from whatsapp_fila where chave like 'radar_pedido_novo:' || :'pedido4' || ':%'), 'chave geral desligada: pedido novo não entra na fila mesmo com a loja de acordo');
 update configuracoes set valor = 'true'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
 
+-- [6c] Na hora de enviar, o aviso confere de novo se o pedido ainda aceita proposta (prazo e limite).
+update whatsapp_fila set enviar_apos = (:'t0'::timestamptz) - interval '2 minutes' where chave = 'radar_pedido_novo:' || :'pedido3' || ':' || :'vit1';
+update radar_pedidos set propostas_ate = (:'t0'::timestamptz) - interval '1 minute' where id = :'pedido3'::uuid;
+delete from pegos830;
+insert into pegos830 select * from whatsapp_fila_pegar_em(5, :'t0'::timestamptz);
+select pg_temp.confere830((select estado = 'cancelada' and erro = 'pedido_fechado' from whatsapp_fila where chave = 'radar_pedido_novo:' || :'pedido3' || ':' || :'vit1'), 'prazo de propostas acabou: o aviso do Radar é cancelado');
+update whatsapp_fila set estado = 'pendente', erro = null where chave = 'radar_pedido_novo:' || :'pedido3' || ':' || :'vit1';
+update radar_pedidos set propostas_ate = (:'t0'::timestamptz) + interval '1 day', total_propostas = max_propostas where id = :'pedido3'::uuid;
+delete from pegos830;
+insert into pegos830 select * from whatsapp_fila_pegar_em(5, :'t0'::timestamptz);
+select pg_temp.confere830((select estado = 'cancelada' and erro = 'pedido_fechado' from whatsapp_fila where chave = 'radar_pedido_novo:' || :'pedido3' || ':' || :'vit1'), 'limite de propostas cheio: o aviso do Radar é cancelado');
+update whatsapp_fila set estado = 'pendente', erro = null where chave = 'radar_pedido_novo:' || :'pedido3' || ':' || :'vit1';
+update radar_pedidos set total_propostas = 0 where id = :'pedido3'::uuid;
+delete from pegos830;
+insert into pegos830 select * from whatsapp_fila_pegar_em(5, :'t0'::timestamptz);
+select pg_temp.confere830((select count(*) = 1 from pegos830 where link = '/radar/' || :'pedido3'), 'controle: pedido que ainda aceita proposta sai');
+
 -- [7] Janela de 8h às 20h e reenvio, com instantes fixos.
 select pg_temp.confere830(whatsapp_reenvio_em('2026-11-12 19:58:00-03') = '2026-11-13 08:00:00-03', 'reenvio de 19:58 cai às 8h do dia seguinte (20h03 está fora)');
 select pg_temp.confere830(whatsapp_reenvio_em('2026-11-12 20:03:00-03') = '2026-11-13 08:00:00-03', 'reenvio de 20h03 cai às 8h do dia seguinte');
