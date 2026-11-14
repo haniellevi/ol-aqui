@@ -23,14 +23,16 @@ function mensagemDecisao(sp: Busca): string {
   const decididas = numeroDoResumo(sp.decididas);
   const movidos = numeroDoResumo(sp.movidos);
   const revisar = numeroDoResumo(sp.revisar);
+  const pedidos = numeroDoResumo(sp.pedidos);
   if (feito === "recusar") return `${inteiro(decididas)} ${decididas === 1 ? "sugestão recusada" : "sugestões recusadas"}. Os anúncios continuam na categoria atual.`;
   const quantas = `${inteiro(decididas)} ${decididas === 1 ? "sugestão decidida" : "sugestões decididas"}`;
   const mudaram = `${inteiro(movidos)} ${movidos === 1 ? "anúncio mudou" : "anúncios mudaram"} de categoria`;
   const revisao = revisar
     ? ` ${inteiro(revisar)} ${revisar === 1 ? "anúncio ficou" : "anúncios ficaram"} onde ${revisar === 1 ? "estava" : "estavam"}: a categoria pede informações que ${revisar === 1 ? "ele não tem" : "eles não têm"}. O vendedor foi avisado.`
     : "";
+  const doRadar = pedidos ? ` ${inteiro(pedidos)} ${pedidos === 1 ? "pedido do Radar mudou" : "pedidos do Radar mudaram"} de categoria.` : "";
   const inicio = feito === "aprovar" ? "Categoria criada. " : "Sugestões unidas à categoria escolhida. ";
-  return `${inicio}${quantas}. ${mudaram}.${revisao}`;
+  return `${inicio}${quantas}. ${mudaram}.${doRadar}${revisao}`;
 }
 
 // Tela 9 · Categorias sugeridas: o que os vendedores pediram e não existe na lista. O admin aprova (cria),
@@ -84,7 +86,7 @@ export default async function CategoriasSugeridasPage({ searchParams }: { search
         <ArrowLeft className="size-5" aria-hidden />
         Todas as categorias
       </Link>
-      <Titulo sub="Categorias que os vendedores pediram e que ainda não existem. Criar cria a categoria nova. Juntar move os anúncios para uma que já existe. Recusar deixa tudo como está. Quem decide move os anúncios e avisa o vendedor.">
+      <Titulo sub="Categorias que os vendedores pediram e que ainda não existem, e pedidos do Radar feitos em Geral. Criar cria a categoria nova. Juntar move os anúncios e os pedidos para uma que já existe. Recusar deixa tudo como está. Quem decide move os anúncios e avisa o vendedor.">
         Categorias sugeridas
       </Titulo>
 

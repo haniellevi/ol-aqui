@@ -6,6 +6,7 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
 
 - **Pedido só por propostas com prazo.** O formulário do site não oferece mais "Podem me chamar no WhatsApp". O servidor recusa esse modo no pedido do site (`criar_pedido_radar_site`) e na validação do formulário. Pedidos antigos continuam como estavam.
 - **Categoria obrigatória no pedido do site.** Vale no formulário, na validação do servidor e na função do banco. Uma subcategoria só vale se a categoria de cima também estiver ativa.
+- **Pedido do Radar em "geral" vira sugestão de categoria.** Pedido sem categoria (Aki) ou em Outros/Diversos (site) entra em Categorias sugeridas, marcado como "Pedido do Radar", com link para o pedido. Só o título vai junto, sem dados do comprador. A equipe cria categoria, junta (o pedido muda de categoria) ou recusa (nada muda). Um pedido tem no máximo uma sugestão. Migração `supabase/migrations/20261125050000_radar_categoria_geral.sql`; teste `supabase/testes/860_radar_categoria_geral.sql`.
 - **Aki:** o pedido feito pelo Aki também sai só com propostas, com prazo de 72 horas. A mensagem de sucesso diz "vão mandar propostas aqui".
 - **Aviso de pedido novo por WhatsApp** (Minha conta > Notificações):
   - desligado por padrão e só para a loja que ligou de propósito;
@@ -40,7 +41,7 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
 
 - **SAIR não alcança a mensagem que já foi marcada para envio** (janela de segundos entre pegar e enviar). Aceito para o piloto.
 - **Conversa `@lid` é ignorada pelo webhook.** Se a Evolution mandar SAIR por esse tipo de conversa, o pedido de saída não vale. Conferir no passo 5.
-- **Aki sem categoria escolhida:** o Aki ainda usa o tipo antigo (imóvel, veículo, móvel ou geral) e cai em "geral" quando falta. A categoria obrigatória vale só no formulário do site. Decidir se o Aki também deve pedir categoria.
+- **Aki sem categoria escolhida:** o Aki ainda usa o tipo antigo (imóvel, veículo, móvel ou geral) e cai em "geral" quando falta. A categoria obrigatória vale só no formulário do site. Pedido do Aki em "geral" já aparece para a equipe em Categorias sugeridas. Decidir se o Aki também deve pedir categoria.
 - **Número separado para os avisos:** recomendado, não configurado.
 - **Linha `Co-Authored-By` dos commits:** os 5 primeiros commits dizem "Claude Opus 5.5"; o modelo em uso é "Claude Haiku 5.5". Decidir qual vale antes de qualquer push (reescrever commit só com aprovação).
 - **Nada foi testado com a Evolution de verdade.** O webhook foi testado com banco simulado.

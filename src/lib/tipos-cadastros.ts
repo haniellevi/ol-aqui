@@ -64,6 +64,10 @@ export type GrupoSugestao = {
   ultima: string;
   /** Textos normalizados de outros grupos pendentes parecidos (erro de digitação). */
   parecidas: string[];
+  /** Quantos desses pedidos vieram do Radar (pedido em "geral"). */
+  radar?: number;
+  /** Até 10 pedidos do Radar do grupo, os mais novos primeiro (id do pedido). */
+  pedidos_radar?: string[];
 };
 
 /** Categoria em árvore (até 3 níveis): nivel 1 = grande, 2 = sub, 3 = tipo. Filhas na ordem do painel. */
