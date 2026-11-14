@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { alternarFavorito } from "@/app/(publico)/anuncio/[idslug]/actions";
+import { alternarFavorito } from "@/app/(anuncio-publico)/anuncio/[idslug]/actions";
 import { ehUuid } from "@/lib/formato";
 import { avisarFavorito } from "@/components/anuncio/coracao-card";
 import { lerPendente, limparPendente } from "@/lib/salvar-pendente";

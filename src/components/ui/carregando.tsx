@@ -46,21 +46,6 @@ export function CarregandoLista({ rotulo = "Carregando", linhas = 5 }: { rotulo?
   );
 }
 
-export function CarregandoAnuncio() {
-  return (
-    <Moldura rotulo="Carregando o anúncio" className="mx-auto grid w-full max-w-6xl gap-5 pb-8 md:grid-cols-[3fr_2fr] md:px-4 md:py-4">
-      <Skeleton className="aspect-square w-full rounded-none md:rounded-card" />
-      <div className="flex flex-col gap-3 px-4 md:px-0">
-        <Skeleton className="h-5 w-4/5" />
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="mt-2 h-10 w-full" />
-        <Skeleton className="h-24 w-full" />
-      </div>
-    </Moldura>
-  );
-}
-
 // Dentro do painel: o <main> já vem do layout.
 export function CarregandoPainel() {
   return (

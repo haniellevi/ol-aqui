@@ -92,7 +92,7 @@ test('favoritos: botão do Radar só com a vitrine nova ligada',async()=>{
  const fora=await pagina({radar:true,data:[{...linha,anuncios:null}]});assert.match(fora,/href="\/radar\/pedir"/);assert.match(fora,/aria-label="Estou procurando algo parecido"/);assert.match(fora,/Peça parecido no Radar/);
 });
 test('anúncio: estado desconhecido bloqueia alteração e oferece consulta novamente',()=>{
- const {BarraContato}=carregar('src/app/(publico)/anuncio/[idslug]/barra-contato.tsx',{'next/navigation':nav,'./actions':{}});
+ const {BarraContato}=carregar('src/app/(anuncio-publico)/anuncio/[idslug]/barra-contato.tsx',{'next/navigation':nav,'./actions':{}});
  const html=render(React.createElement(BarraContato,{anuncioId:id,favoritoInicial:null,podeFavoritar:true,logado:true,whatsappHref:null,entrarHref:'/entrar'}));
  assert.match(html,/Não conseguimos consultar seu favorito/);assert.match(html,/Tentar novamente/);assert.match(html,/Ver meus favoritos/);assert.match(html,/disabled=""/);assert.doesNotMatch(html,/aria-label="Salvar nos favoritos"/);
 });

@@ -1,5 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const { existsSync } = require('node:fs');
+const path = require('node:path');
 const { carregar } = require('./carregar.cjs');
 const { linkAnuncio, idDoLinkAnuncio, slugDoTitulo, slugTexto, ehSlugAnuncio } = carregar('src/lib/formato.ts');
 const { slugDe } = carregar('src/lib/admin/regras-cadastros.ts');
@@ -70,7 +72,7 @@ test('base longa é cortada em 60 letras sem hífen no fim', () => {
 
 // Rota /anuncio/[idslug]: link curto, link antigo com 308 e anúncio que não existe.
 const fixtureAnuncio = require('./fixtures/anuncio.cjs');
-const rota = 'src/app/(publico)/anuncio/[idslug]/page.tsx';
+const rota = 'src/app/(anuncio-publico)/anuncio/[idslug]/page.tsx';
 const SLUG = 'geladeira-brastemp-k3x-a1b2';
 const comSlug = { ...fixtureAnuncio, slug: SLUG };
 function pagina(dados) {
@@ -96,6 +98,14 @@ function pagina(dados) {
 }
 const abrir = (Pagina, idslug) => Pagina({ params: Promise.resolve({ idslug }) });
 
+test('rota de anúncio decide o 404 antes de qualquer tela de carregamento', () => {
+  let pasta = path.dirname(rota);
+  while (pasta !== 'src') {
+    assert.equal(existsSync(path.join(pasta, 'loading.tsx')), false, pasta);
+    pasta = path.dirname(pasta);
+  }
+});
+
 test('link curto abre o anúncio sem redirecionar', async () => {
   const el = await abrir(pagina(comSlug), SLUG);
   assert.equal(el.props.a.slug, SLUG);
@@ -118,4 +128,11 @@ test('link antigo com título errado, sem endereço curto, é corrigido com redi
 
 test('endereço curto que não existe vira "não encontrado"', async () => {
   await assert.rejects(abrir(pagina(comSlug), 'nao-existe-0000'), { message: '404' });
+});
+
+test('link excluído vira 404 pelo slug e pelo UUID mesmo quando o dono consegue resolver o slug', async () => {
+  const excluido = pagina(null);
+  for (const endereco of [SLUG, `${fixtureAnuncio.id}-${slugDoTitulo(fixtureAnuncio.titulo)}`]) {
+    await assert.rejects(abrir(excluido, endereco), { message: '404' });
+  }
 });

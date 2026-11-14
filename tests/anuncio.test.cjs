@@ -4,7 +4,7 @@ const React = require('react');
 const { renderToStaticMarkup: render } = require('react-dom/server');
 const { carregar } = require('./carregar.cjs');
 const anuncio = require('./fixtures/anuncio.cjs');
-const caminho = 'src/app/(publico)/anuncio/[idslug]/';
+const caminho = 'src/app/(anuncio-publico)/anuncio/[idslug]/';
 const navegacao = { useRouter: () => ({ push() {} }), unstable_rethrow() {}, redirect: url => { throw Error(`redirect:${url}`); }, notFound: () => { throw Error('404'); } };
 const mocks = { 'next/navigation': navegacao, './actions': { registrarEvento: async () => true, alternarFavorito: async () => ({ ok: true }), denunciarAnuncio: async () => null } };
 const { ConteudoAnuncio } = carregar(caminho + 'conteudo-anuncio.tsx', mocks);
