@@ -9,7 +9,6 @@ import { caminhoInterno } from "@/lib/caminho-seguro";
 import { configuracaoWhatsapp } from "@/lib/whatsapp/servico";
 import { ConfirmarWhatsapp } from "@/components/conta/confirmar-whatsapp";
 import { Botao } from "@/components/ui/botao";
-import { LINK_AKI } from "@/lib/rotas";
 import { WHATSAPP_JA_VINCULADO } from "@/lib/erros";
 import { Aviso } from "@/components/conta/aviso";
 export const metadata: Metadata = { title: "Confirmar WhatsApp", robots: { index: false } };
@@ -22,9 +21,6 @@ export default async function ConfirmarCelular({ searchParams }: { searchParams:
   const parametros = await searchParams;
   const solicitado = typeof parametros.destino === "string" ? caminhoInterno(parametros.destino) : null;
   const destino = solicitado && !solicitado.startsWith("/confirmar-celular") ? solicitado : "/minha-conta/dados";
-  const retorno = new URLSearchParams({ destino });
-  if (parametros.aviso === "numero_vinculado") retorno.set("aviso", parametros.aviso);
-  const ajuda = new URLSearchParams({ ajuda: "whatsapp", voltar: `/confirmar-celular?${retorno}` });
   let siteKey = "";
   try { siteKey = configuracaoWhatsapp().siteKey; } catch { /* Indisponível: nunca aceitar um telefone sem confirmação. */ }
   return <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 py-8 sm:py-12">
@@ -38,12 +34,5 @@ export default async function ConfirmarCelular({ searchParams }: { searchParams:
     </nav>
     {parametros.aviso === "numero_vinculado" && <Aviso tipo="atencao">{WHATSAPP_JA_VINCULADO} Use outro número ou procure o suporte.</Aviso>}
     {siteKey ? <ConfirmarWhatsapp siteKey={siteKey} destino={destino} numero={conta?.perfil.whatsapp ?? ""} /> : <div role="status" className="rounded-card bg-cartao p-5 shadow-1"><h2 className="font-bold">Confirmação temporariamente indisponível</h2><p className="mt-2">Não conseguimos enviar códigos agora. Seus dados continuam guardados. Tente novamente mais tarde.</p></div>}
-    <section aria-labelledby="titulo-ajuda-codigo" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-      <h2 id="titulo-ajuda-codigo" className="text-lg font-semibold">Precisa de ajuda com o código?</h2>
-      <p>O Merc pode orientar você pelo bate-papo, mesmo antes de confirmar seu WhatsApp.</p>
-      <Botao href={`${LINK_AKI}?${ajuda}`} larguraTotal>Abrir bate-papo com o Merc</Botao>
-      <p className="text-sm text-texto-suave">Digite o código somente na tela de confirmação.</p>
-    </section>
-    <Botao href="/ajuda" variante="texto">Abrir a Central de ajuda</Botao>
   </main>;
 }
