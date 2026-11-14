@@ -129,6 +129,7 @@ test('confirmar a loja escolhe a própria mesmo que exista loja ajudada', async 
 test('na venda assistida a pessoa pode escolher entre dois rascunhos ou criar outro', async () => {
   const { renderToStaticMarkup } = require('react-dom/server');
   const { default: pagina } = carregar('src/app/(conta)/anunciar/page.tsx', {
+    '@/lib/dados/config': { lerConfigNumero: async () => 1 },
     '@/lib/dados/conta': { contaDaLoja: async () => ({ perfil: { id: 'user_a' }, vitrine: { status: 'ativa', tipo: 'loja' }, podePublicar: true }) },
     '@/lib/dados/anuncios': { anunciosDaLoja: async () => [
       { id: tentativa, status: 'rascunho', titulo: 'Mesa de madeira', fotos: [], atualizado_em: new Date().toISOString() },
@@ -160,4 +161,14 @@ test('retomar anúncio com pagamento pendente aponta para o checkout existente',
   let chegou = false;
   RetomarAnuncio({ dono: 'user_a', tentativa, rascunhos: [anterior], publicados: [] });
   assert.equal(chegou, true);
+});
+
+test('atalho de revisão preserva a origem e a tentativa ao trocar de etapa', () => {
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const { CabecalhoPasso } = carregar('src/components/anunciar/cabecalho-passo.tsx');
+  const html = renderToStaticMarkup(CabecalhoPasso({
+    passo: 'preco', id: anterior, editar: false, daRevisao: true, assistente: tentativa, titulo: 'Quanto você quer?',
+  }));
+  assert.ok(html.includes('/anunciar/fotos?rascunho=' + anterior + '&amp;origem=revisao&amp;assistente=' + tentativa));
+  assert.ok(html.includes('/anunciar/revisar?rascunho=' + anterior + '&amp;assistente=' + tentativa));
 });

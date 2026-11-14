@@ -40,6 +40,7 @@ export default async function PassoDetalhes({ searchParams }: { searchParams: Pa
         subtitulo={nome ?? undefined}
       />
       <FormDetalhes
+        assistente={assistente}
         id={anuncio.id}
         categoriaId={anuncio.categoria_id}
         editar={editar}
@@ -50,7 +51,7 @@ export default async function PassoDetalhes({ searchParams }: { searchParams: Pa
         campos={campos}
         atributos={anuncio.atributos}
       />
-      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho />}
+      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio tamanho="toque" id={anuncio.id} titulo={anuncio.titulo} rascunho />}
     </CorpoPasso>
   );
 }

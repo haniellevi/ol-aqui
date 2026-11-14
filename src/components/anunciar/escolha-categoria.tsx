@@ -28,6 +28,7 @@ export function EscolhaCategoria({
   id,
   editar,
   daRevisao,
+  assistente,
   formId,
   arvore,
   selecionadaId,
@@ -36,6 +37,7 @@ export function EscolhaCategoria({
   id: string;
   editar: boolean;
   daRevisao?: boolean;
+  assistente?: string;
   formId: string;
   arvore: CategoriaComFilhas[];
   selecionadaId: string | null;
@@ -88,6 +90,7 @@ export function EscolhaCategoria({
       </p>
       {busca.trim().length >= 2 && (
         <Botao
+          tamanho="toque"
           variante="secundario"
           className="self-start"
           onClick={() => setSugestao(busca.trim().replace(/\s+/g, " ").slice(0, 60))}
@@ -95,13 +98,13 @@ export function EscolhaCategoria({
           Sugerir a categoria “{busca.trim().slice(0, 60)}”
         </Botao>
       )}
-      <Botao variante="texto" className="self-start" onClick={() => setBusca("")}>
+      <Botao tamanho="toque" variante="texto" className="self-start" onClick={() => setBusca("")}>
         Ver todas as categorias
       </Botao>
       {outros && diversos && !daIA.some((x) => x.no.id === diversos.id) && (
         <ul>
           <li>
-            <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-card border border-borda bg-cartao p-3 text-base font-semibold hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro">
+            <label className="flex min-h-toque cursor-pointer items-center gap-2 rounded-campo border border-borda bg-cartao px-3 py-2 text-base font-semibold hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro">
               <input
                 type="radio"
                 name="escolha-categoria"
@@ -119,7 +122,8 @@ export function EscolhaCategoria({
   );
 
   return (
-    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-5">
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-4">
+      {assistente && <input type="hidden" name="assistente" value={assistente} />}
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
       <input type="hidden" name="categoria_id" value={filhaId ?? ""} />
@@ -146,7 +150,7 @@ export function EscolhaCategoria({
             enterKeyHint="search"
             maxLength={MAX_TITULO}
             aria-describedby="ajuda-busca-categoria"
-            className={`${classesCampo} h-11 pl-10 md:h-10`}
+            className={`${classesCampo} h-toque! pl-10`}
           />
         </div>
         <p id="ajuda-busca-categoria" className="text-sm text-texto-suave">
@@ -160,7 +164,7 @@ export function EscolhaCategoria({
           <p className="text-sm text-texto-suave">
             Sugestão: <strong>{sugestao}</strong>
           </p>
-          <Botao variante="texto" className="self-start" onClick={() => setSugestao(null)}>
+          <Botao tamanho="toque" variante="texto" className="self-start" onClick={() => setSugestao(null)}>
             Tirar a sugestão
           </Botao>
         </div>

@@ -24,6 +24,7 @@ export default async function PassoLocal({ searchParams }: { searchParams: Param
       {assistente && !editar && !equipe && <RegistrarAnuncio dono={conta.perfil.id} tentativa={assistente} id={anuncio.id} passo="local" />}
       <CabecalhoPasso assistente={assistente} equipe={equipe} daRevisao={daRevisao} passo="local" id={anuncio.id} editar={editar} formId={FORM} titulo="Onde está?" />
       <FormLocal
+        assistente={assistente}
         id={anuncio.id}
         editar={editar}
         daRevisao={daRevisao}
@@ -32,7 +33,7 @@ export default async function PassoLocal({ searchParams }: { searchParams: Param
         cidadeInicial={cidadeInicial}
         bairroInicial={bairroInicial}
       />
-      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho />}
+      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio tamanho="toque" id={anuncio.id} titulo={anuncio.titulo} rascunho />}
     </CorpoPasso>
   );
 }

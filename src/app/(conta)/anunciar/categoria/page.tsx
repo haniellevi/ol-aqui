@@ -35,15 +35,15 @@ export default async function PassoCategoria({ searchParams }: { searchParams: P
       />
       {sugestao && <SugestaoPendente id={anuncio.id} editar={editar} texto={sugestao.texto} />}
       {arvore.length ? (
-        <EscolhaCategoria id={anuncio.id} editar={editar} daRevisao={daRevisao} formId={FORM} arvore={arvore} selecionadaId={anuncio.categoria_id} tituloAtual={anuncio.titulo} />
+        <EscolhaCategoria assistente={assistente} id={anuncio.id} editar={editar} daRevisao={daRevisao} formId={FORM} arvore={arvore} selecionadaId={anuncio.categoria_id} tituloAtual={anuncio.titulo} />
       ) : (
         <Vazio titulo="Não conseguimos abrir as categorias" texto="Confira sua internet e tente de novo. O que você já fez está salvo.">
-          <Botao href={urlPasso("categoria", anuncio.id, editar, daRevisao, assistente)} larguraTotal>
+          <Botao tamanho="toque" href={urlPasso("categoria", anuncio.id, editar, daRevisao, assistente)} larguraTotal>
             Tentar de novo
           </Botao>
         </Vazio>
       )}
-      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho />}
+      {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio tamanho="toque" id={anuncio.id} titulo={anuncio.titulo} rascunho />}
     </CorpoPasso>
   );
 }

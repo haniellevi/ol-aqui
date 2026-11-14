@@ -11,12 +11,13 @@ import { descartarAnuncio } from "@/app/(conta)/minha-conta/anuncios/actions";
 // Etapa P6: no fim de cada passo do Anunciar, "Descartar rascunho"; no fim da edição de um
 // anúncio publicado, "Excluir anúncio". Os dois mandam para a lixeira (30 dias, com restauração),
 // com o mesmo diálogo do menu "Mais" de Meus anúncios, e abrem a aba Lixeira com o aviso.
-export function DescartarAnuncio({ id, titulo, rascunho, temPagamento = false }: {
+export function DescartarAnuncio({ id, titulo, rascunho, temPagamento = false, tamanho }: {
   id: string;
   titulo: string | null;
   /** Rascunho: "Descartar rascunho". Publicado (editando): "Excluir anúncio". */
   rascunho: boolean;
   temPagamento?: boolean;
+  tamanho?: "toque";
 }) {
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
@@ -65,7 +66,7 @@ export function DescartarAnuncio({ id, titulo, rascunho, temPagamento = false }:
 
   return (
     <div className="flex flex-col items-start">
-      <Botao variante="texto" className="text-perigo" icone={<Trash2 />} disabled={pendente} onClick={abrir}>{rotulo}</Botao>
+      <Botao tamanho={tamanho} variante="texto" className="text-perigo" icone={<Trash2 />} disabled={pendente} onClick={abrir}>{rotulo}</Botao>
       <dialog ref={dialogo} role="alertdialog" aria-labelledby={`descartar-${id}`} aria-describedby={`descartar-texto-${id}`}
         onCancel={(e) => { if (trava.current) e.preventDefault(); }}
         className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%_-_2rem)] max-w-sm overflow-y-auto rounded-folha bg-cartao p-5 text-texto shadow-2 backdrop:bg-beringela/50">
@@ -85,8 +86,8 @@ export function DescartarAnuncio({ id, titulo, rascunho, temPagamento = false }:
           </Alert>
         )}
         <div className="mt-4 flex flex-col gap-2">
-          <Botao variante="perigo" larguraTotal disabled={pendente} carregando={pendente} onClick={confirmar}>{rotulo}</Botao>
-          <Botao ref={cancelar} variante="secundario" larguraTotal disabled={pendente} onClick={() => dialogo.current?.close()}>Cancelar</Botao>
+          <Botao tamanho="toque" variante="perigo" larguraTotal disabled={pendente} carregando={pendente} onClick={confirmar}>{rotulo}</Botao>
+          <Botao tamanho="toque" ref={cancelar} variante="secundario" larguraTotal disabled={pendente} onClick={() => dialogo.current?.close()}>Cancelar</Botao>
         </div>
       </dialog>
     </div>
