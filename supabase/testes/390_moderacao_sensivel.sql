@@ -1,5 +1,6 @@
 \set ON_ERROR_STOP on
 begin;
+create function pg_temp.revisao_da(p uuid) returns boolean language sql security definer set search_path = public as $$ select revisao_manual_admin from anuncios where id = p $$;
 create function pg_temp.confere(ok boolean, caso text) returns void language plpgsql as $$
 begin if ok is distinct from true then raise exception 'FALHOU: %', caso; end if; end $$;
 create function pg_temp.recusa(comando text, codigo text) returns void language plpgsql as $$
@@ -94,7 +95,7 @@ set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_mod390';
 select moderar_anuncio('89000000-0000-4000-a000-000000000003','aprovar');
-select pg_temp.confere((select status='ativo' and motivo_analise is null and not revisao_manual_admin from anuncios where id='89000000-0000-4000-a000-000000000003'),'equipe consegue aprovar após conferência');
+select pg_temp.confere((select status='ativo' and motivo_analise is null from anuncios where id='89000000-0000-4000-a000-000000000003') and not pg_temp.revisao_da('89000000-0000-4000-a000-000000000003'),'equipe consegue aprovar após conferência');
 set local request.jwt.claim.sub='user_loja';
 update anuncios set preco_centavos=1 where id='89000000-0000-4000-a000-000000000003';
 select pg_temp.confere((select status='ativo' from anuncios where id='89000000-0000-4000-a000-000000000003'),'editar só preço preserva aprovação humana');

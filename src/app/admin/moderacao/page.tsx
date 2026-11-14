@@ -49,7 +49,7 @@ export default async function ModeracaoPage({
       .order("atualizado_em", { ascending: false })
       .limit(BANNERS_NA_TELA),
     supabase.from("moderacao_ia").select("anuncio_id, estado, motivo, concluido_em, criado_em").order("criado_em", { ascending: false }).limit(100),
-    supabase.rpc("config", { p_chave: "moderacao.ia_ativa", p_microrregiao: null, p_padrao: false }),
+    supabase.rpc("moderacao_ia_ligada"),
   ]);
   const banners = bannersR.data ?? [];
   const anuncios = anunciosR.data ?? [];

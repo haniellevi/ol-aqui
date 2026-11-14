@@ -8,10 +8,10 @@ values ('70000000-0000-4000-a000-000000000001',:'loja','rascunho',:'cat','Mesa d
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_loja';
-do $$ declare a anuncios; anterior timestamptz; begin
+do $$ declare a record; anterior timestamptz; begin
  assert publicar_anuncio('70000000-0000-4000-a000-000000000001')='ativo';
  assert mover_anuncio_lixeira('70000000-0000-4000-a000-000000000001')='excluido';
- select * into a from anuncios where id='70000000-0000-4000-a000-000000000001';
+ select id, status_antes_exclusao, excluido_em, fotos into a from anuncios where id='70000000-0000-4000-a000-000000000001';
  assert a.status_antes_exclusao='ativo' and a.excluido_em is not null and cardinality(a.fotos)=1;
  anterior:=a.excluido_em;
  assert mover_anuncio_lixeira(a.id)='excluido';
@@ -39,12 +39,12 @@ end $$;
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_loja';
-do $$ declare a anuncios; begin
+do $$ declare a record; begin
  assert restaurar_anuncio('70000000-0000-4000-a000-000000000001')='pausado', 'Restaurar não publica';
  assert restaurar_anuncio('70000000-0000-4000-a000-000000000001')='pausado', 'Restaurar idempotente';
  assert publicar_anuncio('70000000-0000-4000-a000-000000000001')='ativo';
  assert marcar_vendido('70000000-0000-4000-a000-000000000001',true)='vendido';
- select * into a from anuncios where id='70000000-0000-4000-a000-000000000001';
+ select id, vendido_em into a from anuncios where id='70000000-0000-4000-a000-000000000001';
  perform mover_anuncio_lixeira(a.id);
  assert (select vendido_em=a.vendido_em and vendido_pelo_olaki=true from anuncios where id=a.id), 'Lixeira preserva venda';
  assert restaurar_anuncio(a.id)='vendido';

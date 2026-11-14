@@ -80,8 +80,8 @@ do $$ declare n integer; begin
   assert n = 1, 'o dono edita a própria loja (2)';
 end $$;
 reset role;
-select pg_temp.confere((select cnpj_conferido_em = :'antes3'::timestamptz and nome = 'Loja 760 três' and selo_loja_verificada
-   from vitrines_lojas where id = pg_temp.vid(3)), 'dono não muda cnpj_conferido_em; outros campos mudam e o selo fica (nome não reabre)');
+select pg_temp.confere((select cnpj_conferido_em = :'antes3'::timestamptz and nome = 'Loja 760 três' and not selo_loja_verificada and verificacao_estado = 'pendente'
+   from vitrines_lojas where id = pg_temp.vid(3)), 'dono não muda cnpj_conferido_em; outros campos mudam e a troca de nome volta para conferência (sem selo)');
 
 -- [3] Revisão manual antiga fecha o pedido aberto, apaga os arquivos e não manda aviso errado.
 -- ped10 fica enviada, ped11 analisando, ped12 equipe e ped13 revisao_amostra (loja com selo).
