@@ -75,6 +75,8 @@
   --shadow-1: 0 1px 2px rgb(75 18 72 / 0.08);
   --shadow-2: 0 -2px 12px rgb(75 18 72 / 0.12);
 
+  --spacing-barra-nav: 3.5rem; /* altura da navegação inferior, fora da área segura */
+  --spacing-reserva-nav: calc(var(--spacing-barra-nav) + 1.5rem + env(safe-area-inset-bottom));
   --spacing-toque: 2.75rem; /* 44px, área mínima de toque */
 
   /* Régua de tamanhos (docs/DESIGN-SYSTEM.md, seção 3). Toque / mouse. */
@@ -272,7 +274,6 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
   }
 
   .publico:has([data-detalhe-anuncio]) > #conteudo { padding-bottom: 0; }
-  .publico:has([data-comprador]) .navegacao-inferior ul { height: 3.5rem; }
   .publico:has([data-comprador]) .navegacao-inferior :is(a, button) { font-size: 0.75rem; }
   .publico:has([data-comprador]) .navegacao-inferior svg { width: 1.25rem; height: 1.25rem; }
 

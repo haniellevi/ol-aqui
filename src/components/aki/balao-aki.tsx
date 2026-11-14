@@ -395,11 +395,11 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
   const semAtalhoMovel = caminho.startsWith(`${LINK_ATENDIMENTO}/`) || caminho.startsWith("/anunciar/") ? "max-md:hidden" : "";
   const posicao = elevado
     ? "bottom-[calc(8rem+env(safe-area-inset-bottom))] md:bottom-28"
-    : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6";
+    : "bottom-[calc(var(--spacing-barra-nav)+1rem+env(safe-area-inset-bottom))] md:bottom-6";
   // o convite fica logo acima do balão (balão de 44px + folga)
   const posicaoDica = elevado
     ? "bottom-[calc(12rem+env(safe-area-inset-bottom))] md:bottom-44"
-    : "bottom-[calc(8.5rem+env(safe-area-inset-bottom))] md:bottom-24";
+    : "bottom-[calc(var(--spacing-barra-nav)+5rem+env(safe-area-inset-bottom))] md:bottom-24";
 
   const podeEscrever = estado.logado && estado.pode;
   const motivoTexto = estado.logado && !estado.pode ? mensagemBloqueio(estado.motivo) : null;

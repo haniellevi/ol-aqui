@@ -273,6 +273,8 @@ Diretos e firmes, com o texto dizendo o que acontece ("Publicar anúncio", nunca
 - **Hover / Focus / Pressão:** hover clareia 5%; foco por teclado com contorno de 3 px laranja-escuro afastado 2 px; ao encostar o dedo o botão encolhe para 97% em 100 ms (`olaki-acao`), sem movimento com `prefers-reduced-motion`.
 - **Carregando:** bolinha girando, texto troca ("Publicando...") e o botão trava para não duplicar anúncio.
 
+Use `tamanho="toque"` for new touch-first actions, key filters and form controls. It keeps the standard type scale and a 44 px target. The Radar easy mode keeps its 48 px controls. Let translated or long labels wrap and let action rows follow keyboard order. Show a named close action on mobile sheets.
+
 ### Chips
 - **Style:** borda `borda-campo`, fundo branco, texto beringela de 12 px em 600, 40 px de altura.
 - **State:** selecionado com fundo `selecao`, borda beringela e um ✓; o estado nunca depende só da cor.

@@ -10,7 +10,7 @@ export default async function LayoutPublico({ children }: { children: React.Reac
   return (
     <div className="publico">
       <CabecalhoPublico />
-      <div id="conteudo" className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+      <div id="conteudo" className="pb-reserva-nav md:pb-0">
         <AvisoTermos />
         {children}
       </div>

@@ -14,7 +14,7 @@ export default async function LayoutRadar({ children }: { children: React.ReactN
   return (
     <>
       <CabecalhoPublico />
-      <div id="conteudo" className="pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
+      <div id="conteudo" className="pb-reserva-nav md:pb-0">
         <AvisoTermos />
         {children}
       </div>

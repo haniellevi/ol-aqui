@@ -17,7 +17,7 @@ export function ExemploConfirmar() {
         (e) => { e.preventDefault(); setResposta("Confirmado."); },
       )}
     >
-      <Botao type="submit" variante="perigo" tamanho="pequeno">Apagar exemplo</Botao>
+      <Botao type="submit" variante="perigo" tamanho="toque">Apagar exemplo</Botao>
       <span role="status" className="text-sm text-texto-suave">{resposta}</span>
     </form>
   );

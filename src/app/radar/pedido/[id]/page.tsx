@@ -166,7 +166,7 @@ export default async function MeuPedidoPage({
           <p className="text-lg text-texto">
             {fechado ? "Faça o mesmo pedido outra vez. O texto já vem preenchido." : `${vencimento}. Se ainda precisa, faça o mesmo pedido outra vez.`}
           </p>
-          <Botao href={linkDeNovo} variante={destaque ? "secundario" : "primario"} icone={<RotateCcw />} className="min-h-11! self-start">
+          <Botao href={linkDeNovo} variante={destaque ? "secundario" : "primario"} icone={<RotateCcw />} tamanho="toque" className="self-start">
             Pedir de novo
           </Botao>
         </section>

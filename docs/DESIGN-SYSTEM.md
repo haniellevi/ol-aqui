@@ -107,6 +107,7 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 | Título de seção | 15 px | 15 px | `text-lg font-semibold` |
 | Preço e destaque | 16 a 20 px | 16 a 20 px | `text-xl`, `text-2xl` |
 | Botão normal | 40 px | 36 px | `<Botao>` |
+| Controle com tamanho `toque` | mínimo de 44 px | mínimo de 44 px | `Botao`, `Chip`, `Campo` e `Seletor` |
 | Botão pequeno | 32 px | 28 px | `<Botao tamanho="pequeno">`: ações dentro de cards, listas e tabelas |
 | Campo e lista de escolha | 40 px | 36 px | `<Campo>`, `<Seletor>`; `select` solto já recebe a altura pelo CSS base |
 | Letra dentro de campo | 14 px (16 px só no iPhone) | 14 px | automático no `globals.css` |
@@ -117,6 +118,9 @@ Respeitar o tamanho de letra que a pessoa escolheu no celular (usar `rem`, nunca
 
 > **2ª passada (10/11/2026, mesmo dia):** a primeira redução (48 para 44 px) quase não se notava, e o Raniel continuou vendo tudo grande. A escala inteira desceu um degrau (texto 15 para 14, legenda 13 para 12, título 20 para 18, controles 44 para 40) e a letra dos campos, que ficava em 16 px ao lado de texto de 14, passou a 14 px. O 16 px ficou só no iPhone (`@supports (-webkit-touch-callout: none)`), onde evita o zoom automático do Safari. A tabela da seção 2 traz os nomes; os tamanhos que valem são os desta régua.
 
+- **Controles de toque em novos fluxos:** use `tamanho="toque"` para ações do passo, filtros importantes, campos e confirmações. O token `--spacing-toque` dá 44 px com a tipografia normal. Em controles compactos de listas, o tamanho normal ou pequeno permanece disponível. O modo fácil mantém 48 px.
+- **Rótulos longos:** botões de toque, chips e abas permitem quebra de linha e crescem quando necessário. Campos preservam as descrições externas junto da ajuda e do erro.
+- **Diálogos e folhas:** a ordem visual acompanha a de leitura e teclado. Ações podem quebrar linha e a janela rola quando necessário. A folha oferece Fechar também no celular. O fechamento retorna o foco a quem abriu. Em telas públicas, conta e Radar, a altura da barra inferior e a área segura usam os mesmos tokens do layout.
 - **Largura do botão:** `larguraTotal` ocupa a largura toda só no celular; do tablet para cima o botão para em 320 px (`sm:max-w-xs`). Em telas centralizadas, centralize o grupo de botões (`items-center`).
 - **Um botão laranja por tela.** O resto é secundário (borda) ou texto.
 - **Card com no máximo duas ações à vista**, em botões pequenos; as outras vão para o menu "Mais" (ex.: `AcoesAnuncio` em Meus anúncios: Vendi/Reativar/Continuar + Editar + Mais).

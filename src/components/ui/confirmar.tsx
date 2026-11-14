@@ -55,8 +55,8 @@ export function JanelaConfirmar() {
           {pedido?.texto && <AlertDialogDescription>{pedido.texto}</AlertDialogDescription>}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <Botao variante="secundario" onClick={() => responder(false)}>Cancelar</Botao>
-          <Botao variante={pedido?.perigo ? "perigo" : "primario"} onClick={() => responder(true)}>{pedido?.acao ?? "Confirmar"}</Botao>
+          <Botao tamanho="toque" variante="secundario" onClick={() => responder(false)}>Cancelar</Botao>
+          <Botao tamanho="toque" variante={pedido?.perigo ? "perigo" : "primario"} onClick={() => responder(true)}>{pedido?.acao ?? "Confirmar"}</Botao>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -10,8 +10,10 @@ export function Seletor({
   dica,
   tamanho = "normal",
   children,
+  "aria-describedby": descricao,
+  "aria-invalid": invalido,
   ...resto
-}: { rotulo: ReactNode; name: string; erro?: string | null; dica?: ReactNode; tamanho?: "normal" | "grande"; children: ReactNode } & Omit<
+}: { rotulo: ReactNode; name: string; erro?: string | null; dica?: ReactNode; tamanho?: "normal" | "toque" | "grande"; children: ReactNode } & Omit<
   ComponentProps<"select">,
   "name" | "children"
 >) {
@@ -21,17 +23,17 @@ export function Seletor({
   const idErro = erro ? `${id}-erro` : undefined;
   const idDica = dica ? `${id}-dica` : undefined;
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-1 [overflow-wrap:anywhere]">
       <label htmlFor={id} className={`${tamanho === "grande" ? "text-facil" : "text-rotulo"} font-semibold text-texto`}>
         {rotulo}
       </label>
       <NativeSelect
         {...resto}
-        className={tamanho === "grande" ? cn("[&>select]:h-12! [&>select]:text-facil", resto.className) : resto.className}
+        className={cn(tamanho === "grande" && "[&>select]:h-12! [&>select]:text-facil", tamanho === "toque" && "[&>select]:h-toque!", resto.className)}
         id={id}
         name={name}
-        aria-invalid={erro ? true : undefined}
-        aria-describedby={[idErro, idDica].filter(Boolean).join(" ") || undefined}
+        aria-invalid={erro ? true : invalido}
+        aria-describedby={[idErro, idDica, descricao].filter(Boolean).join(" ") || undefined}
       >
         {children}
       </NativeSelect>

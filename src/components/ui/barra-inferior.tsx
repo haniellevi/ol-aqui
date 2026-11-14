@@ -20,7 +20,7 @@ const ITENS: Item[] = [
   { href: "/minha-conta", rotulo: "Conta", Icone: UserRound, ativo: (p) => p.startsWith("/minha-conta") },
 ];
 
-// A página reserva o espaço embaixo com pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0 (ver os layouts).
+// A página reserva o espaço embaixo com pb-reserva-nav md:pb-0 (ver os layouts).
 
 export function BarraInferior({ loja = null }: { loja?: AtalhoLoja | null }) {
   const caminho = usePathname() ?? "/";
@@ -38,7 +38,7 @@ export function BarraInferior({ loja = null }: { loja?: AtalhoLoja | null }) {
       aria-label="Navegação principal"
       className="navegacao-inferior olaki-material fixed inset-x-0 bottom-0 z-30 pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      <ul className="mx-auto grid h-14 max-w-lg grid-cols-5">
+      <ul className="mx-auto grid h-barra-nav max-w-lg grid-cols-5">
         {itens.map(({ href, rotulo, Icone, ativo }, index) => {
           const atual = ativo(caminho);
           const principal = index === 2;

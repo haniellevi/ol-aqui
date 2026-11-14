@@ -10,11 +10,12 @@ import type { ComponentProps, ReactNode } from "react";
 // grande = Modo fácil do Radar: 48px e letra 18px em qualquer tela (não encolhe com mouse).
 
 export type VarianteBotao = "primario" | "secundario" | "perigo" | "whatsapp" | "texto";
-export type TamanhoBotao = "normal" | "pequeno" | "grande";
+export type TamanhoBotao = "normal" | "pequeno" | "toque" | "grande";
 
 const TAMANHOS: Record<TamanhoBotao, string> = {
   normal: "olaki-controle min-h-10 px-4 text-sm leading-5",
   pequeno: "olaki-controle-pequeno min-h-8 px-3 text-legenda leading-4",
+  toque: "min-h-toque min-w-toque px-4 text-sm leading-5",
   grande: "min-h-12 px-5 text-facil leading-6",
 };
 
@@ -35,7 +36,7 @@ type Comum = {
   variante?: VarianteBotao;
   /** Largura cheia no celular; do tablet para cima, no máximo 320px. */
   larguraTotal?: boolean;
-  /** "pequeno" para ações dentro de cards, listas e tabelas; "grande" para o Modo fácil (48px, 18px). */
+  /** "toque" reserva 44 px com a tipografia normal. "grande" usa a régua do Modo fácil. */
   tamanho?: TamanhoBotao;
   /** Mostra a bolinha girando, troca o texto e trava o botão (evita toque duplo). */
   carregando?: boolean;
@@ -67,7 +68,7 @@ export function Botao(props: BotaoProps) {
       ) : (
         icone && <span className="inline-flex shrink-0 [&>svg]:size-4" aria-hidden>{icone}</span>
       )}
-      <span className="inline-flex items-center justify-center gap-2">{carregando && textoCarregando ? textoCarregando : children}</span>
+      <span className="inline-flex min-w-0 items-center justify-center gap-2 text-center [overflow-wrap:anywhere]">{carregando && textoCarregando ? textoCarregando : children}</span>
     </>
   );
 

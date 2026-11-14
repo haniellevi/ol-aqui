@@ -94,7 +94,7 @@ export function FolhaResolver({
 
   return (
     <>
-      <Botao variante={variante} larguraTotal={!compacto} icone={<CheckCircle2 />} onClick={abrir} tamanho={compacto ? "normal" : "grande"} className={compacto ? "min-h-11!" : undefined}>
+      <Botao variante={variante} larguraTotal={!compacto} icone={<CheckCircle2 />} onClick={abrir} tamanho={compacto ? "toque" : "grande"}>
         {rotulo}
       </Botao>
       <Folha open={aberta} onOpenChange={(v) => (v ? setAberta(true) : fechar())}>
