@@ -57,3 +57,33 @@ test('oferece referência pública de origem e rejeita URL insegura', () => {
  html = renderToStaticMarkup(React.createElement(RevisaoLojaIa, { ...props, rascunho:{...rascunho,campos:c} }));
  assert.doesNotMatch(html, /href="javascript:/);
 });
+
+test('gera capa e salva a escolha no rascunho', async () => {
+ const states = []; let cursor = 0;
+ const react = { ...React, useState: (initial) => { const i = cursor++; if (!(i in states)) states[i] = typeof initial === 'function' ? initial() : initial; return [states[i], v => { states[i] = typeof v === 'function' ? v(states[i]) : v; }]; } };
+ const { RevisaoLojaIa } = carregar('src/components/anunciar/revisao-loja-ia.tsx', { react });
+ const chamadas = [];
+ const p = { ...props, gerarCapa:async()=>({id:'gerada',url:'/gerada'}), salvar:async(_id,_rev,e)=>{ chamadas.push(e); return { ...rascunho, revisao:2, campos:{...campos,capa:{...campos.capa,valor:e.capa,editado:true}} }; } };
+ const render = () => { cursor = 0; return RevisaoLojaIa(p); };
+ function achar(elemento, texto) { if (!elemento || typeof elemento !== 'object') return null; if (elemento.props?.children === texto && elemento.props?.onClick) return elemento; for (const filho of React.Children.toArray(elemento.props?.children)) { const achou = achar(filho, texto); if (achou) return achou; } return null; }
+ const botao = achar(render(), 'Gerar capa'); assert.ok(botao); botao.props.onClick();
+ await new Promise(resolve => setImmediate(resolve));
+ assert.deepEqual(chamadas, [{capa:'gerada'}]);
+ const html = renderToStaticMarkup(render()); assert.match(html, /value="gerada" selected=""/);
+});
+
+test('atualiza andamento somente depois de salvar a edição pendente', async () => {
+ const states = []; let cursor = 0;
+ const react = { ...React, useState: initial => { const i = cursor++; if (!(i in states)) states[i] = typeof initial === 'function' ? initial() : initial; return [states[i], v => { states[i] = typeof v === 'function' ? v(states[i]) : v; }]; } };
+ const { RevisaoLojaIa } = carregar('src/components/anunciar/revisao-loja-ia.tsx', { react });
+ const eventos = []; const anterior = global.window; global.window = { location:{ reload:()=>eventos.push('atualizou') } };
+ try {
+  const p = { ...props, rascunho:{...rascunho,estado:'processando'}, salvar:async(_id,_rev,e)=>{ eventos.push(e); return { ...rascunho,revisao:2, campos:{...campos,nome:{...campos.nome,valor:e.nome,editado:true}} }; } };
+  const render = () => { cursor=0; return RevisaoLojaIa(p); };
+  function achar(el, pred) { if (!el || typeof el !== 'object') return null; if (pred(el)) return el; for (const filho of React.Children.toArray(el.props?.children)) { const achou=achar(filho,pred); if (achou) return achou; } return null; }
+  achar(render(), el=>el.props?.name==='nome_loja' && !!el.props.onChange).props.onChange({target:{value:'Nome corrigido'}});
+  achar(render(), el=>el.props?.children==='Atualizar andamento').props.onClick();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(eventos,[{nome:'Nome corrigido'},'atualizou']);
+ } finally { global.window = anterior; }
+});

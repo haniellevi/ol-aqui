@@ -103,3 +103,19 @@ test('página pública acessível gera evidência de descrição e endereço de 
  assert.equal(r.estado, 'ok'); assert.equal(r.evidencias.find(e => e.campo === 'sobre').valor, 'Produtos artesanais');
  assert.equal(r.evidencias.find(e => e.campo === 'sobre').origem.url, 'https://loja.exemplo/');
 });
+
+test('conexão fixada atende lookup all usado pelo Node', async () => {
+ const { EventEmitter } = require('node:events');
+ const mocks = {
+  'node:dns/promises': { lookup: async () => [{ address: '8.8.8.8', family: 4 }] },
+  'node:https': { request: (_url, options, receber) => {
+   const req = new EventEmitter(); req.destroy = e => req.emit('error', e); req.end = () => {
+    options.lookup('exemplo.com', { all: true }, (_erro, enderecos) => assert.deepEqual(enderecos, [{ address: '8.8.8.8', family: 4 }]));
+    const res = new EventEmitter(); res.statusCode = 200; res.headers = { 'content-type': 'text/html' }; receber(res);
+    res.emit('data', Buffer.from('<meta name="description" content="Loja">')); res.emit('end'); req.emit('close');
+   }; return req;
+  } },
+ };
+ const { coletarFonte } = carregar('src/lib/loja-ia/fontes.ts', mocks);
+ assert.equal((await coletarFonte({ fonte:'site', entrada:{ nome:'Loja', cidade:'Recife', site:'https://exemplo.com', materiais:[] } })).estado, 'ok');
+});

@@ -54,7 +54,10 @@ async function lerPagina(url: string): Promise<string> {
   if (!ips.length || ips.some(ip => !enderecoPublico(ip.address))) throw new Error("Destino não público");
   const ip = ips[0];
   return new Promise((resolve, reject) => {
-    const req = request(u, { method: "GET", headers: { "user-agent": "OLAKI/1.0", accept: "text/html" }, lookup: (_host, _options, callback) => callback(null, ip.address, ip.family) }, res => {
+    const req = request(u, { method: "GET", headers: { "user-agent": "OLAKI/1.0", accept: "text/html" }, lookup: (_host, options, callback) => {
+      if (options.all) (callback as unknown as (err: null, addresses: typeof ips) => void)(null, [ip]);
+      else callback(null, ip.address, ip.family);
+    } }, res => {
       if (res.statusCode !== 200 || !/^text\/html(?:;|$)/i.test(res.headers["content-type"] ?? "")) { res.resume(); reject(new Error("Página indisponível")); return; }
       let tamanho = 0; const blocos: Buffer[] = [];
       res.on("data", (bloco: Buffer) => { tamanho += bloco.length; if (tamanho > 200_000) { req.destroy(new Error("Página grande")); return; } blocos.push(bloco); });
