@@ -28,7 +28,7 @@ test('uma versão legal específica mantém o texto correto e distingue ausênci
   const h = await abrir(antiga);
   assert.match(h, /Versão arquivada/);
   assert.match(h, /Texto histórico/);
-  assert.match(h, /<a aria-current="page"[^>]*href="\/termos\?versao=1"/);
+  assert.match(h, /<a(?=[^>]* aria-current="page")(?=[^>]* href="\/termos\?versao=1")/);
   const falta = await abrir(null);
   assert.match(falta, /Versão 1 não encontrada/);
   assert.doesNotMatch(falta, /Texto atual/);
