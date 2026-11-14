@@ -42,7 +42,8 @@ test('anúncio volta à mesma busca com filtros repetidos, ordenação e página
   const { default: Pagina } = carregar(caminho + 'page.tsx', { ...mocks, '@clerk/nextjs/server': { auth: async () => ({ userId: null }) }, '@/lib/supabase/server': {}, '@/lib/dados/paginas': {}, '@/lib/dados/anuncios': { anuncioPublico: async () => anuncio, buscarAnuncios: async () => ({ anuncios: [] }) } });
   const idslug = linkAnuncio(anuncio.id, anuncio.titulo).split('/').pop();
   const voltar = '/busca?q=bike&cidade=Corrente&c_estado=Novo&c_estado=Usado&ordem=menor_preco&pagina=2';
-  for (const [entrada, esperado] of [[voltar, voltar], ['//fora.example/busca', '/busca'], ['/busca\\fora', '/busca']]) {
+  const categoria = '/c/veiculos/carros?cidade=Corrente&visualizacao=grade&pagina=2';
+  for (const [entrada, esperado] of [[voltar, voltar], [categoria, categoria], ['/c//fora.example', '/busca'], ['//fora.example/busca', '/busca'], ['/busca\\fora', '/busca']]) {
     const html = render(await Pagina({ params: Promise.resolve({ idslug }), searchParams: Promise.resolve({ voltar: entrada }) }));
     assert.ok(html.includes('href="' + esperado.replaceAll('&', '&amp;') + '"'), esperado);
   }

@@ -26,6 +26,7 @@ export function BannerLoja({
   logo,
   posicaoAki = null,
   prioridade = false,
+  mostrarLogoModelo = true,
   className = "",
 }: {
   tipo: BannerTipo;
@@ -37,6 +38,7 @@ export function BannerLoja({
   /** Carrega a foto já (topo da página). */
   prioridade?: boolean;
   posicaoAki?: number | null;
+  mostrarLogoModelo?: boolean;
   className?: string;
 }) {
   const [falhou, setFalhou] = useState<string | null>(null);
@@ -76,9 +78,11 @@ export function BannerLoja({
         color: texto,
       }}
     >
-      <span className="hidden shrink-0 sm:block">
-        <AvatarVitrine nome={nome} logo={logo} tamanho="lg" />
-      </span>
+      {mostrarLogoModelo && (
+        <span className={posicaoAki === null ? "hidden shrink-0 sm:block" : "shrink-0"}>
+          <AvatarVitrine nome={nome} logo={logo} tamanho="lg" />
+        </span>
+      )}
       <span className="line-clamp-2 text-center text-xl leading-6 font-bold sm:text-2xl sm:leading-8">{formatarNome(nome)}</span>
     </div>
   );

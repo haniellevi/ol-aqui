@@ -88,9 +88,10 @@ export async function Listagem({
     }
   }
 
-  const limpar =
-    estado.quantos > 0 ? (estado.q ? `${caminho}?q=${encodeURIComponent(estado.q)}` : caminho) : null;
+  const limpar = estado.quantos > 0 ? comParametros(caminho, { q: estado.q, visualizacao: estado.visualizacao }) : null;
   const termoRadar = estado.q || (categoria ? categoria.categoria.nome : "");
+
+  const grade = estado.visualizacao === "grade";
 
   return (
     <main data-comprador={caminho === "/busca" ? "" : undefined} className={`mx-auto flex w-full max-w-6xl flex-col md:gap-4 md:px-4 md:py-4 ${caminho === "/busca" ? "gap-1.5 px-2.5 py-2" : "gap-4 px-4 py-4"}`}>
@@ -114,7 +115,7 @@ export async function Listagem({
           <h2 id="titulo-parecidos" className="text-lg font-semibold">
             {tituloParecidos}
           </h2>
-          <GradeAnuncios anuncios={parecidos} prioridade={0} compacto={caminho === "/busca"} voltarHref={caminho === "/busca" ? comParametros(caminho, sp, { pagina: estado.pagina > 1 ? String(estado.pagina) : null }) : undefined} />
+          <GradeAnuncios anuncios={parecidos} prioridade={0} compacto={!grade} horizontal={!grade} voltarHref={comParametros(caminho, sp, { pagina: estado.pagina > 1 ? String(estado.pagina) : null })} />
         </section>
       )}
     </main>

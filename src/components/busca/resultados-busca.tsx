@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowDownUp, ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
-import { classesChip } from "@/components/ui/chip";
+import { ArrowDownUp, ChevronLeft, ChevronRight, LayoutGrid, List, SlidersHorizontal, X } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { FolhaFiltros } from "@/components/busca/folha-filtros";
@@ -64,111 +63,105 @@ export function ResultadosBusca({
       : c.tipo === "sim_nao" ? (valores[0] === "sim" ? "Sim" : "Não") : [valores[0]].flat().join(", ");
     ativos.push({ rotulo: `${c.rotulo}: ${texto}`, parametros });
   }
-  const compacto = caminho === "/busca";
-  if (!compacto && estado.ordem !== "relevancia" && ordem) ativos.push({ rotulo: `Ordem: ${ordem.rotulo}`, parametros: ["ordem"] });
-  const voltarHref = compacto ? comParametros(caminho, sp, { pagina: estado.pagina > 1 ? String(estado.pagina) : null }) : undefined;
-  const limpar = comParametros(caminho, { q: estado.q });
+  const emCategoria = caminho.startsWith("/c/");
+  const grade = estado.visualizacao === "grade";
+  const paginaAtual = estado.pagina > 1 ? String(estado.pagina) : null;
+  const filtros = { caminho, estado, campos, facetas, cidades, categorias, ia: (Array.isArray(sp.ia) ? sp.ia[0] : sp.ia) || undefined };
+  const voltarHref = comParametros(caminho, sp, { pagina: paginaAtual });
 
   return (
-    <>
-      <nav aria-label="Filtros da busca">
-        <ul className={compacto ? "flex items-center justify-between gap-2 border-b border-borda" : "flex flex-wrap gap-2 py-1"}>
-          <li>
-            <a href={`#${ID_FOLHA}`} className={compacto ? controle : classesChip(estado.quantos > 0)}>
-              <SlidersHorizontal className="size-4" aria-hidden />
-              Filtros{(compacto ? ativos.length : estado.quantos) > 0 ? ` (${compacto ? ativos.length : estado.quantos})` : ""}
-            </a>
-          </li>
-          {!compacto && <>
-          <li>
-            <a href="#filtro-cidade" className={classesChip(!!estado.cidade)}>
-              Cidade
-            </a>
-          </li>
-          <li>
-            <a href="#filtro-preco" className={classesChip(!!estado.precoMinTexto || !!estado.precoMaxTexto)}>
-              Preço
-            </a>
-          </li>
-          <li>
-            {categorias ? (
-              <a href="#filtro-categoria" className={classesChip(!!estado.categoria)}>
-                Categoria
+    <div className={emCategoria ? "grid min-w-0 items-start gap-4 md:grid-cols-[minmax(14rem,16rem)_minmax(0,1fr)] md:gap-5" : "flex min-w-0 flex-col gap-2 md:gap-4"}>
+      {emCategoria && <FolhaFiltros key={`lateral-${voltarHref}`} {...filtros} lateral />}
+      <div className="flex min-w-0 flex-col gap-2 md:gap-3">
+        <nav aria-label="Filtros da busca" className={emCategoria ? "md:hidden" : undefined}>
+          <ul className="flex items-center justify-between gap-2 border-b border-borda">
+            <li>
+              <a href={`#${ID_FOLHA}`} className={controle}>
+                <SlidersHorizontal className="size-4" aria-hidden />
+                Filtros{ativos.length > 0 ? ` (${ativos.length})` : ""}
               </a>
-            ) : (
-              <Link href="/categorias" className={classesChip(true)}>
-                {nomeCategoria ?? "Categoria"}
-              </Link>
-            )}
-          </li>
-          </>}
-          <li>
-            <a href="#filtro-ordem" className={compacto ? controle : classesChip(estado.ordem !== "relevancia")}>
-              {compacto && <ArrowDownUp className="size-4" aria-hidden />}
-              {compacto && estado.ordem !== "relevancia" ? ordem?.rotulo : "Ordenar"}
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      {ativos.length > 0 && (
-        <nav aria-label="Filtros ativos" className={compacto ? undefined : "flex flex-col gap-2 rounded-card border border-borda bg-cartao p-3"}>
-          {!compacto && <div className="flex flex-wrap items-center justify-between gap-x-4">
-            <p className="text-sm font-semibold">Sua busca está filtrada</p>
-            <Link href={limpar} className="inline-flex min-h-12 items-center text-sm font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro">Limpar filtros</Link>
-          </div>}
-          <ul className={compacto ? `grid gap-1 ${ativos.length === 1 ? "grid-cols-1" : ativos.length === 2 ? "grid-cols-2" : "grid-cols-3"} sm:flex sm:flex-wrap` : "flex flex-wrap gap-2"}>
-            {ativos.map((a) => (
-              <li key={a.parametros[0]} className="max-w-full">
-                <Link
-                  href={comParametros(caminho, sp, Object.fromEntries(a.parametros.map((p) => [p, null])))}
-                  aria-label={`Remover filtro: ${a.rotulo}`}
-                  className={compacto ? "flex h-full min-h-12 w-full items-center justify-between gap-1 rounded-campo bg-selecao px-1.5 py-1 text-xs leading-tight text-beringela hover:bg-borda focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro sm:w-auto sm:gap-2 sm:px-3" : "inline-flex min-h-12 max-w-full items-center gap-2 rounded-campo border border-laranja-escuro bg-selecao px-3 py-2 text-sm text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"}
-                >
-                  <span className="min-w-0 [overflow-wrap:anywhere]">{compacto ? a.rotulo.replace(/^(Cidade|Preço): /, "") : a.rotulo}</span><X className="size-3 shrink-0" aria-hidden />
-                </Link>
-              </li>
-            ))}
+            </li>
+            <li>
+              <a href="#filtro-ordem" className={controle}>
+                <ArrowDownUp className="size-4" aria-hidden />
+                {estado.ordem !== "relevancia" ? ordem?.rotulo : "Ordenar"}
+              </a>
+            </li>
           </ul>
         </nav>
-      )}
 
-      <section id={ID_RESULTADOS} aria-labelledby="total-resultados" className="flex scroll-mt-20 flex-col gap-3">
-        <p id="total-resultados" className="text-base text-texto-suave" aria-live="polite">
-          {erros.length ? "Revise os filtros para ver os anúncios" : total === 0 ? (
-            <>Nenhum anúncio em {ondeTexto}</>
-          ) : (
-            <>
-              <strong className="font-semibold text-texto">
-                {inteiro(total)} {total === 1 ? "anúncio" : "anúncios"}
-              </strong>{" "}
-              em {ondeTexto}
-            </>
-          )}
-        </p>
-
-        {erros.length > 0 ? (
-          <Alert variant="destructive" role="alert" className="flex flex-col items-start gap-3">
-            <h2 className="text-lg font-semibold">Não foi possível aplicar os filtros</h2>
-            <ul className="list-inside list-disc text-base">{erros.map((erro) => <li key={erro}>{erro}</li>)}</ul>
-            <a href={`#${ID_FOLHA}`} className={classesBotao("secundario")}>Corrigir filtros</a>
-          </Alert>
-        ) : anuncios.length === 0 && estado.pagina > 1 && total === 0 ? (
-          <div className="flex flex-col items-start gap-2">
-            <p className="text-base">Esta página não tem mais anúncios.</p>
-            <Link href={comParametros(caminho, sp)} className={classesBotao("secundario")}>
-              Voltar para a primeira página
-            </Link>
-          </div>
-        ) : (
-          <GradeAnuncios anuncios={anuncios} vazio={vazio} compacto={compacto} voltarHref={voltarHref} medirEm={caminho === "/busca" ? "busca" : "categoria"} />
+        {ativos.length > 0 && (
+          <nav aria-label="Filtros ativos">
+            <ul className={`grid gap-1 ${ativos.length === 1 ? "grid-cols-1" : ativos.length === 2 ? "grid-cols-2" : "grid-cols-3"} sm:flex sm:flex-wrap`}>
+              {ativos.map((a) => (
+                <li key={a.parametros[0]} className="max-w-full">
+                  <Link
+                    href={comParametros(caminho, sp, Object.fromEntries(a.parametros.map((p) => [p, null])))}
+                    aria-label={`Remover filtro: ${a.rotulo}`}
+                    className="flex h-full min-h-12 w-full items-center justify-between gap-1 rounded-campo bg-selecao px-1.5 py-1 text-xs leading-tight text-beringela hover:bg-borda focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro sm:w-auto sm:gap-2 sm:px-3"
+                  >
+                    <span className="min-w-0 [overflow-wrap:anywhere]">{a.rotulo.replace(/^(Cidade|Preço): /, "")}</span><X className="size-3 shrink-0" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         )}
 
-        {paginas > 1 && <Paginacao caminho={caminho} sp={sp} pagina={estado.pagina} paginas={paginas} />}
-      </section>
+        <section id={ID_RESULTADOS} aria-labelledby="total-resultados" className="flex scroll-mt-20 flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+            <p id="total-resultados" className="text-base text-texto-suave" aria-live="polite">
+              {erros.length ? "Revise os filtros para ver os anúncios" : total === 0 ? (
+                <>Nenhum anúncio em {ondeTexto}</>
+              ) : (
+                <>
+                  <strong className="font-semibold text-texto">
+                    {inteiro(total)} {total === 1 ? "anúncio" : "anúncios"}
+                  </strong>{" "}
+                  em {ondeTexto}
+                </>
+              )}
+            </p>
+            <nav aria-label="Visualização dos resultados" className="inline-flex rounded-campo border border-borda bg-cartao">
+              {([{ modo: "lista", texto: "Lista", Icone: List }, { modo: "grade", texto: "Grade", Icone: LayoutGrid }] as const).map(({ modo, texto, Icone }) => {
+                const selecionada = grade === (modo === "grade");
+                return (
+                  <Link
+                    key={modo}
+                    href={comParametros(caminho, sp, { visualizacao: modo === "grade" ? modo : null, pagina: paginaAtual })}
+                    aria-current={selecionada ? "true" : undefined}
+                    className={`inline-flex min-h-11 items-center gap-1 rounded-campo px-2 text-xs font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${selecionada ? "bg-selecao" : ""}`}
+                  >
+                    <Icone className="size-4" aria-hidden /> {texto}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
 
-      <FolhaFiltros key={comParametros(caminho, sp)} caminho={caminho} estado={estado} campos={campos} facetas={facetas} cidades={cidades} categorias={categorias} ia={(Array.isArray(sp.ia) ? sp.ia[0] : sp.ia) || undefined} />
-    </>
+          {erros.length > 0 ? (
+            <Alert variant="destructive" role="alert" className="flex flex-col items-start gap-3">
+              <h2 className="text-lg font-semibold">Não foi possível aplicar os filtros</h2>
+              <ul className="list-inside list-disc text-base">{erros.map((erro) => <li key={erro}>{erro}</li>)}</ul>
+              <a href={`#${ID_FOLHA}`} className={classesBotao("secundario", false, emCategoria ? "md:hidden" : "")}>Corrigir filtros</a>
+              {emCategoria && <a href="#lateral-titulo-filtros" className={classesBotao("secundario", false, "hidden md:inline-flex")}>Corrigir filtros</a>}
+            </Alert>
+          ) : anuncios.length === 0 && estado.pagina > 1 && total === 0 ? (
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-base">Esta página não tem mais anúncios.</p>
+              <Link href={comParametros(caminho, sp)} className={classesBotao("secundario")}>
+                Voltar para a primeira página
+              </Link>
+            </div>
+          ) : (
+            <GradeAnuncios anuncios={anuncios} vazio={vazio} compacto={!grade} horizontal={!grade} className={emCategoria && grade ? "lg:grid-cols-3! xl:grid-cols-3!" : undefined} voltarHref={voltarHref} medirEm={caminho === "/busca" ? "busca" : "categoria"} />
+          )}
+
+          {paginas > 1 && <Paginacao caminho={caminho} sp={sp} pagina={estado.pagina} paginas={paginas} />}
+        </section>
+      </div>
+      <FolhaFiltros key={voltarHref} {...filtros} apenasMobile={emCategoria} />
+    </div>
   );
 }
 
