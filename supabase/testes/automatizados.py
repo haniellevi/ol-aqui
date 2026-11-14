@@ -25,6 +25,19 @@ try:
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+    checked(sql((root/'supabase/testes/880_loja_ia_rascunhos.sql').read_text()))
+    checked(sql("""insert into perfis(id,microrregiao_id,nome,cidade)
+      select 'user_ia880conc',id,'IA concorrente','Corrente' from microrregioes where slug='corrente-pi';
+      insert into loja_ia_convites(usuario_id) values ('user_ia880conc');"""))
+    def abrir_ia(_):
+        return sql("begin; set local role authenticated; set local request.jwt.claim.sub='user_ia880conc'; select loja_ia_abrir_coleta()->>'id'; select pg_sleep(0.2); commit;")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        aberturas=list(pool.map(abrir_ia,range(2)))
+    for resultado in aberturas: checked(resultado)
+    ids=[re.search(r'[0-9a-f-]{36}', resultado.stdout).group(0) for resultado in aberturas]
+    assert ids[0] == ids[1], ids
+    checked(sql("do $$ begin assert (select count(*)=1 from loja_ia_rascunhos where dono_id='user_ia880conc'), 'aberturas duplicadas'; end $$;"))
+    print('PASS: duas aberturas simultâneas retornam o mesmo rascunho', flush=True)
     marca_documentos = (root/'supabase/migrations/20261110234147_marca_documentos_atuais.sql').read_text()
     checked(sql((root/'supabase/testes/440_marca_documentos_atuais.sql').read_text().replace('-- REAPLICAR_DOCUMENTOS', marca_documentos + marca_documentos)))
     print('PASS: marca nos documentos ativos e idempotência, versões antigas preservadas', flush=True)
