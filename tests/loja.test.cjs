@@ -29,6 +29,7 @@ test('loja: contato tem destino e texto corretos, copiar link e atalhos acessív
  assert.equal(url.pathname,'/5589999990002');assert.match(url.searchParams.get('text'),/https:\/\/mercadodaregiao.com.br\/loja\/loja-teste/);
  for(const t of ['Copiar link da loja','Informações da loja','Ver anúncios','Formas de pagamento','Como chegar','Instagram','Sobre nós','Faz entrega']) assert.ok(h.includes(t),t);
  assert.doesNotMatch(h,/Editar minha vitrine/);
+ assert.doesNotMatch(h,/Negocie com cuidado|O contato acontece diretamente com a loja/);
 });
 test('loja: contato inválido e vitrine inativa não têm WhatsApp; prévia não oferece divulgação',async()=>{
  for(const whatsapp of [null,'','123','javascript:alert(1)']) {const h=await html({v:{whatsapp}});assert.doesNotMatch(h,/https:\/\/wa.me/);assert.match(h,/Contato por WhatsApp indisponível/);}
