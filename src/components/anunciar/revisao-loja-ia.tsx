@@ -45,7 +45,7 @@ export function formularioRevisao(valores: Valores): FormData {
 export function LojaIaConcluida({ slug, assistente }: { slug: string; assistente?: string }) {
   return (
     <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4 sm:p-5" aria-live="polite">
-      <h1 className="text-titulo font-semibold text-beringela">Sua loja foi criada!</h1>
+      <h1 className="text-titulo font-semibold text-beringela">Sua loja foi criada</h1>
       <div className="flex flex-wrap gap-2 [&>*]:grow">
         <Botao href={assistente ? linkAssistente("loja", assistente) : "/anunciar"} tamanho="toque">Criar primeiro anúncio</Botao>
         <Botao href={`/loja/${encodeURIComponent(slug)}`} variante="secundario" tamanho="toque">Ver minha loja</Botao>

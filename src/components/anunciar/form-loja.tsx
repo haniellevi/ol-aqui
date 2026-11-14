@@ -100,7 +100,7 @@ export function FormLoja({
           <CheckCircle2 className="size-5" />
         </span>
         <h1 id="titulo-pronta" className="text-titulo font-semibold text-beringela">
-          Sua loja foi criada!
+          Sua loja foi criada
         </h1>
         <a href={linkLoja(feito.slug)} className="inline-flex min-h-toque items-center break-all text-sm font-semibold text-laranja-escuro underline underline-offset-4">{enderecoCurto}</a>
         <p className="text-sm text-texto-suave">Acompanhe a conferência dos dados, links e contato em Minha loja.</p>
@@ -127,7 +127,7 @@ export function FormLoja({
   const textoSlug: Record<Situacao, { texto: string; cor: string } | null> = {
     vazio: null,
     conferindo: { texto: "Conferindo se está livre...", cor: "text-texto-suave" },
-    livre: { texto: "Endereço livre!", cor: "text-verde-escuro" },
+    livre: { texto: "Endereço livre", cor: "text-verde-escuro" },
     ocupado: { texto: "Esse endereço já está em uso. Escolha outro.", cor: "text-perigo" },
     invalido: { texto: "Use de 3 a 60 letras, números ou hífen.", cor: "text-perigo" },
     falhou: { texto: "Não deu para conferir agora. Você pode continuar.", cor: "text-texto-suave" },
