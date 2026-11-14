@@ -41,7 +41,7 @@ export type OpcoesFunil = {
 export function whatsappParaBanco(bruto: FormDataEntryValue | null, ddd?: string | null): string | null | undefined {
   const texto = String(bruto ?? "");
   if (!texto.trim()) return null;
-  return normalizarTelefone(texto, { ddd }).numero ?? undefined;
+  return normalizarTelefone(texto, { ddd, aceitaFixo: true }).numero ?? undefined;
 }
 
 export const TOM_ETAPA: Record<EtapaFunil["tipo"], "secondary" | "success" | "destructive"> = {

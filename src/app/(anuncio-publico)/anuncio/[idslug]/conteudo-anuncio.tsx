@@ -14,6 +14,7 @@ import { Denunciar } from "./denunciar";
 import { CompartilharAnuncio } from "./compartilhar";
 import { DescricaoAnuncio } from "./descricao";
 import { Alert } from "@/components/ui/alert";
+import { ehTelefoneGuardado } from "@/lib/telefone";
 
 const STATUS_PREVIA: Partial<Record<StatusAnuncio, string>> = {
   rascunho: "Rascunho: ainda não foi publicado.",
@@ -43,7 +44,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
   const detalhes = a.campos
     .map((c) => ({ c, texto: valorDoCampo(c, a.atributos[c.chave]) }))
     .filter((d) => d.texto);
-  const whatsappValido = /^55[1-9][0-9]9?[0-9]{8}$/.test(a.whatsapp ?? "");
+  const whatsappValido = ehTelefoneGuardado(a.whatsapp);
   const whatsappHref = ativo && whatsappValido && a.whatsapp && !a.e_dono ? linkWhatsApp(a.whatsapp, titulo, urlAbsoluta(caminho)) : null;
   const quando = tempoRelativo(a.criado_em);
   const descricao = (a.descricao ?? "").trim();

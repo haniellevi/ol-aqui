@@ -2,8 +2,9 @@ import "server-only";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { REGEX_DDD, normalizarTelefone } from "@/lib/telefone";
 
-// DDD da região para o telefone digitado sem DDD. Só lê o DDD (nada pessoal). Sem região, sem DDD ou erro de
-// leitura → null: a tela então pede o DDD, nunca chuta um.
+// DDD para o telefone digitado sem DDD. Só lê o DDD (nada pessoal). Sem região, sem DDD ou erro de leitura → null:
+// a tela então pede o DDD, nunca chuta um. Cidade que tem outro DDD dentro da região (cidades.ddd, ex.: Barreiras-BA
+// e Formosa do Rio Preto-BA são 77) também não recebe o da região: quem mora lá digita o DDD.
 
 /** DDD de uma microrregião (microrregioes.ddd). */
 export async function dddDaRegiao(microrregiaoId: string | null | undefined): Promise<string | null> {
@@ -16,23 +17,42 @@ export async function dddDaRegiao(microrregiaoId: string | null | undefined): Pr
   }
 }
 
-/** DDD da região da pessoa (perfis.microrregiao_id). */
-export async function dddDoPerfil(userId: string | null | undefined): Promise<string | null> {
-  if (!userId) return null;
+/**
+ * DDD de quem mora numa cidade da região: o da região, salvo quando a cidade tem outro DDD (então null: pede o DDD).
+ * Cidade que não está na lista da região cai no DDD da região (o cadastro escolhe a cidade da lista).
+ */
+export async function dddDaCidade(microrregiaoId: string | null | undefined, cidade: string | null | undefined): Promise<string | null> {
+  const regiao = await dddDaRegiao(microrregiaoId);
+  const nome = typeof cidade === "string" ? cidade.trim() : "";
+  if (!microrregiaoId || !nome) return regiao;
   try {
-    const { data, error } = await supabaseAdmin().from("perfis").select("microrregiao_id").eq("id", userId).maybeSingle();
-    return error || !data?.microrregiao_id ? null : dddDaRegiao(data.microrregiao_id);
+    const { data, error } = await supabaseAdmin().from("cidades").select("ddd")
+      .eq("microrregiao_id", microrregiaoId).eq("nome", nome).maybeSingle();
+    if (error) return null;
+    if (!data?.ddd || data.ddd === regiao) return regiao;
+    return null;
   } catch {
     return null;
   }
 }
 
-/** DDD da região de uma loja (vitrines_lojas.microrregiao_id). */
+/** DDD de quem mora na região e na cidade da pessoa (perfis.microrregiao_id, perfis.cidade). */
+export async function dddDoPerfil(userId: string | null | undefined): Promise<string | null> {
+  if (!userId) return null;
+  try {
+    const { data, error } = await supabaseAdmin().from("perfis").select("microrregiao_id, cidade").eq("id", userId).maybeSingle();
+    return error || !data?.microrregiao_id ? null : dddDaCidade(data.microrregiao_id, data.cidade);
+  } catch {
+    return null;
+  }
+}
+
+/** DDD da região e da cidade de uma loja (vitrines_lojas.microrregiao_id, vitrines_lojas.cidade). */
 export async function dddDaLoja(lojaId: string | null | undefined): Promise<string | null> {
   if (!lojaId) return null;
   try {
-    const { data, error } = await supabaseAdmin().from("vitrines_lojas").select("microrregiao_id").eq("id", lojaId).maybeSingle();
-    return error || !data?.microrregiao_id ? null : dddDaRegiao(data.microrregiao_id);
+    const { data, error } = await supabaseAdmin().from("vitrines_lojas").select("microrregiao_id, cidade").eq("id", lojaId).maybeSingle();
+    return error || !data?.microrregiao_id ? null : dddDaCidade(data.microrregiao_id, data.cidade);
   } catch {
     return null;
   }
