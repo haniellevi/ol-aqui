@@ -17,12 +17,12 @@ import { BotaoAceitarTermos } from "./botao-aceitar";
 // Mostra as versões no ar dos termos e da privacidade e pede o aceite. Quem já aceitou segue direto.
 // Nome e cidade a pessoa ajusta em Minha conta > Meus dados.
 
-export const metadata: Metadata = { title: "Falta só um passo", robots: { index: false } };
+export const metadata: Metadata = { title: "Termos e privacidade", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 /** Só caminho interno ("/..."), nunca outro site (nem "/\\site.com"). */
 function destinoSeguro(v: string | string[] | undefined) {
-  const t = caminhoInterno((Array.isArray(v) ? v[0] : v)?.slice(0, 300));
+  const t = caminhoInterno(Array.isArray(v) ? v[0] : v);
   return t && !t.startsWith(LINK_ENTRAR_PERFIL) && !t.startsWith("/entrar") ? t : "/";
 }
 
@@ -37,12 +37,12 @@ export default async function CompletarPerfil({ searchParams }: { searchParams: 
   if (pendentes.length === 0) redirect(destino);
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-5 px-4 py-10">
-      <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={123} height={45} priority className="self-center" />
-      <header className="flex flex-col gap-2">
-        <h1 className="text-titulo font-semibold text-beringela">Falta só um passo</h1>
-        <p className="text-base text-texto-suave">
-          Para usar o Mercado da Região, leia as regras e como cuidamos dos seus dados. Depois toque em <strong className="font-semibold text-texto">Aceitar e continuar</strong>.
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-4 py-5 sm:py-10">
+      <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={110} height={40} priority className="self-center" />
+      <header className="flex flex-col gap-1">
+        <h1 className="text-titulo font-semibold text-beringela">Termos e privacidade</h1>
+        <p className="text-sm text-texto-suave">
+          Leia os documentos antes de aceitar.
         </p>
       </header>
 
@@ -52,9 +52,9 @@ export default async function CompletarPerfil({ searchParams }: { searchParams: 
             <Link
               href={linkDocumentoLegal(p.tipo)}
               target="_blank"
-              className="flex min-h-12 items-center gap-3 rounded-card bg-cartao px-4 py-3 shadow-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+              className="flex min-h-11 items-center gap-2 rounded-card bg-cartao px-3 py-2 shadow-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
             >
-              <FileText className="size-6 shrink-0 text-laranja-escuro" aria-hidden />
+              <FileText className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
               <span className="text-base font-semibold">{NOME_DOCUMENTO[p.tipo]}</span>
             </Link>
           </li>

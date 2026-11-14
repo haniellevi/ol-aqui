@@ -12,17 +12,17 @@ import { classesCampo } from "@/components/ui/input";
 // GET e :target preservam a busca sem JavaScript. Com JS, o diálogo nativo cuida
 // do foco, do fundo inativo e do Escape; os valores são validados também no servidor.
 
-const SELECT = `${classesCampo} h-10`;
+const SELECT = `${classesCampo} h-toque!`;
 const ENTRADA = SELECT;
 // Chip de escolha (igual ao <Chip>): selecionado = borda laranja-escuro, fundo laranja-claro, texto beringela e ✓.
 const OPCAO =
-  "group inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-campo border border-borda bg-cartao px-4 text-base font-semibold text-beringela " +
+  "group inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-campo border border-borda bg-cartao px-4 text-base font-semibold text-beringela " +
   "has-checked:border-laranja-escuro has-checked:bg-selecao " +
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 const LEGENDA = "mb-2 text-base font-semibold";
 // Chip de categoria (botão): as filhas da categoria escolhida, em qualquer nível.
 const CHIP_CATEGORIA =
-  "inline-flex min-h-10 items-center rounded-campo border border-borda bg-cartao px-4 text-base font-semibold text-beringela hover:bg-fundo " +
+  "inline-flex min-h-11 items-center rounded-campo border border-borda bg-cartao px-4 text-base font-semibold text-beringela hover:bg-fundo " +
   "aria-pressed:border-laranja-escuro aria-pressed:bg-selecao " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
@@ -34,11 +34,13 @@ export function FolhaFiltros({
   cidades,
   categorias,
   ia,
+  semIa = false,
   lateral = false,
   apenasMobile = false,
 }: {
   /** Frase original da busca que entende (ia=...): segue ao aplicar filtros, para não perder o texto nem reinterpretar. */
   ia?: string;
+  semIa?: boolean;
   lateral?: boolean;
   apenasMobile?: boolean;
   /** Para onde o formulário vai (a própria página). */
@@ -62,7 +64,7 @@ export function FolhaFiltros({
   const filtraveis = (categorias ? (escolhida && !escolhida.filhas.length ? escolhida.campos : []) : campos).filter((c) => c.filtro);
   const estadoCampos = categoria === estado.categoria ? estado : { ...estado, valores: {} };
   const facetasAtuais = categoria === estado.categoria ? facetas : null;
-  const limpar = comParametros(caminho, { q: estado.q, visualizacao: estado.visualizacao });
+  const limpar = comParametros(caminho, { q: estado.q, visualizacao: estado.visualizacao, sem_ia: semIa ? "1" : undefined });
   const prefixo = lateral ? "lateral-" : "";
 
   useEffect(() => {
@@ -154,15 +156,16 @@ export function FolhaFiltros({
         {!lateral && <a
           href={`#${ID_RESULTADOS}`}
           aria-label="Fechar filtros"
-          className="grid size-10 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+          className="grid size-11 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
         >
           <X className="size-6" aria-hidden />
         </a>}
       </div>
 
-      <div className={`flex min-h-0 flex-1 flex-col px-4 py-4 ${lateral ? "gap-4" : "gap-6 overflow-y-auto overscroll-contain"}`}>
+      <div className={`flex min-h-0 flex-1 flex-col px-4 py-4 ${lateral ? "gap-4" : "gap-4 overflow-y-auto overscroll-contain"}`}>
         {estado.q && <input type="hidden" name="q" value={estado.q} />}
         {ia && <input type="hidden" name="ia" value={ia} />}
+        {semIa && <input type="hidden" name="sem_ia" value="1" />}
         {estado.visualizacao && <input type="hidden" name="visualizacao" value={estado.visualizacao} />}
 
         {categorias && (
@@ -256,10 +259,10 @@ export function FolhaFiltros({
       </div>
 
       <div className="flex gap-2 border-t border-borda bg-cartao px-3 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <a href={limpar} className={classesBotao("secundario", false, "flex-1")}>
+        <a href={limpar} className={classesBotao("secundario", false, "flex-1", "toque")}>
           Limpar
         </a>
-        <button type="submit" className={classesBotao("primario", false, "flex-[2] px-2")}>
+        <button type="submit" className={classesBotao("primario", false, "flex-[2] px-2", "toque")}>
           Ver anúncios
         </button>
       </div>

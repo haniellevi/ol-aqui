@@ -12,7 +12,7 @@ import { Alert } from "@/components/ui/alert";
 // Corpo comum da busca (T5) e das listas de categoria (T4):
 // chips de filtro, "N anúncios em ...", grade, paginação e a folha de filtros.
 
-const controle = "inline-flex min-h-12 items-center gap-1.5 rounded-campo px-2 text-sm font-semibold text-beringela hover:bg-selecao focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
+const controle = "inline-flex min-h-11 items-center gap-1 rounded-campo px-1.5 text-sm sm:gap-1.5 sm:px-2 font-semibold text-beringela hover:bg-selecao focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
 
 export function ResultadosBusca({
   caminho,
@@ -66,39 +66,56 @@ export function ResultadosBusca({
   const emCategoria = caminho.startsWith("/c/");
   const grade = estado.visualizacao === "grade";
   const paginaAtual = estado.pagina > 1 ? String(estado.pagina) : null;
-  const filtros = { caminho, estado, campos, facetas, cidades, categorias, ia: (Array.isArray(sp.ia) ? sp.ia[0] : sp.ia) || undefined };
+  const filtros = { caminho, estado, campos, facetas, cidades, categorias, semIa: Boolean(sp.sem_ia), ia: (Array.isArray(sp.ia) ? sp.ia[0] : sp.ia) || undefined };
   const voltarHref = comParametros(caminho, sp, { pagina: paginaAtual });
 
   return (
     <div className={emCategoria ? "grid min-w-0 items-start gap-4 md:grid-cols-[minmax(14rem,16rem)_minmax(0,1fr)] md:gap-5" : "flex min-w-0 flex-col gap-2 md:gap-4"}>
       {emCategoria && <FolhaFiltros key={`lateral-${voltarHref}`} {...filtros} lateral />}
       <div className="flex min-w-0 flex-col gap-2 md:gap-3">
-        <nav aria-label="Filtros da busca" className={emCategoria ? "md:hidden" : undefined}>
-          <ul className="flex items-center justify-between gap-2 border-b border-borda">
-            <li>
-              <a href={`#${ID_FOLHA}`} className={controle}>
-                <SlidersHorizontal className="size-4" aria-hidden />
-                Filtros{ativos.length > 0 ? ` (${ativos.length})` : ""}
-              </a>
-            </li>
-            <li>
-              <a href="#filtro-ordem" className={controle}>
-                <ArrowDownUp className="size-4" aria-hidden />
-                {estado.ordem !== "relevancia" ? ordem?.rotulo : "Ordenar"}
-              </a>
-            </li>
-          </ul>
-        </nav>
+        <div className="flex flex-wrap items-center justify-between gap-x-1 gap-y-1 border-b border-borda pb-1">
+          <nav aria-label="Filtros da busca" className={emCategoria ? "md:hidden" : undefined}>
+            <ul className="flex items-center gap-1">
+              <li>
+                <a href={`#${ID_FOLHA}`} className={controle}>
+                  <SlidersHorizontal className="size-4" aria-hidden />
+                  Filtros{ativos.length > 0 ? ` (${ativos.length})` : ""}
+                </a>
+              </li>
+              <li>
+                <a href="#filtro-ordem" className={controle}>
+                  <ArrowDownUp className="size-4" aria-hidden />
+                  {estado.ordem !== "relevancia" ? ordem?.rotulo : "Ordenar"}
+                </a>
+              </li>
+            </ul>
+          </nav>
+          <nav aria-label="Visualização dos resultados" className="inline-flex rounded-campo border border-borda bg-cartao">
+            {([{ modo: "lista", texto: "Lista", Icone: List }, { modo: "grade", texto: "Grade", Icone: LayoutGrid }] as const).map(({ modo, texto, Icone }) => {
+              const selecionada = grade === (modo === "grade");
+              return (
+                <Link
+                  key={modo}
+                  href={comParametros(caminho, sp, { visualizacao: modo === "grade" ? modo : null, pagina: paginaAtual })}
+                  aria-current={selecionada ? "true" : undefined}
+                  className={`inline-flex min-h-11 items-center gap-1 rounded-campo px-1.5 text-xs sm:px-2 font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${selecionada ? "bg-selecao" : ""}`}
+                >
+                  <Icone className="size-4" aria-hidden /> {texto}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
         {ativos.length > 0 && (
           <nav aria-label="Filtros ativos">
-            <ul className={`grid gap-1 ${ativos.length === 1 ? "grid-cols-1" : ativos.length === 2 ? "grid-cols-2" : "grid-cols-3"} sm:flex sm:flex-wrap`}>
+            <ul className="flex flex-wrap gap-1.5">
               {ativos.map((a) => (
                 <li key={a.parametros[0]} className="max-w-full">
                   <Link
                     href={comParametros(caminho, sp, Object.fromEntries(a.parametros.map((p) => [p, null])))}
                     aria-label={`Remover filtro: ${a.rotulo}`}
-                    className="flex h-full min-h-12 w-full items-center justify-between gap-1 rounded-campo bg-selecao px-1.5 py-1 text-xs leading-tight text-beringela hover:bg-borda focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro sm:w-auto sm:gap-2 sm:px-3"
+                    className="flex h-full min-h-11 items-center gap-2 rounded-campo bg-selecao px-2.5 py-1 text-xs leading-tight text-beringela hover:bg-borda focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
                   >
                     <span className="min-w-0 [overflow-wrap:anywhere]">{a.rotulo.replace(/^(Cidade|Preço): /, "")}</span><X className="size-3 shrink-0" aria-hidden />
                   </Link>
@@ -109,47 +126,30 @@ export function ResultadosBusca({
         )}
 
         <section id={ID_RESULTADOS} aria-labelledby="total-resultados" className="flex scroll-mt-20 flex-col gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-            <p id="total-resultados" className="text-base text-texto-suave" aria-live="polite">
-              {erros.length ? "Revise os filtros para ver os anúncios" : total === 0 ? (
-                <>Nenhum anúncio em {ondeTexto}</>
-              ) : (
-                <>
-                  <strong className="font-semibold text-texto">
-                    {inteiro(total)} {total === 1 ? "anúncio" : "anúncios"}
-                  </strong>{" "}
-                  em {ondeTexto}
-                </>
-              )}
-            </p>
-            <nav aria-label="Visualização dos resultados" className="inline-flex rounded-campo border border-borda bg-cartao">
-              {([{ modo: "lista", texto: "Lista", Icone: List }, { modo: "grade", texto: "Grade", Icone: LayoutGrid }] as const).map(({ modo, texto, Icone }) => {
-                const selecionada = grade === (modo === "grade");
-                return (
-                  <Link
-                    key={modo}
-                    href={comParametros(caminho, sp, { visualizacao: modo === "grade" ? modo : null, pagina: paginaAtual })}
-                    aria-current={selecionada ? "true" : undefined}
-                    className={`inline-flex min-h-11 items-center gap-1 rounded-campo px-2 text-xs font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${selecionada ? "bg-selecao" : ""}`}
-                  >
-                    <Icone className="size-4" aria-hidden /> {texto}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
+          <p id="total-resultados" className="text-sm text-texto-suave" aria-live="polite">
+            {erros.length ? "Revise os filtros para ver os anúncios" : total === 0 ? (
+              <>Nenhum anúncio em {ondeTexto}</>
+            ) : (
+              <>
+                <strong className="font-semibold text-texto">
+                  {inteiro(total)} {total === 1 ? "anúncio" : "anúncios"}
+                </strong>{" "}
+                em {ondeTexto}
+              </>
+            )}
+          </p>
 
           {erros.length > 0 ? (
             <Alert variant="destructive" role="alert" className="flex flex-col items-start gap-3">
               <h2 className="text-lg font-semibold">Não foi possível aplicar os filtros</h2>
               <ul className="list-inside list-disc text-base">{erros.map((erro) => <li key={erro}>{erro}</li>)}</ul>
-              <a href={`#${ID_FOLHA}`} className={classesBotao("secundario", false, emCategoria ? "md:hidden" : "")}>Corrigir filtros</a>
-              {emCategoria && <a href="#lateral-titulo-filtros" className={classesBotao("secundario", false, "hidden md:inline-flex")}>Corrigir filtros</a>}
+              <a href={`#${ID_FOLHA}`} className={classesBotao("secundario", false, emCategoria ? "md:hidden" : "", "toque")}>Corrigir filtros</a>
+              {emCategoria && <a href="#lateral-titulo-filtros" className={classesBotao("secundario", false, "hidden md:inline-flex", "toque")}>Corrigir filtros</a>}
             </Alert>
           ) : anuncios.length === 0 && estado.pagina > 1 && total === 0 ? (
             <div className="flex flex-col items-start gap-2">
               <p className="text-base">Esta página não tem mais anúncios.</p>
-              <Link href={comParametros(caminho, sp)} className={classesBotao("secundario")}>
+              <Link href={comParametros(caminho, sp)} className={classesBotao("secundario", false, "", "toque")}>
                 Voltar para a primeira página
               </Link>
             </div>
@@ -170,7 +170,7 @@ function Paginacao({ caminho, sp, pagina, paginas }: { caminho: string; sp: Para
   return (
     <nav aria-label="Páginas" className="mt-2 grid grid-cols-2 items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
       {pagina > 1 ? (
-        <Link href={link(pagina - 1)} rel="prev" className={classesBotao("secundario", false, "order-2 justify-self-start sm:order-1")}>
+        <Link href={link(pagina - 1)} rel="prev" className={classesBotao("secundario", false, "order-2 justify-self-start sm:order-1", "toque")}>
           <ChevronLeft className="hidden size-5 sm:inline" aria-hidden /> Anterior
         </Link>
       ) : (
@@ -180,7 +180,7 @@ function Paginacao({ caminho, sp, pagina, paginas }: { caminho: string; sp: Para
         Página {pagina} de {paginas}
       </span>
       {pagina < paginas ? (
-        <Link href={link(pagina + 1)} rel="next" className={classesBotao("secundario", false, "order-3 justify-self-end")}>
+        <Link href={link(pagina + 1)} rel="next" className={classesBotao("secundario", false, "order-3 justify-self-end", "toque")}>
           Próxima <ChevronRight className="hidden size-5 sm:inline" aria-hidden />
         </Link>
       ) : (

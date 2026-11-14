@@ -342,3 +342,51 @@ test('pedido começa em Toda a região, manda as cidades com id e avisa cidade d
     assert.equal(campos.props.children.some(e=>e&&e.type==='Alert'),avisa);
   }
 });
+
+test('confirmação sem sessão retoma o passo e seu destino sem perder a busca', async () => {
+  const { default: confirmar } = carregar('src/app/confirmar-celular/page.tsx', {
+    'next/image': {},
+    'next/navigation': { redirect: (url) => { throw Error(url); } },
+    '@clerk/nextjs': {},
+    '@clerk/nextjs/server': { auth: async () => ({ userId: null }) },
+    '@/lib/perfil': {},
+    '@/lib/dados/conta': {},
+    '@/lib/whatsapp/servico': {},
+    '@/components/conta/confirmar-whatsapp': {},
+  });
+  const destino = '/radar/pedir?q=Mesa&preco_max=500';
+  let retorno;
+  await assert.rejects(confirmar({ searchParams: Promise.resolve({ destino }) }), (e) => {
+    const entrar = new URL(e.message, 'https://teste.local');
+    retorno = entrar.searchParams.get('redirect_url');
+    const passo = new URL(retorno, 'https://teste.local');
+    return entrar.pathname === '/entrar' && passo.pathname === '/confirmar-celular' && passo.searchParams.get('destino') === destino;
+  });
+  const { default: abrirLogin } = carregar('src/app/entrar/[[...entrar]]/page.tsx', {
+    'next/image': {}, 'next/link': {}, '@clerk/nextjs': { SignIn: 'ClerkSignIn' },
+  });
+  const tela = await abrirLogin({ searchParams: Promise.resolve({ redirect_url: retorno }) });
+  const login = tela.props.children.find(e => e.type === 'ClerkSignIn');
+  assert.equal(login.props.forceRedirectUrl, retorno);
+  assert.equal(login.props.signUpForceRedirectUrl, retorno);
+});
+
+test('após confirmar o WhatsApp, a etapa de termos devolve à ação original', async () => {
+  const { default: confirmar } = carregar('src/app/confirmar-celular/page.tsx', {
+    'next/image': {},
+    'next/navigation': {},
+    '@clerk/nextjs': {},
+    '@clerk/nextjs/server': { auth: async () => ({ userId: 'teste' }) },
+    '@/lib/perfil': { garantirPerfil: async () => {} },
+    '@/lib/dados/conta': { meuPerfilEVitrine: async () => null },
+    '@/lib/whatsapp/servico': { configuracaoWhatsapp: () => ({ siteKey: 'teste' }) },
+    '@/components/conta/confirmar-whatsapp': { ConfirmarWhatsapp: 'ConfirmarWhatsapp' },
+  });
+  const destino = '/radar/pedir?q=Mesa&preco_max=500';
+  const esperado = '/completar-perfil?redirect_url=' + encodeURIComponent(destino);
+  for (const entrada of [destino, esperado]) {
+    const tela = await confirmar({ searchParams: Promise.resolve({ destino: entrada }) });
+    const formulario = tela.props.children.find(e => e?.type === 'ConfirmarWhatsapp');
+    assert.equal(formulario.props.destino, esperado);
+  }
+});

@@ -33,10 +33,10 @@ export function BotaoAceitarTermos({ ids, destino, adiarHref }: { ids: string[];
           {erro}
         </Alert>
       )}
-      <Botao larguraTotal carregando={enviando} textoCarregando="Entrando…" onClick={() => void aceitar()}>
+      <Botao tamanho="toque" larguraTotal carregando={enviando} textoCarregando="Entrando…" onClick={() => void aceitar()}>
         Aceitar e continuar
       </Botao>
-      <Botao href={adiarHref} variante="texto">
+      <Botao href={adiarHref} variante="texto" tamanho="toque">
         Agora não
       </Botao>
     </div>

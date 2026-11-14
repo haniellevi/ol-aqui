@@ -124,15 +124,15 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   return (
     <div data-comprador className={estilos.fundo}>
       {/* Celular: a busca gruda logo abaixo do cabeçalho (no computador ela está no próprio cabeçalho). */}
-      <div className="border-b border-borda bg-cartao px-2.5 py-2 md:hidden">
-        <CampoBusca id="busca-inicio" toqueAmplo />
+      <div className="border-b border-borda bg-cartao px-4 py-2 md:hidden">
+        <CampoBusca id="busca-inicio" sugestoes regiao={regiao?.slug} toqueAmplo />
       </div>
 
-      <div className="mx-auto w-full max-w-7xl px-2.5 md:px-4 [&:not(:empty)]:pt-2">
+      <div className="mx-auto w-full max-w-7xl px-4 [&:not(:empty)]:pt-2">
         <EntradaAssistente dono={userId} />
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl items-start gap-4 px-2.5 py-2 md:px-4 md:py-3 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-7xl items-start gap-4 px-4 py-2 md:py-3 lg:grid-cols-[13rem_minmax(0,1fr)]">
         {/* Coluna da esquerda: categorias e atalhos (só no computador). */}
         <aside className="sticky top-20 hidden flex-col gap-4 lg:flex">
           {categorias.length > 0 && (
@@ -174,7 +174,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           </Suspense>
 
           {/* Lojas no topo do feed (bloco "lojas_regiao" do painel). Desligado: fica só o acesso ao catálogo. */}
-          <div className="min-w-0 max-md:order-3">
+          <div className="min-w-0 max-md:order-4">
           {regiao && blocoLojas ? (
             <LojasDaRegiao regiao={regiao} arvore={enxugarArvore(todasCategorias)} titulo={textoDe(blocoLojas.titulo, "LOJAS DESTAQUE DA REGIÃO", lugar)} />
           ) : (
@@ -206,14 +206,14 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             </div>
             <div role="group" aria-label="Filtros rápidos" className={`flex flex-wrap gap-2 ${filtrando ? "" : "max-md:hidden"}`}>
               {cidade && (
-                <Chip href={linkFiltros({ ...filtros, minha: !filtros.minha })} ativo={filtros.minha} icone={<MapPin />} scroll={false}>
+                <Chip href={linkFiltros({ ...filtros, minha: !filtros.minha })} ativo={filtros.minha} tamanho="toque" icone={<MapPin />} scroll={false}>
                   Só em {formatarNome(cidade)}
                 </Chip>
               )}
-              <Chip href={linkFiltros({ ...filtros, ate: !filtros.ate })} ativo={filtros.ate} scroll={false}>
+              <Chip href={linkFiltros({ ...filtros, ate: !filtros.ate })} ativo={filtros.ate} tamanho="toque" scroll={false}>
                 Até R$ 100
               </Chip>
-              <Chip href={linkFiltros({ ...filtros, menorPreco: !filtros.menorPreco })} ativo={filtros.menorPreco} icone={<ArrowDownWideNarrow />} scroll={false}>
+              <Chip href={linkFiltros({ ...filtros, menorPreco: !filtros.menorPreco })} ativo={filtros.menorPreco} tamanho="toque" icone={<ArrowDownWideNarrow />} scroll={false}>
                 Menor preço
               </Chip>
               {filtrando && (
@@ -224,7 +224,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             </div>
           </div>
 
-          <div className="max-md:order-4">
+          <div className="max-md:order-1">
           <AcoesInicio
             radar={radar ? {
               chamada: textoDe(radar.titulo, "Não achou?", lugar),
@@ -239,7 +239,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             switch (bloco.chave) {
               case "destaques":
                 return destaques.length > 0 ? (
-                  <section key={bloco.chave} aria-labelledby="titulo-destaques" className={`flex flex-col gap-2 max-md:order-1 ${estilos.faixaPaga}`}>
+                  <section key={bloco.chave} aria-labelledby="titulo-destaques" className={`flex flex-col gap-2 max-md:order-2 ${estilos.faixaPaga}`}>
                     <h2 id="titulo-destaques" className="text-lg font-semibold">
                       {textoDe(bloco.titulo, "Destaques perto de você", lugar)}
                     </h2>
@@ -249,7 +249,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
               case "lojas_destaque":
                 return regiao ? (
-                  <div key={bloco.chave} className="min-w-0 max-md:order-3 [&:empty]:hidden"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
+                  <div key={bloco.chave} className="min-w-0 max-md:order-4 [&:empty]:hidden"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
                 ) : null;
 
               case "radar":
@@ -262,7 +262,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
               case "recentes":
                 return (
-                  <div key={bloco.chave} className="flex flex-col gap-3 max-md:order-2">
+                  <div key={bloco.chave} className="flex flex-col gap-3 max-md:order-3">
                     {!filtrando && <div className="max-md:order-last [&:empty]:hidden"><VistosRecentemente voltarHref={voltarHref} /></div>}
                     <section id="anuncios" aria-labelledby="titulo-recentes" className="flex scroll-mt-20 flex-col gap-3">
                       <h2 id="titulo-recentes" className={`text-lg font-semibold ${filtrando ? "" : "max-md:sr-only"}`}>
@@ -285,8 +285,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                               titulo="Nada com esses filtros"
                               texto="Tire um filtro. Não achou? Diga o que procura e as lojas da região te respondem."
                             >
-                              <Botao href="/" variante="secundario" larguraTotal>Limpar filtros</Botao>
-                              <Botao href={linkPedirRadar()} tamanho="grande" larguraTotal>Estou procurando…</Botao>
+                              <Botao href="/" variante="secundario" tamanho="toque" larguraTotal>Limpar filtros</Botao>
+                              <Botao href={linkPedirRadar()} tamanho="toque" larguraTotal>Estou procurando…</Botao>
                             </Vazio>
                           ) : (
                             <Vazio

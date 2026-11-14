@@ -19,7 +19,7 @@ const APARENCIA_LOGIN = {
   elements: {
     rootBox: { width: "100%" },
     cardBox: { width: "100%", boxShadow: "none", border: "1px solid var(--color-borda)" },
-    card: { boxShadow: "none", padding: "1.5rem 1.25rem", gap: "1.25rem" },
+    card: { boxShadow: "none", padding: "1rem", gap: "1rem" },
     logoBox: { display: "none" },
     headerSubtitle: { display: "none" },
     headerTitle: { fontSize: "1.125rem", fontWeight: 600 },
@@ -28,6 +28,7 @@ const APARENCIA_LOGIN = {
     dividerText: { fontSize: "0.8125rem" },
     formFieldRow: { flexDirection: "column", alignItems: "stretch" },
     formFieldLabel: { fontSize: "0.875rem", fontWeight: 600 },
+    formFieldInput: { minHeight: "2.75rem", fontSize: "1rem" },
     formButtonPrimary: { minHeight: "2.75rem", fontSize: "0.875rem" },
     footer: { background: "transparent", fontSize: "0.8125rem" },
   },
@@ -54,14 +55,11 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   const assistido = retorno.pathname === "/assistente" &&
     objetivoAssistente(retorno.searchParams.get("objetivo")) &&
     tentativaAssistente(retorno.searchParams.get("tentativa"));
-  const depoisDeCriar = assistido ? destino
+  const depoisDeCriar = (assistido || retorno.pathname === "/confirmar-celular") ? destino
     : destino === "/" ? LINK_ENTRAR_PERFIL : `${LINK_ENTRAR_PERFIL}?redirect_url=${encodeURIComponent(destino)}`;
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-6 px-4 py-8">
-      <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região, aqui a sua cidade aparece" width={152} height={73} priority />
-      <p className="max-w-xs text-center text-sm text-texto-suave">
-        Vai criar uma conta? Use pelo menos 8 caracteres e escolha uma senha que você não usa em outros sites.
-      </p>
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-3 px-4 py-4 sm:gap-4 sm:py-8">
+      <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região, aqui a sua cidade aparece" width={132} height={63} priority />
       <SignIn
         path="/entrar"
         routing="path"
