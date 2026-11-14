@@ -4,7 +4,7 @@ import { cabecalhoEvolutionConfere, pedidoDeSaida, segredoEvolution } from "@/li
 
 export const dynamic = "force-dynamic";
 
-// Webhook de entrada da Evolution (mensagens recebidas). Só SAIR, PARAR, STOP e CANCELAR fazem efeito:
+// Webhook de entrada da Evolution (mensagens recebidas). Só pedido de saída (SAIR, PARAR, STOP, CANCELAR ou frase curta como "quero sair") faz efeito:
 // desligam o aviso do Radar por WhatsApp de quem tem o número, cancelam a fila dele e ficam registrados.
 // Não guarda nem registra o texto nem o número. Qualquer outra mensagem é ignorada com 200.
 export async function POST(req: Request) {
