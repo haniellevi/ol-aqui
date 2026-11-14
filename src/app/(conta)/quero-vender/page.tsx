@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ChevronRight, Store } from "lucide-react";
+import { ChevronRight, Package, Store } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
@@ -36,35 +36,41 @@ export default async function PaginaQueroVender() {
   ].filter(Boolean);
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-2.5 py-4 md:gap-5 md:px-4 md:py-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-beringela">Como você quer vender?</h1>
-        <p className="text-sm text-texto-suave md:text-base">Você pode criar uma loja depois e manter seus anúncios.</p>
-      </div>
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
+      <header className="flex flex-col gap-2 sm:text-center">
+        <h1 className="text-2xl leading-tight font-bold text-beringela sm:text-3xl">Como você quer vender?</h1>
+        <p className="text-sm text-texto-suave sm:text-base">Você pode criar uma loja depois e manter seus anúncios.</p>
+      </header>
 
-      <section aria-labelledby="titulo-pf" className="flex flex-col gap-2 rounded-card bg-cartao p-3 md:gap-3 md:p-4 shadow-1">
-        <h2 id="titulo-pf" className="text-base font-semibold md:text-lg">Vender minhas coisas</h2>
-        <p className="text-sm text-texto-suave md:text-base">{textoPf}</p>
-        <BotaoVenderCoisas />
-      </section>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <section aria-labelledby="titulo-pf" className="flex min-w-0 flex-col gap-4 rounded-card border border-borda bg-cartao p-5 shadow-1 sm:p-6">
+          <span className="grid size-12 place-items-center rounded-campo bg-selecao text-beringela" aria-hidden>
+            <Package className="size-6" />
+          </span>
+          <div className="flex flex-1 flex-col gap-2">
+            <h2 id="titulo-pf" className="text-lg font-semibold text-beringela">Vender minhas coisas</h2>
+            <p className="text-sm text-texto-suave sm:text-base">{textoPf}</p>
+          </div>
+          <BotaoVenderCoisas />
+        </section>
 
-      <section aria-labelledby="titulo-loja" className="flex flex-col gap-2 rounded-card bg-cartao p-3 md:gap-3 md:p-4 shadow-1">
-        <div className="flex items-start gap-3">
-          <span className="grid size-8 shrink-0 md:size-10 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
+        <section aria-labelledby="titulo-loja" className="flex min-w-0 flex-col gap-4 rounded-card border border-beringela/20 bg-selecao p-5 shadow-1 sm:p-6">
+          <span className="grid size-12 place-items-center rounded-campo bg-beringela/10 text-beringela" aria-hidden>
             <Store className="size-6" />
           </span>
-          <div className="flex flex-col gap-1">
-            <h2 id="titulo-loja" className="text-base font-semibold md:text-lg">Tenho uma loja ou negócio</h2>
-            <p className="text-sm text-texto-suave md:text-base">
-              Vitrine para divulgar seus anúncios. {partesTeste.join(", ")}. Responder no Radar requer loja verificada e plano com Radar ou cortesia da equipe.
+          <div className="flex flex-1 flex-col gap-2">
+            <h2 id="titulo-loja" className="text-lg font-semibold text-beringela">Tenho uma loja ou negócio</h2>
+            <p className="text-sm text-texto-suave sm:text-base">
+              Vitrine própria. {partesTeste.join(", ")}.
             </p>
+            <p className="text-sm text-texto-suave">Responder no Radar requer loja verificada e plano com Radar ou cortesia da equipe.</p>
           </div>
-        </div>
-        <Botao href="/quero-vender/loja" variante="secundario" larguraTotal>
-          Criar minha loja
-          <ChevronRight className="size-5" aria-hidden />
-        </Botao>
-      </section>
+          <Botao href="/quero-vender/loja" variante="secundario" larguraTotal>
+            Criar minha loja
+            <ChevronRight className="size-5" aria-hidden />
+          </Botao>
+        </section>
+      </div>
 
       <p className="text-center text-base text-texto-suave">
         Só quer comprar?{" "}

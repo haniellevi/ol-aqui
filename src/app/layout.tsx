@@ -27,6 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ClerkProvider
       localization={{
         ...ptBR,
+        formFieldInputPlaceholder__firstName: "Seu nome",
+        formFieldInputPlaceholder__lastName: "Seu sobrenome",
         signIn: {
           ...ptBR.signIn,
           start: {

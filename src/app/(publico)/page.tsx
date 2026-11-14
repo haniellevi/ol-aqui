@@ -143,7 +143,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                   <li key={c.id}>
                     <Link href={linkCategoria(c.slug)} className={estilos.itemLado}>
                       <IconeCategoria nome={c.icone} className="size-5 shrink-0 text-beringela" aria-hidden />
-                      <span className="truncate">{c.nome}</span>
+                      <span className="min-w-0 py-1.5 leading-tight [overflow-wrap:anywhere]">{c.nome}</span>
                     </Link>
                   </li>
                 ))}

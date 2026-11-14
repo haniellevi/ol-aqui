@@ -95,7 +95,7 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
                               <ShieldCheck className="absolute -right-1 -bottom-1 size-4 rounded-full bg-cartao p-0.5 text-verde-escuro" aria-label="Loja verificada" role="img" />
                             )}
                           </span>
-                          <span className="w-full truncate text-xs font-medium leading-4 text-texto">{nome}</span>
+                          <span className="w-full text-xs font-medium leading-4 text-texto [overflow-wrap:anywhere]">{nome}</span>
                         </Link>
                       </li>
                     );
