@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { cabecalhoEvolutionConfere, pedidoDeSaida, saidaSemNumeroLegivel, segredoEvolution } from "@/lib/whatsapp/evolution";
+import { cabecalhoEvolutionConfere, pedidoDeMensagem, saidaSemNumeroLegivel, segredoEvolution } from "@/lib/whatsapp/evolution";
 
 export const dynamic = "force-dynamic";
 
-// Webhook de entrada da Evolution (mensagens recebidas). Só pedido de saída (SAIR, PARAR, STOP, CANCELAR ou frase curta como "quero sair") faz efeito:
-// desligam o aviso do Radar por WhatsApp de quem tem o número, cancelam a fila dele e ficam registrados.
-// Não guarda nem registra o texto nem o número. Qualquer outra mensagem é ignorada com 200.
+// Webhook de entrada da Evolution (mensagens recebidas). Só mensagem de pessoa com número legível faz efeito:
+// SAIR (ou PARAR, STOP, CANCELAR, frase curta de saída) desliga o aviso do Radar por WhatsApp e cancela a fila dele.
+// VOLTAR, SIM e as outras mensagens vão para o banco (whatsapp_mensagem_recebida), que decide e responde no máximo
+// uma vez por tipo e dia (a confirmação da volta sai uma por ativação). Vai só o resumo (sha256) do texto, para ver mensagem repetida. Texto e número não são registrados.
 export async function POST(req: Request) {
   const segredo = segredoEvolution();
   if (!segredo) return NextResponse.json({ ok: false }, { status: 503 });
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ ok: true, ignorado: "corpo" });
   }
-  const pedido = pedidoDeSaida(corpo);
+  const pedido = pedidoDeMensagem(corpo);
   if (!pedido) {
     // Frase de saída cujo número não se lê (conversa @lid sem campo de número): só o fato, sem número nem texto.
     if (saidaSemNumeroLegivel(corpo)) console.warn("whatsapp evolution: saida sem numero legivel (conversa sem campo de numero)");
@@ -33,9 +34,11 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ ok: false }, { status: 503 });
   }
-  const { error } = await db.rpc("whatsapp_sair", { p_numero: pedido.numero, p_comando: pedido.comando });
+  const { error } = pedido.intencao === "sair"
+    ? await db.rpc("whatsapp_sair", { p_numero: pedido.numero, p_comando: pedido.comando })
+    : await db.rpc("whatsapp_mensagem_recebida", { p_numero: pedido.numero, p_intencao: pedido.intencao, p_hash: pedido.hash });
   if (error) {
-    console.error("whatsapp evolution: falha ao registrar a saída", error.code);
+    console.error("whatsapp evolution: falha ao registrar a mensagem", error.code);
     return NextResponse.json({ ok: false }, { status: 503 });
   }
   return NextResponse.json({ ok: true });

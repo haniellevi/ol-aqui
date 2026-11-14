@@ -70,7 +70,7 @@ select pg_temp.confere840(:'d2b' = 'ignorada', 'linha já cancelada não é envi
 
 -- [3] Resposta de confirmação: uma por número e dia, com o texto exato, na fila, sem ser cancelada pelo Radar
 select pg_temp.confere840((select count(*) = 1 from whatsapp_fila where chave like 'whatsapp_saida:5589999960001:%'), 'SAIR põe UMA resposta na fila');
-select pg_temp.confere840((select texto = 'Pronto. Você não vai mais receber pedidos do Radar pelo WhatsApp. Para voltar, ligue o aviso em Minha conta > Notificações no Mercado da Região.'
+select pg_temp.confere840((select texto = 'Pronto. Você não vai mais receber pedidos do Radar pelo WhatsApp. Para voltar, responda VOLTAR aqui ou ligue em Minha conta > Notificações.'
   and numero = '5589999960001' and usuario_id = 'user_840loja' and estado = 'pendente' and link is null
   from whatsapp_fila where chave like 'whatsapp_saida:5589999960001:%'), 'resposta com o texto exato, para o número que mandou, pendente e sem link');
 select pg_temp.confere840((select chave ~ '^whatsapp_saida:5589999960001:[0-9]{4}-[0-9]{2}-[0-9]{2}$' from whatsapp_fila where chave like 'whatsapp_saida:5589999960001:%'),
