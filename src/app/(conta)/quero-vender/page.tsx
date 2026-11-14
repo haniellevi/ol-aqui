@@ -56,7 +56,7 @@ export default async function PaginaQueroVender() {
           <div className="flex flex-col gap-1">
             <h2 id="titulo-loja" className="text-base font-semibold md:text-lg">Tenho uma loja ou negócio</h2>
             <p className="text-sm text-texto-suave md:text-base">
-              Vitrine para divulgar seus anúncios e acesso ao Radar. {partesTeste.join(", ")}.
+              Vitrine para divulgar seus anúncios. {partesTeste.join(", ")}. Responder no Radar requer loja verificada e plano com Radar ou cortesia da equipe.
             </p>
           </div>
         </div>
