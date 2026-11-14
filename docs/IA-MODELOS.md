@@ -28,7 +28,7 @@ OpenRouter escolher.
 | Radar: textos e escolha de parecidos | `ia.modelo.radar` | `src/lib/radar-ia/gemini.ts` | Luna, DeepSeek, Gemini 2.5 Flash Lite (anterior) |
 
 A lista fica em `src/lib/ia-modelos.ts` e, igual, na função `ia_modelo` do banco
-(migração `20261126010000_ia_modelos_por_recurso.sql`). Um teste confere que as duas listas batem.
+(migração `20261127010000_ia_modelos_por_recurso.sql`). Um teste confere que as duas listas batem.
 
 ## Recursos com modelo fixo (aparecem na tela com o motivo)
 - Busca que entende, sugestão de categoria e as partes do Radar que julgam (perguntas, novidades, "já comprei"):
@@ -60,7 +60,7 @@ Igual a antes da troca:
 - Radar: segue sem IA (prazo de 3 s).
 
 ## Falta conferir em produção (precisa do "sim" do Raniel)
-1. Aplicar a migração `20261126010000_ia_modelos_por_recurso.sql` no Supabase. Ela para sozinha se alguma reserva
+1. Aplicar a migração `20261127010000_ia_modelos_por_recurso.sql` no Supabase. Ela para sozinha se alguma reserva
    tiver mudado desde 18/11.
 2. Conferir se o OpenRouter tem rota **sem retenção (ZDR)** para o GPT-6 Luna e o DeepSeek V4.1 Flash. Sem rota,
    todas as chamadas falham e cada recurso cai no comportamento acima. Teste: aprovar um anúncio retido de teste

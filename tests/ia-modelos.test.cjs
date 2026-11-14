@@ -8,7 +8,7 @@ const ia = carregar('src/lib/ia-modelos.ts');
 const LUNA = 'openai/gpt-6-luna';
 const DEEPSEEK = 'deepseek/deepseek-v4.1-flash';
 const RECURSOS = ['moderacao', 'categorizacao', 'melhoria', 'verificacao', 'radar'];
-const MIGRACAO = fs.readFileSync('supabase/migrations/20261126010000_ia_modelos_por_recurso.sql', 'utf8');
+const MIGRACAO = fs.readFileSync('supabase/migrations/20261127010000_ia_modelos_por_recurso.sql', 'utf8');
 
 async function comOpenRouter(fn) {
   const antes = global.fetch; const chave = process.env.OPENROUTER_API_KEY;
