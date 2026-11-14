@@ -1,10 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
 import { ImagePlus } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
-import { Botao } from "@/components/ui/botao";
+import { Botao, classesBotao } from "@/components/ui/botao";
 import { AvisoErro } from "./aviso-erro";
 import { classesCampo } from "@/components/ui/input";
 import { enviarFoto } from "@/lib/fotos";
@@ -25,6 +24,7 @@ export type EntradaColetaLojaIa = {
 };
 
 type Props = {
+  andamento?: string;
   rascunho: { id: string; revisao: number; entrada: EntradaColetaLojaIa };
   cidades: { nome: string; uf: string }[];
   whatsappConfirmado: boolean;
@@ -43,10 +43,7 @@ export function etapaInicial(entrada: EntradaColetaLojaIa): number {
   return 1;
 }
 
-const botao = "min-h-11 rounded-campo bg-laranja px-5 py-2 font-semibold text-beringela disabled:opacity-50";
-const secundario = "min-h-11 rounded-campo border border-borda px-5 py-2 font-semibold text-beringela disabled:opacity-50";
-
-export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappConsultaDisponivel, cnpjDisponivel, imagens: imagensIniciais = {}, salvar, prepararEnvio, finalizarEnvio, iniciar }: Props) {
+export function FormLojaIa({ andamento = "/quero-vender/loja/criar-com-ia", rascunho, cidades, whatsappConfirmado, whatsappConsultaDisponivel, cnpjDisponivel, imagens: imagensIniciais = {}, salvar, prepararEnvio, finalizarEnvio, iniciar }: Props) {
   const [entrada, setEntrada] = useState<EntradaColetaLojaIa>({ ...rascunho.entrada, materiais: rascunho.entrada.materiais ?? [] });
   const [etapa, setEtapa] = useState(() => etapaInicial(rascunho.entrada));
   const [revisao, setRevisao] = useState(rascunho.revisao);
@@ -112,40 +109,54 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
     }
   }
 
-  if (iniciado) return <div role="status" className="flex flex-col gap-3"><h1 className="text-xl font-semibold text-beringela">Estamos preparando seu rascunho</h1><p>Você pode sair e acompanhar o andamento em Minhas lojas.</p><Link className="font-semibold text-laranja-escuro underline" href="/minha-conta/lojas">Ir para Minhas lojas</Link></div>;
+  if (iniciado) return (
+    <section className="flex flex-col gap-3">
+      <div role="status">
+        <h1 className="text-titulo font-semibold text-beringela">Estamos preparando seu rascunho</h1>
+        <p className="mt-1 text-sm text-texto-suave">Acompanhe o rascunho aqui ou em Minhas lojas.</p>
+      </div>
+      <div className="flex flex-wrap gap-2 [&>*]:flex-1">
+        <a href={andamento} className={classesBotao("primario", false, "", "toque")}>Atualizar andamento</a>
+        <Botao href="/minha-conta/lojas" variante="secundario" tamanho="toque">Ir para Minhas lojas</Botao>
+      </div>
+    </section>
+  );
 
   return (
-    <section className="flex flex-col gap-4 md:gap-5" aria-busy={ocupado}>
-      <p className="text-sm font-semibold text-texto-suave">Passo {etapa + 1} de 3</p>
-      <h1 className="text-xl font-semibold text-beringela">{["Conte sobre sua loja", "Onde encontramos sua loja?", "Mais informações para seu rascunho"][etapa]}</h1>
+    <section className="flex flex-col gap-3" aria-busy={ocupado}>
+      <header>
+        <h1 className="text-titulo leading-tight font-semibold text-beringela">{["Conte sobre sua loja", "Onde encontramos sua loja?", "Mais informações para seu rascunho"][etapa]}</h1>
+        <p className="mt-1 text-sm text-texto-suave" aria-live="polite">Passo {etapa + 1} de 3</p>
+      </header>
       <AvisoErro mensagem={erro} />
-      <fieldset disabled={ocupado} className="min-w-0">
-      {etapa === 0 && <div className="flex flex-col gap-4">
-        <Campo rotulo="Nome da loja" name="nome" value={entrada.nome} onChange={(e) => atualizar({ nome: e.target.value })} required />
-        <label className="flex flex-col gap-1 text-sm font-semibold" htmlFor="coleta-cidade">Cidade
-          <select id="coleta-cidade" className={classesCampo} value={entrada.cidade} onChange={(e) => atualizar({ cidade: e.target.value })} required>
+      <fieldset disabled={ocupado} className="min-w-0 rounded-card border border-borda bg-cartao p-3 sm:p-4">
+      {etapa === 0 && <div className="flex flex-col gap-3">
+        <Campo tamanho="toque" rotulo="Nome da loja" name="nome" value={entrada.nome} onChange={(e) => atualizar({ nome: e.target.value })} required />
+        <div className="flex flex-col gap-1">
+          <label className="text-rotulo font-semibold" htmlFor="coleta-cidade">Cidade</label>
+          <select id="coleta-cidade" className={`${classesCampo} h-toque!`} value={entrada.cidade} onChange={(e) => atualizar({ cidade: e.target.value })} required>
             <option value="">Escolha a cidade</option>
             {cidades.map((cidade) => <option key={`${cidade.nome}-${cidade.uf}`} value={cidade.nome}>{cidade.nome} - {cidade.uf}</option>)}
           </select>
-        </label>
+        </div>
         {!cidades.length && <p className="text-sm text-perigo">Não há cidades disponíveis agora. Tente novamente mais tarde.</p>}
       </div>}
-      {etapa === 1 && <div className="flex flex-col gap-4">
+      {etapa === 1 && <div className="flex flex-col gap-3">
         <p className="text-sm text-texto-suave">Informe os links ou nomes dos perfis que quiser compartilhar.</p>
-        <Campo rotulo="Site" name="site" value={entrada.site ?? ""} onChange={(e) => atualizar({ site: e.target.value })} opcional />
-        <Campo rotulo="Instagram" name="instagram" value={entrada.instagram ?? ""} onChange={(e) => atualizar({ instagram: e.target.value })} opcional />
-        <Campo rotulo="Facebook" name="facebook" value={entrada.facebook ?? ""} onChange={(e) => atualizar({ facebook: e.target.value })} opcional />
+        <Campo tamanho="toque" rotulo="Site" name="site" value={entrada.site ?? ""} onChange={(e) => atualizar({ site: e.target.value })} opcional />
+        <Campo tamanho="toque" rotulo="Instagram" name="instagram" value={entrada.instagram ?? ""} onChange={(e) => atualizar({ instagram: e.target.value })} opcional />
+        <Campo tamanho="toque" rotulo="Facebook" name="facebook" value={entrada.facebook ?? ""} onChange={(e) => atualizar({ facebook: e.target.value })} opcional />
       </div>}
-      {etapa === 2 && <div className="flex flex-col gap-4">
+      {etapa === 2 && <div className="flex flex-col gap-3">
         <p className="text-sm text-texto-suave">Você pode enviar imagens próprias ou autorizadas para uso. Se não tiver fontes, escreva uma descrição curta da loja.</p>
-        <Campo rotulo="CNPJ" name="cnpj" value={entrada.cnpj ?? ""} onChange={(e) => atualizar({ cnpj: e.target.value })} opcional />
-        <Campo rotulo="Descrição da loja" name="descricao" value={entrada.descricao ?? ""} onChange={(e) => atualizar({ descricao: e.target.value })} multilinha opcional />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <Campo tamanho="toque" rotulo="CNPJ" name="cnpj" value={entrada.cnpj ?? ""} onChange={(e) => atualizar({ cnpj: e.target.value })} opcional />
+        <Campo tamanho="toque" rotulo="Descrição da loja" name="descricao" value={entrada.descricao ?? ""} onChange={(e) => atualizar({ descricao: e.target.value })} multilinha opcional />
+        <div className="grid grid-cols-2 gap-2">
           {([['logo', 'Logo'], ['foto', 'Foto']] as const).map(([tipo, rotulo]) => (
-            <div key={tipo} className="flex min-w-0 flex-col items-start gap-2">
+            <div key={tipo} className="flex min-w-0 flex-col items-stretch gap-1">
               <span className="text-sm font-semibold">{rotulo} <span className="font-normal text-texto-suave">(opcional)</span></span>
               <input ref={(elemento) => { seletores.current[tipo] = elemento; }} type="file" accept="image/jpeg,image/png,image/webp" aria-label={`Selecionar ${tipo}`} aria-describedby="coleta-imagens-dica" tabIndex={-1} disabled={ocupado} onChange={(e) => { const arquivo = e.target.files?.[0]; e.target.value = ''; void adicionar(arquivo, tipo); }} className="sr-only" />
-              <Botao variante="secundario" icone={<ImagePlus />} disabled={ocupado} carregando={enviandoImagem === tipo} textoCarregando="Enviando..." onClick={() => seletores.current[tipo]?.click()}>Enviar {tipo}</Botao>
+              <Botao variante="secundario" tamanho="toque" icone={<ImagePlus />} disabled={ocupado} carregando={enviandoImagem === tipo} textoCarregando="Enviando..." onClick={() => seletores.current[tipo]?.click()}>Enviar {tipo}</Botao>
             </div>
           ))}
         </div>
@@ -161,14 +172,14 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
         </div>}
         {!whatsappConsultaDisponivel && <p className="text-sm text-texto-suave">A importação do perfil do WhatsApp Business ainda não está habilitada. Use site, redes sociais, imagens ou descrição para gerar seu rascunho.</p>}
         {!whatsappConfirmado && <p className="text-sm text-texto-suave">{whatsappConsultaDisponivel ? "Confirme seu WhatsApp para autorizar a consulta do perfil ou receber o aviso." : "Confirme seu WhatsApp para receber o aviso."}</p>}
-        {whatsappConsultaDisponivel && <label className="flex items-start gap-2 text-base"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.consultarWhatsapp} onChange={(e) => atualizar({ consultarWhatsapp: e.target.checked })} />Autorizo importar os dados comerciais e a foto do perfil do meu WhatsApp Business confirmado para sugerir o logo da loja.</label>}
-        <label className="flex items-start gap-2"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.avisarWhatsapp} onChange={(e) => atualizar({ avisarWhatsapp: e.target.checked })} />Me avise quando ficar pronto pelo meu WhatsApp confirmado.</label>
+        {whatsappConsultaDisponivel && <label className="flex min-h-toque items-start gap-2 rounded-campo bg-fundo px-3 py-2 text-sm"><input className="mt-0.5 size-4 shrink-0 accent-beringela" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.consultarWhatsapp} onChange={(e) => atualizar({ consultarWhatsapp: e.target.checked })} />Autorizo importar os dados comerciais e a foto do perfil do meu WhatsApp Business confirmado para sugerir o logo da loja.</label>}
+        <label className="flex min-h-toque items-start gap-2 rounded-campo bg-fundo px-3 py-2 text-sm"><input className="mt-0.5 size-4 shrink-0 accent-beringela" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.avisarWhatsapp} onChange={(e) => atualizar({ avisarWhatsapp: e.target.checked })} />Me avise quando ficar pronto pelo meu WhatsApp confirmado.</label>
       </div>}
       </fieldset>
-      <div className="flex flex-wrap gap-3">
-        {etapa > 0 && <button type="button" className={secundario} disabled={ocupado} onClick={() => void avancar(etapa - 1)}>Voltar</button>}
-        {etapa === 1 && <button type="button" className={secundario} disabled={ocupado} onClick={() => void avancar(2)}>Agora não</button>}
-        {etapa < 2 ? <button type="button" className={botao} disabled={ocupado || (etapa === 0 && !cidades.length)} onClick={() => void avancar(etapa + 1)}>Continuar</button> : <button type="button" className={botao} disabled={ocupado} onClick={() => void avancar(2, true)}>Gerar rascunho</button>}
+      <div className="flex flex-wrap gap-2 [&>*]:grow">
+        {etapa > 0 && <Botao type="button" tamanho="toque" variante="secundario" disabled={ocupado} onClick={() => void avancar(etapa - 1)}>Voltar</Botao>}
+        {etapa === 1 && <Botao type="button" tamanho="toque" variante="texto" disabled={ocupado} onClick={() => void avancar(2)}>Agora não</Botao>}
+        {etapa < 2 ? <Botao type="button" tamanho="toque" disabled={ocupado || (etapa === 0 && !cidades.length)} onClick={() => void avancar(etapa + 1)}>Continuar</Botao> : <Botao type="button" tamanho="toque" disabled={ocupado} onClick={() => void avancar(2, true)}>Gerar rascunho</Botao>}
       </div>
     </section>
   );

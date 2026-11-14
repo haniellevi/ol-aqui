@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ChevronRight, Package, Store } from "lucide-react";
+import { ArrowLeft, Package, Store } from "lucide-react";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
@@ -36,48 +35,45 @@ export default async function PaginaQueroVender() {
   ].filter(Boolean);
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
-      <header className="flex flex-col gap-2 sm:text-center">
-        <h1 className="text-2xl leading-tight font-bold text-beringela sm:text-3xl">Como você quer vender?</h1>
-        <p className="text-sm text-texto-suave sm:text-base">Você pode criar uma loja depois e manter seus anúncios.</p>
+    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-4 px-4 py-4 sm:px-6 sm:py-7">
+      <Botao href="/" variante="texto" tamanho="toque" icone={<ArrowLeft />} className="-ml-3">
+        Voltar ao início
+      </Botao>
+      <header>
+        <h1 className="text-titulo leading-tight font-semibold text-beringela">Como você quer vender?</h1>
+        <p className="mt-1 text-sm text-texto-suave">Você pode criar uma loja depois e manter seus anúncios.</p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <section aria-labelledby="titulo-pf" className="flex min-w-0 flex-col gap-4 rounded-card border border-borda bg-cartao p-5 shadow-1 sm:p-6">
-          <span className="grid size-12 place-items-center rounded-campo bg-selecao text-beringela" aria-hidden>
-            <Package className="size-6" />
-          </span>
-          <div className="flex flex-1 flex-col gap-2">
-            <h2 id="titulo-pf" className="text-lg font-semibold text-beringela">Vender minhas coisas</h2>
-            <p className="text-sm text-texto-suave sm:text-base">{textoPf}</p>
+      <div className="w-full divide-y divide-borda rounded-card border border-borda bg-cartao">
+        <section aria-labelledby="titulo-pf" className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-campo bg-selecao text-beringela" aria-hidden>
+              <Package className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <h2 id="titulo-pf" className="text-lg font-semibold text-beringela">Venda particular</h2>
+              <p className="mt-0.5 text-sm text-texto-suave">{textoPf}</p>
+            </div>
           </div>
-          <BotaoVenderCoisas />
+          <div className="sm:w-48 sm:shrink-0"><BotaoVenderCoisas /></div>
         </section>
 
-        <section aria-labelledby="titulo-loja" className="flex min-w-0 flex-col gap-4 rounded-card border border-beringela/20 bg-selecao p-5 shadow-1 sm:p-6">
-          <span className="grid size-12 place-items-center rounded-campo bg-beringela/10 text-beringela" aria-hidden>
-            <Store className="size-6" />
-          </span>
-          <div className="flex flex-1 flex-col gap-2">
-            <h2 id="titulo-loja" className="text-lg font-semibold text-beringela">Tenho uma loja ou negócio</h2>
-            <p className="text-sm text-texto-suave sm:text-base">
-              Vitrine própria. {partesTeste.join(", ")}.
-            </p>
-            <p className="text-sm text-texto-suave">Responder no Radar requer loja verificada e plano com Radar ou cortesia da equipe.</p>
+        <section aria-labelledby="titulo-loja" className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-campo bg-selecao text-beringela" aria-hidden>
+              <Store className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <h2 id="titulo-loja" className="text-lg font-semibold text-beringela">Loja ou negócio</h2>
+              <p className="mt-0.5 text-sm text-texto-suave">Vitrine própria. {partesTeste.join(", ")}.</p>
+            </div>
           </div>
-          <Botao href="/quero-vender/loja" variante="secundario" larguraTotal>
+          <Botao href="/quero-vender/loja" variante="secundario" tamanho="toque" className="w-full sm:w-48 sm:shrink-0">
             Criar minha loja
-            <ChevronRight className="size-5" aria-hidden />
           </Botao>
         </section>
       </div>
-
-      <p className="text-center text-base text-texto-suave">
-        Só quer comprar?{" "}
-        <Link href="/" className="font-semibold text-laranja-escuro underline underline-offset-4">
-          Voltar ao início
-        </Link>
-      </p>
+      <p className="text-xs leading-relaxed text-texto-suave">Para responder no Radar, a loja precisa ser verificada e ter acesso pelo plano ou por cortesia.</p>
     </main>
   );
 }

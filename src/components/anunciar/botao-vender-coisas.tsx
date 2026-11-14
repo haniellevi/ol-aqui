@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import { Package } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { queroVenderPf } from "@/app/(conta)/quero-vender/actions";
 import { AvisoErro } from "./aviso-erro";
@@ -13,7 +12,7 @@ export function BotaoVenderCoisas({ assistente }: { assistente?: string } = {}) 
   return (
     <form action={acao} className="flex flex-col gap-2">
       <AvisoErro mensagem={estado?.erro?.mensagem} />
-      <Botao type="submit" larguraTotal carregando={enviando} textoCarregando="Abrindo..." icone={<Package />}>
+      <Botao type="submit" larguraTotal tamanho="toque" carregando={enviando} textoCarregando="Abrindo...">
         Vender minhas coisas
       </Botao>
     </form>

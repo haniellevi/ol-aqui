@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { limparInstagram, linkSiteLoja } from "@/components/vitrine/regras";
+import { comAssistente } from "@/lib/assistente";
 import { resultadoCadastroLoja, validarCadastroLoja } from "@/lib/cadastro-loja";
 import { traduzirErro } from "@/lib/erros";
 import { normalizarFonte } from "@/lib/loja-ia/fontes";
@@ -35,13 +36,13 @@ async function rascunhoRpc(rpc: string, args?: Record<string, unknown>): Promise
   return data as RascunhoLoja;
 }
 
-export async function abrirRascunho() {
+export async function abrirRascunho(assistente?: string) {
   try {
     await rascunhoRpc("loja_ia_abrir_coleta");
   } catch {
-    redirect("/quero-vender/loja?aviso=ia");
+    redirect(comAssistente("/quero-vender/loja?aviso=ia", assistente));
   }
-  redirect(PAGINA);
+  redirect(comAssistente(PAGINA, assistente));
 }
 
 export async function salvarColeta(id: string, revisao: number, entrada: EntradaRascunho) {
