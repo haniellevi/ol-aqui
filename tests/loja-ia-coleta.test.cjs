@@ -63,10 +63,10 @@ test('consulta sem integração explica a limitação e oferece só o consentime
   const p = { ...props, whatsappConfirmado: true, rascunho: { ...props.rascunho, entrada: { ...entrada, nome: 'Loja', cidade: 'Cidade', redesConcluidas: true } } };
   const html = renderToStaticMarkup(React.createElement(FormLojaIa, p));
   assert.match(html, /importação do perfil do WhatsApp Business ainda não está habilitada/);
-  assert.doesNotMatch(html, /Autorizo consultar/);
+  assert.doesNotMatch(html, /Autorizo importar/);
   assert.match(html, /Me avise quando ficar pronto/);
   const disponivel = renderToStaticMarkup(React.createElement(FormLojaIa, { ...p, whatsappConsultaDisponivel: true }));
-  assert.match(disponivel, /Autorizo consultar/);
+  assert.match(disponivel, /Autorizo importar/);
   assert.doesNotMatch(disponivel, /ainda não está habilitada/);
 });
 

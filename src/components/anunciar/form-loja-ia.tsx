@@ -161,7 +161,7 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
         </div>}
         {!whatsappConsultaDisponivel && <p className="text-sm text-texto-suave">A importação do perfil do WhatsApp Business ainda não está habilitada. Use site, redes sociais, imagens ou descrição para gerar seu rascunho.</p>}
         {!whatsappConfirmado && <p className="text-sm text-texto-suave">{whatsappConsultaDisponivel ? "Confirme seu WhatsApp para autorizar a consulta do perfil ou receber o aviso." : "Confirme seu WhatsApp para receber o aviso."}</p>}
-        {whatsappConsultaDisponivel && <label className="flex items-start gap-2 text-base"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.consultarWhatsapp} onChange={(e) => atualizar({ consultarWhatsapp: e.target.checked })} />Autorizo consultar os dados comerciais do meu WhatsApp Business confirmado.</label>}
+        {whatsappConsultaDisponivel && <label className="flex items-start gap-2 text-base"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.consultarWhatsapp} onChange={(e) => atualizar({ consultarWhatsapp: e.target.checked })} />Autorizo importar os dados comerciais e a foto do perfil do meu WhatsApp Business confirmado para sugerir o logo da loja.</label>}
         <label className="flex items-start gap-2"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.avisarWhatsapp} onChange={(e) => atualizar({ avisarWhatsapp: e.target.checked })} />Me avise quando ficar pronto pelo meu WhatsApp confirmado.</label>
       </div>}
       </fieldset>

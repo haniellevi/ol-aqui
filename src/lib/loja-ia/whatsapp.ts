@@ -1,10 +1,11 @@
 import "server-only";
 import { isIP } from "node:net";
+import { importarLogoWhatsapp } from "@/lib/loja-ia/whatsapp-logo";
 
 type Trabalho = { id: string; tentativa: string };
 type Banco = { rpc: (nome: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }> };
-type Evidencia = { id: string; campo: "nome" | "sobre" | "site"; valor: string; origem: { fonte: "whatsapp"; rotulo: string } };
-export type ResultadoPerfil = { estado: "ok"; evidencias: Evidencia[] } | { estado: "indisponivel"; motivo: string };
+type Evidencia = { id: string; campo: "nome" | "sobre" | "site" | "logo"; valor: string; origem: { fonte: "whatsapp"; rotulo: string } };
+export type ResultadoPerfil = { estado: "ok"; evidencias: Evidencia[] } | { estado: "indisponivel"; motivo: string; evidencias?: Evidencia[] };
 const indisponivel: ResultadoPerfil = { estado: "indisponivel", motivo: "Não foi possível consultar o perfil comercial." };
 
 export async function consultarPerfilComercial(trabalho: Trabalho, db: Banco): Promise<ResultadoPerfil> {
@@ -33,6 +34,14 @@ export async function consultarPerfilComercial(trabalho: Trabalho, db: Banco): P
         } catch { continue; }
       }
       evidencias.push({ id: `whatsapp:${campo}`, campo, valor, origem: { fonte: "whatsapp", rotulo: "Perfil comercial do WhatsApp" } });
+    }
+    if (typeof dados.foto === "string") {
+      try {
+        const logo = await importarLogoWhatsapp(dados.foto, trabalho);
+        evidencias.push({ id: "whatsapp:logo", campo: "logo", valor: logo, origem: { fonte: "whatsapp", rotulo: "Foto do perfil do WhatsApp Business" } });
+      } catch {
+        return { estado: "indisponivel", motivo: "Os dados disponíveis foram importados, mas a foto do perfil falhou. Envie um logo ou tente novamente.", evidencias };
+      }
     }
     return evidencias.length ? { estado: "ok", evidencias } : indisponivel;
   } catch { return indisponivel; }

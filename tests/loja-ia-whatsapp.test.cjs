@@ -5,7 +5,7 @@ const originalFetch = global.fetch;
 afterEach(() => { global.fetch = originalFetch; delete process.env.LOJA_IA_PERFIL_URL; delete process.env.LOJA_IA_PERFIL_SEGREDO; });
 const trabalho = { id: '11111111-1111-4111-8111-111111111111', tentativa: '22222222-2222-4222-8222-222222222222' };
 const db = { rpc: async () => ({ data: '33333333-3333-4333-8333-333333333333', error: null }) };
-const modulo = () => carregar('src/lib/loja-ia/whatsapp.ts');
+const modulo = (mocks = {}) => carregar('src/lib/loja-ia/whatsapp.ts', mocks);
 test('perfil desativado ou ticket recusado não consulta serviço', async () => {
   const m = modulo(); let chamadas = 0; global.fetch = async () => { chamadas++; throw Error('não deveria chamar'); };
   assert.equal((await m.consultarPerfilComercial(trabalho, db)).estado, 'indisponivel');
@@ -30,7 +30,7 @@ test('falha de fornecedor e perfil sem dados comerciais mantêm revisão possív
 
 test('ponte só lê perfil comercial e não devolve dados privados', () => {
   const { execFileSync } = require('node:child_process');
-  const codigo = `import importlib.util, os, sys\nsys.dont_write_bytecode=True\nspec=importlib.util.spec_from_file_location('ponte','infra/whatsapp/perfil-loja.py')\nm=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\nos.environ.update(LOJA_IA_CALLBACK_URL='https://site.test/callback',LOJA_IA_CALLBACK_SEGREDO='x'*32,EVOLUTION_API_KEY='segredo',EVOLUTION_URL='https://evolution.test')\nchamadas=[]\ndef post(url, body, headers):\n chamadas.append((url,body,headers)); return {'numero':'5589999978811'} if len(chamadas)==1 else {'isBusiness':True,'name':'Loja','description':'Roupas','website':'https://loja.test','email':'privado'}\nm.post=post\nassert m.consultar('ticket')=={'nome':'Loja','descricao':'Roupas','site':'https://loja.test'}\nassert chamadas[1][0]=='http://127.0.0.1:8087/chat/fetchProfile/olaki-verificacao'\nassert chamadas[1][1]=={'number':'5589999978811'}\nassert chamadas[1][2]=={'apikey':'segredo','Origin':'https://evolution.test'}\n`;
+  const codigo = `import importlib.util, os, sys\nsys.dont_write_bytecode=True\nspec=importlib.util.spec_from_file_location('ponte','infra/whatsapp/perfil-loja.py')\nm=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)\nos.environ.update(LOJA_IA_CALLBACK_URL='https://site.test/callback',LOJA_IA_CALLBACK_SEGREDO='x'*32,EVOLUTION_API_KEY='segredo',EVOLUTION_URL='https://evolution.test')\nchamadas=[]\ndef post(url, body, headers):\n chamadas.append((url,body,headers)); return {'numero':'5589999978811'} if len(chamadas)==1 else {'isBusiness':True,'name':'Loja','description':'Roupas','website':'https://loja.test','picture':'https://pps.whatsapp.net/foto','email':'privado'}\nm.post=post\nassert m.consultar('ticket')=={'nome':'Loja','descricao':'Roupas','site':'https://loja.test','foto':'https://pps.whatsapp.net/foto'}\nassert chamadas[1][0]=='http://127.0.0.1:8087/chat/fetchProfile/olaki-verificacao'\nassert chamadas[1][1]=={'number':'5589999978811'}\nassert chamadas[1][2]=={'apikey':'segredo','Origin':'https://evolution.test'}\nm.post=lambda *args: {'numero':'5589999978811','isBusiness':False,'picture':'https://pps.whatsapp.net/pessoal'}\nassert m.consultar('ticket')=={}\n`;
   execFileSync('python3', ['-c', codigo]);
 });
 
@@ -48,4 +48,21 @@ test('callback protege resgate e devolve número só para serviço autorizado', 
   const ok = await r.POST(requisicao('Bearer ' + 'b'.repeat(32), { ticket }));
   assert.equal(ok.body.numero, '5589999978811'); assert.equal(chamadas, 1);
   delete process.env.LOJA_IA_CALLBACK_SEGREDO;
+});
+
+test('importa foto comercial como logo privado e preserva textos quando a foto falha', async () => {
+  process.env.LOJA_IA_PERFIL_URL = 'https://exemplo.test'; process.env.LOJA_IA_PERFIL_SEGREDO = 'a'.repeat(32);
+  global.fetch = async () => new Response(JSON.stringify({ nome:'Loja', foto:'https://pps.whatsapp.net/foto?assinatura=privada' }));
+  const chamadas = [];
+  const mocks = { '@/lib/loja-ia/whatsapp-logo': { importarLogoWhatsapp: async (...args) => { chamadas.push(args); return '44444444-4444-4444-8444-444444444444'; } } };
+  const resultado = await modulo(mocks).consultarPerfilComercial(trabalho, db);
+  assert.equal(chamadas.length, 1);
+  assert.deepEqual(resultado.evidencias.map(e => e.campo), ['nome','logo']);
+  assert.equal(resultado.evidencias[1].valor, '44444444-4444-4444-8444-444444444444');
+  assert.doesNotMatch(JSON.stringify(resultado), /pps.whatsapp.net|assinatura/);
+  mocks['@/lib/loja-ia/whatsapp-logo'].importarLogoWhatsapp = async () => { throw Error('foto indisponível'); };
+  const parcial = await modulo(mocks).consultarPerfilComercial(trabalho, db);
+  assert.deepEqual(parcial.evidencias.map(e => e.campo), ['nome']);
+  assert.equal(parcial.estado, 'indisponivel');
+  assert.match(parcial.motivo, /foto do perfil falhou/);
 });
