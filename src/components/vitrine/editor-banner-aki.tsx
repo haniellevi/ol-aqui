@@ -96,7 +96,8 @@ export function EditorBannerAki({
     <section aria-labelledby="banner-aki-titulo" className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
       <h2 id="banner-aki-titulo" className="text-lg font-semibold text-beringela">Criar banner com o Merc</h2>
       <TextoSaldoAki saldo={aki.saldo} />
-      <Campo name="estilo_aki" rotulo="Pedido extra para o Merc" opcional placeholder="Ex.: mais alegre, com cara de feira"
+      <Campo name="estilo_aki" rotulo="Como você quer o banner?" opcional placeholder="Ex.: fundo alegre com flores"
+        dica="Descreva sua ideia para o Merc e toque em Gerar banner."
         value={estilo} onChange={(e) => setEstilo(e.target.value)} maxLength={400} disabled={ocupado || aki.pendente} />
       <CampoArquivo
         rotulo="Logo da loja" opcional accept="image/png,image/webp,image/jpeg" disabled={ocupado}
