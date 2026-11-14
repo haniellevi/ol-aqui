@@ -16,7 +16,7 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
   - a mensagem diz só a cidade e o link do pedido, sem dados do comprador.
 - **Janela de 8h às 20h de Fortaleza na hora de enviar.** Vale para toda a fila (inclusive avisos de verificação). Fora da janela nada sai; a mensagem espera a próxima janela. O reenvio de falha também respeita a janela.
 - **Radar de pedido fechado ou vencido** não sai mais da fila (fica cancelado). Com a chave geral desligada, os avisos do Radar ficam na fila sem sair; se o pedido fechar ou vencer enquanto isso, são cancelados.
-- **SAIR, PARAR, STOP e CANCELAR** (sem acento e sem caixa): o webhook `/api/whatsapp/evolution` desliga o aviso do Radar de quem tem o número (com ou sem o 9 depois do DDD) e cancela o que estava na fila dessa pessoa. Não guarda o texto nem o número. Não cancela avisos de verificação.
+- **Pedido de saída:** o webhook `/api/whatsapp/evolution` desliga o aviso do Radar de quem tem o número (com ou sem o 9 depois do DDD), cancela o que estava na fila dessa pessoa e manda UMA resposta de confirmação. Detalhes na seção abaixo. Não guarda o texto nem o número. Não cancela avisos de verificação.
 - **Meu plano:**
   - mostra o nome do plano contratado mesmo quando ele saiu de venda;
   - se o plano saiu de venda, a renovação só oferece o plano recomendado (regra em `plano_a_venda`);
@@ -25,6 +25,25 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
   - se a leitura do plano falhar, a página segue sem o nome extra (não cai).
 - **Planos com Radar** listam só os planos ativos.
 - **Modelo `proposta_nova` (WhatsApp):** "OLAKI" trocado por "Mercado da Região". Nenhuma mensagem nova vai ao comprador.
+
+## SAIR: como funciona
+
+- **Quais mensagens valem:** SAIR, PARAR, STOP, CANCELAR, pare, para de, descadastrar, não quero mais e remover. Vale a frase inteira ou até 4 palavras com um desses termos como palavra inteira. Sem acento, sem caixa e sem pontuação.
+  - Vale: "Sair", "SAIR!", "quero sair", "pare por favor", "não quero mais receber".
+  - Não vale: "vou sair de casa agora pra loja" (mais de 4 palavras), "parabéns", "oi".
+- **Conta encontrada:** desliga o aviso do Radar por WhatsApp, cancela os avisos do Radar que estavam na fila e registra a saída (sem número e sem texto).
+- **Confirmação:** entra na fila UMA resposta por número e por dia, com este texto: "Pronto. Você não vai mais receber pedidos do Radar pelo WhatsApp. Para voltar, ligue o aviso em Minha conta > Avisos no Mercado da Região." Ela sai fora da janela de 8h às 20h, e o Radar nunca a cancela.
+- **Sem conta:** nada é registrado e nada é respondido.
+- **Conversa `@lid`:** a Evolution pode mandar o identificador oculto no lugar do número. Então o número real é lido de `remoteJidAlt` ou de `senderPn` (nessa ordem). Se nenhum dos dois vier, a mensagem é ignorada. Grupo é ignorado.
+- **Conferência logo antes de cada envio:** o banco confere de novo se o aviso do Radar ainda pode sair (chave geral ligada, aviso da pessoa ligado, pedido aberto, prazo de propostas e vaga). Se não pode, a mensagem vira "cancelada" com o motivo e não sai. Se a conferência falhar, nada é enviado e a mensagem volta para a fila como falha.
+- **Risco que sobra:** uma SAIR que chegue no mesmo segundo do envio não segura essa mensagem. A conferência fica a milissegundos do envio, mas não zera a janela.
+
+**O que conferir no teste real (antes de ligar `radar.whatsapp_ativo`):**
+1. Mandar SAIR de um celular com conta e conferir: a preferência do aviso fica desligada, chega UMA resposta com o texto acima e, se havia aviso do Radar na fila, ele foi cancelado.
+2. Mandar SAIR de um celular sem conta: não chega nada e o banco não registra nada.
+3. Mandar "quero sair" e "pare por favor" de conta com aviso na fila: deve sair. Mandar "vou sair de casa agora pra loja": não deve.
+4. Ver no payload real da Evolution qual campo traz o número quando `remoteJid` termina em `@lid` (`remoteJidAlt` ou `senderPn`). Se vier outro nome, ajustar `numeroDaConversa` em `src/lib/whatsapp/evolution.ts`.
+5. Confirmar que a Evolution envia o cabeçalho `Authorization: Bearer <segredo>` no webhook (passo 5 acima).
 
 ## Ordem para ligar o piloto (nada disso foi feito)
 
@@ -39,8 +58,8 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
 
 ## Ficou de fora (pendências e riscos)
 
-- **SAIR não alcança a mensagem que já foi marcada para envio** (janela de segundos entre pegar e enviar). Aceito para o piloto.
-- **Conversa `@lid` é ignorada pelo webhook.** Se a Evolution mandar SAIR por esse tipo de conversa, o pedido de saída não vale. Conferir no passo 5.
+- **SAIR durante o envio:** a conferência logo antes de cada envio segura o aviso se a SAIR já chegou. Sobra só a janela de milissegundos entre a conferência e o envio. Aceito para o piloto.
+- **Conversa `@lid`:** o número é lido de `remoteJidAlt` ou `senderPn`. Isso veio da documentação e de issues públicas da Evolution, não de um teste com a Evolution real. Conferir no teste real (seção SAIR).
 - **Aki sem categoria escolhida:** o Aki ainda usa o tipo antigo (imóvel, veículo, móvel ou geral) e cai em "geral" quando falta. A categoria obrigatória vale só no formulário do site. Pedido do Aki em "geral" já aparece para a equipe em Categorias sugeridas. Decidir se o Aki também deve pedir categoria.
 - **Número separado para os avisos:** recomendado, não configurado.
 - **Linha `Co-Authored-By` dos commits:** os 5 primeiros commits dizem "Claude Opus 5.5"; o modelo em uso é "Claude Haiku 5.5". Decidir qual vale antes de qualquer push (reescrever commit só com aprovação).

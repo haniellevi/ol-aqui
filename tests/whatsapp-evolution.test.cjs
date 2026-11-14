@@ -40,7 +40,7 @@ test('cabeçalho: só o segredo exato entra; sem segredo configurado nada passa'
 test('SAIR, PARAR, STOP e CANCELAR valem sem acento e sem caixa; outras palavras não', () => {
   for (const t of ['SAIR', 'sair', ' Sáir! ', 'parar', 'Stop.', 'cancelar', 'CANCELÁR']) assert.notEqual(lib.comandoDeSaida(t), null, t);
   assert.equal(lib.comandoDeSaida('sair')?.toString(), 'SAIR');
-  for (const t of ['quero sair daqui', 'oi', 'SAIRR', '', null, 42, 'x'.repeat(41)]) assert.equal(lib.comandoDeSaida(t), null, String(t));
+  for (const t of ['oi', 'SAIRR', '', null, 42, 'x'.repeat(41), 'sair '.repeat(20)]) assert.equal(lib.comandoDeSaida(t), null, String(t));
 });
 
 test('número: só conversa de pessoa com celular brasileiro', () => {
@@ -142,4 +142,34 @@ test('rota: falha do banco responde 503 com só o código do erro, sem texto nem
   assert.equal(erros.length, 1);
   assert.doesNotMatch(erros[0], new RegExp(NUMERO));
   assert.doesNotMatch(erros[0], /falhou/);
+});
+
+test('frases de saída: valem com até 4 palavras e termo inteiro; conversa comum e palavras parecidas não valem', () => {
+  const sim = {
+    'Sair': 'SAIR', 'SAIR!': 'SAIR', 'Sair.': 'SAIR', 'quero sair': 'SAIR', 'quero sair daqui': 'SAIR', 'sair, por favor': 'SAIR',
+    'pare por favor': 'PARAR', 'Pare.': 'PARAR', 'para de mandar': 'PARAR', 'parar': 'PARAR', 'Stop': 'STOP', 'cancelar': 'CANCELAR',
+    'descadastrar': 'SAIR', 'Não quero mais': 'SAIR', 'não quero mais receber': 'SAIR', 'remover': 'SAIR',
+  };
+  for (const [texto, comando] of Object.entries(sim)) assert.equal(lib.comandoDeSaida(texto), comando, texto);
+  for (const texto of ['vou sair de casa agora pra loja', 'parabéns', 'parabens pelo anuncio', 'oi', 'quero um sofá', 'pare de me ligar agora por favor',
+    'stopwatch', 'desparar', 'sairia', 'para o carro', 'sair '.repeat(3) + 'a'.repeat(80)]) {
+    assert.equal(lib.comandoDeSaida(texto), null, texto);
+  }
+});
+
+test('conversa @lid: o número real vem em remoteJidAlt ou senderPn; grupo e campos de participante não valem', () => {
+  const lid = '123456789012345@lid';
+  const alt = `${NUMERO}@s.whatsapp.net`;
+  assert.equal(lib.numeroDaConversa({ remoteJid: lid, remoteJidAlt: alt }), NUMERO);
+  assert.equal(lib.numeroDaConversa({ remoteJid: lid, senderPn: alt }), NUMERO);
+  assert.equal(lib.numeroDaConversa({ remoteJid: lid, senderPn: NUMERO }), NUMERO);
+  assert.equal(lib.numeroDaConversa({ remoteJid: lid, remoteJidAlt: 'outro@lid', senderPn: alt }), NUMERO);
+  assert.equal(lib.numeroDaConversa({ remoteJid: lid }), null);
+  assert.equal(lib.numeroDaConversa({ remoteJid: lid, remoteJidAlt: '5511@s.whatsapp.net' }), null);
+  assert.equal(lib.numeroDaConversa({ remoteJid: lid, participantAlt: alt }), null);
+  assert.equal(lib.numeroDaConversa({ remoteJid: '120363000000000000@g.us', remoteJidAlt: alt, participant: alt }), null);
+  assert.equal(lib.numeroDaConversa({ remoteJid: alt, remoteJidAlt: '5511999990000@s.whatsapp.net' }), NUMERO);
+  assert.deepEqual(lib.pedidoDeSaida({ event: 'messages.upsert', data: { key: { remoteJid: lid, remoteJidAlt: alt, fromMe: false }, message: { conversation: 'SAIR' } } }),
+    { numero: NUMERO, comando: 'SAIR' });
+  assert.equal(lib.pedidoDeSaida({ event: 'messages.upsert', data: { key: { remoteJid: lid, remoteJidAlt: alt, fromMe: true }, message: { conversation: 'SAIR' } } }), null);
 });

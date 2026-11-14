@@ -80,7 +80,7 @@ test('sucesso: envia o texto e o número certos, sem seguir redirecionamento, e 
 });
 
 // --- Rota ---
-function rota({ segredoOk = true, linhas = [], resultados = [], configurar = true, pegarErro = false } = {}) {
+function rota({ segredoOk = true, linhas = [], resultados = [], configurar = true, pegarErro = false, decisoes = {} } = {}) {
   const estado = { pausas: [], envios: [], rpcs: [], ordem: [] };
   const fila = [...resultados];
   const mod = carregar('src/app/api/interno/whatsapp-fila/route.ts', {
@@ -97,6 +97,10 @@ function rota({ segredoOk = true, linhas = [], resultados = [], configurar = tru
         rpc: async (nome, args) => {
           estado.rpcs.push([nome, args]);
           if (nome === 'whatsapp_fila_pegar') return pegarErro ? { data: null, error: { message: 'x' } } : { data: linhas, error: null };
+          if (nome === 'whatsapp_fila_confirmar_envio') {
+            estado.ordem.push('confirma');
+            return { data: Object.hasOwn(decisoes, args.p_id) ? decisoes[args.p_id] : 'pode', error: null };
+          }
           return { data: 'ok', error: null };
         },
       }),
@@ -121,9 +125,9 @@ test('rota: envia uma por vez, com 1,5 s entre as mensagens, e acrescenta o ende
   const { mod, estado } = rota({ linhas: [linha(1), linha(2, { link: null }), linha(3)] });
   const r = await mod.POST(req);
   assert.equal(r.status, 200);
-  assert.deepEqual(r.corpo, { ok: true, enviadas: 3, falhas: 0, incertas: 0, erros_resultado: 0, devolvidas: 0 });
+  assert.deepEqual(r.corpo, { ok: true, enviadas: 3, falhas: 0, incertas: 0, erros_resultado: 0, devolvidas: 0, canceladas: 0 });
   assert.deepEqual(estado.pausas, [1500, 1500]);
-  assert.deepEqual(estado.ordem, ['envio', 'pausa', 'envio', 'pausa', 'envio']);
+  assert.deepEqual(estado.ordem, ['confirma', 'envio', 'pausa', 'confirma', 'envio', 'pausa', 'confirma', 'envio']);
   assert.deepEqual(estado.envios.map((e) => e[1]), ['Mensagem 1 https://site.exemplo.test/minha-conta/loja/verificar', 'Mensagem 2', 'Mensagem 3 https://site.exemplo.test/minha-conta/loja/verificar']);
   const pegar = estado.rpcs.find((c) => c[0] === 'whatsapp_fila_pegar');
   assert.deepEqual(pegar[1], { p_limite: 5 });
@@ -141,13 +145,13 @@ test('rota: nunca passa de 5 por rodada', async () => {
 test('rota: incerto não volta para a fila; falha devolve "falha" ao banco, que decide as 3 tentativas', async () => {
   const { mod, estado } = rota({ linhas: [linha(1), linha(2), linha(3)], resultados: ['incerto', 'falha', 'enviado'] });
   const r = await mod.POST(req);
-  assert.deepEqual(r.corpo, { ok: true, enviadas: 1, falhas: 1, incertas: 1, erros_resultado: 0, devolvidas: 0 });
+  assert.deepEqual(r.corpo, { ok: true, enviadas: 1, falhas: 1, incertas: 1, erros_resultado: 0, devolvidas: 0, canceladas: 0 });
   assert.equal(estado.envios.length, 3); // cada linha foi enviada uma única vez nesta rodada
   assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado').map((c) => c[1].p_resultado), ['incerto', 'falha', 'enviado']);
   // Três rodadas com falha: a rota só repassa o resultado; as 3 tentativas e o "falha" final estão em whatsapp_fila_resultado (testado em 730).
   for (let i = 0; i < 3; i++) {
     const { mod: m, estado: e } = rota({ linhas: [linha(1)], resultados: ['falha'] });
-    assert.deepEqual((await m.POST(req)).corpo, { ok: true, enviadas: 0, falhas: 1, incertas: 0, erros_resultado: 0, devolvidas: 0 });
+    assert.deepEqual((await m.POST(req)).corpo, { ok: true, enviadas: 0, falhas: 1, incertas: 0, erros_resultado: 0, devolvidas: 0, canceladas: 0 });
     assert.equal(e.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado')[0][1].p_resultado, 'falha');
   }
 });
@@ -161,11 +165,11 @@ test('rota: erro ao enviar vira incerto (nunca repete) e o resto da rodada segue
     '@/lib/moderacao-ia': { segredoModeracaoConfere: () => true },
     '@/lib/formato': { SITE: 'https://site.exemplo.test' },
     '@/lib/whatsapp/envio': { configuracaoEnvio: () => ({}), enviarTexto: async () => { if (n++ === 0) throw Error('boom'); return 'enviado'; } },
-    '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async (nome, args) => { estado.rpcs.push([nome, args]); return nome === 'whatsapp_fila_pegar' ? { data: [linha(1), linha(2)], error: null } : { data: 'ok', error: null }; } }) },
+    '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async (nome, args) => { estado.rpcs.push([nome, args]); return nome === 'whatsapp_fila_pegar' ? { data: [linha(1), linha(2)], error: null } : nome === 'whatsapp_fila_confirmar_envio' ? { data: 'pode', error: null } : { data: 'ok', error: null }; } }) },
   };
   estado.rpcs.length = 0;
   const r = await carregar('src/app/api/interno/whatsapp-fila/route.ts', mocks).POST(req);
-  assert.deepEqual(r.corpo, { ok: true, enviadas: 1, falhas: 0, incertas: 1, erros_resultado: 0, devolvidas: 0 });
+  assert.deepEqual(r.corpo, { ok: true, enviadas: 1, falhas: 0, incertas: 1, erros_resultado: 0, devolvidas: 0, canceladas: 0 });
   assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado').map((c) => c[1].p_resultado), ['incerto', 'enviado']);
   assert.ok(mod);
 });
@@ -199,11 +203,12 @@ test('rota: passou do prazo, devolve à fila o que não foi tentado e não come�
         estado.rpcs.push([nome, args]);
         if (nome === 'whatsapp_fila_pegar') return { data: [linha(1), linha(2), linha(3), linha(4)], error: null };
         if (nome === 'whatsapp_fila_devolver') return { data: args.p_ids.length, error: null };
+        if (nome === 'whatsapp_fila_confirmar_envio') return { data: 'pode', error: null };
         return { data: 'ok', error: null };
       } }) },
     });
     const r = await m.POST(req);
-    assert.deepEqual(r.corpo, { ok: true, enviadas: 2, falhas: 0, incertas: 0, erros_resultado: 0, devolvidas: 2 });
+    assert.deepEqual(r.corpo, { ok: true, enviadas: 2, falhas: 0, incertas: 0, erros_resultado: 0, devolvidas: 2, canceladas: 0 });
   } finally { Date.now = agora; }
   assert.equal(estado.envios.length, 2);
   const devolver = estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_devolver');
@@ -232,12 +237,46 @@ test('rota: erro ao gravar o resultado (supabase-js devolve { error }) é regist
       '@/lib/whatsapp/envio': { configuracaoEnvio: () => ({}), enviarTexto: async () => 'enviado' },
       '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async (nome, args) => (nome === 'whatsapp_fila_pegar'
         ? { data: [linha(1), linha(2)], error: null }
+        : nome === 'whatsapp_fila_confirmar_envio' ? { data: 'pode', error: null }
         : args.p_id === 'id-1' ? { data: null, error: { message: 'falhou 5585999990001' } } : { data: 'ok', error: null }) }) },
     });
     const r = await m.POST(req);
     assert.equal(r.status, 200);
-    assert.deepEqual(r.corpo, { ok: true, enviadas: 2, falhas: 0, incertas: 0, erros_resultado: 1, devolvidas: 0 });
+    assert.deepEqual(r.corpo, { ok: true, enviadas: 2, falhas: 0, incertas: 0, erros_resultado: 1, devolvidas: 0, canceladas: 0 });
   } finally { console.error = original; }
   assert.equal(logs.length, 1);
   assert.ok(!/\d{8}|falhou/.test(logs[0]));
+});
+
+test('rota: confere cada mensagem logo antes de enviar, uma por vez', async () => {
+  const { mod, estado } = rota({ linhas: [linha(1), linha(2)] });
+  await mod.POST(req);
+  assert.deepEqual(estado.ordem, ['confirma', 'envio', 'pausa', 'confirma', 'envio']);
+  assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_confirmar_envio').map((c) => c[1]), [{ p_id: 'id-1' }, { p_id: 'id-2' }]);
+});
+
+test('rota: mensagem cancelada pelo banco (SAIR, preferência, pedido fechado) não é enviada e não grava resultado', async () => {
+  const { mod, estado } = rota({ linhas: [linha(1), linha(2)], decisoes: { 'id-1': 'cancelada' } });
+  const r = await mod.POST(req);
+  assert.deepEqual(r.corpo, { ok: true, enviadas: 1, falhas: 0, incertas: 0, erros_resultado: 0, devolvidas: 0, canceladas: 1 });
+  assert.deepEqual(estado.envios.map((e) => e[0]), ['5585999990002']);
+  assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado').map((c) => c[1].p_id), ['id-2']);
+});
+
+test('rota: linha que já não está "enviando" é pulada sem contar e sem gravar nada', async () => {
+  const { mod, estado } = rota({ linhas: [linha(1)], decisoes: { 'id-1': 'ignorada' } });
+  const r = await mod.POST(req);
+  assert.deepEqual(r.corpo, { ok: true, enviadas: 0, falhas: 0, incertas: 0, erros_resultado: 0, devolvidas: 0, canceladas: 0 });
+  assert.equal(estado.envios.length, 0);
+  assert.equal(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado').length, 0);
+});
+
+test('rota: se a conferência falha (erro do banco ou resposta fora de "pode"), não envia e volta como falha', async () => {
+  for (const decisao of [null, 'qualquer']) {
+    const { mod, estado } = rota({ linhas: [linha(1)], decisoes: { 'id-1': decisao } });
+    const r = await mod.POST(req);
+    assert.deepEqual(r.corpo, { ok: true, enviadas: 0, falhas: 1, incertas: 0, erros_resultado: 0, devolvidas: 0, canceladas: 0 });
+    assert.equal(estado.envios.length, 0, String(decisao));
+    assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado').map((c) => c[1].p_resultado), ['falha']);
+  }
 });
