@@ -247,7 +247,7 @@ try:
     print('PASS: três publicações simultâneas respeitam a única vaga do plano', flush=True)
     cat_sofa=re.search(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', sql("select id from categorias where slug='casas' and ativa;").stdout).group(0)
     def repeat(i):
-        return sql(f"begin; set role authenticated; set request.jwt.claim.role='authenticated'; set request.jwt.claim.sub='user_comprador'; select criar_pedido_radar_site('10000000-0000-4000-a000-000000000002','Procuro armário de cozinha','Corrente',p_categoria_id=>'{cat_sofa}'); select pg_sleep(0.2); commit;")
+        return sql(f"begin; set role authenticated; set request.jwt.claim.role='authenticated'; set request.jwt.claim.sub='user_comprador'; select criar_pedido_radar_site('10000000-0000-4000-a000-000000000002','Procuro armário de cozinha','Corrente',p_modo=>'propostas_prazo',p_prazo_horas=>72,p_categoria_id=>'{cat_sofa}'); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:
         results=list(pool.map(repeat,range(4)))
     for result in results: checked(result)

@@ -12,7 +12,8 @@ export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: Preferenci
   const [mensagem, setMensagem] = useState<string | null>(null);
   const trava = useRef(false);
   const [pendente, iniciar] = useTransition();
-  const bloqueado = !inicial.ativo || (!inicial.confirmado && !ligado);
+  // Ligar exige o aviso liberado e o celular confirmado; desligar é sempre permitido.
+  const bloqueado = !ligado && (!inicial.ativo || !inicial.confirmado);
 
   function alternar() {
     if (trava.current || bloqueado) return;
@@ -51,11 +52,13 @@ export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: Preferenci
         </span>
       </button>
       <p className="px-3 pb-3 text-legenda text-texto-suave">
-        {!inicial.ativo
+        {!inicial.ativo && !ligado
           ? "Este aviso ainda não está disponível."
-          : !inicial.confirmado && !ligado
-            ? "Confirme seu WhatsApp em Meus dados para ligar este aviso."
-            : "Avisamos pelo WhatsApp quando chegar um pedido novo do Radar na sua região. No máximo uma mensagem por pedido. Responda SAIR para parar, ou desligue aqui."}
+          : !inicial.ativo
+            ? "Este aviso está pausado agora. Você pode desligá-lo aqui."
+            : !inicial.confirmado && !ligado
+              ? "Confirme seu WhatsApp em Meus dados para ligar este aviso."
+              : "Avisamos pelo WhatsApp quando chegar pedido do Radar na categoria dos seus anúncios. Vale para lojas com plano com Radar e loja verificada. No máximo uma mensagem por pedido. Só chega se o aviso de pedido novo no site também estiver ligado. Responda SAIR para parar, ou desligue aqui."}
       </p>
       {erro && <p role="alert" className="px-3 pb-3 text-legenda font-semibold text-perigo">{erro}</p>}
       {mensagem && <p role="status" className="sr-only">{mensagem}</p>}

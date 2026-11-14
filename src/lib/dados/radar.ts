@@ -240,7 +240,8 @@ export async function minhaCortesiaRadar(): Promise<string | null> {
   if (!userId) return null;
   const db = await createClient();
   const { data, error } = await db.rpc("minha_cortesia_radar");
-  if (error) throw new Error("Não foi possível carregar a cortesia do Radar.");
+  // A cortesia é um extra: se a leitura falhar, a página segue sem ela.
+  if (error) return null;
   return typeof data === "string" ? data : null;
 }
 

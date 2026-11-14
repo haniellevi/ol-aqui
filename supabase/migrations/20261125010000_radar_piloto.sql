@@ -61,6 +61,9 @@ begin
   if p_ligado and not public.whatsapp_confirmado(uid) then
     raise exception 'Confirme seu WhatsApp antes de ligar os avisos por WhatsApp.' using errcode = '42501';
   end if;
+  if p_ligado and (public.config('radar.whatsapp_ativo', null, 'false'::jsonb) is distinct from 'true'::jsonb) then
+    raise exception 'Este aviso ainda não está disponível.' using errcode = '55000';
+  end if;
   insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
   values (uid, 'pedido_novo', 'whatsapp', p_ligado, now())
   on conflict (usuario_id, tipo, canal) do update set ligado = excluded.ligado, atualizado_em = now();
@@ -94,7 +97,7 @@ grant execute on function public.salvar_preferencia_whatsapp_radar(boolean), pub
 -- ---------------------------------------------------------------------
 create or replace function public.criar_pedido_radar_site(
   p_chave uuid, p_titulo text, p_cidade text default null,
-  p_modo text default 'whatsapp_direto', p_prazo_horas integer default null,
+  p_modo text default 'propostas_prazo', p_prazo_horas integer default null,
   p_detalhes text default null, p_categoria_id uuid default null,
   p_preco_min_centavos bigint default null, p_preco_max_centavos bigint default null,
   p_cidades_ids uuid[] default null, p_visibilidade text default 'lojas')
@@ -111,8 +114,13 @@ begin
   select jsonb_build_object('id', p.id, 'status', p.status) into resultado
     from public.radar_pedidos p where p.comprador_id = uid and p.chave_envio = p_chave;
   if resultado is not null then return resultado; end if;
-  if p_categoria_id is null or not exists (select 1 from public.categorias c where c.id = p_categoria_id and c.ativa) then
+  -- categoria obrigatória e disponível (a categoria e as de cima precisam estar ativas)
+  if p_categoria_id is null or not public.categoria_disponivel(p_categoria_id) then
     raise exception using errcode = '23514', message = 'Escolha uma categoria para o seu pedido.', detail = 'campo:categoria';
+  end if;
+  -- o pedido do site não aceita mais o modo de contato direto (dados antigos continuam como estão)
+  if p_modo is distinct from 'propostas_prazo' then
+    raise exception using errcode = '22023', message = 'Escolha como quer receber as propostas.', detail = 'campo:modo';
   end if;
   resultado := public.criar_pedido_radar(p_titulo, p_cidade, p_modo, p_prazo_horas,
     p_detalhes, p_categoria_id, p_preco_min_centavos, p_preco_max_centavos,
@@ -237,38 +245,64 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 8. Fila de envio: reenvio respeita a janela; Radar de quem desligou sai da fila
+-- 8. Fila de envio: janela de 8h às 20h também na hora de enviar; Radar fechado ou de quem desligou sai da fila
 -- ---------------------------------------------------------------------
--- Pega até p_limite mensagens vencidas e as marca "enviando" (conta a tentativa).
--- Avisos do Radar: se a pessoa desligou (SAIR ou em Minha conta), viram "cancelada"; com a chave geral
--- desligada, ficam na fila sem sair (não são pegos).
-create or replace function public.whatsapp_fila_pegar(p_limite integer default 5)
+-- Próxima tentativa depois de uma falha: 5 minutos depois, ou na próxima janela (8h às 20h, Fortaleza).
+create function public.whatsapp_reenvio_em(p_quando timestamptz)
+returns timestamptz language sql stable
+set search_path = public, extensions
+as $$
+  select public.proxima_janela_whatsapp(p_quando + interval '5 minutes')
+$$;
+
+-- Pega até p_limite mensagens vencidas em p_quando e as marca "enviando" (conta a tentativa). Só uso interno.
+-- Fora da janela de 8h às 20h nada sai: a mensagem espera a próxima janela.
+create function public.whatsapp_fila_pegar_em(p_limite integer, p_quando timestamptz)
 returns table (id uuid, numero text, texto text, link text, tentativas smallint)
-language plpgsql security definer
+language plpgsql
 set search_path = public, extensions
 as $$
 declare
   radar_ligado boolean := public.config('radar.whatsapp_ativo', null, 'false'::jsonb) = 'true'::jsonb;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
-    raise exception 'Acesso restrito.' using errcode = '42501';
-  end if;
   update public.whatsapp_fila f set estado = 'incerta', erro = 'travada'
-   where f.estado = 'enviando' and f.enviar_apos < now() - interval '10 minutes';
+   where f.estado = 'enviando' and f.enviar_apos < p_quando - interval '10 minutes';
+  -- Aviso do Radar de pedido fechado, encerrado ou vencido não sai mais (o id do pedido está na chave)
+  update public.whatsapp_fila f set estado = 'cancelada', erro = 'pedido_fechado'
+   where f.estado = 'pendente' and f.chave like 'radar_pedido_novo:%'
+     and not exists (
+       select 1 from public.radar_pedidos rp
+        where rp.id::text = substring(f.chave from '^radar_pedido_novo:([0-9a-f-]{36}):')
+          and rp.status = 'aberto' and rp.expira_em > p_quando);
+  -- Aviso do Radar de quem desligou (SAIR ou Minha conta) não sai mais
   update public.whatsapp_fila f set estado = 'cancelada', erro = 'radar_desligado'
    where f.estado = 'pendente' and f.chave like 'radar_pedido_novo:%'
      and not exists (select 1 from public.preferencias_avisos pa
                       where pa.usuario_id = f.usuario_id and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp' and pa.ligado);
+  if public.proxima_janela_whatsapp(p_quando) <> p_quando then return; end if;
   return query
-    update public.whatsapp_fila f set estado = 'enviando', tentativas = f.tentativas + 1, enviar_apos = now()
+    update public.whatsapp_fila f set estado = 'enviando', tentativas = f.tentativas + 1, enviar_apos = p_quando
      where f.id in (
        select x.id from public.whatsapp_fila x
-        where x.estado = 'pendente' and x.enviar_apos <= now()
+        where x.estado = 'pendente' and x.enviar_apos <= p_quando
           and (radar_ligado or x.chave is null or x.chave not like 'radar_pedido_novo:%')
         order by x.enviar_apos, x.criado_em
         limit greatest(least(coalesce(p_limite, 5), 5), 1)
         for update skip locked)
     returning f.id, f.numero, f.texto, f.link, f.tentativas;
+end $$;
+
+-- Usada pela rota de envio (só o servidor).
+create or replace function public.whatsapp_fila_pegar(p_limite integer default 5)
+returns table (id uuid, numero text, texto text, link text, tentativas smallint)
+language plpgsql security definer
+set search_path = public, extensions
+as $$
+begin
+  if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
+    raise exception 'Acesso restrito.' using errcode = '42501';
+  end if;
+  return query select * from public.whatsapp_fila_pegar_em(p_limite, now());
 end $$;
 
 -- Resultado do envio: 'enviado', 'falha' (volta na próxima janela, 5 min depois, até 3 tentativas) ou 'incerto' (nunca repete).
@@ -293,7 +327,7 @@ begin
     end if;
     -- o reenvio também respeita a janela de 8h às 20h (Fortaleza)
     update public.whatsapp_fila
-       set estado = 'pendente', enviar_apos = public.proxima_janela_whatsapp(now() + interval '5 minutes'), erro = 'falha'
+       set estado = 'pendente', enviar_apos = public.whatsapp_reenvio_em(now()), erro = 'falha'
      where id = f.id;
     return 'pendente';
   end if;
@@ -314,6 +348,7 @@ alter table public.whatsapp_respostas enable row level security;
 revoke all on public.whatsapp_respostas from public, anon, authenticated, service_role;
 
 -- Desliga o aviso do Radar por WhatsApp de quem tem esse número, cancela os avisos dela na fila e registra.
+-- O número pode chegar com ou sem o 9 depois do DDD: as duas formas são conferidas.
 -- Devolve true se achou alguma conta com o número. Nunca guarda o número nem o texto da mensagem.
 create function public.whatsapp_sair(p_numero text, p_comando text)
 returns boolean language plpgsql security definer
@@ -322,6 +357,7 @@ as $$
 declare
   alvo record;
   achou boolean := false;
+  variantes text[];
 begin
   if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
     raise exception 'Acesso restrito.' using errcode = '42501';
@@ -329,7 +365,11 @@ begin
   if p_numero is null or p_numero !~ '^55[1-9][0-9]9?[0-9]{8}$' or p_comando not in ('SAIR', 'PARAR', 'STOP', 'CANCELAR') then
     raise exception 'Pedido de saída inválido.' using errcode = '22023';
   end if;
-  for alvo in select pf.id from public.perfis pf where pf.whatsapp = p_numero loop
+  -- 13 dígitos (com o 9): a outra forma tira o 9 da 5ª posição; 12 dígitos (sem o 9): a outra põe
+  variantes := case when length(p_numero) = 13
+                    then array[p_numero, substr(p_numero, 1, 4) || substr(p_numero, 6)]
+                    else array[p_numero, substr(p_numero, 1, 4) || '9' || substr(p_numero, 5)] end;
+  for alvo in select distinct pf.id from public.perfis pf where pf.whatsapp = any(variantes) loop
     achou := true;
     insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
     values (alvo.id, 'pedido_novo', 'whatsapp', false, now())
@@ -355,6 +395,7 @@ as $$
    where v.dono_id = public.usuario_id()
 $$;
 
+-- Cortesia vale só para loja ativa (suspensa não tem o Radar, como em pode_atender_radar).
 create function public.minha_cortesia_radar()
 returns timestamptz language sql stable security definer
 set search_path = public
@@ -362,14 +403,32 @@ as $$
   select c.ate
     from public.radar_cortesias c
     join public.vitrines_lojas v on v.id = c.vitrine_id
-   where v.dono_id = public.usuario_id() and c.ate > now()
+   where v.dono_id = public.usuario_id() and c.ate > now() and v.status = 'ativa'
 $$;
 
 revoke all on function public.meu_plano_contratado(), public.minha_cortesia_radar() from public, anon;
 grant execute on function public.meu_plano_contratado(), public.minha_cortesia_radar() to authenticated;
 
 -- ---------------------------------------------------------------------
--- 11. Permissões
+-- 11. Plano que saiu de venda: a renovação vai só para o recomendado
+-- ---------------------------------------------------------------------
+-- Se o plano da loja está inativo, só o recomendado fica à venda (se houver um recomendado à venda).
+-- Vale para a lista de opções, para o pedido de pagamento e para o pagamento pendente.
+create or replace function public.plano_a_venda(p public.planos, v public.vitrines_lojas)
+returns boolean language sql stable
+set search_path = public, extensions
+as $$
+  select p.codigo is not null and p.ativo and not p.e_teste and p.preco_centavos > 0
+     and (p.publico = 'todos' or p.publico = case when v.tipo = 'loja' then 'pj' else 'pf' end)
+     and (p.recomendado
+          or not exists (select 1 from public.planos c where c.codigo = v.plano and not c.ativo)
+          or not exists (select 1 from public.planos r where r.recomendado and r.ativo and not r.e_teste))
+$$;
+
+-- ---------------------------------------------------------------------
+-- 12. Permissões
 -- ---------------------------------------------------------------------
 revoke all on function public.whatsapp_sair(text, text) from public, anon, authenticated;
 grant execute on function public.whatsapp_sair(text, text) to service_role;
+revoke all on function public.whatsapp_reenvio_em(timestamptz), public.whatsapp_fila_pegar_em(integer, timestamptz)
+  from public, anon, authenticated, service_role;

@@ -88,6 +88,21 @@ test('rota: 503 sem segredo, 401 com cabeçalho errado e nada chega ao banco', a
   assert.equal(chamadas.length, 0);
 });
 
+test('rota: sem conexão com o banco, responde 503 e não registra nada no log', async () => {
+  const erros = [];
+  const original = console.error;
+  console.error = (...a) => erros.push(a.join(' '));
+  try {
+    const POST = rota('sem-chave');
+    await comSegredo(SEGREDO, async () => {
+      assert.equal((await POST(pedido(mensagem()))).status, 503);
+    });
+  } finally {
+    console.error = original;
+  }
+  assert.equal(erros.length, 0);
+});
+
 test('rota: SAIR com segredo certo chega ao banco com número e comando, e nada é registrado no log', async () => {
   const chamadas = [];
   const erros = [];

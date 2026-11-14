@@ -67,11 +67,14 @@ async function lerPlanos(): Promise<Plano[]> {
   }
 }
 
-/** Plano contratado da loja, mesmo que tenha saído de venda (ativo = false). A tela mostra o nome dele. */
+/**
+ * Plano contratado da loja, mesmo que tenha saído de venda (ativo = false). A tela mostra o nome dele.
+ * Se a leitura falhar (ex.: banco sem a última migração), devolve null e a tela usa o que já tem.
+ */
 async function lerPlanoContratado(): Promise<{ nome: string; e_teste: boolean; ativo: boolean } | null> {
   const db = await createClient();
   const { data, error } = await db.rpc("meu_plano_contratado");
-  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar seu plano.");
+  if (error || !Array.isArray(data)) return null;
   const linha = data[0] as { nome: string; e_teste: boolean; ativo: boolean } | undefined;
   return linha ? { nome: linha.nome, e_teste: linha.e_teste === true, ativo: linha.ativo === true } : null;
 }
@@ -132,9 +135,12 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
   const contratado = planoRpc?.e_teste ? "período grátis" : `plano ${planoRpc?.nome ?? vitrine.plano}`;
   const planoRecomendado = planos.find((p) => p.recomendado === true && p.ativo !== false && !p.e_teste);
   // Radar: o plano que vale agora dá o Radar; a cortesia é da própria loja e vale até a data (sem plano pago).
+  // Sem verificação, o Radar não atende (só a cortesia libera): não promete o número de propostas.
   const linhaRadarPlano = conta.plano && !conta.plano.e_teste
     ? conta.plano.acesso_radar
-      ? conta.plano.propostas_radar_mes === null ? "Radar de Negócios sem limite de propostas" : `Radar: até ${conta.plano.propostas_radar_mes} propostas por mês`
+      ? !conta.vitrine.selo_loja_verificada && !cortesiaAte
+        ? "Radar: depois que a loja for verificada"
+        : conta.plano.propostas_radar_mes === null ? "Radar de Negócios sem limite de propostas" : `Radar: até ${conta.plano.propostas_radar_mes} propostas por mês`
       : cortesiaAte ? null : "Sem acesso ao Radar de Negócios"
     : null;
   const pct = conta.limite ? Math.min(100, Math.round((conta.ativos / conta.limite) * 100)) : null;

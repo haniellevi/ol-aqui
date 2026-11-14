@@ -104,7 +104,8 @@ export async function confirmarPedidoRadar(mensagemId: number, indice: number): 
   const { data, error } = await db.rpc("criar_pedido_radar", {
     p_titulo: v.dados.titulo,
     p_cidade: v.dados.cidade ?? null, // null = região toda
-    p_modo: "whatsapp_direto",
+    p_modo: "propostas_prazo", // o Aki não pede contato direto: as lojas mandam propostas no prazo
+    p_prazo_horas: 72,
     p_detalhes: v.dados.detalhes,
     p_preco_max_centavos: v.dados.preco_max_centavos,
     p_urgencia: v.dados.urgencia,
@@ -122,6 +123,6 @@ export async function confirmarPedidoRadar(mensagemId: number, indice: number): 
     mensagem:
       criado.status === "em_analise"
         ? "Recebemos seu pedido. Ele passa por uma conferência rápida antes de ir para o Radar."
-        : "Pedido no Radar! As lojas da região vão te chamar no WhatsApp.",
+        : "Pedido no Radar! As lojas da região vão mandar propostas aqui.",
   };
 }
