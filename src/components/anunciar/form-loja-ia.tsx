@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
+import { ImagePlus } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
+import { Botao } from "@/components/ui/botao";
 import { AvisoErro } from "./aviso-erro";
 import { classesCampo } from "@/components/ui/input";
 import { enviarFoto } from "@/lib/fotos";
@@ -28,6 +30,7 @@ type Props = {
   whatsappConfirmado: boolean;
   whatsappConsultaDisponivel: boolean;
   cnpjDisponivel: boolean;
+  imagens?: Record<string, string>;
   salvar: (id: string, revisao: number, entrada: EntradaColetaLojaIa) => Promise<RespostaLojaIa<{ revisao: number }>>;
   prepararEnvio: (id: string, arquivo: { nome: string; tipo: string; tamanho: number }, tipo: "logo" | "foto") => Promise<RespostaLojaIa<{ id: string; urlEnvio: string; token: string }>>;
   finalizarEnvio: (id: string, imagemId: string) => Promise<RespostaLojaIa<{ id: string }>>;
@@ -43,13 +46,16 @@ export function etapaInicial(entrada: EntradaColetaLojaIa): number {
 const botao = "min-h-11 rounded-campo bg-laranja px-5 py-2 font-semibold text-beringela disabled:opacity-50";
 const secundario = "min-h-11 rounded-campo border border-borda px-5 py-2 font-semibold text-beringela disabled:opacity-50";
 
-export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappConsultaDisponivel, cnpjDisponivel, salvar, prepararEnvio, finalizarEnvio, iniciar }: Props) {
+export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappConsultaDisponivel, cnpjDisponivel, imagens: imagensIniciais = {}, salvar, prepararEnvio, finalizarEnvio, iniciar }: Props) {
   const [entrada, setEntrada] = useState<EntradaColetaLojaIa>({ ...rascunho.entrada, materiais: rascunho.entrada.materiais ?? [] });
   const [etapa, setEtapa] = useState(() => etapaInicial(rascunho.entrada));
   const [revisao, setRevisao] = useState(rascunho.revisao);
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
   const [iniciado, setIniciado] = useState(false);
+  const [imagens, setImagens] = useState(imagensIniciais);
+  const [enviandoImagem, setEnviandoImagem] = useState<"logo" | "foto" | null>(null);
+  const seletores = useRef<Record<string, HTMLInputElement | null>>({});
   const atualizar = (mudanca: Partial<EntradaColetaLojaIa>) => setEntrada((anterior) => ({ ...anterior, ...mudanca }));
 
   async function avancar(destino: number, gerar = false) {
@@ -82,7 +88,12 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
 
   async function adicionar(arquivo: File | undefined, tipo: "logo" | "foto") {
     if (!arquivo || ocupado) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(arquivo.type) || !arquivo.size || arquivo.size > 20 * 1024 * 1024) {
+      setErro("Escolha uma imagem JPEG, PNG ou WebP de até 20 MB.");
+      return;
+    }
     setOcupado(true);
+    setEnviandoImagem(tipo);
     setErro("");
     try {
       const envio = dadosLojaIa(await prepararEnvio(rascunho.id, { nome: arquivo.name, tipo: arquivo.type, tamanho: arquivo.size }, tipo));
@@ -90,12 +101,14 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
       const { id } = dadosLojaIa(await finalizarEnvio(rascunho.id, envio.id));
       const atualizada = { ...entrada, materiais: [...entrada.materiais, id] };
       setEntrada(atualizada);
+      setImagens((anteriores) => ({ ...anteriores, [id]: `/api/loja/imagem/${id}/revisao?rascunho=${rascunho.id}` }));
       const salvo = dadosLojaIa(await salvar(rascunho.id, revisao, atualizada));
       setRevisao(salvo.revisao);
     } catch (e) {
       setErro(e instanceof Error && e.message ? e.message : "Não foi possível enviar o arquivo. Tente novamente.");
     } finally {
       setOcupado(false);
+      setEnviandoImagem(null);
     }
   }
 
@@ -127,11 +140,28 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
         <p className="text-sm text-texto-suave">Você pode enviar imagens próprias ou autorizadas para uso. Se não tiver fontes, escreva uma descrição curta da loja.</p>
         <Campo rotulo="CNPJ" name="cnpj" value={entrada.cnpj ?? ""} onChange={(e) => atualizar({ cnpj: e.target.value })} opcional />
         <Campo rotulo="Descrição da loja" name="descricao" value={entrada.descricao ?? ""} onChange={(e) => atualizar({ descricao: e.target.value })} multilinha opcional />
-        <div className="grid gap-4 sm:grid-cols-2">{([['logo', 'Logo'], ['foto', 'Foto']] as const).map(([tipo, rotulo]) => <label key={tipo} className="flex flex-col gap-1 text-sm font-semibold">{rotulo} (opcional)<input type="file" accept="image/*" disabled={ocupado} onChange={(e) => { const arquivo = e.target.files?.[0]; e.target.value = ''; void adicionar(arquivo, tipo); }} className="block min-h-11 w-full text-sm" /></label>)}</div>
-        {entrada.materiais.length > 0 && <p className="text-sm text-texto-suave">{entrada.materiais.length} arquivo(s) adicionado(s).</p>}
-        {!whatsappConsultaDisponivel && <p className="text-sm text-texto-suave">A consulta do perfil comercial está indisponível. Você pode informar outras fontes ou descrever sua loja.</p>}
-        {!whatsappConfirmado && <p className="text-sm text-texto-suave">Confirme seu WhatsApp para autorizar a consulta do perfil ou receber o aviso.</p>}
-        <label className="flex items-start gap-2"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado || !whatsappConsultaDisponivel} checked={whatsappConfirmado && whatsappConsultaDisponivel && entrada.consultarWhatsapp} onChange={(e) => atualizar({ consultarWhatsapp: e.target.checked })} />Autorizo consultar os dados comerciais do meu WhatsApp Business confirmado.</label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {([['logo', 'Logo'], ['foto', 'Foto']] as const).map(([tipo, rotulo]) => (
+            <div key={tipo} className="flex min-w-0 flex-col items-start gap-2">
+              <span className="text-sm font-semibold">{rotulo} <span className="font-normal text-texto-suave">(opcional)</span></span>
+              <input ref={(elemento) => { seletores.current[tipo] = elemento; }} type="file" accept="image/jpeg,image/png,image/webp" aria-label={`Selecionar ${tipo}`} aria-describedby="coleta-imagens-dica" tabIndex={-1} disabled={ocupado} onChange={(e) => { const arquivo = e.target.files?.[0]; e.target.value = ''; void adicionar(arquivo, tipo); }} className="sr-only" />
+              <Botao variante="secundario" icone={<ImagePlus />} disabled={ocupado} carregando={enviandoImagem === tipo} textoCarregando="Enviando..." onClick={() => seletores.current[tipo]?.click()}>Enviar {tipo}</Botao>
+            </div>
+          ))}
+        </div>
+        <p id="coleta-imagens-dica" className="text-sm text-texto-suave">JPEG, PNG ou WebP de até 20 MB.</p>
+        {entrada.materiais.length > 0 && <div className="flex flex-col gap-2" aria-live="polite">
+          <p className="text-sm text-texto-suave">{entrada.materiais.length} {entrada.materiais.length === 1 ? "imagem adicionada" : "imagens adicionadas"}.</p>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {entrada.materiais.filter((id) => imagens[id]).map((id, indice) => (
+              // eslint-disable-next-line @next/next/no-img-element -- prévia privada do material já normalizado no Storage
+              <img key={id} src={imagens[id]} alt={`Imagem enviada ${indice + 1}`} width={128} height={128} className="aspect-square w-full rounded-campo border border-borda bg-cartao object-contain" />
+            ))}
+          </div>
+        </div>}
+        {!whatsappConsultaDisponivel && <p className="text-sm text-texto-suave">A importação do perfil do WhatsApp Business ainda não está habilitada. Use site, redes sociais, imagens ou descrição para gerar seu rascunho.</p>}
+        {!whatsappConfirmado && <p className="text-sm text-texto-suave">{whatsappConsultaDisponivel ? "Confirme seu WhatsApp para autorizar a consulta do perfil ou receber o aviso." : "Confirme seu WhatsApp para receber o aviso."}</p>}
+        {whatsappConsultaDisponivel && <label className="flex items-start gap-2 text-base"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.consultarWhatsapp} onChange={(e) => atualizar({ consultarWhatsapp: e.target.checked })} />Autorizo consultar os dados comerciais do meu WhatsApp Business confirmado.</label>}
         <label className="flex items-start gap-2"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.avisarWhatsapp} onChange={(e) => atualizar({ avisarWhatsapp: e.target.checked })} />Me avise quando ficar pronto pelo meu WhatsApp confirmado.</label>
       </div>}
       </fieldset>

@@ -38,7 +38,93 @@ test('etapa final oferece materiais, consentimentos separados e geração', () =
   assert.match(html, /Foto/);
   assert.match(html, /Gerar rascunho/);
   assert.match(html, /Confirme seu WhatsApp/);
-  assert.equal((html.match(/type="checkbox" disabled=""/g) || []).length, 2);
+  assert.equal((html.match(/type="checkbox" disabled=""/g) || []).length, 1);
+});
+
+test('logo e foto têm botões visíveis e seletores acessíveis com formatos aceitos', () => {
+  const html = renderToStaticMarkup(React.createElement(FormLojaIa, { ...props, rascunho: { ...props.rascunho, entrada: { ...entrada, nome: 'Loja', cidade: 'Cidade', redesConcluidas: true } } }));
+  assert.match(html, /<button[^>]*>[\s\S]*?Enviar logo/);
+  assert.match(html, /Enviar foto/);
+  assert.equal((html.match(/type="file"/g) || []).length, 2);
+  assert.equal((html.match(/accept="image\/jpeg,image\/png,image\/webp"/g) || []).length, 2);
+  assert.match(html, /JPEG, PNG ou WebP de até 20 MB/);
+  assert.match(html, /aria-label="Selecionar logo"/);
+  assert.match(html, /aria-label="Selecionar foto"/);
+});
+
+test('retoma as prévias apenas dos materiais vinculados ao rascunho', () => {
+  const html = renderToStaticMarkup(React.createElement(FormLojaIa, { ...props, imagens: { logo: '/logo.webp', foto: '/foto.webp', outra: '/outra.webp' }, rascunho: { ...props.rascunho, entrada: { ...entrada, nome: 'Loja', cidade: 'Cidade', materiais: ['logo', 'foto'] } } }));
+  assert.match(html, /src="\/logo.webp"/);
+  assert.match(html, /src="\/foto.webp"/);
+  assert.doesNotMatch(html, /src="\/outra.webp"/);
+});
+
+test('consulta sem integração explica a limitação e oferece só o consentimento disponível', () => {
+  const p = { ...props, whatsappConfirmado: true, rascunho: { ...props.rascunho, entrada: { ...entrada, nome: 'Loja', cidade: 'Cidade', redesConcluidas: true } } };
+  const html = renderToStaticMarkup(React.createElement(FormLojaIa, p));
+  assert.match(html, /importação do perfil do WhatsApp Business ainda não está habilitada/);
+  assert.doesNotMatch(html, /Autorizo consultar/);
+  assert.match(html, /Me avise quando ficar pronto/);
+  const disponivel = renderToStaticMarkup(React.createElement(FormLojaIa, { ...p, whatsappConsultaDisponivel: true }));
+  assert.match(disponivel, /Autorizo consultar/);
+  assert.doesNotMatch(disponivel, /ainda não está habilitada/);
+});
+
+test('botão abre o seletor e envio confirmado atualiza materiais e prévia', async () => {
+  const states = [];
+  const refs = [];
+  let cursor = 0;
+  let refCursor = 0;
+  const react = {
+    ...React,
+    useState(initial) {
+      const i = cursor++;
+      if (!(i in states)) states[i] = typeof initial === 'function' ? initial() : initial;
+      return [states[i], value => { states[i] = typeof value === 'function' ? value(states[i]) : value; }];
+    },
+    useRef(initial) {
+      const i = refCursor++;
+      refs[i] ??= { current: initial };
+      return refs[i];
+    },
+  };
+  const chamadas = [];
+  const ok = dados => ({ ok: true, dados });
+  const { FormLojaIa: Formulario } = carregar('src/components/anunciar/form-loja-ia.tsx', {
+    react,
+    '@/lib/fotos': { enviarFoto: async () => { chamadas.push('upload'); return true; } },
+  });
+  const p = {
+    ...props,
+    rascunho: { ...props.rascunho, entrada: { ...entrada, nome: 'Loja', cidade: 'Cidade', redesConcluidas: true } },
+    prepararEnvio: async (_id, arquivo, tipo) => { chamadas.push(tipo); return ok({ id: 'original', urlEnvio: '/envio', token: '' }); },
+    finalizarEnvio: async () => ok({ id: 'normalizada' }),
+    salvar: async (_id, _revisao, dados) => { chamadas.push(dados.materiais); return ok({ revisao: 2 }); },
+  };
+  const render = () => { cursor = 0; refCursor = 0; return Formulario(p); };
+  function achar(elemento, predicado) {
+    if (!elemento || typeof elemento !== 'object') return null;
+    if (predicado(elemento)) return elemento;
+    for (const filho of React.Children.toArray(elemento.props?.children)) {
+      const achado = achar(filho, predicado);
+      if (achado) return achado;
+    }
+    return null;
+  }
+  let arvore = render();
+  const seletor = achar(arvore, el => el.props?.['aria-label'] === 'Selecionar logo');
+  seletor.props.ref({ click: () => chamadas.push('seletor') });
+  achar(arvore, el => el.props?.onClick && React.Children.toArray(el.props.children).join('') === 'Enviar logo').props.onClick();
+  seletor.props.onChange({ target: { files: [{ name: 'logo.png', type: 'image/png', size: 100 }], value: 'logo.png' } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(chamadas, ['seletor', 'logo', 'upload', ['normalizada']]);
+  assert.match(renderToStaticMarkup(render()), /src="\/api\/loja\/imagem\/normalizada\/revisao\?rascunho=rascunho"/);
+  chamadas.length = 0;
+  arvore = render();
+  achar(arvore, el => el.props?.['aria-label'] === 'Selecionar foto').props.onChange({ target: { files: [{ name: 'foto.gif', type: 'image/gif', size: 100 }], value: 'foto.gif' } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(chamadas, []);
+  assert.match(renderToStaticMarkup(render()), /Escolha uma imagem JPEG, PNG ou WebP/);
 });
 
 async function entradaLoja(params = {}, autorizado = true) {
