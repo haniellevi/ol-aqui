@@ -9,8 +9,8 @@ const ACAO =
 
 function Acao({ href, icone, chamada, acao, principal = false }: { href: string; icone: ReactNode; chamada: string; acao: string; principal?: boolean }) {
   return (
-    <Link href={href} className={`${ACAO} ${principal ? "border-laranja bg-laranja text-beringela hover:brightness-95" : "border-beringela/30 bg-selecao text-beringela hover:border-beringela"}`}>
-      <span className={`grid size-8 shrink-0 place-items-center rounded-campo [&>svg]:size-4 md:size-9 ${principal ? "bg-cartao/55" : "bg-cartao"}`} aria-hidden>{icone}</span>
+    <Link href={href} className={`${ACAO} ${principal ? "border-laranja bg-laranja text-beringela hover:brightness-95" : "border-beringela bg-beringela text-cartao hover:brightness-110"}`}>
+      <span className={`grid size-8 shrink-0 place-items-center rounded-campo [&>svg]:size-4 md:size-9 ${principal ? "bg-cartao/55" : "bg-cartao/15"}`} aria-hidden>{icone}</span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-sm leading-4 font-bold [overflow-wrap:anywhere] md:text-base md:leading-5">{acao}</span>
         <span className="line-clamp-2 text-xs leading-4">{chamada}</span>

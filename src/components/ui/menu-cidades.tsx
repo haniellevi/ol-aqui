@@ -15,7 +15,7 @@ export function MenuCidades({ cidade, regiao, cidades }: { cidade: string | null
   const itens = (
     <>
       <MapPin className="size-4 shrink-0" aria-hidden />
-      <span className="cidade-cabecalho-nome truncate">{rotulo}</span>
+      <span className="cidade-cabecalho-nome truncate md:max-w-24 lg:max-w-36">{rotulo}</span>
       <ChevronDown className="size-4 shrink-0" aria-hidden />
     </>
   );

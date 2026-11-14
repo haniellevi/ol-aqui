@@ -47,7 +47,7 @@ export async function CabecalhoPublico() {
 
         <MenuCidades cidade={cidade} regiao={regiao?.id} cidades={cidades} />
 
-        <div className="ml-2 hidden min-w-0 max-w-xl flex-1 md:block">
+        <div className="@container/busca-topo ml-2 hidden max-w-xl min-w-0 flex-1 md:block">
           <CampoBusca id="busca-topo" sugestoes regiao={`${regiao?.id ?? ""}|${cidade ?? ""}`} />
         </div>
 
@@ -76,7 +76,7 @@ export async function CabecalhoPublico() {
                 {comConversas && <IconeConversas />}
                 <SinoAvisos />
                 <Link href="/minha-conta" aria-label="Minha conta" className={LINK}>
-                  <UserRound className="size-5" aria-hidden /> <span className="hidden sm:inline">Conta</span>
+                  <UserRound className="size-5" aria-hidden /> <span className="hidden sm:max-md:inline lg:inline">Conta</span>
                 </Link>
               </SignedIn>
             </>

@@ -58,7 +58,7 @@ export function IconeConversas() {
   const nome = falhou ? "Conversas. Não foi possível atualizar a contagem." : total === null || total === 0 ? "Conversas" : `Conversas: ${total} ${total === 1 ? "não lida" : "não lidas"}`;
   return <Link href={LINK_CONVERSAS} aria-label={nome} title={nome} className="relative inline-flex h-10 shrink-0 items-center gap-2 rounded-card px-2.5 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro">
     <MessageSquare className="size-5" aria-hidden />
-    <span className="hidden sm:inline" aria-hidden>Conversas</span>
+    <span className="hidden sm:max-md:inline lg:inline" aria-hidden>Conversas</span>
     {!falhou && total !== null && total > 0 && <span aria-hidden className="absolute top-0 left-6 min-w-5 rounded-full bg-laranja-escuro px-1 text-center text-legenda leading-5 font-bold text-white tabular-nums">{total > 99 ? "99+" : total}</span>}
   </Link>;
 }
