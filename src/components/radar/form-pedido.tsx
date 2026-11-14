@@ -60,6 +60,8 @@ type Props = {
   /** Celular ainda não confirmado e o painel não exige o código: pede o WhatsApp aqui. */
   pedirWhatsapp?: boolean;
   whatsappInicial?: string;
+  /** DDD da região: o exemplo do campo de WhatsApp usa ele. */
+  ddd?: string | null;
   /** Perguntas ou parecidos da IA ligados no painel. Desligado: o "Continuar" nem vai ao servidor. */
   iaNoPedido?: boolean;
   /** Sem login: o último botão guarda o rascunho no aparelho e manda entrar (não publica). */
@@ -83,7 +85,7 @@ const ESPERA_IA_MS = 5000;
 const ROTULO_GRUPO = "text-facil font-semibold text-texto";
 const TEXTO_ERRO = "text-facil font-semibold text-perigo";
 
-export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", detalhesInicial = "", visibilidadeInicial = "lojas", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "", iaNoPedido = false, anonimo = false, retomar = false }: Props) {
+export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", detalhesInicial = "", visibilidadeInicial = "lojas", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "", ddd = null, iaNoPedido = false, anonimo = false, retomar = false }: Props) {
   const router = useRouter();
   const formulario = useRef<HTMLFormElement>(null);
   const pergunta = useRef<HTMLHeadingElement>(null);
@@ -100,7 +102,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   const [precoMax, setPrecoMax] = useState(precoMaxInicial);
   const [area, setArea] = useState<string[]>(cidadesIniciais);
   const [visibilidade, setVisibilidade] = useState<Visibilidade>(visibilidadeInicial);
-  const whatsapp = useCampoTelefone(whatsappInicial, { obrigatorio: pedirWhatsapp });
+  const whatsapp = useCampoTelefone(whatsappInicial, { obrigatorio: pedirWhatsapp, ddd });
   // Só um jeito de receber: propostas por prazo (o contato direto por WhatsApp saiu do formulário).
   const modo: ModoContato = "propostas_prazo";
   const [prazo, setPrazo] = useState<number | null>(regras.prazosHoras[1] ?? regras.prazosHoras[0] ?? null);

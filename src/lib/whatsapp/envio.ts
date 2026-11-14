@@ -13,14 +13,29 @@ export function configuracaoEnvio(): ConfiguracaoEnvio {
 }
 
 // Mesmo protocolo do envio do código: instância aberta, sendText, mensagem de saída confirmada.
-// "falha" = nada saiu (pode tentar de novo); "incerto" = pode ter saído (nunca repetir sozinho).
-export async function enviarTexto(numero: string, texto: string, config: ConfiguracaoEnvio): Promise<"enviado" | "incerto" | "falha"> {
+// "falha" = nada saiu (pode tentar de novo); "incerto" = pode ter saído (nunca repetir sozinho);
+// "recusado" = a conferência (chamada logo antes do envio) disse que não pode sair: nada saiu, nada a repetir.
+export type ResultadoEnvio = "enviado" | "incerto" | "falha" | "recusado";
+
+// `conferir` roda depois de checar a instância e logo antes do pedido de envio (sendText), para que uma SAIR que
+// chegue antes disso segure a mensagem. Não deve lançar: devolve false quando não pode enviar.
+export async function enviarTexto(
+  numero: string,
+  texto: string,
+  config: ConfiguracaoEnvio,
+  conferir?: () => Promise<boolean>,
+): Promise<ResultadoEnvio> {
   try {
     const estado = await fetch(`${config.url}/instance/connectionState/${config.instancia}`, {
       headers: { apikey: config.chave, Origin: new URL(config.url).origin }, cache: "no-store", signal: AbortSignal.timeout(8000), redirect: "error",
     });
     if (!estado.ok || (await estado.json()).instance?.state !== "open") return "falha";
   } catch { return "falha"; }
+  if (conferir) {
+    let pode = false;
+    try { pode = await conferir(); } catch { pode = false; }
+    if (!pode) return "recusado";
+  }
   try {
     const r = await fetch(`${config.url}/message/sendText/${config.instancia}`, {
       method: "POST", headers: { apikey: config.chave, Origin: new URL(config.url).origin, "Content-Type": "application/json" }, cache: "no-store", redirect: "error",

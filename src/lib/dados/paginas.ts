@@ -14,6 +14,7 @@ import type {
   TipoDocumento,
   VersaoDocumento,
 } from "@/lib/tipos-paginas";
+import { ehTelefoneGuardado } from "@/lib/telefone";
 
 // Leituras editoriais têm padrões; consulta de aceite propaga falhas para permitir nova tentativa.
 
@@ -103,7 +104,7 @@ export async function contatoEquipe(microrregiaoId: string | null): Promise<Cont
   const zap = String(c.get("contato.whatsapp_suporte") ?? "").replace(/\D/g, "");
   const email = texto(c.get("contato.email_suporte"));
   return {
-    whatsapp: /^55[1-9][0-9]9?[0-9]{8}$/.test(zap) ? zap : null,
+    whatsapp: ehTelefoneGuardado(zap) ? zap : null,
     email: email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null,
     texto: texto(c.get("ajuda.texto_contato")),
   };

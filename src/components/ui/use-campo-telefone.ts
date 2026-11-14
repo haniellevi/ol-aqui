@@ -2,11 +2,13 @@
 
 import { useState, type ChangeEvent } from "react";
 import { mascaraCelular } from "@/lib/formato";
+import { exemploTelefone } from "@/lib/telefone";
 
 const CELULAR = String.raw`\([1-9][0-9]\) 9[0-9]{4}-[0-9]{4}`;
 const FIXO = String.raw`\([1-9][0-9]\) [0-9]{4}-[0-9]{4}`;
 
-export function useCampoTelefone(inicial = "", { aceitaFixo = false, obrigatorio = false } = {}) {
+/** ddd: DDD da região da tela, para o exemplo do campo ("(89) 99999-0000"). Sem ele, "(DD) 99999-0000". */
+export function useCampoTelefone(inicial = "", { aceitaFixo = false, obrigatorio = false, ddd = null }: { aceitaFixo?: boolean; obrigatorio?: boolean; ddd?: string | null } = {}) {
   const [valor, setValor] = useState(() => mascaraCelular(inicial, aceitaFixo));
   const [visitado, setVisitado] = useState(false);
   const pattern = aceitaFixo ? `${CELULAR}|${FIXO}` : CELULAR;
@@ -47,7 +49,7 @@ export function useCampoTelefone(inicial = "", { aceitaFixo = false, obrigatorio
       inputMode: "numeric" as const,
       autoComplete: "tel-national",
       prefixo: "+55",
-      placeholder: "(89) 99999-0000",
+      placeholder: exemploTelefone(ddd),
       maxLength: 30,
       required: obrigatorio,
       pattern,

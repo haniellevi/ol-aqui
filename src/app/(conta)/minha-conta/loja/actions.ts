@@ -12,6 +12,7 @@ import { listarCidades } from "@/lib/dados/regiao";
 import { apagarFoto } from "@/lib/dados/fotos";
 import { traduzirErro } from "@/lib/erros";
 import { linkLoja, telefoneComercialDigitado } from "@/lib/formato";
+import { dddDaLoja, numeroComRegiao } from "@/lib/telefone-regiao";
 import type { Resultado } from "@/lib/tipos";
 
 const BUCKET = "anuncios";
@@ -63,7 +64,7 @@ export async function salvarLoja(_antes: EstadoLojaConta, form: FormData): Promi
     // P5b-2b: nome e WhatsApp são só do dono; para o ajudante valem os de agora.
     const nome = v.ajudante ? v.nome : String(form.get("nome") ?? "").replace(/\s+/g, " ").trim();
     const whatsapp = v.ajudante ? v.whatsapp ?? "" : String(form.get("whatsapp") ?? "").trim();
-    const fone = telefoneComercialDigitado(whatsapp);
+    const fone = await numeroComRegiao(whatsapp, () => dddDaLoja(v.id), telefoneComercialDigitado, true);
     const cidade = String(form.get("cidade") ?? "").trim();
     const bairro = String(form.get("bairro") ?? "").replace(/\s+/g, " ").trim();
     const logo = String(form.get("logo_url") ?? "").trim();

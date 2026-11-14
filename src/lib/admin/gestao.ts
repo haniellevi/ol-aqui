@@ -1,4 +1,5 @@
 import type { Horarios } from "@/lib/tipos-vitrine";
+import { MENSAGEM_TELEFONE, normalizarTelefone } from "@/lib/telefone";
 
 export type UsuarioAdmin = {
   id: string; nome: string; tipo_pessoa: "pf" | "pj"; microrregiao_id: string;
@@ -33,14 +34,13 @@ export function motivoForm(form: FormData) {
   if (motivo.length < 3 || motivo.length > 300) throw new Error("Informe o motivo, de 3 a 300 caracteres.");
   return motivo;
 }
-export function telefoneForm(form: FormData, chave: string) {
+/** Telefone do formulário com DDD (ou com o DDD da região, quando a tela sabe a região). Vazio → null. */
+export function telefoneForm(form: FormData, chave: string, ddd?: string | null) {
   const texto = textoForm(form, chave);
   if (!texto) return null;
-  if (texto.length > 30 || !/^[\d+().\s-]+$/.test(texto)) throw new Error("Confira os telefones: use DDD e número.");
-  let n = texto.replace(/\D/g, "");
-  if (n.length === 10 || n.length === 11) n = `55${n}`;
-  if (!/^55[1-9][0-9]9?[0-9]{8}$/.test(n)) throw new Error("Confira os telefones: use DDD e número.");
-  return n;
+  const r = normalizarTelefone(texto, { ddd, aceitaFixo: true });
+  if (r.erro) throw new Error(r.erro === "sem_ddd" ? MENSAGEM_TELEFONE.sem_ddd : "Confira os telefones: use DDD e número.");
+  return r.numero;
 }
 
 export function erroGestao(erro: { code?: string; message?: string }) {

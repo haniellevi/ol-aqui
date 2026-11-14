@@ -6,6 +6,7 @@ import { classesBotao } from "@/components/ui/botao";
 import { DIAS_EM_ORDEM, NOME_DIA, agoraNaRegiao, faixasDoDia, linkComoChegar, linkInstagram, linkSiteLoja, situacaoAgora, temHorarios, textoDoDia } from "@/components/vitrine/regras";
 import { MapaLoja, coordenadasValidas } from "@/components/vitrine/mapa-loja";
 import type { VitrinePublica } from "@/lib/tipos-vitrine";
+import { ehTelefoneGuardado } from "@/lib/telefone";
 
 // Bloco "Informações da loja" da vitrine pública: só aparece o que a loja preencheu.
 export function InformacoesLoja({ v, agora, mapa = false }: { v: VitrinePublica; agora: Date; /** Vitrine nova: mapa com o pino. */ mapa?: boolean }) {
@@ -15,7 +16,7 @@ export function InformacoesLoja({ v, agora, mapa = false }: { v: VitrinePublica;
   const situacao = situacaoAgora(v.horarios, agora);
   const hoje = agoraNaRegiao(agora).dia;
   const site = linkSiteLoja(v.site_url);
-  const telefone = /^55[1-9][0-9]9?[0-9]{8}$/.test(v.telefone_publico ?? "") ? v.telefone_publico : null;
+  const telefone = ehTelefoneGuardado(v.telefone_publico) ? v.telefone_publico : null;
   const temAlgo = site || telefone || v.endereco || comoChegar || temHorarios(v.horarios) || insta || v.sobre || v.formas_pagamento.length || v.faz_entrega !== null;
   if (!temAlgo) return null;
 

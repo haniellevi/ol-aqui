@@ -5,13 +5,15 @@ import { createClient } from "@/lib/supabase/server";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import { numeroWhatsapp } from "@/lib/whatsapp/servico";
+import { dddDaLoja, numeroComRegiao } from "@/lib/telefone-regiao";
 import type { EstadoVitrine } from "../loja/vitrine-actions";
 
 export type EstadoEquipe = { link?: string; erro?: string; ok?: string } | null;
 
 export async function convidarGerente(loja: string, _: EstadoEquipe, form: FormData): Promise<EstadoEquipe> {
-  const whatsapp = numeroWhatsapp(form.get("whatsapp"));
-  if (!ehUuid(loja) || !whatsapp) return { erro: "Informe um celular brasileiro com DDD." };
+  if (!ehUuid(loja)) return { erro: "Informe um celular brasileiro com DDD." };
+  const whatsapp = await numeroComRegiao(form.get("whatsapp"), () => dddDaLoja(loja), numeroWhatsapp);
+  if (!whatsapp) return { erro: "Informe um celular brasileiro com DDD." };
   const db = await createClient();
   const { data, error } = await db.rpc("convidar_gerente_loja", { p_loja: loja, p_whatsapp: whatsapp });
   if (error || typeof data !== "string" || !ehUuid(data)) return { erro: traduzirErro(error).mensagem };

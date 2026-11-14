@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { cabecalhoEvolutionConfere, pedidoDeSaida, segredoEvolution } from "@/lib/whatsapp/evolution";
+import { cabecalhoEvolutionConfere, pedidoDeSaida, saidaSemNumeroLegivel, segredoEvolution } from "@/lib/whatsapp/evolution";
 
 export const dynamic = "force-dynamic";
 
-// Webhook de entrada da Evolution (mensagens recebidas). Só SAIR, PARAR, STOP e CANCELAR fazem efeito:
+// Webhook de entrada da Evolution (mensagens recebidas). Só pedido de saída (SAIR, PARAR, STOP, CANCELAR ou frase curta como "quero sair") faz efeito:
 // desligam o aviso do Radar por WhatsApp de quem tem o número, cancelam a fila dele e ficam registrados.
 // Não guarda nem registra o texto nem o número. Qualquer outra mensagem é ignorada com 200.
 export async function POST(req: Request) {
@@ -21,7 +21,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, ignorado: "corpo" });
   }
   const pedido = pedidoDeSaida(corpo);
-  if (!pedido) return NextResponse.json({ ok: true, ignorado: "sem pedido" });
+  if (!pedido) {
+    // Frase de saída cujo número não se lê (conversa @lid sem campo de número): só o fato, sem número nem texto.
+    if (saidaSemNumeroLegivel(corpo)) console.warn("whatsapp evolution: saida sem numero legivel (conversa sem campo de numero)");
+    return NextResponse.json({ ok: true, ignorado: "sem pedido" });
+  }
 
   let db;
   try {

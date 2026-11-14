@@ -2,11 +2,10 @@ import "server-only";
 import { createHmac, randomInt, randomUUID } from "node:crypto";
 import { whatsappDigitado } from "@/lib/formato";
 
-export function numeroWhatsapp(entrada: unknown): string | null {
-  if (typeof entrada !== "string" || entrada.length > 30 || !/^[\d+().\s-]+$/.test(entrada)) return null;
-  if (entrada.includes("+") && (!/^\s*\+55[\d().\s-]*$/.test(entrada) || entrada.replace(/\D/g, "").length !== 13)) return null;
-  if (entrada.trimStart().startsWith("(") && entrada.replace(/\D/g, "").length !== 11) return null;
-  return whatsappDigitado(entrada);
+/** Celular para confirmar pelo WhatsApp. Sem DDD no número, usa o DDD da região (ddd); sem ele, null. */
+export function numeroWhatsapp(entrada: unknown, ddd?: string | null): string | null {
+  if (typeof entrada !== "string" || entrada.length > 30) return null;
+  return whatsappDigitado(entrada, ddd);
 }
 
 export function configuracaoWhatsapp() {
