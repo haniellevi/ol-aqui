@@ -144,15 +144,26 @@ test('rota: falha do banco responde 503 com só o código do erro, sem texto nem
   assert.doesNotMatch(erros[0], /falhou/);
 });
 
-test('frases de saída: valem com até 4 palavras e termo inteiro; conversa comum e palavras parecidas não valem', () => {
+test('frases de saída: pedido inteiro vale; verbo solto dentro de uma conversa não vale', () => {
   const sim = {
-    'Sair': 'SAIR', 'SAIR!': 'SAIR', 'Sair.': 'SAIR', 'quero sair': 'SAIR', 'quero sair daqui': 'SAIR', 'sair, por favor': 'SAIR',
-    'pare por favor': 'PARAR', 'Pare.': 'PARAR', 'para de mandar': 'PARAR', 'parar': 'PARAR', 'Stop': 'STOP', 'cancelar': 'CANCELAR',
-    'descadastrar': 'SAIR', 'Não quero mais': 'SAIR', 'não quero mais receber': 'SAIR', 'remover': 'SAIR',
+    'Sair': 'SAIR', 'SAIR!': 'SAIR', 'Sair.': 'SAIR', 'sai': 'SAIR', 'saia': 'SAIR', 'quero sair': 'SAIR', 'quero sair daqui': 'SAIR',
+    'sair, por favor': 'SAIR', 'sair por favor agora obrigado': 'SAIR', 'eu quero sair': 'SAIR', 'pode me remover': 'SAIR',
+    'pare por favor': 'PARAR', 'Pare.': 'PARAR', 'pare': 'PARAR', 'parar': 'PARAR', 'para de mandar': 'PARAR',
+    'pare de me mandar mensagem': 'PARAR', 'Stop': 'STOP', 'cancelar': 'CANCELAR', 'cancela': 'CANCELAR',
+    'descadastrar': 'SAIR', 'desinscrever': 'SAIR', 'retirar': 'SAIR', 'Não quero mais': 'SAIR',
+    'não quero mais receber': 'SAIR', 'não quero mais receber mensagens': 'SAIR', 'não me mande mais': 'SAIR',
+    'remover': 'SAIR', 'remova meu nome': 'SAIR', 'me remove': 'SAIR', 'me tira da lista': 'SAIR', 'tira meu numero': 'SAIR',
+    'por favor me remova da lista': 'SAIR', 'remover meu número': 'SAIR', 'tire meu nome da lista': 'SAIR',
   };
   for (const [texto, comando] of Object.entries(sim)) assert.equal(lib.comandoDeSaida(texto), comando, texto);
-  for (const texto of ['vou sair de casa agora pra loja', 'parabéns', 'parabens pelo anuncio', 'oi', 'quero um sofá', 'pare de me ligar agora por favor',
-    'stopwatch', 'desparar', 'sairia', 'para o carro', 'sair '.repeat(3) + 'a'.repeat(80)]) {
+  for (const texto of [
+    // conversa comum com a palavra dentro
+    'vou sair de casa agora pra loja', 'vou sair hoje', 'posso sair pra loja', 'nao consigo sair', 'não quero sair', 'nao quero sair',
+    'sairia', 'parabéns', 'parabens pelo anuncio', 'oi', 'quero um sofá', 'stopwatch', 'desparar', 'para o carro',
+    'pare de me ligar agora por favor', 'quero remover meu anúncio', 'pode remover o anuncio', 'quero cancelar meu pedido',
+    'cancelar meu pedido', 'vou parar hoje', 'posso sair', 'parei', 'sair dessa lista',
+    'sair '.repeat(3) + 'a'.repeat(80),
+  ]) {
     assert.equal(lib.comandoDeSaida(texto), null, texto);
   }
 });
@@ -172,4 +183,20 @@ test('conversa @lid: o número real vem em remoteJidAlt ou senderPn; grupo e cam
   assert.deepEqual(lib.pedidoDeSaida({ event: 'messages.upsert', data: { key: { remoteJid: lid, remoteJidAlt: alt, fromMe: false }, message: { conversation: 'SAIR' } } }),
     { numero: NUMERO, comando: 'SAIR' });
   assert.equal(lib.pedidoDeSaida({ event: 'messages.upsert', data: { key: { remoteJid: lid, remoteJidAlt: alt, fromMe: true }, message: { conversation: 'SAIR' } } }), null);
+});
+
+test('conversa @lid: campo senderPN (outra grafia da Evolution) também vale; grupo não', () => {
+  const alt = `${NUMERO}@s.whatsapp.net`;
+  assert.equal(lib.numeroDaConversa({ remoteJid: '123456789012345@lid', senderPN: alt }), NUMERO);
+  assert.equal(lib.numeroDaConversa({ remoteJid: '123456789012345@lid', remoteJidAlt: '5511@s.whatsapp.net', senderPN: alt }), NUMERO);
+  assert.equal(lib.numeroDaConversa({ remoteJid: '120363000000000000@g.us', remoteJidAlt: alt }), null);
+});
+
+test('saída cujo número não se lê: marcada para o log, sem número nem texto', () => {
+  const lid = { event: 'messages.upsert', data: { key: { remoteJid: '123456789012345@lid', fromMe: false }, message: { conversation: 'SAIR' } } };
+  assert.equal(lib.pedidoDeSaida(lid), null);
+  assert.equal(lib.saidaSemNumeroLegivel(lid), true);
+  assert.equal(lib.saidaSemNumeroLegivel(mensagem({ texto: 'oi' })), false);
+  assert.equal(lib.saidaSemNumeroLegivel({ event: 'messages.upsert', data: { key: { remoteJid: '120363000000000000@g.us', fromMe: false }, message: { conversation: 'SAIR' } } }), false);
+  assert.equal(lib.saidaSemNumeroLegivel(mensagem({ fromMe: true })), false);
 });
