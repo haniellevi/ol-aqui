@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const React = require('react');
+const { renderToStaticMarkup } = require('react-dom/server');
 const { carregar } = require('./carregar.cjs');
 const loja = '40000000-0000-4000-a000-000000000001';
 const regiao = '40000000-0000-4000-a000-000000000002';
@@ -89,6 +91,20 @@ test('imagens administrativas: autorização e destino são conferidos antes de 
   for(const args of [['loja','../fora','logo_url','webp'],['usuario','user_teste','banner_url','webp'],['usuario','user_teste','avatar_url','svg']]){
     const a=ambiente(arquivo);assert.ok((await a.modulo.prepararFotoGestao(...args)).erro);assert.deepEqual(a.chamadas,[]);
   }
+});
+
+test('imagens administrativas: o formulário aceita e mostra uma capa interna existente', () => {
+  const { ImagemGestao } = carregar('src/components/admin/imagem-gestao.tsx', {
+    '@/app/admin/imagens-actions': { prepararFotoGestao() {} },
+  });
+  const capa = `/api/loja/imagem/${loja}`;
+  const render = valor => renderToStaticMarkup(React.createElement(ImagemGestao, {
+    tipo:'loja', campo:'capa_url', rotulo:'Capa', valor,
+  }));
+  const html = render(capa);
+  assert.match(html, /<input[^>]*type="text"/);
+  assert.ok(html.includes(`<img src="${capa}"`));
+  assert.match(render('https://store.test/capa.webp'), /<input[^>]*type="url"/);
 });
 
 test('marca: mensagens legadas do banco exibem a marca atual',()=>{

@@ -76,6 +76,20 @@ test('Capa: bloqueia enum, cor, URL e foto ausente; conserva foto no plano menor
  assert.equal(chamadas.find(x=>x[0]==='update')[1].banner_url,img('vitrine'));assert.equal(chamadas.some(x=>x[0]==='delete'),false);
  assert.ok((await ambiente({falhaPlano:true,v:{banner_tipo:'foto'}}).b.salvarBanner(null,form())).erro);
 });
+test('Capa: salvar apenas o modelo remove a capa publicada pelo piloto', async () => {
+ const capa = '/api/loja/imagem/95000000-0000-4000-a000-000000000003';
+ const { b, chamadas } = ambiente({ semFoto:true, v:{ capa_url:capa, banner_url:null } });
+ assert.ok((await b.salvarBanner(null,form())).ok);
+ assert.deepEqual(chamadas.find(x=>x[0]==='update')[1], {
+  banner_tipo:'modelo', banner_url:null, banner_cor:'#4B1248', banner_modelo:'liso', capa_url:null,
+ });
+ assert.equal(chamadas.some(x=>x[0]==='delete'),false);
+});
+test('Capa: trocar foto de um banner legado mantém uma capa independente', async () => {
+ const { b, chamadas } = ambiente({ v:{ capa_url:img() } });
+ assert.ok((await b.salvarBanner(null,form({ banner_tipo:'foto', banner_url:img('vitrine',uid,'nova.webp') }))).ok);
+ assert.equal(Object.hasOwn(chamadas.find(x=>x[0]==='update')[1],'capa_url'),false);
+});
 test('Informações: horários válidos incluem meia-noite sem modificar o fechamento',async()=>{
  const h={seg:[{abre:'08:00',fecha:'12:00'},{abre:'14:00',fecha:'24:00'}],dom:[]};const {b,chamadas}=ambiente();
  assert.ok((await b.salvarInformacoes(null,form({horarios:JSON.stringify(h),instagram:'https://www.instagram.com/loja.local/',formas_pagamento:['Pix','Crediário antigo','Pix'],faz_entrega:'sim',entrega_obs:'Entrega local'}))).ok);

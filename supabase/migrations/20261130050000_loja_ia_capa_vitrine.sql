@@ -1,4 +1,20 @@
 -- Capa privada aprovada: preserva banner existente e regras do plano.
+create function public.loja_ia_capa_publica(v public.vitrines_lojas, p_foto_fachada boolean)
+returns text language sql stable set search_path = '' as $$
+  select v.capa_url
+  where v.banner_url is null and v.tipo='loja' and v.status='ativa'
+    and v.arquivada_em is null and v.excluida_em is null
+    and exists (
+      select 1 from public.loja_ia_imagens i
+      join public.loja_ia_rascunhos r on r.id=i.rascunho_id
+      join public.loja_ia_imagens_vinculos vinculo on vinculo.imagem_id=i.id and vinculo.vitrine_id=v.id and vinculo.uso='capa'
+      where r.vitrine_id=v.id and r.dono_id=v.dono_id and r.estado='publicado'
+        and i.estado='pronta' and v.capa_url='/api/loja/imagem/' || i.id::text
+        and (p_foto_fachada or (i.origem='merc' and i.tipo='capa'))
+    )
+$$;
+revoke all on function public.loja_ia_capa_publica(public.vitrines_lojas,boolean) from public, anon, authenticated, service_role;
+
 create or replace function public.vitrine_publica(p_slug text)
 returns jsonb language plpgsql stable security definer
 set search_path = public, extensions
@@ -9,7 +25,7 @@ declare
   rec     record;
   dono    boolean;
   foto    boolean;
-  capa_ia boolean;
+  capa_ia text;
   secoes  jsonb;
   total   integer;
 begin
@@ -22,15 +38,7 @@ begin
   select * into rec from public.recursos_vitrine(v);
   select * into pf from public.perfis p where p.id = v.dono_id;
   foto := v.banner_tipo = 'foto' and v.banner_url is not null and (v.banner_aki_posicao is not null or coalesce(rec.foto_fachada, false));
-  -- Mantém um banner existente; a capa do rascunho só vale com vínculo público vigente.
-  select v.banner_url is null and exists (
-    select 1 from public.loja_ia_imagens i
-    join public.loja_ia_rascunhos r on r.id=i.rascunho_id
-    join public.loja_ia_imagens_vinculos vinculo on vinculo.imagem_id=i.id and vinculo.vitrine_id=v.id and vinculo.uso='capa'
-    where r.vitrine_id=v.id and r.dono_id=v.dono_id and r.estado='publicado' and v.status='ativa'
-      and i.estado='pronta' and v.capa_url='/api/loja/imagem/' || i.id::text
-      and (coalesce(rec.foto_fachada, false) or (i.origem='merc' and i.tipo='capa'))
-  ) into capa_ia;
+  capa_ia := public.loja_ia_capa_publica(v, rec.foto_fachada);
 
   select coalesce(jsonb_agg(jsonb_build_object('id', s.id, 'nome', s.nome, 'anuncios', s.ids) order by s.ordem, s.criado_em), '[]'::jsonb)
     into secoes
@@ -48,8 +56,8 @@ begin
 
   return jsonb_build_object(
     'id', v.id, 'slug', v.slug, 'nome', v.nome, 'logo_url', v.logo_url,
-    'banner_tipo', case when foto or capa_ia then 'foto' else 'modelo' end,
-    'banner_url', case when foto then v.banner_url when capa_ia then v.capa_url end,
+    'banner_tipo', case when foto or capa_ia is not null then 'foto' else 'modelo' end,
+    'banner_url', case when foto then v.banner_url else capa_ia end,
     'banner_aki_posicao', case when foto then v.banner_aki_posicao end,
     'categoria_loja', v.categoria_loja,
     'banner_modelo', v.banner_modelo, 'banner_cor', v.banner_cor,

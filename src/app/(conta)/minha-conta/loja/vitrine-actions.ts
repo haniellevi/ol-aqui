@@ -112,8 +112,10 @@ export async function salvarBanner(_antes: EstadoVitrine, form: FormData): Promi
     // Trocar para modelo preserva a foto guardada; substituir a URL libera a anterior.
     const novaUrl = url || null;
     const mudancas: Record<string, unknown> = { banner_tipo: tipo, banner_url: novaUrl, banner_cor: cor, banner_modelo: modelo };
-    // A capa antiga (etapa 2) virou o banner na migração: quando o banner muda, ela sai junto.
-    if (v.capa_url && v.capa_url === v.banner_url && novaUrl !== v.banner_url) mudancas.capa_url = null;
+    // Salvar o modelo também substitui a capa do cadastro quando ainda não havia banner no editor.
+    if (tipo === "modelo" && v.capa_url?.startsWith("/api/loja/imagem/")) mudancas.capa_url = null;
+    // A capa antiga (etapa 2) virou o banner na migração: quando a URL muda, ela sai junto.
+    else if (v.capa_url && v.capa_url === v.banner_url && novaUrl !== v.banner_url) mudancas.capa_url = null;
 
     const db = await createClient();
     const { data, error } = await db.from("vitrines_lojas").update(mudancas).eq("id", v.id).eq("dono_id", v.dono_id).select("id").maybeSingle();

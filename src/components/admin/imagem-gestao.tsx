@@ -14,9 +14,10 @@ export function ImagemGestao({ tipo, id, campo, rotulo, valor, onEnvio }: {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const [nomeArquivo, setNomeArquivo] = useState<string | null>(null);
+  const imagemDoPiloto = tipo === "loja" && url === valor && url.startsWith("/api/loja/imagem/");
   return <div className="space-y-2">
     <label className="block text-sm font-semibold">{rotulo}
-      <input name={campo} type="url" maxLength={500} value={url} onChange={e => setUrl(e.target.value)} className={estiloCampo} placeholder="URL HTTPS ou envie uma foto" />
+      <input name={campo} type={imagemDoPiloto ? "text" : "url"} maxLength={500} value={url} onChange={e => setUrl(e.target.value)} className={estiloCampo} placeholder="URL HTTPS ou envie uma foto" />
     </label>
     {id ? <CampoArquivo
       rotulo="Enviar foto do computador" accept="image/jpeg,image/png,image/webp" disabled={enviando}
@@ -34,7 +35,7 @@ export function ImagemGestao({ tipo, id, campo, rotulo, valor, onEnvio }: {
         } catch (e) { setErro(e instanceof Error ? e.message : "Não foi possível enviar a foto."); }
         finally { setEnviando(false); onEnvio(false); }
       }} /> : <p className="text-sm text-texto-suave">Crie a loja para enviar fotos do computador.</p>}
-    {url && /^https:\/\//.test(url) && (
+    {(imagemDoPiloto || /^https:\/\//.test(url)) && (
       // eslint-disable-next-line @next/next/no-img-element -- prévia de imagem selecionada pelo administrador
       <img src={url} alt={`Prévia: ${rotulo}`} width={160} height={90} className="max-h-24 rounded-campo object-contain" />
     )}
