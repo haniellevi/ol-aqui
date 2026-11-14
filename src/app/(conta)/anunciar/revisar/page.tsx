@@ -1,3 +1,5 @@
+import { RegistrarAnuncio } from "@/components/assistente/retomar";
+import { comAssistente } from "@/lib/assistente";
 import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -28,7 +30,7 @@ type Linha = { rotulo: string; valor: string; passo: SlugPasso; falta?: boolean 
 
 // T22 · Passo 6: o card exatamente como vai aparecer, o resumo com "Alterar" em cada item e Publicar.
 export default async function PassoRevisar({ searchParams }: { searchParams: ParamsPasso }) {
-  const { anuncio, conta, editar, equipe } = await carregarPasso(searchParams);
+  const { anuncio, conta, editar, equipe , assistente } = await carregarPasso(searchParams);
   const jaPublicado = (STATUS_PUBLICADO as readonly string[]).includes(anuncio.status);
   const pagoAte = anuncio.pago_ate && new Date(anuncio.pago_ate).getTime() > Date.now() ? anuncio.pago_ate : null;
   // nunca esteve no ar: só vale categoria visível (o banco recusa publicar em categoria escondida)
@@ -46,7 +48,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
   const destaqueAtivo = Boolean(anuncio.destaque_ate) && new Date(anuncio.destaque_ate as string).getTime() > Date.now();
   const destaquePendente = destaques.some((d) => d.status === "aguardando_pagamento" && d.pagamento_status === "pendente");
   const temPagamento = Boolean(pagoAte) || destaqueAtivo || destaquePendente;
-  const hrefAvulso = avulso ? linkAvulso(anuncio.id) : null;
+  const hrefAvulso = avulso ? comAssistente(linkAvulso(anuncio.id), assistente) : null;
 
   const modo = jaPublicado ? "salvar" : anuncio.status === "rascunho" ? "publicar" : "republicar";
   const categoriaSumiu = Boolean(anuncio.categoria_id) && !achada && nuncaNoAr;
@@ -93,7 +95,8 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
 
   return (
     <CorpoPasso>
-      <CabecalhoPasso equipe={equipe}
+      {assistente && !editar && !equipe && <RegistrarAnuncio dono={conta.perfil.id} tentativa={assistente} id={anuncio.id} passo="revisar" />}
+      <CabecalhoPasso assistente={assistente} equipe={equipe}
         passo="revisar"
         id={anuncio.id}
         editar={editar}
@@ -132,7 +135,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
             <ul className="list-disc pl-5">
               {faltando.map((l) => (
                 <li key={l.rotulo}>
-                  <Link href={urlPasso(l.passo, anuncio.id, editar, true)} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+                  <Link href={urlPasso(l.passo, anuncio.id, editar, true, assistente)} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
                     {l.rotulo}
                   </Link>
                 </li>
@@ -201,7 +204,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
                 <dd className={`text-sm [overflow-wrap:anywhere] md:text-base ${l.falta ? "font-semibold text-perigo" : ""}`}>{l.valor}</dd>
               </div>
               <Link
-                href={urlPasso(l.passo, anuncio.id, editar, true)}
+                href={urlPasso(l.passo, anuncio.id, editar, true, assistente)}
                 className="inline-flex min-h-11 shrink-0 items-center rounded-card px-2 text-sm font-semibold md:text-base text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
                 aria-label={`Alterar ${l.rotulo.toLowerCase()}`}
               >

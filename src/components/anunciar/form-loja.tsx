@@ -1,5 +1,7 @@
 "use client";
 
+import { linkAssistente } from "@/lib/assistente";
+
 import { useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle2, ChevronDown, Loader2, MessageCircle, Plus, Store, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
@@ -40,6 +42,7 @@ export function FormLoja({
   whatsappInicial,
   nomeInicial,
   avisoTeste,
+  assistente,
 }: {
   cidades: { nome: string; uf: string }[];
   cidadeInicial: string;
@@ -47,6 +50,7 @@ export function FormLoja({
   nomeInicial: string;
   /** Ex.: "O teste grátis de 30 dias começa na hora." (null = não mostrar). */
   avisoTeste: string | null;
+  assistente?: string;
 }) {
   const [estado, acao, enviando] = useActionState<EstadoLoja, FormData>(criarLoja, null);
   const [nome, setNome] = useState(nomeInicial);
@@ -104,7 +108,7 @@ export function FormLoja({
           <p className="text-base text-texto-suave">Teste grátis até {dataCurta.format(new Date(feito.teste_expira_em))}.</p>
         )}
         <div className="flex w-full max-w-sm flex-col gap-3">
-          <Botao href="/anunciar" larguraTotal icone={<Plus />}>
+          <Botao href={assistente ? linkAssistente("loja", assistente) : "/anunciar"} larguraTotal icone={<Plus />}>
             Criar primeiro anúncio
           </Botao>
           <Botao href="/minha-conta/loja/banner" variante="secundario" larguraTotal>

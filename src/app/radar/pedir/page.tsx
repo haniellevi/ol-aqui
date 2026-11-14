@@ -1,3 +1,4 @@
+import { tentativaAssistente } from "@/lib/assistente";
 // /radar/pedir: o comprador diz o que procura. Prazos e limites vêm do painel (configuracoes).
 // O celular confirmado vem do Clerk: sincronizamos antes de mostrar o formulário.
 // Enquanto o painel não exige o código (radar.exigir_celular_confirmado = false), quem não
@@ -24,8 +25,12 @@ import { dddDaRegiao } from "@/lib/telefone-regiao";
 
 export const metadata = { title: "Estou procurando…" };
 
-export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; categoria_id?: string; cidade?: string; preco_min?: string; preco_max?: string; detalhes?: string; cidades?: string; quem?: string; retomar?: string }> }) {
+export default async function PedirRadarPage({ searchParams }: { searchParams: Promise<{ q?: string; categoria?: string; categoria_id?: string; cidade?: string; preco_min?: string; preco_max?: string; detalhes?: string; cidades?: string; quem?: string; retomar?: string; assistente?: string }> }) {
   const params = await searchParams;
+  const assistente = tentativaAssistente(params.assistente);
+  const retorno = new URLSearchParams();
+  for (const [chave, valor] of Object.entries(params)) if (typeof valor === "string") retorno.set(chave, valor);
+  const confirmar = `/confirmar-celular?destino=${encodeURIComponent(`/radar/pedir?${retorno}`)}`;
   const textoParametro = (v: unknown, max = 120) => typeof v === "string" ? v.slice(0, max) : "";
   const { userId } = await auth();
   const filtros = {
@@ -68,7 +73,7 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
           titulo="Confirme seu celular primeiro"
           texto="As lojas falam com você pelo WhatsApp. Para pedir no Radar, seu celular precisa estar confirmado."
         >
-          <Botao href="/confirmar-celular?destino=%2Fradar%2Fpedir" larguraTotal tamanho="grande">
+          <Botao href={confirmar} larguraTotal tamanho="grande">
             Confirmar meu celular
           </Botao>
           <Botao href={LINK_RADAR} variante="texto" tamanho="grande">
@@ -77,6 +82,9 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
         </Vazio>
       ) : (
         <Formulario
+          dono={userId}
+          assistente={assistente}
+          confirmar={confirmar}
           microrregiaoId={conta.perfil.microrregiao_id}
           {...filtros}
           pedirWhatsapp={!confirmado}
@@ -115,6 +123,7 @@ function ErroConta() {
 }
 
 async function Formulario({
+  dono, assistente, confirmar,
   microrregiaoId,
   texto,
   categoriaSlug, categoriaId, detalhes, cidadesIds, visibilidade, cidadeBusca, precoMin, precoMax,
@@ -123,6 +132,7 @@ async function Formulario({
   anonimo = false,
   retomar = false,
 }: {
+  dono?: string; assistente?: string; confirmar?: string;
   microrregiaoId: string;
   texto: string;
   categoriaSlug: string; categoriaId: string; detalhes: string; cidadesIds: string[]; visibilidade: "lojas" | "todos";
@@ -139,6 +149,10 @@ async function Formulario({
   const categoriaInicial = opcoes.find((c) => (categoriaId && c.id === categoriaId) || (categoriaSlug && c.slug === categoriaSlug));
   // "Pedir de novo": só as cidades que ainda estão ativas na região do cadastro.
   const cidadesIniciais = cidadesIds.filter((id) => cidades.some((c) => c.id === id));
+  if (assistente && !cidadesIniciais.length && cidadeBusca) {
+    const daBusca = cidades.find((c) => c.nome === cidadeBusca);
+    if (daBusca) cidadesIniciais.push(daBusca.id);
+  }
   // Radar v2: "Toda a região" vem marcado (docs/designs/radar-v2.md); a pessoa marca cidades no passo "Onde?".
   const cidadeEscolhida = cidadeBusca || regiao?.cidade;
   const cidadeFora = !!cidadeEscolhida && !cidades.some((c) => c.nome === cidadeEscolhida);
@@ -147,6 +161,9 @@ async function Formulario({
     <>
       {cidadeFora && <Alert variant="warning" role="status" className="text-facil">A cidade da busca fica fora da região do seu cadastro. Seu pedido vai para as lojas da região do seu cadastro.</Alert>}
       <FormPedido
+        dono={dono}
+        assistente={assistente}
+        confirmar={confirmar}
         ddd={ddd}
         textoInicial={texto.slice(0, 120)}
         categorias={categorias.map((c) => ({ id: c.id, nome: c.nome, filhas: c.filhas.map(({ id, nome }) => ({ id, nome })) }))}

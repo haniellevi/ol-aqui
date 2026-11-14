@@ -1,3 +1,4 @@
+import { comAssistente, tentativaAssistente } from "@/lib/assistente";
 "use server";
 // Server Actions do "Anunciar" (T17–T22). Cada passo salva o rascunho com o cliente do usuário
 // (a RLS só deixa mexer no que é dele) e confere os dados antes, para dar a mensagem no campo certo.
@@ -35,7 +36,7 @@ const MAX_PRECO_CENTAVOS = 100_000_000_000; // R$ 1 bilhão: acima disso é erro
 
 /** `ir`: etapa tocada no topo ("ir:preco"); salva o passo atual e vai direto para ela.
  *  `parcial`: rascunho pode ficar incompleto (Salvar e sair, ou pular para outra etapa). */
-type Comum = { id: string; editar: boolean; sair: boolean; salvar: boolean; salvarRevisao: boolean; ir: SlugPasso | null; parcial: boolean };
+type Comum = { id: string; editar: boolean; sair: boolean; salvar: boolean; salvarRevisao: boolean; ir: SlugPasso | null; parcial: boolean; assistente?: string };
 
 function lerComum(form: FormData): Comum {
   const acao = String(form.get("acao") ?? "");
@@ -49,6 +50,7 @@ function lerComum(form: FormData): Comum {
     salvar: acao === "salvar",
     salvarRevisao: acao === "salvar-revisao",
     ir,
+    assistente: tentativaAssistente(form.get("assistente")),
     parcial: sair || ir !== null,
   };
 }
@@ -59,11 +61,11 @@ const publicado = (a: MeuAnuncio) => (STATUS_PUBLICADO as readonly string[]).inc
 function seguirDepoisDeSalvar(passo: SlugPasso, c: Comum): EstadoForm {
   if (c.sair) redirect(`${DESTINO_SAIR}?salvo=${encodeURIComponent(c.id)}`);
   if (c.salvar) return { irPara: `${DESTINO_SAIR}?salvo=${encodeURIComponent(c.id)}` };
-  if (c.salvarRevisao) return { irPara: urlPasso("revisar", c.id, c.editar) };
+  if (c.salvarRevisao) return { irPara: urlPasso("revisar", c.id, c.editar, false, c.assistente) };
   // Confirme a gravação antes de o navegador carregar a outra etapa.
-  if (c.ir) return { irPara: urlPasso(c.ir, c.id, c.editar) };
+  if (c.ir) return { irPara: urlPasso(c.ir, c.id, c.editar, false, c.assistente) };
   const prox = proximoPasso(passo);
-  redirect(prox ? urlPasso(prox, c.id, c.editar) : DESTINO_SAIR);
+  redirect(prox ? urlPasso(prox, c.id, c.editar, false, c.assistente) : DESTINO_SAIR);
 }
 
 async function abrir(id: string): Promise<MeuAnuncio | null> {
@@ -98,7 +100,7 @@ async function gravar(id: string, colunas: Record<string, unknown>, antes?: MeuA
  * desde que o avulso seja oferecido para a pessoa e o pagamento esteja ligado. O banco segue
  * barrando o excesso de rascunhos e só põe no ar com vaga no plano ou avulso pago.
  */
-export async function novoRascunho(opcoes?: { avulso?: boolean; chave?: string }): Promise<EstadoForm> {
+export async function novoRascunho(opcoes?: { avulso?: boolean; chave?: string; assistente?: string }): Promise<EstadoForm> {
   const conta = await contaDaLoja();
   if (!conta) return { erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
   if (!conta.vitrine) redirect("/quero-vender");
@@ -117,10 +119,10 @@ export async function novoRascunho(opcoes?: { avulso?: boolean; chave?: string }
     .single();
   if (error?.code === "23505" && opcoes?.chave) {
     const existente = await anuncioDaLoja(opcoes.chave);
-    if (existente?.status === "rascunho") redirect(urlPasso("fotos", existente.id));
+    if (existente?.status === "rascunho") redirect(urlPasso("fotos", existente.id, false, false, tentativaAssistente(opcoes?.assistente)));
   }
   if (error || !data) return { erro: traduzirErro(error) };
-  redirect(urlPasso("fotos", String(data.id)));
+  redirect(urlPasso("fotos", String(data.id), false, false, tentativaAssistente(opcoes?.assistente)));
 }
 
 /* ------------------------------- Fotos ------------------------------- */
@@ -472,9 +474,9 @@ export async function publicarAnuncio(_antes: EstadoForm, form: FormData): Promi
   const { data, error } = await db.rpc("publicar_anuncio", { anuncio_id: c.id });
   if (error) return { erro: traduzirErro(error) };
   const status = typeof data === "string" ? data : "";
-  if (status === "em_analise") redirect(`/anunciar/pronto?id=${encodeURIComponent(c.id)}&status=analise`);
-  if (status === "ativo") redirect(`/anunciar/pronto?id=${encodeURIComponent(c.id)}`);
+  if (status === "em_analise") redirect(comAssistente(`/anunciar/pronto?id=${encodeURIComponent(c.id)}&status=analise`, c.assistente));
+  if (status === "ativo") redirect(comAssistente(`/anunciar/pronto?id=${encodeURIComponent(c.id)}`, c.assistente));
   // P5c: loja em montagem — o produto fica pronto e vai ao ar quando o dono aceitar a loja.
-  if (status === "pronto") redirect(`/anunciar/pronto?id=${encodeURIComponent(c.id)}&status=pronto`);
+  if (status === "pronto") redirect(comAssistente(`/anunciar/pronto?id=${encodeURIComponent(c.id)}&status=pronto`, c.assistente));
   return { erro: traduzirErro(null) };
 }

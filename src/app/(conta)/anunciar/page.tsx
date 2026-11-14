@@ -1,3 +1,5 @@
+import { RetomarAnuncio } from "@/components/assistente/retomar";
+import { etapaAnuncio, tentativaAssistente } from "@/lib/assistente";
 import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -20,7 +22,8 @@ export const metadata: Metadata = { title: "Anunciar" };
 
 // /anunciar: confere se a pessoa já vende e o limite do plano (T16) e então
 // oferece retomar ou começar. Abrir/pré-carregar a página nunca grava no banco.
-export default async function PaginaAnunciar() {
+export default async function PaginaAnunciar({ searchParams }: { searchParams?: Promise<{ assistente?: string }> } = {}) {
+  const assistente = tentativaAssistente((await searchParams)?.assistente);
   const conta = await contaDaLoja();
   if (!conta) {
     return (
@@ -45,6 +48,8 @@ export default async function PaginaAnunciar() {
 
   const [todos, lojas, lojaAtual] = await Promise.all([anunciosDaLoja(), lojasQueCuido(), lojaEscolhida()]);
   const rascunhos = todos.filter((a) => a.status === "rascunho");
+  const retomar = assistente ? <RetomarAnuncio dono={conta.perfil.id} tentativa={assistente}
+    rascunhos={rascunhos.map((a) => a.id)} publicados={todos.filter((a) => a.status === "ativo" || a.status === "em_analise" || (a.status === "rascunho" && a.pronto_em)).map((a) => a.id)} /> : null;
   const seletor = <SeletorLoja lojas={lojas} atual={lojaAtual} voltar="/anunciar" />;
 
   // P5b: ajudante no limite do plano não vê avulso nem planos (pagamento é do dono).
@@ -64,6 +69,7 @@ export default async function PaginaAnunciar() {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-2.5 py-4 md:gap-5 md:px-4 md:py-6">
         {seletor}
+        {retomar}
         <LimiteAtingido
           conta={conta}
           avulsoPreco={avulso?.preco ?? null}
@@ -91,6 +97,7 @@ export default async function PaginaAnunciar() {
           <h1 className="text-xl font-semibold text-beringela">Anunciar</h1>
           <p className="text-sm text-texto-suave md:text-base">Comece pelas fotos. O anúncio fica salvo como rascunho até você publicar.</p>
         </div>
+        {retomar}
         <BotaoNovoRascunho texto="Começar meu anúncio" />
       </main>
     );
@@ -103,11 +110,12 @@ export default async function PaginaAnunciar() {
         <h1 className="text-xl font-semibold">Seus rascunhos</h1>
         <p className="text-sm text-texto-suave md:text-base">Escolha um anúncio para continuar.</p>
       </div>
+      {retomar}
       <ul className="flex flex-col gap-2 md:gap-3">
-        {rascunhos.slice(0, 5).map((r) => (
+        {(assistente ? rascunhos : rascunhos.slice(0, 5)).map((r) => (
           <li key={r.id}>
             <Link
-              href={urlPasso(r.fotos.length ? (r.categoria_id ? "detalhes" : "categoria") : "fotos", r.id)}
+              href={urlPasso(assistente ? etapaAnuncio(r) : r.fotos.length ? (r.categoria_id ? "detalhes" : "categoria") : "fotos", r.id, false, false, assistente)}
               className="flex min-h-12 items-center gap-2 rounded-card bg-cartao p-2 shadow-1 md:gap-3 md:p-3 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
             >
               <span className="relative grid size-12 shrink-0 md:size-16 place-items-center overflow-hidden rounded-campo bg-borda text-texto-suave">
@@ -125,13 +133,13 @@ export default async function PaginaAnunciar() {
                   Rascunho · mexido {tempoRelativo(r.atualizado_em)}
                 </span>
               </span>
-              <span className="sr-only md:not-sr-only md:text-sm md:font-semibold md:text-laranja-escuro">Continuar</span>
+              <span className="sr-only md:not-sr-only md:text-sm md:font-semibold md:text-laranja-escuro">{assistente ? "Continuar anúncio" : "Continuar"}</span>
               <ChevronRight className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
             </Link>
           </li>
         ))}
       </ul>
-      <BotaoNovoRascunho variante="secundario" />
+      <BotaoNovoRascunho variante="secundario" texto={assistente ? "Criar novo anúncio" : undefined} />
     </main>
   );
 }

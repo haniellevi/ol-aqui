@@ -11,6 +11,7 @@ import { anunciosCatalogo } from "@/lib/dados/catalogo";
 import { buscarAnuncios } from "@/lib/dados/anuncios";
 import { favoritosEntre } from "@/lib/dados/favoritos";
 import { regiaoAtual } from "@/lib/dados/regiao";
+import { EntradaAssistente } from "@/components/assistente/entrada";
 import { CampoBusca } from "@/components/busca/campo-busca";
 import { lugarDaRegiao } from "@/components/busca/parametros";
 import { CoracaoCard } from "@/components/anuncio/coracao-card";
@@ -125,6 +126,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
       {/* Celular: a busca gruda logo abaixo do cabeçalho (no computador ela está no próprio cabeçalho). */}
       <div className="border-b border-borda bg-cartao px-2.5 py-2 md:hidden">
         <CampoBusca id="busca-inicio" toqueAmplo />
+      </div>
+
+      <div className="mx-auto w-full max-w-7xl px-2.5 pt-2 md:px-4">
+        <EntradaAssistente dono={userId} />
       </div>
 
       <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-2.5 py-2 md:px-4 md:py-4 lg:grid-cols-[13rem_minmax(0,1fr)]">

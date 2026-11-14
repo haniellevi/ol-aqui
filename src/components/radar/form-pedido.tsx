@@ -1,5 +1,8 @@
 "use client";
 
+import { comAssistente } from "@/lib/assistente";
+import { progressoAtual, salvarProgresso } from "@/components/assistente/progresso";
+
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -62,6 +65,9 @@ type Props = {
   whatsappInicial?: string;
   /** DDD da região: o exemplo do campo de WhatsApp usa ele. */
   ddd?: string | null;
+  dono?: string;
+  assistente?: string;
+  confirmar?: string;
   /** Perguntas ou parecidos da IA ligados no painel. Desligado: o "Continuar" nem vai ao servidor. */
   iaNoPedido?: boolean;
   /** Sem login: o último botão guarda o rascunho no aparelho e manda entrar (não publica). */
@@ -85,7 +91,7 @@ const ESPERA_IA_MS = 5000;
 const ROTULO_GRUPO = "text-facil font-semibold text-texto";
 const TEXTO_ERRO = "text-facil font-semibold text-perigo";
 
-export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", detalhesInicial = "", visibilidadeInicial = "lojas", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "", ddd = null, iaNoPedido = false, anonimo = false, retomar = false }: Props) {
+export function FormPedido({ dono, assistente, confirmar, textoInicial, categoriaInicial = null, precoMinInicial = "", precoMaxInicial = "", detalhesInicial = "", visibilidadeInicial = "lojas", categorias, cidades, cidadesIniciais = [], regras, pedirWhatsapp = false, whatsappInicial = "", ddd = null, iaNoPedido = false, anonimo = false, retomar = false }: Props) {
   const router = useRouter();
   const formulario = useRef<HTMLFormElement>(null);
   const pergunta = useRef<HTMLHeadingElement>(null);
@@ -172,7 +178,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
 
   function entrada(): EntradaPedido {
     return {
-      chaveEnvio: (chaveEnvio.current ??= crypto.randomUUID()),
+      chaveEnvio: (chaveEnvio.current ??= assistente ?? crypto.randomUUID()),
       titulo,
       detalhes,
       categoriaId,
@@ -276,7 +282,11 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           return;
         }
         limparRascunho();
-        router.push(`${linkMeuPedidoRadar(r.id)}?novo=1`);
+        if (dono && assistente) {
+          const atual = progressoAtual(dono);
+          if (atual?.tentativa === assistente) salvarProgresso(dono, { ...atual, pedidoId: r.id });
+        }
+        router.push(comAssistente(`${linkMeuPedidoRadar(r.id)}?novo=1`, assistente));
       } catch {
         setErro({ texto: "Não conseguimos confirmar o envio. Seus dados continuam aqui; tente novamente." });
       } finally {
@@ -447,7 +457,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
           <Alert variant="destructive" role="alert" tabIndex={-1} className="flex flex-col gap-2 text-facil">
             <span>{erroGeral.texto}</span>
             {erroGeral.celular && (
-              <Link href="/confirmar-celular?destino=%2Fradar%2Fpedir" className={`min-h-12 content-center underline underline-offset-4 ${FOCO_LINK}`}>
+              <Link href={confirmar ?? "/confirmar-celular?destino=%2Fradar%2Fpedir"} className={`min-h-12 content-center underline underline-offset-4 ${FOCO_LINK}`}>
                 Confirmar meu celular
               </Link>
             )}

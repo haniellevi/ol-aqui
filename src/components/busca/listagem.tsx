@@ -1,5 +1,6 @@
 import "server-only";
 import type { ReactNode } from "react";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { buscarAnuncios } from "@/lib/dados/anuncios";
@@ -89,6 +90,7 @@ export async function Listagem({
   }
 
   const limpar = estado.quantos > 0 ? comParametros(caminho, { q: estado.q, visualizacao: estado.visualizacao }) : null;
+  const dono = !temErro && total === 0 ? (await auth()).userId : undefined;
   const termoRadar = estado.q || (categoria ? categoria.categoria.nome : "");
 
   const grade = estado.visualizacao === "grade";
@@ -108,7 +110,7 @@ export async function Listagem({
         lugar={lugarDaRegiao(regiao)}
         anuncios={anuncios}
         total={total}
-        vazio={<VazioBusca termo={termoRadar} limparHref={limpar} filtros={{ categoria: slugCategoria, cidade: estado.cidade, precoMin: estado.precoMinTexto, precoMax: estado.precoMaxTexto }} />}
+        vazio={<VazioBusca dono={dono} termo={termoRadar} limparHref={limpar} filtros={{ categoria: slugCategoria, cidade: estado.cidade, precoMin: estado.precoMinTexto, precoMax: estado.precoMaxTexto }} />}
       />
       {parecidos.length > 0 && (
         <section aria-labelledby="titulo-parecidos" className="flex flex-col gap-3">

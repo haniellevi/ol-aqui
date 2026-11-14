@@ -1,5 +1,7 @@
 "use client";
 
+import { comAssistente } from "@/lib/assistente";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Botao } from "@/components/ui/botao";
@@ -14,6 +16,7 @@ import type { MeuPagamento } from "@/lib/tipos-cobranca";
 
 export function PagarAvulso({
   anuncioId,
+  assistente,
   editar,
   precoCentavos,
   dias,
@@ -21,6 +24,7 @@ export function PagarAvulso({
   pagamentoInicial,
 }: {
   anuncioId: string;
+  assistente?: string;
   /** Anúncio que já foi publicado antes (pausado/expirado): os passos abrem no modo edição. */
   editar: boolean;
   precoCentavos: number;
@@ -29,14 +33,14 @@ export function PagarAvulso({
   pagamentoInicial?: MeuPagamento | null;
 }) {
   const router = useRouter();
-  const pronto = `/anunciar/pronto?id=${encodeURIComponent(anuncioId)}`;
+  const pronto = comAssistente(`/anunciar/pronto?id=${encodeURIComponent(anuncioId)}`, assistente);
   return (
     <FluxoCobranca
       valorCentavos={precoCentavos}
       precisaDocumento={precisaDocumento}
       pagamentoInicial={pagamentoInicial}
       pedir={(forma, doc) => pedirAvulso(anuncioId, forma, doc)}
-      aoMudarPagamento={(id) => router.replace(linkAvulso(anuncioId, id), { scroll: false })}
+      aoMudarPagamento={(id) => router.replace(comAssistente(linkAvulso(anuncioId, id), assistente), { scroll: false })}
       aoPagar={(p) => {
         if (!p.devolver_motivo) router.push(pronto);
       }}
@@ -44,7 +48,7 @@ export function PagarAvulso({
       aoErrar={(e) => {
         const passo = passoDoCampo(e.campo);
         return passo ? (
-          <Link href={urlPasso(passo, anuncioId, editar)} className="inline-flex min-h-10 items-center underline underline-offset-4">
+          <Link href={urlPasso(passo, anuncioId, editar, false, assistente)} className="inline-flex min-h-10 items-center underline underline-offset-4">
             Corrigir agora
           </Link>
         ) : null;

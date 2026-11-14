@@ -113,6 +113,7 @@ test('subcategoria mantém cidade, preço e ordem ao buscar ou trocar de tipo', 
 test('filtros inválidos na URL não consultam o banco nem simulam ausência de anúncios', async () => {
   let chamadas = 0;
   const { Listagem } = carregar('src/components/busca/listagem.tsx', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: null }) },
     '@/lib/dados/categorias': { listarCategorias: async () => [pai] },
     '@/lib/dados/regiao': { regiaoAtual: async () => ({ id: 'r', nome: 'Corrente' }), listarCidades: async () => [] },
     '@/lib/dados/anuncios': { buscarAnuncios: async () => { chamadas++; throw Error('não deveria consultar'); } },
@@ -128,6 +129,7 @@ test('filtros inválidos na URL não consultam o banco nem simulam ausência de 
 test('listagem envia combinação completa e paginação para a consulta real', async () => {
   const consultas = [];
   const { Listagem } = carregar('src/components/busca/listagem.tsx', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: null }) },
     '@/lib/dados/categorias': { listarCategorias: async () => [pai] },
     '@/lib/dados/regiao': { regiaoAtual: async () => ({ id: 'r', nome: 'Corrente' }), listarCidades: async () => [] },
     '@/lib/dados/anuncios': { buscarAnuncios: async p => { consultas.push(p); return { anuncios: [{ id: 'a', titulo: 'Carro teste' }], total: 25 }; } },
@@ -140,6 +142,7 @@ test('listagem envia combinação completa e paginação para a consulta real', 
 test('listagem regional envia facetas e mantém selecionadas as opções com zero', async () => {
   const consultas = [];
   const { Listagem } = carregar('src/components/busca/listagem.tsx', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: null }) },
     '@/lib/dados/regiao': { regiaoAtual: async () => ({ id: 'r', slug: 'corrente-pi', nome: 'Corrente' }), listarCidades: async () => [] },
     '@/lib/dados/anuncios': { buscarAnuncios: async p => {
       consultas.push(p);
@@ -174,6 +177,7 @@ test('painel separa catálogo e disponibilidade e mantém o filtro booleano fals
 test('sugestões priorizam a categoria escolhida antes de ampliar para outras', async () => {
   const consultas = [];
   const { Listagem } = carregar('src/components/busca/listagem.tsx', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: null }) },
     '@/lib/dados/categorias': { listarCategorias: async () => [pai] },
     '@/lib/dados/regiao': { regiaoAtual: async () => ({ id: 'r', nome: 'Corrente' }), listarCidades: async () => [] },
     '@/lib/dados/anuncios': { buscarAnuncios: async p => {

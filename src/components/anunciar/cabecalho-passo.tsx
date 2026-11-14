@@ -21,6 +21,7 @@ const LINK_TOPO =
   "hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 export function CabecalhoPasso({
+  assistente,
   passo,
   id,
   editar,
@@ -30,6 +31,7 @@ export function CabecalhoPasso({
   subtitulo,
   equipe,
 }: {
+  assistente?: string;
   passo: SlugPasso;
   id: string;
   editar: boolean;
@@ -47,7 +49,7 @@ export function CabecalhoPasso({
   const anterior = daRevisao ? "revisar" : passoAnterior(passo);
   // P5b-2a: a equipe volta para a ficha do anúncio no painel.
   const sair = equipe ? linkAdminAnuncio(id) : DESTINO_SAIR;
-  const voltar = anterior ? urlPasso(anterior, id, editar) : editar ? sair : "/anunciar";
+  const voltar = anterior ? urlPasso(anterior, id, editar, false, assistente) : editar ? sair : "/anunciar";
   // Fotos salvam sozinhas ao enviar e a revisão não tem campos: lá a etapa é só um link.
   const salvaAoIr = Boolean(formId) && passo !== "fotos" && passo !== "revisar";
 
