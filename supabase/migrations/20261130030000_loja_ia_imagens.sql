@@ -119,10 +119,11 @@ create function public.loja_ia_marcar_descarte(p_imagem uuid) returns text
 language plpgsql security definer set search_path=public,pg_temp as $$
 declare i public.loja_ia_imagens; r public.loja_ia_rascunhos;
 begin
-  select * into i from public.loja_ia_imagens where id=p_imagem for update;
+  select * into r from public.loja_ia_rascunhos where id=(select rascunho_id from public.loja_ia_imagens where id=p_imagem) for update;
   if not found then return null; end if;
-  select * into r from public.loja_ia_rascunhos where id=i.rascunho_id;
-  if i.estado = 'apagada' or i.criado_em > now() - interval '1 day' or (r.estado <> 'publicado' and (r.entrada->'materiais') ? i.id::text) or exists(select 1 from public.vitrines_lojas v where ('/api/loja/imagem/' || i.id::text) in (v.logo_url,v.capa_url)) then return null; end if;
+  select * into i from public.loja_ia_imagens where id=p_imagem and rascunho_id=r.id for update;
+  if not found then return null; end if;
+  if i.estado = 'apagada' or i.criado_em > now() - interval '1 day' or (r.estado <> 'publicado' and (r.entrada->'materiais') ? i.id::text) or (r.estado <> 'publicado' and i.id::text in (r.campos->'logo'->>'valor', r.campos->'capa'->>'valor', r.campos->'logo'->'sugestao'->>'valor', r.campos->'capa'->'sugestao'->>'valor')) or exists(select 1 from public.vitrines_lojas v where ('/api/loja/imagem/' || i.id::text) in (v.logo_url,v.capa_url)) then return null; end if;
   update public.loja_ia_imagens set estado='descarte' where id=i.id;
   return i.caminho;
 end $$;
@@ -132,6 +133,7 @@ language sql stable security definer set search_path=public,pg_temp as $$
     'imagens', coalesce((select jsonb_agg(id) from (select i.id from public.loja_ia_imagens i join public.loja_ia_rascunhos r on r.id=i.rascunho_id
       where i.estado <> 'apagada' and i.criado_em < now()-interval '1 day'
       and not (r.estado <> 'publicado' and coalesce((r.entrada->'materiais') ? i.id::text,false))
+      and not (r.estado <> 'publicado' and i.id::text in (coalesce(r.campos->'logo'->>'valor',''),coalesce(r.campos->'capa'->>'valor',''),coalesce(r.campos->'logo'->'sugestao'->>'valor',''),coalesce(r.campos->'capa'->'sugestao'->>'valor','')))
       and not exists(select 1 from public.vitrines_lojas v where ('/api/loja/imagem/' || i.id::text) in (v.logo_url,v.capa_url))
       order by i.criado_em limit 100) x),'[]'::jsonb),
     'lixeira', coalesce((select jsonb_agg(caminho) from (select caminho from public.loja_ia_imagens_lixeira order by criado_em limit 100) x),'[]'::jsonb))

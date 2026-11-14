@@ -78,9 +78,7 @@ export async function prepararImagemPublicacao(rascunhoId: string, materialId: s
 export async function urlRevisaoMaterial(rascunhoId: string, materialId: string): Promise<string> {
   const material = await propria(rascunhoId, materialId);
   if (material.estado !== "pronta") throw new Error("Imagem ainda não está pronta.");
-  const { data, error } = await supabaseAdmin().storage.from(BALDE).createSignedUrl(material.caminho, 60);
-  if (error || !data) throw new Error("Não foi possível abrir a imagem.");
-  return data.signedUrl;
+  return `/api/loja/imagem/${material.id}/revisao?rascunho=${rascunhoId}`;
 }
 
 /** Chamada pelo trabalho de limpeza; uma falha pode ser repetida com o mesmo ID. */
@@ -109,7 +107,7 @@ export async function limparMateriaisPendentes(): Promise<void> {
 
 /** Recebe apenas IDs escolhidos na coleta e nunca consulta outro rascunho. */
 export async function coletarMateriais(rascunhoId: string, materiais: string[]) {
-  const ids = [...new Set(materiais.filter(ehUuid))].slice(0, 24);
+  const ids = [...new Set((Array.isArray(materiais) ? materiais : []).filter((valor): valor is string => typeof valor === "string" && ehUuid(valor)))].slice(0, 24);
   if (!ehUuid(rascunhoId) || !ids.length) return { estado: "indisponivel" as const, motivo: "Nenhuma imagem disponível." };
   const { data, error } = await supabaseAdmin().from("loja_ia_imagens").select("id,tipo").eq("rascunho_id", rascunhoId).eq("estado", "pronta").in("id", ids);
   if (error || !data?.length) return { estado: "indisponivel" as const, motivo: "Não foi possível conferir as imagens." };
