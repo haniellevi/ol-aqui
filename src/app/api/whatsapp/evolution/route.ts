@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 // Webhook de entrada da Evolution (mensagens recebidas). Só mensagem de pessoa com número legível faz efeito:
 // SAIR (ou PARAR, STOP, CANCELAR, frase curta de saída) desliga o aviso do Radar por WhatsApp e cancela a fila dele.
 // VOLTAR, SIM e as outras mensagens vão para o banco (whatsapp_mensagem_recebida), que decide e responde no máximo
-// uma vez por tipo e dia. Vai só o resumo (sha256) do texto, para ver mensagem repetida. Texto e número não são registrados.
+// uma vez por tipo e dia (a confirmação da volta sai uma por ativação). Vai só o resumo (sha256) do texto, para ver mensagem repetida. Texto e número não são registrados.
 export async function POST(req: Request) {
   const segredo = segredoEvolution();
   if (!segredo) return NextResponse.json({ ok: false }, { status: 503 });

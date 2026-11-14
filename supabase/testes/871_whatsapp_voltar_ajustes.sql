@@ -2,7 +2,7 @@
 \set QUIET on
 -- VOLTAR pelo WhatsApp, ajustes (29/11/2026): repetição só para outra mensagem; VOLTAR e SIM sempre avaliados;
 -- SAIR apaga o resumo do número (com e sem o 9); confirmação da volta por ativação (VOLTAR -> SAIR -> VOLTAR no mesmo dia);
--- SIM repetido depois da pergunta; limite de 3 por dia; limpeza do resumo só do que tem mais de 1 dia; fila; permissões.
+-- SIM e VOLTAR apagam o resumo; SIM repetido depois da pergunta; limite de 3 por dia; limpeza do resumo só do que tem mais de 1 dia; fila; permissões.
 -- A migração 20261129020000 é reaplicada no começo deste teste (o harness troca a linha abaixo): tem de ser idempotente.
 -- Tudo numa transação que volta no fim.
 begin;
@@ -84,6 +84,12 @@ set local role service_role;
 select whatsapp_mensagem_recebida('5589999980006', 'outra', pg_temp.h871('oi')) as h2 \gset
 reset role;
 select pg_temp.confere871(:'h2' = 'ja_perguntou', 'depois da saída, a mesma mensagem não é tomada como repetida');
+-- VOLTAR apaga o resumo: a mesma outra logo depois não é tomada como repetida (sem o apagamento daria mensagem_repetida)
+set local role service_role;
+select whatsapp_mensagem_recebida('5589999980006', 'voltar', pg_temp.h871('voltar')) as h_volta \gset
+select whatsapp_mensagem_recebida('5589999980006', 'outra', pg_temp.h871('oi')) as h3 \gset
+reset role;
+select pg_temp.confere871(:'h_volta' = 'voltou' and :'h3' = 'nada', 'VOLTAR apaga o resumo: a mesma outra logo depois não é repetida');
 
 -- [5] SIM repetido depois da pergunta: a primeira volta; a segunda não faz nada e não registra outra volta
 set local role service_role;
@@ -93,6 +99,11 @@ select whatsapp_mensagem_recebida('5589999980004', 'sim', pg_temp.h871('sim')) a
 select whatsapp_mensagem_recebida('5589999980004', 'sim', pg_temp.h871('sim')) as e_sim2 \gset
 reset role;
 select pg_temp.confere871(:'e_perg' = 'pergunta' and :'e_sim1' = 'voltou' and :'e_sim2' = 'nada', 'SIM repetido depois da pergunta: volta uma vez e depois não faz nada');
+-- SIM apagou o resumo: a mesma outra (que deu a pergunta) agora não é repetida; com o aviso ligado, dá nada
+set local role service_role;
+select whatsapp_mensagem_recebida('5589999980004', 'outra', pg_temp.h871('pergunta')) as e_depois \gset
+reset role;
+select pg_temp.confere871(:'e_depois' = 'nada', 'SIM apaga o resumo: a mesma outra depois da volta não é repetida');
 select pg_temp.confere871((select count(*) = 1 from whatsapp_respostas where usuario_id = 'user_871sim' and comando = 'VOLTAR')
   and (select count(*) = 1 from whatsapp_fila where numero = '5589999980004' and chave like 'whatsapp_resposta:5589999980004:voltar%'),
   'SIM repetido: uma volta registrada e uma confirmação');

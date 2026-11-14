@@ -1,7 +1,7 @@
 -- VOLTAR pelo WhatsApp, ajustes depois da revisão do Codex (29/11/2026). Substitui funções da 20261129010000 (create or replace).
 -- 1. Repetição (whatsapp_ultima_mensagem) vale só para outra mensagem. VOLTAR e SIM são sempre reavaliados contra as
 --    preferências atuais, e apagam o resumo guardado do número (para não afetar a próxima outra mensagem).
---    Os limites de resposta continuam valendo (uma por tipo e dia, no máximo 3 por número e dia).
+--    Os limites de resposta continuam valendo (uma por tipo e dia, exceto a confirmação da volta, que sai uma por ativação; no máximo 3 por número e dia).
 -- 2. whatsapp_sair apaga o resumo guardado do número (as duas formas, com e sem o 9). Mesmo texto e mesma trava da 010000.
 -- 3. Confirmação da volta com chave única por ativação (voltar + hora com microssegundos): VOLTAR -> SAIR -> VOLTAR no mesmo dia
 --    manda a segunda confirmação. Continua sujeita ao limite de 3 por número e dia.

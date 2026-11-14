@@ -156,7 +156,7 @@ try:
     print('PASS: quatro VOLTAR simultâneos com o aviso já ligado mandam uma resposta de já recebe e não registram volta nova', flush=True)
     migracao_voltar_ajustes = (root/'supabase/migrations/20261129020000_whatsapp_voltar_ajustes.sql').read_text()
     checked(sql((root/'supabase/testes/871_whatsapp_voltar_ajustes.sql').read_text().replace('-- REAPLICAR_AJUSTES', migracao_voltar_ajustes)))
-    print('PASS: ajustes do VOLTAR: VOLTAR e SIM sempre avaliados, repetição só para outra, SAIR apaga o resumo (com e sem o 9), VOLTAR -> SAIR -> VOLTAR confirma duas vezes, limite de 3, limpeza do resumo só do que tem mais de 1 dia, fila na madrugada e permissões; migração reaplicada sem efeito', flush=True)
+    print('PASS: ajustes do VOLTAR: VOLTAR e SIM sempre avaliados e apagam o resumo, repetição só para outra, SAIR apaga o resumo (com e sem o 9), VOLTAR -> SAIR -> VOLTAR confirma duas vezes, limite de 3, limpeza do resumo só do que tem mais de 1 dia, fila na madrugada e permissões; migração reaplicada sem efeito', flush=True)
     print('PASS: fotos na pasta do ID antigo após a troca do Clerk: dono reordena, tira e põe foto nova; foto antiga fora do anúncio, em outro anúncio ou de outra pessoa continua recusada', flush=True)
     checked(sql((root/'supabase/testes/830_leitura_publica_colunas.sql').read_text()))
     print('PASS: leitura pública: visitante só lê colunas das telas públicas, logado sem IP de criação e revisão interna, ID do dono fora do visitante, dona, ajudante, admin e outra pessoa', flush=True)
