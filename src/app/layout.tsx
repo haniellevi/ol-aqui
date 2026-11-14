@@ -35,6 +35,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             subtitleCombined: "Use seu e-mail ou continue com o Google.",
           },
         },
+        unstable__errors: {
+          ...ptBR.unstable__errors,
+          form_password_pwned: "Essa senha apareceu em um vazamento. Crie outra com pelo menos 8 caracteres que você não usa em outros sites.",
+        },
       }}
       signInUrl="/entrar"
       signUpUrl="/entrar"

@@ -51,6 +51,9 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center justify-center gap-6 px-4 py-8">
       <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região, aqui a sua cidade aparece" width={152} height={73} priority />
+      <p className="max-w-xs text-center text-sm text-texto-suave">
+        Vai criar uma conta? Use pelo menos 8 caracteres e escolha uma senha que você não usa em outros sites.
+      </p>
       <SignIn
         path="/entrar"
         routing="path"
