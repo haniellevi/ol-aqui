@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function destinoDeVolta(voltar: string | string[] | undefined) {
   if (typeof voltar !== "string" || voltar.length > 8192) return "/busca";
-  if (!/^\/(?:busca)?(?:\?[^#]*)?$/.test(voltar) || /[\\\u0000-\u001f]/.test(voltar)) return "/busca";
+  if (!/^\/(?:busca|c\/[a-z0-9-]+(?:\/[a-z0-9-]+)?)?(?:\?[^#]*)?$/.test(voltar) || /[\\\u0000-\u001f]/.test(voltar)) return "/busca";
   return voltar;
 }
 

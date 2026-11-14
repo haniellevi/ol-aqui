@@ -76,6 +76,31 @@ test('filtros ativos podem ser removidos individualmente sem apagar os outros', 
   assert.equal(parametrosDoLink(links.find(l => l.includes('rel="prev"'))).get('pagina'), null);
   assert.match(html, /Página 2 de 3/);
 });
+test('lista e grade da categoria mantêm filtros, ordem e página ao alternar', () => {
+  const { ResultadosBusca } = carregar('src/components/busca/resultados-busca.tsx', { '@/components/anuncio/card-anuncio': cards });
+  const caminho = '/c/veiculos/carros';
+  const parametros = { ...sp, categoria: undefined, visualizacao: 'grade' };
+  const html = render(React.createElement(ResultadosBusca, {
+    caminho, sp: parametros, estado: lerEstadoBusca(parametros, campos), campos, cidades: [],
+    nomeCategoria: 'Carros', lugar: 'Corrente e região', anuncios: [{ id: 'a', titulo: 'Carro teste' }], total: 60, vazio: null,
+  }));
+  const links = html.match(/<a\b[^>]*>.*?<\/a>/g);
+  const lista = links.find(link => link.includes(' Lista</a>'));
+  const grade = links.find(link => link.includes(' Grade</a>'));
+  assert.match(grade, /aria-current="true"/);
+  assert.equal(parametrosDoLink(grade).get('visualizacao'), 'grade');
+  assert.equal(parametrosDoLink(lista).get('visualizacao'), null);
+  assert.equal(parametrosDoLink(lista).get('pagina'), '2');
+  assert.equal(parametrosDoLink(lista).get('ordem'), sp.ordem);
+  assert.deepEqual(parametrosDoLink(lista).getAll('c_estado'), ['Novo', 'Usado']);
+  assert.match(html, /<aside[^>]*aria-labelledby="lateral-titulo-filtros"/);
+  assert.match(html, /<dialog[^>]*id="filtros"/);
+  assert.equal((html.match(/name="visualizacao" value="grade"/g) ?? []).length, 2);
+  const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(([, id]) => id);
+  assert.equal(ids.length, new Set(ids).size);
+  assert.equal(lerEstadoBusca({ visualizacao: 'indevida' }, campos).visualizacao, undefined);
+});
+
 test('subcategoria mantém cidade, preço e ordem ao buscar ou trocar de tipo', () => {
   const { CabecalhoCategoria } = carregar('src/components/busca/cabecalho-categoria.tsx');
   const html = render(React.createElement(CabecalhoCategoria, { achada: encontrada, q: 'fiat', sp }));

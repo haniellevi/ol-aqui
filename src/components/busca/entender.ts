@@ -13,7 +13,7 @@ import { comParametros, type ParametrosUrl } from "@/components/busca/parametros
 // que se remove), ou null para seguir com a busca normal por texto. O endereço novo leva ia=<texto original>:
 // isso evita perguntar de novo e deixa mostrar o que a pessoa escreveu.
 
-const PERMITIDOS = new Set(["q", "cidade", "ordem"]);
+const PERMITIDOS = new Set(["q", "cidade", "ordem", "visualizacao"]);
 
 export function podeEntender(sp: ParametrosUrl): boolean {
   return Object.keys(sp).every((k) => PERMITIDOS.has(k) || (k === "pagina" && sp.pagina === "1"));
@@ -49,7 +49,7 @@ export async function enderecoEntendido(sp: ParametrosUrl, original: string): Pr
       c_estado: estado ? opcao! : null,
       ia: texto,
     });
-    const base = { cidade: sp.cidade, ordem: sp.ordem };
+    const base = { cidade: sp.cidade, ordem: sp.ordem, visualizacao: sp.visualizacao };
     // Com o texto que sobrou a busca pode ficar vazia (a busca por texto exige todas as palavras): confere antes.
     let q = restante;
     if (q) {

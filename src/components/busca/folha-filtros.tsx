@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Check, X } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
-import { ID_FOLHA, ID_RESULTADOS, ORDENS, lerEstadoBusca, paramCampo, type EstadoBusca } from "@/components/busca/parametros";
+import { ID_FOLHA, ID_RESULTADOS, ORDENS, comParametros, lerEstadoBusca, paramCampo, type EstadoBusca } from "@/components/busca/parametros";
 import { inteiro, valorDoCampo } from "@/lib/formato";
 import { nomeCaminho, percorrer } from "@/lib/categorias-arvore";
 import type { CampoCategoria, CategoriaComFilhas, Cidade, FacetaBusca, FacetasBusca } from "@/lib/tipos";
@@ -34,9 +34,13 @@ export function FolhaFiltros({
   cidades,
   categorias,
   ia,
+  lateral = false,
+  apenasMobile = false,
 }: {
   /** Frase original da busca que entende (ia=...): segue ao aplicar filtros, para não perder o texto nem reinterpretar. */
   ia?: string;
+  lateral?: boolean;
+  apenasMobile?: boolean;
   /** Para onde o formulário vai (a própria página). */
   caminho: string;
   estado: EstadoBusca;
@@ -58,12 +62,14 @@ export function FolhaFiltros({
   const filtraveis = (categorias ? (escolhida && !escolhida.filhas.length ? escolhida.campos : []) : campos).filter((c) => c.filtro);
   const estadoCampos = categoria === estado.categoria ? estado : { ...estado, valores: {} };
   const facetasAtuais = categoria === estado.categoria ? facetas : null;
-  const limpar = estado.q ? `${caminho}?q=${encodeURIComponent(estado.q)}` : caminho;
+  const limpar = comParametros(caminho, { q: estado.q, visualizacao: estado.visualizacao });
+  const prefixo = lateral ? "lateral-" : "";
 
   useEffect(() => {
     const el = dialogo.current;
     if (!el) return;
     setPronto(true);
+    const desktop = window.matchMedia("(min-width: 768px)");
     let retorno: HTMLElement | null = null;
     let overflow: string | null = null;
     const liberar = () => {
@@ -81,6 +87,10 @@ export function FolhaFiltros({
     };
     const sincronizar = () => {
       const alvo = alvoAtual();
+      if (apenasMobile && desktop.matches) {
+        if (el.open) el.close();
+        return;
+      }
       if (alvo && (alvo === el || el.contains(alvo))) {
         if (!el.open) {
           retorno ??= document.activeElement instanceof HTMLElement && !el.contains(document.activeElement) ? document.activeElement : null;
@@ -105,18 +115,20 @@ export function FolhaFiltros({
       }
       liberar();
     };
+    desktop.addEventListener("change", sincronizar);
     window.addEventListener("hashchange", sincronizar);
     document.addEventListener("click", lembrarOrigem, true);
     el.addEventListener("close", fechar);
     sincronizar();
     return () => {
+      desktop.removeEventListener("change", sincronizar);
       window.removeEventListener("hashchange", sincronizar);
       document.removeEventListener("click", lembrarOrigem, true);
       el.removeEventListener("close", fechar);
       if (el.open) el.close();
       liberar();
     };
-  }, [estado]);
+  }, [estado, apenasMobile]);
 
   function validar(evento: FormEvent<HTMLFormElement>) {
     const form = evento.currentTarget;
@@ -133,143 +145,153 @@ export function FolhaFiltros({
     }
   }
 
+  const formulario = (
+    <form action={caminho} method="get" onSubmit={validar} className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex items-center justify-between border-b border-borda py-1 pr-1 pl-4">
+        <h2 id={`${prefixo}titulo-filtros`} className="text-lg font-semibold">
+          Filtros
+        </h2>
+        {!lateral && <a
+          href={`#${ID_RESULTADOS}`}
+          aria-label="Fechar filtros"
+          className="grid size-10 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+        >
+          <X className="size-6" aria-hidden />
+        </a>}
+      </div>
+
+      <div className={`flex min-h-0 flex-1 flex-col px-4 py-4 ${lateral ? "gap-4" : "gap-6 overflow-y-auto overscroll-contain"}`}>
+        {estado.q && <input type="hidden" name="q" value={estado.q} />}
+        {ia && <input type="hidden" name="ia" value={ia} />}
+        {estado.visualizacao && <input type="hidden" name="visualizacao" value={estado.visualizacao} />}
+
+        {categorias && (
+          <fieldset id={`${prefixo}filtro-categoria`} className="scroll-mt-4">
+            <legend className={LEGENDA}>Categoria</legend>
+            <label htmlFor={`${prefixo}f-categoria`} className="sr-only">
+              Categoria
+            </label>
+            <select id={`${prefixo}f-categoria`} name="categoria" value={categoria} onChange={(e) => {
+              setCategoria(e.target.value);
+              setErros((anteriores) => Object.fromEntries(Object.entries(anteriores).filter(([k]) => k !== "categoria" && !k.startsWith("c_"))));
+            }} aria-invalid={!!erros.categoria || undefined} aria-describedby={erros.categoria ? `${prefixo}erro-categoria` : undefined} className={SELECT}>
+              <option value="">Todas as categorias</option>
+              {categoria && !escolhida && <option value={categoria}>Categoria indisponível</option>}
+              {todas.map(({ no, caminho }) => (
+                <option key={no.id} value={no.slug}>
+                  {nomeCaminho(caminho)}
+                </option>
+              ))}
+            </select>
+            {escolhida && escolhida.filhas.length > 0 && (
+              <ul aria-label={`Dentro de ${escolhida.nome}`} className="mt-3 flex flex-wrap gap-2">
+                <li>
+                  <button type="button" aria-pressed={categoria === escolhida.slug} onClick={() => setCategoria(escolhida.slug)} className={CHIP_CATEGORIA}>
+                    Tudo em {escolhida.nome}
+                  </button>
+                </li>
+                {escolhida.filhas.map((f) => (
+                  <li key={f.id}>
+                    <button type="button" aria-pressed={categoria === f.slug} onClick={() => setCategoria(f.slug)} className={CHIP_CATEGORIA}>
+                      {f.nome}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {erros.categoria && <p id={`${prefixo}erro-categoria`} role="alert" className="mt-1 text-sm text-perigo">{erros.categoria}</p>}
+          </fieldset>
+        )}
+
+        <fieldset id={`${prefixo}filtro-cidade`} className="scroll-mt-4">
+          <legend className={LEGENDA}>Cidade</legend>
+          <label htmlFor={`${prefixo}f-cidade`} className="sr-only">
+            Cidade
+          </label>
+          <select id={`${prefixo}f-cidade`} name="cidade" defaultValue={estado.cidade} className={SELECT}>
+            <option value="">Todas as cidades da região</option>
+            {estado.cidade && !cidades.some((c) => c.nome === estado.cidade) && (
+              <option value={estado.cidade}>{estado.cidade}</option>
+            )}
+            {cidades.map((c) => (
+              <option key={c.id} value={c.nome}>
+                {c.nome} ({c.uf})
+              </option>
+            ))}
+          </select>
+        </fieldset>
+
+        <fieldset id={`${prefixo}filtro-preco`} className="scroll-mt-4">
+          <legend className={LEGENDA}>Preço</legend>
+          <div className="grid grid-cols-2 gap-3">
+            <CaixaNumero prefixo={prefixo} rotulo="De (R$)" name="preco_min" valor={estado.precoMinTexto} exemplo="0" erro={erros.preco_min} />
+            <CaixaNumero prefixo={prefixo} rotulo="Até (R$)" name="preco_max" valor={estado.precoMaxTexto} exemplo="Sem limite" erro={erros.preco_max} />
+          </div>
+        </fieldset>
+
+        {filtraveis.map((c) => {
+          const faceta = facetasAtuais && Object.hasOwn(facetasAtuais, c.chave) ? facetasAtuais[c.chave] : undefined;
+          if (facetasAtuais && !faceta && !Object.hasOwn(estadoCampos.filtros, c.chave)) return null;
+          return <FiltroCampo key={`${categoria}-${c.chave}`} campo={c} prefixo={prefixo} estado={estadoCampos} erros={erros} faceta={facetasAtuais ? faceta ?? {} : undefined} />;
+        })}
+
+        <fieldset id={`${prefixo}filtro-ordem`} className="scroll-mt-4">
+          <legend className={LEGENDA}>Ordenar por</legend>
+          <div className="flex flex-wrap gap-2">
+            {ORDENS.map((o) => (
+              <label key={o.valor} className={OPCAO}>
+                <input
+                  type="radio"
+                  name="ordem"
+                  value={o.valor === "relevancia" ? "" : o.valor}
+                  defaultChecked={estado.ordem === o.valor}
+                  className="sr-only"
+                />
+                <Check className="hidden size-4 shrink-0 group-has-checked:inline" aria-hidden />
+                {o.rotulo}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </div>
+
+      <div className="flex gap-2 border-t border-borda bg-cartao px-3 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <a href={limpar} className={classesBotao("secundario", false, "flex-1")}>
+          Limpar
+        </a>
+        <button type="submit" className={classesBotao("primario", false, "flex-[2] px-2")}>
+          Ver anúncios
+        </button>
+      </div>
+    </form>
+  );
+
+  if (lateral) {
+    return (
+      <aside aria-labelledby="lateral-titulo-filtros" className="hidden min-w-0 self-start overflow-hidden rounded-card border border-borda bg-cartao md:block">
+        {formulario}
+      </aside>
+    );
+  }
+
   return (
     <dialog
       ref={dialogo}
       id={ID_FOLHA}
       data-pronto={pronto}
       aria-labelledby="titulo-filtros"
-      className="fixed inset-0 z-40 m-0 hidden h-dvh max-h-none w-full max-w-none items-end justify-center border-0 bg-transparent p-0 text-texto backdrop:bg-transparent open:flex data-[pronto=false]:target:flex data-[pronto=false]:has-[:target]:flex md:items-center md:p-6"
+      className={`fixed inset-0 z-40 m-0 hidden h-dvh max-h-none w-full max-w-none items-end justify-center border-0 bg-transparent p-0 text-texto backdrop:bg-transparent open:flex data-[pronto=false]:target:flex data-[pronto=false]:has-[:target]:flex ${apenasMobile ? "md:hidden!" : "md:items-center md:p-6"}`}
     >
       <a href={`#${ID_RESULTADOS}`} tabIndex={-1} aria-hidden className="absolute inset-0 bg-beringela/50" />
-      <section
-        aria-labelledby="titulo-filtros"
-        className="relative flex max-h-[92dvh] w-full max-w-lg flex-col rounded-t-folha bg-cartao shadow-2 md:rounded-folha"
-      >
-        <form action={caminho} method="get" onSubmit={validar} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center justify-between border-b border-borda py-1 pr-1 pl-4">
-            <h2 id="titulo-filtros" className="text-lg font-semibold">
-              Filtros
-            </h2>
-            <a
-              href={`#${ID_RESULTADOS}`}
-              aria-label="Fechar filtros"
-              className="grid size-10 place-items-center rounded-full hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
-            >
-              <X className="size-6" aria-hidden />
-            </a>
-          </div>
-
-          <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-4 py-4">
-            {estado.q && <input type="hidden" name="q" value={estado.q} />}
-            {ia && <input type="hidden" name="ia" value={ia} />}
-
-            {categorias && (
-              <fieldset id="filtro-categoria" className="scroll-mt-4">
-                <legend className={LEGENDA}>Categoria</legend>
-                <label htmlFor="f-categoria" className="sr-only">
-                  Categoria
-                </label>
-                <select id="f-categoria" name="categoria" value={categoria} onChange={(e) => {
-                  setCategoria(e.target.value);
-                  setErros((anteriores) => Object.fromEntries(Object.entries(anteriores).filter(([k]) => k !== "categoria" && !k.startsWith("c_"))));
-                }} aria-invalid={!!erros.categoria || undefined} aria-describedby={erros.categoria ? "erro-categoria" : undefined} className={SELECT}>
-                  <option value="">Todas as categorias</option>
-                  {categoria && !escolhida && <option value={categoria}>Categoria indisponível</option>}
-                  {todas.map(({ no, caminho }) => (
-                    <option key={no.id} value={no.slug}>
-                      {nomeCaminho(caminho)}
-                    </option>
-                  ))}
-                </select>
-                {escolhida && escolhida.filhas.length > 0 && (
-                  <ul aria-label={`Dentro de ${escolhida.nome}`} className="mt-3 flex flex-wrap gap-2">
-                    <li>
-                      <button type="button" aria-pressed={categoria === escolhida.slug} onClick={() => setCategoria(escolhida.slug)} className={CHIP_CATEGORIA}>
-                        Tudo em {escolhida.nome}
-                      </button>
-                    </li>
-                    {escolhida.filhas.map((f) => (
-                      <li key={f.id}>
-                        <button type="button" aria-pressed={categoria === f.slug} onClick={() => setCategoria(f.slug)} className={CHIP_CATEGORIA}>
-                          {f.nome}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {erros.categoria && <p id="erro-categoria" role="alert" className="mt-1 text-sm text-perigo">{erros.categoria}</p>}
-              </fieldset>
-            )}
-
-            <fieldset id="filtro-cidade" className="scroll-mt-4">
-              <legend className={LEGENDA}>Cidade</legend>
-              <label htmlFor="f-cidade" className="sr-only">
-                Cidade
-              </label>
-              <select id="f-cidade" name="cidade" defaultValue={estado.cidade} className={SELECT}>
-                <option value="">Todas as cidades da região</option>
-                {estado.cidade && !cidades.some((c) => c.nome === estado.cidade) && (
-                  <option value={estado.cidade}>{estado.cidade}</option>
-                )}
-                {cidades.map((c) => (
-                  <option key={c.id} value={c.nome}>
-                    {c.nome} ({c.uf})
-                  </option>
-                ))}
-              </select>
-            </fieldset>
-
-            <fieldset id="filtro-preco" className="scroll-mt-4">
-              <legend className={LEGENDA}>Preço</legend>
-              <div className="grid grid-cols-2 gap-3">
-                <CaixaNumero rotulo="De (R$)" name="preco_min" valor={estado.precoMinTexto} exemplo="0" erro={erros.preco_min} />
-                <CaixaNumero rotulo="Até (R$)" name="preco_max" valor={estado.precoMaxTexto} exemplo="Sem limite" erro={erros.preco_max} />
-              </div>
-            </fieldset>
-
-            {filtraveis.map((c) => {
-              const faceta = facetasAtuais && Object.hasOwn(facetasAtuais, c.chave) ? facetasAtuais[c.chave] : undefined;
-              if (facetasAtuais && !faceta && !Object.hasOwn(estadoCampos.filtros, c.chave)) return null;
-              return <FiltroCampo key={`${categoria}-${c.chave}`} campo={c} estado={estadoCampos} erros={erros} faceta={facetasAtuais ? faceta ?? {} : undefined} />;
-            })}
-
-            <fieldset id="filtro-ordem" className="scroll-mt-4">
-              <legend className={LEGENDA}>Ordenar por</legend>
-              <div className="flex flex-wrap gap-2">
-                {ORDENS.map((o) => (
-                  <label key={o.valor} className={OPCAO}>
-                    <input
-                      type="radio"
-                      name="ordem"
-                      value={o.valor === "relevancia" ? "" : o.valor}
-                      defaultChecked={estado.ordem === o.valor}
-                      className="sr-only"
-                    />
-                    <Check className="hidden size-4 shrink-0 group-has-checked:inline" aria-hidden />
-                    {o.rotulo}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          </div>
-
-          <div className="flex gap-3 border-t border-borda bg-cartao px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-            <a href={limpar} className={classesBotao("secundario", false, "flex-1")}>
-              Limpar
-            </a>
-            <button type="submit" className={classesBotao("primario", false, "flex-[2]")}>
-              Ver anúncios
-            </button>
-          </div>
-        </form>
+      <section aria-labelledby="titulo-filtros" className="relative flex max-h-[92dvh] w-full max-w-lg flex-col rounded-t-folha bg-cartao shadow-2 md:rounded-folha">
+        {formulario}
       </section>
     </dialog>
   );
 }
 
-function CaixaNumero({ rotulo, name, valor, exemplo, erro }: { rotulo: string; name: string; valor: string; exemplo?: string; erro?: string }) {
-  const id = `f-${name}`;
+function CaixaNumero({ prefixo, rotulo, name, valor, exemplo, erro }: { prefixo: string; rotulo: string; name: string; valor: string; exemplo?: string; erro?: string }) {
+  const id = `${prefixo}f-${name}`;
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="text-base text-texto-suave">
@@ -281,10 +303,11 @@ function CaixaNumero({ rotulo, name, valor, exemplo, erro }: { rotulo: string; n
   );
 }
 
-function FiltroCampo({ campo: c, estado, erros, faceta }: {
+function FiltroCampo({ campo: c, prefixo, estado, erros, faceta }: {
+  prefixo: string;
   campo: CampoCategoria; estado: EstadoBusca; erros: Record<string, string>; faceta?: FacetaBusca;
 }) {
-  const id = `filtro-${c.chave}`;
+  const id = `${prefixo}filtro-${c.chave}`;
   if (c.tipo === "numero") {
     const unidade = c.unidade ? ` (${c.unidade})` : "";
     return (
@@ -299,6 +322,7 @@ function FiltroCampo({ campo: c, estado, erros, faceta }: {
         )}
         <div className="grid grid-cols-2 gap-3">
           <CaixaNumero
+            prefixo={prefixo}
             rotulo={`De${unidade}`}
             name={paramCampo(c.chave, "min")}
             valor={String(estado.valores[paramCampo(c.chave, "min")] ?? "")}
@@ -306,6 +330,7 @@ function FiltroCampo({ campo: c, estado, erros, faceta }: {
             erro={erros[paramCampo(c.chave, "min")]}
           />
           <CaixaNumero
+            prefixo={prefixo}
             rotulo={`Até${unidade}`}
             name={paramCampo(c.chave, "max")}
             valor={String(estado.valores[paramCampo(c.chave, "max")] ?? "")}
@@ -360,7 +385,7 @@ function FiltroCampo({ campo: c, estado, erros, faceta }: {
       </fieldset>
     );
   }
-  const idEntrada = `f-${c.chave}`;
+  const idEntrada = `${prefixo}f-${c.chave}`;
   return (
     <fieldset id={id} className="scroll-mt-4">
       <legend className={LEGENDA}>{c.rotulo}</legend>

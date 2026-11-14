@@ -12,6 +12,7 @@ export function GradeAnuncios({
   className = "",
   medirEm,
   compacto = false,
+  horizontal = false,
   voltarHref,
 }: {
   anuncios: CardAnuncioProps["anuncio"][];
@@ -25,17 +26,21 @@ export function GradeAnuncios({
   /** Onde a lista aparece (conta as aparições no painel do dono e do administrador). */
   medirEm?: PaginaAparicao;
   compacto?: boolean;
+  horizontal?: boolean;
   voltarHref?: string;
 }) {
   if (anuncios.length === 0) return <>{vazio ?? null}</>;
+  const colunas = horizontal ? "grid-cols-1 gap-2 md:gap-3" : compacto
+    ? "grid-cols-1 gap-1.5 md:grid-cols-3 md:gap-3 lg:grid-cols-4 xl:grid-cols-5"
+    : "grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
   return (
     <>
       {medirEm && <MedirAparicoes pagina={medirEm} ids={anuncios.map((a) => a.id)} />}
-      <ul className={`grid ${compacto ? "grid-cols-1 gap-1.5 md:grid-cols-3 md:gap-3" : "grid-cols-2 gap-3 sm:grid-cols-3"} lg:grid-cols-4 xl:grid-cols-5 ${className}`}>
+      <ul className={`grid ${colunas} ${className}`}>
         {anuncios.map((a, i) => (
           <li key={a.id} className="flex">
             <div className="flex w-full flex-col [&>article]:flex-1">
-              <CardAnuncio anuncio={a} prioridade={i < prioridade} acao={acao?.(a)} compacto={compacto} voltarHref={voltarHref} />
+              <CardAnuncio anuncio={a} prioridade={i < prioridade} acao={acao?.(a)} compacto={compacto} horizontal={horizontal} voltarHref={voltarHref} />
             </div>
           </li>
         ))}

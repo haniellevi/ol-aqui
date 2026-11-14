@@ -61,7 +61,7 @@ export default async function PaginaBusca({ searchParams }: Props) {
               <p className="text-sm text-texto-suave">
                 Entendi sua busca e já marquei os filtros abaixo. Toque num filtro para tirar.{" "}
                 <Link
-                  href={comParametros("/busca", { q: texto(sp.ia), sem_ia: "1" })}
+                  href={comParametros("/busca", { q: texto(sp.ia), sem_ia: "1", visualizacao: sp.visualizacao })}
                   className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
                 >
                   Buscar só pelas palavras

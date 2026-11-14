@@ -25,6 +25,7 @@ export type ValoresCampos = Record<string, string | string[]>;
 
 export type EstadoBusca = {
   q: string;
+  visualizacao?: "grade";
   categoria: string; // slug (só na /busca; nas páginas /c vem do endereço)
   cidade: string;
   precoMinTexto: string;
@@ -48,10 +49,11 @@ function um(v: string | string[] | undefined): string {
 /** Só filtros conhecidos seguem ao trocar o termo; a nova busca começa na primeira página. */
 export function manterFiltros(sp: ParametrosUrl): ParametrosUrl {
   // Filtros marcados pela busca que entende (ia=...) valiam só para aquela frase: uma busca nova começa limpa.
-  if (sp.ia) return {};
-  return Object.fromEntries(Object.entries(sp).filter(([k]) =>
+  const visualizacao = um(sp.visualizacao) === "grade" ? { visualizacao: "grade" } : {};
+  if (sp.ia) return visualizacao;
+  return { ...visualizacao, ...Object.fromEntries(Object.entries(sp).filter(([k]) =>
     ["categoria", "cidade", "preco_min", "preco_max", "ordem"].includes(k) || /^c_[a-z0-9_]+$/.test(k),
-  ));
+  )) };
 }
 
 function numeroDoFiltro(texto: string): number | null {
@@ -145,6 +147,7 @@ export function lerEstadoBusca(sp: ParametrosUrl, campos: CampoCategoria[] = [],
 
   return {
     q: um(sp.q),
+    ...(um(sp.visualizacao) === "grade" ? { visualizacao: "grade" as const } : {}),
     categoria,
     cidade,
     precoMinTexto,
