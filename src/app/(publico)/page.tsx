@@ -34,7 +34,7 @@ import estilos from "./inicio.module.css";
 
 // T2 · Início em 2 colunas (computador) e 1 coluna (celular), pensado para quem procura.
 // Esquerda: categorias e atalhos. Meio (o feed): lojas da região numa fileira no topo, título curto,
-// filtros rápidos, uma faixa fina com "Estou procurando…" e "Anunciar", destaques pagos,
+// filtros rápidos, atalhos com "Estou procurando…" e "Anunciar", destaques pagos,
 // "Você viu há pouco" e os anúncios em grade, que são o assunto principal.
 // Filtros vão pelo endereço (?cidade=minha&ate=100&ordem=menor_preco): funcionam sem JavaScript.
 // A ordem, o liga/desliga e os textos dos blocos seguem vindo do painel (tabela home_blocos).
@@ -248,7 +248,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                 ) : null;
 
               case "radar":
-                // O Radar é a faixa fina acima dos anúncios (AcoesInicio): o painel liga/desliga e dá os textos.
+                // O Radar aparece nos atalhos do início (AcoesInicio): o painel liga/desliga e dá os textos.
                 return null;
 
               case "lojas_regiao":
