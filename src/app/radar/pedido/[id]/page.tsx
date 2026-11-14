@@ -6,14 +6,13 @@ import { tentativaAssistente } from "@/lib/assistente";
 import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { CalendarClock, CheckCircle2, ChevronLeft, Eye, Hourglass, MapPin, MessageCircle, RotateCcw, ShieldAlert, Store } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronLeft, Hourglass, MapPin, MessageCircle, RotateCcw, ShieldAlert, Store } from "lucide-react";
 import { cidadesDoMeuPedido, indicacoesDoPedido, pedidoArquivado, pedidoRadar, propostasDoPedido } from "@/lib/dados/radar";
 import { LINK_RADAR, linkPedidoRadarLoja, linkPedirRadar } from "@/lib/rotas";
 import { linkAnuncio, preco, tempoRelativo } from "@/lib/formato";
-import { CLASSE_TOM, dataHoraCurta, FOCO_LINK, faixaPreco, LINK_VOLTAR, resumoPropostas, rotuloSituacao, textoPrecoProposta } from "@/components/radar/util";
+import { CLASSE_TOM, dataHoraCurta, FOCO_LINK, faixaPreco, resumoPropostas, rotuloSituacao, textoPrecoProposta } from "@/components/radar/util";
 import { TEXTO_VISIBILIDADE, diasParaVencer, mostrarPedirDeNovo, textoVencimento } from "@/components/radar/passos-pedido";
 import { PropostasRecebidas } from "@/components/radar/propostas-recebidas";
-import { AtualizarRadar } from "@/components/radar/atualizar-radar";
 import { AcoesPedido, DestaquePrazo } from "@/components/radar/acoes-pedido";
 import { Botao } from "@/components/ui/botao";
 import type { IndicacaoRadar } from "@/lib/tipos-radar";
@@ -67,9 +66,9 @@ export default async function MeuPedidoPage({
   const visibilidade = TEXTO_VISIBILIDADE[pedido.visibilidade ?? "lojas"];
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-3 sm:gap-4 sm:px-6">
       {tentativa && userId && <ConcluirAssistente dono={userId} tentativa={tentativa} />}
-      <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className={LINK_VOLTAR}>
+      <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className={`inline-flex min-h-11 w-fit items-center gap-1 text-lg font-semibold text-laranja-escuro hover:underline ${FOCO_LINK}`}>
         <ChevronLeft className="size-5" aria-hidden />
         {arquivado ? "Arquivados" : "Meus pedidos"}
       </Link>
@@ -77,20 +76,20 @@ export default async function MeuPedidoPage({
       {novo === "1" && ["aberto", "em_analise"].includes(pedido.situacao) &&
         (pedido.status === "em_analise" ? (
           <Alert variant="warning" role="status" className="flex items-start gap-3">
-            <ShieldAlert className="mt-0.5 size-6 shrink-0" aria-hidden />
+            <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
             <div className="flex flex-col gap-1">
-              <p className="text-facil font-bold">Pedido recebido!</p>
-              <p className="text-facil">A equipe vai dar uma olhada antes de mostrar para as lojas. Você pode acompanhar a situação nesta página.</p>
+              <p className="text-lg font-bold">Pedido recebido!</p>
+              <p className="text-lg">A equipe vai revisar o pedido antes de mostrá-lo às lojas.</p>
             </div>
           </Alert>
         ) : (
           <Alert variant="success" role="status" className="flex items-start gap-3">
-            <CheckCircle2 className="mt-0.5 size-6 shrink-0" aria-hidden />
+            <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden />
             <div className="flex flex-col gap-1">
-              <p className="text-facil font-bold">Pedido no ar!</p>
-              <p className="text-facil text-texto">
+              <p className="text-lg font-bold">Pedido no ar!</p>
+              <p className="text-lg text-texto">
                 {modoPrazo
-                  ? "As lojas da região já podem mandar propostas. As novas ofertas aparecem aqui e nas notificações da sua conta."
+                  ? "As propostas aparecem aqui e nas suas notificações."
                   : "As lojas da região já podem te chamar no WhatsApp."}
               </p>
             </div>
@@ -99,60 +98,60 @@ export default async function MeuPedidoPage({
 
       {estendido === "1" && aberto && (
         <Alert variant="success" role="status" className="flex items-start gap-3">
-          <CheckCircle2 className="mt-0.5 size-6 shrink-0" aria-hidden />
-          <p className="text-facil text-texto">
+          <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden />
+          <p className="text-lg text-texto">
             <strong>Pronto!</strong> Seu pedido fica no ar até {dataHoraCurta(pedido.expira_em)}.
           </p>
         </Alert>
       )}
 
-      <section className="flex flex-col gap-2 rounded-card bg-cartao p-4 shadow-1">
-        <div className="flex flex-wrap gap-2">
+      <section aria-labelledby="titulo-pedido" className="flex min-w-0 flex-col gap-2 rounded-card border border-borda bg-cartao p-3 sm:p-4">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-texto-suave">
           <Badge variant={CLASSE_TOM[s.tom]}>{s.texto}</Badge>
           {arquivado && <Badge variant="secondary">Arquivado</Badge>}
+          <span className="inline-flex min-w-0 items-center gap-1">
+            <MapPin className="size-4 shrink-0" aria-hidden />
+            <span className="[overflow-wrap:anywhere]">{pedido.area_texto || pedido.cidade}</span>
+          </span>
+          {pedido.categoria_nome && <span className="[overflow-wrap:anywhere]">· {pedido.categoria_nome}</span>}
         </div>
-        <h1 className="text-facil-titulo font-semibold break-words text-beringela">{formatarNome(pedido.titulo)}</h1>
-        {pedido.detalhes && <p className="text-facil break-words whitespace-pre-line text-texto-suave">{pedido.detalhes}</p>}
-        <p className="text-facil font-semibold">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
-        <p className="flex items-start gap-2 text-facil">
-          <MapPin className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
-          <span><span className="font-semibold">Onde:</span> {pedido.area_texto || pedido.cidade}</span>
-        </p>
-        <p className="flex items-start gap-2 text-facil">
-          <Eye className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
-          <span><span className="font-semibold">Quem vê:</span> {visibilidade.titulo}. {visibilidade.ajuda}</span>
-        </p>
-        {aberto && (
-          <p className="flex items-center gap-2 text-facil font-semibold text-beringela">
-            <CalendarClock className="size-5 shrink-0" aria-hidden />
-            {vencimento}
-          </p>
-        )}
-        <p className="flex flex-wrap items-center gap-x-2 text-facil text-texto-suave">
-          {pedido.categoria_nome && <span>{pedido.categoria_nome} ·</span>}
-          <span>pedido {tempoRelativo(pedido.criado_em)}</span>
-        </p>
-        {modoPrazo && pedido.propostas_ate && pedido.situacao === "aberto" && (
-          <p className="inline-flex items-center gap-2 text-facil font-semibold text-laranja-escuro">
-            <Hourglass className="size-5" aria-hidden />
-            Propostas até {dataHoraCurta(pedido.propostas_ate)}
-          </p>
-        )}
-        {!modoPrazo && !fechado && (
-          <p className="inline-flex items-center gap-2 text-facil text-texto-suave">
-            <MessageCircle className="size-5" aria-hidden />
-            As lojas chamam você no WhatsApp.
-          </p>
-        )}
-        {pedido.moderado_motivo && <p className="text-facil font-semibold text-aviso">Motivo da equipe: {pedido.moderado_motivo}</p>}
+        <h1 id="titulo-pedido" className="text-3xl font-semibold text-beringela [overflow-wrap:anywhere]">{formatarNome(pedido.titulo)}</h1>
+        {pedido.detalhes && <p className="text-lg whitespace-pre-line text-texto [overflow-wrap:anywhere]">{pedido.detalhes}</p>}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-lg">
+          <p className="font-semibold text-beringela">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
+          {modoPrazo && pedido.propostas_ate && aberto && (
+            <p className="inline-flex items-center gap-1.5 font-semibold text-laranja-escuro">
+              <Hourglass className="size-4 shrink-0" aria-hidden />
+              Propostas até {dataHoraCurta(pedido.propostas_ate)}
+            </p>
+          )}
+          {!modoPrazo && !fechado && (
+            <p className="inline-flex items-center gap-1.5 text-texto-suave">
+              <MessageCircle className="size-4 shrink-0" aria-hidden />
+              As lojas chamam você no WhatsApp.
+            </p>
+          )}
+        </div>
+        <details className="group">
+          <summary className={`flex min-h-11 w-fit max-w-full cursor-pointer items-center gap-1.5 font-semibold text-texto-suave hover:underline md:min-h-9 ${FOCO_LINK}`}>
+            <ChevronDown className="size-4 shrink-0 group-open:rotate-180" aria-hidden />
+            <span>Quem vê: {visibilidade.titulo} · Mais detalhes</span>
+          </summary>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 pb-1 pl-5.5 text-lg text-texto-suave">
+            <li className="[overflow-wrap:anywhere]">{visibilidade.ajuda}</li>
+            {aberto && <li>{vencimento}</li>}
+            <li>Publicado {tempoRelativo(pedido.criado_em)}</li>
+          </ul>
+        </details>
+        {pedido.moderado_motivo && <p className="text-lg font-semibold text-aviso [overflow-wrap:anywhere]">Motivo da equipe: {pedido.moderado_motivo}</p>}
       </section>
 
       {fechado && (pedido.fechado_motivo === "resolvido" || pedido.fechado_motivo === "cancelado") && (
         <section role="status" className="flex items-start gap-3 rounded-card bg-fundo p-4">
-          <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-verde-escuro" aria-hidden />
+          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-verde-escuro" aria-hidden />
           <div className="flex flex-col gap-1">
-            <p className="text-facil font-bold">{pedido.fechado_motivo === "resolvido" ? "Que bom que deu certo!" : "Pedido cancelado"}</p>
-            <p className="text-facil text-texto-suave">As lojas não veem mais este pedido.</p>
+            <p className="text-lg font-bold">{pedido.fechado_motivo === "resolvido" ? "Que bom que deu certo!" : "Pedido cancelado"}</p>
+            <p className="text-lg text-texto-suave">As lojas não veem mais este pedido.</p>
           </div>
         </section>
       )}
@@ -161,13 +160,13 @@ export default async function MeuPedidoPage({
 
       {pedirDeNovo && (
         <section aria-labelledby="titulo-de-novo" className="flex flex-col gap-3 rounded-card bg-fundo p-4">
-          <h2 id="titulo-de-novo" className="text-3xl font-semibold text-beringela">
+          <h2 id="titulo-de-novo" className="text-2xl font-semibold text-beringela">
             {fechado ? "Precisa de novo?" : "Este pedido não pode mais ser estendido"}
           </h2>
-          <p className="text-facil text-texto">
+          <p className="text-lg text-texto">
             {fechado ? "Faça o mesmo pedido outra vez. O texto já vem preenchido." : `${vencimento}. Se ainda precisa, faça o mesmo pedido outra vez.`}
           </p>
-          <Botao href={linkDeNovo} variante={destaque ? "secundario" : "primario"} larguraTotal icone={<RotateCcw />} tamanho="grande">
+          <Botao href={linkDeNovo} variante={destaque ? "secundario" : "primario"} icone={<RotateCcw />} className="min-h-11! self-start">
             Pedir de novo
           </Botao>
         </section>
@@ -175,14 +174,13 @@ export default async function MeuPedidoPage({
 
       {pedido.situacao === "prazo_acabou" && (
         <section className="flex flex-col gap-1 rounded-card bg-fundo p-4 text-beringela">
-          <p className="text-facil font-bold">O prazo acabou</p>
-          <p className="text-facil">
+          <p className="text-lg font-bold">O prazo acabou</p>
+          <p className="text-lg">
             {propostas.length > 0 ? `${resumoPropostas(propostas.length, menor)}. Escolha uma e chame no WhatsApp.` : "Nenhuma loja mandou proposta desta vez."}
           </p>
         </section>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-3xl font-semibold text-beringela">Ofertas recebidas</h2><AtualizarRadar tamanho="grande" /></div>
       <PropostasRecebidas propostas={propostas} podeEscolher={!["em_analise", "congelado"].includes(pedido.status) && !["cancelado", "moderacao"].includes(pedido.fechado_motivo ?? "")} modoPrazo={modoPrazo} />
 
       {indicacoes.length > 0 && <Indicacoes lista={indicacoes} />}
@@ -204,25 +202,25 @@ export default async function MeuPedidoPage({
 function Indicacoes({ lista }: { lista: IndicacaoRadar[] }) {
   return (
     <section aria-labelledby="titulo-indicacoes" className="flex flex-col gap-3">
-      <h2 id="titulo-indicacoes" className="text-3xl font-semibold text-beringela">Indicações</h2>
-      <p className="text-facil text-texto-suave">Pessoas da região indicaram onde tem.</p>
+      <h2 id="titulo-indicacoes" className="text-2xl font-semibold text-beringela">Indicações</h2>
+      <p className="text-lg text-texto-suave">Pessoas da região indicaram onde tem.</p>
       <ul className="flex flex-col gap-3">
         {lista.map((i) => (
-          <li key={i.anuncio_id} className="flex gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1">
+          <li key={i.anuncio_id} className="flex gap-3 rounded-card border border-borda bg-cartao p-3">
             {i.foto ? (
               // eslint-disable-next-line @next/next/no-img-element -- foto do anúncio no Storage
-              <img src={i.foto} alt="" width={80} height={80} className="size-20 shrink-0 rounded-campo bg-borda object-cover" />
+              <img src={i.foto} alt="" width={64} height={64} className="size-16 shrink-0 rounded-campo bg-borda object-cover" />
             ) : (
-              <span className="grid size-20 shrink-0 place-items-center rounded-campo bg-selecao text-beringela" aria-hidden>
+              <span className="grid size-16 shrink-0 place-items-center rounded-campo bg-selecao text-beringela" aria-hidden>
                 <Store className="size-6" />
               </span>
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <Link href={linkAnuncio(i.anuncio_id, i.titulo, null)} className={`min-h-12 content-center text-facil font-semibold break-words text-laranja-escuro underline underline-offset-4 ${FOCO_LINK}`}>
+              <Link href={linkAnuncio(i.anuncio_id, i.titulo, null)} className={`min-h-11 content-center text-lg font-semibold [overflow-wrap:anywhere] text-laranja-escuro underline underline-offset-4 ${FOCO_LINK}`}>
                 {formatarNome(i.titulo)}
               </Link>
-              <span className="text-facil font-bold text-beringela">{i.preco_centavos != null ? preco(i.preco_centavos) : "Preço a combinar"}</span>
-              <span className="text-facil text-texto-suave">{formatarNome(i.vitrine_nome)} · indicado {tempoRelativo(i.criado_em)}</span>
+              <span className="text-lg font-bold text-beringela">{i.preco_centavos != null ? preco(i.preco_centavos) : "Preço a combinar"}</span>
+              <span className="text-lg text-texto-suave">{formatarNome(i.vitrine_nome)} · indicado {tempoRelativo(i.criado_em)}</span>
             </div>
           </li>
         ))}

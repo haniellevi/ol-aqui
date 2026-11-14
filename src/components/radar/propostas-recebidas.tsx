@@ -12,6 +12,7 @@ import { escolherProposta } from "@/app/radar/actions";
 import { linkAnuncio, linkLoja, preco, tempoRelativo } from "@/lib/formato";
 import type { PropostaRecebida } from "@/lib/tipos-radar";
 import { FOCO_LINK } from "./util";
+import { AtualizarRadar } from "./atualizar-radar";
 import { Badge } from "@/components/ui/badge";
 
 type Ordem = "preco" | "novas";
@@ -34,45 +35,48 @@ export function PropostasRecebidas({
     return l;
   }, [propostas, ordem]);
 
-  if (propostas.length === 0) {
-    return (
-      <Vazio
-        tamanho="grande"
-        icone={<Inbox />}
-        titulo="Nenhuma proposta ainda"
-        texto={modoPrazo ? "Quando uma loja mandar oferta, ela aparece aqui e avisamos você." : "As lojas que se interessarem vão te chamar no WhatsApp."}
-      >
-        <Botao tamanho="grande" href="/busca" variante="secundario" larguraTotal>
-          Procurar nos anúncios
-        </Botao>
-      </Vazio>
-    );
-  }
-
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="titulo-propostas">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="titulo-propostas" className="text-facil font-semibold text-beringela">
-          {propostas.length === 1 ? "1 proposta" : `${propostas.length} propostas`}
+    <section className="flex min-w-0 flex-col gap-2" aria-labelledby="titulo-propostas">
+      <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <h2 id="titulo-propostas" className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-2xl font-semibold text-beringela">
+          Ofertas recebidas
+          <span className="text-sm font-normal text-texto-suave">
+            {propostas.length === 1 ? "1 proposta" : `${propostas.length} propostas`}
+          </span>
         </h2>
-        {propostas.length > 1 && (
-          <div className="flex gap-2">
-            <Chip tamanho="grande" ativo={ordem === "preco"} onClick={() => setOrdem("preco")}>
-              Menor preço
-            </Chip>
-            <Chip tamanho="grande" ativo={ordem === "novas"} onClick={() => setOrdem("novas")}>
-              Mais novas
-            </Chip>
-          </div>
-        )}
-      </div>
-      <ul className="flex flex-col gap-3">
-        {lista.map((p) => (
-          <li key={p.id}>
-            <CartaoProposta p={p} podeEscolher={podeEscolher} />
-          </li>
-        ))}
-      </ul>
+        <AtualizarRadar className="min-h-11! px-2" />
+      </header>
+      {lista.length === 0 ? (
+        <Vazio
+          icone={<Inbox />}
+          titulo="Nenhuma proposta ainda"
+          texto={modoPrazo ? "Você recebe um aviso quando chegar uma oferta." : "As lojas que se interessarem vão te chamar no WhatsApp."}
+        >
+          <Botao href="/busca" variante="secundario" className="min-h-11!">
+            Procurar nos anúncios
+          </Botao>
+        </Vazio>
+      ) : (
+        <>
+          {lista.length > 1 && (
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Ordenar propostas">
+              <Chip className="min-h-11!" ativo={ordem === "preco"} onClick={() => setOrdem("preco")}>
+                Menor preço
+              </Chip>
+              <Chip className="min-h-11!" ativo={ordem === "novas"} onClick={() => setOrdem("novas")}>
+                Mais novas
+              </Chip>
+            </div>
+          )}
+          <ul className="flex flex-col gap-2.5">
+            {lista.map((p) => (
+              <li key={p.id}>
+                <CartaoProposta p={p} podeEscolher={podeEscolher} />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </section>
   );
 }
@@ -113,33 +117,33 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
   }
 
   return (
-    <article className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4 shadow-1">
-      <header className="flex flex-wrap items-center gap-3">
+    <article className="flex min-w-0 flex-col gap-2 rounded-card border border-borda bg-cartao p-3 sm:p-4">
+      <header className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
         {p.loja_logo ? (
           // eslint-disable-next-line @next/next/no-img-element -- logo da loja no Storage
-          <img src={p.loja_logo} alt="" width={40} height={40} className="size-10 shrink-0 rounded-full bg-borda object-cover" />
+          <img src={p.loja_logo} alt="" width={32} height={32} className="size-8 shrink-0 rounded-full bg-borda object-cover" />
         ) : (
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
-            <Store className="size-5" />
+          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
+            <Store className="size-4" />
           </span>
         )}
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="min-w-0 flex-1">
           {p.loja_slug ? (
-            <Link href={linkLoja(p.loja_slug)} className={`inline-flex min-h-12 items-center text-facil font-semibold break-words text-laranja-escuro underline-offset-4 hover:underline ${FOCO_LINK}`}>
-              {formatarNome(p.loja_nome)}
+            <Link href={linkLoja(p.loja_slug)} className={`inline-flex min-h-11 max-w-full items-center text-lg font-semibold text-beringela underline-offset-4 hover:underline md:min-h-9 ${FOCO_LINK}`}>
+              <span className="min-w-0 [overflow-wrap:anywhere]">{formatarNome(p.loja_nome)}</span>
             </Link>
           ) : (
-            <span className="text-facil font-semibold break-words">{formatarNome(p.loja_nome)}</span>
+            <span className="text-lg font-semibold [overflow-wrap:anywhere]">{formatarNome(p.loja_nome)}</span>
           )}
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-facil text-texto-suave">
+          <p className="flex flex-wrap items-center gap-x-2 text-sm text-texto-suave">
             {p.loja_selo && (
               <span className="inline-flex items-center gap-0.5 font-semibold text-verde-escuro">
-                <BadgeCheck className="size-4" aria-hidden />
+                <BadgeCheck className="size-4 shrink-0" aria-hidden />
                 Loja verificada
               </span>
             )}
             <span>{tempoRelativo(p.criado_em)}</span>
-          </span>
+          </p>
         </div>
         {p.escolhida && (
           <Badge variant="success">
@@ -149,33 +153,35 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
         )}
       </header>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex items-start gap-3">
         {foto && (
           // eslint-disable-next-line @next/next/no-img-element -- foto da proposta no Storage
-          <img src={foto} alt={formatarNome(p.anuncio_titulo) || "Foto da oferta"} width={96} height={96} className="size-24 shrink-0 rounded-campo bg-borda object-cover" />
+          <img src={foto} alt={formatarNome(p.anuncio_titulo) || "Foto da oferta"} width={64} height={64} className="size-16 shrink-0 rounded-campo bg-borda object-cover" />
         )}
-        <div className="flex min-w-40 flex-1 flex-col gap-1">
-          <span className="text-3xl font-bold break-words text-beringela">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</span>
-          {p.mensagem && <p className="text-facil leading-6 break-words whitespace-pre-line text-texto">{p.mensagem}</p>}
-          {p.anuncio_id && p.anuncio_titulo && (
-            <Link href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} className={`min-h-12 content-center text-facil leading-6 font-semibold text-laranja-escuro underline underline-offset-4 ${FOCO_LINK}`}>
-              Ver anúncio: {formatarNome(p.anuncio_titulo)}
-            </Link>
-          )}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <p className="text-2xl font-bold text-beringela [overflow-wrap:anywhere]">{p.preco_centavos != null ? preco(p.preco_centavos) : "Preço a combinar"}</p>
+          {p.mensagem && <p className="text-lg whitespace-pre-line text-texto [overflow-wrap:anywhere]">{p.mensagem}</p>}
         </div>
       </div>
 
-      {podeEscolher && (
-        <Botao tamanho="grande" variante="whatsapp" larguraTotal icone={<MessageCircle />} onClick={chamar} carregando={abrindo} textoCarregando="Abrindo o WhatsApp...">
-          Chamar no WhatsApp
-        </Botao>
+      {(podeEscolher || (p.anuncio_id && p.anuncio_titulo)) && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          {podeEscolher && (
+            <Botao variante="whatsapp" className="min-h-11!" icone={<MessageCircle />} onClick={chamar} carregando={abrindo} textoCarregando="Abrindo o WhatsApp...">
+              Chamar no WhatsApp
+            </Botao>
+          )}
+          {p.anuncio_id && p.anuncio_titulo && (
+            <Botao href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} aria-label={`Ver anúncio: ${formatarNome(p.anuncio_titulo)}`} variante="secundario" className="min-h-11!">
+              Ver anúncio
+            </Botao>
+          )}
+          {podeEscolher && linkContato && (
+            <Botao href={linkContato} target="_blank" rel="noopener noreferrer" variante="secundario" className="min-h-11!">Continuar no WhatsApp</Botao>
+          )}
+        </div>
       )}
-      {podeEscolher && linkContato && <Botao tamanho="grande" href={linkContato} target="_blank" rel="noopener noreferrer" variante="secundario" larguraTotal>Continuar no WhatsApp</Botao>}
-      {erro && (
-        <p role="alert" className="text-facil font-semibold text-perigo">
-          {erro}
-        </p>
-      )}
+      {erro && <p role="alert" className="text-lg font-semibold text-perigo">{erro}</p>}
     </article>
   );
 }
