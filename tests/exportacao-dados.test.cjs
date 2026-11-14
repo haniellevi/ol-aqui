@@ -5,7 +5,7 @@ const fs = require('node:fs');
 // A exportação "Baixar meus dados" roda com a sessão da pessoa. Ela não pode pedir "*" em anuncios:
 // o banco não concede o IP de criação nem a revisão da equipe a quem está logado, e "*" falha inteiro.
 const ROTA = 'src/app/(conta)/minha-conta/privacidade/baixar/route.ts';
-const MIGRACAO = 'supabase/migrations/20261125010000_seguranca_lote_banco.sql';
+const MIGRACAO = 'supabase/migrations/20261126010000_seguranca_lote_banco.sql';
 
 const lista = (texto) => texto.split(',').map((c) => c.trim()).filter(Boolean);
 

@@ -121,7 +121,7 @@ try:
     print('PASS: campos do dono restaurados pelo banco, nome de loja com filtro de palavras e volta à conferência, recusa da fila deixa anúncio em revisão humana', flush=True)
     checked(sql((root/'supabase/testes/833_permissoes_sobrando.sql').read_text()))
     print('PASS: permissões de tabela sobrando retiradas, perguntas sobre outra conta só do próprio dono ou da equipe ativa, verificação só na pasta da própria pessoa', flush=True)
-    migracao_lote = (root/'supabase/migrations/20261125010000_seguranca_lote_banco.sql').read_text()
+    migracao_lote = (root/'supabase/migrations/20261126010000_seguranca_lote_banco.sql').read_text()
     checked(sql((root/'supabase/testes/834_recusados_antes_do_lote.sql').read_text().replace('-- LOTE_REAPLICADO', migracao_lote)))
     print('PASS: anúncio recusado antes do lote ganha revisão manual e a republicação vai para análise', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()

@@ -1,6 +1,6 @@
 \set ON_ERROR_STOP on
 \set QUIET on
--- Anúncio recusado pela equipe ANTES do lote 20261125010000 (sem a marca de revisão) não pode voltar ao ar
+-- Anúncio recusado pela equipe ANTES do lote 20261126010000 (sem a marca de revisão) não pode voltar ao ar
 -- sem análise. O automatizados.py reaplica a migração do lote no meio deste teste, no lugar da marca de reaplicação
 -- (o mesmo jeito do teste 400): a marca tem que aparecer no anúncio que já existia.
 -- Sem o lote reaplicado, a marca não é trocada e o caso FALHA de propósito.
