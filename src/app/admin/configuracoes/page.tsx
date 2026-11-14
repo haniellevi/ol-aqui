@@ -2,6 +2,7 @@ import Link from "next/link";
 import { exigirAdmin } from "@/lib/admin/auth";
 import { CHAVES_DE_MODELO, CHAVES_DE_PLANO, NOMES_GRUPO, OPCOES_FIXAS, tipoDe, valorParaForm, type Opcao } from "@/lib/admin/config";
 import { quando } from "@/lib/admin/formato";
+import { MODELOS_FIXOS_IA } from "@/lib/ia-modelos";
 import { Aviso, Cartao, Titulo } from "@/components/admin/ui";
 import { configGenericaEditavel, permiteExcecaoRegional } from "@/lib/admin/config-visibilidade";
 import { removerExcecao } from "./actions";
@@ -23,6 +24,7 @@ type Config = {
 const AREAS = [
   { nome: "Comercial", texto: "Preços, planos e destaques.", links: [["Planos", "/admin/planos"], ["Destaques", "/admin/destaques"], ["Teste grátis e avulsos", "/admin/configuracoes?grupo=planos"]] },
   { nome: "Merc", texto: "Modelo, orçamento e qualidade das respostas.", links: [["Configurar Merc", "/admin/robo"]] },
+  { nome: "IA do site", texto: "Modelo de IA de cada recurso: moderação, categorias, anúncios, lojas e Radar.", links: [["Modelos de IA", "/admin/configuracoes?grupo=ia"]] },
   { nome: "Conteúdo", texto: "Página inicial, ajuda e documentos.", links: [["Textos e página inicial", "/admin/textos"]] },
   { nome: "Região", texto: "Região atendida e cidades disponíveis.", links: [["Regiões e cidades", "/admin/regioes"]] },
   { nome: "Catálogo", texto: "Categorias e campos dos anúncios.", links: [["Categorias e campos", "/admin/categorias"], ["Categorias sugeridas", "/admin/categorias/sugeridas"]] },
@@ -73,6 +75,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
       <Titulo>{NOMES_GRUPO[grupoAtual] ?? "Ajustes avançados"}</Titulo>
       {erroConfigs && <Aviso tipo="erro">Não foi possível carregar os ajustes. Tente novamente.</Aviso>}
       {grupoAtual === "robo" && <p className="mb-4 text-sm text-texto-suave">Modelo, orçamento e textos ficam em <Link href="/admin/robo" className="font-semibold underline">Configurar Merc</Link>.</p>}
+      {grupoAtual === "ia" && <p className="mb-4 text-sm text-texto-suave">Cada recurso usa o modelo escolhido aqui. Sem escolha, usa o GPT-6 Luna. Se o modelo falhar, o recurso segue como antes da IA: o anúncio ou a loja vai para a revisão da equipe e o Radar funciona sem IA.</p>}
       {grupoAtual === "radar" && <p className="mb-4 text-sm text-texto-suave">Os textos dos avisos ficam em <Link href="/admin/mensagens" className="font-semibold underline">Mensagens automáticas</Link>.</p>}
 
       <nav aria-label="Seções do painel" className="admin-abas -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]">
@@ -126,6 +129,16 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
             </Cartao>
           );
         })}
+        {grupoAtual === "ia" && <Cartao id="modelos-fixos">
+          <h2 className="font-semibold text-beringela">Recursos com modelo fixo</h2>
+          <p className="mb-3 mt-1 text-sm text-texto-suave">Estes recursos não trocam de modelo aqui.</p>
+          <ul className="space-y-3">
+            {MODELOS_FIXOS_IA.map((f) => <li key={f.nome} className="text-sm text-beringela">
+              <p className="font-semibold">{f.nome}: <span className="font-normal">{f.modelo}</span></p>
+              <p className="text-texto-suave">{f.motivo}</p>
+            </li>)}
+          </ul>
+        </Cartao>}
         {textosRadar.length > 0 && <details className="rounded-card border border-borda bg-cartao p-4">
           <summary className="cursor-pointer font-semibold text-beringela">Textos específicos por região</summary>
           <p className="mt-2 text-sm text-texto-suave">Use apenas quando uma região precisar de mensagem diferente do modelo geral.</p>

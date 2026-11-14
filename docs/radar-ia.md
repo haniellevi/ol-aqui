@@ -18,8 +18,8 @@ Tudo chega **desligado**. Nada muda para o cliente até alguém ligar as chaves 
    mensagem fala), sem links, e-mails e telefones. Plano:
    `docs/superpowers/plans/2026-11-13-radar-ja-comprei.md`. Texto da política: `docs/designs/conversas-politica-privacidade.md`.
 
-Qual IA: o **JEV** (TypeSafe) julga (o pedido está vago? o anúncio novo combina?) e o **Gemini 2.5 Flash-Lite** (OpenRouter,
-sem guardar dados, `zdr`) escreve as perguntas e as frases. Falhou ou demorou mais de 3 segundos: o Radar segue igual a hoje, sem aviso.
+Qual IA: o **JEV** (TypeSafe) julga (o pedido está vago? o anúncio novo combina?) e o modelo escolhido no painel (padrão **GPT-6 Luna**,
+OpenRouter, sem guardar dados, `zdr`; ver `docs/IA-MODELOS.md`) escreve as perguntas e as frases. Falhou ou demorou mais de 3 segundos: o Radar segue igual a hoje, sem aviso.
 
 ## Custo e limites
 - O "já comprei" entra no mesmo teto de R$ 30 e nos mesmos 20 usos por dia por pessoa (parte `ja_comprei` no `radar_ia_uso`).
@@ -43,7 +43,7 @@ sem guardar dados, `zdr`) escreve as perguntas e as frases. Falhou ou demorou ma
 Acrescentar na seção sobre inteligência artificial:
 
 > **Radar.** Quando você pede algo no Radar, o texto do pedido (o que procura e os detalhes que você escreveu) pode ser enviado
-> a serviços de inteligência artificial — o OpenRouter, que usa o modelo Gemini, do Google, e a TypeSafe — só para sugerir
+> a serviços de inteligência artificial — o OpenRouter e a TypeSafe — só para sugerir
 > perguntas que ajudem as lojas a entender o pedido, mostrar anúncios parecidos da região e avisar quando entrar um anúncio novo
 > parecido. Das lojas, vão só o título, o preço e a cidade dos anúncios. Não enviamos seu nome, telefone nem endereço. Esses
 > serviços são contratados sem guardar os dados nem usá-los para treinar modelos. O Mercado da Região não guarda o que a

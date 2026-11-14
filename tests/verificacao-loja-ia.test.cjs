@@ -27,7 +27,7 @@ async function comAmbiente(impl, fn) {
 test('prompt de sistema diz que o documento é dado e nunca instrução', () => {
   assert.match(mod.SISTEMA_VERIFICACAO, /dado/i);
   assert.match(mod.SISTEMA_VERIFICACAO, /nunca instrução/i);
-  assert.equal(mod.MODELO_VERIFICACAO, 'openai/gpt-4.1-mini');
+  assert.equal(mod.MODELO_VERIFICACAO, 'openai/gpt-6-luna');
 });
 
 test('imagem vai como image_url, com trava de privacidade e esquema sem campo de decisão', async () => {
@@ -44,7 +44,8 @@ test('imagem vai como image_url, com trava de privacidade e esquema sem campo de
   assert.equal(corpo.provider.allow_fallbacks, false);
   assert.equal(corpo.provider.require_parameters, true);
   assert.ok(corpo.provider.max_price);
-  assert.equal(corpo.temperature, 0);
+  assert.equal(corpo.model, 'openai/gpt-6-luna');
+  assert.equal('temperature' in corpo, false);
   assert.equal(corpo.max_tokens, 1000);
   assert.equal(init.redirect, 'error');
   assert.equal(corpo.response_format.type, 'json_schema');

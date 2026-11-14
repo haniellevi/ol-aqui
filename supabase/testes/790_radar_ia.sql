@@ -48,7 +48,7 @@ select pg_temp.confere(radar_ia_estado() = '{"perguntas": false, "parecidos": tr
 -- ===== Reserva e conclusão =====
 select radar_ia_reservar('user_q790a', 'parecidos') as uso1 \gset
 select pg_temp.confere(:'uso1' is not null, 'Ligada: reserva');
-select pg_temp.confere((select parte = 'parecidos' and erro = 'em_andamento' and provedor = 'openrouter' and modelo = 'google/gemini-2.5-flash-lite'
+select pg_temp.confere((select parte = 'parecidos' and erro = 'em_andamento' and provedor = 'openrouter' and modelo = 'openai/gpt-6-luna'
   and custo_centavos = 0.55 and usuario_id = 'user_q790a' from radar_ia_uso where id = :uso1), 'Reserva no livro-caixa');
 select radar_ia_concluir(:uso1, 0.0003, 900, 80, null);
 select pg_temp.confere((select erro is null and custo_centavos = 0.165 and tokens_entrada = 900 and tokens_saida = 80 from radar_ia_uso where id = :uso1), 'Custo real gravado');

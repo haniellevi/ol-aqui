@@ -59,7 +59,7 @@ test('Gemini sem chave: não chama a rede', async () => {
   }, { OPENROUTER_API_KEY: null });
 });
 
-test('Gemini: modelo barato, sem guardar dados, resposta estrita', async () => {
+test('Radar escreve: modelo padrão (GPT-6 Luna), sem guardar dados, resposta estrita', async () => {
   await comFetch(respostaGemini({ ok: 1 }), async (pedidos) => {
     const r = await gemini().perguntarGemini(SIMPLES);
     assert.equal(r.ok, true);
@@ -68,12 +68,13 @@ test('Gemini: modelo barato, sem guardar dados, resposta estrita', async () => {
     assert.equal(r.tokensEntrada, 900);
     const c = pedidos[0].corpo;
     assert.equal(pedidos[0].url, 'https://openrouter.ai/api/v1/chat/completions');
-    assert.equal(c.model, 'google/gemini-2.5-flash-lite');
+    assert.equal(c.model, 'openai/gpt-6-luna');
     assert.equal(c.provider.zdr, true);
     assert.equal(c.provider.data_collection, 'deny');
     assert.equal(c.provider.allow_fallbacks, false);
     assert.equal(c.response_format.json_schema.strict, true);
-    assert.equal(c.temperature, 0);
+    // GPT-6 Luna recusa temperature: com require_parameters, mandar o campo derrubaria a chamada.
+    assert.equal('temperature' in c, false);
   });
 });
 

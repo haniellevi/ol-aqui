@@ -1,10 +1,13 @@
 import "server-only";
+import { MODELO_IA_PADRAO, temperaturaPara } from "@/lib/ia-modelos";
+import { modeloDoRecurso } from "@/lib/ia-modelos-servidor";
 
-// IA do Radar que ESCREVE (perguntas e a frase de 1 linha): Gemini barato via OpenRouter.
+// IA do Radar que ESCREVE (perguntas e a frase de 1 linha), via OpenRouter. O modelo é o escolhido
+// no painel (ia.modelo.radar); o nome do arquivo ficou do Gemini, o primeiro modelo usado aqui.
 // Mesmo protocolo de src/lib/verificacao-loja/ia.ts: sem retenção, sem fallback, resposta estrita,
 // e aqui com prazo curto (3 s): demorou, o Radar segue sem IA.
 
-export const MODELO_RADAR = "google/gemini-2.5-flash-lite";
+export const MODELO_RADAR = MODELO_IA_PADRAO;
 const ENDERECO = "https://openrouter.ai/api/v1/chat/completions";
 export const PRAZO_IA_MS = 3000;
 const MAX_CORPO = 100_000;
@@ -28,6 +31,7 @@ function inteiro(v: unknown): number {
 export async function perguntarGemini<T>(p: PedidoGemini<T>): Promise<ResultadoGemini<T>> {
   const chave = process.env.OPENROUTER_API_KEY;
   if (!chave) return { ok: false, falha: "ia_desligada", custoUsd: 0 };
+  const modelo = await modeloDoRecurso("radar");
   let custo: number | null = null;
   let falha = "resposta_invalida";
   try {
@@ -35,7 +39,7 @@ export async function perguntarGemini<T>(p: PedidoGemini<T>): Promise<ResultadoG
       method: "POST", signal: AbortSignal.timeout(PRAZO_IA_MS), cache: "no-store", redirect: "error",
       headers: { "content-type": "application/json", authorization: `Bearer ${chave}` },
       body: JSON.stringify({
-        model: MODELO_RADAR, stream: false, max_tokens: 400, temperature: 0,
+        model: modelo, stream: false, max_tokens: 400, ...temperaturaPara("radar", modelo, 0),
         provider: { require_parameters: true, data_collection: "deny", zdr: true, allow_fallbacks: false,
           max_price: { prompt: 0.2, completion: 0.8, request: 0 } },
         messages: [{ role: "system", content: p.sistema }, { role: "user", content: p.usuario }],

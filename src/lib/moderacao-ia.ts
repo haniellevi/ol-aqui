@@ -1,8 +1,10 @@
 import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { MODELO_IA_PADRAO, modeloDaLista, temperaturaPara } from "@/lib/ia-modelos";
 
-export const MODELO_MODERACAO = "openai/gpt-4.1-mini";
+// O modelo de cada análise vem da fila (o banco grava o escolhido no painel). Este é só o padrão.
+export const MODELO_MODERACAO = MODELO_IA_PADRAO;
 const RISCOS = ["fraude", "proibido", "inconsistente", "imagem", "instrucao", "incerto", "teste"] as const;
 type Risco = typeof RISCOS[number];
 export type Parecer = { decisao: "aprovar" | "revisar"; confianca: number; motivo: string; riscos: Risco[]; imagens_avaliadas: number };
@@ -81,7 +83,7 @@ async function carregarFoto(url: string, sinal: AbortSignal): Promise<{ tipo: st
 
 export async function analisarAnuncioIA(t: Trabalho): Promise<Analise> {
   const vazio = { custo: 0, entrada: 0, saida: 0 };
-  if (!process.env.OPENROUTER_API_KEY || t.modelo !== MODELO_MODERACAO) {
+  if (!process.env.OPENROUTER_API_KEY || !modeloDaLista("moderacao", t.modelo)) {
     return { ...vazio, parecer: manual("O provedor de IA não está configurado para esta análise.") };
   }
   if (!Array.isArray(t.fotos) || t.fotos.length < 1 || t.fotos.length > 10 || t.fotos.some(f => !fotoModeracaoPermitida(f, t))) {
@@ -102,7 +104,7 @@ export async function analisarAnuncioIA(t: Trabalho): Promise<Analise> {
     const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST", signal: AbortSignal.timeout(35_000), cache: "no-store", redirect: "error",
       headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` },
-      body: JSON.stringify({ model: MODELO_MODERACAO, stream: false, max_tokens: 1000, temperature: 0,
+      body: JSON.stringify({ model: t.modelo, stream: false, max_tokens: 1000, ...temperaturaPara("moderacao", t.modelo, 0),
         provider: { require_parameters: true, data_collection: "deny", zdr: true, allow_fallbacks: false,
           max_price: { prompt: 0.4, completion: 1.6, request: 0 } },
         messages: [{ role: "system", content: SISTEMA }, { role: "user", content: [

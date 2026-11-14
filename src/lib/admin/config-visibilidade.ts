@@ -17,5 +17,5 @@ export function configGenericaEditavel(chave: string, regional = false): boolean
 }
 
 export function permiteExcecaoRegional(chave: string): boolean {
-  return !GLOBAIS.has(chave) && !/^(hoje|funil|visitas|compliance)\./.test(chave);
+  return !GLOBAIS.has(chave) && !/^(hoje|funil|visitas|compliance|ia)\./.test(chave);
 }
