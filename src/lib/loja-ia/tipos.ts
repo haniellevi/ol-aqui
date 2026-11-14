@@ -10,6 +10,7 @@ export type CamposRascunho = Record<'nome' | 'cidade' | 'slug' | 'categoria' | '
 export type EntradaRascunho = {
   nome: string
   cidade: string
+  redesConcluidas?: boolean
   site?: string
   instagram?: string
   facebook?: string
@@ -27,4 +28,11 @@ export type RascunhoLoja = {
   fontes: Partial<Record<FonteLoja, unknown>>
   campos: CamposRascunho
   vitrineId: string | null
+}
+
+export type RespostaLojaIa<T> = { ok: true; dados: T } | { ok: false; erro: string };
+
+export function dadosLojaIa<T>(resposta: RespostaLojaIa<T>): T {
+  if (!resposta.ok) throw new Error(resposta.erro);
+  return resposta.dados;
 }

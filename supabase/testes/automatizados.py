@@ -38,6 +38,13 @@ try:
     assert ids[0] == ids[1], ids
     checked(sql("do $$ begin assert (select count(*)=1 from loja_ia_rascunhos where dono_id='user_ia880conc'), 'aberturas duplicadas'; end $$;"))
     print('PASS: duas aberturas simultâneas retornam o mesmo rascunho', flush=True)
+    checked(sql((root/'supabase/testes/881_loja_ia_processamento.sql').read_text()))
+    checked(sql((root/'supabase/testes/882_loja_ia_whatsapp.sql').read_text()))
+    checked(sql((root/'supabase/testes/883_loja_ia_imagens.sql').read_text()))
+    checked(sql((root/'supabase/testes/884_loja_ia_publicacao.sql').read_text()))
+    checked(sql((root/'supabase/testes/885_loja_ia_modelo_capa.sql').read_text()))
+    checked(sql((root/'supabase/testes/886_loja_ia_capa_vitrine.sql').read_text()))
+    print('PASS: piloto de loja com IA, fila e edição, WhatsApp, imagens privadas, publicação e capa', flush=True)
     marca_documentos = (root/'supabase/migrations/20261110234147_marca_documentos_atuais.sql').read_text()
     checked(sql((root/'supabase/testes/440_marca_documentos_atuais.sql').read_text().replace('-- REAPLICAR_DOCUMENTOS', marca_documentos + marca_documentos)))
     print('PASS: marca nos documentos ativos e idempotência, versões antigas preservadas', flush=True)

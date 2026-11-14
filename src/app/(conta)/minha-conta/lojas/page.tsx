@@ -14,7 +14,7 @@ export type LojaDaConta = { id: string; nome: string; dono: boolean };
 export default async function MinhasLojas() {
   const db = await createClient();
   const [{ data, error }, { data: rascunhoDados, error: erroRascunho }] = await Promise.all([db.rpc("minhas_lojas"), db.rpc("loja_ia_obter")]);
-  const rascunho = rascunhoDados as RascunhoLoja | null;
+  const rascunho = rascunhoDados?.id && rascunhoDados?.entrada ? rascunhoDados as RascunhoLoja : null;
   const lojas = (data ?? []) as LojaDaConta[];
   return (
     <PaginaConta>

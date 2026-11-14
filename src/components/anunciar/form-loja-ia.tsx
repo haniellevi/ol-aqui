@@ -6,6 +6,7 @@ import { Campo } from "@/components/ui/campo";
 import { AvisoErro } from "./aviso-erro";
 import { classesCampo } from "@/components/ui/input";
 import { enviarFoto } from "@/lib/fotos";
+import { dadosLojaIa, type RespostaLojaIa } from "@/lib/loja-ia/tipos";
 
 export type EntradaColetaLojaIa = {
   nome: string;
@@ -27,10 +28,10 @@ type Props = {
   whatsappConfirmado: boolean;
   whatsappConsultaDisponivel: boolean;
   cnpjDisponivel: boolean;
-  salvar: (id: string, revisao: number, entrada: EntradaColetaLojaIa) => Promise<{ revisao: number }>;
-  prepararEnvio: (id: string, arquivo: { nome: string; tipo: string; tamanho: number }, tipo: "logo" | "foto") => Promise<{ id: string; urlEnvio: string; token: string }>;
-  finalizarEnvio: (id: string, imagemId: string) => Promise<{ id: string }>;
-  iniciar: (id: string, revisao: number) => Promise<void>;
+  salvar: (id: string, revisao: number, entrada: EntradaColetaLojaIa) => Promise<RespostaLojaIa<{ revisao: number }>>;
+  prepararEnvio: (id: string, arquivo: { nome: string; tipo: string; tamanho: number }, tipo: "logo" | "foto") => Promise<RespostaLojaIa<{ id: string; urlEnvio: string; token: string }>>;
+  finalizarEnvio: (id: string, imagemId: string) => Promise<RespostaLojaIa<{ id: string }>>;
+  iniciar: (id: string, revisao: number) => Promise<RespostaLojaIa<void>>;
 };
 
 export function etapaInicial(entrada: EntradaColetaLojaIa): number {
@@ -57,19 +58,19 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
       setErro("Informe o nome e a cidade da loja para continuar.");
       return;
     }
-    if (gerar && ![entrada.site, entrada.instagram, entrada.facebook, cnpjDisponivel ? entrada.cnpj : "", entrada.descricao].some((valor) => valor?.trim()) && !entrada.materiais.length && !(whatsappConfirmado && whatsappConsultaDisponivel && entrada.consultarWhatsapp)) {
-      setErro("Conte um pouco sobre sua loja para ajudar a montar o rascunho.");
+    if (gerar && ![entrada.site, entrada.instagram, entrada.facebook, cnpjDisponivel ? entrada.cnpj : "", (entrada.descricao?.trim().length ?? 0) >= 10 ? entrada.descricao : ""].some((valor) => valor?.trim()) && !entrada.materiais.length && !(whatsappConfirmado && whatsappConsultaDisponivel && entrada.consultarWhatsapp)) {
+      setErro("Conte em pelo menos 10 caracteres o que sua loja faz ou informe uma fonte.");
       return;
     }
     setOcupado(true);
     setErro("");
     try {
       const dados = { ...entrada, redesConcluidas: entrada.redesConcluidas || (etapa === 1 && destino > etapa), consultarWhatsapp: whatsappConfirmado && whatsappConsultaDisponivel && entrada.consultarWhatsapp, avisarWhatsapp: whatsappConfirmado && entrada.avisarWhatsapp };
-      const salvo = await salvar(rascunho.id, revisao, dados);
+      const salvo = dadosLojaIa(await salvar(rascunho.id, revisao, dados));
       setRevisao(salvo.revisao);
       setEntrada(dados);
       if (gerar) {
-        await iniciar(rascunho.id, salvo.revisao);
+        dadosLojaIa(await iniciar(rascunho.id, salvo.revisao));
         setIniciado(true);
       } else setEtapa(destino);
     } catch (e) {
@@ -84,12 +85,12 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
     setOcupado(true);
     setErro("");
     try {
-      const envio = await prepararEnvio(rascunho.id, { nome: arquivo.name, tipo: arquivo.type, tamanho: arquivo.size }, tipo);
+      const envio = dadosLojaIa(await prepararEnvio(rascunho.id, { nome: arquivo.name, tipo: arquivo.type, tamanho: arquivo.size }, tipo));
       if (!await enviarFoto(arquivo, envio.urlEnvio)) throw new Error("Não foi possível enviar a imagem. Tente novamente.");
-      const { id } = await finalizarEnvio(rascunho.id, envio.id);
+      const { id } = dadosLojaIa(await finalizarEnvio(rascunho.id, envio.id));
       const atualizada = { ...entrada, materiais: [...entrada.materiais, id] };
       setEntrada(atualizada);
-      const salvo = await salvar(rascunho.id, revisao, atualizada);
+      const salvo = dadosLojaIa(await salvar(rascunho.id, revisao, atualizada));
       setRevisao(salvo.revisao);
     } catch (e) {
       setErro(e instanceof Error && e.message ? e.message : "Não foi possível enviar o arquivo. Tente novamente.");
@@ -105,6 +106,7 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
       <p className="text-sm font-semibold text-texto-suave">Passo {etapa + 1} de 3</p>
       <h1 className="text-xl font-semibold text-beringela">{["Conte sobre sua loja", "Onde encontramos sua loja?", "Mais informações para seu rascunho"][etapa]}</h1>
       <AvisoErro mensagem={erro} />
+      <fieldset disabled={ocupado} className="min-w-0">
       {etapa === 0 && <div className="flex flex-col gap-4">
         <Campo rotulo="Nome da loja" name="nome" value={entrada.nome} onChange={(e) => atualizar({ nome: e.target.value })} required />
         <label className="flex flex-col gap-1 text-sm font-semibold" htmlFor="coleta-cidade">Cidade
@@ -132,6 +134,7 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappCons
         <label className="flex items-start gap-2"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado || !whatsappConsultaDisponivel} checked={whatsappConfirmado && whatsappConsultaDisponivel && entrada.consultarWhatsapp} onChange={(e) => atualizar({ consultarWhatsapp: e.target.checked })} />Autorizo consultar os dados comerciais do meu WhatsApp Business confirmado.</label>
         <label className="flex items-start gap-2"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.avisarWhatsapp} onChange={(e) => atualizar({ avisarWhatsapp: e.target.checked })} />Me avise quando ficar pronto pelo meu WhatsApp confirmado.</label>
       </div>}
+      </fieldset>
       <div className="flex flex-wrap gap-3">
         {etapa > 0 && <button type="button" className={secundario} disabled={ocupado} onClick={() => void avancar(etapa - 1)}>Voltar</button>}
         {etapa === 1 && <button type="button" className={secundario} disabled={ocupado} onClick={() => void avancar(2)}>Agora não</button>}

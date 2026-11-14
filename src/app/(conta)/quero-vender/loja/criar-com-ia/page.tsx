@@ -17,6 +17,12 @@ import { salvarColeta, prepararEnvio, finalizarEnvio, iniciarRascunho, salvarRev
 export const metadata: Metadata = { title: "Criar loja com IA" };
 export const dynamic = "force-dynamic";
 
+async function retirarAutorizacao(id: string) {
+  "use server";
+  const resultado = await revogarWhatsapp(id);
+  redirect(resultado.ok ? "/quero-vender/loja/criar-com-ia" : "/quero-vender/loja/criar-com-ia?aviso=erro");
+}
+
 function consultaWhatsappDisponivel(): boolean {
   const endereco = process.env.LOJA_IA_PERFIL_URL?.trim();
   if (!endereco || (process.env.LOJA_IA_PERFIL_SEGREDO?.trim().length ?? 0) < 32 || (process.env.LOJA_IA_CALLBACK_SEGREDO?.trim().length ?? 0) < 32) return false;
@@ -24,7 +30,7 @@ function consultaWhatsappDisponivel(): boolean {
   catch { return false; }
 }
 
-export default async function CriarLojaIa() {
+export default async function CriarLojaIa({ searchParams }: { searchParams: Promise<{ aviso?: string }> }) {
   const db = await createClient();
   const [conta, consulta, convite, cnpj, whatsapp] = await Promise.all([
     meuPerfilEVitrine(), db.rpc("loja_ia_obter"), db.rpc("loja_ia_piloto_autorizado"), db.rpc("loja_ia_cnpj_disponivel"), db.rpc("whatsapp_confirmado"),
@@ -41,6 +47,22 @@ export default async function CriarLojaIa() {
     if (convite.data !== true) return <main className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-6"><Aviso tipo="erro">A coleta está indisponível para esta conta.</Aviso><Botao href="/quero-vender/loja?manual=1">Preencher manualmente</Botao></main>;
     return <main className="mx-auto w-full max-w-xl px-4 py-6"><FormLojaIa rascunho={rascunho} cidades={cidades} whatsappConfirmado={!whatsapp.error && whatsapp.data === true} whatsappConsultaDisponivel={consultaWhatsappDisponivel()} cnpjDisponivel={!cnpj.error && cnpj.data === true} salvar={salvarColeta} prepararEnvio={prepararEnvio} finalizarEnvio={finalizarEnvio} iniciar={iniciarRascunho} /></main>;
   }
+  if (rascunho.estado === "processando") {
+    const { aviso } = await searchParams;
+    return <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-6">
+      <h1 className="text-titulo font-semibold text-beringela">Estamos preparando seu rascunho</h1>
+      {aviso === "erro" && <Aviso tipo="erro">Não foi possível retirar a autorização. Tente novamente.</Aviso>}
+      <p>Você pode sair da página e acompanhar o andamento em Minhas lojas.</p>
+      <div className="flex flex-wrap gap-2">
+        <Botao href="/quero-vender/loja/criar-com-ia">Atualizar andamento</Botao>
+        <Botao href="/minha-conta/lojas" variante="secundario">Ir para Minhas lojas</Botao>
+      </div>
+      {(rascunho.entrada.consultarWhatsapp || rascunho.entrada.avisarWhatsapp) &&
+        <form action={retirarAutorizacao.bind(null, rascunho.id)}>
+          <Botao type="submit" variante="texto">Retirar autorização do WhatsApp</Botao>
+        </form>}
+    </main>;
+  }
   const ids = new Set(rascunho.entrada.materiais);
   for (const campo of ["logo", "capa"] as const) {
     const dado = rascunho.campos[campo];
@@ -52,5 +74,5 @@ export default async function CriarLojaIa() {
     catch { return null; }
   }));
   const imagens = Object.fromEntries(pares.filter((par): par is readonly [string, string] => par !== null));
-  return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">{(rascunho.entrada.consultarWhatsapp || rascunho.entrada.avisarWhatsapp) && <form action={revogarWhatsapp.bind(null, rascunho.id)} className="flex flex-col gap-2 rounded-card bg-fundo p-3"><p className="text-sm text-texto-suave">Você pode retirar a autorização de consulta e o pedido de aviso pelo WhatsApp.</p><Botao type="submit" variante="secundario">Retirar autorização do WhatsApp</Botao></form>}<RevisaoLojaIa rascunho={rascunho} cidades={cidades} whatsappInicial={conta.perfil.whatsapp ? telefone(conta.perfil.whatsapp) : ""} avisoTeste={avisoTeste} salvar={salvarRevisao} retentar={retentarFonte} confirmar={confirmarLojaIa} imagens={imagens} linkMaps={montarLinkMaps({ nome: rascunho.campos.nome.valor ?? rascunho.entrada.nome, cidade: rascunho.campos.cidade.valor ?? rascunho.entrada.cidade, endereco: rascunho.campos.endereco.valor ?? undefined })} gerarCapa={gerarCapa} /></main>;
+  return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6"><RevisaoLojaIa rascunho={rascunho} cidades={cidades} whatsappInicial={conta.perfil.whatsapp ? telefone(conta.perfil.whatsapp) : ""} avisoTeste={avisoTeste} salvar={salvarRevisao} retentar={retentarFonte} confirmar={confirmarLojaIa} imagens={imagens} linkMaps={montarLinkMaps({ nome: rascunho.campos.nome.valor ?? rascunho.entrada.nome, cidade: rascunho.campos.cidade.valor ?? rascunho.entrada.cidade, endereco: rascunho.campos.endereco.valor ?? undefined })} gerarCapa={gerarCapa} revogarWhatsapp={revogarWhatsapp} /></main>;
 }
