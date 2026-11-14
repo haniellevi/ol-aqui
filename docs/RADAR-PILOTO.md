@@ -34,7 +34,7 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
   - Não vale: "vou sair de casa agora pra loja", "posso remover o anúncio", "parabéns", "oi".
   - Lista completa: `comandoDeSaida` em `src/lib/whatsapp/evolution.ts` e os testes em `tests/whatsapp-evolution.test.cjs`.
 - **Conta encontrada:** desliga o aviso do Radar por WhatsApp, cancela os avisos do Radar que estavam na fila e registra a saída (sem número e sem texto).
-- **Confirmação:** entra na fila UMA resposta por número e por dia, com este texto: "Pronto. Você não vai mais receber pedidos do Radar pelo WhatsApp. Para voltar, ligue o aviso em Minha conta > Notificações no Mercado da Região." Ela sai fora da janela de 8h às 20h, e o Radar nunca a cancela.
+- **Confirmação:** entra na fila UMA resposta por número e por dia, com este texto: "Pronto. Você não vai mais receber pedidos do Radar pelo WhatsApp. Para voltar, responda VOLTAR aqui ou ligue em Minha conta > Notificações." Ela sai fora da janela de 8h às 20h, e o Radar nunca a cancela.
 - **Sem conta:** nada é registrado e nada é respondido.
 - **Conversa `@lid`:** a Evolution pode mandar o identificador oculto no lugar do número. Então o número real é lido de `remoteJidAlt`, `senderPn` ou `senderPN` (nessa ordem; a grafia muda entre versões). Se nenhum vier, a mensagem é ignorada e o log registra só "saida sem numero legivel" (sem número e sem texto). Grupo é ignorado.
 - **Conferência logo antes do pedido de envio:** depois de checar que a instância está aberta, o banco confere de novo se o aviso do Radar ainda pode sair: chave geral ligada, aviso da pessoa ligado, pedido aberto, prazo de propostas e vaga, e quem recebe ainda pode (loja ativa na região, WhatsApp verificado e igual ao da fila, conta não revogada, plano que avisa na hora, área e nicho do pedido). Se não pode, a mensagem vira "cancelada" com o motivo e não sai. Se a conferência falhar (erro do banco), nada é enviado e a mensagem volta para a fila como falha. Resposta de SAIR e avisos de verificação passam direto.
@@ -47,9 +47,29 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
 4. Ver no payload real da Evolution qual campo traz o número quando `remoteJid` termina em `@lid` (`remoteJidAlt`, `senderPn` ou `senderPN`). Se vier outro nome, ajustar `numeroDaConversa` em `src/lib/whatsapp/evolution.ts`. Se aparecer "saida sem numero legivel" no log, o campo falta.
 5. Confirmar que a Evolution envia o cabeçalho `Authorization: Bearer <segredo>` no webhook (passo 5 acima).
 
+## VOLTAR pelo WhatsApp (29/11/2026)
+
+- **O que a pessoa manda:** "voltar", "volta", "quero voltar", "ativar", "ativa", "reativar", "quero receber", "quero receber de novo", "voltar a receber", "ligar", "religar". Vale só a frase inteira (sem acento e sem caixa; "por favor" e "obrigado" são ignorados). "voltar amanhã na loja" é outra mensagem.
+- **SIM:** "sim", "s", "sim quero", "pode", "quero" só contam como volta quando há uma pergunta pendente: feita nos últimos 7 dias e sem resposta depois. Fora disso, SIM é outra mensagem (pode gerar a pergunta, se ainda não foi feita no período).
+- **Pergunta automática:** quem saiu pelo WhatsApp e ainda não voltou, ao mandar qualquer outra mensagem, recebe UMA pergunta a cada 7 dias: "Oi! Você pediu para não receber pedidos do Radar pelo WhatsApp. Quer voltar a receber? Responda SIM." Não pergunta a quem nunca saiu nem a número sem conta confirmada.
+- **Volta:** liga o aviso do Radar no WhatsApp e o sino do pedido novo (canal `app`), porque o WhatsApp só sai com o sino ligado. Confirma: "Pronto! Você volta a receber pedidos do Radar pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR." Fica registrada uma volta por saída.
+- **Quem nunca teve o aviso:** não é ligado pelo WhatsApp. Recebe, uma vez por dia: "Para receber pedidos do Radar no WhatsApp, ligue em Minha conta > Notificações no Mercado da Região."
+- **Chave geral desligada (`radar.whatsapp_ativo`):** responde "No momento os avisos do Radar pelo WhatsApp estão pausados." e não liga nada.
+- **Já recebe:** responde "Você já recebe os pedidos do Radar pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR."
+- **Conta:** só conta com número confirmado (com ou sem o 9) e não revogada. Sem conta ou número não confirmado: nada é respondido e nada é registrado.
+- **Limites:** no máximo 3 respostas automáticas por número por dia (contando saída, volta, pergunta e orientação). Cada tipo sai uma vez por dia. Essas respostas saem fora da janela de 8h às 20h e o Radar nunca as cancela. Mensagem nossa, de grupo ou de status não é respondida.
+- **Onde fica:** o webhook classifica o texto em `intencaoDaMensagem` (`src/lib/whatsapp/evolution.ts`) e chama `whatsapp_mensagem_recebida` no banco, que decide tudo numa transação, com trava por conta. A resposta automática passa por `whatsapp_resposta_automatica`. O texto da mensagem não é guardado. `whatsapp_respostas` guarda só o tipo (SAIR, VOLTAR, PERGUNTA_VOLTAR), sem número e sem texto.
+- **Risco que sobra:** um bot que repete a mesma mensagem não é detectado (o texto não é guardado). Os limites acima (3 por dia, uma pergunta por semana) seguram o estrago. Dentro do mesmo dia, uma segunda volta não manda confirmação de novo (regra de uma resposta por tipo e dia).
+
+**O que conferir no teste real (depois do SAIR):**
+1. Conta que saiu: mandar "oi" → chega a pergunta UMA vez. Mandar "oi" de novo → não chega nada.
+2. Responder "SIM" → chega a confirmação de volta, e Minha conta > Notificações mostra o aviso ligado.
+3. Número sem conta mandando "voltar" ou "oi" → não chega nada.
+4. Conta que nunca teve o aviso mandando "voltar" → chega só a orientação de ligar pelo site.
+
 ## Ordem para ligar o piloto (nada disso foi feito)
 
-1. **Aplicar as migrações ANTES de fazer merge ou deploy, nesta ordem** (no editor SQL do Supabase, como as anteriores; nenhuma está aplicada em produção): `20261125010000_radar_piloto.sql`, `20261125020000_radar_fila_recheca_propostas.sql`, `20261128010000_whatsapp_sair_completo.sql`, `20261128020000_microrregiao_ddd.sql`, `20261128030000_radar_categoria_geral.sql`, `20261128040000_whatsapp_sair_ajustes.sql`, `20261128050000_radar_ddd_cidade_e_geral.sql`. Sem elas o Radar e a cortesia não funcionam como descritos (o meu plano usa funções novas; sem elas a página segue, mas sem a cortesia e com o nome do plano vindo da leitura normal).
+1. **Aplicar as migrações ANTES de fazer merge ou deploy, nesta ordem** (no editor SQL do Supabase, como as anteriores; nenhuma está aplicada em produção): `20261125010000_radar_piloto.sql`, `20261125020000_radar_fila_recheca_propostas.sql`, `20261128010000_whatsapp_sair_completo.sql`, `20261128020000_microrregiao_ddd.sql`, `20261128030000_radar_categoria_geral.sql`, `20261128040000_whatsapp_sair_ajustes.sql`, `20261128050000_radar_ddd_cidade_e_geral.sql`, `20261129010000_whatsapp_voltar.sql`. Sem elas o Radar e a cortesia não funcionam como descritos (o meu plano usa funções novas; sem elas a página segue, mas sem a cortesia e com o nome do plano vindo da leitura normal).
 2. **Antes de desativar o Slim no painel, marcar o Full como recomendado.** Hoje o recomendado é o Slim. Se o Slim sair de venda sem outro recomendado à venda, a renovação de quem está nele volta a oferecer todos os planos à venda.
 3. Fazer merge e deploy do código.
 4. Na Vercel (Production), criar `EVOLUTION_WEBHOOK_SEGREDO` com 32 caracteres ou mais, gerado fora do código, e fazer novo deploy. Sem ela o webhook responde 503 e não aceita nada.

@@ -141,3 +141,45 @@ export function saidaSemNumeroLegivel(corpo: unknown): boolean {
   if (!msg || typeof msg.key.remoteJid !== "string" || msg.key.remoteJid.endsWith("@g.us")) return false;
   return comandoDeSaida(msg.texto) !== null && numeroDaConversa(msg.key) === null;
 }
+
+// VOLTAR, SIM e outras mensagens: o banco (whatsapp_mensagem_recebida) decide a resposta. Aqui só se lê o que a pessoa pediu.
+export type IntencaoMensagem = "sair" | "voltar" | "sim" | "outra";
+
+// Frase inteira, depois de tirar acento, caixa, pontuação e as palavras de cortesia. "voltar amanhã na loja" não vale.
+const FRASES_VOLTAR = new Set([
+  "voltar", "volta", "quero voltar", "ativar", "ativa", "reativar", "quero receber", "quero receber de novo", "voltar a receber", "ligar", "religar",
+]);
+// "sim" só conta como volta quando há uma pergunta de volta pendente (decide o banco). Fora disso é outra mensagem.
+const FRASES_SIM = new Set(["sim", "s", "sim quero", "pode", "quero"]);
+
+function fraseDaMensagem(texto: string): string {
+  return normalizarTextoSaida(texto).split(" ").filter((p) => p && !ENFEITES.has(p)).join(" ");
+}
+
+/** Intenção de uma mensagem recebida: "sair" (mesmas regras de comandoDeSaida), "voltar", "sim" ou "outra". Sem texto: "outra". */
+export function intencaoDaMensagem(texto: unknown): IntencaoMensagem {
+  if (comandoDeSaida(texto)) return "sair";
+  if (typeof texto !== "string" || texto.length > MAX_CARACTERES_SAIDA) return "outra";
+  const frase = fraseDaMensagem(texto);
+  if (FRASES_VOLTAR.has(frase)) return "voltar";
+  if (FRASES_SIM.has(frase)) return "sim";
+  return "outra";
+}
+
+export type PedidoDeMensagem =
+  | { numero: string; intencao: "sair"; comando: ComandoSaida }
+  | { numero: string; intencao: "voltar" | "sim" | "outra" };
+
+/** Mensagem recebida de pessoa com número legível, com a intenção dela. Mensagem nossa, de grupo ou sem número: null. */
+export function pedidoDeMensagem(corpo: unknown): PedidoDeMensagem | null {
+  const msg = mensagemRecebida(corpo);
+  if (!msg) return null;
+  const numero = numeroDaConversa(msg.key);
+  if (!numero) return null;
+  const intencao = intencaoDaMensagem(msg.texto);
+  if (intencao === "sair") {
+    const comando = comandoDeSaida(msg.texto);
+    return comando ? { numero, intencao, comando } : null;
+  }
+  return { numero, intencao };
+}

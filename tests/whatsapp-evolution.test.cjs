@@ -103,7 +103,7 @@ test('rota: sem conexão com o banco, responde 503 e não registra nada no log',
   assert.equal(erros.length, 0);
 });
 
-test('rota: SAIR com segredo certo chega ao banco com número e comando, e nada é registrado no log', async () => {
+test('rota: SAIR com segredo certo chega ao banco com número e comando; outra mensagem vai ao banco como outra; nada é registrado no log', async () => {
   const chamadas = [];
   const erros = [];
   const original = console.error;
@@ -114,14 +114,17 @@ test('rota: SAIR com segredo certo chega ao banco com número e comando, e nada 
     await comSegredo(SEGREDO, async () => {
       const r = await POST(pedido(mensagem({ texto: 'Sair' })));
       assert.equal(r.status, 200);
-      const ignorada = await POST(pedido(mensagem({ texto: 'quero um sofá' })));
-      assert.equal(ignorada.status, 200);
-      assert.equal((await ignorada.json()).ignorado, 'sem pedido');
+      const outra = await POST(pedido(mensagem({ texto: 'quero um sofá' })));
+      assert.equal(outra.status, 200);
+      assert.equal((await outra.json()).ignorado, undefined);
     });
   } finally {
     console.error = original;
   }
-  assert.deepEqual(chamadas, [['whatsapp_sair', { p_numero: NUMERO, p_comando: 'SAIR' }]]);
+  assert.deepEqual(chamadas, [
+    ['whatsapp_sair', { p_numero: NUMERO, p_comando: 'SAIR' }],
+    ['whatsapp_mensagem_recebida', { p_numero: NUMERO, p_intencao: 'outra' }],
+  ]);
   assert.equal(erros.length, 0);
 });
 
