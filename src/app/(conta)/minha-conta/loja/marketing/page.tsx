@@ -42,7 +42,7 @@ export default async function PaginaMarketing() {
     ? await Promise.all([minhaSugestaoNicho(loja.id), nichosDisponiveis()]) : [null, []];
   return (
     <PaginaConta larga>
-      <TopoConta titulo="Meu Marketing" texto={nome} voltar={LINK_MINHA_LOJA} textoVoltar="Minha loja" />
+      <TopoConta titulo="Meu Marketing" texto={<span className="[overflow-wrap:anywhere]">{nome}</span>} voltar={LINK_MINHA_LOJA} textoVoltar="Minha loja" />
       {dados === null ? <Aviso tipo="atencao">Não conseguimos carregar as recomendações agora. <Link href={LINK_LOJA_MARKETING} className="underline">Tentar novamente</Link></Aviso> : <>
         <section aria-labelledby="titulo-criativos" className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
@@ -64,10 +64,10 @@ export default async function PaginaMarketing() {
                   <div><h3 className="font-bold [overflow-wrap:anywhere]">{titulo}</h3>
                     <p className="text-lg font-bold text-beringela">{antes !== null && <del className="mr-2 text-sm font-normal text-texto-suave">{preco(antes)}</del>}{preco(anuncio.preco_centavos)}</p></div>
                   <p className="text-sm">{anuncio.motivos.join(". ")}{anuncio.motivos.length ? "." : ""}</p>
-                  <p className="text-legenda text-texto-suave">{anuncio.visualizacoes} visualizações · {anuncio.cliques} cliques no WhatsApp · {anuncio.favoritos} favoritos</p>
+                  <p className="text-legenda text-texto-suave">{anuncio.visualizacoes} {anuncio.visualizacoes === 1 ? "visualização" : "visualizações"} · {anuncio.cliques} {anuncio.cliques === 1 ? "clique" : "cliques"} no WhatsApp · {anuncio.favoritos} {anuncio.favoritos === 1 ? "favorito" : "favoritos"}</p>
                   <div className="mt-auto flex flex-col gap-2">
-                    <a href={`${arte}?formato=feed`} download className="inline-flex min-h-10 items-center justify-center gap-2 rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro"><Download className="size-4" aria-hidden />Baixar para feed</a>
-                    <a href={`${arte}?formato=stories`} download className="inline-flex min-h-10 items-center justify-center gap-2 rounded-campo border border-beringela px-3 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro"><Download className="size-4" aria-hidden />Baixar para stories</a>
+                    <a href={`${arte}?formato=feed`} download className="inline-flex min-h-11 items-center justify-center gap-2 rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro"><Download className="size-4" aria-hidden />Baixar para feed</a>
+                    <a href={`${arte}?formato=stories`} download className="inline-flex min-h-11 items-center justify-center gap-2 rounded-campo border border-beringela px-3 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro"><Download className="size-4" aria-hidden />Baixar para stories</a>
                     <CopiarLegenda texto={legenda} />
                   </div>
                 </div>

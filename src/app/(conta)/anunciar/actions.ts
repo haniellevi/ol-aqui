@@ -122,11 +122,12 @@ export async function novoRascunho(opcoes?: {
   if (sugestao) {
     if (sugestao.vitrineId !== conta.vitrine.id) return { erro: { mensagem: "A loja selecionada mudou. Volte ao Meu Marketing da loja para continuar." } };
     const titulo = typeof sugestao.titulo === "string" ? sugestao.titulo.trim().replace(/\s+/g, " ").slice(0, 90) : "";
-    if (titulo.length < 2 || (sugestao.categoriaId &&
-      (!ehUuid(sugestao.categoriaId) || !(await categoriaPorId(sugestao.categoriaId))))) {
+    const categoria = sugestao.categoriaId && ehUuid(sugestao.categoriaId) ? await categoriaPorId(sugestao.categoriaId) : null;
+    if (titulo.length < 2 || (sugestao.categoriaId && !categoria)) {
       return { erro: { mensagem: "A sugestão mudou. Atualize o Meu Marketing e tente novamente." } };
     }
-    preenchimento = { titulo, ...(sugestao.categoriaId ? { categoria_id: sugestao.categoriaId } : {}) };
+    // Busca pode estar filtrada por uma categoria principal. Só folhas recebem anúncios.
+    preenchimento = { titulo, ...(categoria && categoria.filhas.length === 0 ? { categoria_id: sugestao.categoriaId } : {}) };
   }
   const db = await createClient();
   const { data, error } = await db

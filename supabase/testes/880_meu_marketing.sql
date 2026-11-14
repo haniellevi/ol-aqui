@@ -254,4 +254,23 @@ do $$ begin
   begin perform meu_marketing_loja('88100000-0000-4000-a000-000000000001'); assert false, 'Dono bloqueado leu';
   exception when insufficient_privilege then null; end;
 end $$;
+reset role;
+set local request.jwt.claim.sub='';
+set local request.jwt.claim.role='';
+delete from contas_bloqueadas where usuario_id='user_dono880';
+-- Filtro em categoria principal e busca antiga pelo nome da mãe devem chegar
+-- ao cadastro como oportunidades. A aplicação mantém o título e pede a folha.
+insert into buscas_termos(microrregiao_id,dia,termo_normalizado,categoria_id,vezes) values
+ (:'reg',dia_metrica(now()),'categoria principal procurada 880','88000000-0000-4000-a000-000000000001',2000),
+ (:'reg',dia_metrica(now()),'marketing nicho 880',null,2000);
+set local role authenticated;
+set local request.jwt.claim.role='authenticated';
+set local request.jwt.claim.sub='user_dono880';
+do $$ declare m jsonb; begin
+  m := meu_marketing_loja('88100000-0000-4000-a000-000000000001');
+  assert exists(select 1 from jsonb_array_elements(m->'oportunidades') o
+    where o->>'termo'='categoria principal procurada 880' and o->>'categoria_id'='88000000-0000-4000-a000-000000000001'), 'Filtro de categoria mãe preservado';
+  assert exists(select 1 from jsonb_array_elements(m->'oportunidades') o
+    where o->>'termo'='marketing nicho 880' and o->>'categoria_id'='88000000-0000-4000-a000-000000000001'), 'Busca antiga pelo nome da mãe preservada';
+end $$;
 rollback;
