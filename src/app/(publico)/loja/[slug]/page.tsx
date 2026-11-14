@@ -356,7 +356,6 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
 
         <aside id="informacoes-loja" className="flex min-w-0 scroll-mt-32 flex-col gap-4">
           <InformacoesLoja v={informacoes} agora={agora} mapa={nova} />
-          <p className="rounded-card border border-borda p-4 text-sm text-texto-suave">Negocie com cuidado: confira o produto e o vendedor antes de pagar. O contato acontece diretamente com a loja.</p>
         </aside>
       </div>
       {temBarra && <BarraLoja whatsappHref={whatsapp} mapaHref={mapaHref} />}
