@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ChevronDown, FileText, History } from "lucide-react";
 import { documentoAtivo, documentoVersao, versoesDocumento } from "@/lib/dados/paginas";
 import { linkDocumentoLegal, LINK_AJUDA } from "@/lib/rotas";
@@ -36,7 +35,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
         <h1 className="text-titulo font-semibold text-beringela">{NOME_DOCUMENTO[tipo]}</h1>
         <Vazio titulo={inexistente ? `Versão ${versao} não encontrada` : "Não conseguimos abrir o documento"} icone={<FileText />}>
           {inexistente || atual ? (
-            <Botao href={href} tamanho="toque">Ver versão atual</Botao>
+            <a href={href} className={classesBotao("primario", false, "", "toque")}>Ver versão atual</a>
           ) : (
             <Botao href={linkDocumentoLegal(tipo, versao)} tamanho="toque">Tentar novamente</Botao>
           )}
@@ -64,7 +63,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
       {!doc.ativo && (
         <Alert variant="warning" role="status" className="flex flex-col gap-1">
           <p className="font-semibold">Este documento foi substituído.</p>
-          {atual && <Botao href={href} tamanho="toque" variante="texto" className="self-start">Ver versão atual</Botao>}
+          {atual && <a href={href} className={classesBotao("texto", false, "self-start", "toque")}>Ver versão atual</a>}
         </Alert>
       )}
 
@@ -104,7 +103,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
           <ul className="divide-y divide-borda rounded-card border border-borda bg-cartao">
             {versoes.map((v) => (
               <li key={v.id}>
-                <Link
+                <a
                   href={linkDocumentoLegal(tipo, v.ativo ? null : v.versao)}
                   aria-current={v.id === doc.id ? "page" : undefined}
                   className="flex min-h-11 flex-col justify-center gap-0.5 rounded-campo px-3 py-2 hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
@@ -114,7 +113,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
                     <time dateTime={v.publicado_em}>{data.format(new Date(v.publicado_em))}</time>
                     {v.resumo_mudancas ? ` · ${v.resumo_mudancas}` : ""}
                   </span>
-                </Link>
+                </a>
               </li>
             ))}
           </ul>
