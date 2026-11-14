@@ -124,7 +124,7 @@ function agrupar(anuncios: AnuncioVitrine[]) {
 export default async function PaginaLoja({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const v = await vitrinePublica(slug).catch(() => undefined);
-  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8"><h1 className="text-titulo font-semibold text-balance">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} larguraTotal>Tentar novamente</Botao></main>;
+  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8"><h1 className="text-titulo font-semibold text-balance">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} tamanho="toque" larguraTotal>Tentar novamente</Botao></main>;
   if (!v) notFound();
   const ordem = lerOrdem(sp.ordem);
   const pagina = lerPagina(sp.pagina);
@@ -171,6 +171,9 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const mapaHref = !nova || v.status !== "ativa" ? null : pino ? "#mapa-loja" : linkComoChegar({ lat: v.lat, lng: v.lng, endereco: v.endereco, cidade: v.cidade });
   const capaComLogo = v.banner_tipo === "foto" && !!v.banner_url && v.banner_aki_posicao != null && !!v.logo_url;
   const temBarra = nova && (!!whatsapp || !!mapaHref);
+  const informacoes = v.status === "ativa" ? v : {
+    ...v, instagram: null, endereco: null, lat: null, lng: null, site_url: null, telefone_publico: null,
+  };
   // Abas fixas: um atalho para cada bloco da página, na ordem em que aparecem.
   const abas = !nova || !produtos || anuncios.length === 0 ? [] : [
     ...(fixados.length > 0 ? [{ href: "#destaques-loja", nome: "Destaques" }] : []),
@@ -179,7 +182,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   ];
 
   return (
-    <main className={`mx-auto flex w-full max-w-6xl flex-col gap-5 md:px-4 md:py-4 ${temBarra ? "pb-24 md:pb-8" : "pb-8"}`}>
+    <main className={`mx-auto flex w-full max-w-6xl flex-col gap-4 md:px-4 md:pt-4 ${temBarra ? "pb-18 md:pb-8" : "pb-8"}`}>
       {v.status !== "ativa" && (
         <Alert variant="warning" role="status" className="mx-4 mt-3 md:mx-0 md:mt-0">
           Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : v.status === "montagem" ? "em montagem" : "plano vencido"}). Visível apenas para o responsável e a equipe Mercado da Região.
@@ -188,95 +191,95 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
 
       {/* Topo */}
       <header className="overflow-hidden bg-cartao shadow-1 md:rounded-card">
-        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={formatarNome(v.nome)} logo={v.logo_url} posicaoAki={v.banner_aki_posicao ?? null} mostrarLogoModelo={capaComLogo} prioridade className={v.banner_aki_posicao == null ? "max-h-72" : undefined} />
-        <div className={`flex flex-col gap-3 px-4 pb-4 ${capaComLogo ? "pt-4" : ""}`}>
-          {!capaComLogo && (
-            <div className="relative z-10 -mt-9 flex items-end gap-3">
-              <span className="rounded-full border-3 border-cartao bg-cartao">
-                <AvatarVitrine nome={v.nome} logo={v.logo_url} tamanho="xl" />
-              </span>
-            </div>
-          )}
-          <div className="flex flex-col gap-1">
-            <span className="text-legenda text-texto-suave">{v.categoria_loja ?? "Loja"}</span>
-            <h1 className="text-titulo font-semibold text-balance break-words">{formatarNome(v.nome)}</h1>
-            {v.selo && (
-              <span>
-                <SeloLoja />
+        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={formatarNome(v.nome)} logo={v.logo_url} posicaoAki={v.banner_aki_posicao ?? null} modeloCompacto mostrarLogoModelo={capaComLogo} prioridade className={v.banner_aki_posicao == null ? "max-h-72" : undefined} />
+        <div className={`flex min-w-0 flex-col gap-2 px-4 pb-3 ${capaComLogo ? "pt-3" : ""}`}>
+          <div className={`grid min-w-0 items-start gap-2 ${capaComLogo ? "" : "grid-cols-[auto_minmax(0,1fr)]"}`}>
+            {!capaComLogo && (
+              <span className="relative z-10 -mt-5 rounded-full border-3 border-cartao bg-cartao">
+                <AvatarVitrine nome={v.nome} logo={v.logo_url} tamanho="lg" />
               </span>
             )}
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base text-texto-suave">
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="size-4" aria-hidden />
-                {[v.bairro, v.cidade].filter(Boolean).join(", ")}
-              </span>
-              {desdeTexto && <span>{desdeTexto}</span>}
-            </p>
-            {situacao && (
-              <p className={`inline-flex items-center gap-1 text-base font-semibold ${situacao.aberto ? "text-verde-escuro" : "text-perigo"}`} suppressHydrationWarning>
-                <Clock className="size-4" aria-hidden />
-                {situacao.texto}
+            <div className="flex min-w-0 flex-col gap-1 pt-1 [overflow-wrap:anywhere]">
+              <h1 className="text-titulo leading-tight font-semibold text-beringela">{formatarNome(v.nome)}</h1>
+              <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-texto-suave">
+                <span className="inline-flex min-w-0 items-start gap-1">
+                  <MapPin className="size-4 shrink-0" aria-hidden />
+                  <span className="min-w-0">{[v.bairro, v.cidade].filter(Boolean).join(", ")}</span>
+                </span>
+                {v.categoria_loja && <span>{v.categoria_loja}</span>}
               </p>
-            )}
+              {(v.selo || situacao || desdeTexto) && (
+                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-texto-suave">
+                  {v.selo && <SeloLoja />}
+                  {situacao && (
+                    <p className={`inline-flex min-w-0 items-center gap-1 font-semibold ${situacao.aberto ? "text-verde-escuro" : "text-perigo"}`} suppressHydrationWarning>
+                      <Clock className="size-4 shrink-0" aria-hidden />
+                      {situacao.texto}
+                    </p>
+                  )}
+                  {desdeTexto && <span>{desdeTexto}</span>}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex flex-wrap items-start gap-2">
+          <div className="flex min-w-0 flex-wrap items-start gap-2">
             {whatsapp && (
-              <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "flex-1 whitespace-nowrap sm:flex-none")}>
-                <MessageCircle className="size-5" aria-hidden />
+              <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "min-w-0 flex-1 px-3 sm:flex-none", "toque")}>
+                <MessageCircle className="size-4 shrink-0" aria-hidden />
                 Chamar no WhatsApp
               </a>
             )}
-            {!whatsapp && <p className="flex min-h-10 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
-            {v.status === "ativa" && <CopiarLinkLoja url={urlAbsoluta(linkLoja(v.slug))} />}
+            {!whatsapp && <p className="flex min-h-11 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
+            {v.status === "ativa" && <CopiarLinkLoja url={urlAbsoluta(linkLoja(v.slug))} tamanho="toque" />}
             {v.e_dono && (
-              <Botao href={LINK_MINHA_LOJA} variante="secundario" icone={<Pencil />}>
+              <Botao href={LINK_MINHA_LOJA} variante="secundario" tamanho="toque" icone={<Pencil />}>
                 Editar minha vitrine
               </Botao>
             )}
           </div>
           {!nova && (
             <nav aria-label="Nesta loja" className="flex flex-wrap gap-2">
-              <Chip href="#produtos-loja">Ver anúncios ({inteiro(v.total_anuncios)})</Chip>
-              <Chip href="#informacoes-loja">Informações da loja</Chip>
+              <Chip href="#produtos-loja" tamanho="toque">Ver anúncios ({inteiro(v.total_anuncios)})</Chip>
+              <Chip href="#informacoes-loja" tamanho="toque">Informações da loja</Chip>
             </nav>
           )}
         </div>
       </header>
 
       {nova && (
-        <nav aria-label="Categorias desta loja" className="olaki-material sticky top-13 z-20 -mt-5 md:top-14 md:mt-0 md:rounded-card">
+        <nav aria-label="Categorias desta loja" className="olaki-material sticky top-13 z-20 -mt-4 md:top-14 md:mt-0 md:rounded-card">
           <ul className="flex gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none]">
             {abas.map((a) => (
               <li key={a.href} className="flex">
-                <Chip href={a.href}>{a.nome}</Chip>
+                <Chip href={a.href} tamanho="toque" className="max-w-[75vw]">{a.nome}</Chip>
               </li>
             ))}
             <li className="flex">
-              <Chip href="#informacoes-loja">Informações</Chip>
+              <Chip href="#informacoes-loja" tamanho="toque">Informações</Chip>
             </li>
           </ul>
         </nav>
       )}
 
-      <div className="flex flex-col gap-6 px-4 md:px-0 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start">
-        <div id="produtos-loja" className="flex min-w-0 scroll-mt-24 flex-col gap-6">
-          <h2 className="text-xl font-semibold tabular-nums">{inteiro(v.total_anuncios)} {v.total_anuncios === 1 ? "anúncio" : "anúncios"} {v.status === "ativa" ? "no ar" : "nesta vitrine"}</h2>
-          {/* Ordem */}
-          {v.total_anuncios > 1 && (
-            <nav aria-label="Ordem dos produtos" className="flex flex-wrap items-center gap-2">
-              <span className="text-base text-texto-suave">Mostrar:</span>
-              <Chip href={linkPagina(base, "recentes", 1, previa)} ativo={ordem === "recentes"} scroll={false} replace>
-                Vitrine da loja
-              </Chip>
-              <Chip href={linkPagina(base, "menor_preco", 1, previa)} ativo={ordem === "menor_preco"} scroll={false} replace>
-                Menor preço
-              </Chip>
-            </nav>
-          )}
+      <div className="flex flex-col gap-4 px-4 md:px-0 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start">
+        <div id="produtos-loja" className="flex min-w-0 scroll-mt-28 flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <h2 className="text-lg font-semibold tabular-nums">{inteiro(v.total_anuncios)} {v.total_anuncios === 1 ? "anúncio" : "anúncios"} {v.status === "ativa" ? "no ar" : "nesta vitrine"}</h2>
+            {v.total_anuncios > 1 && (
+              <nav aria-label="Ordem dos produtos" className="flex flex-wrap items-center gap-2">
+                <Chip href={linkPagina(base, "recentes", 1, previa)} tamanho="toque" ativo={ordem === "recentes"} scroll={false} replace>
+                  Vitrine da loja
+                </Chip>
+                <Chip href={linkPagina(base, "menor_preco", 1, previa)} tamanho="toque" ativo={ordem === "menor_preco"} scroll={false} replace>
+                  Menor preço
+                </Chip>
+              </nav>
+            )}
+          </div>
 
-          {!produtos ? <Vazio titulo="Não conseguimos carregar os anúncios" texto="As informações da loja continuam disponíveis. Tente carregar os produtos novamente."><Botao href={linkPagina(base, ordem, pagina, previa)} larguraTotal>Tentar novamente</Botao></Vazio> : anuncios.length === 0 && pagina > 1 ? (
+          {!produtos ? <Vazio titulo="Não conseguimos carregar os anúncios" texto="As informações da loja continuam disponíveis. Tente carregar os produtos novamente."><Botao href={linkPagina(base, ordem, pagina, previa)} tamanho="toque" larguraTotal>Tentar novamente</Botao></Vazio> : anuncios.length === 0 && pagina > 1 ? (
             <Vazio titulo="Não tem mais produtos aqui." texto="Volte para o começo da loja.">
-              <Botao href={linkPagina(base, ordem, 1, previa)} variante="primario" larguraTotal>
+              <Botao href={linkPagina(base, ordem, 1, previa)} variante="primario" tamanho="toque" larguraTotal>
                 Ver o começo da loja
               </Botao>
             </Vazio>
@@ -285,19 +288,19 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
               // O dono vê o caminho para pôr o primeiro produto (o mesmo do "Anunciar" no cabeçalho do site).
               // Loja suspensa não ganha o botão: /anunciar só diria que a conta está suspensa.
               <Vazio titulo="Sua loja ainda não tem anúncio no ar." texto="Cada anúncio que você criar aparece aqui e na busca da região.">
-                <Botao href="/anunciar" larguraTotal icone={<Plus />}>
+                <Botao href="/anunciar" tamanho="toque" larguraTotal icone={<Plus />}>
                   Adicionar produto
                 </Botao>
               </Vazio>
             ) : (
             <Vazio titulo="Esta loja ainda não tem anúncio no ar." texto="Volte daqui a pouco ou veja outros anúncios da região.">
               {whatsapp && (
-                <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" className={classesBotao("whatsapp", true)}>
+                <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" className={classesBotao("whatsapp", true, "", "toque")}>
                   <MessageCircle className="size-5" aria-hidden />
                   Perguntar no WhatsApp
                 </a>
               )}
-              <Botao href="/busca" variante={whatsapp ? "secundario" : "primario"} larguraTotal>
+              <Botao href="/busca" variante={whatsapp ? "secundario" : "primario"} tamanho="toque" larguraTotal>
                 Ver anúncios da região
               </Botao>
             </Vazio>
@@ -306,7 +309,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
             <>
               {fixados.length > 0 && (
                 <section aria-labelledby="destaques-loja" className="flex flex-col gap-3">
-                  <h2 id="destaques-loja" className="scroll-mt-32 text-lg font-semibold">
+                  <h2 id="destaques-loja" className="scroll-mt-32 text-lg font-semibold [overflow-wrap:anywhere]">
                     Destaques da loja
                   </h2>
                   <GradeAnuncios medirEm="loja" className={grade} anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} acao={acao} />
@@ -314,7 +317,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
               )}
               {secoes.map((s) => (
                 <section key={s.id} aria-labelledby={`secao-${s.id}`} className="flex flex-col gap-3">
-                  <h2 id={`secao-${s.id}`} className="scroll-mt-32 text-lg font-semibold">
+                  <h2 id={`secao-${s.id}`} className="scroll-mt-32 text-lg font-semibold [overflow-wrap:anywhere]">
                     {s.nome}
                   </h2>
                   <GradeAnuncios medirEm="loja" className={grade} anuncios={s.itens.map((a) => paraCard(a, v))} acao={acao} />
@@ -322,7 +325,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
               ))}
               {ordem === "menor_preco" ? <section aria-labelledby="ordem-preco" className="flex flex-col gap-3"><h2 id="ordem-preco" className="text-lg font-semibold">Do menor para o maior preço</h2><GradeAnuncios medirEm="loja" className={grade} anuncios={anuncios.map((a) => paraCard(a, v))} acao={acao} /></section> : grupos.map((g, i) => (
                 <section key={g.nome} aria-labelledby={`grupo-${i}`} className="flex flex-col gap-3">
-                  <h2 id={`grupo-${i}`} className="scroll-mt-32 text-lg font-semibold">
+                  <h2 id={`grupo-${i}`} className="scroll-mt-32 text-lg font-semibold [overflow-wrap:anywhere]">
                     {g.nome} <span className="text-base font-normal text-texto-suave">({inteiro(g.itens.length)})</span>
                   </h2>
                   <GradeAnuncios medirEm="loja" className={grade} anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} acao={acao} />
@@ -335,12 +338,12 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
                   </p>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     {temMais && (
-                      <Botao href={linkPagina(base, ordem, pagina + 1, previa)} variante="secundario" larguraTotal className="sm:w-auto">
+                      <Botao href={linkPagina(base, ordem, pagina + 1, previa)} variante="secundario" tamanho="toque" larguraTotal className="sm:w-auto">
                         Ver mais produtos
                       </Botao>
                     )}
                     {pagina > 1 && (
-                      <Botao href={linkPagina(base, ordem, pagina - 1, previa)} variante="secundario" larguraTotal className="sm:w-auto">
+                      <Botao href={linkPagina(base, ordem, pagina - 1, previa)} variante="secundario" tamanho="toque" larguraTotal className="sm:w-auto">
                         Página anterior
                       </Botao>
                     )}
@@ -352,7 +355,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
         </div>
 
         <aside id="informacoes-loja" className="flex min-w-0 scroll-mt-32 flex-col gap-4">
-          <InformacoesLoja v={v.status === "ativa" ? v : { ...v, instagram: null, endereco: null, lat: null, lng: null }} agora={agora} mapa={nova} />
+          <InformacoesLoja v={informacoes} agora={agora} mapa={nova} />
           <p className="rounded-card border border-borda p-4 text-sm text-texto-suave">Negocie com cuidado: confira o produto e o vendedor antes de pagar. O contato acontece diretamente com a loja.</p>
         </aside>
       </div>

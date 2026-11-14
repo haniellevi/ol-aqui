@@ -32,7 +32,7 @@ test('loja: contato tem destino e texto corretos, copiar link e atalhos acessív
 });
 test('loja: contato inválido e vitrine inativa não têm WhatsApp; prévia não oferece divulgação',async()=>{
  for(const whatsapp of [null,'','123','javascript:alert(1)']) {const h=await html({v:{whatsapp}});assert.doesNotMatch(h,/https:\/\/wa.me/);assert.match(h,/Contato por WhatsApp indisponível/);}
- const h=await html({v:{status:'suspensa',e_dono:true}});assert.match(h,/Editar minha vitrine/);assert.match(h,/Prévia da vitrine fora do ar/);assert.doesNotMatch(h,/https:\/\/wa.me|Copiar link da loja|https:\/\/instagram|google.com\/maps/);
+ const h=await html({v:{status:'suspensa',e_dono:true,site_url:'https://loja-inativa.example',telefone_publico:'5589999990002'}});assert.match(h,/Editar minha vitrine/);assert.match(h,/Prévia da vitrine fora do ar/);assert.doesNotMatch(h,/https:\/\/wa.me|Copiar link da loja|https:\/\/instagram|google.com\/maps|loja-inativa.example|href="tel:/);
 });
 test('loja: erro dos produtos mantém informações e contato, sem simular lista vazia',async()=>{
  for(const op of [{erroProdutos:true},{erroConfig:true}]) {const h=await html(op);assert.match(h,/Não conseguimos carregar os anúncios/);assert.match(h,/Tentar novamente/);assert.match(h,/Chamar no WhatsApp/);assert.doesNotMatch(h,/ainda não tem anúncio/);}

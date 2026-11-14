@@ -245,6 +245,13 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
 }
 
 @media (width < 48rem) {
+  .publico:has([data-barra-loja]) [data-aki-atalho] {
+    bottom: calc(var(--spacing-barra-nav) + 4.75rem + env(safe-area-inset-bottom));
+  }
+  .publico:has([data-barra-loja]) [data-aki-dica] {
+    bottom: calc(var(--spacing-barra-nav) + 8.5rem + env(safe-area-inset-bottom));
+  }
+
   .publico:has([data-comprador]) .linha-cabecalho {
     height: auto;
     min-height: 3rem;

@@ -27,6 +27,7 @@ export function BannerLoja({
   posicaoAki = null,
   prioridade = false,
   mostrarLogoModelo = true,
+  modeloCompacto = false,
   className = "",
 }: {
   tipo: BannerTipo;
@@ -39,6 +40,7 @@ export function BannerLoja({
   prioridade?: boolean;
   posicaoAki?: number | null;
   mostrarLogoModelo?: boolean;
+  modeloCompacto?: boolean;
   className?: string;
 }) {
   const [falhou, setFalhou] = useState<string | null>(null);
@@ -70,7 +72,8 @@ export function BannerLoja({
   const desenho = DESENHO[modelo] ?? undefined;
   return (
     <div
-      className={`relative flex aspect-[3/1] w-full items-center justify-center gap-3 overflow-hidden px-6 ${className}`}
+      aria-hidden={modeloCompacto || undefined}
+      className={`relative w-full overflow-hidden ${modeloCompacto ? "grid h-14 place-items-center md:h-20" : "flex aspect-[3/1] items-center justify-center gap-3 px-6"} ${className}`}
       style={{
         backgroundColor: fundo,
         backgroundImage: desenho,
@@ -83,7 +86,7 @@ export function BannerLoja({
           <AvatarVitrine nome={nome} logo={logo} tamanho="lg" />
         </span>
       )}
-      <span className="line-clamp-2 text-center text-xl leading-6 font-bold sm:text-2xl sm:leading-8">{formatarNome(nome)}</span>
+      {!modeloCompacto && <span className="line-clamp-2 text-center text-xl leading-6 font-bold sm:text-2xl sm:leading-8">{formatarNome(nome)}</span>}
     </div>
   );
 }

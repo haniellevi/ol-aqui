@@ -8,14 +8,14 @@ import { escolherCidade } from "@/app/(publico)/cidades/actions";
 import type { Cidade } from "@/lib/tipos";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "./dropdown-menu";
 
-const estilo = "ml-1 inline-flex h-10 min-w-0 items-center gap-1 rounded-full border border-borda bg-cartao px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
+const estilo = "ml-1 inline-flex min-h-11 min-w-0 items-center gap-1 rounded-full border border-borda bg-cartao px-2 md:px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
 export function MenuCidades({ cidade, regiao, cidades }: { cidade: string | null; regiao?: string; cidades: Cidade[] }) {
   const rotulo = cidade ?? "Escolher cidade";
   const itens = (
     <>
       <MapPin className="size-4 shrink-0" aria-hidden />
-      <span className="cidade-cabecalho-nome truncate md:max-w-24 lg:max-w-36">{rotulo}</span>
+      <span className="cidade-cabecalho-nome min-w-0 text-left leading-tight [overflow-wrap:anywhere] max-md:line-clamp-2 md:max-w-24 md:truncate lg:max-w-36">{rotulo}</span>
       <ChevronDown className="size-4 shrink-0" aria-hidden />
     </>
   );
@@ -45,7 +45,7 @@ function OpcoesCidade({ cidade, regiao, cidades, rotulo, children }: {
             {cidades.map((opcao) => {
               const atual = opcao.microrregiao_id === regiao && opcao.nome === cidade;
               return (
-                <DropdownMenuItem key={opcao.id} label={opcao.nome} aria-current={atual ? "true" : undefined}
+                <DropdownMenuItem key={opcao.id} className="min-h-11" label={opcao.nome} aria-current={atual ? "true" : undefined}
                   onClick={() => {
                     if (!id.current) return;
                     id.current.value = opcao.id;

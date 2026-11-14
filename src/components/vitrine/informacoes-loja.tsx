@@ -21,23 +21,23 @@ export function InformacoesLoja({ v, agora, mapa = false }: { v: VitrinePublica;
   if (!temAlgo) return null;
 
   return (
-    <section aria-labelledby="titulo-info-loja" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
+    <section aria-labelledby="titulo-info-loja" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
       <h2 id="titulo-info-loja" className="text-lg font-semibold">
         Informações da loja
       </h2>
 
       {(site || telefone) && (
         <div className="flex flex-wrap gap-4">
-          {site && <a href={site} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline">Visitar site da loja</a>}
-          {telefone && <a href={`tel:+${telefone}`} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline">Ligar para {formatarTelefone(telefone)}</a>}
+          {site && <a href={site} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline">Visitar site da loja</a>}
+          {telefone && <a href={`tel:+${telefone}`} className="inline-flex min-h-11 items-center font-semibold text-laranja-escuro underline">Ligar para {formatarTelefone(telefone)}</a>}
         </div>
       )}
       {(v.endereco || comoChegar) && (
         <Bloco icone={<MapPin />} titulo="Endereço">
-          <p className="text-base break-words">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>
+          <p className="text-base [overflow-wrap:anywhere]">{[v.endereco, v.bairro && !v.endereco ? v.bairro : null, v.cidade].filter(Boolean).join(" · ")}</p>
           {pino && <MapaLoja lat={pino.lat} lng={pino.lng} nome={formatarNome(v.nome)} />}
           {comoChegar && (
-            <a href={comoChegar} data-medir="mapa" target="_blank" rel="noopener noreferrer" aria-label="Como chegar à loja (abre em nova aba)" className={classesBotao("secundario", false, "mt-1 w-full sm:w-fit")}>
+            <a href={comoChegar} data-medir="mapa" target="_blank" rel="noopener noreferrer" aria-label="Como chegar à loja (abre em nova aba)" className={classesBotao("secundario", false, "mt-1 w-full sm:w-fit", "toque")}>
               <Navigation className="size-5" aria-hidden />
               Como chegar
             </a>
@@ -72,7 +72,7 @@ export function InformacoesLoja({ v, agora, mapa = false }: { v: VitrinePublica;
 
       {insta && (
         <Bloco icone={<Instagram />} titulo="Instagram">
-          <a href={insta} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da loja: @${v.instagram} (abre em nova aba)`} className="inline-flex min-h-10 max-w-full items-center font-semibold break-all text-laranja-escuro underline underline-offset-4">
+          <a href={insta} target="_blank" rel="noopener noreferrer" aria-label={`Instagram da loja: @${v.instagram} (abre em nova aba)`} className="inline-flex min-h-11 max-w-full items-center font-semibold break-all text-laranja-escuro underline underline-offset-4">
             @{v.instagram}
           </a>
         </Bloco>
@@ -99,7 +99,7 @@ export function InformacoesLoja({ v, agora, mapa = false }: { v: VitrinePublica;
 
       {v.sobre && (
         <Bloco icone={<Store />} titulo="Sobre nós">
-          <p className="text-base leading-6 break-words whitespace-pre-line">{v.sobre}</p>
+          <p className="text-base leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">{v.sobre}</p>
         </Bloco>
       )}
     </section>
@@ -108,7 +108,7 @@ export function InformacoesLoja({ v, agora, mapa = false }: { v: VitrinePublica;
 
 function Bloco({ icone, titulo, children }: { icone: ReactNode; titulo: string; children: ReactNode }) {
   return (
-    <div className="flex gap-3 border-t border-borda pt-4 first-of-type:border-0 first-of-type:pt-0">
+    <div className="flex gap-2 border-t border-borda pt-3 first-of-type:border-0 first-of-type:pt-0">
       <span className="mt-0.5 shrink-0 text-laranja-escuro [&>svg]:size-5" aria-hidden>
         {icone}
       </span>
