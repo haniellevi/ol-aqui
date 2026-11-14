@@ -41,7 +41,7 @@ insert into anuncios(id, vitrine_id, microrregiao_id, categoria_id, titulo, cida
 
 select pg_temp.confere((select revisao_manual_admin from anuncios where id = '80000000-0000-4000-a000-000000000001'),
   'anúncio recusado antes do lote ganha a marca de revisão manual');
-select set_config('request.jwt.claim.sub', 'user_h8dono', false), set_config('request.jwt.claim.role', 'authenticated', false) \g /dev/null;
+select set_config('request.jwt.claim.sub', 'user_h8dono', false), set_config('request.jwt.claim.role', 'authenticated', false) \g /dev/null
 set role authenticated;
 select pg_temp.confere(publicar_anuncio('80000000-0000-4000-a000-000000000001') = 'em_analise',
   'dona republica anúncio recusado antes do lote: vai para análise, não volta ao ar');
