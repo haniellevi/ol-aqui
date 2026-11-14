@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Heart, Loader2 } from "lucide-react";
-import { alternarFavorito } from "@/app/(publico)/anuncio/[idslug]/actions";
+import { alternarFavorito } from "@/app/(anuncio-publico)/anuncio/[idslug]/actions";
 import { guardarPendente } from "@/lib/salvar-pendente";
 
 // Coração no canto da foto do card. Logado: salva/tira na hora (volta se der erro).
