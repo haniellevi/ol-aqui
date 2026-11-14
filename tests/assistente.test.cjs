@@ -125,3 +125,39 @@ test('confirmar a loja escolhe a própria mesmo que exista loja ajudada', async 
     (error) => error.message === '/anunciar');
   assert.deepEqual(chamadas, [tentativa]);
 });
+
+test('na venda assistida a pessoa pode escolher entre dois rascunhos ou criar outro', async () => {
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const { default: pagina } = carregar('src/app/(conta)/anunciar/page.tsx', {
+    '@/lib/dados/conta': { contaDaLoja: async () => ({ perfil: { id: 'user_a' }, vitrine: { status: 'ativa', tipo: 'loja' }, podePublicar: true }) },
+    '@/lib/dados/anuncios': { anunciosDaLoja: async () => [
+      { id: tentativa, status: 'rascunho', titulo: 'Mesa de madeira', fotos: [], atualizado_em: new Date().toISOString() },
+      { id: anterior, status: 'rascunho', titulo: 'Cadeira de madeira', fotos: [], atualizado_em: new Date().toISOString() },
+    ] },
+    '@/lib/dados/loja-ativa': { lojasQueCuido: async () => [], lojaEscolhida: async () => null },
+  });
+  const html = renderToStaticMarkup(await pagina({ searchParams: Promise.resolve({ assistente: tentativa }) }));
+  assert.match(html, /Mesa de madeira/);
+  assert.match(html, /Cadeira de madeira/);
+  for (const id of [tentativa, anterior]) {
+    assert.ok(html.includes('/anunciar/fotos?rascunho=' + id + '&amp;assistente=' + tentativa));
+  }
+  assert.match(html, /Criar novo anúncio/);
+});
+
+test('retomar anúncio com pagamento pendente aponta para o checkout existente', () => {
+  const { RetomarAnuncio } = carregar('src/components/assistente/retomar.tsx', {
+    react: { useEffect: (effect) => effect(), useState: () => [null, (href) => {
+      const url = new URL(href, 'https://olaki.invalid');
+      assert.equal(url.pathname, '/anunciar/avulso');
+      assert.equal(url.searchParams.get('id'), anterior);
+      assert.equal(url.searchParams.get('p'), tentativa);
+      assert.equal(url.searchParams.get('assistente'), tentativa);
+      chegou = true;
+    }] },
+    './progresso': { progressoAtual: () => ({ dono: 'user_a', objetivo: 'item', tentativa, anuncio: { id: anterior, passo: 'revisar', pagamento: tentativa } }) },
+  });
+  let chegou = false;
+  RetomarAnuncio({ dono: 'user_a', tentativa, rascunhos: [anterior], publicados: [] });
+  assert.equal(chegou, true);
+});
