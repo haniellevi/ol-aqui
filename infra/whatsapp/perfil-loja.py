@@ -34,7 +34,7 @@ def consultar(ticket):
     numero = info.get('numero')
     if not isinstance(numero, str) or not re.fullmatch(r'55[1-9][0-9]9?[0-9]{8}', numero):
         raise ValueError('ticket recusado')
-    perfil = post('http://127.0.0.1:8087/chat/fetchProfile/olaki-verificacao', {'number': numero}, {'apikey': os.environ['EVOLUTION_API_KEY']})
+    perfil = post('http://127.0.0.1:8087/chat/fetchProfile/olaki-verificacao', {'number': numero}, {'apikey': os.environ['EVOLUTION_API_KEY'], 'Origin': os.environ['EVOLUTION_URL']})
     if perfil.get('isBusiness') is not True:
         return {}
     return {saida: valor[:limite] for entrada, saida, limite in [('name', 'nome', 80), ('description', 'descricao', 600), ('website', 'site', 2048)] if isinstance((valor := perfil.get(entrada)), str) and valor.strip()}
@@ -58,4 +58,4 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(503)
 
 if __name__ == '__main__':
-    ThreadingHTTPServer(('127.0.0.1', 8090), Handler).serve_forever()
+    ThreadingHTTPServer(('127.0.0.1', 8091), Handler).serve_forever()

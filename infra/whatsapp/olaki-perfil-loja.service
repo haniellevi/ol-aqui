@@ -1,0 +1,25 @@
+[Unit]
+Description=Consulta autorizada de perfil comercial do Mercado da Região
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+WorkingDirectory=/usr/local/lib/olaki-perfil-loja
+ExecStart=/usr/bin/python3 /usr/local/lib/olaki-perfil-loja/perfil-loja.py
+EnvironmentFile=/etc/olaki/perfil-loja.env
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryMax=96M
+CPUQuota=10%
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target
