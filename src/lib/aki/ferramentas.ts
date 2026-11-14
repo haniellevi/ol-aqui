@@ -596,7 +596,7 @@ async function planos(ctx: ContextoFerramentas): Promise<Resultado> {
       .eq("ativo", true)
       .order("ordem"),
     ...["avulso.preco_centavos", "avulso.dias", "destaque.preco_centavos", "destaque.dias"].map((chave) =>
-      ctx.db.rpc("config", { p_chave: chave, p_microrregiao: ctx.regiao.id, p_padrao: null }),
+      ctx.db.rpc("config_publica", { p_chave: chave, p_microrregiao: ctx.regiao.id, p_padrao: null }),
     ),
   ]);
   if (error) return falha("Não consegui ler os planos agora.");

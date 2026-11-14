@@ -113,6 +113,17 @@ try:
     print('PASS: IA do Radar "já comprei": chave própria desligada, só mensagem do cliente com pedido dele aberto, pergunta só para o cliente, "não" vale para sempre naquele pedido e só o servidor lê', flush=True)
     checked(sql((root/'supabase/testes/820_fotos_pasta_antiga.sql').read_text()))
     print('PASS: fotos na pasta do ID antigo após a troca do Clerk: dono reordena, tira e põe foto nova; foto antiga fora do anúncio, em outro anúncio ou de outra pessoa continua recusada', flush=True)
+    checked(sql((root/'supabase/testes/830_leitura_publica_colunas.sql').read_text()))
+    print('PASS: leitura pública: visitante só lê colunas das telas públicas, logado sem IP de criação e revisão interna, ID do dono fora do visitante, dona, ajudante, admin e outra pessoa', flush=True)
+    checked(sql((root/'supabase/testes/831_config_equipe_merc.sql').read_text()))
+    print('PASS: configurações: config_publica só entrega chaves públicas, moderação sem config(), financeiro fora de anúncios e lojas, conversas do Merc só do dono', flush=True)
+    checked(sql((root/'supabase/testes/832_campos_do_dono.sql').read_text()))
+    print('PASS: campos do dono restaurados pelo banco, nome de loja com filtro de palavras e volta à conferência, recusa da fila deixa anúncio em revisão humana', flush=True)
+    checked(sql((root/'supabase/testes/833_permissoes_sobrando.sql').read_text()))
+    print('PASS: permissões de tabela sobrando retiradas, perguntas sobre outra conta só do próprio dono ou da equipe ativa, verificação só na pasta da própria pessoa', flush=True)
+    migracao_lote = (root/'supabase/migrations/20261125010000_seguranca_lote_banco.sql').read_text()
+    checked(sql((root/'supabase/testes/834_recusados_antes_do_lote.sql').read_text().replace('-- LOTE_REAPLICADO', migracao_lote)))
+    print('PASS: anúncio recusado antes do lote ganha revisão manual e a republicação vai para análise', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin

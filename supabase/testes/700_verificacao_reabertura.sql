@@ -1,7 +1,7 @@
 \set ON_ERROR_STOP on
 \set QUIET on
 -- Verificação de lojas: o selo só cai quando CNPJ, endereço, cidade, bairro, região, mapa ou WhatsApp mudam.
--- Mudar nome ou Instagram mantém o selo e deixa um aviso aberto para a equipe.
+-- Mudar o Instagram mantém o selo e deixa um aviso aberto para a equipe. Mudar o nome volta a loja para conferência (sem selo), com aviso.
 begin;
 reset role;
 set local request.jwt.claim.role='';
@@ -39,11 +39,11 @@ select pg_temp.confere((select count(*)=1 from verificacao_loja_avisos where tip
 -- [2] Nome: idem; repetir o mesmo campo não cria segundo aviso aberto.
 select pg_temp.aprovar();
 update vitrines_lojas set nome='Loja 700 Nova' where id='70000000-0000-4000-a000-000000000001';
-select pg_temp.confere(pg_temp.estado()='aprovada/true/0', 'nome mantém aprovação, selo e revisão');
+select pg_temp.confere(pg_temp.estado()='pendente/false/1', 'nome volta para conferência e tira o selo');
 select pg_temp.confere((select count(*)=1 from verificacao_loja_avisos where tipo='mudou_nome' and resolvido_em is null), 'nome abre 1 aviso');
 update vitrines_lojas set nome='Loja 700 Outra' where id='70000000-0000-4000-a000-000000000001';
 select pg_temp.confere((select count(*)=1 from verificacao_loja_avisos where tipo='mudou_nome'), 'nome repetido não duplica aviso aberto');
-select pg_temp.confere(pg_temp.estado()='aprovada/true/0', 'segunda troca de nome mantém selo');
+select pg_temp.confere(pg_temp.estado()='pendente/false/1', 'segunda troca de nome, já em conferência, não muda o estado');
 
 -- [3] Campos que derrubam o selo.
 select pg_temp.aprovar();

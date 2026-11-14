@@ -223,7 +223,7 @@ export async function minhasPreferenciasAvisos(): Promise<PreferenciaAviso[]> {
   if (!userId) throw new Error("Entre na sua conta para acessar suas preferências.");
   const db = await createClient();
   const [config, preferencias] = await Promise.all([
-    db.rpc("config", { p_chave: "radar.avisos_escolha", p_microrregiao: null, p_padrao: [] }),
+    db.rpc("config_publica", { p_chave: "radar.avisos_escolha", p_microrregiao: null, p_padrao: [] }),
     db.from("preferencias_avisos").select("tipo, ligado").eq("usuario_id", userId).eq("canal", "app"),
   ]);
   if (config.error || !Array.isArray(config.data) || preferencias.error || !Array.isArray(preferencias.data)) throw new Error("Não foi possível carregar suas preferências.");

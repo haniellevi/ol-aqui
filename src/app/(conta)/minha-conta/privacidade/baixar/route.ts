@@ -7,6 +7,10 @@ export const dynamic = "force-dynamic";
 
 const COLUNAS_VITRINE =
   "id, tipo, slug, nome, descricao, logo_url, capa_url, cidade, bairro, plano, status, teste_expira_em, plano_expira_em, selo_loja_verificada, criado_em, banner_tipo, banner_url, banner_modelo, banner_cor, endereco, lat, lng, horarios, sobre, formas_pagamento, faz_entrega, entrega_obs";
+// Anúncios: a lista é a que o banco concede a quem está logado (migração 20261125010000). "*" falha para quem
+// está logado, porque o IP de criação e a revisão da equipe não são legíveis. Teste: tests/exportacao-dados.test.cjs.
+const COLUNAS_ANUNCIOS_DONO =
+  "id, vitrine_id, microrregiao_id, categoria, subcategoria, titulo, descricao, preco_centavos, aceita_troca, cidade, bairro, fotos, atributos, status, destaque_ate, visualizacoes, cliques_whatsapp, total_favoritos, busca, congelado_motivo, criado_em, atualizado_em, pago_ate, motivo_analise, categoria_id, vendido_pelo_olaki, vendido_em, publicado_em, subido_em, fixado_na_loja, excluido_em, status_antes_exclusao, excluido_com_loja, categoria_sugerida_id, categoria_sugestao_estado, categoria_sugerida_em, slug, saiu_do_ar_em, pronto_em, preco_antes_centavos";
 // O IP da loja e os identificadores internos do gateway não saem pela API.
 const COLUNAS_PROPOSTA =
   "id, pedido_id, vitrine_id, anuncio_id, mensagem, preco_centavos, foto_url, escolhida, escolhida_em, status, moderado_motivo, criado_em, atualizado_em";
@@ -61,7 +65,7 @@ export async function GET() {
       ? lerPaginas((inicio, fim) => db.from(tabela).select(colunas).eq("vitrine_id", vitrine.data!.id).order("id").range(inicio, fim))
       : Promise.resolve([]);
     const [anuncios, propostasEnviadas, pagamentos, propostasRecebidas] = await Promise.all([
-      daVitrine("anuncios", "*"),
+      daVitrine("anuncios", COLUNAS_ANUNCIOS_DONO),
       daVitrine("radar_propostas", COLUNAS_PROPOSTA),
       daVitrine("pagamentos", "id, tipo, plano_codigo, anuncio_id, valor_centavos, forma, status, vencimento, pago_em, criado_em"),
       lerPaginas((inicio, fim) => db.from("radar_propostas")

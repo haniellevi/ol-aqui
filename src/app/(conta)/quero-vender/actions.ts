@@ -58,7 +58,9 @@ export async function criarLoja(_antes: EstadoLoja, form: FormData): Promise<Est
   });
   if (error) {
     const erro = traduzirErro(error);
-    if (erro.campo) return { erro: { mensagem: "Confira o campo marcado." }, campos: { [erro.campo]: erro.mensagem } };
+    // o banco marca o nome da loja como "nome"; o formulário usa "nome_loja"
+    const campo = erro.campo === "nome" ? "nome_loja" : erro.campo;
+    if (campo) return { erro: { mensagem: "Confira o campo marcado." }, campos: { [campo]: erro.mensagem } };
     return { erro };
   }
   const feito = (Array.isArray(data) ? data[0] : data) as ResultadoQueroVender | null;

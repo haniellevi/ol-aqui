@@ -1,5 +1,6 @@
 \set ON_ERROR_STOP on
 begin;
+create function pg_temp.revisao_da(p uuid) returns boolean language sql security definer set search_path = public as $$ select revisao_manual_admin from anuncios where id = p $$;
 create function pg_temp.confere(ok boolean, caso text) returns void language plpgsql as $$
 begin if ok is distinct from true then raise exception 'FALHOU: %', caso; end if; end $$;
 create function pg_temp.recusa(comando text, codigo text) returns void language plpgsql as $$
@@ -40,11 +41,11 @@ select pg_temp.confere(admin_gerenciar_anuncio(:'anuncio','revisar','ativo',:'re
 select pg_temp.confere((select motivo_analise='Revisão da equipe: Conferir dados do anúncio' from anuncios where id=:'anuncio'),'motivo fica visível');
 set local request.jwt.claim.sub='user_loja';
 update anuncios set revisao_manual_admin=false, motivo_analise='Preço fora do normal para a categoria' where id=:'anuncio';
-select pg_temp.confere((select revisao_manual_admin and motivo_analise like 'Revisão da equipe:%' from anuncios where id=:'anuncio'),'anunciante não pode trocar revisão humana por automática');
+select pg_temp.confere((pg_temp.revisao_da(:'anuncio') and (select motivo_analise like 'Revisão da equipe:%' from anuncios where id=:'anuncio')),'anunciante não pode trocar revisão humana por automática');
 select pg_temp.recusa(format('update anuncios set status=%L where id=%L','ativo',:'anuncio'),'P0001');
 set local request.jwt.claim.sub='user_adminchat';
 select pg_temp.confere(admin_gerenciar_anuncio(:'anuncio','aprovar','em_analise', (select atualizado_em from anuncios where id=:'anuncio'), null)='ativo','administrador aprova pela moderação');
-select pg_temp.confere((select not revisao_manual_admin from anuncios where id=:'anuncio'),'aprovação libera o anúncio');
+select pg_temp.confere((select not pg_temp.revisao_da(:'anuncio')),'aprovação libera o anúncio');
 select admin_gerenciar_anuncio(:'anuncio','revisar','ativo', (select atualizado_em from anuncios where id=:'anuncio'), 'Conferir dados de novo');
 select pg_temp.confere(admin_gerenciar_anuncio(:'anuncio','recusar','em_analise', (select atualizado_em from anuncios where id=:'anuncio'), 'Dados ainda incompletos')='pausado','recusa deixa fora do ar');
 set local request.jwt.claim.sub='user_loja';
