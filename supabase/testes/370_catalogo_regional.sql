@@ -18,10 +18,33 @@ values ('37000000-0000-4000-a000-000000000011','37000000-0000-4000-a000-00000000
 insert into destaques(tipo,vitrine_id,anuncio_id,microrregiao_id,origem,status,inicio,fim)
 values ('home','37000000-0000-4000-a000-000000000001','37000000-0000-4000-a000-000000000011',:'regiao','cortesia','ativo',now()-interval '1 day',now()+interval '1 day');
 
+insert into perfis(id,microrregiao_id,nome,whatsapp,whatsapp_verificado_em)
+values ('user_lojaB370',:'regiao','Comerciante B','5589999990372',now()),
+       ('user_lojaOculta370',:'regiao','Comerciante oculto','5589999990373',now());
+insert into vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,tipo,plano,status)
+values ('37000000-0000-4000-a000-000000000003','user_lojaB370',:'regiao','loja-arvore-370','Regional Árvore 370','Corrente','loja','full','ativa'),
+       ('37000000-0000-4000-a000-000000000004','user_lojaOculta370',:'regiao','loja-oculta-370','Regional Oculta 370','Corrente','loja','full','suspensa');
+
 set local role anon;
 do $$
 declare reg uuid := current_setting('teste.regiao370')::uuid;
 begin
+  assert (select slug='loja-arvore-370' and total=1 from catalogo_lojas_busca(reg,'Bom Jesus',null,1,0,false,'ARVORE')),
+    'Busca sem acento e antes do limite encontra loja de outra cidade da região';
+  assert (select slug='loja-arvore-370' and total=2 from catalogo_lojas_busca(reg,'Corrente',null,1,0,false,'370')),
+    'Total da busca conta todas as lojas encontradas antes da paginação';
+  assert (select slug='loja-regional-370' and total=2 from catalogo_lojas_busca(reg,'Corrente',null,1,1,false,'370')),
+    'Segunda página mantém o recorte de nome';
+  assert (select count(*)=1 from catalogo_lojas_busca(reg,'Corrente','moveis',24,0,false,'370')),
+    'Busca respeita a categoria dos produtos';
+  assert not exists(select 1 from catalogo_lojas_busca(reg,'Corrente',null,24,0,false,'370%')),
+    'Percentual da busca é literal';
+  assert not exists(select 1 from catalogo_lojas_busca(reg,'Corrente',null,24,0,false,'Oculta')),
+    'Loja suspensa não aparece na busca';
+  assert not exists(select 1 from catalogo_lojas_busca(reg,'Corrente',null,24,0,false,'Pessoa Teste 370')),
+    'Vitrine PF não aparece na busca por loja';
+  assert not exists(select 1 from catalogo_lojas_busca('37000000-0000-4000-a000-000000000099','Corrente',null,24,0,false,'370')),
+    'Busca não sai da região';
   assert (select slug='loja-regional-370' from catalogo_lojas(reg,'Bom Jesus','moveis',1,0)),
     'Loja da cidade passa na frente e nicho pai inclui produtos da subcategoria';
   assert (select (item->>'id')::uuid = '37000000-0000-4000-a000-000000000011'
