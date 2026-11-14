@@ -90,7 +90,10 @@ function rota({ segredoOk = true, linhas = [], resultados = [], configurar = tru
     '@/lib/formato': { SITE: 'https://site.exemplo.test' },
     '@/lib/whatsapp/envio': {
       configuracaoEnvio: () => { if (!configurar) throw Error('Envio indisponível.'); return { url: 'https://w.test', chave: 'k', instancia: 'i' }; },
-      enviarTexto: async (numero, texto) => { estado.envios.push([numero, texto]); estado.ordem.push('envio'); return fila.shift() ?? 'enviado'; },
+      enviarTexto: async (numero, texto, _config, conferir) => {
+        if (conferir && !(await conferir())) return 'recusado';
+        estado.envios.push([numero, texto]); estado.ordem.push('envio'); return fila.shift() ?? 'enviado';
+      },
     },
     '@/lib/supabase/admin': {
       supabaseAdmin: () => ({
@@ -189,9 +192,7 @@ test('rota: passou do prazo, devolve à fila o que não foi tentado e não come�
   const agora = Date.now;
   let relogio = 1_000_000;
   Date.now = () => relogio;
-  const pausaOriginal = estado.pausas;
   // Cada envio "demora" 30 s: depois do 2º já passou de 45 s.
-  const mocks = {};
   try {
     const m = carregar('src/app/api/interno/whatsapp-fila/route.ts', {
       'next/server': { NextResponse: { json: (corpo, init) => ({ corpo, status: init?.status ?? 200 }) } },
@@ -215,7 +216,6 @@ test('rota: passou do prazo, devolve à fila o que não foi tentado e não come�
   assert.equal(devolver.length, 1);
   assert.deepEqual(devolver[0][1], { p_ids: ['id-3', 'id-4'] });
   assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado').map((c) => c[1].p_id), ['id-1', 'id-2']);
-  assert.ok(mod && mocks && pausaOriginal);
 });
 
 test('rota: dentro do prazo não devolve nada', async () => {
@@ -280,3 +280,56 @@ test('rota: se a conferência falha (erro do banco ou resposta fora de "pode"), 
     assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado').map((c) => c[1].p_resultado), ['falha']);
   }
 });
+
+// Conferência logo antes do pedido de envio (dentro de enviarTexto), com a rota real e o banco de mentira.
+test('envio: a conferência roda depois da checagem da instância e antes do pedido; se recusar, nada é enviado', async () => {
+  const e = envio(), c = e.configuracaoEnvio(); const chamadas = []; let conferidas = 0;
+  global.fetch = async (url) => { chamadas.push(url.includes('connectionState') ? 'estado' : 'post'); return { ok: true, json: async () => (url.includes('connectionState') ? { instance: { state: 'open' } } : { key: { id: 'x', fromMe: true } }) }; };
+  const resultado = await e.enviarTexto('5585999990001', 'oi', c, async () => { chamadas.push('conferir'); return false; });
+  assert.equal(resultado, 'recusado');
+  assert.deepEqual(chamadas, ['estado', 'conferir']);
+  chamadas.length = 0;
+  assert.equal(await e.enviarTexto('5585999990001', 'oi', c, async () => { chamadas.push('conferir'); conferidas++; return true; }), 'enviado');
+  assert.deepEqual(chamadas, ['estado', 'conferir', 'post']);
+  assert.equal(conferidas, 1);
+});
+
+test('envio: conferência que lança exceção não envia (recusado, nunca enviado)', async () => {
+  const e = envio(), c = e.configuracaoEnvio(); const chamadas = [];
+  global.fetch = async (url) => { chamadas.push(url); return { ok: true, json: async () => ({ instance: { state: 'open' } }) }; };
+  assert.equal(await e.enviarTexto('5585999990001', 'oi', c, async () => { throw Error('banco'); }), 'recusado');
+  assert.equal(chamadas.length, 1);
+});
+
+test('rota: RPC de conferência com erro (data nula + error) ou exceção não envia e volta como falha', async () => {
+  for (const jeito of ['erro', 'lanca']) {
+    const estado = { envios: [], resultados: [] };
+    const m = carregar('src/app/api/interno/whatsapp-fila/route.ts', {
+      'next/server': { NextResponse: { json: (corpo, init) => ({ corpo, status: init?.status ?? 200 }) } },
+      'node:timers/promises': { setTimeout: async () => {} },
+      '@/lib/moderacao-ia': { segredoModeracaoConfere: () => true },
+      '@/lib/formato': { SITE: 'https://site.exemplo.test' },
+      '@/lib/whatsapp/envio': {
+        configuracaoEnvio: () => ({}),
+        enviarTexto: async (numero, texto, _c, conferir) => {
+          if (conferir && !(await conferir())) return 'recusado';
+          estado.envios.push(numero); return 'enviado';
+        },
+      },
+      '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async (nome, args) => {
+        if (nome === 'whatsapp_fila_pegar') return { data: [linha(1)], error: null };
+        if (nome === 'whatsapp_fila_confirmar_envio') {
+          if (jeito === 'lanca') throw Error('falha de rede');
+          return { data: null, error: { message: 'x' } };
+        }
+        if (nome === 'whatsapp_fila_resultado') estado.resultados.push(args.p_resultado);
+        return { data: 'ok', error: null };
+      } }) },
+    });
+    const r = await m.POST(req);
+    assert.deepEqual(r.corpo, { ok: true, enviadas: 0, falhas: 1, incertas: 0, erros_resultado: 0, devolvidas: 0, canceladas: 0 }, jeito);
+    assert.equal(estado.envios.length, 0, jeito);
+    assert.deepEqual(estado.resultados, ['falha'], jeito);
+  }
+});
+

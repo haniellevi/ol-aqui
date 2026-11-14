@@ -1,8 +1,9 @@
 \set ON_ERROR_STOP on
 \set QUIET on
--- SAIR à prova de falha: conferência logo antes de enviar (chave geral, preferência, pedido aberto, prazo e vaga),
--- corrida com SAIR durante o envio, uma resposta de confirmação por número e dia (sai fora da janela, o Radar não a
--- cancela), sem conta não responde, e permissões. Horários fixos onde a janela importa; o resto usa now().
+-- SAIR: conferência logo antes de enviar (chave geral, preferência, pedido aberto, prazo e vaga, e as regras de quem
+-- recebe: loja ativa, WhatsApp verificado e igual ao da fila, plano que avisa, área e nicho), SAIR chegando depois de
+-- uma conferência "pode" (a conferência seguinte cancela), uma resposta de confirmação por número e dia (sai fora da
+-- janela, o Radar não a cancela), sem conta não responde, e permissões. Horários fixos onde a janela importa.
 begin;
 reset role;
 
@@ -21,6 +22,7 @@ begin
 end $$;
 
 select id as reg from microrregioes where slug = 'corrente-pi' \gset
+select id as sofas from categorias where slug = 'sofas-e-poltronas' \gset
 
 -- Chave geral do aviso do Radar ligada só neste teste (a transação desfaz). Começa desligada para as preparações.
 update configuracoes set valor = 'false'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
@@ -32,28 +34,35 @@ insert into perfis(id, microrregiao_id, nome, cidade, whatsapp, whatsapp_verific
 insert into preferencias_avisos (usuario_id, tipo, canal, ligado) values
   ('user_840loja', 'pedido_novo', 'whatsapp', true),
   ('user_840outra', 'pedido_novo', 'whatsapp', true);
-insert into radar_pedidos (id, comprador_id, microrregiao_id, titulo, cidade, status, expira_em, modo_contato, propostas_ate, max_propostas, total_propostas)
-values ('84000000-0000-4000-a000-000000000001', 'user_840comprador', :'reg', 'Procuro sofá para teste 840', 'Corrente',
+insert into radar_pedidos (id, comprador_id, microrregiao_id, categoria_id, titulo, cidade, status, expira_em, modo_contato, propostas_ate, max_propostas, total_propostas)
+values ('84000000-0000-4000-a000-000000000001', 'user_840comprador', :'reg', :'sofas'::uuid, 'Procuro sofá para teste 840', 'Corrente',
         'aberto', now() + interval '10 days', 'propostas_prazo', now() + interval '3 days', 10, 0);
+-- A loja da conferência é de verdade: vitrine ativa e verificada, plano que avisa na hora e um anúncio na categoria do pedido.
+insert into vitrines_lojas(dono_id, microrregiao_id, slug, nome, cidade, tipo, plano, plano_expira_em, criado_em)
+values ('user_840loja', :'reg', 'teste-840-loja', 'Vitrine 840 um', 'Corrente', 'loja', 'full', now() + interval '30 days', now());
+update vitrines_lojas set verificacao_estado = 'aprovada', selo_loja_verificada = true where dono_id = 'user_840loja';
+insert into anuncios(vitrine_id, categoria_id, titulo, cidade, preco_centavos, atributos, status)
+select v.id, :'sofas'::uuid, 'Anúncio de teste 840', 'Corrente', 10000, '{"estado":"usado"}', 'ativo'::public.status_anuncio
+  from vitrines_lojas v where v.dono_id = 'user_840loja';
 
 -- [1] Conferência: aviso do Radar com tudo de acordo sai ("pode") e continua "enviando"
 update configuracoes set valor = 'true'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
 insert into whatsapp_fila(id, usuario_id, numero, texto, link, chave, enviar_apos, estado, tentativas) values
   ('84000000-0000-4000-a000-0000000000a1', 'user_840loja', '5589999960001', 'Aviso Radar 840 um', '/radar/x',
-   'radar_pedido_novo:84000000-0000-4000-a000-000000000001:84000000-0000-4000-a000-0000000000f1', now(), 'enviando', 1);
+   'radar_pedido_novo:84000000-0000-4000-a000-000000000001:' || (select id::text from vitrines_lojas where dono_id = 'user_840loja'), now(), 'enviando', 1);
 select whatsapp_fila_confirmar_envio('84000000-0000-4000-a000-0000000000a1') as d1 \gset
 select pg_temp.confere840(:'d1' = 'pode', 'aviso do Radar com tudo de acordo pode sair');
 select pg_temp.confere840((select estado = 'enviando' from whatsapp_fila where id = '84000000-0000-4000-a000-0000000000a1'), 'conferir não muda o estado quando pode sair');
 
--- [2] Corrida: SAIR chega enquanto a mensagem está "enviando". SAIR não mexe em "enviando" (só em pendente),
--- então a conferência logo antes do envio é que segura a mensagem.
+-- [2] SAIR chega depois do "pode" e antes do envio. SAIR não mexe em "enviando" (só em pendente),
+-- então a conferência seguinte (logo antes do pedido de envio) é que segura a mensagem.
 set local role service_role;
 select whatsapp_sair('5589999960001', 'SAIR') as achou \gset
 reset role;
 select pg_temp.confere840(:'achou' = 't', 'SAIR acha a conta de quem respondeu');
 select pg_temp.confere840((select estado = 'enviando' from whatsapp_fila where id = '84000000-0000-4000-a000-0000000000a1'), 'SAIR não altera mensagem já "enviando"');
 select whatsapp_fila_confirmar_envio('84000000-0000-4000-a000-0000000000a1') as d2 \gset
-select pg_temp.confere840(:'d2' = 'cancelada', 'SAIR durante o envio: a conferência cancela antes de enviar');
+select pg_temp.confere840(:'d2' = 'cancelada', 'SAIR depois do pode: a conferência seguinte cancela antes de enviar');
 select pg_temp.confere840((select estado = 'cancelada' and erro = 'radar_desligado' from whatsapp_fila where id = '84000000-0000-4000-a000-0000000000a1'),
   'cancelada com o motivo radar_desligado');
 select whatsapp_fila_confirmar_envio('84000000-0000-4000-a000-0000000000a1') as d2b \gset
@@ -61,7 +70,7 @@ select pg_temp.confere840(:'d2b' = 'ignorada', 'linha já cancelada não é envi
 
 -- [3] Resposta de confirmação: uma por número e dia, com o texto exato, na fila, sem ser cancelada pelo Radar
 select pg_temp.confere840((select count(*) = 1 from whatsapp_fila where chave like 'whatsapp_saida:5589999960001:%'), 'SAIR põe UMA resposta na fila');
-select pg_temp.confere840((select texto = 'Pronto. Você não vai mais receber pedidos do Radar pelo WhatsApp. Para voltar, ligue o aviso em Minha conta > Avisos no Mercado da Região.'
+select pg_temp.confere840((select texto = 'Pronto. Você não vai mais receber pedidos do Radar pelo WhatsApp. Para voltar, ligue o aviso em Minha conta > Notificações no Mercado da Região.'
   and numero = '5589999960001' and usuario_id = 'user_840loja' and estado = 'pendente' and link is null
   from whatsapp_fila where chave like 'whatsapp_saida:5589999960001:%'), 'resposta com o texto exato, para o número que mandou, pendente e sem link');
 select pg_temp.confere840((select chave ~ '^whatsapp_saida:5589999960001:[0-9]{4}-[0-9]{2}-[0-9]{2}$' from whatsapp_fila where chave like 'whatsapp_saida:5589999960001:%'),
@@ -162,4 +171,21 @@ select pg_temp.confere840(has_function_privilege('service_role', 'whatsapp_fila_
 select pg_temp.confere840(not has_function_privilege('authenticated', 'whatsapp_sair(text,text)', 'execute')
   and not has_function_privilege('anon', 'whatsapp_sair(text,text)', 'execute'), 'SAIR fechado para a conta e para o visitante');
 select pg_temp.confere840(not has_function_privilege('authenticated', 'whatsapp_fila_pegar_em(integer,timestamptz)', 'execute'), 'pegar com instante continua interno');
+-- [12] Quem recebe tem de continuar apto: loja suspensa e número trocado não recebem o aviso (mesma linha, chave única)
+-- O SAIR do caso [2] desligou o aviso de quem mandou: liga de volta, para testar só as regras de quem recebe.
+update preferencias_avisos set ligado = true where usuario_id = 'user_840loja' and tipo = 'pedido_novo' and canal = 'whatsapp';
+update whatsapp_fila set estado = 'enviando', erro = null, tentativas = 1 where id = '84000000-0000-4000-a000-0000000000a1';
+update vitrines_lojas set status = 'suspensa' where dono_id = 'user_840loja';
+select whatsapp_fila_confirmar_envio('84000000-0000-4000-a000-0000000000a1') as d_suspensa \gset
+select pg_temp.confere840(:'d_suspensa' = 'cancelada' and (select erro from whatsapp_fila where id = '84000000-0000-4000-a000-0000000000a1') = 'sem_direito_aviso',
+  'loja suspensa: não sai, motivo sem_direito_aviso');
+update vitrines_lojas set status = 'ativa' where dono_id = 'user_840loja';
+update whatsapp_fila set estado = 'enviando', erro = null where id = '84000000-0000-4000-a000-0000000000a1';
+update whatsapp_fila set estado = 'enviando', erro = null where id = '84000000-0000-4000-a000-0000000000a1';
+update perfis set whatsapp = '5589999960009' where id = 'user_840loja';
+select whatsapp_fila_confirmar_envio('84000000-0000-4000-a000-0000000000a1') as d_numero \gset
+select pg_temp.confere840(:'d_numero' = 'cancelada' and (select erro from whatsapp_fila where id = '84000000-0000-4000-a000-0000000000a1') = 'sem_direito_aviso',
+  'número trocado depois do enfileiramento: não sai');
+update perfis set whatsapp = '5589999960001' where id = 'user_840loja';
+select pg_temp.confere840(whatsapp_fila_confirmar_envio('84000000-0000-4000-a000-0000000000a1') = 'ignorada', 'linha já cancelada não é conferida de novo');
 rollback;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { cabecalhoEvolutionConfere, pedidoDeSaida, segredoEvolution } from "@/lib/whatsapp/evolution";
+import { cabecalhoEvolutionConfere, pedidoDeSaida, saidaSemNumeroLegivel, segredoEvolution } from "@/lib/whatsapp/evolution";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, ignorado: "corpo" });
   }
   const pedido = pedidoDeSaida(corpo);
-  if (!pedido) return NextResponse.json({ ok: true, ignorado: "sem pedido" });
+  if (!pedido) {
+    // Frase de saída cujo número não se lê (conversa @lid sem campo de número): só o fato, sem número nem texto.
+    if (saidaSemNumeroLegivel(corpo)) console.warn("whatsapp evolution: saida sem numero legivel (conversa sem campo de numero)");
+    return NextResponse.json({ ok: true, ignorado: "sem pedido" });
+  }
 
   let db;
   try {

@@ -7,21 +7,39 @@ import { createHash, timingSafeEqual } from "node:crypto";
 export const COMANDOS_SAIDA = ["SAIR", "PARAR", "STOP", "CANCELAR"] as const;
 export type ComandoSaida = (typeof COMANDOS_SAIDA)[number];
 
-// Frases de saída já normalizadas (sem acento, minúsculas, sem pontuação). Cada uma guarda um dos quatro comandos do banco.
-const TERMOS_SAIDA: ReadonlyArray<readonly [string, ComandoSaida]> = [
-  ["sair", "SAIR"],
-  ["parar", "PARAR"],
-  ["pare", "PARAR"],
-  ["para de", "PARAR"],
-  ["stop", "STOP"],
-  ["cancelar", "CANCELAR"],
-  ["descadastrar", "SAIR"],
-  ["nao quero mais", "SAIR"],
-  ["remover", "SAIR"],
-];
-// Mensagem de saída tem no máximo 4 palavras. Com mais que isso é conversa ("vou sair de casa agora pra loja").
-const MAX_PALAVRAS_SAIDA = 4;
 const MAX_CARACTERES_SAIDA = 80;
+
+// Palavras de cortesia ou de tempo que não mudam o pedido: "sair, por favor, obrigado" é "sair".
+const ENFEITES = new Set(["por", "favor", "pfv", "pf", "obrigado", "obrigada", "agora", "daqui", "muito", "please", "gentileza"]);
+
+// Verbo de saída → comando guardado no banco (whatsapp_sair).
+const VERBO_SAIDA: Readonly<Record<string, ComandoSaida>> = {
+  sair: "SAIR", sai: "SAIR", saia: "SAIR",
+  remover: "SAIR", remova: "SAIR", remove: "SAIR",
+  tirar: "SAIR", tira: "SAIR", tire: "SAIR",
+  retirar: "SAIR", retira: "SAIR", retire: "SAIR",
+  descadastrar: "SAIR", descadastra: "SAIR", descadastre: "SAIR",
+  desinscrever: "SAIR", desinscreva: "SAIR", desinscreve: "SAIR",
+  parar: "PARAR", pare: "PARAR",
+  stop: "STOP",
+  cancelar: "CANCELAR", cancela: "CANCELAR", cancele: "CANCELAR",
+};
+
+// Só estas palavras podem vir depois do verbo: "remover meu número", "tira da lista", "sair do radar".
+// Qualquer outra (anúncio, casa, loja) tira a mensagem do pedido de saída.
+const COMPLEMENTO = "me|meu|minha|nome|numero|contato|da|do|dos|das|lista|listagem|aviso|avisos|radar|mensagem|mensagens|mais|pelo|whatsapp|zap";
+const SUFIXO = "(?: (?:mais|mensagem|mensagens|avisos?|pedidos?|pelo whatsapp|no whatsapp))*";
+const PEDIDO_COM_VERBO = new RegExp(
+  `^(?:(?:quero|queria|eu quero|gostaria de|pode|podem) )?(?:me )?(${Object.keys(VERBO_SAIDA).join("|")})(?: (?:${COMPLEMENTO}))*$`,
+);
+// "para de mandar", "pare de me mandar mensagem"
+const PARAR_DE = new RegExp(
+  `^(?:(?:quero|queria|pode|podem) )?(?:parar|pare|para) de (?:me )?(?:mandar|mande|enviar|envie|mandando|enviando|incomodar)${SUFIXO}$`,
+);
+// "não quero mais receber", "nao quero mais", "nao quero receber mais"
+const NAO_QUERO = new RegExp(`^nao quero mais(?: receber)?${SUFIXO}$|^nao quero receber(?: mais)?${SUFIXO}$`);
+// "não me mande mais"
+const NAO_ME_MANDE = new RegExp(`^nao me (?:mande|mandem|manda|mandar|envie|enviem|envia|enviar)(?: mais)?${SUFIXO}$`);
 
 /** Segredo do webhook. Sem ele, ou curto demais, o webhook responde 503 e não aceita nada. */
 export function segredoEvolution(): string | null {
@@ -41,23 +59,25 @@ export function normalizarTextoSaida(texto: string): string {
   return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+function comandoDoTextoNormalizado(normal: string): ComandoSaida | null {
+  const verbo = PEDIDO_COM_VERBO.exec(normal);
+  if (verbo) return VERBO_SAIDA[verbo[1]] ?? null;
+  if (PARAR_DE.test(normal)) return "PARAR";
+  if (NAO_QUERO.test(normal) || NAO_ME_MANDE.test(normal)) return "SAIR";
+  return null;
+}
+
 /**
- * Pedido de saída: a frase inteira é um termo, ou tem até 4 palavras e contém um termo como palavra inteira.
- * "quero sair" e "pare por favor" valem. "parabéns" (não é "pare") e "vou sair de casa agora pra loja" não valem.
+ * Pedido de saída: a mensagem inteira tem de ser um pedido. Valem "sair", "SAIR!", "quero sair", "quero sair daqui",
+ * "pare por favor", "para de mandar", "não quero mais receber", "remover meu número".
+ * Não valem quando o verbo aparece dentro de uma conversa: "vou sair de casa", "posso remover o anúncio",
+ * "quero cancelar meu anúncio", "não quero sair", "sairia", "parabéns", "stopwatch". Texto acima de 80 caracteres: não.
  */
 export function comandoDeSaida(texto: unknown): ComandoSaida | null {
   if (typeof texto !== "string" || texto.length > MAX_CARACTERES_SAIDA) return null;
-  const normal = normalizarTextoSaida(texto);
-  if (!normal) return null;
-  const palavras = normal.split(" ");
-  if (palavras.length > MAX_PALAVRAS_SAIDA) return null;
-  for (const [termo, comando] of TERMOS_SAIDA) {
-    const partes = termo.split(" ");
-    for (let i = 0; i + partes.length <= palavras.length; i++) {
-      if (partes.every((parte, j) => palavras[i + j] === parte)) return comando;
-    }
-  }
-  return null;
+  const palavras = normalizarTextoSaida(texto).split(" ").filter((p) => p && !ENFEITES.has(p));
+  if (palavras.length === 0) return null;
+  return comandoDoTextoNormalizado(palavras.join(" "));
 }
 
 /** Só conversa de pessoa (@s.whatsapp.net) com celular brasileiro. Grupo, lista ou número estranho: null. */
@@ -74,29 +94,50 @@ function numeroDeCampoAlternativo(valor: unknown): string | null {
   return numeroDoRemetente(`${valor.trim().replace(/@s\.whatsapp\.net$/, "")}@s.whatsapp.net`);
 }
 
+export type ChaveDaMensagem = { remoteJid?: unknown; remoteJidAlt?: unknown; senderPn?: unknown; senderPN?: unknown };
+
 /**
  * Número da conversa. Conversa com identificador @lid (a Evolution v2 pode mandar só o identificador oculto):
- * o número real vem em remoteJidAlt ou senderPn. Aceitamos os dois, nessa ordem. Grupo (@g.us) não entra.
+ * o número real vem em remoteJidAlt, senderPn ou senderPN (a grafia muda entre versões), nessa ordem. Grupo (@g.us) não entra.
  */
-export function numeroDaConversa(key: { remoteJid?: unknown; remoteJidAlt?: unknown; senderPn?: unknown }): string | null {
+export function numeroDaConversa(key: ChaveDaMensagem): string | null {
   if (typeof key.remoteJid === "string" && key.remoteJid.endsWith("@lid")) {
-    return numeroDeCampoAlternativo(key.remoteJidAlt) ?? numeroDeCampoAlternativo(key.senderPn);
+    return numeroDeCampoAlternativo(key.remoteJidAlt) ?? numeroDeCampoAlternativo(key.senderPn) ?? numeroDeCampoAlternativo(key.senderPN);
   }
   return numeroDoRemetente(key.remoteJid);
 }
 
-/** Só mensagem recebida (messages.upsert). Outros eventos e mensagens que nós enviamos (fromMe) não valem. */
-export function pedidoDeSaida(corpo: unknown): { numero: string; comando: ComandoSaida } | null {
+type MensagemRecebida = { key: ChaveDaMensagem & { fromMe?: unknown }; texto: unknown };
+
+/** Lê o evento só se for mensagem recebida (messages.upsert, fromMe falso). Outros eventos e mensagens nossas: null. */
+function mensagemRecebida(corpo: unknown): MensagemRecebida | null {
   if (!corpo || typeof corpo !== "object") return null;
   const { event, data } = corpo as { event?: unknown; data?: unknown };
   if (typeof event !== "string" || event.toLowerCase().replace(/_/g, ".") !== "messages.upsert") return null;
   if (!data || typeof data !== "object") return null;
   const { key, message } = data as {
-    key?: { remoteJid?: unknown; remoteJidAlt?: unknown; senderPn?: unknown; fromMe?: unknown };
+    key?: ChaveDaMensagem & { fromMe?: unknown };
     message?: { conversation?: unknown; extendedTextMessage?: { text?: unknown } };
   };
   if (!key || key.fromMe !== false) return null;
-  const comando = comandoDeSaida(message?.conversation ?? message?.extendedTextMessage?.text);
-  const numero = numeroDaConversa(key);
+  return { key, texto: message?.conversation ?? message?.extendedTextMessage?.text };
+}
+
+/** Pedido de saída com número legível: { numero, comando }. Qualquer outra coisa: null. */
+export function pedidoDeSaida(corpo: unknown): { numero: string; comando: ComandoSaida } | null {
+  const msg = mensagemRecebida(corpo);
+  if (!msg) return null;
+  const comando = comandoDeSaida(msg.texto);
+  const numero = numeroDaConversa(msg.key);
   return comando && numero ? { numero, comando } : null;
+}
+
+/**
+ * Diagnóstico para o log: a frase é um pedido de saída, mas o número não pode ser lido (conversa @lid sem campo de número).
+ * Não devolve número nem texto; a rota só registra o fato, para o teste real mostrar o problema logo.
+ */
+export function saidaSemNumeroLegivel(corpo: unknown): boolean {
+  const msg = mensagemRecebida(corpo);
+  if (!msg || typeof msg.key.remoteJid !== "string" || msg.key.remoteJid.endsWith("@g.us")) return false;
+  return comandoDeSaida(msg.texto) !== null && numeroDaConversa(msg.key) === null;
 }
