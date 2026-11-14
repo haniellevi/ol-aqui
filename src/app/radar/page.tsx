@@ -51,15 +51,15 @@ type LinhaFeed = {
   pode_propor?: boolean;
 };
 
-type ParametrosRadar = Promise<{ aba?: string; q?: string; nicho?: string; pagina?: string; arquivo?: string }>;
+type ParametrosRadar = Promise<{ aba?: string; q?: string; nicho?: string; pagina?: string; arquivo?: string; "como-funciona"?: string }>;
 
 export default async function RadarPage({ searchParams }: { searchParams: ParametrosRadar }) {
-  const { aba, q, nicho, pagina, arquivo } = await searchParams;
+  const { aba, q, nicho, pagina, arquivo, "como-funciona": comoFunciona } = await searchParams;
   const textoBusca = typeof q === "string" ? q : null;
   const { userId } = await auth();
 
-  // Visitante: explica o Radar em 3 passos (pedir exige entrar com o celular).
-  if (!userId) return <ExplicacaoRadar textoBusca={textoBusca} />;
+  // A ajuda também fica disponível para quem já entrou.
+  if (!userId || comoFunciona === "1") return <ExplicacaoRadar textoBusca={textoBusca} visitante={!userId} />;
 
   await garantirPerfil();
   const conta = await meuPerfilEVitrine();

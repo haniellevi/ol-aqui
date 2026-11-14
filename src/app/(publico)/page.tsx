@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
-import { ArrowDownWideNarrow, Clock, Heart, LayoutGrid, MapPin, Tag } from "lucide-react";
+import { ArrowDownWideNarrow, Clock, Heart, MapPin, Tag } from "lucide-react";
 import { listarCategorias, totaisCategorias } from "@/lib/dados/categorias";
 import { arvoreComAnuncios, enxugarArvore } from "@/lib/categorias-arvore";
-import { FaixaCategorias } from "@/components/categorias/faixa-categorias";
+import { MenuCategoriasInicio } from "@/components/categorias/menu-categorias-inicio";
 import { anunciosCatalogo } from "@/lib/dados/catalogo";
 import { buscarAnuncios } from "@/lib/dados/anuncios";
 import { favoritosEntre } from "@/lib/dados/favoritos";
@@ -18,29 +18,20 @@ import { CoracaoCard } from "@/components/anuncio/coracao-card";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { SalvarAoVoltar } from "@/components/anuncio/salvar-ao-voltar";
 import { VistosRecentemente } from "@/components/anuncio/vistos-recentemente";
-import { IconeCategoria } from "@/components/ui/icone-categoria";
 import { Botao } from "@/components/ui/botao";
 import { Chip } from "@/components/ui/chip";
 import { Vazio } from "@/components/ui/vazio";
 import { LojasDaRegiao } from "@/components/vitrine/lojas-da-regiao";
 import { LojasEmDestaque } from "@/components/destaques/lojas-em-destaque";
-import { linkCategoria } from "@/lib/formato";
 import { blocosHome } from "@/lib/dados/paginas";
-import { AcoesInicio } from "@/components/paginas/acoes-inicio";
+import { AnunciarInicio, RadarInicio } from "@/components/paginas/acoes-inicio";
 import { RodapeInicio } from "@/components/paginas/rodape-inicio";
 import { linkPedirRadar } from "@/lib/rotas";
 import type { AnuncioCard } from "@/lib/tipos";
 import type { BlocoHome } from "@/lib/tipos-paginas";
 import estilos from "./inicio.module.css";
 
-// T2 · Início em 2 colunas (computador) e 1 coluna (celular), pensado para quem procura.
-// Esquerda: categorias e atalhos. Meio (o feed): lojas da região numa fileira no topo, título curto,
-// filtros rápidos, atalhos com "Estou procurando…" e "Anunciar", destaques pagos,
-// "Você viu há pouco" e os anúncios em grade, que são o assunto principal.
-// Filtros vão pelo endereço (?cidade=minha&ate=100&ordem=menor_preco): funcionam sem JavaScript.
-// A ordem, o liga/desliga e os textos dos blocos seguem vindo do painel (tabela home_blocos).
-// Todo lugar pago mostra "Patrocinado". Os blocos pagos e os "mais recentes" não desligam.
-
+// As categorias ficam na busca. O Radar explica o pedido na lateral ou acima dos filtros no celular.
 const POR_VEZ = 24;
 const ATE_CENTAVOS = 10000; // "Até R$ 100"
 
@@ -112,8 +103,22 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
   const ativos = blocos.filter((b) => b.ativo);
   const radar = ativos.find((b) => b.chave === "radar");
-  const recentes = ativos.find((b) => b.chave === "recentes");
+  const chamadaRadar = radar ? {
+    titulo: textoDe(["Não achou?", "Não achou o que queria?"].includes(radar.titulo ?? "") ? null : radar.titulo, "Procurando algo?", lugar),
+    texto: textoDe([
+      "Diga o que procura no Radar e as lojas da região te chamam.",
+      "Conte o que procura. As lojas podem enviar propostas, e você escolhe com quem conversar.",
+      "Diga o que precisa. As lojas da região te respondem.",
+    ].includes(radar.texto ?? "") ? null : radar.texto, "Diga o que você procura. Lojas da região podem responder com ofertas.", lugar),
+    botao: textoDe(["Estou procurando…", "Estou procurando..."].includes(radar.botao ?? "") ? null : radar.botao, "Pedir no Radar", lugar),
+  } : null;
   const blocoLojas = regiao ? ativos.find((b) => b.chave === "lojas_regiao") : undefined;
+  const tituloAnterior = blocoLojas?.titulo ?? null;
+  const tituloLojas = textoDe(
+    ["LOJAS DESTAQUE DA REGIÃO", "Lojas de {lugar}", "Lojas da região"].includes(tituloAnterior ?? "") ? null : tituloAnterior,
+    "DESTAQUES DA REGIÃO",
+    lugar,
+  );
   const base = linkFiltros(filtros);
   const voltarHref = pagina > 1 ? `${base}${base.includes("?") ? "&" : "?"}pagina=${pagina}` : base;
   const linkPagina = (n: number) => {
@@ -122,41 +127,37 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   };
 
   return (
-    <div data-comprador className={estilos.fundo}>
-      {/* Celular: a busca gruda logo abaixo do cabeçalho (no computador ela está no próprio cabeçalho). */}
-      <div className="border-b border-borda bg-cartao px-4 py-2 md:hidden">
-        <CampoBusca id="busca-inicio" sugestoes regiao={regiao?.slug} toqueAmplo />
+    <div data-comprador data-inicio className={estilos.fundo}>
+      <div className="border-b border-borda bg-cartao">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-2 px-4 py-2 sm:gap-3">
+          <MenuCategoriasInicio categorias={categorias.map(({ id, slug, nome, icone }) => ({ id, slug, nome, icone }))} />
+          <div className={`@container/busca-topo w-full min-w-0 max-w-2xl ${estilos.busca}`}>
+            <CampoBusca id="busca-inicio" placeholder="Buscar algo" sugestoes regiao={regiao?.slug} toqueAmplo />
+          </div>
+        </div>
       </div>
 
       <div className="mx-auto w-full max-w-7xl px-4 [&:not(:empty)]:pt-2">
         <EntradaAssistente dono={userId} />
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl items-start gap-4 px-4 py-2 md:py-3 lg:grid-cols-[13rem_minmax(0,1fr)]">
-        {/* Coluna da esquerda: categorias e atalhos (só no computador). */}
-        <aside className="sticky top-20 hidden flex-col gap-4 lg:flex">
-          {categorias.length > 0 && (
-            <nav aria-labelledby="titulo-cats-lado" className="rounded-card border border-borda bg-cartao p-2">
-              <h2 id="titulo-cats-lado" className="px-2 pt-1 pb-1 text-legenda font-semibold tracking-wide text-texto-suave uppercase">Categorias</h2>
-              <ul className="flex flex-col">
-                {categorias.map((c) => (
-                  <li key={c.id}>
-                    <Link href={linkCategoria(c.slug)} className={estilos.itemLado}>
-                      <IconeCategoria nome={c.icone} className="size-5 shrink-0 text-beringela" aria-hidden />
-                      <span className="min-w-0 py-1.5 leading-tight [overflow-wrap:anywhere]">{c.nome}</span>
-                    </Link>
-                  </li>
-                ))}
-                <li>
-                  <Link href="/categorias" className={estilos.itemLado}>
-                    <LayoutGrid className="size-5 shrink-0 text-beringela" aria-hidden />
-                    <span>Todas as categorias</span>
-                  </Link>
-                </li>
-              </ul>
-            </nav>
+      <main className="mx-auto grid w-full max-w-7xl items-start gap-3 px-4 py-3 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-4">
+        <Suspense fallback={null}>
+          <SalvarAoVoltar logado={logado} />
+        </Suspense>
+
+        <div className="flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-start-1">
+          {regiao && blocoLojas ? (
+            <LojasDaRegiao regiao={regiao} arvore={enxugarArvore(todasCategorias)} titulo={tituloLojas} />
+          ) : (
+            <Botao href="/lojas" variante="secundario" tamanho="toque" className="self-start">Ver todas as lojas</Botao>
           )}
-          <nav aria-labelledby="titulo-atalhos" className="rounded-card border border-borda bg-cartao p-2">
+          <AnunciarInicio />
+        </div>
+
+        <aside className={`${chamadaRadar ? "flex" : "hidden lg:flex"} min-w-0 flex-col gap-3 lg:sticky lg:top-20 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start`}>
+          {chamadaRadar && <RadarInicio {...chamadaRadar} />}
+          <nav aria-labelledby="titulo-atalhos" className="hidden rounded-card border border-borda bg-cartao p-2 lg:block">
             <h2 id="titulo-atalhos" className="px-2 pt-1 pb-1 text-legenda font-semibold tracking-wide text-texto-suave uppercase">Para você</h2>
             <ul className="flex flex-col">
               <li><Link href="/minha-conta/favoritos" className={estilos.itemLado}><Heart className="size-5 shrink-0 text-beringela" aria-hidden />Favoritos</Link></li>
@@ -167,44 +168,15 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           </nav>
         </aside>
 
-        {/* Meio: o feed. */}
-        <main className="flex min-w-0 flex-col gap-3">
-          <Suspense fallback={null}>
-            <SalvarAoVoltar logado={logado} />
-          </Suspense>
-
-          {/* Lojas no topo do feed (bloco "lojas_regiao" do painel). Desligado: fica só o acesso ao catálogo. */}
-          <div className="min-w-0 max-md:order-4">
-          {regiao && blocoLojas ? (
-            <LojasDaRegiao regiao={regiao} arvore={enxugarArvore(todasCategorias)} titulo={textoDe(blocoLojas.titulo, "LOJAS DESTAQUE DA REGIÃO", lugar)} />
-          ) : (
-            <Botao href="/lojas" variante="secundario" className="self-start">Ver todas as lojas</Botao>
-          )}
-
-          </div>
-          <FaixaCategorias arvore={categorias} soComAnuncios={!!totais} className="hidden md:block lg:hidden" />
-          <nav aria-label="Categorias" className="md:hidden">
-            <ul className="flex flex-wrap gap-x-2">
-              <li><Link href="/categorias" className={estilos.atalhoCategoria}><LayoutGrid className="size-4 shrink-0" aria-hidden /> Todas</Link></li>
-              {categorias.slice(0, 2).map((c) => (
-                <li key={c.id} className="max-w-full min-w-0">
-                  <Link href={linkCategoria(c.slug)} className={estilos.atalhoCategoria}>
-                    <IconeCategoria nome={c.icone} className="size-4 shrink-0" aria-hidden />
-                    <span className="[overflow-wrap:anywhere]">{c.nome}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
+        <div className="flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-start-2">
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <h1 id="titulo-inicio" className="text-xl font-semibold text-balance text-beringela">
+              <h1 id="titulo-inicio" className="text-titulo font-semibold text-balance text-beringela">
                 Anúncios em {lugar}
               </h1>
               {total > 0 && <p className="text-legenda text-texto-suave">{total.toLocaleString("pt-BR")} {total === 1 ? "anúncio" : "anúncios"}</p>}
             </div>
-            <div role="group" aria-label="Filtros rápidos" className={`flex flex-wrap gap-2 ${filtrando ? "" : "max-md:hidden"}`}>
+            <div role="group" aria-label="Filtros rápidos" className="flex flex-wrap gap-2">
               {cidade && (
                 <Chip href={linkFiltros({ ...filtros, minha: !filtros.minha })} ativo={filtros.minha} tamanho="toque" icone={<MapPin />} scroll={false}>
                   Só em {formatarNome(cidade)}
@@ -217,29 +189,18 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                 Menor preço
               </Chip>
               {filtrando && (
-                <Link href="/" scroll={false} className="inline-flex min-h-11 shrink-0 items-center rounded-campo px-2 text-rotulo font-semibold text-laranja-escuro underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
+                <Link href="/" scroll={false} className="inline-flex min-h-toque shrink-0 items-center rounded-campo px-2 text-rotulo font-semibold text-laranja-escuro underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
                   Limpar filtros
                 </Link>
               )}
             </div>
           </div>
 
-          <div className="max-md:order-1">
-          <AcoesInicio
-            radar={radar ? {
-              chamada: textoDe(radar.titulo, "Não achou?", lugar),
-              botao: textoDe(radar.botao, "Estou procurando…", lugar),
-            } : null}
-            venderPrimeiro={Boolean(radar && recentes && ativos.indexOf(recentes) < ativos.indexOf(radar))}
-          />
-
-          </div>
-
           {ativos.map((bloco) => {
             switch (bloco.chave) {
               case "destaques":
                 return destaques.length > 0 ? (
-                  <section key={bloco.chave} aria-labelledby="titulo-destaques" className={`flex flex-col gap-2 max-md:order-2 ${estilos.faixaPaga}`}>
+                  <section key={bloco.chave} aria-labelledby="titulo-destaques" className={`flex flex-col gap-2 ${estilos.faixaPaga}`}>
                     <h2 id="titulo-destaques" className="text-lg font-semibold">
                       {textoDe(bloco.titulo, "Destaques perto de você", lugar)}
                     </h2>
@@ -249,21 +210,18 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
               case "lojas_destaque":
                 return regiao ? (
-                  <div key={bloco.chave} className="min-w-0 max-md:order-4 [&:empty]:hidden"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
+                  <div key={bloco.chave} className="min-w-0 [&:empty]:hidden"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
                 ) : null;
 
               case "radar":
-                // O Radar aparece nos atalhos do início (AcoesInicio): o painel liga/desliga e dá os textos.
                 return null;
 
               case "lojas_regiao":
-                // As lojas ficam no topo do feed (acima); o painel liga/desliga e dá o título.
                 return null;
 
               case "recentes":
                 return (
-                  <div key={bloco.chave} className="flex flex-col gap-3 max-md:order-3">
-                    {!filtrando && <div className="max-md:order-last [&:empty]:hidden"><VistosRecentemente voltarHref={voltarHref} /></div>}
+                  <div key={bloco.chave} className="flex flex-col gap-3">
                     <section id="anuncios" aria-labelledby="titulo-recentes" className="flex scroll-mt-20 flex-col gap-3">
                       <h2 id="titulo-recentes" className={`text-lg font-semibold ${filtrando ? "" : "max-md:sr-only"}`}>
                         {filtrando
@@ -283,10 +241,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                             <Vazio
                               className={estilos.vazio}
                               titulo="Nada com esses filtros"
-                              texto="Tire um filtro. Não achou? Diga o que procura e as lojas da região te respondem."
+                              texto="Tire um filtro para ver mais anúncios."
                             >
                               <Botao href="/" variante="secundario" tamanho="toque" larguraTotal>Limpar filtros</Botao>
-                              <Botao href={linkPedirRadar()} tamanho="toque" larguraTotal>Estou procurando…</Botao>
+                              {radar && <Botao href={linkPedirRadar()} tamanho="toque" larguraTotal>Pedir no Radar</Botao>}
                             </Vazio>
                           ) : (
                             <Vazio
@@ -308,6 +266,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                         )}
                       </div>
                     </section>
+                    {!filtrando && <div className="[&:empty]:hidden"><VistosRecentemente voltarHref={voltarHref} /></div>}
                   </div>
                 );
 
@@ -317,8 +276,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           })}
 
           <RodapeInicio />
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

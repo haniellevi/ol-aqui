@@ -15,7 +15,7 @@ import type { TipoLoja } from "@/lib/tipos-de-loja";
 type LojaFaixa = { id: string; slug: string; nome: string; logo_url: string | null; verificada: boolean; tipos: string[] };
 
 const SETA =
-  "grid size-10 shrink-0 place-items-center rounded-campo border border-borda bg-cartao text-beringela " +
+  "grid size-11 shrink-0 place-items-center rounded-campo border border-borda bg-cartao text-beringela " +
   "hover:bg-selecao focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
 
 export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: LojaFaixa[]; tipos: TipoLoja[] }) {
@@ -53,27 +53,27 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
   return (
     <section aria-labelledby="titulo-lojas" className="flex min-w-0 flex-col gap-1 rounded-card border border-borda bg-cartao p-2 md:px-3 md:py-2">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="titulo-lojas" className="min-w-0 text-sm font-semibold text-beringela md:text-base">{titulo}</h2>
-        <Botao href="/lojas" variante="texto" className="shrink-0 px-2">Ver todas</Botao>
+        <h2 id="titulo-lojas" className="min-w-0 text-lg font-semibold text-beringela [overflow-wrap:anywhere]">{titulo}</h2>
+        <Botao href="/lojas" variante="texto" tamanho="toque" className="shrink-0 px-2">Ver todas</Botao>
       </div>
       {lojas.length > 0 && (
         <>
           <div className="flex min-w-0 items-center gap-1.5 md:gap-3">
             {visiveis.length > 0 ? (
               <div className="relative min-w-0 flex-1">
-                <ul ref={fila} id="lojas-da-regiao" aria-label="Lojas da região" className="flex min-w-0 snap-x gap-1.5 overflow-x-auto py-1 [scrollbar-width:none]">
+                <ul ref={fila} id="lojas-da-regiao" aria-label="Lojas da região" className="flex min-w-0 snap-x gap-2 overflow-x-auto py-1 [scrollbar-width:none]">
                   {visiveis.map((l) => {
                     const nome = formatarNome(l.nome);
                     return (
                       <li key={l.id} className="shrink-0 snap-start">
-                        <Link href={linkLoja(l.slug)} title={nome} className="olaki-toque flex w-[5.375rem] flex-col items-center gap-1 rounded-campo bg-fundo px-1.5 py-1.5 text-center hover:bg-selecao focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro md:w-28">
-                          <span className="relative">
-                            <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="sm" quadrado />
-                            {l.verificada && (
-                              <ShieldCheck className="absolute -right-1 -bottom-1 size-4 rounded-full bg-cartao p-0.5 text-verde-escuro" aria-label="Loja verificada" role="img" />
-                            )}
+                        <Link href={linkLoja(l.slug)} title={nome} className="olaki-toque relative isolate block aspect-square w-30 overflow-hidden rounded-card border border-borda bg-cartao hover:border-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro md:w-36">
+                          <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="cartao" />
+                          {l.verificada && (
+                            <ShieldCheck className="absolute top-2 right-2 size-5 rounded-full bg-cartao p-0.5 text-verde-escuro" aria-label="Loja verificada" role="img" />
+                          )}
+                          <span className="absolute inset-x-0 bottom-0 bg-beringela/95 px-2 py-1.5 text-sm leading-tight font-semibold text-white">
+                            <span className="line-clamp-2 [overflow-wrap:anywhere]">{nome}</span>
                           </span>
-                          <span className="w-full text-xs font-medium leading-4 text-texto [overflow-wrap:anywhere]">{nome}</span>
                         </Link>
                       </li>
                     );
@@ -98,9 +98,9 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
 
           {tipos.length > 1 && (
             <div role="group" aria-label="Tipo de loja" className="flex gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:none]">
-              <Chip ativo={!tipo} onClick={() => setTipo(null)}>Todos os tipos</Chip>
+              <Chip tamanho="toque" ativo={!tipo} onClick={() => setTipo(null)}>Todos os tipos</Chip>
               {tipos.map((t) => (
-                <Chip key={t.slug} ativo={tipo === t.slug} icone={<IconeCategoria nome={t.icone} />} onClick={() => setTipo(tipo === t.slug ? null : t.slug)}>
+                <Chip tamanho="toque" key={t.slug} ativo={tipo === t.slug} icone={<IconeCategoria nome={t.icone} />} onClick={() => setTipo(tipo === t.slug ? null : t.slug)}>
                   {t.nome}
                 </Chip>
               ))}

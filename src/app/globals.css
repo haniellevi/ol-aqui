@@ -244,6 +244,8 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
   --sidebar-ring: var(--color-laranja-escuro);
 }
 
+.publico:has([data-inicio]) .busca-cabecalho { display: none; }
+
 @media (width < 48rem) {
   .publico:has([data-barra-loja]) [data-aki-atalho] {
     bottom: calc(var(--spacing-barra-nav) + 4.75rem + env(safe-area-inset-bottom));
