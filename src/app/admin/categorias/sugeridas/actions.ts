@@ -45,12 +45,13 @@ export async function decidirSugestoes(_: EstadoForm, form: FormData): Promise<E
   revalidatePath(LINK_ADMIN_CATEGORIAS_SUGERIDAS);
   revalidatePath(LINK_ADMIN_CATEGORIAS);
   revalidatePath("/", "layout");
-  const r = (data ?? {}) as { decididas?: number; movidos?: number; revisar?: number };
+  const r = (data ?? {}) as { decididas?: number; movidos?: number; revisar?: number; pedidos?: number };
   const resumo = new URLSearchParams({
     feito: acao,
     decididas: String(r.decididas ?? 0),
     movidos: String(r.movidos ?? 0),
     revisar: String(r.revisar ?? 0),
+    pedidos: String(r.pedidos ?? 0), // pedidos do Radar que mudaram de categoria
   });
   redirect(`${LINK_ADMIN_CATEGORIAS_SUGERIDAS}?${resumo.toString()}`);
 }

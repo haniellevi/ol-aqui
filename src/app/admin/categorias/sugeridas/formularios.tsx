@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState, useId, useState } from "react";
+import Link from "next/link";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { Aviso, Cartao, estiloCampo } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
 import { confirmarAntes, useConfirmar } from "@/components/ui/confirmar";
 import type { EstadoForm } from "@/lib/admin/estado";
 import { inteiro, quando } from "@/lib/admin/formato";
+import { linkPedidoRadarLoja } from "@/lib/rotas";
 import type { GrupoSugestao } from "@/lib/tipos-cadastros";
 import { enviarSemLimpar } from "../../textos/enviar-sem-limpar";
 import { decidirSugestoes } from "./actions";
@@ -54,6 +56,17 @@ export function CartaoSugestao({ item, maes, finais, podeDecidir = true }: { ite
         <p className="text-sm">
           <span className="text-texto-suave">Mais perto de:</span> {proximas || "—"}
         </p>
+        {grupo.radar ? (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span className="rounded-full bg-selecao px-3 py-0.5 text-legenda font-semibold text-beringela">Pedido do Radar</span>
+            <span className="text-texto-suave">{inteiro(grupo.radar)} {grupo.radar === 1 ? "pedido feito em Geral" : "pedidos feitos em Geral"}</span>
+            {(grupo.pedidos_radar ?? []).map((id, i) => (
+              <Link key={id} href={linkPedidoRadarLoja(id)} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline">
+                {grupo.radar === 1 ? "Ver pedido" : `Ver pedido ${i + 1}`}
+              </Link>
+            ))}
+          </p>
+        ) : null}
       </div>
 
       {item.parecidas.length > 0 && (

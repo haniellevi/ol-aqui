@@ -117,6 +117,8 @@ try:
     checked(sql((root/'supabase/testes/820_fotos_pasta_antiga.sql').read_text()))
     checked(sql((root/'supabase/testes/830_radar_piloto.sql').read_text()))
     print('PASS: Radar piloto: categoria obrigatória, aviso de WhatsApp só com chave e consentimento, SAIR desliga e cancela, fila pula quem saiu, reenvio dentro da janela e Meu plano', flush=True)
+    checked(sql((root/'supabase/testes/860_radar_categoria_geral.sql').read_text()))
+    print('PASS: pedido do Radar em geral vira sugestão de categoria: uma por pedido, sem dado do comprador, juntar e aprovar movem o pedido, recusar não move e só o super admin decide', flush=True)
     print('PASS: fotos na pasta do ID antigo após a troca do Clerk: dono reordena, tira e põe foto nova; foto antiga fora do anúncio, em outro anúncio ou de outra pessoa continua recusada', flush=True)
     checked(sql((root/'supabase/testes/830_leitura_publica_colunas.sql').read_text()))
     print('PASS: leitura pública: visitante só lê colunas das telas públicas, logado sem IP de criação e revisão interna, ID do dono fora do visitante, dona, ajudante, admin e outra pessoa', flush=True)
