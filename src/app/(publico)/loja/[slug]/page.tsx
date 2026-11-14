@@ -25,6 +25,7 @@ import { inteiro, linkLoja, urlAbsoluta } from "@/lib/formato";
 import { LINK_MINHA_LOJA } from "@/lib/rotas";
 import type { AnuncioVitrine, OrdemVitrine, VitrinePublica } from "@/lib/tipos-vitrine";
 import { Alert } from "@/components/ui/alert";
+import { ehTelefoneGuardado } from "@/lib/telefone";
 
 // T10 · Vitrine da loja: mercadodaregiao.com.br/loja/<slug>. "Site grátis" que a loja divulga no Instagram.
 // Ordem da página: topo (banner, logo, nome, selo, WhatsApp) → destaques da loja (produtos fixados
@@ -134,7 +135,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const agora = new Date();
   const situacao = situacaoAgora(v.horarios, agora);
   const numero = (v.whatsapp ?? "").replace(/\D/g, "");
-  const whatsapp = v.status === "ativa" && /^55[1-9][0-9]9?[0-9]{8}$/.test(numero)
+  const whatsapp = v.status === "ativa" && ehTelefoneGuardado(numero)
     ? `https://wa.me/${numero}?text=${encodeURIComponent(`Olá! Vi sua loja no Mercado da Região: ${urlAbsoluta(linkLoja(v.slug))}`)}`
     : null;
 

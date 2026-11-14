@@ -41,4 +41,13 @@ update microrregioes set ddd = '77' where slug = 'corrente-pi';
 update microrregioes set ddd = '89' where slug = 'corrente-pi' and cidade_sede = 'Corrente' and ddd is null;
 do $$ begin assert (select ddd from microrregioes where slug = 'corrente-pi') = '77', 'Migração trocou DDD preenchido'; end $$;
 
+-- Cidade com DDD próprio (cidades.ddd, migração 20261125070000): só DDD que existe; vazio é permitido;
+-- Formosa do Rio Preto-BA e Barreiras-BA ficam com 77 quando existem na tabela.
+select pg_temp.recusa850(format('update cidades set ddd = %L where id = (select id from cidades order by nome limit 1)', v))
+  from unnest(array['10', '00', '1', '7a']) v;
+update cidades set ddd = null where id = (select id from cidades order by nome limit 1);
+do $$ begin
+  assert (select count(*) from cidades where nome in ('Formosa do Rio Preto', 'Barreiras') and uf = 'BA' and ddd is not null and ddd <> '77') = 0,
+    'Cidade de DDD 77 com outro DDD';
+end $$;
 rollback;

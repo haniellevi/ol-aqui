@@ -19,7 +19,7 @@ const REGIAO_PADRAO = "corrente-pi"; // região-piloto; o usuário poderá troca
 
 /** "+5589999990000" → "5589999990000" (só se for telefone brasileiro válido; o Clerk sempre manda com +55). */
 function whatsappDe(e164?: string) {
-  return numeroTelefone(e164, { aceitaFixo: true });
+  return numeroTelefone(e164, { aceitaFixo: false });
 }
 
 /**

@@ -141,5 +141,15 @@ select pg_temp.confere860((select categoria_id = :'moveis'::uuid from radar_pedi
 -- [10] Pedidos sem categoria que já viraram sugestão continuam abertos e nenhum outro foi criado.
 select pg_temp.confere860((select count(*) = 0 from categorias_sugeridas where pedido_radar_id is not null and estado = 'pendente'), 'Nenhuma sugestão do Radar sobrou pendente');
 
+-- [11] Pedido do Aki em imóvel (tipo no enum, sem categoria da tabela) não é geral: sem sugestão, e fica no tipo dele.
+set local role authenticated;
+set local request.jwt.claim.role = 'authenticated';
+set local request.jwt.claim.sub = 'user_860comprador';
+select criar_pedido_radar(p_titulo => 'Procuro casa para alugar no centro', p_modo => 'propostas_prazo',
+  p_prazo_horas => 72, p_categoria => 'imovel', p_origem => 'aki') ->> 'id' as p_imovel \gset
+reset role;
+select pg_temp.confere860(not exists (select 1 from categorias_sugeridas where pedido_radar_id = :'p_imovel'::uuid), 'Pedido de imóvel (Aki) não vira sugestão de geral');
+select pg_temp.confere860((select categoria::text = 'imovel' and categoria_id is null from radar_pedidos where id = :'p_imovel'::uuid), 'Pedido de imóvel fica no tipo imóvel, sem categoria da tabela');
+
 select 'ok' as radar_categoria_geral;
 rollback;

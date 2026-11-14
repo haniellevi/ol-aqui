@@ -89,6 +89,11 @@ export function numeroTelefone(entrada: unknown, opcoes: OpcoesTelefone = {}): s
   return normalizarTelefone(entrada, opcoes).numero ?? null;
 }
 
+/** Número já guardado (55 + DDD + 8 ou 9 dígitos): a mesma regra do banco. Para ler o que está gravado, sem normalizar. */
+export function ehTelefoneGuardado(valor: unknown): boolean {
+  return typeof valor === "string" && REGEX_GUARDADO.test(valor);
+}
+
 /** Só o DDD de um número guardado ("5589999990000" → "89"). Fora do formato → null. */
 export function dddDoNumero(numero: string | null | undefined): string | null {
   const m = /^55([1-9][0-9])9?[0-9]{8}$/.exec(String(numero ?? ""));

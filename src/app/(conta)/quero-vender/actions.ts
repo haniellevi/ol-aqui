@@ -2,7 +2,8 @@
 // Server Actions do "Quero vender" (T14, T15). Quem cria a vitrine e decide plano e teste
 // grátis é a função quero_vender() do banco; aqui só conferimos os dados para mostrar o erro no campo.
 import { telefoneComercialDigitado } from "@/lib/formato";
-import { dddDaRegiao, numeroComRegiao } from "@/lib/telefone-regiao";
+import { dddDoPerfil, numeroComRegiao } from "@/lib/telefone-regiao";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugDisponivel } from "@/lib/dados/vitrines";
@@ -35,10 +36,8 @@ export async function criarLoja(_antes: EstadoLoja, form: FormData): Promise<Est
   const slug = String(form.get("slug") ?? "").trim().toLowerCase();
   const whatsapp = String(form.get("whatsapp") ?? "").trim();
   // Sem DDD no WhatsApp da loja, usa o DDD da região da pessoa.
-  const fone = await numeroComRegiao(whatsapp, async () => {
-    const { data: perfil } = await (await createClient()).from("perfis").select("microrregiao_id").maybeSingle();
-    return dddDaRegiao(perfil?.microrregiao_id);
-  }, telefoneComercialDigitado, true);
+  const { userId } = await auth();
+  const fone = await numeroComRegiao(whatsapp, () => dddDoPerfil(userId), telefoneComercialDigitado, true);
   const cidade = String(form.get("cidade") ?? "").trim();
   const categoria = String(form.get("categoria_loja") ?? "").trim();
   const sobre = String(form.get("sobre") ?? "").trim();

@@ -11,7 +11,7 @@ import { apagarFoto } from "@/lib/dados/fotos";
 import { minhaVitrineCompleta, meusRecursosVitrine, minhasSecoes, opcoesVitrine } from "@/lib/dados/vitrine-completa";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid, linkLoja, telefoneComercialDigitado } from "@/lib/formato";
-import { dddDaRegiao, numeroComRegiao } from "@/lib/telefone-regiao";
+import { dddDaLoja, numeroComRegiao } from "@/lib/telefone-regiao";
 import { limparInstagram, linkSiteLoja, minutosDoDia } from "@/components/vitrine/regras";
 import { BANNER_MODELOS, DIAS_SEMANA, type FaixaHorario, type Horarios } from "@/lib/tipos-vitrine";
 import type { Resultado } from "@/lib/tipos";
@@ -223,7 +223,7 @@ export async function salvarInformacoes(_antes: EstadoVitrine, form: FormData): 
     const site = form.get("site_url");
     const telefone = form.get("telefone_publico");
     const siteUrl = typeof site === "string" && site.trim() ? linkSiteLoja(site.trim()) : null;
-    const telefonePublico = await numeroComRegiao(telefone, () => dddDaRegiao(v.microrregiao_id), telefoneComercialDigitado, true);
+    const telefonePublico = await numeroComRegiao(telefone, () => dddDaLoja(v.id), telefoneComercialDigitado, true);
     const sobre = String(form.get("sobre") ?? "").trim();
     const entrega = String(form.get("faz_entrega") ?? "");
     const entregaObs = String(form.get("entrega_obs") ?? "").replace(/\s+/g, " ").trim();
