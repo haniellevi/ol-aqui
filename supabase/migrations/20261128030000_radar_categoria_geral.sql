@@ -1,4 +1,4 @@
--- Pedido do Radar em "geral" vira sugestão de categoria (20261125050000).
+-- Pedido do Radar em "geral" vira sugestão de categoria (20261128030000).
 -- Pedido sem categoria (o Aki cria assim quando não sabe) ou em "Outros" / "Diversos" (o site) entra no
 -- fluxo de categorias sugeridas (mesma tabela e mesma tela da equipe), marcado como "Pedido do Radar".
 -- O texto é só o título do pedido: o comprador não aparece (autor vazio). Um pedido tem no máximo uma sugestão.

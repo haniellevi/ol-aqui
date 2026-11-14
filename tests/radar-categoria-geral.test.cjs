@@ -4,7 +4,7 @@ const React = require('react');
 const { renderToStaticMarkup: render } = require('react-dom/server');
 const { carregar } = require('./carregar.cjs');
 
-// Pedido do Radar em "geral" (migração 20261125050000): a lista do admin marca o grupo, leva ao pedido e
+// Pedido do Radar em "geral" (migração 20261128030000): a lista do admin marca o grupo, leva ao pedido e
 // a volta da decisão conta os pedidos que mudaram de categoria.
 const PEDIDO_1 = '86000000-0000-4000-a000-000000000001';
 const PEDIDO_2 = '86000000-0000-4000-a000-000000000002';

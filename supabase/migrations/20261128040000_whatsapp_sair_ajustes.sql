@@ -1,4 +1,4 @@
--- SAIR: ajustes depois da revisão (25/11/2026). Substitui duas funções da 20261125030000 (create or replace):
+-- SAIR: ajustes depois da revisão (25/11/2026). Substitui duas funções da 20261128010000 (create or replace):
 -- 1. whatsapp_fila_confirmar_envio: a conferência antes do envio passa a usar as mesmas regras de quem recebe
 --    o aviso do Radar que radar_avisar_pedido_novo usa ao enfileirar (loja ativa na região, WhatsApp verificado e igual
 --    ao da fila, conta não revogada, plano que avisa na hora, área e nicho do pedido). Motivo novo: sem_direito_aviso.
@@ -62,7 +62,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- 2. SAIR / PARAR / STOP / CANCELAR: igual à 20261125030000, com o nome certo da tela na resposta
+-- 2. SAIR / PARAR / STOP / CANCELAR: igual à 20261128010000, com o nome certo da tela na resposta
 -- ---------------------------------------------------------------------
 create or replace function public.whatsapp_sair(p_numero text, p_comando text)
 returns boolean language plpgsql security definer

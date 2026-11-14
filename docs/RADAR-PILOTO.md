@@ -6,7 +6,7 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
 
 - **Pedido só por propostas com prazo.** O formulário do site não oferece mais "Podem me chamar no WhatsApp". O servidor recusa esse modo no pedido do site (`criar_pedido_radar_site`) e na validação do formulário. Pedidos antigos continuam como estavam.
 - **Categoria obrigatória no pedido do site.** Vale no formulário, na validação do servidor e na função do banco. Uma subcategoria só vale se a categoria de cima também estiver ativa.
-- **Pedido do Radar em "geral" vira sugestão de categoria.** Pedido sem categoria da tabela e do tipo "geral" (Aki) ou em Outros/Diversos (site) entra em Categorias sugeridas, marcado como "Pedido do Radar", com link para o pedido. Pedido do Aki em imóvel, veículo ou móvel não entra: já tem tipo próprio. Só o título vai junto, sem dados do comprador. A equipe cria categoria, junta (o pedido muda de categoria) ou recusa (nada muda). Um pedido tem no máximo uma sugestão. Migração `supabase/migrations/20261125050000_radar_categoria_geral.sql`; teste `supabase/testes/860_radar_categoria_geral.sql`.
+- **Pedido do Radar em "geral" vira sugestão de categoria.** Pedido sem categoria da tabela e do tipo "geral" (Aki) ou em Outros/Diversos (site) entra em Categorias sugeridas, marcado como "Pedido do Radar", com link para o pedido. Pedido do Aki em imóvel, veículo ou móvel não entra: já tem tipo próprio. Só o título vai junto, sem dados do comprador. A equipe cria categoria, junta (o pedido muda de categoria) ou recusa (nada muda). Um pedido tem no máximo uma sugestão. Migração `supabase/migrations/20261128030000_radar_categoria_geral.sql`; teste `supabase/testes/860_radar_categoria_geral.sql`.
 - **Aki:** o pedido feito pelo Aki também sai só com propostas, com prazo de 72 horas. A mensagem de sucesso diz "vão mandar propostas aqui".
 - **Aviso de pedido novo por WhatsApp** (Minha conta > Notificações):
   - desligado por padrão e só para a loja que ligou de propósito;
@@ -49,7 +49,7 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
 
 ## Ordem para ligar o piloto (nada disso foi feito)
 
-1. **Aplicar as migrações ANTES de fazer merge ou deploy, nesta ordem** (no editor SQL do Supabase, como as anteriores; nenhuma está aplicada em produção): `20261125010000_radar_piloto.sql`, `20261125020000_radar_fila_recheca_propostas.sql`, `20261125030000_whatsapp_sair_completo.sql`, `20261125040000_microrregiao_ddd.sql`, `20261125050000_radar_categoria_geral.sql`, `20261125060000_whatsapp_sair_ajustes.sql`, `20261125070000_radar_ddd_cidade_e_geral.sql`. Sem elas o Radar e a cortesia não funcionam como descritos (o meu plano usa funções novas; sem elas a página segue, mas sem a cortesia e com o nome do plano vindo da leitura normal).
+1. **Aplicar as migrações ANTES de fazer merge ou deploy, nesta ordem** (no editor SQL do Supabase, como as anteriores; nenhuma está aplicada em produção): `20261125010000_radar_piloto.sql`, `20261125020000_radar_fila_recheca_propostas.sql`, `20261128010000_whatsapp_sair_completo.sql`, `20261128020000_microrregiao_ddd.sql`, `20261128030000_radar_categoria_geral.sql`, `20261128040000_whatsapp_sair_ajustes.sql`, `20261128050000_radar_ddd_cidade_e_geral.sql`. Sem elas o Radar e a cortesia não funcionam como descritos (o meu plano usa funções novas; sem elas a página segue, mas sem a cortesia e com o nome do plano vindo da leitura normal).
 2. **Antes de desativar o Slim no painel, marcar o Full como recomendado.** Hoje o recomendado é o Slim. Se o Slim sair de venda sem outro recomendado à venda, a renovação de quem está nele volta a oferecer todos os planos à venda.
 3. Fazer merge e deploy do código.
 4. Na Vercel (Production), criar `EVOLUTION_WEBHOOK_SEGREDO` com 32 caracteres ou mais, gerado fora do código, e fazer novo deploy. Sem ela o webhook responde 503 e não aceita nada.
@@ -70,6 +70,6 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
 - **Número separado para os avisos:** recomendado, não configurado.
 - **Linha `Co-Authored-By` dos commits:** os commits anteriores dizem "Claude Opus 5.5" ou "Claude Haiku 5.5"; os desta rodada dizem "Claude Haiku 5.5" (Opus 5.5 não é usado). Decidir o nome antes de qualquer push (reescrever commit só com aprovação).
 - **Frases fora da lista** (ex.: "sai dessa lista", "parei") não são reconhecidas como saída. Frases de até 80 caracteres só.
-- **Pedido do Radar em geral sem backfill:** pedidos já criados antes da migração 20261125050000 não geram sugestão.
+- **Pedido do Radar em geral sem backfill:** pedidos já criados antes da migração 20261128030000 não geram sugestão.
 - **Nada foi testado com a Evolution de verdade.** O webhook foi testado com banco simulado.
 - **Sem `next build` nesta rodada.**
