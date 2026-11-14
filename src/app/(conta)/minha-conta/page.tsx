@@ -140,7 +140,19 @@ export default async function PaginaMinhaConta() {
         <div className="grid min-w-0 items-start gap-4 md:grid-cols-3">
           {deVendedor.length > 0 && <Lista titulo="Lojas e vendas" itens={deVendedor} />}
           <Lista titulo="Compras e conversas" itens={comprasEConversas} />
-          <Lista titulo="Perfil e suporte" itens={perfilESuporte} />
+          <div className="flex min-w-0 flex-col gap-4">
+            <Lista titulo="Perfil e suporte" itens={perfilESuporte} />
+            <div className="overflow-hidden rounded-card border border-borda bg-cartao">
+              <SignOutButton redirectUrl="/">
+                <button type="button" className={`${CLASSE_ITEM} text-perigo`}>
+                  <span className="inline-flex shrink-0 [&>svg]:size-5" aria-hidden>
+                    <LogOut />
+                  </span>
+                  Sair
+                </button>
+              </SignOutButton>
+            </div>
+          </div>
 
           {vitrine?.tipo === "pf" && (
             <p className="text-base text-texto-suave md:col-span-2">
@@ -151,16 +163,6 @@ export default async function PaginaMinhaConta() {
             </p>
           )}
 
-          <div className="overflow-hidden rounded-card border border-borda bg-cartao">
-            <SignOutButton redirectUrl="/">
-              <button type="button" className={`${CLASSE_ITEM} text-perigo`}>
-                <span className="inline-flex shrink-0 [&>svg]:size-5" aria-hidden>
-                  <LogOut />
-                </span>
-                Sair
-              </button>
-            </SignOutButton>
-          </div>
         </div>
       </div>
     </PaginaConta>

@@ -60,3 +60,32 @@ test('barra móvel: várias lojas abrem lista e visitante tem Anunciar', () => {
   assert.match(varias, /Minhas lojas/);
   assert.match(barra(null, '/'), /href="\/anunciar"/);
 });
+
+test('Minha conta mantém Sair na coluna de Perfil e suporte em todos os tipos de conta', async () => {
+  function localizar(elemento, predicado) {
+    if (!elemento || typeof elemento !== 'object') return null;
+    if (predicado(elemento)) return elemento;
+    for (const filho of React.Children.toArray(elemento.props?.children)) {
+      const achado = localizar(filho, predicado);
+      if (achado) return achado;
+    }
+    return null;
+  }
+  const Sair = ({ children }) => children;
+  for (const vitrine of [null, { tipo: 'pf', nome: 'Pessoa física' }, { tipo: 'loja', nome: 'Loja' }]) {
+    const { default: Pagina } = carregar('src/app/(conta)/minha-conta/page.tsx', {
+      '@clerk/nextjs': { SignOutButton: Sair },
+      '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ perfil: { nome: 'Conta de teste' }, vitrine, rascunhos: 0 }) },
+      '@/lib/dados/radar': { avisosNaoLidos: async () => 0 },
+      '@/components/conta/resumo-plano': { resumoPlano: () => null },
+    });
+    const pagina = await Pagina();
+    const grade = localizar(pagina, el => el.props?.className?.includes('md:grid-cols-3'));
+    const coluna = React.Children.toArray(grade.props.children).find(el => el.type === 'div' && localizar(el, filho => filho.props?.titulo === 'Perfil e suporte'));
+    assert.ok(coluna, 'Perfil e suporte deve ter uma coluna própria');
+    const sair = localizar(coluna, el => el.type === Sair);
+    assert.ok(sair, 'Sair deve pertencer à coluna de perfil');
+    assert.equal(sair.props.redirectUrl, '/');
+    assert.ok(React.Children.toArray(coluna.props.children).findIndex(el => localizar(el, filho => filho.type === Sair)) > 0);
+  }
+});
