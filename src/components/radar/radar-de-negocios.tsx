@@ -90,24 +90,24 @@ export function RadarDeNegocios({
   const restantes = propostasRestantes;
   const podePropor = temAcesso && (restantes === null || restantes > 0);
 
-  // Modo fácil (docs/designs/radar-v2.md): letra 18px, títulos 24px e controles de 48px.
+  // Usa os mesmos tamanhos de texto e controles das demais áreas do site.
   return (
-    <main className="mx-auto min-h-dvh max-w-5xl bg-fundo pb-28">
-      <header className=" border-b border-borda bg-cartao px-4 pt-5 pb-4">
+    <main className="mx-auto min-h-dvh max-w-5xl bg-fundo pb-6">
+      <header className=" border-b border-borda bg-cartao px-4 py-3">
         <div className="flex items-center gap-2">
-          <Radar className="size-7 text-laranja-escuro" aria-hidden />
-          <h1 className="text-facil-titulo font-semibold text-beringela">Radar de Negócios</h1>
+          <Radar className="size-5 text-laranja-escuro" aria-hidden />
+          <h1 className="text-titulo font-semibold text-beringela">Radar de Negócios</h1>
         </div>
-        <p className="mt-0.5 text-facil text-texto-suave">
+        <p className="mt-0.5 text-base text-texto-suave">
           {pedidos.length} {pedidos.length === 1 ? "pedido aberto nesta página" : "pedidos abertos nesta página"}
         </p>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-3">{abas}<AtualizarRadar tamanho="grande" /></div>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-3">{abas}<AtualizarRadar /></div>
 
         <form action="/radar" method="get" className="mt-4 flex flex-wrap items-end gap-3">
           <input type="hidden" name="aba" value="regiao" />
           {textoBusca && <input type="hidden" name="q" value={textoBusca} />}
           <div className="min-w-0 flex-[1_1_14rem]">
-            <Seletor rotulo="Filtrar por categoria" name="nicho" id="radar-nicho" tamanho="grande" defaultValue={nicho} key={nicho}>
+            <Seletor rotulo="Filtrar por categoria" name="nicho" id="radar-nicho" defaultValue={nicho} key={nicho}>
               <option value="todas">Todas as categorias</option>
               {vende && <option value="meu_nicho">Das minhas categorias</option>}
               <option value="sem_categoria">Sem categoria</option>
@@ -121,9 +121,9 @@ export function RadarDeNegocios({
               ))}
             </Seletor>
           </div>
-          <Botao type="submit" variante="secundario" tamanho="grande">Filtrar</Botao>
+          <Botao type="submit" variante="secundario">Filtrar</Botao>
         </form>
-        {nicho === "meu_nicho" && <p className="mt-2 text-facil text-texto-suave">Pedidos nas categorias dos seus anúncios no ar.</p>}
+        {nicho === "meu_nicho" && <p className="mt-2 text-base text-texto-suave">Pedidos nas categorias dos seus anúncios no ar.</p>}
       </header>
 
       {!temAcesso && (linkVerificar
@@ -131,7 +131,7 @@ export function RadarDeNegocios({
         : <FaixaUpgrade planos={planos} titulo="Esses clientes já querem comprar." />)}
       {temAcesso && restantes !== null && (
         restantes > 0 ? (
-          <p className="mx-4 mt-4 rounded-card bg-fundo px-4 py-3 text-facil text-beringela">
+          <p className="mx-4 mt-4 rounded-card bg-fundo px-4 py-3 text-base text-beringela">
             Você ainda pode enviar <strong>{restantes}</strong> {restantes === 1 ? "oferta" : "ofertas"} {emTeste ? "durante o teste" : "neste mês"}.
           </p>
         ) : (
@@ -139,30 +139,30 @@ export function RadarDeNegocios({
         )
       )}
 
-      <ul className="grid grid-cols-1 items-start gap-4 px-4 pt-4 md:grid-cols-2">
+      <ul className="grid grid-cols-1 items-start gap-3 px-4 pt-3 md:grid-cols-2">
         {pedidos.map((p) => (
           <li key={p.id}>
             <CartaoPedido pedido={p} temAcesso={temAcesso} podePropor={podePropor} linkVerificar={linkVerificar} />
           </li>
         ))}
         {pedidos.length === 0 && (
-          <li className="rounded-card border border-dashed border-borda bg-cartao p-8 text-center text-facil text-texto-suave">
+          <li className="rounded-card border border-dashed border-borda bg-cartao p-8 text-center text-base text-texto-suave">
             Nenhum pedido aberto para este filtro nesta página.
           </li>
         )}
       </ul>
       {(anterior || proxima) && (
         <nav aria-label="Páginas dos pedidos" className="mt-4 flex flex-wrap items-center justify-center gap-3 px-4">
-          {anterior && <Botao href={anterior} variante="secundario" tamanho="grande">Anterior</Botao>}
-          <span className="text-facil text-texto-suave">Página {pagina}</span>
-          {proxima && <Botao href={proxima} variante="secundario" tamanho="grande">Próxima</Botao>}
+          {anterior && <Botao href={anterior} variante="secundario">Anterior</Botao>}
+          <span className="text-base text-texto-suave">Página {pagina}</span>
+          {proxima && <Botao href={proxima} variante="secundario">Próxima</Botao>}
         </nav>
       )}
     </main>
   );
 }
 
-// Ação do cartão: largura toda dentro do cartão, 48px (Botao grande).
+// A ação acompanha a largura do cartão e o tamanho padrão dos controles.
 const ACAO_CARTAO = "w-full sm:max-w-none";
 
 function CartaoPedido({
@@ -192,44 +192,44 @@ function CartaoPedido({
     <article className="overflow-hidden rounded-card border border-borda bg-cartao">
       <div className="p-4">
         <div className="flex flex-wrap items-center gap-2">
-          {p.categoriaNome && <Badge variant="secondary" tamanho="grande">{p.categoriaNome}</Badge>}
+          {p.categoriaNome && <Badge variant="secondary">{p.categoriaNome}</Badge>}
           {p.urgencia !== "normal" && (
-            <Badge variant="warning" tamanho="grande">
+            <Badge variant="warning">
               <Flame aria-hidden />
               {p.urgencia === "hoje" ? "Precisa hoje" : "Esta semana"}
             </Badge>
           )}
           {modoPrazo && p.propostasAte && (
-            <Badge variant="warning" tamanho="grande">
+            <Badge variant="warning">
               <Hourglass aria-hidden />
               Propostas até {dataHoraCurta(p.propostasAte)}
             </Badge>
           )}
           <SeloVisibilidade visibilidade={p.visibilidade} />
           {p.compradorCertificado && (
-            <Badge variant="success" tamanho="grande">
+            <Badge variant="success">
               <BadgeCheck aria-hidden />
               Comprador certificado
             </Badge>
           )}
-          <span className="ml-auto inline-flex items-center gap-1 text-facil text-texto-suave">
+          <span className="ml-auto inline-flex items-center gap-1 text-base text-texto-suave">
             <Clock className="size-4" aria-hidden />
             {tempoAtras(p.criadoEm)}
           </span>
         </div>
 
         {/* O que procura: sempre visível, é o "gancho" que vende o plano */}
-        <h2 className="mt-2 text-facil-titulo font-semibold break-words text-beringela">
+        <h2 className="mt-2 text-titulo font-semibold break-words text-beringela">
           <Link href={p.souComprador ? linkMeuPedidoRadar(p.id) : linkPedido} className="rounded-card hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro">
             {formatarNome(p.titulo)}
           </Link>
         </h2>
 
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-          <span className="text-facil font-bold text-beringela tabular-nums">
+          <span className="text-base font-bold text-beringela tabular-nums">
             {faixaPreco(p.precoMinCentavos, p.precoMaxCentavos)}
           </span>
-          <span className="inline-flex items-center gap-1 text-facil text-texto-suave">
+          <span className="inline-flex items-center gap-1 text-base text-texto-suave">
             <MapPin className="size-5" aria-hidden />
             {p.areaTexto ?? p.cidade}
           </span>
@@ -237,10 +237,10 @@ function CartaoPedido({
 
         <div className="relative mt-3">
           {temAcesso || soIndicar ? (
-            <div className="rounded-card bg-fundo p-3 text-facil text-texto">
+            <div className="rounded-card bg-fundo p-3 text-base text-texto">
               {p.detalhes ? <p className="break-words whitespace-pre-line">{p.detalhes}</p> : <p className="text-texto-suave">Sem detalhes extras.</p>}
               {temAcesso && !foraDaArea && p.compradorNome && (
-                <p className="mt-2 text-facil text-texto-suave">
+                <p className="mt-2 text-base text-texto-suave">
                   Comprador: {p.compradorNome}
                   {modoPrazo && " · prefere receber as ofertas e escolher com quem falar"}
                 </p>
@@ -249,12 +249,12 @@ function CartaoPedido({
           ) : (
             <>
               {/* Texto falso: o real nunca chega ao navegador de quem não tem acesso */}
-              <div aria-hidden className="rounded-card bg-fundo p-3 text-facil text-beringela blur-[5px] select-none">
+              <div aria-hidden className="rounded-card bg-fundo p-3 text-base text-beringela blur-[5px] select-none">
                 <p>Detalhes do pedido com modelo, ano, condição de pagamento e prazo para fechar negócio.</p>
                 <p className="mt-2">Comprador: ••••••• · (89) 9••••-••••</p>
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="inline-flex items-center gap-2 rounded-full bg-beringela/90 px-4 py-2 text-facil font-semibold text-white">
+                <span className="inline-flex items-center gap-2 rounded-full bg-beringela/90 px-4 py-2 text-base font-semibold text-white">
                   <Lock className="size-4" aria-hidden />
                   Exclusivo para lojistas assinantes
                 </span>
@@ -264,13 +264,13 @@ function CartaoPedido({
         </div>
 
         {foraDaArea && (
-          <p className="mt-3 inline-flex items-start gap-2 text-facil font-semibold text-beringela">
+          <p className="mt-3 inline-flex items-start gap-2 text-base font-semibold text-beringela">
             <MapPinOff className="mt-1 size-5 shrink-0" aria-hidden />
             Este pedido é para lojas de {p.areaTexto ?? p.cidade}.
           </p>
         )}
 
-        <p className="mt-3 inline-flex items-center gap-1 text-facil text-texto-suave">
+        <p className="mt-3 inline-flex items-center gap-1 text-base text-texto-suave">
           <Users className="size-4" aria-hidden />
           {p.totalPropostas === 0
             ? "Nenhuma proposta ainda. Seja o primeiro!"
@@ -279,30 +279,30 @@ function CartaoPedido({
 
         <div className="mt-3">
           {p.souComprador ? (
-            <Botao href={linkMeuPedidoRadar(p.id)} variante="secundario" tamanho="grande" icone={<Users />} className={ACAO_CARTAO}>
+            <Botao href={linkMeuPedidoRadar(p.id)} variante="secundario" icone={<Users />} className={ACAO_CARTAO}>
               Seu pedido · ver propostas
             </Botao>
           ) : soIndicar ? (
-            <Botao href={linkPedido} variante="secundario" tamanho="grande" icone={<Lightbulb />} className={ACAO_CARTAO}>
+            <Botao href={linkPedido} variante="secundario" icone={<Lightbulb />} className={ACAO_CARTAO}>
               Eu sei onde tem
             </Botao>
           ) : !temAcesso && linkVerificar ? (
-            <Botao href={linkVerificar} tamanho="grande" icone={<ShieldCheck />} className={ACAO_CARTAO}>
+            <Botao href={linkVerificar} icone={<ShieldCheck />} className={ACAO_CARTAO}>
               Verificar minha loja
             </Botao>
           ) : !temAcesso || !liberado ? (
-            <Botao href={`${LINK_PLANOS}?origem=radar`} tamanho="grande" icone={<Lock />} className={ACAO_CARTAO}>
+            <Botao href={`${LINK_PLANOS}?origem=radar`} icone={<Lock />} className={ACAO_CARTAO}>
               Desbloquear e mandar oferta
             </Botao>
           ) : esgotado ? (
-            <Botao variante="secundario" tamanho="grande" icone={<Send />} className={ACAO_CARTAO} disabled>
+            <Botao variante="secundario" icone={<Send />} className={ACAO_CARTAO} disabled>
               Propostas esgotadas
             </Botao>
           ) : (
             <Botao
               href={`${linkPedido}?propor=1`}
               variante={modoPrazo ? "primario" : "whatsapp"}
-              tamanho="grande"
+
               icone={modoPrazo ? <Send /> : <MessageCircle />}
               className={ACAO_CARTAO}
             >
@@ -320,11 +320,11 @@ function FaixaUpgrade({ planos, titulo }: { planos: PlanoResumo[]; titulo: strin
   const lista = planos.map((p) => `${p.nome} (${reaisCentavos.format(p.preco_centavos / 100)}${!p.periodo_dias || p.periodo_dias === 30 ? "/mês" : ` a cada ${p.periodo_dias} dias`})`).join(" ou ");
   return (
     <section className="mx-4 mt-4 flex flex-col gap-3 rounded-card bg-beringela p-4 text-white">
-      <p className="text-facil font-bold">{titulo}</p>
-      <p className="text-facil text-white/85">
+      <p className="text-base font-bold">{titulo}</p>
+      <p className="text-base text-white/85">
         Assine {lista || "um plano com Radar"} para ver os detalhes e mandar sua oferta antes da concorrência.
       </p>
-      <Botao href={`${LINK_PLANOS}?origem=radar`} tamanho="grande" larguraTotal>
+      <Botao href={`${LINK_PLANOS}?origem=radar`} larguraTotal>
         Ver planos
       </Botao>
     </section>

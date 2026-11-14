@@ -1,19 +1,17 @@
 "use client";
 
 import { formatarNome } from "@/lib/formatar-nome";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Search, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Chip } from "@/components/ui/chip";
-import { classesCampo } from "@/components/ui/input";
 import { IconeCategoria } from "@/components/ui/icone-categoria";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
-import { semAcento } from "@/lib/categorias-arvore";
 import { linkLoja } from "@/lib/formato";
 import type { TipoLoja } from "@/lib/tipos-de-loja";
 
-// A busca fica fixa enquanto a fileira de lojas rola ao lado.
+// A home mostra a fileira de lojas. A busca fica no catálogo /lojas.
 type LojaFaixa = { id: string; slug: string; nome: string; logo_url: string | null; verificada: boolean; tipos: string[] };
 
 const SETA =
@@ -21,15 +19,11 @@ const SETA =
   "hover:bg-selecao focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
 
 export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: LojaFaixa[]; tipos: TipoLoja[] }) {
-  const [busca, setBusca] = useState("");
   const [tipo, setTipo] = useState<string | null>(null);
   const fila = useRef<HTMLUListElement>(null);
   const [rolar, setRolar] = useState({ antes: false, depois: false });
 
-  const visiveis = useMemo(() => {
-    const q = semAcento(busca);
-    return lojas.filter((l) => (!q || semAcento(l.nome).includes(q)) && (!tipo || l.tipos.includes(tipo)));
-  }, [lojas, busca, tipo]);
+  const visiveis = lojas.filter((l) => !tipo || l.tipos.includes(tipo));
 
   useEffect(() => {
     const ul = fila.current;
@@ -57,7 +51,7 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
   }
 
   return (
-    <section aria-labelledby="titulo-lojas" className="flex min-w-0 flex-col gap-2 rounded-card border border-borda bg-cartao p-2.5 md:px-4 md:py-3">
+    <section aria-labelledby="titulo-lojas" className="flex min-w-0 flex-col gap-1 rounded-card border border-borda bg-cartao p-2 md:px-3 md:py-2">
       <div className="flex items-center justify-between gap-2">
         <h2 id="titulo-lojas" className="min-w-0 text-sm font-semibold text-beringela md:text-base">{titulo}</h2>
         <Botao href="/lojas" variante="texto" className="shrink-0 px-2">Ver todas</Botao>
@@ -65,22 +59,6 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
       {lojas.length > 0 && (
         <>
           <div className="flex min-w-0 items-center gap-1.5 md:gap-3">
-            <div role="search" aria-label="Lojas" className="relative w-28 shrink-0 min-[360px]:w-32 md:w-48">
-              <label htmlFor="busca-loja" className="sr-only">Buscar loja</label>
-              <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-texto-suave" aria-hidden />
-              <input
-                id="busca-loja"
-                type="search"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar loja"
-                autoComplete="off"
-                enterKeyHint="search"
-                maxLength={60}
-                className={`${classesCampo} h-11 px-1.5 pl-7 text-[13px]`}
-              />
-            </div>
-
             {visiveis.length > 0 ? (
               <div className="relative min-w-0 flex-1">
                 <ul ref={fila} id="lojas-da-regiao" aria-label="Lojas da região" className="flex min-w-0 snap-x gap-1.5 overflow-x-auto py-1 [scrollbar-width:none]">

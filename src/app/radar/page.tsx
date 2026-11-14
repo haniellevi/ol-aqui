@@ -77,15 +77,17 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
     const pedidos = await meusPedidos(arquivados);
     return (
       <Moldura titulo={arquivados ? "Pedidos arquivados" : "Meus pedidos"} abas={navAbas}>
-        <nav aria-label="Histórico de pedidos" className="flex flex-wrap gap-2">
-          <Chip href="/radar?aba=meus" ativo={!arquivados} tamanho="grande">Pedidos</Chip>
-          <Chip href="/radar?aba=meus&arquivo=1" ativo={arquivados} tamanho="grande">Arquivados</Chip>
-        </nav>
-        {!arquivados && pedidos.length > 0 && (
-          <Botao href={linkPedir} larguraTotal tamanho="grande">
-            Estou procurando outra coisa
-          </Botao>
-        )}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <nav aria-label="Histórico de pedidos" className="flex flex-wrap gap-2">
+            <Chip href="/radar?aba=meus" ativo={!arquivados}>Pedidos</Chip>
+            <Chip href="/radar?aba=meus&arquivo=1" ativo={arquivados}>Arquivados</Chip>
+          </nav>
+          {!arquivados && pedidos.length > 0 && (
+            <Botao href={linkPedir}>
+              Estou procurando outra coisa
+            </Botao>
+          )}
+        </div>
         <ListaMeusPedidos pedidos={pedidos} linkPedir={linkPedir} arquivados={arquivados} />
       </Moldura>
     );
@@ -174,16 +176,16 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
 
 function Moldura({ titulo, abas, children }: { titulo: string; abas: React.ReactNode; children: React.ReactNode }) {
   return (
-    <main className="mx-auto min-h-dvh max-w-xl bg-fundo pb-28">
-      <header className="sticky top-13 z-10 border-b border-borda bg-cartao/95 px-4 pt-4 pb-3 backdrop-blur md:top-14">
+    <main className="mx-auto min-h-dvh max-w-3xl bg-fundo pb-6">
+      <header className="sticky top-13 z-10 border-b border-borda bg-cartao/95 px-4 py-3 backdrop-blur md:top-14">
         <div className="flex items-center gap-2">
-          <Radar className="size-7 text-laranja-escuro" aria-hidden />
-          <h1 className="text-facil-titulo font-semibold text-beringela">Radar de Negócios</h1>
+          <Radar className="size-5 text-laranja-escuro" aria-hidden />
+          <h1 className="text-titulo font-semibold text-beringela">Radar de Negócios</h1>
         </div>
-        <p className="mt-0.5 text-facil text-texto-suave">{titulo}</p>
-        {abas}
+        <p className="mt-0.5 text-base text-texto-suave">{titulo}</p>
+        <div className="flex flex-wrap items-end justify-between gap-2">{abas}<AtualizarRadar /></div>
       </header>
-      <div className="flex flex-col gap-4 px-4 pt-4"><div className="flex justify-end"><AtualizarRadar tamanho="grande" /></div>{children}</div>
+      <div className="flex flex-col gap-3 px-4 pt-3">{children}</div>
     </main>
   );
 }

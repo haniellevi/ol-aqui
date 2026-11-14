@@ -5,10 +5,12 @@ import { conversasLigadas } from "@/lib/dados/conversas";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
-import { Plus, Radar, UserRound } from "lucide-react";
+import { Plus, Radar, Store, UserRound } from "lucide-react";
 import { CampoBusca } from "@/components/busca/campo-busca";
 import { listarCidadesAtivas, regiaoAtual } from "@/lib/dados/regiao";
 import { classesBotao } from "@/components/ui/botao";
+import { atalhoLoja } from "@/lib/dados/navegacao-lojista";
+import { escolherLoja } from "@/app/(conta)/_loja/actions";
 import { MenuCidades } from "./menu-cidades";
 
 // Cabeçalho das páginas públicas e da conta: logo, cidade ("Corrente ▾") e Entrar/Conta.
@@ -32,7 +34,7 @@ async function loginLegivel(): Promise<boolean> {
 
 export async function CabecalhoPublico() {
   const [regiao, cidades, comLogin] = await Promise.all([regiaoAtual(), listarCidadesAtivas().catch(() => []), loginLegivel()]);
-  const comConversas = comLogin && (await conversasLigadas());
+  const [comConversas, loja] = await Promise.all([comLogin ? conversasLigadas() : false, comLogin ? atalhoLoja() : null]);
   const cidade = regiao?.cidade ?? regiao?.cidadeSede ?? regiao?.nome ?? null;
 
   return (
@@ -55,9 +57,23 @@ export async function CabecalhoPublico() {
           <Link href="/radar" className={LINK}>
             <Radar className="size-5" aria-hidden /> Radar
           </Link>
-          <Link href="/anunciar" className={classesBotao("primario", false, "ml-1")}>
-            <Plus className="size-5" aria-hidden /> Anunciar
-          </Link>
+          {loja?.id ? (
+            <form action={escolherLoja}>
+              <input type="hidden" name="loja" value={loja.id} />
+              <input type="hidden" name="voltar" value={loja.href} />
+              <button type="submit" className={classesBotao("primario", false, "ml-1")}>
+                <Store className="size-5" aria-hidden /> {loja.rotulo}
+              </button>
+            </form>
+          ) : loja ? (
+            <Link href={loja.href} className={classesBotao("primario", false, "ml-1")}>
+              <Store className="size-5" aria-hidden /> {loja.rotulo}
+            </Link>
+          ) : (
+            <Link href="/anunciar" className={classesBotao("primario", false, "ml-1")}>
+              <Plus className="size-5" aria-hidden /> Anunciar
+            </Link>
+          )}
         </nav>
 
         <div className="conta-cabecalho ml-auto flex shrink-0 items-center md:ml-1">

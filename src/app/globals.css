@@ -273,7 +273,7 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
 
   .publico:has([data-detalhe-anuncio]) > #conteudo { padding-bottom: 0; }
   .publico:has([data-comprador]) .navegacao-inferior ul { height: 3.5rem; }
-  .publico:has([data-comprador]) .navegacao-inferior a { font-size: 0.75rem; }
+  .publico:has([data-comprador]) .navegacao-inferior :is(a, button) { font-size: 0.75rem; }
   .publico:has([data-comprador]) .navegacao-inferior svg { width: 1.25rem; height: 1.25rem; }
 
   .publico:has([data-comprador]) .icone-anunciar {

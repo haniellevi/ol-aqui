@@ -16,7 +16,7 @@ export function ListaConversas({ conversas }: { conversas: ResumoConversa[] }) {
           className={`flex min-h-14 w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${nova ? "bg-selecao/40" : ""}`}>
           <span className="grid size-8 shrink-0 place-items-center rounded-full bg-fundo text-beringela"><Icone className="size-4" aria-hidden /></span>
           <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1">
-            <span className={`min-w-0 break-words text-facil ${nova ? "font-semibold text-beringela" : ""}`}>
+            <span className={`min-w-0 break-words text-base ${nova ? "font-semibold text-beringela" : ""}`}>
               {c.outro_nome}
               <span className="sr-only">{c.papel === "cliente" ? " (loja)" : " (cliente)"}</span>
             </span>

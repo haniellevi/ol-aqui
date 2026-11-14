@@ -39,7 +39,7 @@ export async function abrirRascunho() {
   try {
     await rascunhoRpc("loja_ia_abrir_coleta");
   } catch {
-    redirect("/quero-vender/loja?manual=1");
+    redirect("/quero-vender/loja?aviso=ia");
   }
   redirect(PAGINA);
 }

@@ -40,7 +40,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
     <>
       <div className={`relative ${foto} ${a.capa ? "bg-white" : "bg-borda"}`}>
         {a.capa ? (
-          // Foto inteira (sem cortar) sobre fundo branco. Foto do Storage sai otimizada (AVIF/WebP, só o tamanho que a tela precisa); outras vão como estão.
+          // A foto preenche o card com recorte central, mantendo a proporção.
           <Image
             src={a.capa}
             alt={compacto ? "" : `Foto de ${formatarNome(a.titulo)}`}
@@ -48,7 +48,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
             sizes={horizontal ? "(max-width: 767px) 68px, 224px" : compacto ? "(max-width: 767px) 68px, (min-width: 1024px) 25vw, 33vw" : "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"}
             priority={prioridade}
             unoptimized={!podeOtimizar(a.capa)}
-            className="object-contain"
+            className="object-cover"
           />
         ) : (
           <span className="absolute inset-0 grid place-items-center text-texto-suave" aria-label="Sem foto">

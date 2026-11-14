@@ -16,8 +16,8 @@ export default async function PaginaConversas() {
   return <PaginaConta>
     <TopoConta titulo="Conversas" texto={novas > 0 ? `${novas} ${novas === 1 ? "conversa com mensagem nova" : "conversas com mensagem nova"}` : "Suas conversas com lojas e clientes."} />
     {conversas.length === 0
-      ? <Vazio tamanho="grande" titulo="Nenhuma conversa ainda." icone={<MessageSquare />}
-          texto="Toque em Conversar num anúncio para falar com quem vende. Quando uma loja responder seu pedido no Radar, a conversa aparece aqui." />
+      ? <Vazio titulo="Nenhuma conversa ainda" icone={<MessageSquare />}
+          texto="Abra uma conversa pelo anúncio ou receba respostas aos seus pedidos no Radar." />
       : <ListaConversas conversas={conversas} />}
   </PaginaConta>;
 }

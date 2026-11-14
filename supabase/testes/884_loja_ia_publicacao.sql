@@ -2,7 +2,6 @@ begin;
 insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
 select 'user_ia884a', id, 'Teste IA', 'Corrente', '5589999010884', now()
 from public.microrregioes where slug='corrente-pi';
-insert into public.loja_ia_convites(usuario_id) values ('user_ia884a');
 set local role authenticated;
 set local request.jwt.claim.sub='user_ia884a';
 select public.loja_ia_abrir_coleta()->>'id' as id \gset

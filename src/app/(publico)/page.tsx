@@ -128,16 +128,16 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
         <CampoBusca id="busca-inicio" toqueAmplo />
       </div>
 
-      <div className="mx-auto w-full max-w-7xl px-2.5 pt-2 md:px-4">
+      <div className="mx-auto w-full max-w-7xl px-2.5 md:px-4 [&:not(:empty)]:pt-2">
         <EntradaAssistente dono={userId} />
       </div>
 
-      <div className="mx-auto grid w-full max-w-7xl items-start gap-6 px-2.5 py-2 md:px-4 md:py-4 lg:grid-cols-[13rem_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-7xl items-start gap-4 px-2.5 py-2 md:px-4 md:py-3 lg:grid-cols-[13rem_minmax(0,1fr)]">
         {/* Coluna da esquerda: categorias e atalhos (só no computador). */}
         <aside className="sticky top-20 hidden flex-col gap-4 lg:flex">
           {categorias.length > 0 && (
             <nav aria-labelledby="titulo-cats-lado" className="rounded-card border border-borda bg-cartao p-2">
-              <h2 id="titulo-cats-lado" className="px-2 pb-1 pt-1 text-legenda font-semibold uppercase tracking-wide text-texto-suave">Categorias</h2>
+              <h2 id="titulo-cats-lado" className="px-2 pt-1 pb-1 text-legenda font-semibold tracking-wide text-texto-suave uppercase">Categorias</h2>
               <ul className="flex flex-col">
                 {categorias.map((c) => (
                   <li key={c.id}>
@@ -157,7 +157,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             </nav>
           )}
           <nav aria-labelledby="titulo-atalhos" className="rounded-card border border-borda bg-cartao p-2">
-            <h2 id="titulo-atalhos" className="px-2 pb-1 pt-1 text-legenda font-semibold uppercase tracking-wide text-texto-suave">Para você</h2>
+            <h2 id="titulo-atalhos" className="px-2 pt-1 pb-1 text-legenda font-semibold tracking-wide text-texto-suave uppercase">Para você</h2>
             <ul className="flex flex-col">
               <li><Link href="/minha-conta/favoritos" className={estilos.itemLado}><Heart className="size-5 shrink-0 text-beringela" aria-hidden />Favoritos</Link></li>
               <li><a href="#vistos" className={estilos.itemLado}><Clock className="size-5 shrink-0 text-beringela" aria-hidden />Vistos há pouco</a></li>
@@ -168,7 +168,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
         </aside>
 
         {/* Meio: o feed. */}
-        <main className="flex min-w-0 flex-col gap-3 md:gap-5">
+        <main className="flex min-w-0 flex-col gap-3">
           <Suspense fallback={null}>
             <SalvarAoVoltar logado={logado} />
           </Suspense>
@@ -176,7 +176,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           {/* Lojas no topo do feed (bloco "lojas_regiao" do painel). Desligado: fica só o acesso ao catálogo. */}
           <div className="min-w-0 max-md:order-3">
           {regiao && blocoLojas ? (
-            <LojasDaRegiao regiao={regiao} lugar={lugar} arvore={enxugarArvore(todasCategorias)} titulo={textoDe(blocoLojas.titulo, "Lojas de {lugar}", lugar)} />
+            <LojasDaRegiao regiao={regiao} arvore={enxugarArvore(todasCategorias)} titulo={textoDe(blocoLojas.titulo, "LOJAS DESTAQUE DA REGIÃO", lugar)} />
           ) : (
             <Botao href="/lojas" variante="secundario" className="self-start">Ver todas as lojas</Botao>
           )}
@@ -187,7 +187,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             <ul className="flex flex-wrap gap-x-2">
               <li><Link href="/categorias" className={estilos.atalhoCategoria}><LayoutGrid className="size-4 shrink-0" aria-hidden /> Todas</Link></li>
               {categorias.slice(0, 2).map((c) => (
-                <li key={c.id} className="min-w-0 max-w-full">
+                <li key={c.id} className="max-w-full min-w-0">
                   <Link href={linkCategoria(c.slug)} className={estilos.atalhoCategoria}>
                     <IconeCategoria nome={c.icone} className="size-4 shrink-0" aria-hidden />
                     <span className="[overflow-wrap:anywhere]">{c.nome}</span>
@@ -249,7 +249,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
               case "lojas_destaque":
                 return regiao ? (
-                  <div key={bloco.chave} className="min-w-0 max-md:order-3"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
+                  <div key={bloco.chave} className="min-w-0 max-md:order-3 [&:empty]:hidden"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
                 ) : null;
 
               case "radar":
@@ -262,8 +262,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
               case "recentes":
                 return (
-                  <div key={bloco.chave} className="flex flex-col gap-3 max-md:order-2 md:gap-6">
-                    {!filtrando && <div className="max-md:order-last"><VistosRecentemente voltarHref={voltarHref} /></div>}
+                  <div key={bloco.chave} className="flex flex-col gap-3 max-md:order-2">
+                    {!filtrando && <div className="max-md:order-last [&:empty]:hidden"><VistosRecentemente voltarHref={voltarHref} /></div>}
                     <section id="anuncios" aria-labelledby="titulo-recentes" className="flex scroll-mt-20 flex-col gap-3">
                       <h2 id="titulo-recentes" className={`text-lg font-semibold ${filtrando ? "" : "max-md:sr-only"}`}>
                         {filtrando

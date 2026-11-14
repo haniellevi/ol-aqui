@@ -2,7 +2,6 @@
 begin;
 insert into perfis(id,microrregiao_id,nome,cidade)
 select x,id,'Teste imagem','Corrente' from microrregioes cross join unnest(array['user_ia883a','user_ia883b']) x where slug='corrente-pi';
-insert into loja_ia_convites(usuario_id) values ('user_ia883a'),('user_ia883b');
 set local role authenticated;
 set local request.jwt.claim.sub='user_ia883a';
 select loja_ia_abrir_coleta() as draft \gset
