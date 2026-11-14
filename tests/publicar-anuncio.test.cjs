@@ -246,7 +246,7 @@ test('P5c: publicar na loja em montagem deixa o produto pronto e mostra a tela c
   const html = render(await Pagina({ searchParams: Promise.resolve({ id, status: 'pronto' }) }));
   assert.match(html, /Produto pronto/);
   assert.match(html, /vai ao ar quando o dono aceitar a loja/);
-  assert.doesNotMatch(html, /Seu anúncio está no ar!/);
+  assert.doesNotMatch(html, /Seu anúncio está no ar/);
 });
 test('publicação não permite editar anúncio de outro usuário', async () => {
   const { a, gravacoes } = fronteiras({ semAnuncio: true });
@@ -259,13 +259,13 @@ test('confirmação mostra o estado do banco, inclusive quando a URL diz o contr
     const { default: Pagina } = carregar(base + 'pronto/page.tsx', mocks);
     const html = render(await Pagina({ searchParams: Promise.resolve({ id, status: status === 'ativo' ? 'analise' : 'ativo' }) }));
     if (status === 'ativo') {
-      assert.match(html, /Seu anúncio está no ar!/);
+      assert.match(html, /Seu anúncio está no ar/);
       assert.doesNotMatch(html, /Seu anúncio está em análise/);
     } else {
       assert.match(html, /Seu anúncio está em análise/);
       assert.match(html, /A equipe precisa conferir/);
       assert.ok(html.includes(motivo));
-      assert.doesNotMatch(html, /Seu anúncio está no ar!|automática|em até \d+/);
+      assert.doesNotMatch(html, /Seu anúncio está no ar|automática|em até \d+/);
     }
   }
 });
