@@ -22,8 +22,8 @@ export const metadata: Metadata = { title: "Anunciar" };
 
 // /anunciar: confere se a pessoa já vende e o limite do plano (T16) e então
 // oferece retomar ou começar. Abrir/pré-carregar a página nunca grava no banco.
-export default async function PaginaAnunciar({ searchParams }: { searchParams?: Promise<{ assistente?: string }> } = {}) {
-  const assistente = tentativaAssistente((await searchParams)?.assistente);
+export default async function PaginaAnunciar({ searchParams }: { searchParams: Promise<{ assistente?: string }> }) {
+  const assistente = tentativaAssistente((await searchParams).assistente);
   const conta = await contaDaLoja();
   if (!conta) {
     return (

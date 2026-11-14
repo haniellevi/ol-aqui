@@ -12,8 +12,8 @@ import { testeGratis } from "../_dados";
 export const metadata: Metadata = { title: "Criar minha loja" };
 
 // T15 · Dados da loja. Pessoa física que já vende pode virar loja aqui sem perder os anúncios.
-export default async function PaginaDadosLoja({ searchParams }: { searchParams?: Promise<{ assistente?: string }> } = {}) {
-  const assistente = tentativaAssistente((await searchParams)?.assistente);
+export default async function PaginaDadosLoja({ searchParams }: { searchParams: Promise<{ assistente?: string }> }) {
+  const assistente = tentativaAssistente((await searchParams).assistente);
   const conta = await meuPerfilEVitrine();
   if (!conta) {
     return (
