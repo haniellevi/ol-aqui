@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Campo } from "@/components/ui/campo";
 import { AvisoErro } from "./aviso-erro";
 import { classesCampo } from "@/components/ui/input";
+import { enviarFoto } from "@/lib/fotos";
 
 export type EntradaColetaLojaIa = {
   nome: string;
@@ -16,27 +18,31 @@ export type EntradaColetaLojaIa = {
   materiais: string[];
   consultarWhatsapp: boolean;
   avisarWhatsapp: boolean;
+  redesConcluidas?: boolean;
 };
 
 type Props = {
   rascunho: { id: string; revisao: number; entrada: EntradaColetaLojaIa };
   cidades: { nome: string; uf: string }[];
   whatsappConfirmado: boolean;
+  whatsappConsultaDisponivel: boolean;
+  cnpjDisponivel: boolean;
   salvar: (id: string, revisao: number, entrada: EntradaColetaLojaIa) => Promise<{ revisao: number }>;
-  enviarMaterial: (id: string, arquivo: File, tipo: "logo" | "foto") => Promise<string>;
+  prepararEnvio: (id: string, arquivo: { nome: string; tipo: string; tamanho: number }, tipo: "logo" | "foto") => Promise<{ id: string; urlEnvio: string; token: string }>;
+  finalizarEnvio: (id: string, imagemId: string) => Promise<{ id: string }>;
   iniciar: (id: string, revisao: number) => Promise<void>;
 };
 
 export function etapaInicial(entrada: EntradaColetaLojaIa): number {
   if (!entrada.nome?.trim() || !entrada.cidade?.trim()) return 0;
-  if (entrada.site || entrada.instagram || entrada.facebook || entrada.cnpj || entrada.descricao || entrada.materiais?.length || entrada.consultarWhatsapp || entrada.avisarWhatsapp) return 2;
+  if (entrada.redesConcluidas || entrada.site || entrada.instagram || entrada.facebook || entrada.cnpj || entrada.descricao || entrada.materiais?.length || entrada.consultarWhatsapp || entrada.avisarWhatsapp) return 2;
   return 1;
 }
 
 const botao = "min-h-11 rounded-campo bg-laranja px-5 py-2 font-semibold text-beringela disabled:opacity-50";
 const secundario = "min-h-11 rounded-campo border border-borda px-5 py-2 font-semibold text-beringela disabled:opacity-50";
 
-export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, salvar, enviarMaterial, iniciar }: Props) {
+export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, whatsappConsultaDisponivel, cnpjDisponivel, salvar, prepararEnvio, finalizarEnvio, iniciar }: Props) {
   const [entrada, setEntrada] = useState<EntradaColetaLojaIa>({ ...rascunho.entrada, materiais: rascunho.entrada.materiais ?? [] });
   const [etapa, setEtapa] = useState(() => etapaInicial(rascunho.entrada));
   const [revisao, setRevisao] = useState(rascunho.revisao);
@@ -51,16 +57,17 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, salvar, envi
       setErro("Informe o nome e a cidade da loja para continuar.");
       return;
     }
-    if (gerar && ![entrada.site, entrada.instagram, entrada.facebook, entrada.cnpj, entrada.descricao].some((valor) => valor?.trim()) && !entrada.materiais.length && !(whatsappConfirmado && entrada.consultarWhatsapp)) {
+    if (gerar && ![entrada.site, entrada.instagram, entrada.facebook, cnpjDisponivel ? entrada.cnpj : "", entrada.descricao].some((valor) => valor?.trim()) && !entrada.materiais.length && !(whatsappConfirmado && whatsappConsultaDisponivel && entrada.consultarWhatsapp)) {
       setErro("Conte um pouco sobre sua loja para ajudar a montar o rascunho.");
       return;
     }
     setOcupado(true);
     setErro("");
     try {
-      const dados = whatsappConfirmado ? entrada : { ...entrada, consultarWhatsapp: false, avisarWhatsapp: false };
+      const dados = { ...entrada, redesConcluidas: entrada.redesConcluidas || (etapa === 1 && destino > etapa), consultarWhatsapp: whatsappConfirmado && whatsappConsultaDisponivel && entrada.consultarWhatsapp, avisarWhatsapp: whatsappConfirmado && entrada.avisarWhatsapp };
       const salvo = await salvar(rascunho.id, revisao, dados);
       setRevisao(salvo.revisao);
+      setEntrada(dados);
       if (gerar) {
         await iniciar(rascunho.id, salvo.revisao);
         setIniciado(true);
@@ -77,7 +84,9 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, salvar, envi
     setOcupado(true);
     setErro("");
     try {
-      const id = await enviarMaterial(rascunho.id, arquivo, tipo);
+      const envio = await prepararEnvio(rascunho.id, { nome: arquivo.name, tipo: arquivo.type, tamanho: arquivo.size }, tipo);
+      if (!await enviarFoto(arquivo, envio.urlEnvio)) throw new Error("Não foi possível enviar a imagem. Tente novamente.");
+      const { id } = await finalizarEnvio(rascunho.id, envio.id);
       const atualizada = { ...entrada, materiais: [...entrada.materiais, id] };
       setEntrada(atualizada);
       const salvo = await salvar(rascunho.id, revisao, atualizada);
@@ -89,7 +98,7 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, salvar, envi
     }
   }
 
-  if (iniciado) return <div role="status" className="flex flex-col gap-3"><h1 className="text-xl font-semibold text-beringela">Estamos preparando seu rascunho</h1><p>Você pode sair e acompanhar o andamento em Minhas lojas.</p><a className="font-semibold text-laranja-escuro underline" href="/minha-conta/lojas">Ir para Minhas lojas</a></div>;
+  if (iniciado) return <div role="status" className="flex flex-col gap-3"><h1 className="text-xl font-semibold text-beringela">Estamos preparando seu rascunho</h1><p>Você pode sair e acompanhar o andamento em Minhas lojas.</p><Link className="font-semibold text-laranja-escuro underline" href="/minha-conta/lojas">Ir para Minhas lojas</Link></div>;
 
   return (
     <section className="flex flex-col gap-4 md:gap-5" aria-busy={ocupado}>
@@ -118,8 +127,9 @@ export function FormLojaIa({ rascunho, cidades, whatsappConfirmado, salvar, envi
         <Campo rotulo="Descrição da loja" name="descricao" value={entrada.descricao ?? ""} onChange={(e) => atualizar({ descricao: e.target.value })} multilinha opcional />
         <div className="grid gap-4 sm:grid-cols-2">{([['logo', 'Logo'], ['foto', 'Foto']] as const).map(([tipo, rotulo]) => <label key={tipo} className="flex flex-col gap-1 text-sm font-semibold">{rotulo} (opcional)<input type="file" accept="image/*" disabled={ocupado} onChange={(e) => { const arquivo = e.target.files?.[0]; e.target.value = ''; void adicionar(arquivo, tipo); }} className="block min-h-11 w-full text-sm" /></label>)}</div>
         {entrada.materiais.length > 0 && <p className="text-sm text-texto-suave">{entrada.materiais.length} arquivo(s) adicionado(s).</p>}
+        {!whatsappConsultaDisponivel && <p className="text-sm text-texto-suave">A consulta do perfil comercial está indisponível. Você pode informar outras fontes ou descrever sua loja.</p>}
         {!whatsappConfirmado && <p className="text-sm text-texto-suave">Confirme seu WhatsApp para autorizar a consulta do perfil ou receber o aviso.</p>}
-        <label className="flex items-start gap-2"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.consultarWhatsapp} onChange={(e) => atualizar({ consultarWhatsapp: e.target.checked })} />Autorizo consultar os dados comerciais do meu WhatsApp Business confirmado.</label>
+        <label className="flex items-start gap-2"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado || !whatsappConsultaDisponivel} checked={whatsappConfirmado && whatsappConsultaDisponivel && entrada.consultarWhatsapp} onChange={(e) => atualizar({ consultarWhatsapp: e.target.checked })} />Autorizo consultar os dados comerciais do meu WhatsApp Business confirmado.</label>
         <label className="flex items-start gap-2"><input className="mt-1" type="checkbox" disabled={!whatsappConfirmado} checked={whatsappConfirmado && entrada.avisarWhatsapp} onChange={(e) => atualizar({ avisarWhatsapp: e.target.checked })} />Me avise quando ficar pronto pelo meu WhatsApp confirmado.</label>
       </div>}
       <div className="flex flex-wrap gap-3">
