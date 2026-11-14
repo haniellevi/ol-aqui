@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Banco sem portas, volume persistente ou acesso à rede. Nunca usa credenciais externas."""
 from pathlib import Path
+import re
 import subprocess, time, uuid
 from concurrent.futures import ThreadPoolExecutor
 root = Path(__file__).resolve().parents[2]
@@ -114,7 +115,20 @@ try:
     checked(sql((root/'supabase/testes/870_ia_modelos.sql').read_text()))
     print('PASS: modelo de IA por recurso: padrão GPT-6 Luna, troca no painel sem vazar, valor estranho ou chave apagada cai no padrão, reservas gravam o escolhido e só o servidor lê', flush=True)
     checked(sql((root/'supabase/testes/820_fotos_pasta_antiga.sql').read_text()))
+    checked(sql((root/'supabase/testes/830_radar_piloto.sql').read_text()))
+    print('PASS: Radar piloto: categoria obrigatória, aviso de WhatsApp só com chave e consentimento, SAIR desliga e cancela, fila pula quem saiu, reenvio dentro da janela e Meu plano', flush=True)
     print('PASS: fotos na pasta do ID antigo após a troca do Clerk: dono reordena, tira e põe foto nova; foto antiga fora do anúncio, em outro anúncio ou de outra pessoa continua recusada', flush=True)
+    checked(sql((root/'supabase/testes/830_leitura_publica_colunas.sql').read_text()))
+    print('PASS: leitura pública: visitante só lê colunas das telas públicas, logado sem IP de criação e revisão interna, ID do dono fora do visitante, dona, ajudante, admin e outra pessoa', flush=True)
+    checked(sql((root/'supabase/testes/831_config_equipe_merc.sql').read_text()))
+    print('PASS: configurações: config_publica só entrega chaves públicas, moderação sem config(), financeiro fora de anúncios e lojas, conversas do Merc só do dono', flush=True)
+    checked(sql((root/'supabase/testes/832_campos_do_dono.sql').read_text()))
+    print('PASS: campos do dono restaurados pelo banco, nome de loja com filtro de palavras e volta à conferência, recusa da fila deixa anúncio em revisão humana', flush=True)
+    checked(sql((root/'supabase/testes/833_permissoes_sobrando.sql').read_text()))
+    print('PASS: permissões de tabela sobrando retiradas, perguntas sobre outra conta só do próprio dono ou da equipe ativa, verificação só na pasta da própria pessoa', flush=True)
+    migracao_lote = (root/'supabase/migrations/20261126010000_seguranca_lote_banco.sql').read_text()
+    checked(sql((root/'supabase/testes/834_recusados_antes_do_lote.sql').read_text().replace('-- LOTE_REAPLICADO', migracao_lote)))
+    print('PASS: anúncio recusado antes do lote ganha revisão manual e a republicação vai para análise', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
       do $$ begin
@@ -244,8 +258,9 @@ try:
     assert sum(r.returncode==0 for r in results)==1, [r.stderr for r in results]
     assert all(r.returncode==0 or 'limite de 1' in r.stderr for r in results), [r.stderr for r in results]
     print('PASS: três publicações simultâneas respeitam a única vaga do plano', flush=True)
+    cat_sofa=re.search(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', sql("select id from categorias where slug='casas' and ativa;").stdout).group(0)
     def repeat(i):
-        return sql("begin; set role authenticated; set request.jwt.claim.role='authenticated'; set request.jwt.claim.sub='user_comprador'; select criar_pedido_radar_site('10000000-0000-4000-a000-000000000002','Procuro armário de cozinha','Corrente'); select pg_sleep(0.2); commit;")
+        return sql(f"begin; set role authenticated; set request.jwt.claim.role='authenticated'; set request.jwt.claim.sub='user_comprador'; select criar_pedido_radar_site('10000000-0000-4000-a000-000000000002','Procuro armário de cozinha','Corrente',p_modo=>'propostas_prazo',p_prazo_horas=>72,p_categoria_id=>'{cat_sofa}'); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:
         results=list(pool.map(repeat,range(4)))
     for result in results: checked(result)

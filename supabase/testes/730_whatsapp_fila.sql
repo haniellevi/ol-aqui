@@ -188,18 +188,19 @@ update verificacoes_loja set lembrete_em = null where id = pg_temp.req(8);
 select verificacao_loja_lembrar();
 select pg_temp.confere(pg_temp.fila() = 0, 'whatsapp_equipe desligada: lembrete não enfileira');
 
--- [8] Funções da rota de envio.
+-- [8] Funções da rota de envio. Instante fixo dentro da janela (10h de Fortaleza, hoje), para o teste valer a qualquer hora.
+select (date_trunc('day', now() at time zone 'America/Fortaleza') + interval '10 hours') at time zone 'America/Fortaleza' as t0 \gset
 delete from whatsapp_fila;
 insert into whatsapp_fila(usuario_id,numero,texto,link,chave,enviar_apos) values
-  ('user_730conf','5589975000001','Mensagem 1','/a','pegar-1', now() - interval '7 minutes'),
-  ('user_730conf','5589975000001','Mensagem 2','/a','pegar-2', now() - interval '6 minutes'),
-  ('user_730conf','5589975000001','Mensagem 3','/a','pegar-3', now() - interval '5 minutes'),
-  ('user_730conf','5589975000001','Mensagem 4','/a','pegar-4', now() - interval '4 minutes'),
-  ('user_730conf','5589975000001','Mensagem 5','/a','pegar-5', now() - interval '3 minutes'),
-  ('user_730conf','5589975000001','Mensagem 6','/a','pegar-6', now() - interval '2 minutes'),
-  ('user_730conf','5589975000001','Futura','/a','pegar-7', now() + interval '1 hour');
-create temp table pegas as select * from whatsapp_fila_pegar() with no data;
-insert into pegas select * from whatsapp_fila_pegar();
+  ('user_730conf','5589975000001','Mensagem 1','/a','pegar-1', (:'t0'::timestamptz) - interval '7 minutes'),
+  ('user_730conf','5589975000001','Mensagem 2','/a','pegar-2', (:'t0'::timestamptz) - interval '6 minutes'),
+  ('user_730conf','5589975000001','Mensagem 3','/a','pegar-3', (:'t0'::timestamptz) - interval '5 minutes'),
+  ('user_730conf','5589975000001','Mensagem 4','/a','pegar-4', (:'t0'::timestamptz) - interval '4 minutes'),
+  ('user_730conf','5589975000001','Mensagem 5','/a','pegar-5', (:'t0'::timestamptz) - interval '3 minutes'),
+  ('user_730conf','5589975000001','Mensagem 6','/a','pegar-6', (:'t0'::timestamptz) - interval '2 minutes'),
+  ('user_730conf','5589975000001','Futura','/a','pegar-7', (:'t0'::timestamptz) + interval '1 hour');
+create temp table pegas as select * from whatsapp_fila_pegar_em(5, :'t0'::timestamptz) with no data;
+insert into pegas select * from whatsapp_fila_pegar_em(5, :'t0'::timestamptz);
 select pg_temp.confere((select count(*) = 5 and bool_and(tentativas = 1) from pegas), 'pega no máximo 5, com a tentativa contada');
 select pg_temp.confere((select string_agg(texto, ',' order by texto) = 'Mensagem 1,Mensagem 2,Mensagem 3,Mensagem 4,Mensagem 5' from pegas), 'pega as mais antigas');
 select pg_temp.confere((select count(*) = 5 from whatsapp_fila where estado = 'enviando') and (select count(*) = 1 from whatsapp_fila where texto = 'Futura' and estado = 'pendente'), 'marcou enviando; a futura espera');
@@ -209,25 +210,25 @@ select whatsapp_fila_resultado((select id from pegas where texto = 'Mensagem 3')
 select pg_temp.confere(:'r1' = 'enviada' and :'r2' = 'incerta' and :'r3' = 'pendente', 'resultados: enviada, incerta e pendente');
 select pg_temp.confere((select estado = 'enviada' and enviada_em is not null from pegas p join whatsapp_fila f using (id) where f.texto = 'Mensagem 1'), 'enviada guarda a hora');
 select pg_temp.confere((select estado = 'incerta' from whatsapp_fila where texto = 'Mensagem 2'), 'incerta não volta');
-select pg_temp.confere((select estado = 'pendente' and enviar_apos > now() + interval '4 minutes' and enviar_apos < now() + interval '6 minutes' from whatsapp_fila where texto = 'Mensagem 3'), 'falha volta em 5 minutos');
+select pg_temp.confere((select estado = 'pendente' and enviar_apos = whatsapp_reenvio_em(now()) and (enviar_apos at time zone 'America/Fortaleza')::time >= time '08:00' and (enviar_apos at time zone 'America/Fortaleza')::time < time '20:00' from whatsapp_fila where texto = 'Mensagem 3'), 'falha volta para o cálculo do reenvio (5 min ou próxima janela 8h-20h)');
 -- 3 falhas viram falha.
-update whatsapp_fila set enviar_apos = now() - interval '1 minute' where texto = 'Mensagem 3';
-select count(*) as pegou2 from whatsapp_fila_pegar() where texto = 'Mensagem 3' \gset
+update whatsapp_fila set enviar_apos = (:'t0'::timestamptz) - interval '1 minute' where texto = 'Mensagem 3';
+select count(*) as pegou2 from whatsapp_fila_pegar_em(5, :'t0'::timestamptz) where texto = 'Mensagem 3' \gset
 select whatsapp_fila_resultado((select id from pegas where texto = 'Mensagem 3'), 'falha') as r3b \gset
-update whatsapp_fila set enviar_apos = now() - interval '1 minute' where texto = 'Mensagem 3';
-select count(*) as pegou3 from whatsapp_fila_pegar() where texto = 'Mensagem 3' \gset
+update whatsapp_fila set enviar_apos = (:'t0'::timestamptz) - interval '1 minute' where texto = 'Mensagem 3';
+select count(*) as pegou3 from whatsapp_fila_pegar_em(5, :'t0'::timestamptz) where texto = 'Mensagem 3' \gset
 select whatsapp_fila_resultado((select id from pegas where texto = 'Mensagem 3'), 'falha') as r3c \gset
 select pg_temp.confere(:'pegou2' = '1' and :'pegou3' = '1' and :'r3b' = 'pendente' and :'r3c' = 'falha'
     and (select estado = 'falha' and tentativas = 3 from whatsapp_fila where texto = 'Mensagem 3'), '3ª falha vira falha');
 select whatsapp_fila_resultado((select id from pegas where texto = 'Mensagem 1'), 'falha') as r_ignorado \gset
 select pg_temp.confere(:'r_ignorado' = 'ignorado' and (select estado = 'enviada' from whatsapp_fila where texto = 'Mensagem 1'), 'resultado de linha que não está enviando é ignorado');
 -- "enviando" esquecida há mais de 10 minutos vira incerta, nunca pendente.
-update whatsapp_fila set estado = 'enviando', enviar_apos = now() - interval '11 minutes' where texto = 'Mensagem 4';
-select count(*) as nada from whatsapp_fila_pegar() where texto = 'Mensagem 4' \gset
+update whatsapp_fila set estado = 'enviando', enviar_apos = (:'t0'::timestamptz) - interval '11 minutes' where texto = 'Mensagem 4';
+select count(*) as nada from whatsapp_fila_pegar_em(5, :'t0'::timestamptz) where texto = 'Mensagem 4' \gset
 select pg_temp.confere(:'nada' = '0' and (select estado = 'incerta' from whatsapp_fila where texto = 'Mensagem 4'), 'enviando esquecida vira incerta');
 
 -- pegar nunca pega incerta nem falha.
-select count(*) as pegou_ruins from whatsapp_fila_pegar() where texto in ('Mensagem 2', 'Mensagem 3', 'Mensagem 4') \gset
+select count(*) as pegou_ruins from whatsapp_fila_pegar_em(5, :'t0'::timestamptz) where texto in ('Mensagem 2', 'Mensagem 3', 'Mensagem 4') \gset
 select pg_temp.confere(:'pegou_ruins' = '0', 'pegar ignora incerta e falha');
 select pg_temp.confere((select estado = 'incerta' from whatsapp_fila where texto = 'Mensagem 2')
   and (select estado = 'falha' from whatsapp_fila where texto = 'Mensagem 3')

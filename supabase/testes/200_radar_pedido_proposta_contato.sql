@@ -16,7 +16,7 @@ end $$;
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 set local request.jwt.claim.sub='user_comprador';
-select criar_pedido_radar_site('80000000-0000-4000-a000-000000000001','Procuro mesa para testar o Radar','Corrente','propostas_prazo',72,'Somente teste local',null,100050,200099) as criado \gset
+select criar_pedido_radar_site('80000000-0000-4000-a000-000000000001','Procuro mesa para testar o Radar','Corrente','propostas_prazo',72,'Somente teste local',(select id from categorias where slug='sofas-e-poltronas'),100050,200099) as criado \gset
 select (:'criado'::jsonb->>'id') as pedido \gset
 select pg_temp.confere((select preco_min_centavos=100050 and preco_max_centavos=200099 from radar_pedido(:'pedido')),'Faixa com centavos preservada');
 set local request.jwt.claim.sub='user_loja';

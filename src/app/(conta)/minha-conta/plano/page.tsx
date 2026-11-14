@@ -15,7 +15,8 @@ import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { Aviso } from "@/components/conta/aviso";
-import { dataPorExtenso, resumoPlano } from "@/components/conta/resumo-plano";
+import { dataPorExtenso, diaMesCurto, resumoPlano } from "@/components/conta/resumo-plano";
+import { minhaCortesiaRadar } from "@/lib/dados/radar";
 import { EscolherPlano } from "@/components/cobranca/escolher-plano";
 import { Badge, type TomSelo } from "@/components/ui/badge";
 
@@ -27,7 +28,7 @@ export const metadata: Metadata = { title: "Meu plano" };
 // ?plano=<codigo> já escolhe um plano; ?p=<pagamento> retoma um pagamento.
 
 const COLUNAS_PLANO =
-  "codigo, nome, descricao, publico, preco_centavos, periodo_dias, limite_anuncios, acesso_radar, propostas_radar_mes, e_teste, ordem";
+  "codigo, nome, descricao, publico, preco_centavos, periodo_dias, limite_anuncios, acesso_radar, propostas_radar_mes, e_teste, ordem, ativo, recomendado";
 
 type Pagamento = {
   id: string;
@@ -64,6 +65,18 @@ async function lerPlanos(): Promise<Plano[]> {
     if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar os planos.");
     return data as Plano[];
   }
+}
+
+/**
+ * Plano contratado da loja, mesmo que tenha saído de venda (ativo = false). A tela mostra o nome dele.
+ * Se a leitura falhar (ex.: banco sem a última migração), devolve null e a tela usa o que já tem.
+ */
+async function lerPlanoContratado(): Promise<{ nome: string; e_teste: boolean; ativo: boolean } | null> {
+  const db = await createClient();
+  const { data, error } = await db.rpc("meu_plano_contratado");
+  if (error || !Array.isArray(data)) return null;
+  const linha = data[0] as { nome: string; e_teste: boolean; ativo: boolean } | undefined;
+  return linha ? { nome: linha.nome, e_teste: linha.e_teste === true, ativo: linha.ativo === true } : null;
 }
 
 async function lerPagamentos(vitrineId: string, pagina: number): Promise<{ lista: Pagamento[]; total: number }> {
@@ -104,7 +117,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
   }
   const vitrine = conta.vitrine;
   const pagamentoLigado = asaasConfigurado();
-  const [planos, historico, assinatura, opcoes, doc, retomado, ambiente] = await Promise.all([
+  const [planos, historico, assinatura, opcoes, doc, retomado, ambiente, planoRpc, cortesiaAte] = await Promise.all([
     lerPlanos(),
     lerPagamentos(vitrine.id, pagina),
     minhaAssinatura(),
@@ -112,13 +125,24 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
     pagamentoLigado ? precisaDocumento(vitrine.id) : Promise.resolve(false),
     pagamentoPedido ? meuPagamento(pagamentoPedido) : Promise.resolve(null),
     pagamentoLigado ? ambienteAsaas() : Promise.resolve(null),
+    lerPlanoContratado(),
+    minhaCortesiaRadar(),
   ]);
   if (!assinatura || assinatura.vitrine_id !== vitrine.id) throw new Error("Não foi possível confirmar sua assinatura.");
   const pagamentos = historico.lista;
   const resumo = resumoPlano(conta)!;
   const nomes = new Map(planos.map((p) => [p.codigo, p.nome]));
-  const planoContratado = planos.find((p) => p.codigo === vitrine.plano);
-  const contratado = planoContratado?.e_teste ? "período grátis" : `plano ${planoContratado?.nome ?? vitrine.plano}`;
+  const contratado = planoRpc?.e_teste ? "período grátis" : `plano ${planoRpc?.nome ?? vitrine.plano}`;
+  const planoRecomendado = planos.find((p) => p.recomendado === true && p.ativo !== false && !p.e_teste);
+  // Radar: o plano que vale agora dá o Radar; a cortesia é da própria loja e vale até a data (sem plano pago).
+  // Sem verificação, o Radar não atende (só a cortesia libera): não promete o número de propostas.
+  const linhaRadarPlano = conta.plano && !conta.plano.e_teste
+    ? conta.plano.acesso_radar
+      ? !conta.vitrine.selo_loja_verificada && !cortesiaAte
+        ? "Radar: depois que a loja for verificada"
+        : conta.plano.propostas_radar_mes === null ? "Radar de Negócios sem limite de propostas" : `Radar: até ${conta.plano.propostas_radar_mes} propostas por mês`
+      : cortesiaAte ? null : "Sem acesso ao Radar de Negócios"
+    : null;
   const pct = conta.limite ? Math.min(100, Math.round((conta.ativos / conta.limite) * 100)) : null;
   const suspensa = assinatura?.situacao === "suspensa";
 
@@ -133,7 +157,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
         <h2 id="plano-atual" className="text-sm font-semibold text-texto-suave uppercase">
           Plano atual
         </h2>
-        <p className="text-xl font-bold">{resumo.nome ?? "Sem plano ativo"}</p>
+        <p className="text-xl font-bold">{resumo.nome ?? planoRpc?.nome ?? "Sem plano ativo"}</p>
         {conta.plano?.descricao && <p className="text-base text-texto-suave">{conta.plano.descricao}</p>}
 
         {resumo.venceu && (
@@ -141,6 +165,14 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
             <span>
               Seu {contratado} terminou.
               {resumo.nome ? ` Agora você está no ${resumo.nome}.` : " Assine um plano para pôr anúncios no ar."}
+            </span>
+          </Aviso>
+        )}
+
+        {planoRpc && !planoRpc.ativo && (
+          <Aviso tipo="info">
+            <span>
+              O {planoRpc.nome} saiu de venda. Na renovação, você passa para o {planoRecomendado ? `plano recomendado, o ${planoRecomendado.nome}` : "plano recomendado"}.
             </span>
           </Aviso>
         )}
@@ -201,14 +233,16 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
             )}
           </p>
         )}
-        {conta.plano && (
+        {linhaRadarPlano && (
           <p className="flex items-center gap-2 text-base">
             <Radar className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
-            {conta.plano.acesso_radar
-              ? conta.plano.propostas_radar_mes === null
-                ? "Radar de Negócios sem limite de propostas"
-                : `Radar: até ${conta.plano.propostas_radar_mes} propostas por mês`
-              : "Sem acesso ao Radar de Negócios"}
+            {linhaRadarPlano}
+          </p>
+        )}
+        {cortesiaAte && (
+          <p className="flex items-center gap-2 text-base">
+            <Radar className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
+            Radar liberado por cortesia até {diaMesCurto(cortesiaAte)}
           </p>
         )}
       </section>

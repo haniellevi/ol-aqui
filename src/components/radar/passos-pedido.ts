@@ -32,7 +32,7 @@ export function passoDoCampo(campo: string | null | undefined): NumeroPasso {
  */
 export function erroDoPasso(passo: NumeroPasso, e: EntradaPedido, cidadesValidas: string[]): ErroRadar | null {
   if (passo === 1) {
-    return validarPedido({ ...e, cidade: undefined, cidadesIds: [], visibilidade: "lojas", modo: "whatsapp_direto", prazoHoras: null, whatsapp: undefined });
+    return validarPedido({ ...e, cidade: undefined, cidadesIds: [], visibilidade: "lojas", modo: "propostas_prazo", prazoHoras: 24, whatsapp: undefined });
   }
   if (passo === 2) {
     const ids = e.cidadesIds ?? [];

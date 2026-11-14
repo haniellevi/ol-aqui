@@ -14,7 +14,7 @@ export const lerConfig = cache(async function lerConfig<T = unknown>(
 ): Promise<T | null> {
   return seguro(async () => {
     const db = await createClient();
-    const { data, error } = await db.rpc("config", { p_chave: chave, p_microrregiao: microrregiaoId, p_padrao: padrao });
+    const { data, error } = await db.rpc("config_publica", { p_chave: chave, p_microrregiao: microrregiaoId, p_padrao: padrao });
     if (error) return padrao;
     return (data ?? padrao) as T | null;
   }, padrao);

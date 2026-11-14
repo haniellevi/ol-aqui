@@ -47,9 +47,9 @@ set request.jwt.claim.role='authenticated';
 set request.jwt.claim.sub='user_semcodigo';
 select pg_temp.recusa($q$select criar_pedido_radar('Procuro bicicleta usada','Corrente')$q$, '42501');
 set request.jwt.claim.sub='user_comprador';
-select criar_pedido_radar_site('10000000-0000-4000-a000-000000000001','Procuro bicicleta usada','Corrente','propostas_prazo',72,'Com marchas') as criado \gset
+select criar_pedido_radar_site('10000000-0000-4000-a000-000000000001','Procuro bicicleta usada','Corrente','propostas_prazo',72,'Com marchas',(select id from categorias where slug='sofas-e-poltronas')) as criado \gset
 select (:'criado'::jsonb->>'id') as pedido \gset
-select pg_temp.confere(criar_pedido_radar_site('10000000-0000-4000-a000-000000000001','Procuro bicicleta usada','Corrente','propostas_prazo',72) ->> 'id' = :'pedido', 'repetição devolve mesmo pedido');
+select pg_temp.confere(criar_pedido_radar_site('10000000-0000-4000-a000-000000000001','Procuro bicicleta usada','Corrente','propostas_prazo',72,null,(select id from categorias where slug='sofas-e-poltronas')) ->> 'id' = :'pedido', 'repetição devolve mesmo pedido');
 select pg_temp.confere((select count(*)=1 from meus_pedidos_radar() where id=:'pedido'), 'comprador acompanha pedido');
 select pg_temp.recusa($q$select criar_pedido_radar('Procuro bicicleta usada','Outra cidade')$q$, '23514');
 select pg_temp.recusa($q$select criar_pedido_radar('Procuro bicicleta usada','Corrente','whatsapp_direto',null,null,null,10000,1000)$q$, '23514');

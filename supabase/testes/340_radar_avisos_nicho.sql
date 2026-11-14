@@ -137,7 +137,7 @@ set local request.jwt.claim.role = 'authenticated';
 set local request.jwt.claim.sub = 'user_radar340comprador';
 select criar_pedido_radar_site(
   '34000000-0000-4000-a000-000000000011', 'Procuro um móvel pelo formulário 340',
-  'Corrente', 'whatsapp_direto', null, null, :'moveis'
+  'Corrente', 'propostas_prazo', 72, null, :'moveis'
 )->>'id' as pelo_site \gset
 reset role;
 select pg_temp.confere340(pg_temp.destinatarios340(:'pelo_site') = array['user_radar340loja','user_radar340pf'],

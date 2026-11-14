@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Hourglass, LogIn, Megaphone, MessageCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Hourglass, LogIn, Megaphone } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
 import { Seletor } from "@/components/conta/seletor";
 import { Chip } from "@/components/ui/chip";
@@ -101,7 +101,8 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
   const [area, setArea] = useState<string[]>(cidadesIniciais);
   const [visibilidade, setVisibilidade] = useState<Visibilidade>(visibilidadeInicial);
   const whatsapp = useCampoTelefone(whatsappInicial, { obrigatorio: pedirWhatsapp });
-  const [modo, setModo] = useState<ModoContato>("whatsapp_direto");
+  // Só um jeito de receber: propostas por prazo (o contato direto por WhatsApp saiu do formulário).
+  const modo: ModoContato = "propostas_prazo";
   const [prazo, setPrazo] = useState<number | null>(regras.prazosHoras[1] ?? regras.prazosHoras[0] ?? null);
   const [erro, setErro] = useState<{ texto: string; campo?: string; celular?: boolean } | null>(null);
   const [enviando, iniciar] = useTransition();
@@ -138,7 +139,6 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
     setPrecoMax(r.precoMax);
     setArea(area.ids);
     setVisibilidade(r.visibilidade);
-    setModo(r.modo);
     if (r.prazoHoras != null && regras.prazosHoras.includes(r.prazoHoras)) setPrazo(r.prazoHoras);
     irPara(TOTAL_PASSOS_PEDIDO);
     // Só na montagem: o rascunho é lido uma vez (e só sai do aparelho ao publicar).
@@ -356,25 +356,23 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
                 <Campo tamanho="grande" rotulo="Até" name="preco_max" prefixo="R$" inputMode="decimal" value={precoMax} onChange={(e) => setPrecoMax(e.target.value)} placeholder="0" erro={erroDe("preco_max_centavos", "preco")} />
               </div>
             </fieldset>
-            {categorias.length > 0 && (
-              <Seletor
-                tamanho="grande"
-                rotulo="Categoria (opcional)"
-                name="categoria"
-                value={categoriaId ?? ""}
-                onChange={(e) => setCategoriaId(e.target.value || null)}
-                erro={erroDe("categoria")}
-                dica="Escolha a opção mais específica para ajudar vendedores da área a encontrar seu pedido."
-              >
-                <option value="">Sem categoria</option>
-                {categorias.map((c) => (
-                  <optgroup key={c.id} label={c.nome}>
-                    <option value={c.id}>{c.nome}{c.filhas.length ? " (geral)" : ""}</option>
-                    {c.filhas.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
-                  </optgroup>
-                ))}
-              </Seletor>
-            )}
+            <Seletor
+              tamanho="grande"
+              rotulo="Categoria"
+              name="categoria"
+              value={categoriaId ?? ""}
+              onChange={(e) => setCategoriaId(e.target.value || null)}
+              erro={erroDe("categoria")}
+              dica="Escolha a opção mais específica para ajudar vendedores da área a encontrar seu pedido."
+            >
+              <option value="">Escolha uma categoria</option>
+              {categorias.map((c) => (
+                <optgroup key={c.id} label={c.nome}>
+                  <option value={c.id}>{c.nome}{c.filhas.length ? " (geral)" : ""}</option>
+                  {c.filhas.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                </optgroup>
+              ))}
+            </Seletor>
           </div>
         )}
 
@@ -395,21 +393,12 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
         {passo === 4 && (
           <div className="flex flex-col gap-6">
             <div role="radiogroup" aria-labelledby="pergunta-passo" className="flex flex-col gap-3">
-              <CartaoEscolha
-                nome="modo"
-                valor="whatsapp_direto"
-                marcado={modo === "whatsapp_direto"}
-                onEscolher={() => setModo("whatsapp_direto")}
-                icone={<MessageCircle />}
-                titulo="Podem me chamar no WhatsApp"
-                ajuda="As lojas mandam mensagem direto para o seu celular."
-              />
               {temPrazos && (
                 <CartaoEscolha
                   nome="modo"
                   valor="propostas_prazo"
-                  marcado={modo === "propostas_prazo"}
-                  onEscolher={() => setModo("propostas_prazo")}
+                  marcado
+                  onEscolher={() => undefined}
                   icone={<Hourglass />}
                   titulo={`Quero receber propostas aqui${fimPrazo && prazo ? ` até ${fimPrazo}` : ""}`}
                   ajuda="Você compara preço e foto e só chama quem quiser. Seu número fica escondido."
@@ -436,7 +425,7 @@ export function FormPedido({ textoInicial, categoriaInicial = null, precoMinInic
                 name="whatsapp"
                 {...whatsapp.campo}
                 erro={whatsapp.erro ?? erroDe("whatsapp")}
-                dica={modo === "whatsapp_direto" ? "Com DDD. As lojas que enviarem uma proposta poderão ver este número." : "Com DDD. Seu número fica oculto; você escolhe com qual loja conversar."}
+                dica="Com DDD. Seu número fica oculto; você escolhe com qual loja conversar."
               />
             )}
 
