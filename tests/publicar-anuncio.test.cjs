@@ -129,8 +129,29 @@ test('rascunho repetido retoma a mesma chave somente se pertencer ao usuário', 
 test('abrir a página de anunciar não cria rascunho', async () => {
   const { mocks, gravacoes } = fronteiras();
   const { default: Pagina } = carregar(base + 'page.tsx', mocks);
-  const html = render(await Pagina());
+  const html = render(await Pagina({ searchParams: Promise.resolve({}) }));
   assert.match(html, /Começar meu anúncio/); assert.equal(gravacoes.length, 0);
+});
+test('marketing preenche o rascunho na loja escolhida e recusa troca de loja', async () => {
+  const categoria = '71000000-0000-4000-a000-000000000003';
+  const { a, gravacoes } = fronteiras({ categorias: { [categoria]: { categoria: { id: categoria }, filhas: [] } } });
+  await assert.rejects(a.novoRascunho({ chave: id, sugestao: { vitrineId: 'loja', titulo: '  Ventilador  de mesa ', categoriaId: categoria } }), /redirect:\/anunciar\/fotos/);
+  assert.equal(gravacoes[0].titulo, 'Ventilador de mesa');
+  assert.equal(gravacoes[0].categoria_id, categoria);
+  assert.equal(gravacoes[0].status, 'rascunho');
+  const outra = fronteiras();
+  assert.ok((await outra.a.novoRascunho({ sugestao: { vitrineId: 'outra', titulo: 'Mesa' } })).erro);
+  assert.equal(outra.gravacoes.length, 0);
+  const invalida = fronteiras();
+  assert.ok((await invalida.a.novoRascunho({ sugestao: { vitrineId: 'loja', titulo: 'Mesa', categoriaId: 'nao-uuid' } })).erro);
+  assert.equal(invalida.gravacoes.length, 0);
+});
+test('marketing com categoria principal abre rascunho e deixa a subcategoria para a revisão normal', async () => {
+  const categoria = '71000000-0000-4000-a000-000000000003';
+  const { a, gravacoes } = fronteiras({ categorias: { [categoria]: { categoria: { id: categoria }, filhas: [{ id: 'filha' }] } } });
+  await assert.rejects(a.novoRascunho({ chave: id, sugestao: { vitrineId: 'loja', titulo: 'Ventilador', categoriaId: categoria } }), /redirect:\/anunciar\/fotos/);
+  assert.equal(gravacoes[0].titulo, 'Ventilador');
+  assert.equal(gravacoes[0].categoria_id, undefined);
 });
 test('falha de rede mantém erro recuperável e sinais de redirect continuam funcionando', async () => {
   const { envioRecuperavel } = carregar('src/components/anunciar/enviar.ts', fronteiras().mocks);

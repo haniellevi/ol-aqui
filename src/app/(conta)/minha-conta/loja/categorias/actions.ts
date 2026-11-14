@@ -65,12 +65,13 @@ export async function decidirTodasCategorias(aceitar: boolean): Promise<Resultad
 }
 
 /** nichoId nulo = dispensar a sugestão sem escolher outro. */
-export async function definirNicho(nichoId: string | null): Promise<Resultado> {
+export async function definirNicho(nichoId: string | null, vitrineId?: string): Promise<Resultado> {
   if (nichoId !== null && !ehUuid(nichoId)) return { ok: false, erro: { mensagem: "Escolha um nicho da lista." } };
   try {
     const v = await minhaLoja();
     if (v === null) return SEM_LOGIN;
     if (!v) return { ok: false, erro: { mensagem: "Só lojas têm nicho." } };
+    if (vitrineId && v.id !== vitrineId) return { ok: false, erro: { mensagem: "A loja selecionada mudou. Atualize a página para continuar." } };
     const db = await createClient();
     const { error } = await db.rpc("definir_nicho_loja", { p_vitrine: v.id, p_nicho: nichoId });
     if (error) return { ok: false, erro: traduzirErro(error) };

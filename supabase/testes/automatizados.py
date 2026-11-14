@@ -25,6 +25,8 @@ try:
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+    checked(sql((root/'supabase/testes/880_meu_marketing.sql').read_text()))
+    print('PASS: Meu Marketing: permissões, ranking público, 30 dias, demanda regional por nicho, buscas antigas, caracteres literais e privacidade', flush=True)
     marca_documentos = (root/'supabase/migrations/20261110234147_marca_documentos_atuais.sql').read_text()
     checked(sql((root/'supabase/testes/440_marca_documentos_atuais.sql').read_text().replace('-- REAPLICAR_DOCUMENTOS', marca_documentos + marca_documentos)))
     print('PASS: marca nos documentos ativos e idempotência, versões antigas preservadas', flush=True)

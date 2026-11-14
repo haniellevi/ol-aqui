@@ -101,7 +101,12 @@ async function gravar(id: string, colunas: Record<string, unknown>, antes?: MeuA
  * desde que o avulso seja oferecido para a pessoa e o pagamento esteja ligado. O banco segue
  * barrando o excesso de rascunhos e só põe no ar com vaga no plano ou avulso pago.
  */
-export async function novoRascunho(opcoes?: { avulso?: boolean; chave?: string; assistente?: string }): Promise<EstadoForm> {
+export async function novoRascunho(opcoes?: {
+  avulso?: boolean;
+  chave?: string;
+  assistente?: string;
+  sugestao?: { vitrineId: string; titulo: string; categoriaId?: string };
+}): Promise<EstadoForm> {
   const conta = await contaDaLoja();
   if (!conta) return { erro: { mensagem: "Entre na sua conta para continuar.", codigo: "28000" } };
   if (!conta.vitrine) redirect("/quero-vender");
@@ -112,15 +117,27 @@ export async function novoRascunho(opcoes?: { avulso?: boolean; chave?: string; 
     if (!avulso) redirect("/anunciar");
   }
   if (opcoes?.chave && !ehUuid(opcoes.chave)) return { erro: { mensagem: "Não foi possível começar. Abra esta página novamente." } };
+  const sugestao = opcoes?.sugestao;
+  let preenchimento: { titulo?: string; categoria_id?: string } = {};
+  if (sugestao) {
+    if (sugestao.vitrineId !== conta.vitrine.id) return { erro: { mensagem: "A loja selecionada mudou. Volte ao Meu Marketing da loja para continuar." } };
+    const titulo = typeof sugestao.titulo === "string" ? sugestao.titulo.trim().replace(/\s+/g, " ").slice(0, 90) : "";
+    const categoria = sugestao.categoriaId && ehUuid(sugestao.categoriaId) ? await categoriaPorId(sugestao.categoriaId) : null;
+    if (titulo.length < 2 || (sugestao.categoriaId && !categoria)) {
+      return { erro: { mensagem: "A sugestão mudou. Atualize o Meu Marketing e tente novamente." } };
+    }
+    // Busca pode estar filtrada por uma categoria principal. Só folhas recebem anúncios.
+    preenchimento = { titulo, ...(categoria && categoria.filhas.length === 0 ? { categoria_id: sugestao.categoriaId } : {}) };
+  }
   const db = await createClient();
   const { data, error } = await db
     .from("anuncios")
-    .insert({ ...(opcoes?.chave ? { id: opcoes.chave } : {}), vitrine_id: conta.vitrine.id, status: "rascunho" })
+    .insert({ ...(opcoes?.chave ? { id: opcoes.chave } : {}), vitrine_id: conta.vitrine.id, status: "rascunho", ...preenchimento })
     .select("id")
     .single();
   if (error?.code === "23505" && opcoes?.chave) {
     const existente = await anuncioDaLoja(opcoes.chave);
-    if (existente?.status === "rascunho") redirect(urlPasso("fotos", existente.id, false, false, tentativaAssistente(opcoes?.assistente)));
+    if (existente?.status === "rascunho" && (!sugestao || existente.vitrine_id === sugestao.vitrineId)) redirect(urlPasso("fotos", existente.id, false, false, tentativaAssistente(opcoes?.assistente)));
   }
   if (error || !data) return { erro: traduzirErro(error) };
   redirect(urlPasso("fotos", String(data.id), false, false, tentativaAssistente(opcoes?.assistente)));

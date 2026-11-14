@@ -154,6 +154,9 @@ test('revise categorias: ações validam, usam a loja da pessoa e não vazam err
   ({ a, chamadas } = acoes());
   assert.equal((await a.definirNicho(null)).ok, true); assert.deepEqual(chamadas[0], ['definir_nicho_loja', { p_vitrine: loja.id, p_nicho: null }]);
   assert.equal((await a.definirNicho('x')).ok, false);
+  const antesDeTrocar = chamadas.length;
+  assert.equal((await a.definirNicho(null, 'outra-loja')).ok, false);
+  assert.equal(chamadas.length, antesDeTrocar, 'troca da loja não pode mudar o nicho de outra vitrine');
   assert.equal((await acoes({ semLogin: true }).a.decidirTodasCategorias(true)).erro.codigo, '28000');
   assert.equal((await acoes({ v: { ...loja, tipo: 'pf' } }).a.definirNicho(null)).ok, false);
   const r = await acoes({ rede: true }).a.decidirCategoria(A1, false); assert.equal(r.ok, false); assert.match(r.erro.mensagem, /conexão falhou/);
