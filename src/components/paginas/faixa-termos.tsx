@@ -62,7 +62,7 @@ export function FaixaTermos({ aviso }: { aviso: AvisoTermos }) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 pt-3">
         <Alert variant="success" role="status">
-          Pronto, obrigado!
+          Documentos aceitos.
         </Alert>
       </div>
     );
@@ -71,17 +71,17 @@ export function FaixaTermos({ aviso }: { aviso: AvisoTermos }) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pt-3">
-      <section aria-labelledby="faixa-termos-titulo" className="relative flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4 pr-14">
+      <section aria-labelledby="faixa-termos-titulo" className="relative flex flex-col gap-3 rounded-card border border-borda bg-cartao p-3">
         <button
           type="button"
           onClick={agoraNao}
           aria-label="Fechar o aviso dos termos por agora"
-          className="absolute top-1 right-1 grid size-10 place-items-center text-beringela"
+          className="absolute top-1 right-1 grid size-11 place-items-center rounded-campo text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro"
         >
           <X className="size-5" aria-hidden />
         </button>
         <div className="flex flex-col gap-1">
-          <h2 id="faixa-termos-titulo" className="text-lg leading-6 font-semibold">
+          <h2 id="faixa-termos-titulo" className="pr-11 text-lg leading-6 font-semibold">
             {aviso.titulo}
           </h2>
           <p className="text-base">{aviso.texto}</p>
@@ -90,8 +90,8 @@ export function FaixaTermos({ aviso }: { aviso: AvisoTermos }) {
           {aviso.pendentes.map((p) => (
             <li key={p.id} className="flex flex-col">
               <Link
-                href={linkDocumentoLegal(p.tipo)}
-                className="inline-flex min-h-10 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4"
+                href={linkDocumentoLegal(p.tipo, p.versao)}
+                className="inline-flex min-h-11 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4"
               >
                 <FileText className="size-5 shrink-0" aria-hidden />
                 Ler {NOME_DOCUMENTO[p.tipo].toLowerCase()} (versão {p.versao})
@@ -105,12 +105,12 @@ export function FaixaTermos({ aviso }: { aviso: AvisoTermos }) {
             {erro}
           </Alert>
         )}
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-wrap gap-2">
           {/* secundário: a faixa não disputa com o botão principal da tela */}
-          <Botao variante="secundario" carregando={enviando} textoCarregando="Aceitando…" onClick={() => void aceitar()} className="sm:w-auto" larguraTotal>
-            Aceitar
+          <Botao variante="secundario" tamanho="toque" carregando={enviando} textoCarregando="Aceitando…" onClick={() => void aceitar()}>
+            Aceitar documentos
           </Botao>
-          <Botao variante="texto" onClick={agoraNao} disabled={enviando}>
+          <Botao variante="texto" tamanho="toque" onClick={agoraNao} disabled={enviando}>
             Agora não
           </Botao>
         </div>

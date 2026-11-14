@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 // [texto](link). Links só para caminho interno ("/..."), https://, http:// e mailto:.
 
 type Bloco =
-  | { tipo: "titulo"; nivel: 1 | 2 | 3; texto: string }
+  | { tipo: "titulo"; nivel: 1 | 2 | 3; texto: string; id: string }
   | { tipo: "paragrafo"; linhas: string[] }
   | { tipo: "lista"; ordenada: boolean; itens: string[] };
 
@@ -39,7 +39,8 @@ function separar(md: string): Bloco[] {
     const titulo = /^(#{1,3})\s+(.+)$/.exec(linha);
     if (titulo) {
       fechar();
-      blocos.push({ tipo: "titulo", nivel: titulo[1].length as 1 | 2 | 3, texto: titulo[2].trim() });
+      const texto = titulo[2].trim();
+      blocos.push({ tipo: "titulo", nivel: titulo[1].length as 1 | 2 | 3, texto, id: ancora(texto) || "secao" });
       continue;
     }
     const item = /^[-*]\s+(.+)$/.exec(linha);
@@ -67,6 +68,18 @@ function separar(md: string): Bloco[] {
     }
   }
   fechar();
+  const titulos = blocos.filter((b) => b.tipo === "titulo");
+  const usados = new Set<string>();
+  const reservados = new Set(titulos.map((b) => b.id));
+  for (const b of titulos) {
+    const base = b.id;
+    if (usados.has(base)) {
+      let numero = 2;
+      while (reservados.has(`${base}-${numero}`) || usados.has(`${base}-${numero}`)) numero++;
+      b.id = `${base}-${numero}`;
+    }
+    usados.add(b.id);
+  }
   return blocos;
 }
 
@@ -118,7 +131,7 @@ function emLinha(texto: string, chave: string): ReactNode[] {
 export function titulosDoTexto(md: string): { id: string; texto: string }[] {
   return separar(md)
     .filter((b): b is Extract<Bloco, { tipo: "titulo" }> => b.tipo === "titulo" && b.nivel <= 2)
-    .map((b) => ({ id: ancora(b.texto), texto: b.texto.replace(/\*\*/g, "") }));
+    .map((b) => ({ id: b.id, texto: textoPuro(b.texto) }));
 }
 
 /** Texto sem marcação (busca da ajuda). */
@@ -130,23 +143,23 @@ export function textoPuro(md: string) {
     .trim();
 }
 
-export function Markdown({ texto, className = "" }: { texto: string; className?: string }) {
+export function Markdown({ texto, className = "", prefixo = "" }: { texto: string; className?: string; prefixo?: string }) {
   const blocos = separar(texto);
   return (
-    <div className={`flex flex-col gap-3 text-base leading-6 text-texto ${className}`}>
+    <div className={`flex flex-col gap-3 text-base leading-6 text-texto [overflow-wrap:anywhere] ${className}`}>
       {blocos.map((b, i) => {
         const k = `b${i}`;
         if (b.tipo === "titulo") {
           const conteudo = emLinha(b.texto, k);
-          const id = ancora(b.texto);
+          const id = `${prefixo}${b.id}`;
           if (b.nivel === 3)
             return (
-              <h3 key={k} id={id} className="mt-1 scroll-mt-20 text-base font-semibold">
+              <h3 key={k} id={id} tabIndex={-1} className="mt-1 scroll-mt-20 text-base font-semibold">
                 {conteudo}
               </h3>
             );
           return (
-            <h2 key={k} id={id} className="mt-3 scroll-mt-20 text-lg leading-6 font-semibold">
+            <h2 key={k} id={id} tabIndex={-1} className="mt-3 scroll-mt-20 text-titulo font-semibold text-beringela">
               {conteudo}
             </h2>
           );

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { FileText, LifeBuoy } from "lucide-react";
 import { regiaoAtual } from "@/lib/dados/regiao";
 import { ajudaCompleta, contatoEquipe, precosDestaqueAjuda } from "@/lib/dados/paginas";
@@ -7,7 +6,7 @@ import { planosPublicos } from "@/lib/dados/vitrine-completa";
 import { lugarDaRegiao } from "@/components/busca/parametros";
 import { preco } from "@/lib/formato";
 import { LINK_PLANOS, LINK_PRIVACIDADE, LINK_TERMOS } from "@/lib/rotas";
-import { Botao } from "@/components/ui/botao";
+import { Botao, classesBotao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { ContatoSuporte } from "@/components/paginas/contato-suporte";
 import { ListaAjuda } from "./lista-ajuda";
@@ -39,46 +38,52 @@ export default async function PaginaAjuda() {
 
   const precosHoje =
     destaques.length > 0 || planosVenda.length > 0 ? (
-      <div className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h3 className="text-base font-semibold">Preços de hoje em {lugar}</h3>
-        {destaques.length > 0 && (
+      <div className="flex flex-col gap-2 border-t border-borda pt-3">
+        {destaques.length > 0 && <>
+          <h3 className="text-base font-semibold">Destaques em {lugar}</h3>
           <ul className="flex flex-col gap-2">
             {destaques.map((d) => (
               <li key={d.slug} className="flex flex-col">
-                <span className="text-base">
-                  <strong className="font-semibold">{d.nome}</strong>: {d.preco_centavos > 0 ? preco(d.preco_centavos) : "grátis"} {dias(d.dias)}
+                <span className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-base">
+                  <strong className="font-semibold">{d.nome}</strong>
+                  <span className="tabular-nums">{d.preco_centavos > 0 ? preco(d.preco_centavos) : "Grátis"} {dias(d.dias)}</span>
                 </span>
                 {d.descricao && <span className="text-sm text-texto-suave">{d.descricao}</span>}
               </li>
             ))}
           </ul>
-        )}
-        {planosVenda.length > 0 && (
-          <ul className="flex flex-col gap-1 border-t border-borda pt-3">
+        </>}
+        {planosVenda.length > 0 && <>
+          <h3 className="text-base font-semibold">Planos pagos</h3>
+          <ul className="flex flex-col gap-2">
             {planosVenda.map((p) => (
-              <li key={p.codigo} className="text-base">
-                Plano <strong className="font-semibold">{p.nome}</strong>: {preco(p.preco_centavos)} a cada {p.periodo_dias} dias
+              <li key={p.codigo} className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-base">
+                <strong className="font-semibold">{p.nome}</strong>
+                <span className="tabular-nums">{preco(p.preco_centavos)} por {p.periodo_dias} dias</span>
               </li>
             ))}
           </ul>
-        )}
-        <Botao href={LINK_PLANOS} variante="secundario" larguraTotal>
+        </>}
+        <Botao href={LINK_PLANOS} variante="secundario" tamanho="toque">
           Ver planos e preços
         </Botao>
       </div>
     ) : null;
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
-      <header className="flex flex-col gap-1">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-4 [overflow-wrap:anywhere]">
+      <header className="flex flex-wrap items-center justify-between gap-x-2">
         <h1 className="text-titulo font-semibold text-beringela">Ajuda</h1>
+        <a href="#titulo-contato" className={classesBotao("texto", false, "", "toque")}>
+          <LifeBuoy className="size-4 shrink-0" aria-hidden /> Falar com a equipe
+        </a>
       </header>
 
       {ajuda.perguntas.length > 0 ? (
         <ListaAjuda categorias={ajuda.categorias} perguntas={ajuda.perguntas} extras={precosHoje ? { destaques: precosHoje } : {}} />
       ) : (
-        <Vazio titulo="A ajuda não abriu agora." texto="Confira sua internet e tente de novo. Se precisar, fale com a equipe aqui embaixo." icone={<LifeBuoy />}>
-          <Botao href="/ajuda" variante="secundario" larguraTotal>
+        <Vazio titulo="A Ajuda está indisponível" texto="Tente carregar as perguntas de novo ou fale com a equipe." icone={<LifeBuoy />}>
+          <Botao href="/ajuda" variante="secundario" tamanho="toque">
             Tentar de novo
           </Botao>
         </Vazio>
@@ -86,13 +91,9 @@ export default async function PaginaAjuda() {
 
       <ContatoSuporte contato={contato} />
 
-      <nav aria-label="Textos do Mercado da Região" className="flex flex-col gap-1">
-        <Link href={LINK_TERMOS} className="inline-flex min-h-10 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4">
-          <FileText className="size-5" aria-hidden /> Termos de uso
-        </Link>
-        <Link href={LINK_PRIVACIDADE} className="inline-flex min-h-10 items-center gap-2 text-base font-semibold text-laranja-escuro underline underline-offset-4">
-          <FileText className="size-5" aria-hidden /> Política de privacidade
-        </Link>
+      <nav aria-label="Textos do Mercado da Região" className="flex flex-wrap gap-2">
+        <Botao href={LINK_TERMOS} variante="secundario" tamanho="toque" icone={<FileText />}>Termos de uso</Botao>
+        <Botao href={LINK_PRIVACIDADE} variante="secundario" tamanho="toque" icone={<FileText />}>Política de privacidade</Botao>
       </nav>
     </main>
   );

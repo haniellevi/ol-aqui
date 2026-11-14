@@ -33,11 +33,10 @@ export const documentoAtivo = cache(
 /** Uma versão específica (as antigas continuam públicas). */
 export async function documentoVersao(tipo: TipoDocumento, versao: number): Promise<DocumentoLegal | null> {
   if (!Number.isInteger(versao) || versao < 1) return null;
-  return seguro(async () => {
-    const db = await createClient();
-    const { data, error } = await db.from("documentos_legais").select(`${COLUNAS_VERSAO}, conteudo`).eq("tipo", tipo).eq("versao", versao).maybeSingle();
-    return error ? null : ((data as DocumentoLegal | null) ?? null);
-  }, null);
+  const db = await createClient();
+  const { data, error } = await db.from("documentos_legais").select(`${COLUNAS_VERSAO}, conteudo`).eq("tipo", tipo).eq("versao", versao).maybeSingle();
+  if (error) throw new Error("Não foi possível carregar esta versão.");
+  return (data as DocumentoLegal | null) ?? null;
 }
 
 /** Todas as versões de um tipo, da mais nova para a mais velha (sem o texto). */
@@ -110,13 +109,13 @@ export async function contatoEquipe(microrregiaoId: string | null): Promise<Cont
   };
 }
 
-/** Categorias e perguntas da Central de ajuda (só as ativas, pela RLS; admin vê tudo). */
+/** Categorias e perguntas ativas da Central de ajuda, inclusive na sessão da equipe. */
 export async function ajudaCompleta(): Promise<AjudaCompleta> {
   return seguro(async () => {
     const db = await createClient();
     const [cats, pergs] = await Promise.all([
-      db.from("ajuda_categorias").select("slug, nome, descricao, ordem, ativa").order("ordem").order("nome"),
-      db.from("ajuda_perguntas").select("id, categoria, pergunta, resposta, ordem, ativo").order("ordem").order("pergunta"),
+      db.from("ajuda_categorias").select("slug, nome, descricao, ordem, ativa").eq("ativa", true).order("ordem").order("nome"),
+      db.from("ajuda_perguntas").select("id, categoria, pergunta, resposta, ordem, ativo").eq("ativo", true).order("ordem").order("pergunta"),
     ]);
     if (cats.error || pergs.error) return { categorias: [], perguntas: [] };
     return { categorias: cats.data ?? [], perguntas: pergs.data ?? [] } as AjudaCompleta;
@@ -133,7 +132,7 @@ export async function precosDestaqueAjuda(microrregiaoId: string | null): Promis
         ? db.from("destaque_precos_regiao").select("tipo, preco_centavos, dias").eq("microrregiao_id", microrregiaoId)
         : Promise.resolve({ data: [], error: null }),
     ]);
-    if (tipos.error) return [];
+    if (tipos.error || regiao.error) return [];
     const excecoes = new Map(((regiao.data ?? []) as { tipo: string; preco_centavos: number | null; dias: number | null }[]).map((r) => [r.tipo, r]));
     return ((tipos.data ?? []) as PrecoDestaqueAjuda[]).map((t) => {
       const e = excecoes.get(t.slug);
