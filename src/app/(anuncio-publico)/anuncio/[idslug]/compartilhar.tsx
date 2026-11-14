@@ -19,7 +19,7 @@ export function CompartilharAnuncio({ anuncioId, titulo, url }: { anuncioId: str
         await navigator.share({ title: titulo, url });
       } else {
         await navigator.clipboard.writeText(url);
-        setAviso("Link copiado. Cole onde quiser compartilhar.");
+        setAviso("Link copiado.");
       }
       void registrarEvento(anuncioId, "compartilhar").catch(() => undefined);
     } catch (erro) {
@@ -29,10 +29,10 @@ export function CompartilharAnuncio({ anuncioId, titulo, url }: { anuncioId: str
       }
     } finally { setPendente(false); }
   }
-  return <div className="flex flex-col gap-1">
-    <div className="flex flex-wrap gap-2">
-      <button type="button" disabled={pendente} onClick={() => void compartilhar(false)} className={classesBotao("texto", false, "text-base")}><Share2 className="size-4" aria-hidden />Compartilhar</button>
-      <button type="button" disabled={pendente} onClick={() => void compartilhar(true)} className={classesBotao("texto", false, "text-base")}><Copy className="size-4" aria-hidden />Copiar link</button>
+  return <div className="flex min-w-0 flex-col gap-1">
+    <div className="flex flex-wrap gap-1">
+      <button type="button" disabled={pendente} onClick={() => void compartilhar(false)} className={classesBotao("texto", false, "px-2!", "toque")}><Share2 className="size-4" aria-hidden />Compartilhar</button>
+      <button type="button" disabled={pendente} onClick={() => void compartilhar(true)} className={classesBotao("texto", false, "px-2!", "toque")}><Copy className="size-4" aria-hidden />Copiar link</button>
     </div>
     <p role="status" className={aviso ? "text-sm text-texto-suave" : "sr-only"}>{aviso}</p>
     {manual && <label className="flex flex-col gap-1 text-sm">Link do anúncio<input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="h-10 min-w-0 rounded-campo border border-borda bg-cartao px-3 text-base focus-visible:outline-laranja-escuro" /></label>}

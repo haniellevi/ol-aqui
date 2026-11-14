@@ -49,6 +49,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
   const quando = tempoRelativo(a.criado_em);
   const descricao = (a.descricao ?? "").trim();
   const mostrarBarra = ativo && !a.e_dono;
+  const compartilhar = publico(a) ? <CompartilharAnuncio anuncioId={a.id} titulo={titulo} url={urlAbsoluta(caminho)} /> : null;
 
   const jsonLd = publico(a)
     ? {
@@ -69,8 +70,8 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
     : null;
 
   return (
-    <main data-comprador data-detalhe-anuncio className={`mx-auto w-full max-w-6xl px-2.5 md:px-4 md:py-4 ${whatsappHref ? "pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-8" : "pb-8"}`}>
-      <Link href={voltarHref} className="inline-flex min-h-12 items-center gap-2 rounded-campo px-1 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro">
+    <main data-comprador data-detalhe-anuncio className={`mx-auto w-full max-w-6xl px-4 md:py-4 ${whatsappHref ? "pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-8" : "pb-8"}`}>
+      <Link href={voltarHref} className="inline-flex min-h-11 items-center gap-2 rounded-campo px-1 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro">
         <ArrowLeft className="size-5" aria-hidden /> Voltar
       </Link>
       {jsonLd && (
@@ -109,101 +110,95 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
         </nav>
       )}
 
-      {vendido && (
-        <div role="status" className="mx-4 mt-3 mb-3 flex flex-col gap-2 rounded-card border-2 border-beringela bg-fundo p-4 md:mx-0 md:mt-0">
-          <p className="text-lg font-bold">Vendido</p>
-          <p className="text-base">Este anúncio já foi vendido. Veja abaixo outros parecidos na região.</p>
-          {parecidos.length > 0 && (
-            <a href="#parecidos" className={classesBotao("primario", true, "sm:w-auto sm:self-start")}>
-              Ver parecidos
-            </a>
-          )}
-        </div>
-      )}
-
       {!publico(a) && (
-        <Alert variant="warning" role="status" className="mx-4 mt-3 mb-3 flex flex-col gap-2 md:mx-0 md:mt-0">
+        <Alert variant="warning" role="status" className="mb-3 flex flex-col gap-2">
           <p className="text-base font-semibold">Prévia: só você vê esta página.</p>
           <p className="text-base">{STATUS_PREVIA[a.status] ?? "Fora do ar."}</p>
           {a.e_dono && (
-            <Link href="/minha-conta/anuncios" className="inline-flex min-h-10 items-center self-start font-semibold underline underline-offset-4">
+            <Link href="/minha-conta/anuncios" className="inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4">
               Ir para Meus anúncios
             </Link>
           )}
         </Alert>
       )}
 
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] md:gap-6">
-        <div className={`min-w-0 ${vendido ? "opacity-80" : ""}`}>
+      <div className="grid items-start gap-3 md:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] md:grid-rows-[auto_1fr_auto] md:gap-x-6 md:gap-y-4">
+        <header className="flex min-w-0 flex-col gap-1.5 md:col-start-2 md:row-start-1">
+          <h1 className="text-titulo font-semibold text-beringela [overflow-wrap:anywhere]">{titulo}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-titulo font-bold text-beringela tabular-nums">{preco(a.preco_centavos)}</p>
+            {vendido && <span className="rounded-full bg-beringela px-3 py-0.5 text-legenda font-bold text-white">Vendido</span>}
+            {a.destaque && ativo && (
+              <span className="rounded-full bg-patrocinado-fundo px-3 py-0.5 text-legenda font-bold text-beringela">Patrocinado</span>
+            )}
+          </div>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-texto-suave">
+            {a.cidade && (
+              <span className="inline-flex max-w-full min-w-0 items-center gap-1">
+                <MapPin className="size-4 shrink-0" aria-hidden />
+                <span className="min-w-0 [overflow-wrap:anywhere]">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</span>
+              </span>
+            )}
+            {quando && (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="size-4" aria-hidden />
+                {a.status === "rascunho" ? "Criado" : "Publicado"}{" "}
+                <time dateTime={a.criado_em} suppressHydrationWarning>
+                  {quando}
+                </time>
+              </span>
+            )}
+            {a.aceita_troca && (
+              <span className="inline-flex items-center gap-1 font-semibold text-verde-escuro">
+                <Repeat className="size-4 shrink-0" aria-hidden /> Aceita troca
+              </span>
+            )}
+            {a.e_dono && (
+              <span className="inline-flex items-center gap-1">
+                <Eye className="size-4" aria-hidden />
+                {inteiro(a.visualizacoes)} visualizações
+              </span>
+            )}
+          </p>
+
+          {vendido && (
+            <div role="status" className="text-sm text-texto-suave">
+              <p>Este anúncio já foi vendido.</p>
+              {parecidos.length > 0 && (
+                <a href="#parecidos" className={classesBotao("texto", false, "-ml-2", "toque")}>Ver parecidos</a>
+              )}
+            </div>
+          )}
+        </header>
+
+        <div className={`min-w-0 md:col-start-1 md:row-span-2 md:row-start-1 ${vendido ? "opacity-80" : ""}`}>
           <Galeria key={a.id} fotos={a.fotos} titulo={titulo} />
         </div>
 
-        <aside className="min-w-0 md:row-span-2">
-          <div className="flex flex-col gap-1.5 md:sticky md:top-20 md:gap-2">
-            <h1 className="text-[17px] leading-snug font-semibold text-beringela [overflow-wrap:anywhere] md:text-xl">{titulo}</h1>
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-titulo font-bold text-beringela tabular-nums">{preco(a.preco_centavos)}</p>
-              {vendido && <span className="rounded-full bg-beringela px-3 py-0.5 text-legenda font-bold text-white">Vendido</span>}
-              {a.destaque && ativo && (
-                <span className="rounded-full bg-patrocinado-fundo px-3 py-0.5 text-legenda font-bold text-beringela">Patrocinado</span>
-              )}
-            </div>
-            {a.aceita_troca && (
-              <p className="flex items-center gap-2 text-base font-semibold text-verde-escuro">
-                <Repeat className="size-5" aria-hidden /> Aceita troca
-              </p>
-            )}
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-legenda text-texto-suave">
-              {a.cidade && (
-                <span className="inline-flex max-w-full min-w-0 items-center gap-1">
-                  <MapPin className="size-4 shrink-0" aria-hidden />
-                  <span className="min-w-0 [overflow-wrap:anywhere]">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</span>
-                </span>
-              )}
-              {quando && (
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="size-4" aria-hidden />
-                  {a.status === "rascunho" ? "Criado" : "Publicado"}{" "}
-                  <time dateTime={a.criado_em} suppressHydrationWarning>
-                    {quando}
-                  </time>
-                </span>
-              )}
-              {a.e_dono && (
-                <span className="inline-flex items-center gap-1">
-                  <Eye className="size-4" aria-hidden />
-                  {inteiro(a.visualizacoes)} visualizações
-                </span>
-              )}
-            </p>
+        <aside aria-label="Vendedor e contato" className="flex min-w-0 flex-col gap-2 md:col-start-2 md:row-start-2">
+          <CartaoVendedor v={a} />
 
-            {publico(a) && <CompartilharAnuncio anuncioId={a.id} titulo={titulo} url={urlAbsoluta(caminho)} />}
-
-            <CartaoVendedor v={a} />
-
-            {mostrarBarra && (
-              <div className="mt-2">
-                <BarraContato
-                  anuncioId={a.id}
-                  whatsappHref={whatsappHref}
-                  podeFavoritar={ativo}
-                  favoritoInicial={favorito}
-                  logado={logado}
-                  entrarHref={entrarHref}
-                  conversar={conversas}
-                />
-              </div>
-            )}
-            {a.e_dono && (
-              <Link href="/minha-conta/anuncios" className={classesBotao("secundario", true, "mt-2")}>
-                Este anúncio é seu: ver Meus anúncios
-              </Link>
-            )}
-
-          </div>
+          {mostrarBarra && (
+            <BarraContato
+              anuncioId={a.id}
+              whatsappHref={whatsappHref}
+              podeFavoritar={ativo}
+              favoritoInicial={favorito}
+              logado={logado}
+              entrarHref={entrarHref}
+              conversar={conversas}
+              compartilhar={compartilhar}
+            />
+          )}
+          {!mostrarBarra && compartilhar}
+          {a.e_dono && (
+            <Link href="/minha-conta/anuncios" className={classesBotao("secundario", true, "", "toque")}>
+              Este anúncio é seu: ver Meus anúncios
+            </Link>
+          )}
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-3 md:gap-5">
+        <div className="flex min-w-0 flex-col gap-4 md:col-start-1 md:row-start-3 md:gap-5">
           {descricao && (
             <section aria-labelledby="titulo-descricao" className="flex flex-col gap-2">
               <h2 id="titulo-descricao" className="text-lg font-semibold">
@@ -218,19 +213,19 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
               <h2 id="titulo-detalhes" className="text-lg font-semibold">
                 Detalhes
               </h2>
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-card bg-cartao p-4 shadow-1">
+              <dl className="grid grid-cols-2 gap-3 rounded-card border border-borda bg-cartao p-3">
                 {detalhes.map(({ c, texto }) => (
                   <div key={c.chave} className="flex min-w-0 flex-col">
-                    <dt className="text-legenda text-texto-suave">{c.rotulo}</dt>
-                    <dd className="text-base font-semibold break-words">{texto}</dd>
+                    <dt className="text-sm text-texto-suave">{c.rotulo}</dt>
+                    <dd className="text-base font-semibold [overflow-wrap:anywhere]">{texto}</dd>
                   </div>
                 ))}
               </dl>
             </section>
           )}
 
-          <Alert variant="warning" role="note" aria-label="Dica de segurança" className="flex gap-3">
-            <ShieldAlert className="mt-0.5 size-6 shrink-0 text-aviso" aria-hidden />
+          <Alert variant="warning" role="note" aria-label="Dica de segurança" className="flex gap-2 text-sm">
+            <ShieldAlert className="mt-0.5 size-5 shrink-0 text-aviso" aria-hidden />
             <p>
               <strong className="font-semibold">Nunca pague nada antes de ver o produto.</strong> Desconfie de preço muito abaixo do normal e
               combine a entrega em lugar movimentado.
@@ -246,7 +241,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
               {a.categoria_pai_slug && a.categoria_slug && (
                 <Link
                   href={linkCategoria(a.categoria_pai_slug, a.categoria_slug)}
-                  className="inline-flex min-h-10 items-center self-start font-semibold text-laranja-escuro underline-offset-4 hover:underline"
+                  className="inline-flex min-h-11 items-center self-start font-semibold text-laranja-escuro underline-offset-4 hover:underline"
                 >
                   Ver todos em {a.categoria_nome}
                 </Link>
@@ -254,7 +249,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
             </section>
           )}
 
-          {publico(a) && !a.e_dono && <Denunciar anuncioId={a.id} logado={logado} entrarHref={`/entrar?redirect_url=${encodeURIComponent(`${caminho}#denunciar`)}`} />}
+          {publico(a) && !a.e_dono && <Denunciar anuncioId={a.id} logado={logado} entrarHref={`/entrar?redirect_url=${encodeURIComponent(`${caminhoComVolta}#denunciar`)}`} />}
         </div>
       </div>
     </main>

@@ -23,7 +23,7 @@ const MOTIVOS = [
 ];
 
 const OPCAO =
-  "flex min-h-10 cursor-pointer items-center gap-3 rounded-campo border border-borda bg-cartao px-4 text-base " +
+  "flex min-h-11 cursor-pointer items-center gap-3 rounded-campo border border-borda bg-cartao px-4 text-base " +
   "has-checked:border-beringela has-checked:bg-selecao has-checked:font-semibold " +
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 
@@ -37,7 +37,7 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
     <Folha>
       <FolhaTrigger
         id="denunciar"
-        className="olaki-toque inline-flex min-h-10 w-fit cursor-pointer items-center gap-2 rounded-campo px-2 text-sm text-perigo underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+        className="olaki-toque inline-flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-campo px-2 text-sm text-perigo underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro"
       >
         <Flag className="size-4" aria-hidden /> Denunciar este anúncio
       </FolhaTrigger>
@@ -51,7 +51,7 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
         ) : !logado ? (
           <>
             <p className="text-base">Para denunciar, entre na sua conta. É rápido e depois você volta para cá.</p>
-            <Link href={entrarHref} className={classesBotao("secundario", true)}>
+            <Link href={entrarHref} className={classesBotao("secundario", true, "", "toque")}>
               Entrar para denunciar
             </Link>
           </>
@@ -88,7 +88,7 @@ export function Denunciar({ anuncioId, logado, entrarHref }: { anuncioId: string
                 )}
               </Alert>
             )}
-            <Botao type="submit" variante="perigo" larguraTotal carregando={enviando} textoCarregando="Enviando...">
+            <Botao type="submit" variante="perigo" tamanho="toque" larguraTotal carregando={enviando} textoCarregando="Enviando...">
               Enviar denúncia
             </Botao>
           </form>
