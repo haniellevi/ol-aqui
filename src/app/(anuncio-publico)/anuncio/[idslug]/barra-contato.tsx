@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Heart, MessageCircle } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
@@ -13,7 +13,7 @@ import { BotaoConversar } from "@/components/conversas/botao-conversar";
 // O WhatsApp é um link comum: funciona sem JavaScript; com JavaScript também conta o clique.
 
 const CORACAO =
-  "grid size-10 shrink-0 place-items-center rounded-campo border md:size-9 border-borda bg-cartao text-beringela hover:bg-fundo active:brightness-90 " +
+  "grid size-11 shrink-0 place-items-center rounded-campo border border-borda bg-cartao text-beringela hover:bg-fundo active:brightness-90 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:opacity-60";
 
 export function BarraContato({
@@ -24,6 +24,7 @@ export function BarraContato({
   logado,
   entrarHref,
   conversar = false,
+  compartilhar,
 }: {
   anuncioId: string;
   /** Link wa.me com a mensagem pronta (null = vendedor sem WhatsApp). */
@@ -35,6 +36,7 @@ export function BarraContato({
   entrarHref: string;
   /** Botão "Conversar" (conversas ligadas e a barra só aparece para quem não é o dono). */
   conversar?: boolean;
+  compartilhar?: ReactNode;
 }) {
   const router = useRouter();
   const [favorito, setFavorito] = useState(favoritoInicial);
@@ -75,27 +77,26 @@ export function BarraContato({
   }
 
   return (
-    <div className="flex flex-col">
-      <div className="mx-auto flex max-w-6xl items-center gap-2">
-        {whatsappHref ? (
-          <div role="region" aria-label="Contato com o vendedor" className="fixed inset-x-0 bottom-0 z-30 border-t border-borda bg-cartao px-2.5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2 md:static md:flex-1 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+    <div className="flex min-w-0 flex-col gap-2">
+      {whatsappHref ? (
+        <div role="region" aria-label="Contato com o vendedor" className="fixed inset-x-0 bottom-0 z-30 border-t border-borda bg-cartao px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2 md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none">
           <a
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => void registrarEvento(anuncioId, "clique_whatsapp").catch(() => undefined)}
             aria-label="Chamar o vendedor no WhatsApp (abre em nova aba)"
-            className={classesBotao("primario", true, "min-h-12 px-3")}
+            className={classesBotao("whatsapp", false, "min-h-12 w-full", "toque")}
           >
             <MessageCircle className="size-5" aria-hidden />
             Chamar no WhatsApp
           </a>
-          </div>
-        ) : (
-          !conversar && <p className="flex min-h-10 min-w-0 flex-1 items-center text-base text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
-        )}
-        {conversar && <BotaoConversar anuncioId={anuncioId} logado={logado} entrarHref={entrarHref} onErro={(m) => mostrar(m, true)} />}
-
+        </div>
+      ) : (
+        !conversar && <p className="flex min-h-11 min-w-0 flex-1 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível neste anúncio.</p>
+      )}
+      {conversar && <BotaoConversar anuncioId={anuncioId} logado={logado} entrarHref={entrarHref} onErro={(m) => mostrar(m, true)} />}
+      <div className="flex min-w-0 flex-wrap items-start gap-2">
         {podeFavoritar &&
           (logado ? (
             <button
@@ -114,9 +115,10 @@ export function BarraContato({
               <Heart className="size-5" aria-hidden />
             </Link>
           ))}
+        {compartilhar}
       </div>
       {podeFavoritar && logado && <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 text-sm">
-        {favorito === null && <><span role="alert" className="text-perigo">Não conseguimos consultar seu favorito.</span><button type="button" onClick={() => router.refresh()} className="min-h-10 rounded-campo font-semibold text-laranja-escuro underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">Tentar novamente</button></>}
+        {favorito === null && <><span role="alert" className="text-perigo">Não conseguimos consultar seu favorito.</span><button type="button" onClick={() => router.refresh()} className="min-h-11 rounded-campo font-semibold text-laranja-escuro underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">Tentar novamente</button></>}
         <Link href="/minha-conta/favoritos" className="hidden min-h-9 items-center rounded-campo font-semibold text-laranja-escuro underline focus-visible:outline-3 focus-visible:outline-laranja-escuro md:inline-flex">Ver meus favoritos</Link>
       </div>}
       <p

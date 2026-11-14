@@ -113,12 +113,8 @@ type LinhaCard = {
   categorias: { slug: string; nome: string } | null;
 };
 
-/** Anúncios ativos de uma vitrine (página /loja/[slug]), destaques primeiro e depois os mais novos. */
+/** Anúncios ativos do perfil público, destaques primeiro e depois os mais novos. */
 export async function anunciosDaVitrine(v: Vitrine, limite = 48): Promise<AnuncioCard[]> {
-  return seguro(() => lerDaVitrine(v, limite), []);
-}
-
-async function lerDaVitrine(v: Vitrine, limite: number): Promise<AnuncioCard[]> {
   const db = await createClient();
   const { data, error } = await db
     .from("anuncios")
@@ -127,7 +123,7 @@ async function lerDaVitrine(v: Vitrine, limite: number): Promise<AnuncioCard[]> 
     .eq("status", "ativo")
     .order("publicado_em", { ascending: false, nullsFirst: false })
     .limit(Math.min(Math.max(limite, 1), 96));
-  if (error || !data) return [];
+  if (error || !data) throw new Error("Não foi possível carregar os anúncios do vendedor.");
   const agora = Date.now();
   const cards = (data as unknown as LinhaCard[]).map<AnuncioCard>((a) => ({
     id: a.id,

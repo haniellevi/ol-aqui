@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, ImageOff, Maximize2, X } from "lucide-react"
 // contador "1/8", setas no computador e tela cheia ao tocar na foto.
 
 const BOTAO_REDONDO =
-  "grid size-10 place-items-center rounded-full bg-cartao/90 text-beringela shadow-1 hover:bg-cartao active:brightness-90 " +
+  "grid size-11 place-items-center rounded-full bg-cartao/90 text-beringela shadow-1 hover:bg-cartao active:brightness-90 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro disabled:opacity-60";
 
 export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) {
@@ -84,9 +84,9 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
 
   if (total === 0) {
     return (
-      <div className="grid aspect-square max-h-48 w-full rounded-card md:max-h-none place-items-center bg-borda text-texto-suave md:rounded-card">
+      <div className="grid min-h-24 w-full place-items-center rounded-card border border-borda bg-cartao text-texto-suave">
         <span className="flex flex-col items-center gap-2">
-          <ImageOff className="size-10" aria-hidden />
+          <ImageOff className="size-6" aria-hidden />
           Anúncio sem foto
         </span>
       </div>
@@ -98,7 +98,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
       <ul
         ref={trilho}
         onScroll={(e) => aoRolar(e.currentTarget)}
-        className="flex aspect-square max-h-48 w-full rounded-card md:max-h-none snap-x snap-mandatory overflow-x-auto bg-white [scrollbar-width:none] md:rounded-card"
+        className="flex aspect-[4/3] max-h-60 w-full snap-x snap-mandatory overflow-x-auto rounded-card bg-cartao [scrollbar-width:none] md:aspect-square md:max-h-none"
       >
         {fotos.map((f, i) => (
           <li key={f + i} className="relative h-full w-full shrink-0 snap-center">
@@ -152,7 +152,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
             <button
               type="button"
               onClick={fechar}
-              className="grid size-10 place-items-center rounded-full bg-white/15 hover:bg-white/25 focus-visible:outline-3 focus-visible:outline-laranja active:bg-white/25"
+              className="grid size-11 place-items-center rounded-full bg-white/15 hover:bg-white/25 focus-visible:outline-3 focus-visible:outline-laranja active:bg-white/25"
               aria-label="Fechar fotos"
               autoFocus
             >
@@ -187,9 +187,9 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
 }
 
 function Foto({ src, alt, principal = false }: { src: string; alt: string; principal?: boolean }) {
-  const [erro, setErro] = useState(false);
-  if (erro) return <span role="img" aria-label={`${alt}: indisponível`} className="flex size-full flex-col items-center justify-center gap-2 bg-fundo p-6 text-center text-texto-suave"><ImageOff className="size-10" aria-hidden />Não foi possível carregar esta foto.</span>;
+  const [falhou, setFalhou] = useState<string | null>(null);
+  if (falhou === src) return <span role="img" aria-label={`${alt}: indisponível`} className="flex size-full flex-col items-center justify-center gap-2 bg-fundo p-6 text-center text-texto-suave"><ImageOff className="size-6" aria-hidden />Não foi possível carregar esta foto.</span>;
   // Fotos públicas do Storage, com alternativa explícita quando o arquivo não responde.
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={alt} width={1080} height={1080} loading={principal ? "eager" : "lazy"} fetchPriority={principal ? "high" : undefined} decoding="async" onError={() => setErro(true)} className="size-full object-contain" />;
+  return <img src={src} alt={alt} width={1080} height={1080} loading={principal ? "eager" : "lazy"} fetchPriority={principal ? "high" : undefined} decoding="async" ref={(img) => { if (img?.complete && img.naturalWidth === 0) setFalhou(src); }} onError={() => setFalhou(src)} className="size-full object-contain" />;
 }

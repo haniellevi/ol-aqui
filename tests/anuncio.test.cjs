@@ -119,3 +119,32 @@ for (const caso of ['copiar', 'nativo', 'cancelado', 'indisponivel']) {
     }
   });
 }
+
+test('perfil público distingue ausência, falha e lista vazia sem exibir sobrenome ou contato', async () => {
+  const path = 'src/app/(anuncio-publico)/vendedor/[id]/page.tsx';
+  const id = anuncio.vitrine_id;
+  const data = { id, nome: 'Ana Fictícia', tipo: 'pf', status: 'ativa', cidade: 'Corrente', whatsapp: '5589999990000' };
+  async function abrir(resposta, erroAnuncios = false) {
+    const { default: Perfil } = carregar(path, {
+      'next/navigation': navegacao,
+      '@/lib/supabase/server': { createClient: async () => ({ from: () => ({
+        select() { return this; }, eq() { return this; }, maybeSingle: async () => resposta,
+      }) }) },
+      '@/lib/dados/anuncios': { anunciosDaVitrine: async (vitrine) => {
+        assert.equal(vitrine.whatsapp, null);
+        if (erroAnuncios) throw Error('offline');
+        return [];
+      } },
+    });
+    return render(await Perfil({ params: Promise.resolve({ id }) }));
+  }
+  await assert.rejects(abrir({ data: null }), /404/);
+  await assert.rejects(abrir({ data: { ...data, status: 'suspensa' } }), /404/);
+  assert.match(await abrir({ data: null, error: {} }), /Não conseguimos carregar o perfil/);
+  const falha = await abrir({ data }, true);
+  assert.match(falha, /Não conseguimos carregar os anúncios/);
+  assert.doesNotMatch(falha, /ainda não tem/);
+  const vazio = await abrir({ data });
+  assert.match(vazio, /Ana ainda não tem anúncios no ar/);
+  assert.doesNotMatch(vazio, /Fictícia|5589999990000/);
+});

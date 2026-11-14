@@ -1,3 +1,3 @@
-// A página precisa decidir se o anúncio existe antes de enviar a resposta HTTP.
-// Este grupo usa o mesmo layout público sem herdar a tela de carregamento da grade.
+// Anúncios e perfis decidem se existem antes de enviar a resposta HTTP.
+// Este grupo usa o layout público sem herdar o carregamento da grade.
 export { default } from "../(publico)/layout";
