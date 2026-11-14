@@ -36,7 +36,7 @@ test('precoAntesValido: só risca quando o antes é maior que o atual', () => {
 });
 
 const mocks = {
-  'next/image': { __esModule: true, default: (p) => React.createElement('img', { src: p.src, alt: p.alt }) },
+  'next/image': { __esModule: true, default: (p) => React.createElement('img', { src: p.src, alt: p.alt, className: p.className }) },
   'next/link': { __esModule: true, default: ({ href, children, ...r }) => React.createElement('a', { href, ...r }, children) },
 };
 const { CardAnuncio } = carregar('src/components/anuncio/card-anuncio.tsx', mocks);
@@ -87,4 +87,12 @@ test('completarCards junta preço antes e UF; se a consulta falhar, devolve os c
   assert.deepEqual(await falha.completarCards([{ id }]), [{ id }]);
   const quebra = carregar('src/lib/dados/cards-extra.ts', { '@/lib/supabase/server': { createClient: async () => { throw Error('sem rede'); } } });
   assert.deepEqual(await quebra.completarCards([{ id }]), [{ id }]);
+});
+
+test('card: foto preenche a área sem distorção em todos os formatos', () => {
+  for (const props of [{}, { compacto: true }, { horizontal: true }]) {
+    const html = desenhar({ capa: 'https://example.com/foto.jpg' }, props);
+    assert.match(html, /<img[^>]*class="object-cover"/);
+    assert.doesNotMatch(html, /object-contain/);
+  }
 });

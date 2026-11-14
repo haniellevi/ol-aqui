@@ -6,8 +6,13 @@ insert into loja_ia_convites(usuario_id) values ('user_ia880a'),('user_ia880b');
 set local role authenticated;
 set local request.jwt.claim.sub='user_ia880c';
 do $$ begin
-  assert not loja_ia_piloto_autorizado(), 'sem convite';
-  begin perform loja_ia_abrir_coleta(); raise exception 'abriu sem convite'; exception when insufficient_privilege then null; end;
+  assert loja_ia_piloto_autorizado(), 'novo lojista sem convite deve ter acesso';
+  assert loja_ia_abrir_coleta()->>'id' is not null, 'rascunho não abriu para novo lojista';
+end $$;
+set local request.jwt.claim.sub='user_sem_perfil880';
+do $$ begin
+  assert not loja_ia_piloto_autorizado(), 'conta sem perfil elegível';
+  begin perform loja_ia_abrir_coleta(); raise exception 'abriu sem perfil'; exception when insufficient_privilege then null; end;
 end $$;
 set local request.jwt.claim.sub='user_ia880a';
 select loja_ia_abrir_coleta() as draft \gset
@@ -41,23 +46,25 @@ do $$ begin assert (select whatsapp_autorizado='5589999971001' from loja_ia_rasc
 delete from loja_ia_convites where usuario_id='user_ia880a';
 set local role authenticated;
 do $$ begin
-  assert loja_ia_obter() is not null, 'rascunho perdido após revogação';
-  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,2,'{}'); raise exception 'convite revogado grava'; exception when insufficient_privilege then null; end;
+  assert loja_ia_obter() is not null, 'rascunho perdido após remoção de convite legado';
+  perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,2,loja_ia_obter()->'entrada');
 end $$;
 reset role;
-insert into loja_ia_convites(usuario_id) values ('user_ia880a');
+insert into loja_ia_convites(usuario_id) values ('user_ia880a') on conflict do nothing;
 update vitrines_lojas set status='suspensa' where dono_id='user_ia880a';
 insert into vitrines_lojas(dono_id,microrregiao_id,nome,slug,cidade,tipo,plano,status)
 select id,microrregiao_id,'PF','pf-ia880','Corrente','pf','pf_gratis','suspensa' from perfis where id='user_ia880a';
 set local role authenticated;
 set local request.jwt.claim.sub='user_ia880a';
 do $$ begin
+  assert not loja_ia_piloto_autorizado(), 'conta suspensa aparece como elegível';
   begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,2,'{}'); raise exception 'conta suspensa grava'; exception when insufficient_privilege then null; end;
 end $$;
 reset role;
 update vitrines_lojas set status='ativa', tipo='loja' where dono_id='user_ia880a';
 set local role authenticated;
 do $$ begin
+  assert not loja_ia_piloto_autorizado(), 'loja existente aparece como elegível';
   begin perform loja_ia_abrir_coleta(); raise exception 'loja existente abriu coleta'; exception when insufficient_privilege then null; end;
 end $$;
 reset role;

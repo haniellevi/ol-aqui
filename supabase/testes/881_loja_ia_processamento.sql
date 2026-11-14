@@ -1,7 +1,6 @@
 begin;
 insert into public.perfis(id,microrregiao_id,nome,cidade)
 select 'user_lojaia881', id, 'Loja teste IA', 'Corrente' from public.microrregioes where slug='corrente-pi';
-insert into public.loja_ia_convites(usuario_id) values ('user_lojaia881');
 set local role authenticated;
 set local request.jwt.claim.sub='user_lojaia881';
 

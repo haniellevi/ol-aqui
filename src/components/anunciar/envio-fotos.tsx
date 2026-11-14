@@ -316,12 +316,10 @@ export function EnvioFotos({
         }}
       />
 
-      <div className="grid grid-cols-2 items-start gap-x-2 text-sm text-texto-suave">
-        <p className="py-3">{itens.length} de {maximo} fotos{minimo > 0 && ` · Mín. ${minimo}`}</p>
-        <details className="text-right open:col-span-2 open:-mt-2 open:text-left">
-          <summary className="min-h-11 cursor-pointer rounded-campo py-3 font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro">Dicas para fotos</summary>
-          <p className="rounded-campo bg-selecao p-2">Use boa luz e centralize o produto. Prefira fotos quadradas de 1080 × 1080, com até 20 MB cada.</p>
-        </details>
+      <div className="flex flex-col gap-1 text-sm text-texto-suave">
+        <p>{itens.length} de {maximo} fotos{minimo > 0 && ` · Mín. ${minimo}`}</p>
+        <p>Prefira fotos de 1080 × 1080 px, com o produto centralizado e pouca margem. Até 20 MB por foto.</p>
+        <p className="text-legenda">A prévia mostra o recorte central usado nos cards.</p>
       </div>
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">

@@ -1,7 +1,6 @@
 \set ON_ERROR_STOP on
 begin;
 insert into perfis(id,microrregiao_id,nome,cidade) select 'user_ia885',id,'Modelo','Corrente' from microrregioes where slug='corrente-pi';
-insert into loja_ia_convites(usuario_id) values ('user_ia885');
 set local role authenticated;
 set local request.jwt.claim.sub='user_ia885';
 select loja_ia_abrir_coleta() as draft \gset

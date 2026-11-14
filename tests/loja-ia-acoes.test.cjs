@@ -42,3 +42,8 @@ test('confirmação repetida recupera a vitrine sem exigir o rascunho ativo', as
   });
   assert.deepEqual(await confirmarLojaIa('rascunho', 2, new FormData()), { feito: resultado });
 });
+
+test('falha ao abrir criação IA volta à escolha com aviso explícito', async () => {
+  const { abrirRascunho } = acoes(async () => ({ data: null, error: { code: 'XX000' } }));
+  await assert.rejects(abrirRascunho(), erro => erro.digest?.includes('/quero-vender/loja?aviso=ia'));
+});

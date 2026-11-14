@@ -40,3 +40,27 @@ test('etapa final oferece materiais, consentimentos separados e geração', () =
   assert.match(html, /Confirme seu WhatsApp/);
   assert.equal((html.match(/type="checkbox" disabled=""/g) || []).length, 2);
 });
+
+async function entradaLoja(params = {}, autorizado = true) {
+  const { default: Pagina } = carregar('src/app/(conta)/quero-vender/loja/page.tsx', {
+    '@/lib/assistente': { comAssistente: href => href, tentativaAssistente: () => null },
+    '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ perfil: { microrregiao_id: 'regiao', cidade: 'Corrente' }, vitrine: null, plano: null }) },
+    '@/lib/dados/regiao': { listarCidades: async () => [{ nome: 'Corrente', uf: 'PI' }] },
+    '../_dados': { testeGratis: async () => ({ dias: 7, limite: 10 }) },
+    '@/lib/supabase/server': { createClient: async () => ({ rpc: async () => ({ data: autorizado, error: null }) }) },
+    './criar-com-ia/actions': { abrirRascunho: () => {} },
+    '@/components/anunciar/form-loja': { FormLoja: () => React.createElement('form', null, 'Formulário manual') },
+  });
+  return renderToStaticMarkup(await Pagina({ searchParams: Promise.resolve(params) }));
+}
+test('novo lojista encontra criação com IA primeiro e alternativa manual acessível', async () => {
+  const html = await entradaLoja();
+  assert.match(html, /Começar com IA/);
+  assert.match(html, /href="\/quero-vender\/loja\?manual=1"/);
+  assert.ok(html.indexOf('criar-loja-ia') < html.indexOf('criar-loja-manual'));
+  assert.doesNotMatch(html, /Formulário manual/);
+});
+test('escolha manual abre formulário e falha da IA oferece nova tentativa', async () => {
+  assert.match(await entradaLoja({ manual: '1' }), /Formulário manual/);
+  assert.match(await entradaLoja({ aviso: 'ia' }), /Não foi possível abrir o cadastro com IA/);
+});

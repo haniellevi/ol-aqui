@@ -1,3 +1,4 @@
+import { atalhoLoja } from "@/lib/dados/navegacao-lojista";
 import { redirect } from "next/navigation";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { auth } from "@clerk/nextjs/server";
@@ -20,6 +21,7 @@ export default async function LayoutConta({ children }: { children: React.ReactN
   await garantirPerfil(); // 1º acesso: cria o perfil se o webhook do Clerk ainda não chegou
   const conta = await meuPerfilEVitrine(true);
   if (!conta?.perfil.whatsapp || !conta.perfil.whatsapp_verificado_em) redirect("/confirmar-celular");
+  const loja = await atalhoLoja();
   return (
     <>
       <CabecalhoPublico />
@@ -27,7 +29,7 @@ export default async function LayoutConta({ children }: { children: React.ReactN
         <AvisoTermos />
         {children}
       </div>
-      <BarraInferior />
+      <BarraInferior loja={loja} />
       <BalaoAki />
     </>
   );

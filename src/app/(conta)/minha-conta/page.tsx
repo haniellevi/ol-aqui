@@ -32,7 +32,7 @@ export const metadata: Metadata = { title: "Minha conta" };
 type Item = { href: string; nome: string; icone: React.ReactNode; detalhe?: string };
 
 const CLASSE_ITEM =
-  "flex min-h-12 w-full items-center gap-3 px-4 py-2 text-left text-base font-semibold hover:bg-fundo " +
+  "flex min-h-12 w-full items-center gap-3 px-3 py-2 text-left text-base font-semibold hover:bg-fundo " +
   "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
 
 // T31 · Minha conta: lista simples com ícone + nome. Itens de vendedor só para quem vende.
@@ -55,8 +55,9 @@ export default async function PaginaMinhaConta() {
   const textoSelo = ehLoja ? "Loja verificada" : "Negociador certificado";
   const iniciais = perfil.nome.trim().slice(0, 1).toUpperCase() || "?";
 
-  const deVendedor: Item[] = vitrine
-    ? [
+  const deVendedor: Item[] = [
+    { href: "/minha-conta/lojas", nome: "Minhas lojas", icone: <Store /> },
+    ...(vitrine ? [
         {
           href: "/minha-conta/anuncios",
           nome: "Meus anúncios",
@@ -65,10 +66,9 @@ export default async function PaginaMinhaConta() {
         },
         { href: "/minha-conta/plano", nome: "Meu plano", icone: <CreditCard /> },
         ...(!ehLoja ? [{ href: "/minha-conta/verificacao", nome: "Verificação de vendedor", icone: <ShieldCheck /> }] : []),
-      ]
-    : [];
-  const paraTodos: Item[] = [
-    { href: "/minha-conta/lojas", nome: "Minhas lojas", icone: <Store /> },
+      ] : []),
+  ];
+  const comprasEConversas: Item[] = [
     { href: LINK_ATENDIMENTO, nome: "Atendimento", icone: <MessagesSquare /> },
     { href: "/radar", nome: "Radar", icone: <Radar /> },
     { href: "/minha-conta/favoritos", nome: "Favoritos", icone: <Heart /> },
@@ -78,6 +78,8 @@ export default async function PaginaMinhaConta() {
       icone: <Bell />,
       detalhe: naoLidos === null ? "Consulte seus avisos" : naoLidos > 0 ? `${naoLidos} ${naoLidos === 1 ? "aviso novo" : "avisos novos"}` : undefined,
     },
+  ];
+  const perfilESuporte: Item[] = [
     { href: "/minha-conta/dados", nome: "Meus dados", icone: <UserRound />, detalhe: "Perfil, foto e WhatsApp" },
     { href: "/minha-conta/privacidade", nome: "Privacidade", icone: <Lock /> },
     { href: "/ajuda", nome: "Ajuda", icone: <LifeBuoy /> },
@@ -86,12 +88,12 @@ export default async function PaginaMinhaConta() {
   return (
     <PaginaConta larga>
       <h1 className="text-titulo font-semibold text-beringela">Minha conta</h1>
-      <div className="grid items-start gap-6 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div className="flex min-w-0 flex-col gap-5">
+      <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
 
           {/* Cartão do topo: nome, selo e, para quem vende, o plano e o uso */}
-          <section aria-label="Sua conta" className="flex flex-col gap-3 rounded-card bg-beringela p-5 text-white">
-            <div className="flex items-center gap-3">
+          <section aria-label="Sua conta" className="flex flex-col gap-3 rounded-card bg-beringela p-4 text-white md:flex-row md:items-center md:gap-4">
+            <div className="flex min-w-0 items-center gap-3 md:flex-1">
               {perfil.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element -- foto do Clerk, host externo
                 <img src={perfil.avatar_url} alt="" width={48} height={48} className="size-12 shrink-0 rounded-full bg-white/20 object-cover" />
@@ -135,12 +137,13 @@ export default async function PaginaMinhaConta() {
           )}
 
         </div>
-        <div className="flex min-w-0 flex-col gap-5">
-          {deVendedor.length > 0 && <Lista titulo="Vendas" itens={deVendedor} />}
-          <Lista titulo="Conta" itens={paraTodos} />
+        <div className="grid min-w-0 items-start gap-4 md:grid-cols-3">
+          {deVendedor.length > 0 && <Lista titulo="Lojas e vendas" itens={deVendedor} />}
+          <Lista titulo="Compras e conversas" itens={comprasEConversas} />
+          <Lista titulo="Perfil e suporte" itens={perfilESuporte} />
 
           {vitrine?.tipo === "pf" && (
-            <p className="text-base text-texto-suave">
+            <p className="text-base text-texto-suave md:col-span-2">
               Tem uma loja?{" "}
               <Link href="/quero-vender/loja" className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
                 Abrir minha loja no Mercado da Região

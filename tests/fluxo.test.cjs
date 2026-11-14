@@ -54,11 +54,11 @@ test('início apresenta região, busca GET acessível e destinos das categorias'
   assert.match(html, /<form[^>]*role="search"[^>]*action="\/busca"/);
   for (const href of ['/c/veiculos', '/c/pet', '/categorias']) assert.ok(html.includes(`href="${href}"`));
 });
-test('início mostra as lojas no topo do feed, com busca, tipo de loja e um só "Ver todas"', async () => {
+test('início mostra as lojas no topo do feed, sem busca, com tipo de loja e um só "Ver todas"', async () => {
   const html = await htmlInicio({ lojas: LOJAS, categoriasLojas: new Map([['l1', ['c21', 'c21']], ['l2', ['c1']]]), anuncios: [{ id: 'a1', titulo: 'Mesa' }] });
-  assert.match(html, /id="titulo-lojas"[^>]*>Lojas de Corrente e região<\/h2><a\b[^>]*href="\/lojas"[^>]*>(<span[^>]*>)?Ver todas<\//);
+  assert.match(html, /id="titulo-lojas"[^>]*>LOJAS DESTAQUE DA REGIÃO<\/h2><a\b[^>]*href="\/lojas"[^>]*>(<span[^>]*>)?Ver todas<\//);
   assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
-  assert.match(html, /<label for="busca-loja"[^>]*>Buscar loja<\/label>/);
+  assert.doesNotMatch(html, /busca-loja|Buscar loja/);
   assert.match(html, /role="group" aria-label="Tipo de loja"/);
   for (const nome of ['>Todos os tipos<', '>Pet<', '>Veículos<']) assert.ok(html.includes(nome), nome);
   for (const slug of ['multi', 'rvs']) assert.ok(html.includes(`href="/loja/${slug}"`));
@@ -72,7 +72,7 @@ test('início mostra as lojas no topo do feed, com busca, tipo de loja e um só 
 test('início esconde o filtro de tipo quando as lojas não têm tipos diferentes', async () => {
   const html = await htmlInicio({ lojas: LOJAS });
   assert.doesNotMatch(html, /aria-label="Tipo de loja"/);
-  assert.match(html, /busca-loja/);
+  assert.doesNotMatch(html, /busca-loja/);
   const vazio = await htmlInicio({ lojas: [] });
   assert.match(vazio, /id="titulo-lojas"/);
   assert.doesNotMatch(vazio, /busca-loja/);

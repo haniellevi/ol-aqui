@@ -1,3 +1,4 @@
+import { atalhoLoja } from "@/lib/dados/navegacao-lojista";
 import { CabecalhoPublico } from "@/components/ui/cabecalho-publico";
 import { BarraInferior } from "@/components/ui/barra-inferior";
 import { BalaoAki } from "@/components/aki/balao-aki";
@@ -8,7 +9,8 @@ import { AvisoTermos } from "@/components/paginas/aviso-termos";
 export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false } };
 
-export default function LayoutRadar({ children }: { children: React.ReactNode }) {
+export default async function LayoutRadar({ children }: { children: React.ReactNode }) {
+  const loja = await atalhoLoja();
   return (
     <>
       <CabecalhoPublico />
@@ -16,7 +18,7 @@ export default function LayoutRadar({ children }: { children: React.ReactNode })
         <AvisoTermos />
         {children}
       </div>
-      <BarraInferior />
+      <BarraInferior loja={loja} />
       <BalaoAki />
     </>
   );

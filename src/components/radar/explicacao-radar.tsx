@@ -13,11 +13,11 @@ export function ExplicacaoRadar({ textoBusca }: { textoBusca?: string | null }) 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-4">
       <header className="flex flex-col gap-2">
-        <h1 className="flex items-center gap-2 text-facil-titulo font-semibold text-beringela">
+        <h1 className="flex items-center gap-2 text-titulo font-semibold text-beringela">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
           Estou procurando…
         </h1>
-        <p className="text-facil text-texto-suave">Diga o que precisa. As lojas da região te respondem.</p>
+        <p className="text-base text-texto-suave">Diga o que precisa. As lojas da região te respondem.</p>
       </header>
       <ol className="flex flex-col gap-3">
         {PASSOS.map((p) => (
@@ -25,14 +25,14 @@ export function ExplicacaoRadar({ textoBusca }: { textoBusca?: string | null }) 
             <span className="grid size-12 shrink-0 place-items-center rounded-full bg-selecao text-beringela [&>svg]:size-6" aria-hidden>
               {p.icone}
             </span>
-            <span className="text-facil font-semibold">{p.titulo}</span>
+            <span className="text-base font-semibold">{p.titulo}</span>
           </li>
         ))}
       </ol>
-      <Botao href={linkPedirRadar(textoBusca)} tamanho="grande" larguraTotal icone={<Megaphone />}>
+      <Botao href={linkPedirRadar(textoBusca)} larguraTotal icone={<Megaphone />}>
         Estou procurando…
       </Botao>
-      <p className="text-center text-facil text-texto-suave">Entre na sua conta para fazer um pedido grátis.</p>
+      <p className="text-center text-base text-texto-suave">Entre na sua conta para fazer um pedido grátis.</p>
     </main>
   );
 }
