@@ -7,7 +7,8 @@ import { Aviso } from "@/components/conta/aviso";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { LinhaAviso, MarcarAvisos, PreferenciaAvisoBotao } from "@/components/conta/botoes-aviso";
 import { AtualizarRadar } from "@/components/radar/atualizar-radar";
-import { AVISOS_POR_PAGINA, avisosNaoLidos, minhasNotificacoes, minhasPreferenciasAvisos } from "@/lib/dados/radar";
+import { AVISOS_POR_PAGINA, avisosNaoLidos, minhaPreferenciaWhatsappRadar, minhasNotificacoes, minhasPreferenciasAvisos } from "@/lib/dados/radar";
+import { PreferenciaWhatsappRadarBotao } from "@/components/conta/preferencia-whatsapp-radar";
 import { LINK_AVISOS, LINK_RADAR } from "@/lib/rotas";
 
 export const metadata: Metadata = { title: "Notificações" };
@@ -17,8 +18,8 @@ export default async function PaginaNotificacoes({ searchParams }: { searchParam
   const busca = await searchParams;
   const pagina = /^\d{1,5}$/.test(busca.pagina ?? "") ? Math.max(1, Math.min(10000, Number(busca.pagina))) : 1;
   const somenteNaoLidas = busca.filtro === "nao-lidas";
-  const [lista, contagem, preferencias] = await Promise.allSettled([
-    minhasNotificacoes(pagina, somenteNaoLidas), avisosNaoLidos(), minhasPreferenciasAvisos(),
+  const [lista, contagem, preferencias, radarWhatsapp] = await Promise.allSettled([
+    minhasNotificacoes(pagina, somenteNaoLidas), avisosNaoLidos(), minhasPreferenciasAvisos(), minhaPreferenciaWhatsappRadar(),
   ]);
   const naoLidos = contagem.status === "fulfilled" ? contagem.value : null;
   const dados = lista.status === "fulfilled" ? lista.value : null;
@@ -70,6 +71,12 @@ export default async function PaginaNotificacoes({ searchParams }: { searchParam
               </div>)}</dl>
             </details>
           </>}
+        <h3 className="mt-4 text-rotulo font-semibold text-beringela">Pedidos do Radar</h3>
+        {radarWhatsapp.status === "rejected" ? <Aviso tipo="erro">Não conseguimos carregar o aviso por WhatsApp. Use Atualizar para tentar novamente.</Aviso> : (
+          <ul className="overflow-hidden rounded-card border border-borda bg-cartao">
+            <li><PreferenciaWhatsappRadarBotao inicial={radarWhatsapp.value} /></li>
+          </ul>
+        )}
       </section>
     </div>
   </PaginaConta>;

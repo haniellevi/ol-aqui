@@ -27,7 +27,8 @@ test('decidirManutencao: ligada → páginas viram /manutencao e APIs 503', () =
 });
 
 test('decidirManutencao: a própria página, robots e o aviso do Asaas passam sem o Clerk', () => {
-  for (const p of ['/manutencao', '/robots.txt', '/api/asaas/webhook']) assert.equal(m.decidirManutencao(p, true, false), 'livre', p);
+  for (const p of ['/manutencao', '/robots.txt', '/api/asaas/webhook', '/api/whatsapp/evolution']) assert.equal(m.decidirManutencao(p, true, false), 'livre', p);
+  assert.equal(m.decidirManutencao('/api/whatsapp/evolution/x', true, false), 'api');
   // com o cookie da equipe, tudo segue normal (com Clerk), inclusive a página de manutenção
   assert.equal(m.decidirManutencao('/manutencao', true, true), 'seguir');
   assert.equal(m.decidirManutencao('/manutencao/x', true, false), 'pagina');

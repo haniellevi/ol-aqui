@@ -15,6 +15,7 @@ import type {
   PedidoRadarDetalhe,
   PlanoRadar,
   PreferenciaAviso,
+  PreferenciaWhatsappRadar,
   PropostaRecebida,
   RegrasRadar,
 } from "@/lib/tipos-radar";
@@ -60,6 +61,7 @@ export const planosComRadar = cache(
         .select("codigo, nome, preco_centavos, periodo_dias, propostas_radar_mes")
         .eq("acesso_radar", true)
         .eq("e_teste", false)
+        .eq("ativo", true)
         .order("ordem");
       return error ? [] : ((data ?? []) as PlanoRadar[]);
     }, []),
@@ -230,4 +232,26 @@ export async function minhasPreferenciasAvisos(): Promise<PreferenciaAviso[]> {
   const desligados = new Set(preferencias.data.filter((p) => p.ligado === false).map((p) => p.tipo as string));
   return [...new Set(config.data.filter((t): t is string => typeof t === "string" && /^[a-z0-9_]{3,40}$/.test(t)))]
     .map((tipo) => ({ tipo, nome: NOMES_AVISO[tipo]?.nome ?? tipo.replace(/_/g, " "), explicacao: NOMES_AVISO[tipo]?.explicacao ?? "", ligado: !desligados.has(tipo) }));
+}
+
+/** Até quando o Radar desta loja está liberado por cortesia (ISO) ou null. Só a própria loja lê. */
+export async function minhaCortesiaRadar(): Promise<string | null> {
+  const { userId } = await auth();
+  if (!userId) return null;
+  const db = await createClient();
+  const { data, error } = await db.rpc("minha_cortesia_radar");
+  // A cortesia é um extra: se a leitura falhar, a página segue sem ela.
+  if (error) return null;
+  return typeof data === "string" ? data : null;
+}
+
+/** Aviso de pedido novo por WhatsApp: a preferência de quem pergunta (padrão desligado). */
+export async function minhaPreferenciaWhatsappRadar(): Promise<PreferenciaWhatsappRadar> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Entre na sua conta para acessar suas preferências.");
+  const db = await createClient();
+  const { data, error } = await db.rpc("minha_preferencia_whatsapp_radar");
+  if (error || !data || typeof data !== "object") throw new Error("Não foi possível carregar o aviso por WhatsApp.");
+  const d = data as Record<string, unknown>;
+  return { ligado: d.ligado === true, confirmado: d.confirmado === true, ativo: d.ativo === true };
 }

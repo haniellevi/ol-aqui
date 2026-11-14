@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Banco sem portas, volume persistente ou acesso à rede. Nunca usa credenciais externas."""
 from pathlib import Path
+import re
 import subprocess, time, uuid
 from concurrent.futures import ThreadPoolExecutor
 root = Path(__file__).resolve().parents[2]
@@ -112,6 +113,8 @@ try:
     checked(sql((root/'supabase/testes/810_radar_ja_comprei.sql').read_text()))
     print('PASS: IA do Radar "já comprei": chave própria desligada, só mensagem do cliente com pedido dele aberto, pergunta só para o cliente, "não" vale para sempre naquele pedido e só o servidor lê', flush=True)
     checked(sql((root/'supabase/testes/820_fotos_pasta_antiga.sql').read_text()))
+    checked(sql((root/'supabase/testes/830_radar_piloto.sql').read_text()))
+    print('PASS: Radar piloto: categoria obrigatória, aviso de WhatsApp só com chave e consentimento, SAIR desliga e cancela, fila pula quem saiu, reenvio dentro da janela e Meu plano', flush=True)
     print('PASS: fotos na pasta do ID antigo após a troca do Clerk: dono reordena, tira e põe foto nova; foto antiga fora do anúncio, em outro anúncio ou de outra pessoa continua recusada', flush=True)
     migracao_home = (root/'supabase/migrations/20261117040000_radar_textos.sql').read_text()
     checked(sql("""begin;
@@ -242,8 +245,9 @@ try:
     assert sum(r.returncode==0 for r in results)==1, [r.stderr for r in results]
     assert all(r.returncode==0 or 'limite de 1' in r.stderr for r in results), [r.stderr for r in results]
     print('PASS: três publicações simultâneas respeitam a única vaga do plano', flush=True)
+    cat_sofa=re.search(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', sql("select id from categorias where slug='casas' and ativa;").stdout).group(0)
     def repeat(i):
-        return sql("begin; set role authenticated; set request.jwt.claim.role='authenticated'; set request.jwt.claim.sub='user_comprador'; select criar_pedido_radar_site('10000000-0000-4000-a000-000000000002','Procuro armário de cozinha','Corrente'); select pg_sleep(0.2); commit;")
+        return sql(f"begin; set role authenticated; set request.jwt.claim.role='authenticated'; set request.jwt.claim.sub='user_comprador'; select criar_pedido_radar_site('10000000-0000-4000-a000-000000000002','Procuro armário de cozinha','Corrente',p_modo=>'propostas_prazo',p_prazo_horas=>72,p_categoria_id=>'{cat_sofa}'); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:
         results=list(pool.map(repeat,range(4)))
     for result in results: checked(result)

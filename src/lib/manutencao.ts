@@ -34,7 +34,9 @@ function liberadoSempre(caminho: string): boolean {
     caminho === "/robots.txt" ||
     // Pagamentos: o Asaas pausa a fila de avisos se receber muitos erros seguidos.
     // Não depende do Clerk nem cria perfil.
-    caminho === "/api/asaas/webhook"
+    caminho === "/api/asaas/webhook" ||
+    // WhatsApp de entrada (Evolution): responde SAIR/PARAR; o próprio webhook confere o segredo.
+    caminho === "/api/whatsapp/evolution"
   );
 }
 

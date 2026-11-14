@@ -44,7 +44,7 @@ export function rascunhoValido(v: unknown, agora: number): RascunhoPedido | null
     precoMax: texto(d.precoMax, 120),
     cidadesIds,
     visibilidade: d.visibilidade === "todos" ? "todos" : "lojas",
-    modo: d.modo === "propostas_prazo" ? "propostas_prazo" : "whatsapp_direto",
+    modo: "propostas_prazo",
     prazoHoras: typeof d.prazoHoras === "number" && Number.isInteger(d.prazoHoras) ? d.prazoHoras : null,
   };
 }

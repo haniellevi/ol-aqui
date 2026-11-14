@@ -210,6 +210,9 @@ export type Plano = {
   propostas_radar_mes: number | null;
   e_teste: boolean;
   ordem: number;
+  /** Opcionais: só a tela de planos e Meu plano leem estes campos. */
+  ativo?: boolean;
+  recomendado?: boolean;
 };
 
 export type MeuPerfil = {

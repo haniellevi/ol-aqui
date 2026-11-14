@@ -40,7 +40,7 @@ test('rascunho: corta e limpa campos', () => {
   assert.equal(r.cidadesIds.length, 20);
   assert.ok(!r.cidadesIds.includes('nao-uuid'));
   assert.equal(r.visibilidade, 'lojas');
-  assert.equal(r.modo, 'whatsapp_direto');
+  assert.equal(r.modo, 'propostas_prazo');
   assert.equal(r.prazoHoras, null);
   assert.equal(r.categoriaId, null);
   assert.equal(r.precoMin, '');

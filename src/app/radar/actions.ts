@@ -77,10 +77,10 @@ export async function criarPedido(entrada: EntradaPedido): Promise<RespostaCriar
     p_cidade: entrada.cidade ? String(entrada.cidade).slice(0, 80) : null,
     p_cidades_ids: entrada.cidadesIds && entrada.cidadesIds.length > 0 ? entrada.cidadesIds : null,
     p_visibilidade: entrada.visibilidade,
-    p_modo: entrada.modo === "propostas_prazo" ? "propostas_prazo" : "whatsapp_direto",
-    p_prazo_horas: entrada.modo === "propostas_prazo" && Number.isInteger(entrada.prazoHoras) ? entrada.prazoHoras : null,
+    p_modo: "propostas_prazo",
+    p_prazo_horas: entrada.prazoHoras,
     p_detalhes: entrada.detalhes ? String(entrada.detalhes).slice(0, 1200) : null,
-    p_categoria_id: entrada.categoriaId && ehUuid(entrada.categoriaId) ? entrada.categoriaId : null,
+    p_categoria_id: entrada.categoriaId,
     p_preco_min_centavos: centavosDoTexto(entrada.precoMin),
     p_preco_max_centavos: centavosDoTexto(entrada.precoMax),
   });
