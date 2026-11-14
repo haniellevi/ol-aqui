@@ -1,10 +1,12 @@
 import "server-only";
+import { MODELO_IA_PADRAO, modeloDaLista, ajustesDoModelo } from "@/lib/ia-modelos";
 
 // Vitrine com IA, etapa 5b: a IA sugere título e descrição melhores e orienta sobre as fotos
 // (docs/PLANO-VITRINE-IA.md). Não altera foto nenhuma. O banco (melhoria_ia_concluir) confere
 // tudo de novo: tamanho, sem link, e-mail ou telefone, e só fotos que existem no anúncio.
 
-export const MODELO_MELHORIA = "openai/gpt-4.1-mini";
+// O modelo de cada pedido vem da reserva no banco (escolhido no painel). Este é só o padrão.
+export const MODELO_MELHORIA = MODELO_IA_PADRAO;
 export type PedidoMelhoria = {
   id: string; reserva: string; modelo: string;
   titulo: string; descricao: string; categoria: string | null;
@@ -76,7 +78,7 @@ function fotoPermitida(url: unknown): url is string {
 
 export async function sugerirMelhoriaIA(p: PedidoMelhoria): Promise<Analise> {
   const vazio = { resultado: null, custo: 0, entrada: 0, saida: 0 };
-  if (!process.env.OPENROUTER_API_KEY || p.modelo !== MODELO_MELHORIA) return vazio;
+  if (!process.env.OPENROUTER_API_KEY || !modeloDaLista("melhoria", p.modelo)) return vazio;
   // Para na primeira foto estranha: o número de cada foto precisa bater com a ordem do anúncio.
   const fotos: string[] = [];
   for (const url of (Array.isArray(p.fotos) ? p.fotos : []).slice(0, 3)) { if (!fotoPermitida(url)) break; fotos.push(url); }
@@ -88,7 +90,7 @@ export async function sugerirMelhoriaIA(p: PedidoMelhoria): Promise<Analise> {
       method: "POST", signal: AbortSignal.timeout(45_000), cache: "no-store", redirect: "error",
       headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` },
       body: JSON.stringify({
-        model: MODELO_MELHORIA, stream: false, max_tokens: 1200, temperature: 0.2,
+        model: p.modelo, stream: false, max_tokens: 1200, ...ajustesDoModelo("melhoria", p.modelo, 0.2),
         provider: { require_parameters: true, data_collection: "deny", zdr: true, allow_fallbacks: false,
           max_price: { prompt: 0.4, completion: 1.6, request: 0 } },
         messages: [

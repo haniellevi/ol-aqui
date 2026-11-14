@@ -1,4 +1,5 @@
 import { MODELOS_LOJISTA } from "@/lib/aki/lojista";
+import { OPCOES_MODELOS_IA } from "@/lib/ia-modelos";
 
 // Converte valores das configurações entre o banco (jsonb) e os campos do painel.
 export type TipoValor = "numero" | "texto" | "lista" | "mapa" | "json" | "simnao";
@@ -80,6 +81,7 @@ export const NOMES_GRUPO: Record<string, string> = {
   moderacao: "Moderação",
   cobranca: "Cobrança",
   robo: "Robô Merc",
+  ia: "Modelos de IA",
   aki_lojistas: "Merc para lojistas",
   conversas: "Conversas",
   geral: "Geral",
@@ -93,6 +95,7 @@ export type Opcao = { valor: string; nome: string };
 /** Configurações de texto que só aceitam valores fixos: aparecem como lista de escolha. */
 export const OPCOES_FIXAS: Record<string, Opcao[]> = {
   ...MODELOS_LOJISTA,
+  ...OPCOES_MODELOS_IA,
   "asaas.ambiente": [
     { valor: "sandbox", nome: "Teste (sandbox): não cobra de verdade" },
     { valor: "producao", nome: "Produção: cobra de verdade" },

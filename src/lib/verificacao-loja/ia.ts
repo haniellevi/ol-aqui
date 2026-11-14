@@ -1,10 +1,13 @@
 import "server-only";
+import { MODELO_IA_PADRAO, ajustesDoModelo } from "@/lib/ia-modelos";
+import { modeloDoRecurso } from "@/lib/ia-modelos-servidor";
 import type { LeituraComprovante, LeituraFachada } from "./tipos";
 import { extrairTextoPdf } from "./pdf";
 
 // A IA só EXTRAI campos do documento. Quem decide são as regras em decidir.ts; não existe campo de decisão aqui.
 // Mesmo protocolo de src/lib/moderacao-ia.ts (sem retenção de dados, sem fallback, resposta estrita).
-export const MODELO_VERIFICACAO = "openai/gpt-4.1-mini";
+// Padrão. O modelo de cada leitura é o escolhido no painel (ia.modelo.verificacao).
+export const MODELO_VERIFICACAO = MODELO_IA_PADRAO;
 export type ArquivoVerificacao = { base64: string; tipo: "application/pdf" | "image/jpeg" | "image/png" };
 export type ResultadoIA<T> =
   | { ok: true; leitura: T; custoUsd: number; tokensEntrada: number; tokensSaida: number }
@@ -71,6 +74,7 @@ type Conteudo = { type: "text"; text: string } | { type: "image_url"; image_url:
 
 async function chamar<T>(nome: "comprovante" | "fachada", conteudo: Conteudo[], validar: (v: unknown) => T): Promise<ResultadoIA<T>> {
   if (!process.env.OPENROUTER_API_KEY) return { ok: false, falha: "ia_desligada", custoUsd: 0 };
+  const modelo = await modeloDoRecurso("verificacao");
   let custo: number | null = null;
   let falha = "resposta_invalida";
   try {
@@ -78,7 +82,7 @@ async function chamar<T>(nome: "comprovante" | "fachada", conteudo: Conteudo[], 
       method: "POST", signal: AbortSignal.timeout(35_000), cache: "no-store", redirect: "error",
       headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` },
       body: JSON.stringify({
-        model: MODELO_VERIFICACAO, stream: false, max_tokens: 1000, temperature: 0,
+        model: modelo, stream: false, max_tokens: 1000, ...ajustesDoModelo("verificacao", modelo, 0),
         provider: { require_parameters: true, data_collection: "deny", zdr: true, allow_fallbacks: false,
           max_price: { prompt: 0.4, completion: 1.6, request: 0 } },
         messages: [{ role: "system", content: SISTEMA_VERIFICACAO }, { role: "user", content: conteudo }],

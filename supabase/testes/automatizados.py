@@ -112,6 +112,8 @@ try:
     print('PASS: IA do Radar: chaves desligadas, 20 usos por dia, teto do mês próprio, livro-caixa e aviso de anúncio novo parecido 1 vez por dia', flush=True)
     checked(sql((root/'supabase/testes/810_radar_ja_comprei.sql').read_text()))
     print('PASS: IA do Radar "já comprei": chave própria desligada, só mensagem do cliente com pedido dele aberto, pergunta só para o cliente, "não" vale para sempre naquele pedido e só o servidor lê', flush=True)
+    checked(sql((root/'supabase/testes/870_ia_modelos.sql').read_text()))
+    print('PASS: modelo de IA por recurso: padrão GPT-6 Luna, troca no painel sem vazar, valor estranho ou chave apagada cai no padrão, reservas gravam o escolhido e só o servidor lê', flush=True)
     checked(sql((root/'supabase/testes/820_fotos_pasta_antiga.sql').read_text()))
     checked(sql((root/'supabase/testes/830_radar_piloto.sql').read_text()))
     print('PASS: Radar piloto: categoria obrigatória, aviso de WhatsApp só com chave e consentimento, SAIR desliga e cancela, fila pula quem saiu, reenvio dentro da janela e Meu plano', flush=True)

@@ -6,7 +6,7 @@ Com a migração `20261110121649_moderacao_sensivel_anuncios.sql`, anúncios com
 
 O Supabase Cron verifica a fila a cada minuto e chama `POST /api/interno/moderacao` com um token exclusivo guardado no Vault e na Vercel. Não envia conteúdo do anúncio nesse disparo. Cada execução reserva até três trabalhos, processados em paralelo. Uma reserva expirada vai para revisão manual, sem reenviar uma chamada que pode ter sido cobrada.
 
-O servidor envia título, descrição, preço, categoria, atributos e todas as fotos ao modelo `openai/gpt-4.1-mini` pelo OpenRouter. Não inclui dados do perfil, telefone da conta, e-mail ou identificadores. Texto livre e fotos podem conter dados inseridos pelo anunciante. Os provedores são restringidos por `data_collection: deny` e `zdr: true`, sem fallback para uma rota incompatível.
+O servidor envia título, descrição, preço, categoria, atributos e todas as fotos ao modelo escolhido no painel (padrão `openai/gpt-6-luna`; ver `docs/IA-MODELOS.md`) pelo OpenRouter. Não inclui dados do perfil, telefone da conta, e-mail ou identificadores. Texto livre e fotos podem conter dados inseridos pelo anunciante. Os provedores são restringidos por `data_collection: deny` e `zdr: true`, sem fallback para uma rota incompatível.
 
 Fotos precisam pertencer ao próprio anúncio no Storage configurado. Redirecionamentos, SVG, origens externas, excesso de tamanho e imagens que não carregam impedem aprovação. Anúncios identificados como teste nunca são liberados automaticamente.
 
