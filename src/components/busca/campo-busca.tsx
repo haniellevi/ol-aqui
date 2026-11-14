@@ -41,7 +41,7 @@ export function CampoBusca({
         (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean).map((valor, i) => <input key={`${k}-${i}`} type="hidden" name={k} value={valor} />),
       )}
       <div className={`relative flex items-center gap-2 rounded-card bg-cartao pl-3 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${toqueAmplo ? "h-[50px] border border-borda-campo md:h-10 md:pr-1" : "h-12 border-2 border-beringela pr-1 md:h-10"}`}>
-        <Search className="size-5 shrink-0 text-beringela" aria-hidden />
+        <Search className="size-5 shrink-0 text-beringela @max-[12rem]/busca-topo:hidden" aria-hidden />
         {sugestoes ? (
           <EntradaComSugestoes key={`${regiao}|${valor}`} id={id} valor={valor} autoFocus={autoFocus} className={ESTILO_ENTRADA} placeholder={toqueAmplo ? "Buscar anúncios" : undefined} />
         ) : (
@@ -60,9 +60,10 @@ export function CampoBusca({
         )}
         <button
           type="submit"
-          className={`inline-flex shrink-0 items-center rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela hover:brightness-95 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro active:brightness-90 md:h-7 ${toqueAmplo ? "h-12 max-md:rounded-s-none" : "h-8"}`}
+          className={`inline-flex shrink-0 items-center rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela hover:brightness-95 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro active:brightness-90 md:h-7 @max-[12rem]/busca-topo:h-8 @max-[12rem]/busca-topo:px-2 ${toqueAmplo ? "h-12 max-md:rounded-s-none" : "h-8"}`}
         >
-          Buscar
+          <Search className="hidden size-5 @max-[12rem]/busca-topo:block" aria-hidden />
+          <span className="@max-[12rem]/busca-topo:sr-only">Buscar</span>
         </button>
       </div>
     </form>
