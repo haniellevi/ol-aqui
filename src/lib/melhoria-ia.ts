@@ -1,5 +1,5 @@
 import "server-only";
-import { MODELO_IA_PADRAO, modeloDaLista, temperaturaPara } from "@/lib/ia-modelos";
+import { MODELO_IA_PADRAO, modeloDaLista, ajustesDoModelo } from "@/lib/ia-modelos";
 
 // Vitrine com IA, etapa 5b: a IA sugere título e descrição melhores e orienta sobre as fotos
 // (docs/PLANO-VITRINE-IA.md). Não altera foto nenhuma. O banco (melhoria_ia_concluir) confere
@@ -90,7 +90,7 @@ export async function sugerirMelhoriaIA(p: PedidoMelhoria): Promise<Analise> {
       method: "POST", signal: AbortSignal.timeout(45_000), cache: "no-store", redirect: "error",
       headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` },
       body: JSON.stringify({
-        model: p.modelo, stream: false, max_tokens: 1200, ...temperaturaPara("melhoria", p.modelo, 0.2),
+        model: p.modelo, stream: false, max_tokens: 1200, ...ajustesDoModelo("melhoria", p.modelo, 0.2),
         provider: { require_parameters: true, data_collection: "deny", zdr: true, allow_fallbacks: false,
           max_price: { prompt: 0.4, completion: 1.6, request: 0 } },
         messages: [

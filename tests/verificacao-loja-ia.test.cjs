@@ -46,6 +46,7 @@ test('imagem vai como image_url, com trava de privacidade e esquema sem campo de
   assert.ok(corpo.provider.max_price);
   assert.equal(corpo.model, 'openai/gpt-6-luna');
   assert.equal('temperature' in corpo, false);
+  assert.deepEqual(corpo.reasoning, { effort: 'none' });
   assert.equal(corpo.max_tokens, 1000);
   assert.equal(init.redirect, 'error');
   assert.equal(corpo.response_format.type, 'json_schema');

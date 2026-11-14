@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { MODELO_IA_PADRAO, modeloDaLista, temperaturaPara } from "@/lib/ia-modelos";
+import { MODELO_IA_PADRAO, modeloDaLista, ajustesDoModelo } from "@/lib/ia-modelos";
 
 // O modelo de cada análise vem da fila (o banco grava o escolhido no painel). Este é só o padrão.
 export const MODELO_MODERACAO = MODELO_IA_PADRAO;
@@ -104,7 +104,7 @@ export async function analisarAnuncioIA(t: Trabalho): Promise<Analise> {
     const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST", signal: AbortSignal.timeout(35_000), cache: "no-store", redirect: "error",
       headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` },
-      body: JSON.stringify({ model: t.modelo, stream: false, max_tokens: 1000, ...temperaturaPara("moderacao", t.modelo, 0),
+      body: JSON.stringify({ model: t.modelo, stream: false, max_tokens: 1000, ...ajustesDoModelo("moderacao", t.modelo, 0),
         provider: { require_parameters: true, data_collection: "deny", zdr: true, allow_fallbacks: false,
           max_price: { prompt: 0.4, completion: 1.6, request: 0 } },
         messages: [{ role: "system", content: SISTEMA }, { role: "user", content: [

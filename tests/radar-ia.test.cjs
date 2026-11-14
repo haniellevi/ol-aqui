@@ -75,6 +75,7 @@ test('Radar escreve: modelo padrão (GPT-6 Luna), sem guardar dados, resposta es
     assert.equal(c.response_format.json_schema.strict, true);
     // GPT-6 Luna recusa temperature: com require_parameters, mandar o campo derrubaria a chamada.
     assert.equal('temperature' in c, false);
+    assert.deepEqual(c.reasoning, { effort: 'none' });
   });
 });
 

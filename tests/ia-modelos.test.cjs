@@ -46,10 +46,12 @@ test('valor salvo estranho, vazio ou ausente cai no padrão', () => {
   assert.equal(ia.modeloOuPadrao('radar', 'google/gemini-2.5-flash-lite'), 'google/gemini-2.5-flash-lite');
 });
 
-test('GPT-6 Luna não recebe temperature; os outros recebem', () => {
-  assert.deepEqual(ia.temperaturaPara('melhoria', LUNA, 0.2), {});
-  assert.deepEqual(ia.temperaturaPara('melhoria', DEEPSEEK, 0.2), { temperature: 0.2 });
-  assert.deepEqual(ia.temperaturaPara('melhoria', 'openai/gpt-4.1-mini', 0), { temperature: 0 });
+test('Luna sem temperature; Luna e DeepSeek com raciocínio desligado; modelos anteriores como antes', () => {
+  const NADA = { effort: 'none' };
+  assert.deepEqual(ia.ajustesDoModelo('melhoria', LUNA, 0.2), { reasoning: NADA });
+  assert.deepEqual(ia.ajustesDoModelo('melhoria', DEEPSEEK, 0.2), { temperature: 0.2, reasoning: NADA });
+  assert.deepEqual(ia.ajustesDoModelo('melhoria', 'openai/gpt-4.1-mini', 0), { temperature: 0 });
+  assert.deepEqual(ia.ajustesDoModelo('radar', 'google/gemini-2.5-flash-lite', 0), { temperature: 0 });
 });
 
 test('a lista do banco é a mesma do código (padrão, modelos e chaves)', () => {
@@ -116,6 +118,7 @@ test('categorização e melhoria usam o modelo da reserva: Luna sem temperature,
   assert.equal(corpos.length, 4, 'modelo fora da lista não chama a IA');
   assert.deepEqual(corpos.map((c) => c.model), [LUNA, DEEPSEEK, LUNA, DEEPSEEK]);
   assert.deepEqual(corpos.map((c) => c.temperature), [undefined, 0, undefined, 0.2]);
+  assert.deepEqual(corpos.map((c) => c.reasoning?.effort), ['none', 'none', 'none', 'none']);
   for (const c of corpos) { assert.equal(c.provider.require_parameters, true); assert.equal(c.provider.zdr, true); }
 });
 
@@ -129,6 +132,7 @@ test('verificação e Radar leem o modelo do painel a cada chamada', async () =>
   });
   assert.deepEqual(corpos.map((c) => c.model), [DEEPSEEK, DEEPSEEK]);
   assert.deepEqual(corpos.map((c) => c.temperature), [0, 0]);
+  assert.deepEqual(corpos.map((c) => c.reasoning), [{ effort: 'none' }, { effort: 'none' }]);
 });
 
 test('moderação: análise pendente com o modelo anterior continua funcionando', async () => {
@@ -146,6 +150,7 @@ test('moderação: análise pendente com o modelo anterior continua funcionando'
     });
     assert.deepEqual(corpos.map((c) => c.model), [LUNA, 'openai/gpt-4.1-mini']);
     assert.deepEqual(corpos.map((c) => c.temperature), [undefined, 0]);
+    assert.deepEqual(corpos.map((c) => c.reasoning), [{ effort: 'none' }, undefined], 'modelo anterior segue sem o campo');
   } finally {
     if (antes === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL; else process.env.NEXT_PUBLIC_SUPABASE_URL = antes;
   }

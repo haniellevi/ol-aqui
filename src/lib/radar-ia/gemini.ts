@@ -1,5 +1,5 @@
 import "server-only";
-import { MODELO_IA_PADRAO, temperaturaPara } from "@/lib/ia-modelos";
+import { MODELO_IA_PADRAO, ajustesDoModelo } from "@/lib/ia-modelos";
 import { modeloDoRecurso } from "@/lib/ia-modelos-servidor";
 
 // IA do Radar que ESCREVE (perguntas e a frase de 1 linha), via OpenRouter. O modelo é o escolhido
@@ -39,7 +39,7 @@ export async function perguntarGemini<T>(p: PedidoGemini<T>): Promise<ResultadoG
       method: "POST", signal: AbortSignal.timeout(PRAZO_IA_MS), cache: "no-store", redirect: "error",
       headers: { "content-type": "application/json", authorization: `Bearer ${chave}` },
       body: JSON.stringify({
-        model: modelo, stream: false, max_tokens: 400, ...temperaturaPara("radar", modelo, 0),
+        model: modelo, stream: false, max_tokens: 400, ...ajustesDoModelo("radar", modelo, 0),
         provider: { require_parameters: true, data_collection: "deny", zdr: true, allow_fallbacks: false,
           max_price: { prompt: 0.2, completion: 0.8, request: 0 } },
         messages: [{ role: "system", content: p.sistema }, { role: "user", content: p.usuario }],

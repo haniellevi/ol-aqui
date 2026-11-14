@@ -1,5 +1,5 @@
 import "server-only";
-import { MODELO_IA_PADRAO, temperaturaPara } from "@/lib/ia-modelos";
+import { MODELO_IA_PADRAO, ajustesDoModelo } from "@/lib/ia-modelos";
 import { modeloDoRecurso } from "@/lib/ia-modelos-servidor";
 import type { LeituraComprovante, LeituraFachada } from "./tipos";
 import { extrairTextoPdf } from "./pdf";
@@ -82,7 +82,7 @@ async function chamar<T>(nome: "comprovante" | "fachada", conteudo: Conteudo[], 
       method: "POST", signal: AbortSignal.timeout(35_000), cache: "no-store", redirect: "error",
       headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` },
       body: JSON.stringify({
-        model: modelo, stream: false, max_tokens: 1000, ...temperaturaPara("verificacao", modelo, 0),
+        model: modelo, stream: false, max_tokens: 1000, ...ajustesDoModelo("verificacao", modelo, 0),
         provider: { require_parameters: true, data_collection: "deny", zdr: true, allow_fallbacks: false,
           max_price: { prompt: 0.4, completion: 1.6, request: 0 } },
         messages: [{ role: "system", content: SISTEMA_VERIFICACAO }, { role: "user", content: conteudo }],

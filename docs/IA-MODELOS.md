@@ -45,7 +45,11 @@ A lista fica em `src/lib/ia-modelos.ts` e, igual, na função `ia_modelo` do ban
     guarda o valor por 30 segundos. Por até 30 s depois de uma troca, o livro-caixa pode mostrar o modelo novo
     numa chamada feita com o anterior.
 - O GPT-6 Luna recusa o parâmetro `temperature`. Como as chamadas usam `require_parameters: true`, mandar o campo
-  derrubaria a chamada. O código só manda `temperature` para quem aceita (`temperaturaPara`).
+  derrubaria a chamada. O código só manda `temperature` para quem aceita (`ajustesDoModelo`).
+- O GPT-6 Luna (raciocínio médio) e o DeepSeek V4.1 Flash (raciocínio alto) raciocinam por padrão. O raciocínio
+  gasta o mesmo `max_tokens` da resposta e cortaria o JSON (`finish_reason: "length"`), uma chamada paga e inútil.
+  Por isso vão com `reasoning: { effort: "none" }`, como os modelos anteriores, que não raciocinavam. Os modelos
+  anteriores seguem sem o campo. Fonte: catálogo do OpenRouter (`reasoning.default_effort`) em 14/11/2026.
 - Continuam iguais: `data_collection: "deny"`, `zdr: true`, sem fallback, resposta em JSON estrito e preço máximo.
 
 ## Quando o modelo falha

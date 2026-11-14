@@ -14,12 +14,14 @@ export type ModeloIA = {
   nome: string;
   /** false = o modelo recusa o parâmetro temperature (com require_parameters, a chamada falharia). */
   temperatura: boolean;
+  /** true = o modelo raciocina por padrão. O raciocínio gasta o mesmo max_tokens da resposta e cortaria o JSON. */
+  raciocinio: boolean;
 };
 
-export const LUNA: ModeloIA = { valor: "openai/gpt-6-luna", nome: "OpenAI: GPT-6 Luna (openai/gpt-6-luna)", temperatura: false };
-export const DEEPSEEK: ModeloIA = { valor: "deepseek/deepseek-v4.1-flash", nome: "DeepSeek: DeepSeek V4.1 Flash (deepseek/deepseek-v4.1-flash)", temperatura: true };
-const GPT41_MINI: ModeloIA = { valor: "openai/gpt-4.1-mini", nome: "OpenAI: GPT-4.1 mini (openai/gpt-4.1-mini), modelo anterior", temperatura: true };
-const GEMINI_LITE: ModeloIA = { valor: "google/gemini-2.5-flash-lite", nome: "Google: Gemini 2.5 Flash Lite (google/gemini-2.5-flash-lite), modelo anterior", temperatura: true };
+export const LUNA: ModeloIA = { valor: "openai/gpt-6-luna", nome: "OpenAI: GPT-6 Luna (openai/gpt-6-luna)", temperatura: false, raciocinio: true };
+export const DEEPSEEK: ModeloIA = { valor: "deepseek/deepseek-v4.1-flash", nome: "DeepSeek: DeepSeek V4.1 Flash (deepseek/deepseek-v4.1-flash)", temperatura: true, raciocinio: true };
+const GPT41_MINI: ModeloIA = { valor: "openai/gpt-4.1-mini", nome: "OpenAI: GPT-4.1 mini (openai/gpt-4.1-mini), modelo anterior", temperatura: true, raciocinio: false };
+const GEMINI_LITE: ModeloIA = { valor: "google/gemini-2.5-flash-lite", nome: "Google: Gemini 2.5 Flash Lite (google/gemini-2.5-flash-lite), modelo anterior", temperatura: true, raciocinio: false };
 
 export const MODELO_IA_PADRAO = LUNA.valor;
 
@@ -51,9 +53,17 @@ export function modeloOuPadrao(recurso: RecursoIA, valor: unknown): string {
   return modeloDaLista(recurso, valor)?.valor ?? MODELO_IA_PADRAO;
 }
 
-/** Parâmetro temperature só para quem aceita. */
-export function temperaturaPara(recurso: RecursoIA, modelo: string, valor: number): { temperature?: number } {
-  return modeloDaLista(recurso, modelo)?.temperatura === false ? {} : { temperature: valor };
+/**
+ * Ajustes por modelo: temperature só para quem aceita, e raciocínio desligado em quem raciocina por padrão.
+ * As chamadas são curtas e em JSON, como no modelo anterior (que não raciocinava). Com o raciocínio ligado,
+ * ele gastaria o max_tokens e a resposta viria cortada (finish_reason "length"), paga e inútil.
+ */
+export function ajustesDoModelo(recurso: RecursoIA, modelo: string, temperatura: number): { temperature?: number; reasoning?: { effort: "none" } } {
+  const m = modeloDaLista(recurso, modelo);
+  return {
+    ...(m?.temperatura === false ? {} : { temperature: temperatura }),
+    ...(m?.raciocinio ? { reasoning: { effort: "none" as const } } : {}),
+  };
 }
 
 /** Opções da lista de escolha do painel, por chave de configuração. */
