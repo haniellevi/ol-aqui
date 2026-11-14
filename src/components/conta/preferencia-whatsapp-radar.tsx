@@ -58,7 +58,7 @@ export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: Preferenci
             ? "Este aviso está pausado agora. Você pode desligá-lo aqui."
             : !inicial.confirmado && !ligado
               ? "Confirme seu WhatsApp em Meus dados para ligar este aviso."
-              : "Avisamos pelo WhatsApp quando chegar pedido do Radar na categoria dos seus anúncios. Vale para lojas com plano com Radar e loja verificada. No máximo uma mensagem por pedido. Só chega se o aviso de pedido novo no site também estiver ligado. Responda SAIR para parar, ou desligue aqui."}
+              : "Avisamos pelo WhatsApp quando chegar pedido do Radar na categoria dos seus anúncios. Aviso imediato para loja verificada com plano que inclui o alerta ou para loja com cortesia do Radar. No máximo uma mensagem por pedido. Só chega se o aviso de pedido novo no site também estiver ligado. Responda SAIR para parar, ou desligue aqui."}
       </p>
       {erro && <p role="alert" className="px-3 pb-3 text-legenda font-semibold text-perigo">{erro}</p>}
       {mensagem && <p role="status" className="sr-only">{mensagem}</p>}
