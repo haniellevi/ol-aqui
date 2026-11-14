@@ -19,12 +19,14 @@ export function FolhaResolver({
   propostas,
   variante = "secundario",
   rotulo = "Já resolvi",
+  compacto = false,
 }: {
   pedidoId: string;
   propostas: LojaComProposta[];
   variante?: VarianteBotao;
   /** Texto do botão que abre a folha (na conversa: "Sim, pode tirar"). */
   rotulo?: string;
+  compacto?: boolean;
 }) {
   const router = useRouter();
   const [aberta, setAberta] = useState(false);
@@ -92,7 +94,7 @@ export function FolhaResolver({
 
   return (
     <>
-      <Botao variante={variante} larguraTotal icone={<CheckCircle2 />} onClick={abrir} tamanho="grande">
+      <Botao variante={variante} larguraTotal={!compacto} icone={<CheckCircle2 />} onClick={abrir} tamanho={compacto ? "normal" : "grande"} className={compacto ? "min-h-11!" : undefined}>
         {rotulo}
       </Botao>
       <Folha open={aberta} onOpenChange={(v) => (v ? setAberta(true) : fechar())}>

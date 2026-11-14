@@ -36,14 +36,16 @@ export function DestaquePrazo({ pedidoId, propostas, vencimento }: { pedidoId: s
   }
 
   return (
-    <section aria-labelledby="titulo-achou" className="flex flex-col gap-3 rounded-card border border-laranja-escuro bg-cartao p-4 shadow-1">
-      <h2 id="titulo-achou" className="text-3xl font-semibold text-beringela">Você achou o que procurava?</h2>
-      <p className="text-facil text-texto">{vencimento}. Se ainda precisa, ele fica mais 15 dias no ar.</p>
-      <Botao larguraTotal icone={<CalendarPlus />} carregando={pendente} textoCarregando="Salvando..." onClick={aindaPreciso} tamanho="grande">
-        Ainda preciso
-      </Botao>
-      <FolhaResolver pedidoId={pedidoId} propostas={propostas} />
-      {erro && <p role="alert" className="text-facil font-semibold text-perigo">{erro}</p>}
+    <section aria-labelledby="titulo-achou" className="flex flex-col gap-2 rounded-card border border-laranja-escuro bg-cartao p-3">
+      <h2 id="titulo-achou" className="text-2xl font-semibold text-beringela">Você achou o que procurava?</h2>
+      <p className="text-lg text-texto">{vencimento}. Se ainda precisa, ele fica mais 15 dias no ar.</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Botao className="min-h-11!" icone={<CalendarPlus />} carregando={pendente} textoCarregando="Salvando..." onClick={aindaPreciso}>
+          Ainda preciso
+        </Botao>
+        <FolhaResolver pedidoId={pedidoId} propostas={propostas} compacto />
+      </div>
+      {erro && <p role="alert" className="text-lg font-semibold text-perigo">{erro}</p>}
     </section>
   );
 }
@@ -111,25 +113,25 @@ export function AcoesPedido({
     },
   }[acao];
 
-  return <section className="flex flex-col gap-2 border-t border-borda pt-4" aria-label="Ações do pedido">
-    {podeResolver && <FolhaResolver pedidoId={pedidoId} propostas={propostas} />}
+  return <section className="flex flex-col gap-2 border-t border-borda pt-3 sm:flex-row sm:flex-wrap sm:items-center" aria-label="Ações do pedido">
+    {podeResolver && <FolhaResolver pedidoId={pedidoId} propostas={propostas} compacto />}
     {podeArquivar && (
-      <Botao variante="secundario" larguraTotal icone={arquivado ? <ArchiveRestore /> : <Archive />} disabled={pendente} tamanho="grande"
+      <Botao variante="secundario" className="min-h-11!" icone={arquivado ? <ArchiveRestore /> : <Archive />} disabled={pendente}
         onClick={() => abrir(arquivado ? "desarquivar" : "arquivar")}>
         {arquivado ? "Retirar do arquivo" : aberto ? "Encerrar e arquivar" : "Arquivar pedido"}
       </Botao>
     )}
-    {podeCancelar && <Botao variante="texto" icone={<XCircle />} disabled={pendente} onClick={() => abrir("cancelado")} tamanho="grande">Cancelar pedido</Botao>}
+    {podeCancelar && <Botao variante="texto" className="min-h-11!" icone={<XCircle />} disabled={pendente} onClick={() => abrir("cancelado")}>Cancelar pedido</Botao>}
     <AlertDialog open={janela} onOpenChange={(abrir) => { if (!abrir && !trava.current) setJanela(false); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-3xl">{textos.titulo}</AlertDialogTitle>
-          <AlertDialogDescription className="text-facil">{textos.detalhe}</AlertDialogDescription>
+          <AlertDialogTitle className="text-2xl">{textos.titulo}</AlertDialogTitle>
+          <AlertDialogDescription className="text-lg">{textos.detalhe}</AlertDialogDescription>
         </AlertDialogHeader>
-        {erro && <Alert variant="destructive" className="text-facil">{erro}</Alert>}
+        {erro && <Alert variant="destructive" className="text-lg">{erro}</Alert>}
         <AlertDialogFooter>
-          <Botao variante="secundario" disabled={pendente} onClick={() => setJanela(false)} tamanho="grande">Voltar</Botao>
-          <Botao variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar} tamanho="grande">{textos.botao}</Botao>
+          <Botao variante="secundario" disabled={pendente} onClick={() => setJanela(false)} className="min-h-11!">Voltar</Botao>
+          <Botao variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar} className="min-h-11!">{textos.botao}</Botao>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

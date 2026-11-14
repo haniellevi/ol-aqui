@@ -198,11 +198,11 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
       )}
       {podeEditar && (
         <div className="flex flex-col gap-2">
-          <Botao larguraTotal variante={minha ? "secundario" : "primario"} disabled={ocupado} onClick={() => { setErro(null); setAberta(true); }} icone={minha ? <Pencil /> : <Send />}>
+          <Botao className="min-h-11! self-start max-sm:w-full" variante={minha ? "secundario" : "primario"} disabled={ocupado} onClick={() => { setErro(null); setAberta(true); }} icone={minha ? <Pencil /> : <Send />}>
             {minha ? "Mudar minha proposta" : "Propor Produto"}
           </Botao>
           {!minha && restantes != null && (
-            <p className="text-center text-sm text-texto-suave">
+            <p className="text-sm text-texto-suave">
               Você tem {restantes} {restantes === 1 ? "proposta disponível" : "propostas disponíveis"}.
             </p>
           )}
@@ -231,7 +231,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                             type="button"
                             onClick={() => escolherAnuncio(a)}
                             aria-pressed={ativo}
-                            className={`flex min-h-10 w-full items-center gap-3 rounded-campo border p-2 text-left focus-visible:outline-3 focus-visible:outline-laranja-escuro ${
+                            className={`flex min-h-11 w-full items-center gap-2 rounded-campo border p-2 text-left focus-visible:outline-3 focus-visible:outline-laranja-escuro ${
                               ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao hover:bg-fundo"
                             }`}
                           >
@@ -262,7 +262,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                   )}
                   <Botao
                     variante="secundario"
-                    className="min-w-0 flex-1 whitespace-normal"
+                    className="min-h-11! min-w-0 flex-1 whitespace-normal"
                     icone={<ImagePlus />}
                     onClick={() => arquivo.current?.click()}
                     disabled={ocupado}
@@ -312,6 +312,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
 
               <Botao
                 type="submit"
+                className="min-h-11!"
                 larguraTotal
                 variante={modoPrazo ? "primario" : "whatsapp"}
                 carregando={enviando}

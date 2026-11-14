@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { Botao, type TamanhoBotao } from "@/components/ui/botao";
 
-export function AtualizarRadar({ tamanho = "normal" }: { tamanho?: TamanhoBotao } = {}) {
+export function AtualizarRadar({ tamanho = "normal", className }: { tamanho?: TamanhoBotao; className?: string } = {}) {
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
-  return <Botao variante="secundario" tamanho={tamanho} icone={<RefreshCw />} carregando={pendente} textoCarregando="Atualizando..." onClick={() => {
+  return <Botao variante="secundario" tamanho={tamanho} className={className} icone={<RefreshCw />} carregando={pendente} textoCarregando="Atualizando..." onClick={() => {
     window.dispatchEvent(new Event("olaki:avisos"));
     iniciar(() => router.refresh());
   }}>Atualizar</Botao>;

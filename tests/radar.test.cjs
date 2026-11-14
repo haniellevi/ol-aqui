@@ -257,7 +257,7 @@ const baseTela={id,titulo:'Geladeira secreta',detalhes:'Detalhe',categoria_nome:
  comprador_primeiro_nome:null,comprador_certificado:false,sou_comprador:false,ja_propus:false,mesma_regiao:true,tem_acesso:false,bloqueado:false};
 test('v2 tela do pedido: bloqueado esconde o título e mostra a frase e os planos, mesmo para quem é comprador',async()=>{
  const html=await telaPedido({...baseTela,bloqueado:true,titulo:null,detalhes:null,sou_comprador:true},{temAcesso:false,restantes:0},{perfil:{},vitrine:null});
- assert.match(html,/Este pedido é só para lojas verificadas\./);assert.match(html,/Quer ver pedidos como este\?/);assert.match(html,/Ver planos/);
+ assert.match(html,/Este pedido é só para lojas com acesso ao Radar\./);assert.match(html,/Quer ver pedidos como este\?/);assert.match(html,/Ver planos/);
  assert.doesNotMatch(html,/Geladeira secreta/);assert.doesNotMatch(html,/Eu sei onde tem|Mandar oferta/);
 });
 test('v2 tela do pedido: quem não atende num pedido "todos" vê detalhes e "Eu sei onde tem", sem oferta nem propostas restantes',async()=>{
@@ -311,4 +311,29 @@ test('estadoRetomada: quando mostrar o rascunho e qual aviso',()=>{
  assert.equal(estadoRetomada({retomar:false,anonimo:false,temRascunho:true,perdeuCidades:true}),'perdeu_cidades');
  // Logado sem ?retomar=1 e sem rascunho: formulário normal, sem aviso
  assert.equal(estadoRetomada({retomar:false,anonimo:false,temRascunho:false,perdeuCidades:false}),null);
+});
+
+function telaOfertas(propostas) {
+ const React = require('react');
+ const { renderToStaticMarkup } = require('react-dom/server');
+ const { PropostasRecebidas } = carregar('src/components/radar/propostas-recebidas.tsx', {
+  'next/link': { __esModule: true, default: ({ href, children }) => React.createElement('a', { href: String(href) }, children) },
+  'next/navigation': { useRouter: () => ({ refresh() {} }) },
+  '@/app/radar/actions': {},
+ });
+ return renderToStaticMarkup(React.createElement(PropostasRecebidas, { propostas, podeEscolher: true, modoPrazo: true }));
+}
+
+test('detalhe do Radar agrupa o título, a contagem e a atualização das ofertas', () => {
+ const oferta = { id, loja_nome:'Loja do Extremo Sul', criado_em:'2026-11-14T12:00:00Z', preco_centavos:150000, mensagem:'Retirada em Corrente' };
+ const html = telaOfertas([oferta]);
+ assert.match(html, /<h2[^>]*>Ofertas recebidas.*?1 proposta.*?<\/h2>/);
+ assert.match(html, /Atualizar/);
+ assert.match(html, /Chamar no WhatsApp/);
+ assert.match(html, /Retirada em Corrente/);
+ assert.match(telaOfertas([]), /Nenhuma proposta ainda/);
+ const muitas = telaOfertas(Array.from({ length: 5 }, (_, i) => ({ ...oferta, id: String(i) })));
+ assert.match(muitas, /5 propostas/);
+ assert.match(muitas, /Menor preço/);
+ assert.match(muitas, /Mais novas/);
 });
