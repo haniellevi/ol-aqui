@@ -63,6 +63,8 @@ test('início mostra as lojas no topo do feed, com busca, tipo de loja e um só 
   for (const nome of ['>Todos os tipos<', '>Pet<', '>Veículos<']) assert.ok(html.includes(nome), nome);
   for (const slug of ['multi', 'rvs']) assert.ok(html.includes(`href="/loja/${slug}"`));
   assert.match(html, /aria-label="Loja verificada"/);
+  assert.match(html, /id="lojas-da-regiao"/);
+  assert.match(html, /w-full truncate text-xs/);
   const lojasEm = html.indexOf('titulo-lojas');
   assert.ok(lojasEm < html.indexOf('titulo-inicio') && lojasEm < html.indexOf('titulo-recentes'));
   assert.doesNotMatch(html, /Ver todas as lojas/);
@@ -83,13 +85,15 @@ test('início com o bloco de lojas desligado mantém um acesso ao catálogo', as
   assert.match(html, /Ver todas as lojas/);
   assert.doesNotMatch(html, /id="titulo-lojas"|href="\/loja\/multi"/);
 });
-test('início troca os cartões grandes por uma faixa fina de Radar e Anunciar acima dos anúncios', async () => {
+test('início destaca os atalhos do Radar e de Anunciar', async () => {
   for (const anuncios of [[], [{ id: 'a1', titulo: 'Mesa da região' }]]) {
     const html = await htmlInicio({ anuncios });
     assert.match(html, /<nav aria-label="Pedir no Radar ou anunciar">/);
     assert.equal((html.match(/href="\/radar\/pedir"/g) ?? []).length, 1);
-    assert.match(html, /Não achou\?.*Estou procurando/);
-    assert.match(html, /Quer vender\?.*>Anunciar</);
+    assert.match(html, /Estou procurando.*Não achou\?/);
+    assert.match(html, />Anunciar<.*Quer vender\?/);
+    assert.match(html, /bg-laranja/);
+    assert.match(html, /bg-selecao/);
     assert.doesNotMatch(html, /titulo-vender|>Exemplo<|Anunciar grátis|Tem algo parado em casa/);
     assert.ok(html.indexOf('Pedir no Radar ou anunciar') < html.indexOf('titulo-recentes'));
   }
