@@ -3,14 +3,17 @@ const assert=require('node:assert/strict');
 const {carregar}=require('./carregar.cjs');
 const {validarPedido,validarProposta}=carregar('src/components/radar/validacao.ts');
 const id='80000000-0000-4000-a000-000000000001';
-const pedido={chaveEnvio:id,titulo:'Procuro mesa de madeira',cidade:'Corrente',modo:'propostas_prazo',prazoHoras:72,visibilidade:'lojas'};
+const categoria='80000000-0000-4000-a000-0000000000ca';
+const pedido={chaveEnvio:id,titulo:'Procuro mesa de madeira',cidade:'Corrente',categoriaId:categoria,modo:'propostas_prazo',prazoHoras:72,visibilidade:'lojas'};
 test('orçamento mantém centavos e recusa limites invertidos antes de enviar',()=>{
  assert.equal(validarPedido({...pedido,precoMin:'1.500,50',precoMax:'1600.99'}),null);
  assert.equal(validarPedido({...pedido,precoMin:'1600',precoMax:'1500'}).campo,'preco_max_centavos');
  for(const preco of ['abc','-10','1e6','1000000001',{},10]) assert.ok(validarPedido({...pedido,precoMax:preco}));
 });
 test('pedido rejeita payloads malformados, texto excessivo, cidade e prazo ausentes',()=>{
- for(const entrada of [null,{}, {...pedido,titulo:'abc'},{...pedido,titulo:'a'.repeat(121)}, {...pedido,detalhes:'a'.repeat(1001)},{...pedido,cidade:'a'.repeat(81)},{...pedido,prazoHoras:null},{...pedido,categoriaId:'x'},{...pedido,modo:'privado'}]) assert.ok(validarPedido(entrada));
+ for(const entrada of [null,{}, {...pedido,titulo:'abc'},{...pedido,titulo:'a'.repeat(121)}, {...pedido,detalhes:'a'.repeat(1001)},{...pedido,cidade:'a'.repeat(81)},{...pedido,prazoHoras:null},{...pedido,categoriaId:'x'},{...pedido,modo:'privado'},{...pedido,categoriaId:null},{...pedido,modo:'whatsapp_direto'}]) assert.ok(validarPedido(entrada));
+ assert.equal(validarPedido({...pedido,categoriaId:null}).campo,'categoria');
+ assert.equal(validarPedido({...pedido,modo:'whatsapp_direto'}).erro,'Escolha como quer receber as propostas.');
  assert.equal(validarPedido(pedido),null);
 });
 test('proposta preserva formato decimal e rejeita referência ambígua ou inválida',()=>{
@@ -127,7 +130,8 @@ test('v2 telas: cada campo de erro volta ao passo dele',()=>{
 test('v2 telas: o passo só confere o que pergunta',()=>{
  const {erroDoPasso}=carregar('src/components/radar/passos-pedido.ts');
  const c1='80000000-0000-4000-a000-0000000000c1',c2='80000000-0000-4000-a000-0000000000c2';
- const e={chaveEnvio:id,titulo:'Procuro mesa de madeira',modo:'propostas_prazo',prazoHoras:null,cidadesIds:[],visibilidade:'lojas'};
+ const e={chaveEnvio:id,titulo:'Procuro mesa de madeira',categoriaId:categoria,modo:'propostas_prazo',prazoHoras:null,cidadesIds:[],visibilidade:'lojas'};
+ assert.equal(erroDoPasso(1,{...e,categoriaId:null},[c1]).campo,'categoria');
  // passo 1 não reclama do prazo (passo 4), mas reclama do título e do preço
  assert.equal(erroDoPasso(1,e,[c1]),null);
  assert.equal(erroDoPasso(1,{...e,titulo:'abc'},[c1]).campo,'titulo');

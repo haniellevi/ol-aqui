@@ -2,7 +2,7 @@ import { centavosDoTexto, ehUuid } from "@/lib/formato";
 import type { ModoContato, Visibilidade } from "@/lib/tipos-radar";
 
 export type EntradaPedido = {
-  chaveEnvio: string; titulo: string; detalhes?: string; categoriaId?: string | null;
+  chaveEnvio: string; titulo: string; detalhes?: string; categoriaId: string | null;
   precoMin?: string; precoMax?: string; cidade?: string; modo: ModoContato;
   /** 0–20 cidades; vazio = região toda. */
   cidadesIds?: string[]; visibilidade: Visibilidade;
@@ -26,9 +26,9 @@ export function validarPedido(e: EntradaPedido): ErroRadar | null {
   if (e.cidade != null && (typeof e.cidade !== "string" || e.cidade.length > 80)) return { erro: "Escolha a cidade.", campo: "cidade" };
   if (e.cidadesIds != null && (!Array.isArray(e.cidadesIds) || e.cidadesIds.length > 20 || !e.cidadesIds.every(ehUuid))) return { erro: "Escolha até 20 cidades da lista.", campo: "cidades" };
   if (e.visibilidade !== "lojas" && e.visibilidade !== "todos") return { erro: "Escolha quem pode ver o pedido.", campo: "visibilidade" };
-  if (!["whatsapp_direto", "propostas_prazo"].includes(e.modo)) return { erro: "Escolha como quer receber as propostas." };
-  if (e.categoriaId != null && !ehUuid(e.categoriaId)) return { erro: "Escolha uma categoria válida.", campo: "categoria" };
-  if (e.modo === "propostas_prazo" && (!Number.isInteger(e.prazoHoras) || (e.prazoHoras ?? 0) <= 0)) return { erro: "Escolha o prazo das propostas.", campo: "prazo" };
+  if (e.modo !== "propostas_prazo") return { erro: "Escolha como quer receber as propostas." };
+  if (!e.categoriaId || !ehUuid(e.categoriaId)) return { erro: "Escolha uma categoria para o seu pedido.", campo: "categoria" };
+  if (!Number.isInteger(e.prazoHoras) || (e.prazoHoras ?? 0) <= 0) return { erro: "Escolha o prazo das propostas.", campo: "prazo" };
   const erro = validarPreco(e.precoMin, "preco_min_centavos") ?? validarPreco(e.precoMax, "preco_max_centavos");
   if (erro) return erro;
   const min = centavosDoTexto(e.precoMin), max = centavosDoTexto(e.precoMax);
