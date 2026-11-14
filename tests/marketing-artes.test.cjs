@@ -54,7 +54,7 @@ test('marketing artes: autenticação precede consultas e loja ativa é obrigat�
   const anonima = rota({ semLogin: true });
   assert.equal((await anonima.get()).status, 401);
   assert.deepEqual(anonima.chamadas, ['auth']);
-  for (const op of [{ semLoja: true }, { loja: { tipo: 'pessoa' } }, { loja: { status: 'montagem' } }, { loja: { status: 'suspensa' } }]) {
+  for (const op of [{ semLoja: true }, { loja: { tipo: 'pessoa' } }, { loja: { status: 'montagem' } }, { loja: { status: 'suspensa' } }, { loja: { pasta_montagem: 'recebimento-pendente' } }]) {
     const r = rota(op);
     assert.equal((await r.get()).status, 404);
     assert.equal(r.chamadas.some(c => c[0] === 'marketing'), false);

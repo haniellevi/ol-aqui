@@ -64,7 +64,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     if (formatos.length > 1 || !["feed", "stories"].includes(formato)) return falha("Escolha o formato feed ou stories.", 400);
 
     const loja = await minhaVitrineCompleta(true);
-    if (!loja || loja.tipo !== "loja" || loja.status !== "ativa") return falha("Loja ativa não encontrada.", 404);
+    if (!loja || loja.tipo !== "loja" || loja.status !== "ativa" || loja.pasta_montagem) return falha("Loja ativa não encontrada.", 404);
     const { id } = await params;
     const marketing = await meuMarketingLoja(loja.id);
     if (!marketing) return falha("Não foi possível carregar as recomendações. Tente novamente.", 503);
