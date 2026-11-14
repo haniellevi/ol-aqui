@@ -3,6 +3,7 @@ import { lookup } from "node:dns/promises";
 import { request } from "node:https";
 import { BlockList, isIP } from "node:net";
 import { consultarCnpj } from "@/lib/verificacao-loja/receita";
+import { MODELOS_LOJISTA } from "@/lib/aki/lojista";
 
 export type FonteExterna = "site" | "instagram" | "facebook" | "cnpj" | "informado";
 export type CampoSugestao = "nome" | "cidade" | "slug" | "categoria" | "sobre" | "whatsapp" | "endereco" | "site" | "instagram" | "logo" | "capa";
@@ -33,8 +34,11 @@ export function normalizarFonte(fonte: "site" | "instagram" | "facebook", valor:
     const host = u.hostname.toLowerCase();
     if (u.protocol !== "https:" || u.username || u.password || u.port || isIP(host.replace(/^\[|\]$/g, "")) || !host.includes(".") || host.endsWith(".local") || host.endsWith(".localhost")) return null;
     if (fonte !== "site" && host !== `${fonte}.com` && host !== `www.${fonte}.com`) return null;
-    if (fonte !== "site" && !/^\/[\w.]+\/?$/.test(u.pathname)) return null;
-    u.hash = ""; u.search = "";
+    const perfilFacebook = fonte === "facebook" && u.pathname === "/profile.php" && /^\d+$/.test(u.searchParams.get("id") ?? "");
+    if (fonte === "facebook" && u.pathname === "/profile.php" && !perfilFacebook) return null;
+    if (fonte !== "site" && !perfilFacebook && !/^\/[\w.]+\/?$/.test(u.pathname)) return null;
+    u.hash = "";
+    if (fonte !== "site") u.search = perfilFacebook ? `?id=${u.searchParams.get("id")}` : "";
     return u.toString();
   } catch { return null; }
 }
@@ -48,8 +52,20 @@ export function extrairTextoPublico(html: string): string {
   return textoSeguro(valor.replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;/g, "'"), 1500);
 }
 
-async function lerPagina(url: string): Promise<string> {
-  const u = new URL(url);
+async function lerPagina(fonte: "site" | "instagram" | "facebook", url: string): Promise<string> {
+  for (let salto = 0; salto <= 2; salto++) {
+    const u = new URL(url);
+    const retorno = await lerResposta(u);
+    if ("html" in retorno) return retorno.html;
+    const destino = new URL(retorno.destino, u);
+    const proximo = normalizarFonte(fonte, destino.href);
+    if (!proximo || proximo === url) break;
+    url = proximo;
+  }
+  throw new Error("Redirecionamento indisponível");
+}
+
+async function lerResposta(u: URL): Promise<{ html: string } | { destino: string }> {
   const ips = await Promise.race([lookup(u.hostname, { all: true, verbatim: true }), new Promise<never>((_, reject) => { const timer = setTimeout(() => reject(new Error("DNS indisponível")), 8000); timer.unref(); })]);
   if (!ips.length || ips.some(ip => !enderecoPublico(ip.address))) throw new Error("Destino não público");
   const ip = ips[0];
@@ -58,10 +74,15 @@ async function lerPagina(url: string): Promise<string> {
       if (options.all) (callback as unknown as (err: null, addresses: typeof ips) => void)(null, [ip]);
       else callback(null, ip.address, ip.family);
     } }, res => {
+      if ([301, 302, 303, 307, 308].includes(res.statusCode ?? 0) && typeof res.headers.location === "string") {
+        res.resume();
+        resolve({ destino: res.headers.location });
+        return;
+      }
       if (res.statusCode !== 200 || !/^text\/html(?:;|$)/i.test(res.headers["content-type"] ?? "")) { res.resume(); reject(new Error("Página indisponível")); return; }
       let tamanho = 0; const blocos: Buffer[] = [];
       res.on("data", (bloco: Buffer) => { tamanho += bloco.length; if (tamanho > 200_000) { req.destroy(new Error("Página grande")); return; } blocos.push(bloco); });
-      res.on("end", () => resolve(Buffer.concat(blocos).toString("utf8")));
+      res.on("end", () => resolve({ html: Buffer.concat(blocos).toString("utf8") }));
       res.on("error", reject);
     });
     const timer = setTimeout(() => req.destroy(new Error("Tempo esgotado")), 8000);
@@ -93,7 +114,7 @@ export async function coletarFonte(trabalho: TrabalhoFonte, opcoes: { cnpjAutori
     const url = normalizarFonte(fonte, entrada[fonte] ?? "");
     if (!url) return { estado: "indisponivel", motivo: "Endereço da fonte inválido ou não público." };
     try {
-      const descricao = extrairTextoPublico(await lerPagina(url));
+      const descricao = extrairTextoPublico(await lerPagina(fonte, url));
       if (!descricao) return { estado: "indisponivel", motivo: "A página não disponibilizou informações públicas." };
       if (fonte === "site" || fonte === "instagram") adicionar(fonte, url, fonte, url);
       adicionar("sobre", descricao, fonte, url);
@@ -120,8 +141,9 @@ export async function montarSugestoes(evidencias: EvidenciaFonte[], gerador?: (e
 export async function gerarSugestoesMerc(evidencias: EvidenciaFonte[], uid: string, db: ReturnType<typeof import("@/lib/supabase/admin").supabaseAdmin>, chave = process.env.OPENAI_API_KEY): Promise<PropostaIA[]> {
   const seguras = evidencias.filter(e => e.campo === "sobre").map(e => ({ id: e.id, texto: textoSeguro(e.valor, 1500) })).filter(e => e.texto).slice(0, 8);
   if (!chave || !seguras.length) return [];
-  const { data: modelo, error: erroModelo } = await db.rpc("config", { p_chave: "robo.lojista_modelo_texto", p_microrregiao: null, p_padrao: "gpt-6-luna" });
-  if (erroModelo || !["gpt-6-luna", "gpt-6-sol"].includes(modelo)) throw new Error("Modelo indisponível");
+  const modelos = MODELOS_LOJISTA["robo.lojista_modelo_texto"];
+  const { data: modelo, error: erroModelo } = await db.rpc("config", { p_chave: "robo.lojista_modelo_texto", p_microrregiao: null, p_padrao: modelos[0].valor });
+  if (erroModelo || !modelos.some(opcao => opcao.valor === modelo)) throw new Error("Modelo indisponível");
   const { data: reserva, error: erroReserva } = await db.rpc("aki_reservar_cadastro", { p_usuario: uid, p_modelo: modelo });
   if (erroReserva || !reserva) throw new Error("Cota indisponível");
   let uso: { prompt_tokens?: number; completion_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } } = {};

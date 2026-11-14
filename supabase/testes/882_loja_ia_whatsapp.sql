@@ -71,6 +71,17 @@ do $$ declare f uuid; begin
   select id into f from whatsapp_fila where usuario_id='user_ia882';
   assert whatsapp_fila_confirmar_envio(f)='cancelada', 'verificação retirada após enfileirar';
 end $$;
+-- A confirmação perdida entre consulta autorizada e retorno invalida as evidências.
+do $$
+declare t public.loja_ia_trabalhos;
+begin
+  select * into t from public.loja_ia_trabalhos where id=current_setting('test.trabalho')::uuid;
+  assert public.loja_ia_concluir_fonte(t.id,t.tentativa,
+    '{"estado":"ok","evidencias":[{"id":"wa:desc","campo":"sobre","valor":"Privado","origem":{"fonte":"whatsapp","rotulo":"WhatsApp"}}]}'::jsonb),
+    'Finaliza fonte cujo consentimento perdeu validade';
+  assert exists(select 1 from public.loja_ia_trabalhos where id=t.id and resultado->>'estado'='indisponivel' and not (resultado ? 'evidencias')),
+    'Descarta evidências coletadas com autorização expirada';
+end $$;
 -- O dono pode retirar os opt-ins mesmo depois da coleta, sem reautorizar o restante.
 set local role authenticated;
 set local request.jwt.claim.sub='user_ia882';

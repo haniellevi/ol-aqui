@@ -1,5 +1,4 @@
 -- A autorização registra a confirmação vigente junto com o número.
-alter table public.loja_ia_rascunhos add column whatsapp_verificado_autorizado_em timestamptz;
 create function public.loja_ia_guardar_verificacao() returns trigger
 language plpgsql security definer set search_path=public,pg_temp as $$
 begin
@@ -139,7 +138,21 @@ begin
   if p_consulta then entrada_ := jsonb_set(entrada_,'{consultarWhatsapp}','false'); end if;
   if p_aviso then entrada_ := jsonb_set(entrada_,'{avisarWhatsapp}','false'); end if;
   if entrada_ is distinct from r.entrada then
-    update public.loja_ia_rascunhos set entrada=entrada_, revisao=revisao+1, atualizado_em=now() where id=r.id returning * into r;
+    if p_consulta and r.entrada->'consultarWhatsapp'='true'::jsonb then
+      update public.loja_ia_trabalhos set resultado='{"estado":"indisponivel","motivo":"Autorização retirada."}'::jsonb
+        where rascunho_id=r.id and fonte='whatsapp' and estado='concluido';
+      select coalesce(jsonb_object_agg(k,
+        case
+          when val#>>'{origem,fonte}'='whatsapp' and not coalesce((val->>'editado')::boolean,false)
+            then val || '{"valor":null,"origem":null,"sugestao":null}'::jsonb
+          when val#>>'{sugestao,origem,fonte}'='whatsapp' then val || '{"sugestao":null}'::jsonb
+          else val end), '{}'::jsonb) into r.campos from jsonb_each(r.campos) f(k,val);
+      if r.fontes->'whatsapp'->>'estado'='ok' then
+        r.fontes := jsonb_set(r.fontes,'{whatsapp}','{"estado":"indisponivel","motivo":"Autorização retirada."}');
+      end if;
+    end if;
+    update public.loja_ia_rascunhos set entrada=entrada_, campos=r.campos, fontes=r.fontes,
+      revisao=revisao+1, atualizado_em=now() where id=r.id returning * into r;
   end if;
   return public.loja_ia_json(r);
 end $$;

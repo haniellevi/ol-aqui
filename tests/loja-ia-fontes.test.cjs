@@ -5,6 +5,8 @@ const fontes = () => carregar('src/lib/loja-ia/fontes.ts', { '@/lib/verificacao-
 
 test('normaliza perfis e rejeita endereços inseguros ou de outra rede', () => {
  const { normalizarFonte } = fontes();
+ assert.equal(normalizarFonte('facebook', 'https://facebook.com/profile.php?id=123&ref=teste'), 'https://facebook.com/profile.php?id=123');
+ assert.equal(normalizarFonte('site', 'https://exemplo.com/loja?cidade=Corrente'), 'https://exemplo.com/loja?cidade=Corrente');
  assert.equal(normalizarFonte('instagram', '@loja.modelo'), 'https://www.instagram.com/loja.modelo/');
  assert.equal(normalizarFonte('facebook', 'loja.modelo'), 'https://www.facebook.com/loja.modelo/');
  assert.equal(normalizarFonte('instagram', 'https://exemplo.com/loja'), null);
@@ -118,4 +120,31 @@ test('conexão fixada atende lookup all usado pelo Node', async () => {
  };
  const { coletarFonte } = carregar('src/lib/loja-ia/fontes.ts', mocks);
  assert.equal((await coletarFonte({ fonte:'site', entrada:{ nome:'Loja', cidade:'Recife', site:'https://exemplo.com', materiais:[] } })).estado, 'ok');
+});
+
+test('continua por redirecionamento público validado com nova resolução de DNS', async () => {
+ const { EventEmitter } = require('node:events');
+ const hosts = [];
+ const mocks = {
+  'node:dns/promises': { lookup: async host => { hosts.push(host); return [{ address: '8.8.8.8', family: 4 }]; } },
+  'node:https': { request: (url, _options, receber) => {
+    const req = new EventEmitter();
+    req.destroy = e => req.emit('error', e);
+    req.end = () => {
+      const res = new EventEmitter();
+      res.resume = () => {};
+      const redirecionar = url.hostname === 'exemplo.com';
+      res.statusCode = redirecionar ? 301 : 200;
+      res.headers = redirecionar ? { location: 'https://www.exemplo.com/loja' } : { 'content-type': 'text/html' };
+      receber(res);
+      if (!redirecionar) { res.emit('data', Buffer.from('<meta name="description" content="Loja">')); res.emit('end'); }
+      req.emit('close');
+    };
+    return req;
+  } },
+ };
+ const { coletarFonte } = carregar('src/lib/loja-ia/fontes.ts', mocks);
+ const retorno = await coletarFonte({ fonte:'site', entrada:{ nome:'Loja', cidade:'Recife', site:'https://exemplo.com', materiais:[] } });
+ assert.equal(retorno.estado, 'ok');
+ assert.deepEqual(hosts, ['exemplo.com', 'www.exemplo.com']);
 });

@@ -93,16 +93,21 @@ export async function limparMaterial(materialId: string): Promise<boolean> {
   return !confirmacao;
 }
 
-/** Processa até 100 registros e 100 objetos de contas excluídas; seguro para repetir. */
-export async function limparMateriaisPendentes(): Promise<void> {
+/** Limita cada rodada de limpeza e devolve apenas a contagem de falhas. */
+export async function limparMateriaisPendentes(): Promise<number> {
   const admin = supabaseAdmin();
   const { data, error } = await admin.rpc("loja_ia_lote_limpeza");
   if (error || !data) throw new Error("Não foi possível consultar a limpeza de imagens.");
-  for (const id of data.imagens as string[]) await limparMaterial(id);
-  for (const caminho of data.lixeira as string[]) {
-    const { error: falha } = await admin.storage.from(BALDE).remove([caminho]);
-    if (!falha) await admin.rpc("loja_ia_confirmar_lixeira", { p_caminho: caminho });
-  }
+  const resultados = await Promise.allSettled([
+    ...(data.imagens as string[]).slice(0, 10).map(limparMaterial),
+    ...(data.lixeira as string[]).slice(0, 10).map(async caminho => {
+      const { error: falha } = await admin.storage.from(BALDE).remove([caminho]);
+      if (falha) return false;
+      const { error: confirmacao } = await admin.rpc("loja_ia_confirmar_lixeira", { p_caminho: caminho });
+      return !confirmacao;
+    }),
+  ]);
+  return resultados.filter(item => item.status === "rejected" || !item.value).length;
 }
 
 /** Recebe apenas IDs escolhidos na coleta e nunca consulta outro rascunho. */

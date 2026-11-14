@@ -11,9 +11,17 @@ do $$ begin
 end $$;
 set local request.jwt.claim.sub='user_ia880a';
 select loja_ia_abrir_coleta() as draft \gset
-select loja_ia_salvar_coleta((:'draft'::jsonb->>'id')::uuid,0,'{"nome":"Loja","cidade":"Corrente","materiais":[],"consultarWhatsapp":true,"avisarWhatsapp":false}') as saved \gset
+select loja_ia_salvar_coleta((:'draft'::jsonb->>'id')::uuid,0,'{"nome":"Loja","cidade":"Corrente","materiais":[],"consultarWhatsapp":true,"avisarWhatsapp":false,"redesConcluidas":false}') as saved \gset
 select 1 / case when (:'saved'::jsonb->>'revisao')::int = 1 then 1 else 0 end;
 select set_config('test.draft', :'draft'::jsonb->>'id', true);
+select loja_ia_salvar_coleta((:'draft'::jsonb->>'id')::uuid,1,'{"nome":"Loja","cidade":"Corrente","materiais":[],"consultarWhatsapp":true,"avisarWhatsapp":false,"redesConcluidas":true}') as saved \gset
+do $$ begin
+  assert loja_ia_obter()#>>'{entrada,redesConcluidas}'='true', 'passo de redes salvo';
+  begin
+    perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,2,'{"nome":"Loja","cidade":"Corrente","materiais":[],"consultarWhatsapp":true,"avisarWhatsapp":false,"redesConcluidas":"true"}');
+    raise exception 'etapa inválida aceita';
+  exception when invalid_parameter_value then null; end;
+end $$;
 do $$ begin
   begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,0,'{}'); raise exception 'revisão obsoleta aceita'; exception when serialization_failure then null; end;
   begin perform * from loja_ia_rascunhos; raise exception 'tabela exposta'; exception when insufficient_privilege then null; end;
@@ -21,12 +29,12 @@ end $$;
 set local request.jwt.claim.sub='user_ia880b';
 do $$ begin
   assert loja_ia_obter() is null, 'outro dono lê';
-  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,1,'{}'); raise exception 'outro dono grava'; exception when insufficient_privilege then null; end;
+  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,2,'{}'); raise exception 'outro dono grava'; exception when insufficient_privilege then null; end;
 end $$;
 set local request.jwt.claim.sub='user_ia880a';
 do $$ begin
-  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,1,'{"nome":"x","cidade":"x","materiais":[],"consultarWhatsapp":"true","avisarWhatsapp":false}'); raise exception 'boolean inválido aceito'; exception when invalid_parameter_value then null; end;
-  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,1,'{"nome":"x","cidade":"x","materiais":[],"consultarWhatsapp":true,"avisarWhatsapp":false,"numero":"5589999999999"}'); raise exception 'número arbitrário aceito'; exception when invalid_parameter_value then null; end;
+  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,2,'{"nome":"x","cidade":"x","materiais":[],"consultarWhatsapp":"true","avisarWhatsapp":false}'); raise exception 'boolean inválido aceito'; exception when invalid_parameter_value then null; end;
+  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,2,'{"nome":"x","cidade":"x","materiais":[],"consultarWhatsapp":true,"avisarWhatsapp":false,"numero":"5589999999999"}'); raise exception 'número arbitrário aceito'; exception when invalid_parameter_value then null; end;
 end $$;
 reset role;
 do $$ begin assert (select whatsapp_autorizado='5589999971001' from loja_ia_rascunhos where id=current_setting('test.draft')::uuid), 'snapshot do número'; end $$;
@@ -34,7 +42,7 @@ delete from loja_ia_convites where usuario_id='user_ia880a';
 set local role authenticated;
 do $$ begin
   assert loja_ia_obter() is not null, 'rascunho perdido após revogação';
-  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,1,'{}'); raise exception 'convite revogado grava'; exception when insufficient_privilege then null; end;
+  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,2,'{}'); raise exception 'convite revogado grava'; exception when insufficient_privilege then null; end;
 end $$;
 reset role;
 insert into loja_ia_convites(usuario_id) values ('user_ia880a');
@@ -44,7 +52,7 @@ select id,microrregiao_id,'PF','pf-ia880','Corrente','pf','pf_gratis','suspensa'
 set local role authenticated;
 set local request.jwt.claim.sub='user_ia880a';
 do $$ begin
-  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,1,'{}'); raise exception 'conta suspensa grava'; exception when insufficient_privilege then null; end;
+  begin perform loja_ia_salvar_coleta(current_setting('test.draft')::uuid,2,'{}'); raise exception 'conta suspensa grava'; exception when insufficient_privilege then null; end;
 end $$;
 reset role;
 update vitrines_lojas set status='ativa', tipo='loja' where dono_id='user_ia880a';

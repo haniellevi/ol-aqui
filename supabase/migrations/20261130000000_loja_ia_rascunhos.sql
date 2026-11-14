@@ -11,8 +11,9 @@ create table public.loja_ia_rascunhos (
   entrada jsonb not null default '{"nome":"","cidade":"","materiais":[],"consultarWhatsapp":false,"avisarWhatsapp":false}',
   fontes jsonb not null default '{}',
   campos jsonb not null default '{}',
-  vitrine_id uuid references public.vitrines_lojas(id),
+  vitrine_id uuid references public.vitrines_lojas(id) on delete set null,
   whatsapp_autorizado text,
+  whatsapp_verificado_autorizado_em timestamptz,
   criado_em timestamptz not null default now(),
   atualizado_em timestamptz not null default now()
 );
@@ -49,7 +50,10 @@ $$;
 revoke all on function public.loja_ia_json(public.loja_ia_rascunhos) from public, anon, authenticated;
 create function public.loja_ia_obter() returns jsonb
 language sql stable security definer set search_path=public, pg_temp as $$
-  select public.loja_ia_json(r) from public.loja_ia_rascunhos r where r.dono_id=public.usuario_id() and r.estado <> 'publicado' limit 1
+  select public.loja_ia_json(r) from public.loja_ia_rascunhos r
+  where r.dono_id=public.usuario_id() and r.estado <> 'publicado'
+    and not exists (select 1 from public.vitrines_lojas where dono_id=r.dono_id and tipo='loja')
+  limit 1
 $$;
 create function public.loja_ia_abrir_coleta() returns jsonb
 language plpgsql security definer set search_path=public, pg_temp as $$
@@ -71,10 +75,11 @@ begin
   if r.revisao is distinct from p_revisao then raise exception 'Rascunho atualizado em outra aba.' using errcode='40001'; end if;
   if r.estado <> 'coleta' then raise exception 'Coleta já encerrada.' using errcode='42501'; end if;
   if jsonb_typeof(p_entrada) is distinct from 'object' or not (p_entrada ?& array['nome','cidade','materiais','consultarWhatsapp','avisarWhatsapp'])
-    or exists(select 1 from jsonb_object_keys(p_entrada) key where key <> all(array['nome','cidade','site','instagram','facebook','cnpj','descricao','materiais','consultarWhatsapp','avisarWhatsapp']))
+    or exists(select 1 from jsonb_object_keys(p_entrada) key where key <> all(array['nome','cidade','site','instagram','facebook','cnpj','descricao','materiais','consultarWhatsapp','avisarWhatsapp','redesConcluidas']))
     or jsonb_typeof(p_entrada->'nome') <> 'string' or jsonb_typeof(p_entrada->'cidade') <> 'string'
     or jsonb_typeof(p_entrada->'materiais') <> 'array' or jsonb_typeof(p_entrada->'consultarWhatsapp') <> 'boolean' or jsonb_typeof(p_entrada->'avisarWhatsapp') <> 'boolean'
     or exists(select 1 from jsonb_array_elements(p_entrada->'materiais') x where jsonb_typeof(x) <> 'string')
+    or (p_entrada ? 'redesConcluidas' and jsonb_typeof(p_entrada->'redesConcluidas') <> 'boolean')
     or pg_column_size(p_entrada) > 32768 then
     raise exception 'Dados da coleta inválidos.' using errcode='22023';
   end if;
