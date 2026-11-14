@@ -37,7 +37,7 @@ def consultar(ticket):
     perfil = post('http://127.0.0.1:8087/chat/fetchProfile/olaki-verificacao', {'number': numero}, {'apikey': os.environ['EVOLUTION_API_KEY'], 'Origin': os.environ['EVOLUTION_URL']})
     if perfil.get('isBusiness') is not True:
         return {}
-    return {saida: valor[:limite] for entrada, saida, limite in [('name', 'nome', 80), ('description', 'descricao', 600), ('website', 'site', 2048)] if isinstance((valor := perfil.get(entrada)), str) and valor.strip()}
+    return {saida: valor[:limite] for entrada, saida, limite in [('name', 'nome', 80), ('description', 'descricao', 600), ('website', 'site', 2048), ('picture', 'foto', 2048)] if isinstance((valor := perfil.get(entrada)), str) and valor.strip()}
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):

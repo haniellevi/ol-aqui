@@ -88,3 +88,11 @@ test('atualiza andamento somente depois de salvar a edição pendente', async ()
   assert.deepEqual(eventos,[{nome:'Nome corrigido'},'atualizou']);
  } finally { global.window = anterior; }
 });
+
+test('mostra a prévia privada do logo importado do WhatsApp na revisão', () => {
+ const { RevisaoLojaIa } = carregar('src/components/anunciar/revisao-loja-ia.tsx');
+ const r = { ...rascunho, campos:{...campos,logo:{valor:'imagem',editado:false,origem:{fonte:'whatsapp',rotulo:'Foto do perfil do WhatsApp Business'},sugestao:null}} };
+ const html = renderToStaticMarkup(React.createElement(RevisaoLojaIa, { ...props, rascunho:r }));
+ assert.match(html, /<img[^>]*src="\/imagem"[^>]*alt="Prévia do logo da loja"/);
+ assert.match(html, /Foto do perfil do WhatsApp Business/);
+});

@@ -101,7 +101,13 @@ export function RevisaoLojaIa({ rascunho: inicial, cidades, whatsappInicial, avi
     const sugestao = dado.sugestao;
     return <div className="flex flex-col gap-1 text-sm text-texto-suave">
       {origem && <p>Origem: {origem.url && /^https:\/\//i.test(origem.url) ? <a href={origem.url} target="_blank" rel="noreferrer" className="text-laranja-escuro underline">{origem.rotulo}</a> : origem.rotulo}</p>}
-      {sugestao && <div><p>Nova sugestão ({sugestao.origem.rotulo}): {sugestao.valor}</p><Botao variante="texto" tamanho="pequeno" type="button" onClick={() => atualizar(campo, sugestao.valor)}>Usar sugestão</Botao></div>}
+      {sugestao && <div>
+        <p>Nova sugestão ({sugestao.origem.rotulo}){campo !== "logo" && campo !== "capa" && `: ${sugestao.valor}`}</p>
+        {(campo === "logo" || campo === "capa") && imagensDisponiveis[sugestao.valor] &&
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imagensDisponiveis[sugestao.valor]} alt={`Sugestão de ${rotulos[campo].toLowerCase()} da loja`} className="h-24 max-w-full object-contain" />}
+        <Botao variante="texto" tamanho="pequeno" type="button" onClick={() => atualizar(campo, sugestao.valor)}>Usar sugestão</Botao>
+      </div>}
     </div>;
   }
   const fontes = Object.entries(rascunho.fontes) as [FonteLoja, unknown][];
@@ -115,7 +121,24 @@ export function RevisaoLojaIa({ rascunho: inicial, cidades, whatsappInicial, avi
         {campo === "cidade" && cidades.length ? <div className="flex flex-col gap-1"><label className="text-sm font-semibold" htmlFor="revisao-cidade">Cidade da loja</label><select id="revisao-cidade" name="cidade" className={classesCampo} value={valores.cidade} onChange={e => atualizar("cidade", e.target.value)} aria-invalid={!!erroCampo("cidade")}><option value="">Escolha a cidade</option>{cidades.map(c => <option key={`${c.nome}-${c.uf}`} value={c.nome}>{c.nome} - {c.uf}</option>)}</select>{erroCampo("cidade") && <p role="alert" className="text-sm text-perigo">{erroCampo("cidade")}</p>}</div> : campo === "sobre" ? <Campo multilinha rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} maxLength={1500} rows={4} erro={erroCampo(campo)} opcional /> : <Campo rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} erro={erroCampo(campo)} opcional={!['nome','cidade','slug','whatsapp'].includes(campo)} />}
         {detalhes(campo)}
       </div>)}
-      {(["logo", "capa"] as const).map(campo => <div key={campo} className="flex flex-col gap-2"><label htmlFor={`revisao-${campo}`} className="text-sm font-semibold">{rotulos[campo]}</label><select id={`revisao-${campo}`} className={classesCampo} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)}><option value="">Nenhuma imagem</option>{Object.keys(imagensDisponiveis).map((id, i) => <option key={id} value={id}>Imagem {i + 1}</option>)}</select>{valores[campo] && imagensDisponiveis[valores[campo]] && <a href={imagensDisponiveis[valores[campo]]} target="_blank" rel="noreferrer" className="text-sm text-laranja-escuro underline">Visualizar {rotulos[campo].toLowerCase()}</a>}{detalhes(campo)}{campo === "capa" && gerarCapa && <Botao type="button" variante="secundario" onClick={() => void executar("gerarCapa")}>Criar modelo de capa do Merc</Botao>}{erroCampo(campo) && <p role="alert" className="text-sm text-perigo">{erroCampo(campo)}</p>}</div>)}
+      {(["logo", "capa"] as const).map(campo => <div key={campo} className="flex flex-col gap-2">
+        <label htmlFor={`revisao-${campo}`} className="text-sm font-semibold">{rotulos[campo]}</label>
+        <select id={`revisao-${campo}`} className={classesCampo} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)}>
+          <option value="">Nenhuma imagem</option>
+          {Object.keys(imagensDisponiveis).map((id, i) => {
+            const logo = rascunho.campos.logo;
+            const doWhatsapp = (logo.origem?.fonte === "whatsapp" && logo.valor === id) || (logo.sugestao?.origem.fonte === "whatsapp" && logo.sugestao.valor === id);
+            return <option key={id} value={id}>{doWhatsapp ? "Foto do WhatsApp Business" : `Imagem ${i + 1}`}</option>;
+          })}
+        </select>
+        {valores[campo] && imagensDisponiveis[valores[campo]] && <a href={imagensDisponiveis[valores[campo]]} target="_blank" rel="noreferrer" className="w-fit rounded-lg border border-borda p-2 focus-visible:outline-2 focus-visible:outline-offset-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={imagensDisponiveis[valores[campo]]} alt={`Prévia ${campo === "logo" ? "do logo" : "da capa"} da loja`} className="h-32 max-w-full object-contain" />
+        </a>}
+        {detalhes(campo)}
+        {campo === "capa" && gerarCapa && <Botao type="button" variante="secundario" onClick={() => void executar("gerarCapa")}>Criar modelo de capa do Merc</Botao>}
+        {erroCampo(campo) && <p role="alert" className="text-sm text-perigo">{erroCampo(campo)}</p>}
+      </div>)}
       <a href={linkMaps} target="_blank" rel="noreferrer" className="font-semibold text-laranja-escuro underline">Conferir no Google Maps</a>
       {fontes.map(([fonte, resultado]) => {
         if (!resultado || typeof resultado !== "object" || !("estado" in resultado) || !["indisponivel", "pendente"].includes(String(resultado.estado))) return null;

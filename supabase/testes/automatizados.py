@@ -44,6 +44,7 @@ try:
     checked(sql((root/'supabase/testes/884_loja_ia_publicacao.sql').read_text()))
     checked(sql((root/'supabase/testes/885_loja_ia_modelo_capa.sql').read_text()))
     checked(sql((root/'supabase/testes/886_loja_ia_capa_vitrine.sql').read_text()))
+    checked(sql((root/'supabase/testes/887_loja_ia_logo_whatsapp.sql').read_text()))
     checked(sql("""insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
       select 'user_ia884conc',id,'IA concorrente','Corrente','5589999040884',now() from microrregioes where slug='corrente-pi';
       insert into loja_ia_convites(usuario_id) values ('user_ia884conc');
