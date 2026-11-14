@@ -28,4 +28,22 @@ do $$ begin
   assert loja_ia_imagem_publica(current_setting('test.imagem_nova')::uuid) is null, 'imagem vazou antes da publicação';
   assert (select estado='descarte' from loja_ia_imagens where id=current_setting('test.imagem_original')::uuid), 'original não descartado';
 end $$;
+insert into vitrines_lojas(dono_id,microrregiao_id,slug,nome,cidade,tipo,status,plano)
+select id,microrregiao_id,'imagem-ia883','Teste imagem','Corrente','loja','ativa','teste' from perfis where id='user_ia883a';
+update loja_ia_rascunhos set estado='publicado', vitrine_id=(select id from vitrines_lojas where dono_id='user_ia883a') where id=current_setting('test.imagem_draft')::uuid;
+insert into loja_ia_imagens_vinculos(imagem_id,vitrine_id,uso)
+select current_setting('test.imagem_nova')::uuid, id, 'capa' from vitrines_lojas where dono_id='user_ia883a';
+update vitrines_lojas set banner_tipo='foto',banner_url='/api/loja/imagem/'||current_setting('test.imagem_nova'),banner_aki_posicao=50 where dono_id='user_ia883a';
+update loja_ia_imagens set criado_em=now()-interval '2 days' where id=current_setting('test.imagem_nova')::uuid;
+do $$ begin
+  assert loja_ia_imagem_publica(current_setting('test.imagem_nova')::uuid) is not null, 'banner visível negado';
+  assert vitrine_publica('imagem-ia883')->>'banner_url'='/api/loja/imagem/'||current_setting('test.imagem_nova'), 'banner público diverge da RPC';
+  assert loja_ia_marcar_descarte(current_setting('test.imagem_nova')::uuid) is null, 'banner vigente descartado';
+end $$;
+update vitrines_lojas set banner_tipo='modelo' where dono_id='user_ia883a';
+do $$ begin assert loja_ia_imagem_publica(current_setting('test.imagem_nova')::uuid) is null, 'banner oculto exposto'; assert vitrine_publica('imagem-ia883')->>'banner_url' is null, 'banner oculto na RPC'; end $$;
+update vitrines_lojas set banner_tipo='foto',status='suspensa',arquivada_em=now() where dono_id='user_ia883a';
+do $$ begin assert loja_ia_imagem_publica(current_setting('test.imagem_nova')::uuid) is null, 'vitrine arquivada exposta'; end $$;
+update vitrines_lojas set arquivada_em=null,excluida_em=now() where dono_id='user_ia883a';
+do $$ begin assert loja_ia_imagem_publica(current_setting('test.imagem_nova')::uuid) is null, 'vitrine excluída exposta'; end $$;
 rollback;
