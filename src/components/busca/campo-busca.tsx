@@ -17,6 +17,7 @@ export function CampoBusca({
   sugestoes = false,
   regiao = "",
   toqueAmplo = false,
+  placeholder,
 }: {
   valor?: string;
   /** Mostra o rótulo como título acima (Início). Senão fica só para o leitor de tela. */
@@ -31,6 +32,7 @@ export function CampoBusca({
   /** Cidade escolhida: ao trocar, o campo recomeça e esquece as sugestões da cidade anterior. */
   regiao?: string;
   toqueAmplo?: boolean;
+  placeholder?: string;
 }) {
   return (
     <form action={caminho} method="get" role="search" className="flex flex-col gap-2">
@@ -43,14 +45,14 @@ export function CampoBusca({
       <div className={`relative flex items-center gap-2 rounded-card bg-cartao pl-3 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${toqueAmplo ? "h-[50px] border border-borda-campo md:h-10 md:pr-1" : "h-12 border-2 border-beringela pr-1 md:h-10"}`}>
         <Search className="size-5 shrink-0 text-beringela @max-[12rem]/busca-topo:hidden" aria-hidden />
         {sugestoes ? (
-          <EntradaComSugestoes key={`${regiao}|${valor}`} id={id} valor={valor} autoFocus={autoFocus} className={ESTILO_ENTRADA} placeholder={toqueAmplo ? "Buscar anúncios" : undefined} />
+          <EntradaComSugestoes key={`${regiao}|${valor}`} id={id} valor={valor} autoFocus={autoFocus} className={ESTILO_ENTRADA} placeholder={placeholder ?? (toqueAmplo ? "Buscar anúncios" : undefined)} />
         ) : (
           <input
             id={id}
             type="search"
             name="q"
             defaultValue={valor}
-            placeholder={toqueAmplo ? "Buscar anúncios" : "Ex.: moto, geladeira, casa"}
+            placeholder={placeholder ?? (toqueAmplo ? "Buscar anúncios" : "Ex.: moto, geladeira, casa")}
             enterKeyHint="search"
             autoComplete="off"
             maxLength={120}

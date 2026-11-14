@@ -8,14 +8,14 @@ const PASSOS = [
   { icone: <MessageCircle />, titulo: "3. Você escolhe com quem falar" },
 ];
 
-// T26 para quem ainda não entrou: o Radar em 3 passos e o botão para pedir. Modo fácil (texto 18px, botão 48px).
-export function ExplicacaoRadar({ textoBusca }: { textoBusca?: string | null }) {
+// Explica o Radar a visitantes e a quem abriu a ajuda.
+export function ExplicacaoRadar({ textoBusca, visitante = true }: { textoBusca?: string | null; visitante?: boolean }) {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-4">
       <header className="flex flex-col gap-2">
         <h1 className="flex items-center gap-2 text-titulo font-semibold text-beringela">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
-          Estou procurando…
+          Como funciona o Radar
         </h1>
         <p className="text-base text-texto-suave">Diga o que precisa. As lojas da região te respondem.</p>
       </header>
@@ -29,10 +29,10 @@ export function ExplicacaoRadar({ textoBusca }: { textoBusca?: string | null }) 
           </li>
         ))}
       </ol>
-      <Botao href={linkPedirRadar(textoBusca)} larguraTotal icone={<Megaphone />}>
-        Estou procurando…
+      <Botao href={linkPedirRadar(textoBusca)} larguraTotal tamanho="toque" icone={<Megaphone />}>
+        Pedir no Radar
       </Botao>
-      <p className="text-center text-base text-texto-suave">Entre na sua conta para fazer um pedido grátis.</p>
+      {visitante && <p className="text-base text-texto-suave">Entre na sua conta para fazer um pedido grátis.</p>}
     </main>
   );
 }

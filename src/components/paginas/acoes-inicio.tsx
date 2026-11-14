@@ -1,41 +1,23 @@
-import Link from "next/link";
-import { ChevronRight, Plus, Radar } from "lucide-react";
-import type { ReactNode } from "react";
-import { linkPedirRadar } from "@/lib/rotas";
+import { Info, Plus } from "lucide-react";
+import { Botao, classesBotao } from "@/components/ui/botao";
+import { LINK_RADAR, linkPedirRadar } from "@/lib/rotas";
 
-const ACAO =
-  "olaki-toque flex h-full min-h-12 min-w-0 items-center gap-2 rounded-card border px-2 py-1.5 " +
-  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:gap-3 md:px-4";
-
-function Acao({ href, icone, chamada, acao, principal = false }: { href: string; icone: ReactNode; chamada: string; acao: string; principal?: boolean }) {
-  return (
-    <Link href={href} className={`${ACAO} ${principal ? "border-laranja bg-laranja text-beringela hover:brightness-95" : "border-beringela bg-beringela text-cartao hover:brightness-110"}`}>
-      <span className={`grid size-8 shrink-0 place-items-center rounded-campo [&>svg]:size-4 md:size-9 ${principal ? "bg-cartao/55" : "bg-cartao/15"}`} aria-hidden>{icone}</span>
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-sm leading-4 font-bold [overflow-wrap:anywhere] md:text-base md:leading-5">{acao}</span>
-        <span className="text-xs leading-4 [overflow-wrap:anywhere]">{chamada}</span>
-      </span>
-      <ChevronRight className="hidden size-4 shrink-0 min-[390px]:block" aria-hidden />
-    </Link>
-  );
+export function AnunciarInicio() {
+  return <Botao href="/anunciar" tamanho="toque" icone={<Plus />} className="self-start">Anunciar</Botao>;
 }
 
-export function AcoesInicio({
-  radar,
-  venderPrimeiro = false,
-}: {
-  /** Textos do bloco do Radar no painel (chamada curta e botão). null = bloco desligado: só "Anunciar". */
-  radar: { chamada: string; botao: string } | null;
-  /** Segue a ordem dos blocos no painel ("recentes" antes de "radar"). */
-  venderPrimeiro?: boolean;
-}) {
-  const pedir = radar && <li key="radar" className="min-w-0"><Acao href={linkPedirRadar()} icone={<Radar />} chamada={radar.chamada} acao={radar.botao} /></li>;
-  const vender = <li key="vender" className="min-w-0"><Acao href="/anunciar" icone={<Plus />} chamada="Quer vender?" acao="Anunciar" principal /></li>;
+export function RadarInicio({ titulo, texto, botao }: { titulo: string; texto: string; botao: string }) {
   return (
-    <nav aria-label="Pedir no Radar ou anunciar">
-      <ul className={`grid gap-2 ${radar ? "grid-cols-2" : ""}`}>
-        {venderPrimeiro ? [vender, pedir] : [pedir, vender]}
-      </ul>
-    </nav>
+    <section aria-labelledby="titulo-radar-inicio" className="flex min-w-0 flex-col gap-3 rounded-card bg-beringela p-4 text-white lg:min-h-64">
+      <div className="flex items-start justify-between gap-2">
+        <h2 id="titulo-radar-inicio" className="min-w-0 pt-2 text-lg leading-snug font-semibold [overflow-wrap:anywhere]">{titulo}</h2>
+        <a href={`${LINK_RADAR}?como-funciona=1`} aria-label="Como funciona o Radar" title="Como funciona o Radar"
+          className={classesBotao("texto", false, "-mt-2 -mr-2 shrink-0 px-0 text-white! focus-visible:outline-white hover:bg-white/15", "toque")}>
+          <Info className="size-5" aria-hidden />
+        </a>
+      </div>
+      <p className="min-w-0 text-base leading-relaxed text-selecao [overflow-wrap:anywhere]">{texto}</p>
+      <Botao href={linkPedirRadar()} tamanho="toque" className="self-start lg:mt-auto lg:w-full">{botao}</Botao>
+    </section>
   );
 }

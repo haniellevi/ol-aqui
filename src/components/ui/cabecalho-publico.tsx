@@ -49,7 +49,7 @@ export async function CabecalhoPublico() {
 
         <MenuCidades cidade={cidade} regiao={regiao?.id} cidades={cidades} />
 
-        <div className="@container/busca-topo ml-2 hidden max-w-xl min-w-0 flex-1 md:block">
+        <div className="busca-cabecalho @container/busca-topo ml-2 hidden max-w-xl min-w-0 flex-1 md:block">
           <CampoBusca id="busca-topo" sugestoes regiao={`${regiao?.id ?? ""}|${cidade ?? ""}`} />
         </div>
 

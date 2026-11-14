@@ -17,14 +17,14 @@ export async function LojasDaRegiao({
   /** Árvore completa de categorias, para subir de qualquer categoria até a de cima. */
   arvore: CategoriaLeve[];
   limite?: number;
-  /** vem do painel (tela 12, home_blocos); sem ele, "LOJAS DESTAQUE DA REGIÃO" */
+  /** vem do painel (tela 12, home_blocos); sem ele, "DESTAQUES DA REGIÃO" */
   titulo?: string;
 }) {
   const lojas = await lojasCatalogo(regiao, null, limite);
   const { porLoja, tipos } = tiposDasLojas(lojas, await categoriasDasLojas(lojas.map((l) => l.id)), arvore);
   return (
     <FaixaLojas
-      titulo={titulo ?? "LOJAS DESTAQUE DA REGIÃO"}
+      titulo={titulo ?? "DESTAQUES DA REGIÃO"}
       tipos={tipos}
       lojas={lojas.map((l) => ({ id: l.id, slug: l.slug, nome: l.nome, logo_url: l.logo_url, verificada: l.verificada, tipos: porLoja.get(l.id) ?? [] }))}
     />

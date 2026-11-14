@@ -52,11 +52,12 @@ test('início apresenta região, busca GET acessível e destinos das categorias'
   const html = await htmlInicio();
   assert.match(html, /<h1[^>]*>Anúncios em (<!-- -->)?Corrente e região<\/h1>/);
   assert.match(html, /<form[^>]*role="search"[^>]*action="\/busca"/);
+  assert.match(html, /<details[^>]*>.*<summary[^>]*>.*Categorias.*aria-label="Categorias de anúncios"/);
   for (const href of ['/c/veiculos', '/c/pet', '/categorias']) assert.ok(html.includes(`href="${href}"`));
 });
 test('início mostra as lojas no topo do feed, sem busca, com tipo de loja e um só "Ver todas"', async () => {
   const html = await htmlInicio({ lojas: LOJAS, categoriasLojas: new Map([['l1', ['c21', 'c21']], ['l2', ['c1']]]), anuncios: [{ id: 'a1', titulo: 'Mesa' }] });
-  assert.match(html, /id="titulo-lojas"[^>]*>LOJAS DESTAQUE DA REGIÃO<\/h2><a\b[^>]*href="\/lojas"[^>]*>(<span[^>]*>)?Ver todas<\//);
+  assert.match(html, /id="titulo-lojas"[^>]*>DESTAQUES DA REGIÃO<\/h2><a\b[^>]*href="\/lojas"[^>]*>(<span[^>]*>)?Ver todas<\//);
   assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
   assert.doesNotMatch(html, /busca-loja|Buscar loja/);
   assert.match(html, /role="group" aria-label="Tipo de loja"/);
@@ -88,14 +89,18 @@ test('início com o bloco de lojas desligado mantém um acesso ao catálogo', as
 test('início destaca os atalhos do Radar e de Anunciar', async () => {
   for (const anuncios of [[], [{ id: 'a1', titulo: 'Mesa da região' }]]) {
     const html = await htmlInicio({ anuncios });
-    assert.match(html, /<nav aria-label="Pedir no Radar ou anunciar">/);
+    assert.match(html, /aria-labelledby="titulo-radar-inicio"/);
     assert.equal((html.match(/href="\/radar\/pedir"/g) ?? []).length, 1);
-    assert.match(html, /Estou procurando.*Não achou\?/);
-    assert.match(html, />Anunciar<.*Quer vender\?/);
+    assert.match(html, /Procurando algo\?/);
+    assert.match(html, /aria-label="Como funciona o Radar"/);
+    assert.match(html, /podem responder com ofertas/);
+    assert.match(html, />Anunciar</);
     assert.match(html, /bg-laranja/);
     assert.match(html, /bg-selecao/);
     assert.doesNotMatch(html, /titulo-vender|>Exemplo<|Anunciar grátis|Tem algo parado em casa/);
-    assert.ok(html.indexOf('Pedir no Radar ou anunciar') < html.indexOf('titulo-recentes'));
+    assert.ok(html.indexOf('titulo-lojas') < html.indexOf('href="/anunciar"'));
+    assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('aria-label="Filtros rápidos"'));
+    assert.ok(html.indexOf('aria-label="Filtros rápidos"') < html.indexOf('titulo-recentes'));
   }
 });
 test('início vazio mostra a grade vazia com saída para anunciar', async () => {
@@ -129,7 +134,7 @@ test('início respeita textos, ordem e visibilidade definidos no painel', async 
   assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('href="/radar/pedir"'));
   const oculto = await htmlInicio({ blocos: blocos.map(b => ({ ...b, ativo: b.chave !== 'radar' })) });
   assert.doesNotMatch(oculto, /href="\/radar\/pedir"|Pedido em/);
-  assert.match(oculto, /Quer vender\?/);
+  assert.match(oculto, />Anunciar</);
 });
 test('início sem região mantém busca e não inventa localização', async () => {
   const pagina = inicio({ regiao: null });
@@ -389,4 +394,15 @@ test('após confirmar o WhatsApp, a etapa de termos devolve à ação original',
     const formulario = tela.props.children.find(e => e?.type === 'ConfirmarWhatsapp');
     assert.equal(formulario.props.destino, esperado);
   }
+});
+
+test('ajuda do Radar explica como pedir para quem já está autenticado', async () => {
+  const { default: pagina } = carregar('src/app/radar/page.tsx', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_logado' }) },
+    '@/lib/perfil': { garantirPerfil: async () => { throw new Error('A ajuda não precisa consultar o perfil'); } },
+  });
+  const html = renderToStaticMarkup(await pagina({ searchParams: Promise.resolve({ 'como-funciona': '1' }) }));
+  assert.match(html, /Como funciona o Radar/);
+  assert.match(html, /href="\/radar\/pedir"/);
+  assert.doesNotMatch(html, /Entre na sua conta/);
 });
