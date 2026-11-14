@@ -44,7 +44,7 @@ export function PropostasRecebidas({
             {propostas.length === 1 ? "1 proposta" : `${propostas.length} propostas`}
           </span>
         </h2>
-        <AtualizarRadar className="min-h-11! px-2" />
+        <AtualizarRadar tamanho="toque" className="px-2" />
       </header>
       {lista.length === 0 ? (
         <Vazio
@@ -52,7 +52,7 @@ export function PropostasRecebidas({
           titulo="Nenhuma proposta ainda"
           texto={modoPrazo ? "Você recebe um aviso quando chegar uma oferta." : "As lojas que se interessarem vão te chamar no WhatsApp."}
         >
-          <Botao href="/busca" variante="secundario" className="min-h-11!">
+          <Botao href="/busca" variante="secundario" tamanho="toque">
             Procurar nos anúncios
           </Botao>
         </Vazio>
@@ -60,10 +60,10 @@ export function PropostasRecebidas({
         <>
           {lista.length > 1 && (
             <div className="flex flex-wrap gap-2" role="group" aria-label="Ordenar propostas">
-              <Chip className="min-h-11!" ativo={ordem === "preco"} onClick={() => setOrdem("preco")}>
+              <Chip tamanho="toque" ativo={ordem === "preco"} onClick={() => setOrdem("preco")}>
                 Menor preço
               </Chip>
-              <Chip className="min-h-11!" ativo={ordem === "novas"} onClick={() => setOrdem("novas")}>
+              <Chip tamanho="toque" ativo={ordem === "novas"} onClick={() => setOrdem("novas")}>
                 Mais novas
               </Chip>
             </div>
@@ -167,17 +167,17 @@ function CartaoProposta({ p, podeEscolher }: { p: PropostaRecebida; podeEscolher
       {(podeEscolher || (p.anuncio_id && p.anuncio_titulo)) && (
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           {podeEscolher && (
-            <Botao variante="whatsapp" className="min-h-11!" icone={<MessageCircle />} onClick={chamar} carregando={abrindo} textoCarregando="Abrindo o WhatsApp...">
+            <Botao variante="whatsapp" tamanho="toque" icone={<MessageCircle />} onClick={chamar} carregando={abrindo} textoCarregando="Abrindo o WhatsApp...">
               Chamar no WhatsApp
             </Botao>
           )}
           {p.anuncio_id && p.anuncio_titulo && (
-            <Botao href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} aria-label={`Ver anúncio: ${formatarNome(p.anuncio_titulo)}`} variante="secundario" className="min-h-11!">
+            <Botao href={linkAnuncio(p.anuncio_id, p.anuncio_titulo, p.anuncio_slug)} aria-label={`Ver anúncio: ${formatarNome(p.anuncio_titulo)}`} variante="secundario" tamanho="toque">
               Ver anúncio
             </Botao>
           )}
           {podeEscolher && linkContato && (
-            <Botao href={linkContato} target="_blank" rel="noopener noreferrer" variante="secundario" className="min-h-11!">Continuar no WhatsApp</Botao>
+            <Botao href={linkContato} target="_blank" rel="noopener noreferrer" variante="secundario" tamanho="toque">Continuar no WhatsApp</Botao>
           )}
         </div>
       )}

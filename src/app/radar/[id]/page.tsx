@@ -40,7 +40,7 @@ export default async function PedidoLojaPage({
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-3 sm:gap-4 sm:px-6">
         {voltar}
         <Vazio titulo="Este pedido não está mais no ar" texto="O comprador já resolveu ou o prazo acabou. Veja outros pedidos da região.">
-          <Botao href={`${LINK_RADAR}?aba=regiao`} className="min-h-11! self-start">
+          <Botao href={`${LINK_RADAR}?aba=regiao`} tamanho="toque" className="self-start">
             Ver pedidos na região
           </Botao>
         </Vazio>
@@ -113,7 +113,7 @@ export default async function PedidoLojaPage({
   } else if (!conta?.vitrine) {
     rodape = (
       <Vazio icone={<Store />} titulo="Você vende?" texto="Crie uma vitrine para começar a vender. Confira como receber pedidos no Radar.">
-        <Botao href="/quero-vender" className="min-h-11! self-start">
+        <Botao href="/quero-vender" tamanho="toque" className="self-start">
           Quero vender
         </Botao>
       </Vazio>
@@ -121,7 +121,7 @@ export default async function PedidoLojaPage({
   } else if (!pedido.mesma_regiao) {
     rodape = (
       <Vazio icone={<MapPinOff />} titulo="Pedido de outra região" texto="Você só pode mandar proposta para compradores da região da sua loja.">
-        <Botao href={`${LINK_RADAR}?aba=regiao`} variante="secundario" className="min-h-11! self-start">
+        <Botao href={`${LINK_RADAR}?aba=regiao`} variante="secundario" tamanho="toque" className="self-start">
           Ver pedidos da minha região
         </Botao>
       </Vazio>
@@ -243,7 +243,7 @@ function Planos({ planos, titulo }: { planos: PlanoRadar[]; titulo: string }) {
           ))}
         </ul>
       )}
-      <Botao href={`${LINK_PLANOS}?origem=radar`} className="min-h-11! self-start">
+      <Botao href={`${LINK_PLANOS}?origem=radar`} tamanho="toque" className="self-start">
         Ver planos
       </Botao>
     </section>

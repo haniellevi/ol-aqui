@@ -7,6 +7,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { Botao } from "@/components/ui/botao";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableRowHead } from "@/components/ui/table";
 import { Aviso, Cartao, estiloCampo } from "@/components/admin/ui";
+import { ExemplosControles } from "./exemplos-controles";
 import { ExemploConfirmar } from "./exemplo-confirmar";
 
 // Página de peças: o que o app usa para montar as telas. Serve para conferir a régua num lugar só.
@@ -27,6 +28,9 @@ export default function PaginaPecas() {
   return (
     <div className="flex max-w-xl flex-col gap-5">
       <h1 className="text-titulo font-semibold text-beringela">Peças do design</h1>
+
+      <ExemplosControles />
+      <Separator />
 
       <section className="flex flex-col gap-3">
         <h2 className="text-xl font-semibold">Selos</h2>
@@ -79,7 +83,7 @@ export default function PaginaPecas() {
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableRowHead>Outubro</TableRowHead>
+                <TableRowHead>Outubro em Corrente e cidades vizinhas</TableRowHead>
                 <TableCell className="text-right">12</TableCell>
                 <TableCell className="text-right">R$ 588,00</TableCell>
               </TableRow>

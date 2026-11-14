@@ -85,7 +85,7 @@ function TableRowHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       scope="row"
       data-slot="table-row-head"
-      className={cn("px-3 py-2 text-left align-middle font-medium text-beringela", className)}
+      className={cn("px-3 py-2 text-left align-middle font-medium text-beringela [overflow-wrap:anywhere]", className)}
       {...props}
     />
   )

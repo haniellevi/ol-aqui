@@ -198,7 +198,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
       )}
       {podeEditar && (
         <div className="flex flex-col gap-2">
-          <Botao className="min-h-11! self-start max-sm:w-full" variante={minha ? "secundario" : "primario"} disabled={ocupado} onClick={() => { setErro(null); setAberta(true); }} icone={minha ? <Pencil /> : <Send />}>
+          <Botao tamanho="toque" className="self-start max-sm:w-full" variante={minha ? "secundario" : "primario"} disabled={ocupado} onClick={() => { setErro(null); setAberta(true); }} icone={minha ? <Pencil /> : <Send />}>
             {minha ? "Mudar minha proposta" : "Propor Produto"}
           </Botao>
           {!minha && restantes != null && (
@@ -262,7 +262,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
                   )}
                   <Botao
                     variante="secundario"
-                    className="min-h-11! min-w-0 flex-1 whitespace-normal"
+                    tamanho="toque" className="min-w-0 flex-1 whitespace-normal"
                     icone={<ImagePlus />}
                     onClick={() => arquivo.current?.click()}
                     disabled={ocupado}
@@ -312,7 +312,7 @@ export function FolhaPropor({ pedidoId, modoPrazo, podeEditar, podeChamar, abrir
 
               <Botao
                 type="submit"
-                className="min-h-11!"
+                tamanho="toque"
                 larguraTotal
                 variante={modoPrazo ? "primario" : "whatsapp"}
                 carregando={enviando}

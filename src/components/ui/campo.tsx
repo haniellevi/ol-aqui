@@ -19,7 +19,7 @@ type Comum = {
   /** Mostra "(opcional)" ao lado do rótulo. */
   opcional?: boolean;
   /** "grande" = Modo fácil do Radar: rótulo, texto, erro e dica em 18px e caixa de 48px. */
-  tamanho?: "normal" | "grande";
+  tamanho?: "normal" | "toque" | "grande";
   className?: string;
 };
 
@@ -30,17 +30,17 @@ export type CampoProps = ComoInput | ComoTexto;
 
 /** Use `multilinha` para descrição (textarea). Os outros props vão direto para o input. */
 export function Campo(props: CampoProps) {
-  const { rotulo, name, erro, dica, prefixo, opcional, tamanho = "normal", className = "", id: idProp, multilinha, ...resto } = props;
+  const { rotulo, name, erro, dica, prefixo, opcional, tamanho = "normal", className = "", id: idProp, multilinha, "aria-describedby": descricao, "aria-invalid": invalido, ...resto } = props;
   const grande = tamanho === "grande";
   const letra = grande ? "text-facil" : "text-sm";
   const id = idProp ?? `campo-${name}`;
   const idDica = dica ? `${id}-dica` : undefined;
   const idErro = erro ? `${id}-erro` : undefined;
-  const descritoPor = [idErro, idDica].filter(Boolean).join(" ") || undefined;
-  const aria = { "aria-invalid": erro ? true : undefined, "aria-describedby": descritoPor };
+  const descritoPor = [idErro, idDica, descricao].filter(Boolean).join(" ") || undefined;
+  const aria = { "aria-invalid": erro ? true : invalido, "aria-describedby": descritoPor };
 
   return (
-    <div className={`flex flex-col gap-1 ${className}`}>
+    <div className={`flex min-w-0 flex-col gap-1 [overflow-wrap:anywhere] ${className}`}>
       <label htmlFor={id} className={`${grande ? "text-facil" : "text-rotulo"} font-semibold text-texto`}>
         {rotulo}
         {opcional && <span className="ml-1 font-normal text-texto-suave">(opcional)</span>}
@@ -54,7 +54,7 @@ export function Campo(props: CampoProps) {
         {multilinha ? (
           <Textarea {...(resto as ComponentProps<"textarea">)} {...aria} id={id} name={name} className={grande ? "text-facil leading-7" : undefined} />
         ) : (
-          <Input {...(resto as ComponentProps<"input">)} {...aria} id={id} name={name} className={cn(prefixo && (grande ? "pl-12" : "pl-11"), grande && "h-12! text-facil")} />
+          <Input {...(resto as ComponentProps<"input">)} {...aria} id={id} name={name} className={cn(prefixo && (grande ? "pl-12" : "pl-11"), grande && "h-12! text-facil", tamanho === "toque" && "h-toque!")} />
         )}
       </div>
       {erro && (

@@ -1,10 +1,12 @@
 "use client"
 
 import * as React from "react"
+import { X } from "lucide-react"
+import { Botao } from "@/components/ui/botao"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
 
 // Folha: no celular sobe de baixo e fecha arrastando para baixo (Drawer);
 // no computador é a janela do meio (Dialog). Mesmo conteúdo nos dois.
@@ -43,14 +45,19 @@ function FolhaContent({
 }: {
   className?: string
   children: React.ReactNode
-  /** Só vale no computador; no celular fecha arrastando ou tocando fora. */
+  /** Exibe o botão Fechar no celular e no computador. */
   showCloseButton?: boolean
 }) {
   const celular = React.useContext(NoCelular)
   if (!celular) return <DialogContent className={className} showCloseButton={showCloseButton}>{children}</DialogContent>
   return (
-    <DrawerContent className="rounded-t-folha border-border pt-2">
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto p-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom))] text-base">{children}</div>
+    <DrawerContent className="rounded-t-folha border-border pt-2 motion-reduce:transition-none">
+      <div className="flex min-h-0 flex-col gap-3 overflow-y-auto p-4 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom))] text-base [overflow-wrap:anywhere]">
+        {showCloseButton && (
+          <DrawerClose render={<Botao variante="texto" tamanho="toque" className="self-end px-2" icone={<X />}>Fechar</Botao>} />
+        )}
+        {children}
+      </div>
     </DrawerContent>
   )
 }

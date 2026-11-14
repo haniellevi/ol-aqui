@@ -40,7 +40,7 @@ export function DestaquePrazo({ pedidoId, propostas, vencimento }: { pedidoId: s
       <h2 id="titulo-achou" className="text-2xl font-semibold text-beringela">Você achou o que procurava?</h2>
       <p className="text-lg text-texto">{vencimento}. Se ainda precisa, ele fica mais 15 dias no ar.</p>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        <Botao className="min-h-11!" icone={<CalendarPlus />} carregando={pendente} textoCarregando="Salvando..." onClick={aindaPreciso}>
+        <Botao tamanho="toque" icone={<CalendarPlus />} carregando={pendente} textoCarregando="Salvando..." onClick={aindaPreciso}>
           Ainda preciso
         </Botao>
         <FolhaResolver pedidoId={pedidoId} propostas={propostas} compacto />
@@ -116,12 +116,12 @@ export function AcoesPedido({
   return <section className="flex flex-col gap-2 border-t border-borda pt-3 sm:flex-row sm:flex-wrap sm:items-center" aria-label="Ações do pedido">
     {podeResolver && <FolhaResolver pedidoId={pedidoId} propostas={propostas} compacto />}
     {podeArquivar && (
-      <Botao variante="secundario" className="min-h-11!" icone={arquivado ? <ArchiveRestore /> : <Archive />} disabled={pendente}
+      <Botao variante="secundario" tamanho="toque" icone={arquivado ? <ArchiveRestore /> : <Archive />} disabled={pendente}
         onClick={() => abrir(arquivado ? "desarquivar" : "arquivar")}>
         {arquivado ? "Retirar do arquivo" : aberto ? "Encerrar e arquivar" : "Arquivar pedido"}
       </Botao>
     )}
-    {podeCancelar && <Botao variante="texto" className="min-h-11!" icone={<XCircle />} disabled={pendente} onClick={() => abrir("cancelado")}>Cancelar pedido</Botao>}
+    {podeCancelar && <Botao variante="texto" tamanho="toque" icone={<XCircle />} disabled={pendente} onClick={() => abrir("cancelado")}>Cancelar pedido</Botao>}
     <AlertDialog open={janela} onOpenChange={(abrir) => { if (!abrir && !trava.current) setJanela(false); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -130,8 +130,8 @@ export function AcoesPedido({
         </AlertDialogHeader>
         {erro && <Alert variant="destructive" className="text-lg">{erro}</Alert>}
         <AlertDialogFooter>
-          <Botao variante="secundario" disabled={pendente} onClick={() => setJanela(false)} className="min-h-11!">Voltar</Botao>
-          <Botao variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar} className="min-h-11!">{textos.botao}</Botao>
+          <Botao variante="secundario" disabled={pendente} onClick={() => setJanela(false)} tamanho="toque">Voltar</Botao>
+          <Botao variante={acao === "cancelado" ? "perigo" : "primario"} carregando={pendente} textoCarregando="Salvando..." onClick={confirmar} tamanho="toque">{textos.botao}</Botao>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
