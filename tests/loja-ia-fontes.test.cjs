@@ -86,3 +86,20 @@ test('mantém links informados mesmo quando a coleta externa falha', async () =>
 test('lê descrição com atributos em ordem diferente', () => {
  assert.equal(fontes().extrairTextoPublico('<meta content="Loja de artesanato" property="og:description">'), 'Loja de artesanato');
 });
+
+test('página pública acessível gera evidência de descrição e endereço de origem', async () => {
+ const { EventEmitter } = require('node:events');
+ const mocks = {
+  'node:dns/promises': { lookup: async () => [{ address: '8.8.8.8', family: 4 }] },
+  'node:https': { request: (_url, _options, receber) => {
+   const req = new EventEmitter(); req.destroy = e => req.emit('error', e); req.end = () => {
+    const res = new EventEmitter(); res.statusCode = 200; res.headers = { 'content-type': 'text/html; charset=utf-8' }; receber(res);
+    res.emit('data', Buffer.from('<meta name="description" content="Produtos artesanais">')); res.emit('end'); req.emit('close');
+   }; return req;
+  } },
+ };
+ const { coletarFonte } = carregar('src/lib/loja-ia/fontes.ts', mocks);
+ const r = await coletarFonte({ fonte: 'site', entrada: { nome: 'Loja', cidade: 'Recife', site: 'https://loja.exemplo', materiais: [] } });
+ assert.equal(r.estado, 'ok'); assert.equal(r.evidencias.find(e => e.campo === 'sobre').valor, 'Produtos artesanais');
+ assert.equal(r.evidencias.find(e => e.campo === 'sobre').origem.url, 'https://loja.exemplo/');
+});
