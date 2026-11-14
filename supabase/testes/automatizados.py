@@ -114,6 +114,8 @@ try:
     print('PASS: IA do Radar "já comprei": chave própria desligada, só mensagem do cliente com pedido dele aberto, pergunta só para o cliente, "não" vale para sempre naquele pedido e só o servidor lê', flush=True)
     checked(sql((root/'supabase/testes/820_fotos_pasta_antiga.sql').read_text()))
     checked(sql((root/'supabase/testes/830_radar_piloto.sql').read_text()))
+    checked(sql((root/'supabase/testes/850_ddd_microrregioes.sql').read_text()))
+    print('PASS: DDD da região: 67 DDD válidos, inexistentes recusados, Corrente-PI com 89 e migração sem trocar DDD preenchido', flush=True)
     print('PASS: Radar piloto: categoria obrigatória, aviso de WhatsApp só com chave e consentimento, SAIR desliga e cancela, fila pula quem saiu, reenvio dentro da janela e Meu plano', flush=True)
     checked(sql((root/'supabase/testes/840_whatsapp_sair_completo.sql').read_text()))
     print('PASS: SAIR completo: conferência antes de cada envio, corrida com SAIR durante o envio, uma resposta por número e dia (fora da janela), sem conta não responde e permissões', flush=True)

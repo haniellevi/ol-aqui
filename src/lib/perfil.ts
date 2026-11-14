@@ -2,6 +2,7 @@ import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { whatsappJaVinculado } from "@/lib/erros";
+import { numeroTelefone } from "@/lib/telefone";
 
 /** Formato que o Clerk usa (WebhookEvent "user" e currentUser) reduzido ao que importa. */
 type UsuarioClerk = {
@@ -16,10 +17,9 @@ type UsuarioClerk = {
 
 const REGIAO_PADRAO = "corrente-pi"; // região-piloto; o usuário poderá trocar no perfil
 
-/** "+5589999990000" → "5589999990000" (só se for celular brasileiro válido). */
+/** "+5589999990000" → "5589999990000" (só se for telefone brasileiro válido; o Clerk sempre manda com +55). */
 function whatsappDe(e164?: string) {
-  const d = (e164 ?? "").replace(/\D/g, "");
-  return /^55[1-9][0-9]9?[0-9]{8}$/.test(d) ? d : null;
+  return numeroTelefone(e164, { aceitaFixo: true });
 }
 
 /**

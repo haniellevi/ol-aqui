@@ -20,6 +20,7 @@ import { FormPedido } from "@/components/radar/form-pedido";
 import { estadoRadarIA } from "@/lib/radar-ia/uso";
 import { LINK_VOLTAR } from "@/components/radar/util";
 import { Alert } from "@/components/ui/alert";
+import { dddDaRegiao } from "@/lib/telefone-regiao";
 
 export const metadata = { title: "Estou procurando…" };
 
@@ -141,10 +142,12 @@ async function Formulario({
   // Radar v2: "Toda a região" vem marcado (docs/designs/radar-v2.md); a pessoa marca cidades no passo "Onde?".
   const cidadeEscolhida = cidadeBusca || regiao?.cidade;
   const cidadeFora = !!cidadeEscolhida && !cidades.some((c) => c.nome === cidadeEscolhida);
+  const ddd = await dddDaRegiao(microrregiaoId);
   return (
     <>
       {cidadeFora && <Alert variant="warning" role="status" className="text-facil">A cidade da busca fica fora da região do seu cadastro. Seu pedido vai para as lojas da região do seu cadastro.</Alert>}
       <FormPedido
+        ddd={ddd}
         textoInicial={texto.slice(0, 120)}
         categorias={categorias.map((c) => ({ id: c.id, nome: c.nome, filhas: c.filhas.map(({ id, nome }) => ({ id, nome })) }))}
         categoriaInicial={categoriaInicial?.id ?? null}

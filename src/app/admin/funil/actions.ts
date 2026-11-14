@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { exigirTela } from "@/lib/admin/equipe";
 import type { EstadoForm } from "@/lib/admin/estado";
 import { whatsappParaBanco } from "@/lib/admin/funil";
+import { dddDaRegiao } from "@/lib/telefone-regiao";
 import { ehUuid } from "@/lib/formato";
 import { traduzirErro } from "@/lib/erros";
 
@@ -27,11 +28,12 @@ function atualizar(id?: string) {
 export async function salvarLojista(_: EstadoForm, form: FormData): Promise<EstadoForm> {
   const { supabase, userId } = await exigirTela("funil");
   const id = String(form.get("id") ?? "");
-  const whatsapp = whatsappParaBanco(form.get("whatsapp"));
-  if (whatsapp === undefined) return { erro: "Confira o WhatsApp: DDD e os 9 dígitos do celular." };
+  // Região primeiro: o WhatsApp sem DDD usa o DDD dela.
+  const microrregiao_id = uuidOuNulo(form, "regiao");
+  const whatsapp = whatsappParaBanco(form.get("whatsapp"), await dddDaRegiao(microrregiao_id));
+  if (whatsapp === undefined) return { erro: "Confira o WhatsApp: use o DDD e o celular, ex.: (89) 99999-0000." };
   const nome_loja = txt(form, "nome_loja", 80);
   if (!nome_loja || nome_loja.length < 2) return { erro: "Escreva o nome da loja." };
-  const microrregiao_id = uuidOuNulo(form, "regiao");
   if (!microrregiao_id) return { erro: "Escolha a região." };
   const etapa = String(form.get("etapa") ?? "");
   if (!CODIGO_ETAPA.test(etapa)) return { erro: "Escolha a etapa." };

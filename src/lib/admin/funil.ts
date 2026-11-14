@@ -1,4 +1,5 @@
 // Funil de vendas de lojistas (CRM simples): tipos e regras usadas pelas telas e pelas ações.
+import { normalizarTelefone } from "@/lib/telefone";
 
 export type EtapaFunil = { codigo: string; nome: string; tipo: "aberta" | "ganho" | "perdido"; ordem: number; ativa: boolean };
 
@@ -36,12 +37,11 @@ export type OpcoesFunil = {
   responsaveis: Opcao[];
 };
 
-/** "(89) 99999-0000" → "5589999990000". Vazio → null. Inválido → undefined. */
-export function whatsappParaBanco(bruto: FormDataEntryValue | null): string | null | undefined {
-  const d = String(bruto ?? "").replace(/\D/g, "");
-  if (!d) return null;
-  const com55 = d.length === 10 || d.length === 11 ? `55${d}` : d;
-  return /^55[1-9][0-9]9?[0-9]{8}$/.test(com55) ? com55 : undefined;
+/** "(89) 99999-0000" → "5589999990000". Vazio → null. Inválido ou sem DDD (e a região não tem DDD) → undefined. */
+export function whatsappParaBanco(bruto: FormDataEntryValue | null, ddd?: string | null): string | null | undefined {
+  const texto = String(bruto ?? "");
+  if (!texto.trim()) return null;
+  return normalizarTelefone(texto, { ddd }).numero ?? undefined;
 }
 
 export const TOM_ETAPA: Record<EtapaFunil["tipo"], "secondary" | "success" | "destructive"> = {

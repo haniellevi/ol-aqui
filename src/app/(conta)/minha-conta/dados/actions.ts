@@ -7,6 +7,7 @@ import { listarCidades } from "@/lib/dados/regiao";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { sincronizarPerfil } from "@/lib/perfil";
 import { whatsappDigitado } from "@/lib/formato";
+import { dddDoPerfil, numeroComRegiao } from "@/lib/telefone-regiao";
 
 export type EstadoDados = { ok?: boolean; erro?: string; campos?: Record<string, string>; whatsappVinculado?: boolean } | null;
 const SEM_LOGIN = "Entre na sua conta para continuar.";
@@ -67,8 +68,7 @@ export async function salvarWhatsapp(_antes: EstadoDados, form: FormData): Promi
   const { userId } = await auth();
   if (!userId) return { erro: SEM_LOGIN };
   const entrada = form.get("whatsapp");
-  if (typeof entrada !== "string" || entrada.length > 30 || !/^[\d+().\s-]+$/.test(entrada) || !whatsappDigitado(entrada)) {
-    return { erro: "Confira o WhatsApp.", campos: { whatsapp: "Digite um celular brasileiro com DDD." } };
-  }
+  const numero = typeof entrada === "string" && entrada.length <= 30 ? await numeroComRegiao(entrada, () => dddDoPerfil(userId), whatsappDigitado) : null;
+  if (!numero) return { erro: "Confira o WhatsApp.", campos: { whatsapp: "Digite um celular brasileiro com DDD." } };
   return { erro: "Para salvar o contato, use Confirmar ou trocar celular e confirme o código recebido no WhatsApp." };
 }

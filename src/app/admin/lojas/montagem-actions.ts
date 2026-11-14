@@ -8,6 +8,7 @@ import { textoForm } from "@/lib/admin/gestao";
 import { ehUuid, urlAbsoluta } from "@/lib/formato";
 import { traduzirErro } from "@/lib/erros";
 import { numeroWhatsapp } from "@/lib/whatsapp/servico";
+import { dddDaLoja, numeroComRegiao } from "@/lib/telefone-regiao";
 import type { EstadoForm } from "@/lib/admin/estado";
 
 export type EstadoConviteDono = { erro?: string; link?: string; whatsapp?: string } | null;
@@ -30,8 +31,9 @@ export async function montarLoja(_: EstadoForm, form: FormData): Promise<EstadoF
 }
 
 export async function convidarDono(loja: string, _: EstadoConviteDono, form: FormData): Promise<EstadoConviteDono> {
-  const whatsapp = numeroWhatsapp(form.get("whatsapp"));
-  if (!ehUuid(loja) || !whatsapp) return { erro: "Informe o celular do dono com DDD." };
+  if (!ehUuid(loja)) return { erro: "Informe o celular do dono com DDD." };
+  const whatsapp = await numeroComRegiao(form.get("whatsapp"), () => dddDaLoja(loja), numeroWhatsapp);
+  if (!whatsapp) return { erro: "Informe o celular do dono com DDD." };
   const { supabase } = await exigirSuperAdmin();
   const { data, error } = await supabase.rpc("super_convidar_dono", { p_loja: loja, p_whatsapp: whatsapp });
   if (error || typeof data !== "string" || !ehUuid(data)) return { erro: traduzirErro(error).mensagem };
