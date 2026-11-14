@@ -166,3 +166,22 @@ test('marketing artes: renderiza PNG real nas duas dimensões', async () => {
     assert.ok(bytes.length > 1000);
   }
 });
+
+test('marketing artes: preserva nome de 80 e título de 90 caracteres sem espaços na arte real', async () => {
+  const nome = 'NomeDaLoja'.repeat(8);
+  const titulo = 'SuperTenis'.repeat(9);
+  const op = { loja: { nome, logo_url: foto }, anuncio: { titulo } };
+  const previa = rota(op);
+  assert.equal((await previa.get()).status, 200);
+  assert.ok(previa.desenho.html.includes(nome));
+  assert.ok(previa.desenho.html.includes(titulo));
+  assert.ok(previa.desenho.html.includes(`word-break:break-word">${nome}</div>`));
+  assert.ok(previa.desenho.html.includes(`word-break:break-word">${titulo}</div>`));
+  for (const formato of ['feed', 'stories']) {
+    const resposta = await rota({ ...op, imagemReal: true }).get(`?formato=${formato}`);
+    assert.equal(resposta.status, 200);
+    const bytes = Buffer.from(await resposta.arrayBuffer());
+    assert.equal(bytes.readUInt32BE(16), 1080);
+    assert.equal(bytes.readUInt32BE(20), formato === 'feed' ? 1350 : 1920);
+  }
+});

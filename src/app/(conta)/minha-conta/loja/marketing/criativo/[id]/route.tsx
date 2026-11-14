@@ -83,17 +83,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const imagem = new ImageResponse(
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", gap: 28, padding: 52, background: "#fff8f1", color: "#351332" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 24, minHeight: 100 }}>
-          {logo && <img src={logo} alt="" width={100} height={100} style={{ objectFit: "contain", borderRadius: 20 }} />}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ fontSize: 42, fontWeight: 700, lineHeight: 1.15 }}>{loja.nome.slice(0, 70)}</div>
+          {logo && <img src={logo} alt="" width={100} height={100} style={{ objectFit: "contain", borderRadius: 20, flexShrink: 0 }} />}
+          <div style={{ display: "flex", flex: 1, minWidth: 0, flexDirection: "column", gap: 8 }}>
+            <div style={{ fontSize: loja.nome.length > 50 ? 34 : 42, fontWeight: 700, lineHeight: 1.15, wordBreak: "break-word" }}>{loja.nome}</div>
             <div style={{ fontSize: 24, color: "#795973" }}>Encontre na sua região</div>
           </div>
         </div>
-        <div style={{ display: "flex", flex: 1, minHeight: 440, padding: 24, borderRadius: 30, background: "#ffffff" }}>
+        <div style={{ display: "flex", flex: 1, minHeight: 360, padding: 24, borderRadius: 30, background: "#ffffff" }}>
           <img src={foto} alt="" width={928} height={formato === "stories" ? 1070 : 500} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ display: "flex", fontSize: 58, fontWeight: 700, lineHeight: 1.12 }}>{anuncio.titulo.slice(0, 120)}</div>
+          <div style={{ display: "flex", fontSize: anuncio.titulo.length > 60 ? 48 : 58, fontWeight: 700, lineHeight: 1.12, wordBreak: "break-word" }}>{anuncio.titulo}</div>
           <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 24 }}>
             {anterior !== null && <div style={{ display: "flex", fontSize: 32, color: "#795973", textDecoration: "line-through" }}>{preco(anterior)}</div>}
             <div style={{ display: "flex", fontSize: 76, fontWeight: 700, color: "#c34916" }}>{preco(anuncio.preco_centavos)}</div>
@@ -101,7 +101,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "26px 30px", borderRadius: 24, background: "#4b1248", color: "#ffffff" }}>
           <div style={{ display: "flex", fontSize: 32, fontWeight: 700 }}>Mercado da Região</div>
-          <div style={{ display: "flex", fontSize: link.length > 70 ? 20 : 24, overflowWrap: "anywhere" }}>{link}</div>
+          <div style={{ display: "flex", fontSize: link.length > 70 ? 20 : 24, wordBreak: "break-word" }}>{link}</div>
         </div>
       </div>,
       { width: 1080, height: formato === "stories" ? 1920 : 1350, headers },
