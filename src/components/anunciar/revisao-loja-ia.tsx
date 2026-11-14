@@ -1,5 +1,6 @@
 "use client";
 
+import { linkAssistente } from "@/lib/assistente";
 import { useState } from "react";
 import type { EstadoLoja } from "@/app/(conta)/quero-vender/actions";
 import { dadosLojaIa, type CamposRascunho, type FonteLoja, type RascunhoLoja, type RespostaLojaIa } from "@/lib/loja-ia/tipos";
@@ -12,6 +13,7 @@ type NomeCampo = keyof CamposRascunho;
 type Valores = Record<NomeCampo, string>;
 type Edicoes = Partial<Record<NomeCampo, string | null>>;
 type Props = {
+  assistente?: string;
   rascunho: RascunhoLoja;
   cidades: { nome: string; uf: string }[];
   whatsappInicial: string;
@@ -40,7 +42,19 @@ export function formularioRevisao(valores: Valores): FormData {
   return form;
 }
 
-export function RevisaoLojaIa({ rascunho: inicial, cidades, whatsappInicial, avisoTeste, salvar, retentar, confirmar, imagens, linkMaps, gerarCapa, revogarWhatsapp }: Props) {
+export function LojaIaConcluida({ slug, assistente }: { slug: string; assistente?: string }) {
+  return (
+    <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4 sm:p-5" aria-live="polite">
+      <h1 className="text-titulo font-semibold text-beringela">Sua loja foi criada</h1>
+      <div className="flex flex-wrap gap-2 [&>*]:grow">
+        <Botao href={assistente ? linkAssistente("loja", assistente) : "/anunciar"} tamanho="toque">Criar primeiro anúncio</Botao>
+        <Botao href={`/loja/${encodeURIComponent(slug)}`} variante="secundario" tamanho="toque">Ver minha loja</Botao>
+      </div>
+    </section>
+  );
+}
+
+export function RevisaoLojaIa({ assistente, rascunho: inicial, cidades, whatsappInicial, avisoTeste, salvar, retentar, confirmar, imagens, linkMaps, gerarCapa, revogarWhatsapp }: Props) {
   const [rascunho, setRascunho] = useState(inicial);
   const [valores, setValores] = useState(() => valoresIniciais(inicial, whatsappInicial));
   const [base, setBase] = useState(() => valoresIniciais(inicial, whatsappInicial));
@@ -92,7 +106,7 @@ export function RevisaoLojaIa({ rascunho: inicial, cidades, whatsappInicial, avi
     } catch (e) { setErro(e instanceof Error && e.message ? e.message : "Não foi possível concluir. Tente novamente."); }
     finally { setOcupado(false); }
   }
-  if (estado?.feito) return <div role="status"><p>Sua loja foi criada.</p><a href={`/loja/${encodeURIComponent(estado.feito.slug)}`} className="font-semibold text-laranja-escuro underline">Ver minha loja</a></div>;
+  if (estado?.feito) return <LojaIaConcluida slug={estado.feito.slug} assistente={assistente} />;
   const erroCampo = (campo: NomeCampo) => estado?.campos?.[nomesForm[campo]];
   function detalhes(campo: NomeCampo) {
     const dado = rascunho.campos[campo];
@@ -111,19 +125,21 @@ export function RevisaoLojaIa({ rascunho: inicial, cidades, whatsappInicial, avi
     </div>;
   }
   const fontes = Object.entries(rascunho.fontes) as [FonteLoja, unknown][];
-  return <section className="flex flex-col gap-5" aria-busy={ocupado}>
-    <h1 className="text-xl font-semibold text-beringela">Revise sua loja</h1>
-    <p>Confira os dados e escolha o que deseja publicar.</p>
+  return <section className="flex flex-col gap-3" aria-busy={ocupado}>
+    <header>
+      <h1 className="text-titulo font-semibold text-beringela">Revise sua loja</h1>
+      <p className="mt-1 text-sm text-texto-suave">Confira os dados e escolha o que deseja publicar.</p>
+    </header>
     <AvisoErro mensagem={erro} />
-    {revogarWhatsapp && (rascunho.entrada.consultarWhatsapp || rascunho.entrada.avisarWhatsapp) && <Botao type="button" variante="secundario" disabled={ocupado} onClick={() => void executar("revogarWhatsapp")}>Retirar autorização do WhatsApp</Botao>}
-    <fieldset disabled={ocupado} className="flex min-w-0 flex-col gap-5">
+    {revogarWhatsapp && (rascunho.entrada.consultarWhatsapp || rascunho.entrada.avisarWhatsapp) && <Botao type="button" tamanho="toque" variante="secundario" disabled={ocupado} onClick={() => void executar("revogarWhatsapp")}>Retirar autorização do WhatsApp</Botao>}
+    <fieldset disabled={ocupado} className="flex min-w-0 flex-col gap-3 rounded-card border border-borda bg-cartao p-3 sm:p-4">
       {campos.filter(c => c !== "logo" && c !== "capa").map(campo => <div key={campo} className="flex flex-col gap-2">
-        {campo === "cidade" && cidades.length ? <div className="flex flex-col gap-1"><label className="text-sm font-semibold" htmlFor="revisao-cidade">Cidade da loja</label><select id="revisao-cidade" name="cidade" className={classesCampo} value={valores.cidade} onChange={e => atualizar("cidade", e.target.value)} aria-invalid={!!erroCampo("cidade")}><option value="">Escolha a cidade</option>{cidades.map(c => <option key={`${c.nome}-${c.uf}`} value={c.nome}>{c.nome} - {c.uf}</option>)}</select>{erroCampo("cidade") && <p role="alert" className="text-sm text-perigo">{erroCampo("cidade")}</p>}</div> : campo === "sobre" ? <Campo multilinha rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} maxLength={1500} rows={4} erro={erroCampo(campo)} opcional /> : <Campo rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} erro={erroCampo(campo)} opcional={!['nome','cidade','slug','whatsapp'].includes(campo)} />}
+        {campo === "cidade" && cidades.length ? <div className="flex flex-col gap-1"><label className="text-sm font-semibold" htmlFor="revisao-cidade">Cidade da loja</label><select id="revisao-cidade" name="cidade" className={`${classesCampo} h-toque!`} value={valores.cidade} onChange={e => atualizar("cidade", e.target.value)} aria-invalid={!!erroCampo("cidade")}><option value="">Escolha a cidade</option>{cidades.map(c => <option key={`${c.nome}-${c.uf}`} value={c.nome}>{c.nome} - {c.uf}</option>)}</select>{erroCampo("cidade") && <p role="alert" className="text-sm text-perigo">{erroCampo("cidade")}</p>}</div> : campo === "sobre" ? <Campo tamanho="toque" multilinha rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} maxLength={1500} rows={4} erro={erroCampo(campo)} opcional /> : <Campo tamanho="toque" rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} erro={erroCampo(campo)} opcional={!['nome','cidade','slug','whatsapp'].includes(campo)} />}
         {detalhes(campo)}
       </div>)}
       {(["logo", "capa"] as const).map(campo => <div key={campo} className="flex flex-col gap-2">
         <label htmlFor={`revisao-${campo}`} className="text-sm font-semibold">{rotulos[campo]}</label>
-        <select id={`revisao-${campo}`} className={classesCampo} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)}>
+        <select id={`revisao-${campo}`} className={`${classesCampo} h-toque!`} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)}>
           <option value="">Nenhuma imagem</option>
           {Object.keys(imagensDisponiveis).map((id, i) => {
             const logo = rascunho.campos.logo;
@@ -136,19 +152,19 @@ export function RevisaoLojaIa({ rascunho: inicial, cidades, whatsappInicial, avi
           <img src={imagensDisponiveis[valores[campo]]} alt={`Prévia ${campo === "logo" ? "do logo" : "da capa"} da loja`} className="h-32 max-w-full object-contain" />
         </a>}
         {detalhes(campo)}
-        {campo === "capa" && gerarCapa && <Botao type="button" variante="secundario" onClick={() => void executar("gerarCapa")}>Criar modelo de capa do Merc</Botao>}
+        {campo === "capa" && gerarCapa && <Botao type="button" tamanho="toque" variante="secundario" onClick={() => void executar("gerarCapa")}>Criar modelo de capa do Merc</Botao>}
         {erroCampo(campo) && <p role="alert" className="text-sm text-perigo">{erroCampo(campo)}</p>}
       </div>)}
-      <a href={linkMaps} target="_blank" rel="noreferrer" className="font-semibold text-laranja-escuro underline">Conferir no Google Maps</a>
+      <Botao href={linkMaps} target="_blank" rel="noreferrer" variante="texto" tamanho="toque" className="self-start">Conferir no Google Maps</Botao>
       {fontes.map(([fonte, resultado]) => {
         if (!resultado || typeof resultado !== "object" || !("estado" in resultado) || !["indisponivel", "pendente"].includes(String(resultado.estado))) return null;
         const pendente = resultado.estado === "pendente";
         const motivo = "motivo" in resultado && typeof resultado.motivo === "string" ? resultado.motivo : "Fonte indisponível.";
-        return <div key={fonte} className="rounded-card bg-fundo p-3"><p>{fonte}: {pendente ? "Consulta em andamento." : motivo}</p><Botao type="button" variante="secundario" disabled={pendente} onClick={() => void executar(fonte)}>Tentar novamente</Botao></div>;
+        return <div key={fonte} className="rounded-card bg-fundo p-3"><p>{fonte}: {pendente ? "Consulta em andamento." : motivo}</p><Botao type="button" tamanho="toque" variante="secundario" disabled={pendente} onClick={() => void executar(fonte)}>Tentar novamente</Botao></div>;
       })}
-      {(rascunho.estado === "processando" || fontes.some(([, resultado]) => resultado && typeof resultado === "object" && "estado" in resultado && resultado.estado === "pendente")) && <Botao type="button" variante="secundario" onClick={() => void executar("atualizar")}>Atualizar andamento</Botao>}
-      {avisoTeste && <p className="rounded-card bg-fundo p-3">{avisoTeste}</p>}
-      <div className="flex flex-wrap gap-3"><Botao type="button" variante="secundario" onClick={() => void executar("salvar")}>Salvar alterações</Botao><Botao type="button" onClick={() => void executar("confirmar")}>Criar minha loja</Botao></div>
+      {(rascunho.estado === "processando" || fontes.some(([, resultado]) => resultado && typeof resultado === "object" && "estado" in resultado && resultado.estado === "pendente")) && <Botao type="button" tamanho="toque" variante="secundario" onClick={() => void executar("atualizar")}>Atualizar andamento</Botao>}
+      {avisoTeste && <p className="rounded-campo bg-selecao px-3 py-2 text-sm text-beringela">{avisoTeste}</p>}
+      <div className="flex flex-wrap gap-2 [&>*]:grow"><Botao type="button" tamanho="toque" variante="secundario" onClick={() => void executar("salvar")}>Salvar alterações</Botao><Botao type="button" tamanho="toque" onClick={() => void executar("confirmar")}>Criar minha loja</Botao></div>
     </fieldset>
   </section>;
 }

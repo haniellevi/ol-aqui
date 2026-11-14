@@ -47,3 +47,13 @@ test('falha ao abrir criação IA volta à escolha com aviso explícito', async 
   const { abrirRascunho } = acoes(async () => ({ data: null, error: { code: 'XX000' } }));
   await assert.rejects(abrirRascunho(), erro => erro.digest?.includes('/quero-vender/loja?aviso=ia'));
 });
+
+test('entrada com IA preserva a tentativa do assistente no rascunho e na volta à escolha', async () => {
+  const tentativa = 'f4320804-3ec9-4b1b-a72d-1bbddcaca80c';
+  const sucesso = acoes(async () => ({ data: { id: 'rascunho' }, error: null }));
+  const falha = acoes(async () => ({ data: null, error: { code: 'XX000' } }));
+  await assert.rejects(sucesso.abrirRascunho(tentativa), erro =>
+    erro.digest?.includes(`/quero-vender/loja/criar-com-ia?assistente=${tentativa}`));
+  await assert.rejects(falha.abrirRascunho(tentativa), erro =>
+    erro.digest?.includes(`/quero-vender/loja?aviso=ia&assistente=${tentativa}`));
+});

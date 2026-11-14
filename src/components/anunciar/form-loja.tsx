@@ -3,7 +3,7 @@
 import { linkAssistente } from "@/lib/assistente";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { CheckCircle2, ChevronDown, Loader2, MessageCircle, Plus, Store, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, Loader2, MessageCircle, Plus, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { CadastroLojaAki } from "@/components/aki/cadastro-loja-aki";
 import { Campo } from "@/components/ui/campo";
@@ -41,6 +41,7 @@ export function FormLoja({
   cidadeInicial,
   whatsappInicial,
   nomeInicial,
+  manterAnuncios,
   avisoTeste,
   assistente,
 }: {
@@ -48,6 +49,7 @@ export function FormLoja({
   cidadeInicial: string;
   whatsappInicial: string;
   nomeInicial: string;
+  manterAnuncios: boolean;
   /** Ex.: "O teste grátis de 30 dias começa na hora." (null = não mostrar). */
   avisoTeste: string | null;
   assistente?: string;
@@ -93,32 +95,27 @@ export function FormLoja({
     const enderecoCurto = url.replace(/^https?:\/\//, "");
     const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Conheça minha loja no Mercado da Região: *${feito.nome}* ${url}`)}`;
     return (
-      <section aria-labelledby="titulo-pronta" className="flex flex-col items-center gap-4 text-center" aria-live="polite">
-        <span className="grid size-20 place-items-center rounded-full bg-sucesso-fundo text-verde-escuro" aria-hidden>
-          <CheckCircle2 className="size-10" />
+      <section aria-labelledby="titulo-pronta" className="flex flex-col items-start gap-3 rounded-card border border-borda bg-cartao p-4 sm:p-5" aria-live="polite">
+        <span className="grid size-10 place-items-center rounded-campo bg-sucesso-fundo text-verde-escuro" aria-hidden>
+          <CheckCircle2 className="size-5" />
         </span>
         <h1 id="titulo-pronta" className="text-titulo font-semibold text-beringela">
-          Sua loja foi criada!
+          Sua loja foi criada
         </h1>
-        <p className="text-base">
-          Sua vitrine: <strong className="break-all">{enderecoCurto}</strong>
-        </p>
-        <p className="text-base text-texto-suave">Acompanhe a conferência dos dados, links e contato em Minha loja.</p>
+        <a href={linkLoja(feito.slug)} className="inline-flex min-h-toque items-center break-all text-sm font-semibold text-laranja-escuro underline underline-offset-4">{enderecoCurto}</a>
+        <p className="text-sm text-texto-suave">Acompanhe a conferência dos dados, links e contato em Minha loja.</p>
         {feito.teste_expira_em && new Date(feito.teste_expira_em).getTime() > Date.now() && (
-          <p className="text-base text-texto-suave">Teste grátis até {dataCurta.format(new Date(feito.teste_expira_em))}.</p>
+          <p className="text-sm text-texto-suave">Teste grátis até {dataCurta.format(new Date(feito.teste_expira_em))}.</p>
         )}
-        <div className="flex w-full max-w-sm flex-col gap-3">
-          <Botao href={assistente ? linkAssistente("loja", assistente) : "/anunciar"} larguraTotal icone={<Plus />}>
+        <div className="grid w-full gap-2 sm:grid-cols-2">
+          <Botao href={assistente ? linkAssistente("loja", assistente) : "/anunciar"} tamanho="toque" icone={<Plus />}>
             Criar primeiro anúncio
           </Botao>
-          <Botao href="/minha-conta/loja/banner" variante="secundario" larguraTotal>
+          <Botao href="/minha-conta/loja/banner" variante="secundario" tamanho="toque">
             Criar banner com o Merc
           </Botao>
-          <Botao href={compartilhar} variante="whatsapp" larguraTotal icone={<MessageCircle />} target="_blank" rel="noopener noreferrer">
+          <Botao href={compartilhar} variante="secundario" tamanho="toque" icone={<MessageCircle />} target="_blank" rel="noopener noreferrer">
             Compartilhar no WhatsApp
-          </Botao>
-          <Botao href={linkLoja(feito.slug)} variante="secundario" larguraTotal icone={<Store />}>
-            Ver minha vitrine
           </Botao>
         </div>
       </section>
@@ -130,7 +127,7 @@ export function FormLoja({
   const textoSlug: Record<Situacao, { texto: string; cor: string } | null> = {
     vazio: null,
     conferindo: { texto: "Conferindo se está livre...", cor: "text-texto-suave" },
-    livre: { texto: "Endereço livre!", cor: "text-verde-escuro" },
+    livre: { texto: "Endereço livre", cor: "text-verde-escuro" },
     ocupado: { texto: "Esse endereço já está em uso. Escolha outro.", cor: "text-perigo" },
     invalido: { texto: "Use de 3 a 60 letras, números ou hífen.", cor: "text-perigo" },
     falhou: { texto: "Não deu para conferir agora. Você pode continuar.", cor: "text-texto-suave" },
@@ -138,117 +135,133 @@ export function FormLoja({
   const status = textoSlug[situacao];
 
   return (
-    <form onSubmit={aoEnviar(acao)} className="flex flex-col gap-5" noValidate>
+    <form onSubmit={aoEnviar(acao)} className="flex flex-col gap-3" noValidate>
+      <header>
+        <h1 className="text-titulo leading-tight font-semibold text-beringela">Dados da loja</h1>
+        <p className="mt-1 text-sm text-texto-suave">
+          {manterAnuncios ? "Seus anúncios continuam no ar." : "Crie uma vitrine com link próprio para divulgar."}
+        </p>
+      </header>
       <AvisoErro mensagem={estado?.erro?.mensagem} />
 
-      <Campo
-        rotulo="Nome da loja"
-        name="nome_loja"
-        value={nome}
-        onChange={(e) => {
-          setNome(e.target.value);
-          if (!slugEditado) setSlug(e.target.value.trim() ? limparSlug(slugDoTitulo(e.target.value)) : "");
-        }}
-        maxLength={80}
-        autoComplete="organization"
-        placeholder="Ex.: João Moto Peças"
-        erro={erroDe("nome_loja")}
-        dica={avisoComoVaiAparecer(nome)}
-      />
-
-      <CadastroLojaAki nome={nome} aplicar={(dados) => {
-        setCategoria(dados.categoria);
-        setSobre(dados.descricao);
-      }} />
-      <Campo rotulo="Categoria da loja" name="categoria_loja" maxLength={80} opcional
-        value={categoria} onChange={(e) => setCategoria(e.target.value)} erro={erroDe("categoria_loja")} />
-      <Campo multilinha rotulo="Descrição da loja" name="sobre" rows={4} maxLength={1500} opcional
-        value={sobre} onChange={(e) => setSobre(e.target.value)} erro={erroDe("sobre")} />
-
-      <div className="flex flex-col gap-2">
+      <fieldset className="flex min-w-0 flex-col gap-3 rounded-card border border-borda bg-cartao px-3 pb-4 sm:px-4">
+        <legend className="ml-1 px-1 text-sm font-semibold text-beringela">Vitrine</legend>
         <Campo
-          rotulo="Link da sua loja"
-          name="slug"
-          value={slug}
+          tamanho="toque"
+          rotulo="Nome da loja"
+          name="nome_loja"
+          value={nome}
           onChange={(e) => {
-            setSlugEditado(true);
-            setSlug(limparSlug(e.target.value));
+            setNome(e.target.value);
+            if (!slugEditado) setSlug(e.target.value.trim() ? limparSlug(slugDoTitulo(e.target.value)) : "");
           }}
-          maxLength={60}
-          autoComplete="off"
-          autoCapitalize="none"
-          spellCheck={false}
-          erro={erroDe("slug")}
-          dica={
-            <>
-              Seu link: <strong className="break-all text-texto">{urlAbsoluta(linkLoja(slug || "nome-da-loja"))}</strong>
-            </>
-          }
+          maxLength={80}
+          autoComplete="organization"
+          placeholder="Ex.: João Moto Peças"
+          erro={erroDe("nome_loja")}
+          dica={avisoComoVaiAparecer(nome)}
         />
-        <p className={`flex min-h-6 items-center gap-2 text-sm font-semibold ${status?.cor ?? ""}`} aria-live="polite">
-          {situacao === "conferindo" && <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />}
-          {situacao === "livre" && <CheckCircle2 className="size-4" aria-hidden />}
-          {(situacao === "ocupado" || situacao === "invalido") && <XCircle className="size-4" aria-hidden />}
-          {status?.texto}
-        </p>
-        {sugestao && sugestao !== slug && SLUG_OK.test(sugestao) && (
-          <Botao
-            variante="secundario"
-            onClick={() => {
+
+        <div className="flex flex-col gap-1">
+          <Campo
+            tamanho="toque"
+            rotulo="Link da sua loja"
+            name="slug"
+            value={slug}
+            onChange={(e) => {
               setSlugEditado(true);
-              setSlug(sugestao);
+              setSlug(limparSlug(e.target.value));
             }}
-          >
-            Usar {sugestao}
-          </Botao>
-        )}
-      </div>
-
-      <Campo
-        rotulo="WhatsApp da loja"
-        name="whatsapp"
-        {...fone.campo}
-        erro={fone.erro ?? erroDe("whatsapp")}
-        dica="Use o DDD. Se for diferente do WhatsApp confirmado da sua conta, a equipe confere o número comercial antes de divulgá-lo. Até lá, os clientes usam seu número confirmado."
-      />
-
-      {cidades.length ? (
-        <div className="flex flex-col gap-2">
-          <label htmlFor="campo-cidade" className="text-base font-semibold">
-            Cidade da loja
-          </label>
-          <div className="relative">
-            <select
-              id="campo-cidade"
-              name="cidade"
-              value={cidade}
-              onChange={(e) => setCidade(e.target.value)}
-              aria-invalid={erroDe("cidade") ? true : undefined}
-              aria-describedby={erroDe("cidade") ? "campo-cidade-erro" : undefined}
-              className={`${classesCampo} h-10 appearance-none pr-10`}
+            maxLength={60}
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            erro={erroDe("slug")}
+            dica={
+              <>
+                Seu link: <strong className="break-all text-texto">{urlAbsoluta(linkLoja(slug || "nome-da-loja"))}</strong>
+              </>
+            }
+          />
+          <p className={`flex items-center gap-2 text-sm font-semibold ${status?.cor ?? ""}`} aria-live="polite">
+            {situacao === "conferindo" && <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />}
+            {situacao === "livre" && <CheckCircle2 className="size-4" aria-hidden />}
+            {(situacao === "ocupado" || situacao === "invalido") && <XCircle className="size-4" aria-hidden />}
+            {status?.texto}
+          </p>
+          {sugestao && sugestao !== slug && SLUG_OK.test(sugestao) && (
+            <Botao
+              variante="secundario"
+              tamanho="toque"
+              onClick={() => {
+                setSlugEditado(true);
+                setSlug(sugestao);
+              }}
             >
-              <option value="">Escolha a cidade</option>
-              {cidades.map((c) => (
-                <option key={c.nome} value={c.nome}>
-                  {c.nome} – {c.uf}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
-          </div>
-          {erroDe("cidade") && (
-            <p id="campo-cidade-erro" role="alert" className="text-sm font-semibold text-perigo">
-              {erroDe("cidade")}
-            </p>
+              Usar {sugestao}
+            </Botao>
           )}
         </div>
-      ) : (
-        <Campo rotulo="Cidade da loja" name="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} maxLength={80} erro={erroDe("cidade")} />
-      )}
+      </fieldset>
+      <fieldset className="flex min-w-0 flex-col gap-3 rounded-card border border-borda bg-cartao px-3 pb-4 sm:px-4">
+        <legend className="ml-1 px-1 text-sm font-semibold text-beringela">Local e contato</legend>
+        <Campo
+          tamanho="toque"
+          rotulo="WhatsApp da loja"
+          name="whatsapp"
+          {...fone.campo}
+          erro={fone.erro ?? erroDe("whatsapp")}
+          dica="Inclua o DDD. Se usar outro número, os clientes verão o WhatsApp confirmado da conta até a equipe conferir o novo."
+        />
 
-      {avisoTeste && <p className="rounded-card bg-fundo p-3 text-base">{avisoTeste}</p>}
+        {cidades.length ? (
+          <div className="flex flex-col gap-1">
+            <label htmlFor="campo-cidade" className="text-rotulo font-semibold">
+              Cidade da loja
+            </label>
+            <div className="relative">
+              <select
+                id="campo-cidade"
+                name="cidade"
+                value={cidade}
+                onChange={(e) => setCidade(e.target.value)}
+                aria-invalid={erroDe("cidade") ? true : undefined}
+                aria-describedby={erroDe("cidade") ? "campo-cidade-erro" : undefined}
+                className={`${classesCampo} h-toque! appearance-none pr-10`}
+              >
+                <option value="">Escolha a cidade</option>
+                {cidades.map((c) => (
+                  <option key={c.nome} value={c.nome}>
+                    {c.nome} – {c.uf}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
+            </div>
+            {erroDe("cidade") && (
+              <p id="campo-cidade-erro" role="alert" className="text-sm font-semibold text-perigo">
+                {erroDe("cidade")}
+              </p>
+            )}
+          </div>
+        ) : (
+          <Campo tamanho="toque" rotulo="Cidade da loja" name="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} maxLength={80} erro={erroDe("cidade")} />
+        )}
+      </fieldset>
+      <fieldset className="flex min-w-0 flex-col gap-3 rounded-card border border-borda bg-cartao px-3 pb-4 sm:px-4">
+        <legend className="ml-1 px-1 text-sm font-semibold text-beringela">Sobre a loja</legend>
+        <CadastroLojaAki nome={nome} aplicar={(dados) => {
+          setCategoria(dados.categoria);
+          setSobre(dados.descricao);
+        }} />
+        <Campo tamanho="toque" rotulo="Categoria da loja" name="categoria_loja" maxLength={80} opcional
+          value={categoria} onChange={(e) => setCategoria(e.target.value)} erro={erroDe("categoria_loja")} />
+        <Campo multilinha rotulo="Descrição da loja" name="sobre" rows={4} maxLength={1500} opcional
+          value={sobre} onChange={(e) => setSobre(e.target.value)} erro={erroDe("sobre")} />
+      </fieldset>
+      {avisoTeste && <p className="rounded-campo bg-selecao px-3 py-2 text-sm text-beringela">{avisoTeste}</p>}
 
-      <Botao type="submit" larguraTotal carregando={enviando} textoCarregando="Criando sua loja..." disabled={situacao === "ocupado"}>
+      <Botao type="submit" tamanho="toque" className="w-full" carregando={enviando} textoCarregando="Criando sua loja..." disabled={situacao === "ocupado"}>
         Criar minha loja
       </Botao>
     </form>
