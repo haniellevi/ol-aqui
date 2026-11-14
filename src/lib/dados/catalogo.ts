@@ -22,9 +22,12 @@ const recorte = (regiao: Regiao, nicho: string | null, limite: number, offset: n
   p_offset: offset,
 });
 
-export async function lojasCatalogo(regiao: Regiao, nicho: string | null, limite: number, offset = 0, destaques = false) {
+export async function lojasCatalogo(regiao: Regiao, nicho: string | null, limite: number, offset = 0, destaques = false, busca = "") {
   const db = await createClient();
-  const { data, error } = await db.rpc("catalogo_lojas", { ...recorte(regiao, nicho, limite, offset), p_destaques: destaques });
+  const parametros = { ...recorte(regiao, nicho, limite, offset), p_destaques: destaques };
+  const { data, error } = busca
+    ? await db.rpc("catalogo_lojas_busca", { ...parametros, p_busca: busca })
+    : await db.rpc("catalogo_lojas", parametros);
   if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar o catálogo de lojas.");
   return data as LojaCatalogo[];
 }
