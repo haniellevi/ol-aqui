@@ -209,7 +209,7 @@ select whatsapp_fila_resultado((select id from pegas where texto = 'Mensagem 3')
 select pg_temp.confere(:'r1' = 'enviada' and :'r2' = 'incerta' and :'r3' = 'pendente', 'resultados: enviada, incerta e pendente');
 select pg_temp.confere((select estado = 'enviada' and enviada_em is not null from pegas p join whatsapp_fila f using (id) where f.texto = 'Mensagem 1'), 'enviada guarda a hora');
 select pg_temp.confere((select estado = 'incerta' from whatsapp_fila where texto = 'Mensagem 2'), 'incerta não volta');
-select pg_temp.confere((select estado = 'pendente' and enviar_apos > now() + interval '4 minutes' and enviar_apos < now() + interval '6 minutes' from whatsapp_fila where texto = 'Mensagem 3'), 'falha volta em 5 minutos');
+select pg_temp.confere((select estado = 'pendente' and enviar_apos >= now() + interval '4 minutes' and (enviar_apos at time zone 'America/Fortaleza')::time >= time '08:00' and (enviar_apos at time zone 'America/Fortaleza')::time < time '20:00' from whatsapp_fila where texto = 'Mensagem 3'), 'falha volta dentro da janela 8h-20h (5 minutos ou próxima janela)');
 -- 3 falhas viram falha.
 update whatsapp_fila set enviar_apos = now() - interval '1 minute' where texto = 'Mensagem 3';
 select count(*) as pegou2 from whatsapp_fila_pegar() where texto = 'Mensagem 3' \gset

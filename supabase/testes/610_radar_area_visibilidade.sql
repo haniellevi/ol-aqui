@@ -57,30 +57,31 @@ values ('61000000-0000-4000-a000-0000000000d1','user_q610d',:'regiao','Procuro f
 select pg_temp.confere((select visibilidade='lojas' and cidades_ids is null from radar_pedidos where id='61000000-0000-4000-a000-0000000000d1'),'Pedido antigo vira visibilidade lojas e região toda');
 select pg_temp.confere((select max_propostas=5 from radar_pedidos where id='61000000-0000-4000-a000-0000000000d1'),'Pedido novo recebe máximo de 5 lojas');
 
+select id as cat_sofa from categorias where slug='casas' and ativa \gset
 set local role authenticated;
 set local request.jwt.claim.role='authenticated';
 
 -- ---------- criar pedidos pelo site ----------
 set local request.jwt.claim.sub='user_q610a';
 select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000a1','Procuro geladeira duas portas','Qualquer',
-  'whatsapp_direto',null,null,null,null,null, array[:'c_corrente', :'c_gilbues', :'c_corrente']::uuid[], 'lojas') \gset a_
+  'whatsapp_direto',null,null,:'cat_sofa',null,null, array[:'c_corrente', :'c_gilbues', :'c_corrente']::uuid[], 'lojas') \gset a_
 select pg_temp.confere((select cidade='Corrente, Gilbués' and visibilidade='lojas' and cidades_ids=array[:'c_corrente',:'c_gilbues']::uuid[]
   from radar_pedidos where id=((:'a_criar_pedido_radar_site'::jsonb)->>'id')::uuid),'Duas cidades: cidade em texto, repetidas removidas');
 select pg_temp.recusa(format($q$select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000a2','Procuro geladeira de outra região','x',
-  'whatsapp_direto',null,null,null,null,null, array[%L]::uuid[], 'lojas')$q$, :'c_outra'),'23514');
+  'whatsapp_direto',null,null,%L,null,null, array[%L]::uuid[], 'lojas')$q$, :'cat_sofa', :'c_outra'),'23514');
 select pg_temp.recusa(format($q$select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000a3','Procuro geladeira cidade fantasma','x',
-  'whatsapp_direto',null,null,null,null,null, array[%L]::uuid[], 'lojas')$q$, gen_random_uuid()),'23514');
-select pg_temp.recusa($q$select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000a4','Procuro geladeira visibilidade ruim',null,
-  'whatsapp_direto',null,null,null,null,null, null, 'amigos')$q$,'23514');
+  'whatsapp_direto',null,null,%L,null,null, array[%L]::uuid[], 'lojas')$q$, :'cat_sofa', gen_random_uuid()),'23514');
+select pg_temp.recusa(format($q$select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000a4','Procuro geladeira visibilidade ruim',null,
+  'whatsapp_direto',null,null,%L,null,null, null, 'amigos')$q$, :'cat_sofa'),'23514');
 
 set local request.jwt.claim.sub='user_q610b';
-select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000b1','Procuro fogão de seis bocas',null) \gset b_
+select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000b1','Procuro fogão de seis bocas',null,'whatsapp_direto',null,null,:'cat_sofa') \gset b_
 select pg_temp.confere((select cidade='Toda a região' and cidades_ids is null and visibilidade='lojas' and max_propostas=5
   from radar_pedidos where id=((:'b_criar_pedido_radar_site'::jsonb)->>'id')::uuid),'Sem cidades: Toda a região, só lojas, 5 lojas');
 
 set local request.jwt.claim.sub='user_q610c';
 select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000c1','Procuro máquina de lavar roupa',null,
-  'whatsapp_direto',null,null,null,null,null, null, 'todos') \gset c_
+  'whatsapp_direto',null,null,:'cat_sofa',null,null, null, 'todos') \gset c_
 
 select (:'a_criar_pedido_radar_site'::jsonb)->>'id' as pa, (:'b_criar_pedido_radar_site'::jsonb)->>'id' as pb, (:'c_criar_pedido_radar_site'::jsonb)->>'id' as pc \gset
 
@@ -129,7 +130,7 @@ select pg_temp.confere((select count(*)=1 from propor_radar('61000000-0000-4000-
 -- ---------- área limita quem atende, em qualquer visibilidade ----------
 set local request.jwt.claim.sub='user_q610a';
 select criar_pedido_radar_site('61000000-0000-4000-a000-0000000000a5','Procuro freezer horizontal grande',null,
-  'whatsapp_direto',null,null,null,null,null, array[:'c_corrente']::uuid[], 'todos') \gset e_
+  'whatsapp_direto',null,null,:'cat_sofa',null,null, array[:'c_corrente']::uuid[], 'todos') \gset e_
 select (:'e_criar_pedido_radar_site'::jsonb)->>'id' as pe \gset
 set local request.jwt.claim.sub='user_q610parn';
 select pg_temp.confere(exists(select 1 from radar_pedido(:'pe'::uuid) where not bloqueado),'Pedido para todos é visível à loja de fora da área');
