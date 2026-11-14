@@ -187,6 +187,7 @@ export async function conferirNoAsaas(pagamentoId: string): Promise<boolean> {
     if (!pg?.asaas_cobranca_id || pg.status !== "pendente") return false;
     if (!(await podePerguntarAoAsaas(pg.id))) return false;
     const amb = await ambienteAsaas();
+    if (process.env.VERCEL_ENV === "production" && amb !== "producao") return false;
     const c = await consultarCobranca(amb, pg.asaas_cobranca_id);
     if (!STATUS_PAGO.has(String(c.status))) return false;
     const confirmado = await supabaseAdmin().rpc("confirmar_pagamento", {

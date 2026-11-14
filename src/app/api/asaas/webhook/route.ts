@@ -40,6 +40,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, ignorado: evento || "sem evento" });
   }
 
+  try {
+    if (process.env.VERCEL_ENV === "production" && (await ambienteAsaas()) !== "producao") {
+      return NextResponse.json({ ok: false }, { status: 503 });
+    }
+  } catch {
+    return NextResponse.json({ ok: false }, { status: 503 });
+  }
+
   let db;
   try {
     db = supabaseAdmin();

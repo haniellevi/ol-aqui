@@ -146,3 +146,33 @@ test('Asaas sandbox não fica disponível para cobrança em produção', async (
     if (anteriorVercel === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anteriorVercel;
   }
 });
+
+test('produção não confirma pagamentos consultando o sandbox', async () => {
+  const anterior = process.env.VERCEL_ENV;
+  try {
+    process.env.VERCEL_ENV = 'production';
+    const a = ambiente({pg:{asaas_cobranca_id:'pay_1'}});
+    assert.equal(await a.conferirNoAsaas(id), false);
+    assert.equal(a.eventos.includes('confirmar_pagamento'), false);
+  } finally {
+    if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
+  }
+});
+
+test('webhook não confirma cobranças sandbox no site de produção', async () => {
+  const anterior = process.env.VERCEL_ENV;
+  const chamadas = [];
+  try {
+    process.env.VERCEL_ENV = 'production';
+    const webhook = carregar('src/app/api/asaas/webhook/route.ts', {
+      'next/server': { NextResponse: { json: (body, op = {}) => ({ body, status: op.status ?? 200 }) } },
+      '@/lib/asaas': { tokenWebhookConfere: () => true, ambienteAsaas: async () => 'sandbox' },
+      '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async (...args) => { chamadas.push(args); return { error: null }; } }) },
+    });
+    const resposta = await webhook.POST({ headers: { get: () => 'token' }, json: async () => ({ event: 'PAYMENT_RECEIVED', payment: { id: 'pay_1' } }) });
+    assert.equal(resposta.status, 503);
+    assert.deepEqual(chamadas, []);
+  } finally {
+    if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
+  }
+});
