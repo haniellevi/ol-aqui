@@ -65,6 +65,9 @@ export function CartaoSugestao({ item, maes, finais, podeDecidir = true }: { ite
                 {grupo.radar === 1 ? "Ver pedido" : `Ver pedido ${i + 1}`}
               </Link>
             ))}
+            {grupo.radar > (grupo.pedidos_radar ?? []).length ? (
+              <span className="text-texto-suave">e mais {inteiro(grupo.radar - (grupo.pedidos_radar ?? []).length)} (os 10 mais novos têm link)</span>
+            ) : null}
           </p>
         ) : null}
       </div>
