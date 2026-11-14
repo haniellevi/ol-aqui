@@ -179,6 +179,9 @@ export type Notificacao = {
 /** Um aviso que a pessoa pode ligar ou desligar (Minha conta > Notificações). */
 export type PreferenciaAviso = { tipo: string; nome: string; explicacao: string; ligado: boolean };
 
+/** Aviso de pedido novo do Radar por WhatsApp: a preferência da pessoa, se o celular foi confirmado e se o painel liga o recurso. */
+export type PreferenciaWhatsappRadar = { ligado: boolean; confirmado: boolean; ativo: boolean };
+
 /* ----------------------------- Respostas ----------------------------- */
 
 export type RespostaCriarPedido =
