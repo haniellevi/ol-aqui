@@ -44,8 +44,8 @@ const publico = (a: AnuncioPublico) => a.status === "ativo" || a.status === "ven
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { idslug } = await params;
   const { id, a } = await localizar(idslug);
-  if (!a) {
-    const fora = id ? await anuncioForaDoAr(id) : null;
+  if (!a || a.status === "pausado") {
+    const fora = !a && id ? await anuncioForaDoAr(id) : null;
     return { title: fora ? "Anúncio fora do ar" : "Anúncio não encontrado", robots: { index: false } };
   }
   const titulo = formatarNome(a.titulo) || "Anúncio";
@@ -79,8 +79,9 @@ export default async function PaginaAnuncio({ params, searchParams }: Props) {
 
   const { idslug } = await params;
   const { id, a, antigo } = await localizar(idslug);
+  if (a?.status === "pausado") notFound();
   if (!a) {
-    // pausado/expirado: "saiu do ar" com parecidos em vez de erro (T44); senão, não encontrado
+    // Expirados e anúncios de lojas fora do ar podem mostrar sugestões da categoria.
     const fora = id ? await anuncioForaDoAr(id) : null;
     if (!fora) notFound();
     return <AnuncioForaDoAr categoriaSlug={fora.categoria_slug} categoriaNome={fora.categoria_nome} />;
