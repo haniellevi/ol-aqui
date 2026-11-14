@@ -29,12 +29,12 @@ type Item = {
 };
 
 const BOTAO_FOTO =
-  "flex min-h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-card border border-beringela bg-cartao px-2 py-2 text-center md:min-h-16 md:gap-2 md:px-3 " +
+  "flex min-h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-card border border-beringela bg-cartao px-2 py-2 text-center sm:gap-2 sm:px-3 " +
   "text-sm font-semibold text-beringela md:text-base hover:bg-fundo active:bg-borda disabled:cursor-not-allowed disabled:opacity-60 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 const BOTAO_MINI =
-  "grid min-h-10 flex-1 place-items-center rounded-campo border border-borda bg-cartao text-beringela hover:bg-fundo active:bg-borda " +
+  "grid min-h-toque min-w-toque flex-1 place-items-center rounded-campo border border-borda bg-cartao text-beringela hover:bg-fundo active:bg-borda " +
   "disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-laranja-escuro";
 
 let contador = 0;
@@ -319,7 +319,7 @@ export function EnvioFotos({
       <div className="flex flex-col gap-1 text-sm text-texto-suave">
         <p>{itens.length} de {maximo} fotos{minimo > 0 && ` · Mín. ${minimo}`}</p>
         <p>Prefira fotos de 1080 × 1080 px, com o produto centralizado e pouca margem. Até 20 MB por foto.</p>
-        <p className="text-legenda">A prévia mostra o recorte central usado nos cards.</p>
+        <p className="text-sm">A prévia mostra o recorte usado na busca.</p>
       </div>
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
@@ -333,7 +333,7 @@ export function EnvioFotos({
             const src = item.previa ?? item.url;
             const nome = `Foto ${i + 1}${i === 0 ? " (capa)" : ""}`;
             return (
-              <li key={item.chave} className="flex flex-col gap-2 rounded-card bg-cartao p-2 shadow-1">
+              <li key={item.chave} className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-2">
                 <div className="relative aspect-square overflow-hidden rounded-campo bg-borda">
                   {src && (
                     // eslint-disable-next-line @next/next/no-img-element -- prévia local (blob:) ou foto do Storage
@@ -356,7 +356,7 @@ export function EnvioFotos({
                         type="button"
                         onClick={() => tentarDeNovo(item.chave)}
                         disabled={travado}
-                        className="inline-flex min-h-10 items-center gap-2 rounded-card border-2 border-beringela bg-cartao px-3 text-sm font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro active:bg-borda"
+                        className="inline-flex min-h-toque min-w-toque items-center gap-2 rounded-card border-2 border-beringela bg-cartao px-3 text-sm font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro active:bg-borda"
                       >
                         <RotateCw className="size-4" aria-hidden />
                         Tentar de novo

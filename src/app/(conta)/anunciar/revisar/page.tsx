@@ -26,7 +26,7 @@ export const metadata: Metadata = { title: "Anunciar · Revisar" };
 
 const FORM = "form-publicar";
 
-type Linha = { rotulo: string; valor: string; passo: SlugPasso; falta?: boolean };
+type Linha = { rotulo: string; valor: string; passo: SlugPasso; falta?: boolean; expansivel?: boolean };
 
 // T22 · Passo 6: o card exatamente como vai aparecer, o resumo com "Alterar" em cada item e Publicar.
 export default async function PassoRevisar({ searchParams }: { searchParams: ParamsPasso }) {
@@ -79,7 +79,8 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
     }),
     {
       rotulo: "Descrição",
-      valor: anuncio.descricao ? (anuncio.descricao.length > 140 ? `${anuncio.descricao.slice(0, 140)}…` : anuncio.descricao) : "Sem descrição",
+      valor: anuncio.descricao || "Sem descrição",
+      expansivel: (anuncio.descricao?.length ?? 0) > 240,
       passo: "detalhes",
     },
     { rotulo: "Preço", valor: `${preco(anuncio.preco_centavos)}${anuncio.aceita_troca ? " · Aceito troca" : ""}`, passo: "preco" },
@@ -91,6 +92,13 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
     },
   ];
   const faltando = linhas.filter((l) => l.falta);
+  const grupos = [
+    { passo: "fotos", titulo: "Fotos" },
+    { passo: "categoria", titulo: "Categoria" },
+    { passo: "detalhes", titulo: "Detalhes" },
+    { passo: "preco", titulo: "Preço" },
+    { passo: "local", titulo: "Local" },
+  ] as const;
   const v = conta.vitrine;
 
   return (
@@ -101,41 +109,17 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
         id={anuncio.id}
         editar={editar}
         titulo={jaPublicado ? "Confira as mudanças" : "Confira antes de publicar"}
-        subtitulo="Veja a prévia e confira os dados."
       />
-
-      <div className="mx-auto w-full md:max-w-[260px]">
-        <CardAnuncio
-          prioridade
-          compacto
-          semLink
-          anuncio={{
-            id: anuncio.id,
-            slug: null, // rascunho: o endereço só nasce ao publicar
-            titulo: formatarNome(titulo) || "Seu anúncio",
-            preco_centavos: anuncio.preco_centavos,
-            cidade: anuncio.cidade ?? v.cidade,
-            capa: anuncio.fotos[0] ?? null,
-            criado_em: anuncio.publicado_em ?? new Date().toISOString(),
-            destaque: publico?.destaque ?? false,
-            vitrine_nome: formatarNome(publico?.vitrine_nome ?? v.nome),
-            vitrine_selo: publico?.vitrine_selo ?? v.selo_loja_verificada,
-            vitrine_tipo: publico?.vitrine_tipo ?? v.tipo,
-            preco_antes_centavos: extra?.preco_antes_centavos ?? null,
-            uf: extra?.uf ?? null,
-          }}
-        />
-      </div>
 
       {faltando.length > 0 && (
         <Alert variant="warning" role="status" className="flex gap-3">
           <AlertTriangle className="mt-0.5 size-5 shrink-0 text-aviso" aria-hidden />
           <div className="flex flex-col gap-1">
-            <p className="font-semibold">Falta pouco. Complete para publicar:</p>
+            <p className="font-semibold">Complete para publicar</p>
             <ul className="list-disc pl-5">
               {faltando.map((l) => (
                 <li key={l.rotulo}>
-                  <Link href={urlPasso(l.passo, anuncio.id, editar, true, assistente)} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+                  <Link href={urlPasso(l.passo, anuncio.id, editar, true, assistente)} className="inline-flex min-h-toque items-center font-semibold text-laranja-escuro underline underline-offset-4">
                     {l.rotulo}
                   </Link>
                 </li>
@@ -188,37 +172,74 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
         <p className="text-sm text-texto-suave">
           {conta.vitrine.status === "montagem"
             ? "A loja ainda está em montagem. Ao publicar, o produto fica pronto e vai ao ar quando o dono aceitar a loja, depois da conferência de sempre."
-            : "Ao publicar, seu anúncio entra no ar. Se forem encontrados termos sexuais ou violentos, ele aguarda conferência da equipe."}
+            : "Se o anúncio precisar de conferência, você poderá acompanhar em Meus anúncios."}
         </p>
       )}
 
-      <section aria-labelledby="titulo-resumo" className="flex flex-col gap-2">
-        <h2 id="titulo-resumo" className="text-lg font-semibold">
-          Resumo
-        </h2>
-        <dl className="divide-y divide-borda rounded-card bg-cartao shadow-1">
-          {linhas.map((l) => (
-            <div key={l.rotulo} className="flex items-center gap-2 p-2 md:gap-3 md:p-3">
-              <div className="flex min-w-0 flex-1 flex-col">
-                <dt className="text-sm text-texto-suave">{l.rotulo}</dt>
-                <dd className={`text-sm [overflow-wrap:anywhere] md:text-base ${l.falta ? "font-semibold text-perigo" : ""}`}>{l.valor}</dd>
-              </div>
-              <Link
-                href={urlPasso(l.passo, anuncio.id, editar, true, assistente)}
-                className="inline-flex min-h-11 shrink-0 items-center rounded-card px-2 text-sm font-semibold md:text-base text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
-                aria-label={`Alterar ${l.rotulo.toLowerCase()}`}
-              >
-                Alterar
-              </Link>
-            </div>
-          ))}
-        </dl>
+      <div className="grid min-w-0 items-start gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <section aria-labelledby="titulo-previa" className="w-full max-w-52 sm:max-w-none">
+        <h2 id="titulo-previa" className="mb-2 text-lg font-semibold text-beringela">Prévia na busca</h2>
+        <CardAnuncio
+          prioridade
+          compacto
+          semLink
+          anuncio={{
+            id: anuncio.id,
+            slug: null, // rascunho: o endereço só nasce ao publicar
+            titulo: formatarNome(titulo) || "Seu anúncio",
+            preco_centavos: anuncio.preco_centavos,
+            cidade: anuncio.cidade ?? v.cidade,
+            capa: anuncio.fotos[0] ?? null,
+            criado_em: anuncio.publicado_em ?? new Date().toISOString(),
+            destaque: publico?.destaque ?? false,
+            vitrine_nome: formatarNome(publico?.vitrine_nome ?? v.nome),
+            vitrine_selo: publico?.vitrine_selo ?? v.selo_loja_verificada,
+            vitrine_tipo: publico?.vitrine_tipo ?? v.tipo,
+            preco_antes_centavos: extra?.preco_antes_centavos ?? null,
+            uf: extra?.uf ?? null,
+          }}
+        />
       </section>
+        <section aria-labelledby="titulo-resumo" className="min-w-0">
+          <h2 id="titulo-resumo" className="mb-2 text-lg font-semibold text-beringela">Dados do anúncio</h2>
+          <ul className="divide-y divide-borda rounded-card border border-borda bg-cartao">
+            {grupos.map(({ passo, titulo }) => (
+              <li key={passo} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 px-3 py-2">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-beringela">{titulo}</h3>
+                  <dl className="mt-0.5 flex flex-col gap-2">
+                    {linhas.filter((linha) => linha.passo === passo).map((linha) => (
+                      <div key={linha.rotulo} className="min-w-0">
+                        <dt className={passo === "detalhes" ? "text-xs text-texto-suave" : "sr-only"}>{linha.rotulo}</dt>
+                        <dd className={`whitespace-pre-wrap [overflow-wrap:anywhere] ${linha.falta ? "font-semibold text-perigo" : ""}`}>
+                          {linha.expansivel ? (
+                            <details>
+                              <summary className="min-h-toque cursor-pointer rounded-campo py-3 text-sm font-semibold text-laranja-escuro focus-visible:outline-2">Ver descrição completa</summary>
+                              <p>{linha.valor}</p>
+                            </details>
+                          ) : linha.valor}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+                <Link
+                  href={urlPasso(passo, anuncio.id, editar, true, assistente)}
+                  className="inline-flex min-h-toque min-w-toque items-center justify-center rounded-campo px-2 text-sm font-semibold text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+                  aria-label={`Alterar ${titulo.toLowerCase()}`}
+                >
+                  Alterar
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
 
       {/* P6: rascunho → "Descartar rascunho"; publicado (fim da edição) → "Excluir anúncio". A equipe usa a lixeira do painel. */}
-      {!equipe && <DescartarAnuncio id={anuncio.id} titulo={anuncio.titulo} rascunho={anuncio.status === "rascunho"} temPagamento={temPagamento} />}
+      {!equipe && <DescartarAnuncio tamanho="toque" id={anuncio.id} titulo={anuncio.titulo} rascunho={anuncio.status === "rascunho"} temPagamento={temPagamento} />}
 
-      <BotaoPublicar id={anuncio.id} editar={editar} formId={FORM} modo={modo} linkAvulso={hrefAvulso} />
+      <BotaoPublicar assistente={assistente} id={anuncio.id} editar={editar} formId={FORM} modo={modo} linkAvulso={hrefAvulso} />
     </CorpoPasso>
   );
 }

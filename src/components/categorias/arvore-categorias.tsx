@@ -28,7 +28,7 @@ const NENHUMA: NoLeve[] = [];
 const MAX_ACHADAS = 8;
 
 const VOLTA =
-  "flex min-h-10 w-full items-center gap-2 rounded-campo px-2 text-left text-base text-texto-suave hover:bg-fundo " +
+  "flex min-h-toque w-full items-center gap-2 rounded-campo px-2 text-left text-base text-texto-suave hover:bg-fundo " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 type Props = {

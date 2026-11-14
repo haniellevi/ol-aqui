@@ -12,12 +12,14 @@ import { LINK_PLANOS } from "@/lib/rotas";
 // Botão final do Revisar: "Publicar anúncio" (rascunho), "Publicar de novo" (pausado/expirado)
 // ou "Salvar alterações" (anúncio que já está no ar). O erro do banco aponta o passo para corrigir.
 export function BotaoPublicar({
+  assistente,
   id,
   editar,
   formId,
   modo,
   linkAvulso,
 }: {
+  assistente?: string;
   id: string;
   editar: boolean;
   formId: string;
@@ -29,7 +31,7 @@ export function BotaoPublicar({
   const passo = passoDoCampo(estado?.erro?.campo);
   const limite = estado?.erro?.codigo === "P0001";
   const link = passo
-    ? { href: urlPasso(passo, id, editar), texto: "Corrigir agora" }
+    ? { href: urlPasso(passo, id, editar, true, assistente), texto: "Corrigir agora" }
     : limite
       ? linkAvulso
         ? { href: linkAvulso, texto: "Pagar anúncio avulso" }
@@ -40,14 +42,15 @@ export function BotaoPublicar({
 
   return (
     <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3">
+      {assistente && <input type="hidden" name="assistente" value={assistente} />}
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
       <AvisoErro mensagem={estado?.erro?.mensagem} link={link} />
       <BarraContinuar aviso={modo === "salvar" ? "As mudanças de cada passo já foram salvas." : undefined}>
         <Botao
           type="submit"
-          larguraTotal
-         
+          tamanho="toque"
+          className="w-full sm:w-auto sm:min-w-48"
           carregando={enviando}
           textoCarregando={modo === "salvar" ? "Salvando..." : "Publicando..."}
           icone={modo === "salvar" ? <Save /> : <Send />}

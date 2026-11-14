@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { comAssistente } from "@/lib/assistente";
 import { MARCA_EQUIPE } from "@/lib/historico";
 import { linkAdminAnuncio } from "@/lib/rotas";
 import { DESTINO_SAIR, PASSOS, TOTAL_PASSOS, numeroPasso, passoAnterior, urlPasso, type SlugPasso } from "./passos";
@@ -17,7 +18,7 @@ function horaCurta(iso: string) {
 }
 
 const LINK_TOPO =
-  "inline-flex min-h-11 items-center gap-1 rounded-card px-2 text-sm font-semibold text-beringela md:min-h-10 md:text-base md:text-laranja-escuro " +
+  "inline-flex min-h-toque min-w-toque items-center gap-1.5 rounded-campo px-2 text-sm font-semibold text-beringela " +
   "hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 export function CabecalhoPasso({
@@ -49,12 +50,12 @@ export function CabecalhoPasso({
   const anterior = daRevisao ? "revisar" : passoAnterior(passo);
   // P5b-2a: a equipe volta para a ficha do anúncio no painel.
   const sair = equipe ? linkAdminAnuncio(id) : DESTINO_SAIR;
-  const voltar = anterior ? urlPasso(anterior, id, editar, false, assistente) : editar ? sair : "/anunciar";
+  const voltar = anterior ? urlPasso(anterior, id, editar, false, assistente) : editar ? sair : comAssistente("/anunciar", assistente);
   // Fotos salvam sozinhas ao enviar e a revisão não tem campos: lá a etapa é só um link.
   const salvaAoIr = Boolean(formId) && passo !== "fotos" && passo !== "revisar";
 
   return (
-    <div className="flex flex-col gap-2 md:gap-3">
+    <header className="flex min-w-0 flex-col">
       {equipe && (
         <p role="note" className="rounded-card border border-aviso bg-aviso-fundo p-3 text-sm break-words">
           <strong>Este anúncio é de outra pessoa.</strong> Você está editando como {MARCA_EQUIPE}. Motivo: {equipe.motivo}.
@@ -83,30 +84,28 @@ export function CabecalhoPasso({
           </Link>
         )}
       </div>
-      <div className="flex flex-col md:gap-2">
-        <p className="text-sm font-semibold text-texto-suave">
-          Passo {n} de {TOTAL_PASSOS} · {nome}
-          {editar && <span className="ml-1 font-normal">(editando)</span>}
-        </p>
-        <EtapasTocaveis passo={passo} id={id} editar={editar} formId={salvaAoIr ? formId : undefined} />
+      <div className="flex min-w-0 flex-col gap-1">
+        <h1 className="text-titulo font-semibold text-beringela [overflow-wrap:anywhere]">{titulo}</h1>
+        {subtitulo && <p className="text-sm text-texto-suave [overflow-wrap:anywhere]">{subtitulo}</p>}
       </div>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold leading-tight text-beringela [overflow-wrap:anywhere] md:text-titulo">{titulo}</h1>
-        {subtitulo && <p className="text-sm text-texto-suave [overflow-wrap:anywhere] md:text-base">{subtitulo}</p>}
-      </div>
-    </div>
+      <p className="mt-2 text-sm text-texto-suave">
+        Passo {n} de {TOTAL_PASSOS} · {nome}
+        {editar && <span className="ml-1">(editando)</span>}
+      </p>
+      <EtapasTocaveis passo={passo} id={id} editar={editar} daRevisao={daRevisao} assistente={assistente} formId={salvaAoIr ? formId : undefined} />
+    </header>
   );
 }
 
 const ETAPA =
-  "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-campo px-1 py-1 text-legenda leading-tight md:min-h-10 " +
+  "flex min-h-toque min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-campo px-1 py-1 text-legenda leading-tight " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
-function EtapasTocaveis({ passo, id, editar, formId }: { passo: SlugPasso; id: string; editar: boolean; formId?: string }) {
+function EtapasTocaveis({ passo, id, editar, daRevisao, assistente, formId }: { passo: SlugPasso; id: string; editar: boolean; daRevisao?: boolean; assistente?: string; formId?: string }) {
   const atual = numeroPasso(passo);
   return (
     <nav aria-label="Etapas do anúncio">
-      <ol className="flex gap-1">
+      <ol className="grid grid-cols-6 gap-0.5">
         {PASSOS.map((p, i) => {
           const n = i + 1;
           const ehAtual = n === atual;
@@ -130,7 +129,7 @@ function EtapasTocaveis({ passo, id, editar, formId }: { passo: SlugPasso; id: s
                   {marca}
                 </button>
               ) : (
-                <Link href={urlPasso(p.slug, id, editar)} className={`${ETAPA} hover:bg-fundo`}>{marca}</Link>
+                <Link href={urlPasso(p.slug, id, editar, daRevisao && p.slug !== "revisar", assistente)} className={`${ETAPA} hover:bg-fundo`}>{marca}</Link>
               )}
             </li>
           );

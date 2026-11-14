@@ -16,6 +16,7 @@ export function FormLocal({
   id,
   editar,
   daRevisao,
+  assistente,
   formId,
   cidades,
   cidadeInicial,
@@ -24,6 +25,7 @@ export function FormLocal({
   id: string;
   editar: boolean;
   daRevisao?: boolean;
+  assistente?: string;
   formId: string;
   cidades: { nome: string; uf: string }[];
   cidadeInicial: string;
@@ -35,7 +37,8 @@ export function FormLocal({
   const erroCidade = estado?.campos?.cidade;
 
   return (
-    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-5" noValidate>
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-4" noValidate>
+      {assistente && <input type="hidden" name="assistente" value={assistente} />}
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
 
@@ -54,7 +57,7 @@ export function FormLocal({
               onChange={(e) => setCidade(e.target.value)}
               aria-invalid={erroCidade ? true : undefined}
               aria-describedby={erroCidade ? "campo-cidade-erro" : undefined}
-              className={`${classesCampo} h-11 appearance-none pr-10 md:h-10`}
+              className={`${classesCampo} h-toque! appearance-none pr-10`}
             >
               <option value="">Escolha a cidade</option>
               {cidades.map((c) => (
@@ -79,6 +82,8 @@ export function FormLocal({
       )}
 
       <Campo
+
+        tamanho="toque"
         rotulo="Bairro"
         name="bairro"
         value={bairro}

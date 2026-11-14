@@ -13,7 +13,7 @@ import { BarraContinuar, BotaoPasso } from "./barra-continuar";
 // Na edição aparece "Preço antes" (opcional): quem baixou o preço diz quanto era e o card mostra riscado.
 
 const CAIXA =
-  "flex min-h-10 cursor-pointer items-center gap-3 rounded-card border border-borda bg-cartao px-3 py-2 text-base font-semibold " +
+  "flex min-h-toque cursor-pointer items-center gap-3 rounded-card border border-borda bg-cartao px-3 py-2 text-base font-semibold " +
   "text-beringela hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
 function paraTexto(centavos: number | null): string {
@@ -24,6 +24,7 @@ export function FormPreco({
   id,
   editar,
   daRevisao,
+  assistente,
   formId,
   precoInicial,
   aCombinarInicial,
@@ -34,6 +35,7 @@ export function FormPreco({
   id: string;
   editar: boolean;
   daRevisao?: boolean;
+  assistente?: string;
   formId: string;
   precoInicial: number | null;
   aCombinarInicial: boolean;
@@ -51,13 +53,16 @@ export function FormPreco({
   const mostrarAntes = editar && precoAntesInicial !== undefined;
 
   return (
-    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-5" noValidate>
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-4" noValidate>
+      {assistente && <input type="hidden" name="assistente" value={assistente} />}
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
 
       <AvisoErro mensagem={estado?.erro?.mensagem} />
 
       <Campo
+
+        tamanho="toque"
         rotulo="Preço"
         name="preco"
         prefixo="R$"
@@ -78,6 +83,7 @@ export function FormPreco({
         <>
           <input type="hidden" name="tem_preco_antes" value="1" />
           <Campo
+            tamanho="toque"
             rotulo="Preço antes"
             opcional
             name="preco_antes"

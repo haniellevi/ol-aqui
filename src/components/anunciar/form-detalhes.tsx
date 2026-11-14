@@ -16,7 +16,7 @@ import { nomeAtributo } from "./atributos";
 // sumirem quando o servidor devolve um erro.
 
 const OPCAO =
-  "flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-card border border-borda bg-cartao px-3 py-2 text-center " +
+  "flex min-h-toque cursor-pointer items-center justify-center gap-2 rounded-card border border-borda bg-cartao px-3 py-2 text-center " +
   "text-base font-semibold text-beringela hover:bg-fundo has-[:checked]:border-beringela has-[:checked]:bg-selecao " +
   "has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-laranja-escuro";
 
@@ -35,6 +35,7 @@ export function FormDetalhes({
   categoriaId,
   editar,
   daRevisao,
+  assistente,
   formId,
   tituloInicial,
   descricaoInicial,
@@ -45,6 +46,7 @@ export function FormDetalhes({
   categoriaId: string | null;
   editar: boolean;
   daRevisao?: boolean;
+  assistente?: string;
   formId: string;
   tituloInicial: string;
   descricaoInicial: string;
@@ -62,7 +64,8 @@ export function FormDetalhes({
   const mudar = (chave: string, v: string) => setValores((a) => ({ ...a, [chave]: v }));
 
   return (
-    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-6" noValidate>
+    <form id={formId} action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col gap-3 md:gap-4" noValidate>
+      {assistente && <input type="hidden" name="assistente" value={assistente} />}
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="categoria_id" value={categoriaId ?? ""} />
       <input type="hidden" name="editar" value={editar ? "1" : ""} />
@@ -70,6 +73,8 @@ export function FormDetalhes({
       <AvisoErro mensagem={estado?.erro?.mensagem} />
 
       <Campo
+
+        tamanho="toque"
         rotulo="Título"
         name="titulo"
         value={titulo}
@@ -134,6 +139,7 @@ export function FormDetalhes({
           const decimal = (c.min != null && !Number.isInteger(c.min)) || (c.max != null && !Number.isInteger(c.max));
           return (
             <Campo
+              tamanho="toque"
               key={c.chave}
               rotulo={rotulo}
               name={nome}
@@ -152,6 +158,7 @@ export function FormDetalhes({
 
         return (
           <Campo
+            tamanho="toque"
             key={c.chave}
             rotulo={rotulo}
             name={nome}
@@ -168,6 +175,8 @@ export function FormDetalhes({
       })}
 
       <Campo
+
+        tamanho="toque"
         multilinha
         rotulo="Descrição"
         name="descricao"
