@@ -66,12 +66,12 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
                     const nome = formatarNome(l.nome);
                     return (
                       <li key={l.id} className="shrink-0 snap-start">
-                        <Link href={linkLoja(l.slug)} title={nome} className="olaki-toque relative isolate block aspect-square w-30 overflow-hidden rounded-card border border-borda bg-cartao hover:border-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro md:w-36">
+                        <Link href={linkLoja(l.slug)} title={nome} className="olaki-toque relative isolate block aspect-square w-20 overflow-hidden rounded-card border border-borda bg-cartao hover:border-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro md:w-36">
                           <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="cartao" />
                           {l.verificada && (
                             <ShieldCheck className="absolute top-2 right-2 size-5 rounded-full bg-cartao p-0.5 text-verde-escuro" aria-label="Loja verificada" role="img" />
                           )}
-                          <span className="absolute inset-x-0 bottom-0 bg-beringela/95 px-2 py-1.5 text-sm leading-tight font-semibold text-white">
+                          <span className="absolute inset-x-0 bottom-0 bg-beringela/95 px-2 py-1 text-legenda leading-tight font-semibold text-white">
                             <span className="line-clamp-2 [overflow-wrap:anywhere]">{nome}</span>
                           </span>
                         </Link>

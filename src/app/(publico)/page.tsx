@@ -147,27 +147,6 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           <SalvarAoVoltar logado={logado} />
         </Suspense>
 
-        <div className="flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-start-1">
-          {regiao && blocoLojas ? (
-            <LojasDaRegiao regiao={regiao} arvore={enxugarArvore(todasCategorias)} titulo={tituloLojas} />
-          ) : (
-            <Botao href="/lojas" variante="secundario" tamanho="toque" className="self-start">Ver todas as lojas</Botao>
-          )}
-        </div>
-
-        <aside className={`${chamadaRadar ? "flex" : "hidden lg:flex"} min-w-0 flex-col gap-3 lg:sticky lg:top-20 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start`}>
-          {chamadaRadar && <RadarInicio {...chamadaRadar} />}
-          <nav aria-labelledby="titulo-atalhos" className="hidden rounded-card border border-borda bg-cartao p-2 lg:block">
-            <h2 id="titulo-atalhos" className="px-2 pt-1 pb-1 text-legenda font-semibold tracking-wide text-texto-suave uppercase">Para você</h2>
-            <ul className="flex flex-col">
-              <li><Link href="/minha-conta/favoritos" className={estilos.itemLado}><Heart className="size-5 shrink-0 text-beringela" aria-hidden />Favoritos</Link></li>
-              <li><a href="#vistos" className={estilos.itemLado}><Clock className="size-5 shrink-0 text-beringela" aria-hidden />Vistos há pouco</a></li>
-              <li><Link href="/minha-conta/anuncios" className={estilos.itemLado}><Tag className="size-5 shrink-0 text-beringela" aria-hidden />Meus anúncios</Link></li>
-              <li><Link href="/cidades" className={estilos.itemLado}><MapPin className="size-5 shrink-0 text-beringela" aria-hidden />Trocar cidade</Link></li>
-            </ul>
-          </nav>
-        </aside>
-
         <div className="flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-start-2">
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -176,7 +155,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
               </h1>
               {total > 0 && <p className="text-legenda text-texto-suave">{total.toLocaleString("pt-BR")} {total === 1 ? "anúncio" : "anúncios"}</p>}
             </div>
-            <div role="group" aria-label="Filtros rápidos" className="flex flex-wrap gap-2">
+            <div role="group" aria-label="Filtros rápidos" className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:flex-wrap">
               {cidade && (
                 <Chip href={linkFiltros({ ...filtros, minha: !filtros.minha })} ativo={filtros.minha} tamanho="toque" icone={<MapPin />} scroll={false}>
                   Só em {formatarNome(cidade)}
@@ -200,7 +179,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             switch (bloco.chave) {
               case "destaques":
                 return destaques.length > 0 ? (
-                  <section key={bloco.chave} aria-labelledby="titulo-destaques" className={`flex flex-col gap-2 ${estilos.faixaPaga}`}>
+                  <section key={bloco.chave} aria-labelledby="titulo-destaques" className={`flex flex-col gap-2 max-md:order-1 ${estilos.faixaPaga}`}>
                     <h2 id="titulo-destaques" className="text-lg font-semibold">
                       {textoDe(bloco.titulo, "Destaques perto de você", lugar)}
                     </h2>
@@ -210,7 +189,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
               case "lojas_destaque":
                 return regiao ? (
-                  <div key={bloco.chave} className="min-w-0 [&:empty]:hidden"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
+                  <div key={bloco.chave} className="min-w-0 max-md:order-3 [&:empty]:hidden"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
                 ) : null;
 
               case "radar":
@@ -221,7 +200,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
               case "recentes":
                 return (
-                  <div key={bloco.chave} className="flex flex-col gap-3">
+                  <div key={bloco.chave} className="flex flex-col gap-3 max-md:order-2">
                     <section id="anuncios" aria-labelledby="titulo-recentes" className="flex scroll-mt-20 flex-col gap-3">
                       <h2 id="titulo-recentes" className={`text-lg font-semibold ${filtrando ? "" : "max-md:sr-only"}`}>
                         {filtrando
@@ -275,8 +254,30 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
             }
           })}
 
-          <RodapeInicio />
         </div>
+
+        <div className="flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-start-1">
+          {regiao && blocoLojas ? (
+            <LojasDaRegiao regiao={regiao} arvore={enxugarArvore(todasCategorias)} titulo={tituloLojas} />
+          ) : (
+            <Botao href="/lojas" variante="secundario" tamanho="toque" className="self-start">Ver todas as lojas</Botao>
+          )}
+        </div>
+
+        <aside className={`${chamadaRadar ? "flex" : "hidden lg:flex"} min-w-0 flex-col gap-3 lg:sticky lg:top-20 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start`}>
+          {chamadaRadar && <RadarInicio {...chamadaRadar} />}
+          <nav aria-labelledby="titulo-atalhos" className="hidden rounded-card border border-borda bg-cartao p-2 lg:block">
+            <h2 id="titulo-atalhos" className="px-2 pt-1 pb-1 text-legenda font-semibold tracking-wide text-texto-suave uppercase">Para você</h2>
+            <ul className="flex flex-col">
+              <li><Link href="/minha-conta/favoritos" className={estilos.itemLado}><Heart className="size-5 shrink-0 text-beringela" aria-hidden />Favoritos</Link></li>
+              <li><a href="#vistos" className={estilos.itemLado}><Clock className="size-5 shrink-0 text-beringela" aria-hidden />Vistos há pouco</a></li>
+              <li><Link href="/minha-conta/anuncios" className={estilos.itemLado}><Tag className="size-5 shrink-0 text-beringela" aria-hidden />Meus anúncios</Link></li>
+              <li><Link href="/cidades" className={estilos.itemLado}><MapPin className="size-5 shrink-0 text-beringela" aria-hidden />Trocar cidade</Link></li>
+            </ul>
+          </nav>
+        </aside>
+
+        <div className="lg:col-start-2"><RodapeInicio /></div>
       </main>
     </div>
   );
