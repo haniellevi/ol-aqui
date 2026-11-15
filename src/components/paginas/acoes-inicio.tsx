@@ -1,4 +1,4 @@
-import { Info, Plus } from "lucide-react";
+import { Info, Plus, Radar } from "lucide-react";
 import { Botao, classesBotao } from "@/components/ui/botao";
 import { LINK_RADAR, linkPedirRadar } from "@/lib/rotas";
 
@@ -13,16 +13,26 @@ export function CriarAnuncioInicio() {
 
 export function RadarInicio({ titulo, texto, botao }: { titulo: string; texto: string; botao: string }) {
   return (
-    <section aria-labelledby="titulo-radar-inicio" className="flex min-w-0 flex-col gap-3 rounded-card bg-beringela p-4 text-white lg:min-h-64">
-      <div className="flex items-start justify-between gap-2">
-        <h2 id="titulo-radar-inicio" className="min-w-0 pt-2 text-lg leading-snug font-semibold [overflow-wrap:anywhere]">{titulo}</h2>
-        <a href={`${LINK_RADAR}?como-funciona=1`} aria-label="Como funciona o Radar" title="Como funciona o Radar"
-          className={classesBotao("texto", false, "-mt-2 -mr-2 shrink-0 px-0 text-white! focus-visible:outline-white hover:bg-white/15", "toque")}>
-          <Info className="size-5" aria-hidden />
-        </a>
+    <section aria-label="Radar" className="relative min-w-0">
+      <div className="pr-13">
+        <Botao href={linkPedirRadar()} variante="secundario" tamanho="toque" icone={<Radar />}
+          className="w-full bg-beringela px-2 text-white hover:bg-beringela/90">
+          {botao}
+        </Botao>
       </div>
-      <p className="min-w-0 text-base leading-relaxed text-selecao [overflow-wrap:anywhere]">{texto}</p>
-      <Botao href={linkPedirRadar()} tamanho="toque" className="self-start lg:mt-auto lg:w-full">{botao}</Botao>
+      <details className="group">
+        <summary aria-label="Como funciona o Radar" title="Como funciona o Radar"
+          className={classesBotao("secundario", false, "absolute top-0 right-0 cursor-pointer list-none px-0 group-open:bg-selecao [&::-webkit-details-marker]:hidden", "toque")}>
+          <Info className="size-5" aria-hidden />
+        </summary>
+        <div className="mt-2 flex flex-col gap-1 rounded-card border border-borda bg-cartao p-3 [overflow-wrap:anywhere]">
+          <h2 id="titulo-radar-inicio" className="text-lg font-semibold text-beringela">{titulo}</h2>
+          <p className="text-base text-texto-suave">{texto}</p>
+          <Botao href={`${LINK_RADAR}?como-funciona=1`} variante="texto" tamanho="toque" className="self-start px-0">
+            Ver detalhes do Radar
+          </Botao>
+        </div>
+      </details>
     </section>
   );
 }

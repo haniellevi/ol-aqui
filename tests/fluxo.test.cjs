@@ -55,7 +55,7 @@ test('início apresenta região, busca GET acessível e destinos das categorias'
   assert.match(html, /<details[^>]*>.*<summary[^>]*>.*Categorias.*aria-label="Categorias de anúncios"/);
   for (const href of ['/c/veiculos', '/c/pet', '/categorias']) assert.ok(html.includes(`href="${href}"`));
 });
-test('início mostra as lojas no topo do feed, sem busca, com tipo de loja e um só "Ver todas"', async () => {
+test('início mantém os destaques regionais no feed, com tipo de loja e um só "Ver todas"', async () => {
   const html = await htmlInicio({ lojas: LOJAS, categoriasLojas: new Map([['l1', ['c21', 'c21']], ['l2', ['c1']]]), anuncios: [{ id: 'a1', titulo: 'Mesa' }] });
   assert.match(html, /id="titulo-lojas"[^>]*>DESTAQUES DA REGIÃO<\/h2><a\b[^>]*href="\/lojas"[^>]*>(<span[^>]*>)?Ver todas<\//);
   assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
@@ -67,8 +67,9 @@ test('início mostra as lojas no topo do feed, sem busca, com tipo de loja e um 
   assert.match(html, /id="lojas-da-regiao"/);
   assert.match(html, /\[overflow-wrap:anywhere\][^>]*>Rvs Tecnologia e Comunicação do Extremo Sul<\/span>/);
   const lojasEm = html.indexOf('titulo-lojas');
-  assert.ok(lojasEm >= 0);
+  assert.ok(lojasEm > html.indexOf('titulo-recentes'));
   assert.match(html, /lg:col-start-2 lg:row-start-1/);
+  assert.match(html, /grid-rows-\[minmax\(0,1fr\)_auto\]/);
   assert.doesNotMatch(html, /Ver todas as lojas/);
 });
 test('início esconde o filtro de tipo quando as lojas não têm tipos diferentes', async () => {
@@ -87,18 +88,17 @@ test('início com o bloco de lojas desligado mantém um acesso ao catálogo', as
   assert.match(html, /Ver todas as lojas/);
   assert.doesNotMatch(html, /id="titulo-lojas"|href="\/loja\/multi"/);
 });
-test('início posiciona Criar anúncio na barra e mantém o Radar antes dos filtros', async () => {
+test('início mantém Criar anúncio na barra e guarda a explicação do Radar em um painel fechado', async () => {
   for (const anuncios of [[], [{ id: 'a1', titulo: 'Mesa da região' }]]) {
     const html = await htmlInicio({ anuncios });
-    assert.match(html, /aria-labelledby="titulo-radar-inicio"/);
+    assert.match(html, /<section aria-label="Radar"/);
     assert.equal((html.match(/href="\/radar\/pedir"/g) ?? []).length, 1);
     assert.match(html, /Procurando algo\?/);
-    assert.match(html, /aria-label="Como funciona o Radar"/);
+    assert.match(html, /<details class="group"><summary aria-label="Como funciona o Radar"/);
+    assert.match(html, /href="\/radar\?como-funciona=1"/);
     assert.match(html, /podem responder com ofertas/);
     assert.match(html, />Criar anúncio</);
-    assert.match(html, /bg-laranja/);
-    assert.match(html, /bg-selecao/);
-    assert.doesNotMatch(html, /titulo-vender|>Exemplo<|Anunciar grátis|Tem algo parado em casa/);
+    assert.doesNotMatch(html, /titulo-vender|>Anunciar<|>Exemplo<|Anunciar grátis|Tem algo parado em casa/);
     assert.ok(html.indexOf('action="/busca"') < html.indexOf('href="/anunciar"'));
     assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('titulo-lojas'));
     assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('aria-label="Filtros rápidos"'));
