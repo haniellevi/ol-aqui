@@ -10,6 +10,7 @@ import {
   ambienteAsaas,
   apagarCobranca,
   asaasConfigurado,
+  cobrancaNoAmbiente,
   clienteDoAmbiente,
   consultarCobranca,
   criarCliente,
@@ -96,6 +97,9 @@ export async function garantirCobranca(opcoes: {
   naoEncontrado: string;
 }): Promise<"ok" | "precisa_documento"> {
   const { amb, pg, userId, forma, documento, descricao, naoEncontrado } = opcoes;
+  if (process.env.VERCEL_ENV === "production" && amb !== "producao") {
+    throw new ErroCobranca("Pagamento em breve. Tente novamente mais tarde.");
+  }
   const db = supabaseAdmin();
   const { data: vitrine } = await db
     .from("vitrines_lojas")
@@ -106,6 +110,9 @@ export async function garantirCobranca(opcoes: {
 
   if (pg.status === "pago") return "ok";
   if (pg.status !== "pendente") throw new ErroCobranca("Esta cobrança não está mais esperando pagamento.");
+  if (process.env.VERCEL_ENV === "production" && pg.asaas_cobranca_id && !(await cobrancaNoAmbiente(pg.id, amb))) {
+    throw new ErroCobranca("Esta cobrança precisa ser conferida pela equipe. Fale com o suporte.");
+  }
 
   let reservou = false;
   let enviouCriacao = false;
@@ -184,6 +191,8 @@ export async function conferirNoAsaas(pagamentoId: string): Promise<boolean> {
     if (!pg?.asaas_cobranca_id || pg.status !== "pendente") return false;
     if (!(await podePerguntarAoAsaas(pg.id))) return false;
     const amb = await ambienteAsaas();
+    if (process.env.VERCEL_ENV === "production" && amb !== "producao") return false;
+    if (process.env.VERCEL_ENV === "production" && !(await cobrancaNoAmbiente(pg.id, amb))) return false;
     const c = await consultarCobranca(amb, pg.asaas_cobranca_id);
     if (!STATUS_PAGO.has(String(c.status))) return false;
     const confirmado = await supabaseAdmin().rpc("confirmar_pagamento", {

@@ -32,7 +32,7 @@ function ambiente(op = {}) {
     '@/lib/supabase/admin': {supabaseAdmin:()=>db}, '@/lib/supabase/server':{createClient:async()=>db},
     '@/lib/dados/cobranca':{meuPagamento:async()=>({...pg,tipo:'assinatura',tem_cobranca:!!pg.asaas_cobranca_id})},
     '@/lib/asaas':{
-      ErroAsaas,STATUS_PAGO:new Set(['RECEIVED','CONFIRMED']),ambienteAsaas:async()=>'sandbox',asaasConfigurado:()=>true,
+      ErroAsaas,STATUS_PAGO:new Set(['RECEIVED','CONFIRMED']),ambienteAsaas:async()=>op.ambiente??'sandbox',asaasConfigurado:()=>true,cobrancaNoAmbiente:async()=>op.origemValida!==false,
       clienteDoAmbiente:(v)=>v?.split(':')[1],
       buscarCobrancaPorReferencia:async()=>encontrada,
       criarCobranca:async()=>{eventos.push('POST');await new Promise(r=>setTimeout(r,10));if(op.recusa)throw new ErroAsaas('documento recusado',400);if(op.timeout)throw new Error('timeout');return {id:'pay_1',value:29.9,billingType:'PIX',status:'PENDING',invoiceUrl:'https://sandbox.asaas.com/i/teste'};},
@@ -41,7 +41,7 @@ function ambiente(op = {}) {
     }
   });
   return { ...cobrar,pg,eventos,setEncontrada:(v)=>encontrada=v,
-    run:()=>cobrar.garantirCobranca({amb:'sandbox',pg:{...pg},userId:'user',forma:'pix',descricao:'Teste',naoEncontrado:'Não encontrado'}) };
+    run:()=>cobrar.garantirCobranca({amb:op.ambiente??'sandbox',pg:{...pg},userId:'user',forma:'pix',descricao:'Teste',naoEncontrado:'Não encontrado'}) };
 }
 
 test('cobrança: quatro solicitações simultâneas fazem no máximo um POST',async()=>{
@@ -96,7 +96,7 @@ function acoes(op={}) {
   const a=carregar('src/app/(conta)/pagar/actions.ts',{
     '@clerk/nextjs/server':{auth:async()=>({userId:op.semLogin?null:'user'})},'next/cache':{revalidatePath:()=>{}},
     '@/lib/supabase/server':{createClient:async()=>({rpc:async(n,p)=>{chamadas.push([n,p]);if(op.rede)throw Error('rede');return {data:op.semLinha?null:{pagamento_id:id,cancelados:[]},error:op.erro??null};}})},
-    '@/lib/asaas':{asaasConfigurado:()=>!op.desligado},
+    '@/lib/asaas':{pagamentoDisponivel:async()=>!op.desligado},
     '@/lib/cobranca-pagamento':{ErroCobranca,apagarCanceladasNoAsaas:async()=>{},cobrarMeuPagamento:async(pg)=>{chamadas.push(['cobrar',pg]);if(op.falha)throw new ErroCobranca('Retome este pagamento.');return {etapa:'precisa_documento',pagamentoId:pg};},situacaoMeuPagamento:async()=>{throw Error('consulta indisponível');}},
   });return {a,chamadas};
 }
@@ -121,4 +121,119 @@ test('leituras: indisponibilidade não se apresenta como ausência de assinatura
   const q={select(){return q;},eq(){return q;},maybeSingle:async()=>({data:null,error:{message:'offline'}})};
   const d=carregar('src/lib/dados/cobranca.ts',{'@/lib/supabase/server':{createClient:async()=>({rpc:async()=>({data:null,error:{message:'offline'}}),from:()=>q})}});
   await assert.rejects(d.minhaAssinatura());await assert.rejects(d.opcoesAssinatura());await assert.rejects(d.meuPagamento(id));
+});
+
+test('Asaas sandbox não fica disponível para cobrança em produção', async () => {
+  const anteriorChave = process.env.ASAAS_API_KEY;
+  const anteriorVercel = process.env.VERCEL_ENV;
+  let ambienteAtual = 'sandbox';
+  try {
+    process.env.ASAAS_API_KEY = 'chave-de-teste';
+    const asaas = carregar('src/lib/asaas.ts', {
+      '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async () => ({ data: ambienteAtual, error: null }) }) },
+    });
+    process.env.VERCEL_ENV = 'production';
+    assert.equal(await asaas.pagamentoDisponivel(), false);
+    ambienteAtual = 'producao';
+    assert.equal(await asaas.pagamentoDisponivel(), true);
+    ambienteAtual = 'sandbox';
+    process.env.VERCEL_ENV = 'preview';
+    assert.equal(await asaas.pagamentoDisponivel(), true);
+    delete process.env.ASAAS_API_KEY;
+    assert.equal(await asaas.pagamentoDisponivel(), false);
+  } finally {
+    if (anteriorChave === undefined) delete process.env.ASAAS_API_KEY; else process.env.ASAAS_API_KEY = anteriorChave;
+    if (anteriorVercel === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anteriorVercel;
+  }
+});
+
+test('produção não confirma pagamentos consultando o sandbox', async () => {
+  const anterior = process.env.VERCEL_ENV;
+  try {
+    process.env.VERCEL_ENV = 'production';
+    const a = ambiente({pg:{asaas_cobranca_id:'pay_1'}});
+    assert.equal(await a.conferirNoAsaas(id), false);
+    assert.equal(a.eventos.includes('confirmar_pagamento'), false);
+  } finally {
+    if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
+  }
+});
+
+test('webhook não confirma cobranças sandbox no site de produção', async () => {
+  const anterior = process.env.VERCEL_ENV;
+  const chamadas = [];
+  try {
+    process.env.VERCEL_ENV = 'production';
+    const webhook = carregar('src/app/api/asaas/webhook/route.ts', {
+      'next/server': { NextResponse: { json: (body, op = {}) => ({ body, status: op.status ?? 200 }) } },
+      '@/lib/asaas': { tokenWebhookConfere: () => true, ambienteAsaas: async () => 'sandbox' },
+      '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async (...args) => { chamadas.push(args); return { error: null }; } }) },
+    });
+    const resposta = await webhook.POST({ headers: { get: () => 'token' }, json: async () => ({ event: 'PAYMENT_RECEIVED', payment: { id: 'pay_1' } }) });
+    assert.equal(resposta.status, 503);
+    assert.deepEqual(chamadas, []);
+  } finally {
+    if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
+  }
+});
+
+test('ambiente da cobrança é conferido com a reserva persistida', async () => {
+  let ambienteRegistrado = 'sandbox';
+  const db = { from: () => ({ select() { return this; }, eq() { return this; }, maybeSingle: async () => ({ data: ambienteRegistrado ? { ambiente: ambienteRegistrado } : null, error: null }) }) };
+  const { cobrancaNoAmbiente } = carregar('src/lib/asaas.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => db } });
+  assert.equal(await cobrancaNoAmbiente(id, 'producao'), false);
+  ambienteRegistrado = 'producao';
+  assert.equal(await cobrancaNoAmbiente(id, 'producao'), true);
+  ambienteRegistrado = null;
+  assert.equal(await cobrancaNoAmbiente(id, 'producao'), false);
+});
+
+
+test('produção rejeita retomada e consulta de cobrança de outro ambiente', async () => {
+  const anterior = process.env.VERCEL_ENV;
+  try {
+    process.env.VERCEL_ENV = 'production';
+    const a = ambiente({ambiente:'producao', origemValida:false, pg:{asaas_cobranca_id:'pay_1',forma:'pix'}});
+    await assert.rejects(a.run(), /conferida/);
+    assert.equal(await a.conferirNoAsaas(id), false);
+    assert.equal(a.eventos.includes('confirmar_pagamento'), false);
+  } finally {
+    if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
+  }
+});
+
+test('webhook rejeita cobrança registrada em outro ambiente após migração', async () => {
+  const anterior = process.env.VERCEL_ENV;
+  const chamadas = [];
+  try {
+    process.env.VERCEL_ENV = 'production';
+    const q = { select() { return q; }, eq() { return q; }, maybeSingle: async () => ({ data: { id }, error: null }) };
+    const webhook = carregar('src/app/api/asaas/webhook/route.ts', {
+      'next/server': { NextResponse: { json: (body, op = {}) => ({ body, status: op.status ?? 200 }) } },
+      '@/lib/asaas': { tokenWebhookConfere: () => true, ambienteAsaas: async () => 'producao', cobrancaNoAmbiente: async () => false },
+      '@/lib/supabase/admin': { supabaseAdmin: () => ({ from: () => q, rpc: async (...args) => { chamadas.push(args); return { error: null }; } }) },
+    });
+    const resposta = await webhook.POST({ headers: { get: () => 'token' }, json: async () => ({ event: 'PAYMENT_RECEIVED', payment: { id: 'pay_1' } }) });
+    assert.equal(resposta.status, 503);
+    assert.deepEqual(chamadas, []);
+  } finally {
+    if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
+  }
+});
+
+test('cobrança antiga sem reserva pode ser reconhecida pela API real com referência e valor exatos', async () => {
+  const originalFetch = global.fetch, chave = process.env.ASAAS_API_KEY;
+  let referencia = id;
+  const db = { from: (tabela) => ({ select() { return this; }, eq() { return this; }, maybeSingle: async () => ({ data: tabela === 'asaas_criacoes' ? null : { id, asaas_cobranca_id:'pay_1', valor_centavos:2990 }, error: null }) }) };
+  try {
+    process.env.ASAAS_API_KEY = 'teste';
+    global.fetch = async () => ({ ok:true, text:async()=>JSON.stringify({id:'pay_1',externalReference:referencia,value:29.9}) });
+    const { cobrancaNoAmbiente } = carregar('src/lib/asaas.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => db } });
+    assert.equal(await cobrancaNoAmbiente(id, 'producao'), true);
+    referencia = 'outro';
+    assert.equal(await cobrancaNoAmbiente(id, 'producao'), false);
+  } finally {
+    global.fetch = originalFetch;
+    if (chave === undefined) delete process.env.ASAAS_API_KEY; else process.env.ASAAS_API_KEY = chave;
+  }
 });

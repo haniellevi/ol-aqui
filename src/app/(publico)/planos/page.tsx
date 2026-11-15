@@ -10,6 +10,7 @@ import type { PlanoPublico } from "@/lib/tipos-vitrine";
 import { Badge } from "@/components/ui/badge";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
+import { Voltar } from "@/components/ui/voltar";
 
 // Página pública dos planos. Tudo vem da tabela planos (painel, tela 2) e as perguntas da
 // configuração planos.perguntas_frequentes: nenhum preço ou limite fica no código.
@@ -65,6 +66,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 [overflow-wrap:anywhere]">
+      <Voltar />
       <header className="flex flex-col gap-1">
         <h1 className="text-titulo font-semibold text-beringela">Planos do Mercado da Região</h1>
         <p className="text-base text-texto-suave">
@@ -89,8 +91,19 @@ export default async function PaginaPlanos({ searchParams }: Props) {
           </Botao>
         </Vazio>
       ) : (
-        <ul className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
-          {planos.map((p) => {
+        <div className="flex flex-col gap-6">
+          {[
+            { titulo: "Para pessoas físicas", descricao: "Para quem quer anunciar itens pessoais.", planos: planos.filter((p) => p.publico === "pf" && p.preco_centavos === 0) },
+            { titulo: "Para começar sua loja", descricao: "Conheça a opção gratuita para sua vitrine.", planos: planos.filter((p) => p.publico !== "pf" && p.preco_centavos === 0) },
+            { titulo: "Para lojas que querem mais recursos", descricao: "Compare os planos pagos para lojistas.", planos: planos.filter((p) => p.preco_centavos > 0) },
+          ].filter((grupo) => grupo.planos.length > 0).map((grupo) => (
+          <section key={grupo.titulo} className="flex flex-col gap-3" aria-label={grupo.titulo}>
+            <div className="border-l-4 border-laranja-escuro pl-3">
+              <h2 className="text-lg font-bold text-beringela">{grupo.titulo}</h2>
+              <p className="text-sm text-texto-suave">{grupo.descricao}</p>
+            </div>
+            <ul className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+          {grupo.planos.map((p) => {
             const valor = textoPreco(p);
             const cta = acao(p);
             const destaque = p.recomendado;
@@ -102,7 +115,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
               >
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-                    <h2 className="text-lg font-semibold text-beringela">{p.nome}</h2>
+                    <h3 className="text-lg font-semibold text-beringela">{p.nome}</h3>
                     {destaque && <Badge>Recomendado</Badge>}
                   </div>
                   {p.publico !== "todos" && (
@@ -159,7 +172,10 @@ export default async function PaginaPlanos({ searchParams }: Props) {
               </li>
             );
           })}
-        </ul>
+            </ul>
+          </section>
+          ))}
+        </div>
       )}
 
       {loja && (

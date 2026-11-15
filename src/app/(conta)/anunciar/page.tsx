@@ -12,7 +12,7 @@ import { anunciosDaLoja } from "@/lib/dados/anuncios";
 import { categoriaPorId } from "@/lib/dados/categorias";
 import { lerConfigNumero } from "@/lib/dados/config";
 import { avulsoParaMim } from "@/lib/dados/cobranca";
-import { asaasConfigurado } from "@/lib/asaas";
+import { pagamentoDisponivel } from "@/lib/asaas";
 import { tempoRelativo } from "@/lib/formato";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
@@ -76,7 +76,7 @@ export default async function PaginaAnunciar({ searchParams }: { searchParams: P
           conta={conta}
           avulsoPreco={avulso?.preco ?? null}
           avulsoDias={avulso?.dias ?? null}
-          pagamentoLigado={asaasConfigurado()}
+          pagamentoLigado={(await pagamentoDisponivel())}
         />
         {rascunhos.length > 0 && (
           <p className="text-center text-base text-texto-suave">

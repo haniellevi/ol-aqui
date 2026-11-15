@@ -8,7 +8,7 @@ import { ImageOff, Receipt, ShieldAlert } from "lucide-react";
 import { anuncioDaLoja } from "@/lib/dados/anuncios";
 import { contaDaLoja } from "@/lib/dados/conta";
 import { avulsoParaMim, meuPagamento } from "@/lib/dados/cobranca";
-import { asaasConfigurado } from "@/lib/asaas";
+import { pagamentoDisponivel } from "@/lib/asaas";
 import { precisaDocumento } from "@/lib/cobranca-destaque";
 import { ehUuid, preco } from "@/lib/formato";
 import { LINK_PLANOS } from "@/lib/rotas";
@@ -49,7 +49,7 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
   const editar = anuncio.status !== "rascunho";
   const revisar = urlPasso("revisar", anuncio.id, editar, false, tentativa);
 
-  const pagamentoLigado = asaasConfigurado();
+  const pagamentoLigado = (await pagamentoDisponivel());
   const [avulso, retomado, doc] = await Promise.all([
     avulsoParaMim(vitrine),
     ehUuid(p) ? meuPagamento(p) : Promise.resolve(null),

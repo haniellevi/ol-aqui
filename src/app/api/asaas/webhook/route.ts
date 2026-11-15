@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { ambienteAsaas, apagarCobranca, asaasConfigurado, tokenWebhookConfere } from "@/lib/asaas";
+import { ambienteAsaas, apagarCobranca, asaasConfigurado, cobrancaNoAmbiente, tokenWebhookConfere } from "@/lib/asaas";
 
 // Avisos do Asaas (Configurações > Integrações > Webhooks, com o mesmo token de ASAAS_WEBHOOK_TOKEN).
 // Confere o token em tempo constante e repassa ao banco, que é idempotente:
@@ -40,11 +40,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, ignorado: evento || "sem evento" });
   }
 
+  try {
+    if (process.env.VERCEL_ENV === "production" && (await ambienteAsaas()) !== "producao") {
+      return NextResponse.json({ ok: false }, { status: 503 });
+    }
+  } catch {
+    return NextResponse.json({ ok: false }, { status: 503 });
+  }
+
   let db;
   try {
     db = supabaseAdmin();
   } catch {
     return NextResponse.json({ ok: false }, { status: 503 }); // sem chave do banco: o Asaas tenta de novo
+  }
+
+  if (process.env.VERCEL_ENV === "production") {
+    try {
+      const { data, error } = await db.from("pagamentos").select("id").eq("asaas_cobranca_id", cobranca).maybeSingle();
+      if (error) return NextResponse.json({ ok: false }, { status: 503 });
+      if (!data) return NextResponse.json({ ok: true, ignorado: "cobrança desconhecida" });
+      if (!(await cobrancaNoAmbiente(data.id, "producao"))) return NextResponse.json({ ok: false }, { status: 503 });
+    } catch {
+      return NextResponse.json({ ok: false }, { status: 503 });
+    }
   }
 
   const { error } = PAGO.has(evento)

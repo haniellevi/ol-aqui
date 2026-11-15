@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import { documentoValido } from "@/lib/cpf-cnpj";
-import { asaasConfigurado } from "@/lib/asaas";
+import { pagamentoDisponivel } from "@/lib/asaas";
 import { ErroCobranca, apagarCanceladasNoAsaas, cobrarMeuPagamento, situacaoMeuPagamento } from "@/lib/cobranca-pagamento";
 import type { Resultado } from "@/lib/tipos";
 import type { FormaPagamento, MeuPagamento, RespostaCobranca } from "@/lib/tipos-cobranca";
@@ -53,7 +53,7 @@ export async function pedirPlano(plano: string, meses: number, forma: string, do
     if (!Number.isInteger(meses) || meses < 1 || meses > 36) return falha("Escolha um dos períodos da lista.");
     const invalido = conferirForma(forma, documento);
     if (invalido) return falha(invalido);
-    if (!asaasConfigurado()) return falha(EM_BREVE);
+    if (!(await pagamentoDisponivel())) return falha(EM_BREVE);
 
     if (!Number.isSafeInteger(valorEsperado) || valorEsperado <= 0) return falha("Confira o preço do plano antes de pagar.");
     const db = await createClient();
@@ -77,7 +77,7 @@ export async function pedirAvulso(anuncioId: string, forma: string, documento: s
     if (!ehUuid(anuncioId)) return falha("Anúncio não encontrado.");
     const invalido = conferirForma(forma, documento);
     if (invalido) return falha(invalido);
-    if (!asaasConfigurado()) return falha(EM_BREVE);
+    if (!(await pagamentoDisponivel())) return falha(EM_BREVE);
 
     const db = await createClient();
     const { data, error } = await db.rpc("pedir_anuncio_avulso", { p_anuncio_id: anuncioId });
