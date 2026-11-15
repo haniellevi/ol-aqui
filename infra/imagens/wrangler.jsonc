@@ -5,6 +5,7 @@
   "images": { "binding": "IMAGES" },
   "workers_dev": false,
   "preview_urls": false,
+  "observability": { "enabled": true, "logs": { "enabled": true, "invocation_logs": true }, "traces": { "enabled": true }, "redact_query_string": true },
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"]
 }
