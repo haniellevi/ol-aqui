@@ -55,11 +55,19 @@ export async function pagamentoDisponivel(): Promise<boolean> {
   return process.env.VERCEL_ENV !== "production" || (await ambienteAsaas()) === "producao";
 }
 
-/** Cobranças antigas sem origem comprovada exigem conferência manual. */
+/** Confere a reserva ou, para cobranças antigas, a própria API de produção. */
 export async function cobrancaNoAmbiente(pagamentoId: string, ambiente: AmbienteAsaas): Promise<boolean> {
   const { data, error } = await supabaseAdmin().from("asaas_criacoes").select("ambiente").eq("pagamento_id", pagamentoId).maybeSingle();
   if (error) throw new ErroAsaas("Não foi possível conferir a origem da cobrança.");
-  return data?.ambiente === ambiente;
+  if (data) return data.ambiente === ambiente;
+  if (ambiente !== "producao") return false;
+  const { data: pagamento, error: erroPagamento } = await supabaseAdmin().from("pagamentos")
+    .select("id, asaas_cobranca_id, valor_centavos").eq("id", pagamentoId).maybeSingle();
+  if (erroPagamento) throw new ErroAsaas("Não foi possível conferir a cobrança.");
+  if (!pagamento?.asaas_cobranca_id) return false;
+  const cobranca = await consultarCobranca("producao", pagamento.asaas_cobranca_id);
+  return cobranca.id === pagamento.asaas_cobranca_id && cobranca.externalReference === pagamento.id &&
+    typeof cobranca.value === "number" && Number.isFinite(cobranca.value) && Math.round(cobranca.value * 100) === pagamento.valor_centavos;
 }
 
 async function chamar<T>(ambiente: AmbienteAsaas, caminho: string, init: RequestInit = {}): Promise<T> {

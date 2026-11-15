@@ -220,3 +220,20 @@ test('webhook rejeita cobrança registrada em outro ambiente após migração', 
     if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
   }
 });
+
+test('cobrança antiga sem reserva pode ser reconhecida pela API real com referência e valor exatos', async () => {
+  const originalFetch = global.fetch, chave = process.env.ASAAS_API_KEY;
+  let referencia = id;
+  const db = { from: (tabela) => ({ select() { return this; }, eq() { return this; }, maybeSingle: async () => ({ data: tabela === 'asaas_criacoes' ? null : { id, asaas_cobranca_id:'pay_1', valor_centavos:2990 }, error: null }) }) };
+  try {
+    process.env.ASAAS_API_KEY = 'teste';
+    global.fetch = async () => ({ ok:true, text:async()=>JSON.stringify({id:'pay_1',externalReference:referencia,value:29.9}) });
+    const { cobrancaNoAmbiente } = carregar('src/lib/asaas.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => db } });
+    assert.equal(await cobrancaNoAmbiente(id, 'producao'), true);
+    referencia = 'outro';
+    assert.equal(await cobrancaNoAmbiente(id, 'producao'), false);
+  } finally {
+    global.fetch = originalFetch;
+    if (chave === undefined) delete process.env.ASAAS_API_KEY; else process.env.ASAAS_API_KEY = chave;
+  }
+});
