@@ -68,7 +68,7 @@ export default async function MeuPedidoPage({
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-3 sm:gap-4 sm:px-6">
       {tentativa && userId && <ConcluirAssistente dono={userId} tentativa={tentativa} />}
-      <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className={`inline-flex min-h-11 w-fit items-center gap-1 text-lg font-semibold text-laranja-escuro hover:underline ${FOCO_LINK}`}>
+      <Link href={`${LINK_RADAR}?aba=meus${arquivado ? "&arquivo=1" : ""}`} className={`inline-flex min-h-11 w-fit items-center gap-1 text-base font-semibold text-laranja-escuro hover:underline ${FOCO_LINK}`}>
         <ChevronLeft className="size-5" aria-hidden />
         {arquivado ? "Arquivados" : "Meus pedidos"}
       </Link>
@@ -115,9 +115,9 @@ export default async function MeuPedidoPage({
           </span>
           {pedido.categoria_nome && <span className="[overflow-wrap:anywhere]">· {pedido.categoria_nome}</span>}
         </div>
-        <h1 id="titulo-pedido" className="text-3xl font-semibold text-beringela [overflow-wrap:anywhere]">{formatarNome(pedido.titulo)}</h1>
-        {pedido.detalhes && <p className="text-lg whitespace-pre-line text-texto [overflow-wrap:anywhere]">{pedido.detalhes}</p>}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-lg">
+        <h1 id="titulo-pedido" className="text-xl font-semibold text-beringela [overflow-wrap:anywhere] sm:text-2xl">{formatarNome(pedido.titulo)}</h1>
+        {pedido.detalhes && <p className="text-base whitespace-pre-line text-texto [overflow-wrap:anywhere]">{pedido.detalhes}</p>}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base">
           <p className="font-semibold text-beringela">{faixaPreco(pedido.preco_min_centavos, pedido.preco_max_centavos)}</p>
           {modoPrazo && pedido.propostas_ate && aberto && (
             <p className="inline-flex items-center gap-1.5 font-semibold text-laranja-escuro">
@@ -137,7 +137,7 @@ export default async function MeuPedidoPage({
             <ChevronDown className="size-4 shrink-0 group-open:rotate-180" aria-hidden />
             <span>Quem vê: {visibilidade.titulo} · Mais detalhes</span>
           </summary>
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 pb-1 pl-5.5 text-lg text-texto-suave">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 pb-1 pl-5.5 text-base text-texto-suave">
             <li className="[overflow-wrap:anywhere]">{visibilidade.ajuda}</li>
             {aberto && <li>{vencimento}</li>}
             <li>Publicado {tempoRelativo(pedido.criado_em)}</li>
