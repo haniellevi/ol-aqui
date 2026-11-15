@@ -25,6 +25,7 @@ try:
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+    checked(sql((root/'supabase/testes/891_convite_envio.sql').read_text()))
     checked(sql((root/'supabase/testes/880_loja_ia_rascunhos.sql').read_text()))
     checked(sql("""insert into perfis(id,microrregiao_id,nome,cidade)
       select 'user_ia880conc',id,'IA concorrente','Corrente' from microrregioes where slug='corrente-pi';
@@ -421,5 +422,20 @@ try:
     for result in artes: checked(result)
     assert sum('nova' in r.stdout for r in artes)==1 and sum('sem_credito' in r.stdout for r in artes)==3, [r.stdout for r in artes]
     print('PASS: quatro pedidos simultâneos do Aki disputam um único crédito', flush=True)
+    checked(sql("""insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+      select 'user_conviteconc891',id,'Loja convite concorrente','Corrente','5589999900896',now() from public.microrregioes where slug='corrente-pi';
+      insert into public.vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo)
+      select '89100000-0000-4000-a000-000000000001','user_conviteconc891',microrregiao_id,'loja-convite-concorrente','Loja convite concorrente','Corrente','5589999900896','loja'
+      from public.perfis where id='user_conviteconc891';"""))
+    gerado=sql("begin; set local role authenticated; set local request.jwt.claim.sub='user_conviteconc891'; select public.convidar_gerente_loja('89100000-0000-4000-a000-000000000001','5589999900897'); commit;")
+    checked(gerado)
+    token_convite=re.search(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}',gerado.stdout).group(0)
+    def reservar_envio(_):
+        return sql(f"begin; set local role authenticated; set local request.jwt.claim.sub='user_conviteconc891'; select public.convite_gerente_reservar_envio('89100000-0000-4000-a000-000000000001','{token_convite}','5589999900897'); select pg_sleep(0.2); commit;")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        envios=list(pool.map(reservar_envio,range(2)))
+    for resultado in envios: checked(resultado)
+    assert sum(bool(re.search(r'^\s*t\s*$', r.stdout, re.M)) for r in envios)==1, [r.stdout for r in envios]
+    print('PASS: duas reservas simultâneas permitem um único envio de convite', flush=True)
 finally:
     run('docker','stop',container)
