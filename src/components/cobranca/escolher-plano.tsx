@@ -35,7 +35,7 @@ export function textoRegra(o: Pick<OpcaoAssinatura, "regra" | "nome" | "inicio" 
   const fim = dataPorExtenso(o.fim);
   switch (o.regra) {
     case "inicio":
-      return `O plano ${o.nome} começa agora e vale até ${fim}.`;
+      return `Após a confirmação, você começa a usar ${o.nome} com validade até ${fim}.`;
     case "renovacao":
       return `Soma ao seu plano: o ${o.nome} passa a valer até ${fim}.`;
     case "troca_agora":
@@ -71,10 +71,10 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
 
   function resultado(p: MeuPagamento) {
     return <CaixaResultado icone="ok" titulo="Pagamento confirmado">
-      <p className="max-w-sm text-base text-texto-suave">{p.concedido_de && p.regra === "proximo_periodo"
-        ? `O plano ${p.plano_nome ?? ""} começa em ${dataPorExtenso(p.concedido_de)} e vale até ${dataPorExtenso(p.concedido_ate)}.`
-        : p.concedido_ate ? `Seu plano ${p.plano_nome ?? ""} vale até ${dataPorExtenso(p.concedido_ate)}.` : "Seu pagamento foi recebido. Consulte a situação do plano acima."}</p>
-      <Botao href="/minha-conta" larguraTotal className="max-w-sm">Ir para Minha conta</Botao>
+      <p className="max-w-sm text-sm text-texto-suave">{p.concedido_de && p.regra === "proximo_periodo"
+        ? `${p.plano_nome ?? "Seu plano"} começa em ${dataPorExtenso(p.concedido_de)} e vale até ${dataPorExtenso(p.concedido_ate)}.`
+        : p.concedido_ate ? `${p.plano_nome ?? "Seu plano"} vale até ${dataPorExtenso(p.concedido_ate)}.` : "Seu pagamento foi recebido. Consulte a situação do plano acima."}</p>
+      <Botao href="/minha-conta" variante="secundario" tamanho="toque" larguraTotal className="max-w-sm">Ir para Minha conta</Botao>
     </CaixaResultado>;
   }
   if (retomado) return <div className="flex flex-col gap-4">
@@ -83,7 +83,7 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
       pagamentoInicial={retomado} pedir={() => Promise.resolve({ok:false,erro:{mensagem:"Escolha um plano para iniciar um novo pedido."}})}
       aoMudarPagamento={(id) => router.replace(linkMeuPlano({ pagamentoId: id }), { scroll: false })}
       aoPagar={atualizarPlano} sucesso={resultado} desligado={!pagamentoLigado} />
-    <Botao variante="texto" href={linkMeuPlano()}>Ver planos disponíveis</Botao>
+    <Botao variante="texto" tamanho="toque" href={linkMeuPlano()}>Ver planos disponíveis</Botao>
   </div>;
 
   if (opcoes.length === 0) {
@@ -95,16 +95,16 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       {periodos.length > 1 && (
         <div className="flex flex-col gap-2">
-          <p className="text-base font-semibold">Pagar por quanto tempo?</p>
+          <p className="text-base font-semibold">Período do plano</p>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Período">
             {periodos.map((m) => {
               const exemplo = opcoes.find((o) => o.meses === m);
               const desconto = exemplo?.desconto_percentual ?? 0;
               return (
-                <Chip key={m} ativo={m === meses} disabled={ocupado || (travado && m !== meses)} onClick={() => { setMeses(m); if (!opcoes.some((o) => o.meses === m && o.codigo === codigo && o.disponivel)) setCodigo(opcoes.find((o) => o.meses === m && o.disponivel)?.codigo ?? null); }}>
+                <Chip key={m} tamanho="toque" ativo={m === meses} disabled={ocupado || (travado && m !== meses)} onClick={() => { setMeses(m); if (!opcoes.some((o) => o.meses === m && o.codigo === codigo && o.disponivel)) setCodigo(opcoes.find((o) => o.meses === m && o.disponivel)?.codigo ?? null); }}>
                   {nomePeriodo(m, exemplo?.dias ?? null)}
                   {desconto > 0 ? ` · ${desconto.toLocaleString("pt-BR")}% de desconto` : ""}
                 </Chip>
@@ -114,8 +114,8 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
         </div>
       )}
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-3 text-lg font-semibold">Escolha o plano</legend>
+      <fieldset className="flex min-w-0 flex-col gap-2">
+        <legend className="mb-2 text-base font-semibold">Escolha o plano</legend>
         {planos.map((o) => (
           <CartaoPlano
             key={o.codigo}
@@ -126,13 +126,13 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
           />
         ))}
         {travado && (
-          <p className="text-sm text-texto-suave">Para escolher outro plano, toque em &quot;Escolher outra opção&quot;, lá embaixo.</p>
+          <p className="text-sm text-texto-suave">Para trocar de plano, toque em &quot;Escolher outra opção&quot; na cobrança.</p>
         )}
       </fieldset>
 
       {!pagamentoLigado ? (
         <Aviso tipo="info">
-          <span>Pagamento em breve: logo dá para pagar por Pix ou cartão aqui mesmo. Se precisar agora, fale com a equipe Mercado da Região.</span>
+          <span>O pagamento online ainda não está disponível. Se precisar assinar agora, fale com a equipe do Mercado da Região.</span>
         </Aviso>
       ) : opcao && opcao.disponivel ? (
         <FluxoCobranca
@@ -147,7 +147,7 @@ export function EscolherPlano({ opcoes, assinatura, pagamentoLigado, precisaDocu
           }}
           aoOcupar={setOcupado}
           aoPagar={atualizarPlano}
-          nota={<p>{textoRegra(opcao, planoAtual)}</p>}
+          nota={textoRegra(opcao, planoAtual) || undefined}
           sucesso={resultado}
         />
       ) : opcao?.motivo ? (
@@ -175,20 +175,20 @@ function CartaoPlano({
   const porPeriodo = `por ${o.dias} dias`;
   return (
     <label
-      className={`relative flex min-h-10 cursor-pointer gap-3 rounded-card border p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
+      className={`relative flex min-h-toque cursor-pointer gap-2.5 rounded-card border p-3 sm:p-4 transition-colors focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${
         ativo ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
       } ${bloqueado ? "cursor-not-allowed opacity-70" : ""}`}
     >
       <input type="radio" name="plano" value={o.codigo} checked={ativo} disabled={bloqueado} onChange={onEscolher} className="sr-only" />
       <span
-        className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border-2 ${ativo ? "border-laranja-escuro bg-laranja-escuro text-white" : "border-borda bg-cartao"}`}
+        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border-2 ${ativo ? "border-laranja-escuro bg-laranja-escuro text-white" : "border-borda bg-cartao"}`}
         aria-hidden
       >
         {ativo && <CheckCircle2 className="size-4" />}
       </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="flex flex-wrap items-baseline justify-between gap-x-3">
-          <span className="flex flex-wrap items-center gap-2 text-lg leading-6 font-semibold">
+      <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <span className="flex min-w-0 flex-wrap items-center gap-1.5 text-base leading-tight font-semibold [overflow-wrap:anywhere]">
             {o.nome}
             {o.recomendado && (
               <Badge variant="solid">
@@ -197,8 +197,8 @@ function CartaoPlano({
               </Badge>
             )}
           </span>
-          <span className="text-lg leading-6 font-bold tabular-nums">
-            {preco(o.valor_centavos)} <span className="text-sm font-normal text-texto-suave">{porPeriodo}</span>
+          <span className="text-lg leading-tight font-bold text-beringela tabular-nums">
+            <span className="whitespace-nowrap">{preco(o.valor_centavos)}</span> <span className="text-sm font-normal text-texto-suave">{porPeriodo}</span>
           </span>
         </span>
         {o.desconto_percentual > 0 && (
@@ -206,13 +206,13 @@ function CartaoPlano({
             Economia de {preco(o.preco_centavos * o.meses - o.valor_centavos)} no período
           </span>
         )}
-        {o.descricao && <span className="text-base">{o.descricao}</span>}
-        <span className="flex items-center gap-2 text-base">
-          <Check className="size-5 shrink-0 text-verde-escuro" aria-hidden />
+        {o.descricao && <span className="text-sm text-texto-suave">{o.descricao}</span>}
+        <span className="flex items-start gap-2 text-sm">
+          <Check className="mt-0.5 size-4 shrink-0 text-verde-escuro" aria-hidden />
           {o.limite_anuncios === null ? "Anúncios sem limite" : `Até ${o.limite_anuncios} anúncios no ar`}
         </span>
-        <span className="flex items-center gap-2 text-base">
-          <Radar className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
+        <span className="flex items-start gap-2 text-sm">
+          <Radar className="mt-0.5 size-4 shrink-0 text-laranja-escuro" aria-hidden />
           {o.acesso_radar
             ? o.propostas_radar_mes === null
               ? "Radar de Negócios sem limite de propostas"
