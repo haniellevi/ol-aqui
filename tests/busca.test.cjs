@@ -214,7 +214,7 @@ test('busca interpretada sem resultados leva o termo original e filtros ao Radar
     caminho: '/busca', sp: { q: 'inox', ia: termoDigitado, preco_max: '500' },
     categoria: null, categoriaPeloEndereco: false, topo: null, termoDigitado,
   });
-  const vazio = tela.props.children[1].props.vazio.props;
+  const vazio = tela.props.children.find((filho) => filho?.props?.vazio).props.vazio.props;
   assert.equal(vazio.termo, termoDigitado);
   assert.equal(vazio.filtros.precoMax, '500');
   const voltar = new URL(vazio.limparHref, 'https://teste.local');

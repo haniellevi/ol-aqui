@@ -79,7 +79,7 @@ select pg_temp.confere(coalesce((select criado_ip::text from vitrines_lojas wher
 select pg_temp.confere((select criado_em::text from vitrines_lojas where id = :'loja') = :'cem_loja', 'B-42: data de criação da loja não muda pelo dono');
 select pg_temp.confere(coalesce((select criado_ip::text from anuncios where id = '90000000-0000-4000-a000-000000000001'), 'nulo') = :'ip_anuncio', 'M-04: IP do anúncio não muda pelo dono');
 select pg_temp.confere((select criado_em::text from anuncios where id = '90000000-0000-4000-a000-000000000001') = :'cem_anuncio', 'B-42: data do anúncio não muda pelo dono');
-select pg_temp.confere((select plano_efetivo(v) is null from vitrines_lojas v where id = :'loja'), 'B-41: PJ vencida continua sem plano grátis');
+select pg_temp.confere((select (plano_efetivo(v)).codigo = 'loja_gratis' and limite_anuncios(v)=10 from vitrines_lojas v where id = :'loja'), 'B-41: loja vencida usa plano gratuito próprio');
 -- Plano da loja volta a valer para os passos de moderação (aprovar exige plano ativo).
 update vitrines_lojas set plano_expira_em = now() + interval '30 days' where id = :'loja';
 

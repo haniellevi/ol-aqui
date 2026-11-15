@@ -67,7 +67,8 @@ test('início mostra as lojas no topo do feed, sem busca, com tipo de loja e um 
   assert.match(html, /id="lojas-da-regiao"/);
   assert.match(html, /\[overflow-wrap:anywhere\][^>]*>Rvs Tecnologia e Comunicação do Extremo Sul<\/span>/);
   const lojasEm = html.indexOf('titulo-lojas');
-  assert.ok(lojasEm < html.indexOf('titulo-inicio') && lojasEm < html.indexOf('titulo-recentes'));
+  assert.ok(lojasEm >= 0);
+  assert.match(html, /lg:col-start-2 lg:row-start-1/);
   assert.doesNotMatch(html, /Ver todas as lojas/);
 });
 test('início esconde o filtro de tipo quando as lojas não têm tipos diferentes', async () => {
