@@ -14,3 +14,11 @@ Execute `npm run build:cloudflare` e `npm run preview:cloudflare` para validar o
 A branch `codex/cloudflare-producao` prepara o Worker `mercado-regiao-candidato` em modo somente leitura. O Worker `mercado-regiao-imagens`, configurado em `infra/imagens/wrangler.jsonc`, deve ser publicado primeiro pelo GitHub; ele não possui domínio público e é acessado pela associação `IMAGENS_TRATAMENTO`. Ambos precisam acompanhar a mesma versão da branch.
 
 O tratamento usa WebAssembly e valida formato, animação, tamanho e dimensões antes de processar. O teste local com os dois Workers usa imagens artificiais e não precisa de banco. Antes de usar em produção, confira as operações no ambiente real da Cloudflare, incluindo o consumo de CPU e memória, e valide novamente os fluxos de envio e publicação. O artefato fixo de capa é gerado da arte em `src/lib/loja-ia/modelo-capa.ts`; mudanças nessa arte exigem atualizar `infra/imagens/modelo-capa.js` e rodar os testes.
+
+## Integrações e troca do domínio
+
+O domínio permanece na Vercel enquanto o candidato usa autenticação de teste e o Supabase anônimo. Antes da troca, conferir segredos, chaves públicas da mesma instância Clerk, domínios autorizados no Turnstile, webhooks do Clerk, Asaas e Evolution, processamento de imagens e revalidação. Nenhum webhook ou job deve ser duplicado durante a transição.
+
+No banco de produção, as funções `categorizacao_ia_disparar`, `limpeza_disparar`, `moderacao_ia_disparar`, `radar_ia_novidades_disparar`, `verificacao_loja_disparar`, `verificacao_loja_reconferir_disparar` e `whatsapp_fila_disparar` ainda usam `ol-aqui.vercel.app`. Planejar uma migração revisada e reversível para o domínio principal antes de desligar a Vercel; não mudar os jobs durante a prévia. O endereço `olaki_loja_ia_endpoint` no Vault já usa o domínio principal. Os segredos de limpeza e moderação permanecem no Vault e não devem aparecer em código ou logs.
+
+A zona DNS da Cloudflare está pendente e os sete registros foram comparados com o Registro.br. Antes da delegação, conferir novamente todos os registros, planejar a transição do DNSSEC e manter a possibilidade de retornar à Vercel. A ativação da zona e a mudança do destino do domínio só devem ocorrer depois dos testes de produção.
