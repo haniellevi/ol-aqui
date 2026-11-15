@@ -15,10 +15,12 @@ export function SeletorLoja({ lojas, atual, voltar }: { lojas: LojaOpcao[]; atua
     <form action={escolherLoja} className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-3 sm:flex-row sm:items-end">
       <input type="hidden" name="voltar" value={voltar} />
       <label className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="flex items-center gap-1 text-sm text-texto-suave">
-          <Store className="size-4 shrink-0" aria-hidden />
-          Trabalhando na loja <strong className="break-words text-texto">{formatarNome(atual.nome)}</strong>
-          {!atual.dono && <span>(você ajuda)</span>}
+        <span className="flex items-start gap-1 text-sm text-texto-suave">
+          <Store className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span className="min-w-0 [overflow-wrap:anywhere]">
+            Trabalhando na loja <strong className="text-texto">{formatarNome(atual.nome)}</strong>
+            {!atual.dono && " (você ajuda)"}
+          </span>
         </span>
         <NativeSelect name="loja" defaultValue={atual.id} aria-label="Escolher a loja">
           {lojas.map((l) => (
@@ -26,7 +28,7 @@ export function SeletorLoja({ lojas, atual, voltar }: { lojas: LojaOpcao[]; atua
           ))}
         </NativeSelect>
       </label>
-      <Botao type="submit" variante="secundario" className="sm:w-fit">Trocar de loja</Botao>
+      <Botao type="submit" variante="secundario" tamanho="toque" className="sm:w-fit">Trocar de loja</Botao>
     </form>
   );
 }

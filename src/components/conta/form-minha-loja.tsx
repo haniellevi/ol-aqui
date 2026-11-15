@@ -55,65 +55,60 @@ export function FormMinhaLoja({ loja, cidades, ajudante = false }: { loja: Dados
       onReset={(e) => e.preventDefault()}
       onChangeCapture={() => setMostrarSucesso(false)}
       onClickCapture={(e) => { if ((e.target as HTMLElement).closest('button[type="button"]')) setMostrarSucesso(false); }}
-      className="flex flex-col gap-5" noValidate
+      className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-3 sm:p-4" noValidate
     >
-      <div aria-live="polite">
-        {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
-        {mostrarSucesso && !enviando && estado?.ok && <Aviso tipo="ok">Dados da loja salvos.</Aviso>}
-      </div>
-
-      <fieldset disabled={enviando || subindo !== null} className="flex min-w-0 flex-col gap-5">
-      <section aria-label="Logo" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
-        <EnvioImagem
-          qual="logo"
-          rotulo="Logo"
-          dica="Use uma imagem quadrada de até 20 MB. A troca ou remoção só aparece na vitrine depois de salvar."
-          url={logo}
-          aoMudar={mudarLogo}
-          ocupado={enviando || subindo !== null}
-          aoSubir={setSubindo}
-          erro={campos.logo_url}
-        />
-        <input type="hidden" name="logo_url" value={logo} />
-      </section>
-
-      <section aria-label="Dados da loja" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
+      <fieldset disabled={enviando || subindo !== null} className="flex min-w-0 flex-col gap-4">
         {ajudante ? (
-          <p className="text-base break-words">
+          <p className="text-base [overflow-wrap:anywhere]">
             <strong>{loja.nome}</strong>
             {loja.whatsapp && <span className="block text-texto-suave">WhatsApp: {fone.campo.value}</span>}
             <span className="block text-sm text-texto-suave">Só o dono da loja muda o nome e o WhatsApp.</span>
           </p>
         ) : (
           <>
-            <Campo rotulo="Nome da loja" name="nome" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={80} erro={campos.nome} dica={avisoComoVaiAparecer(nome)} />
+            <Campo rotulo="Nome da loja" name="nome" tamanho="toque" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={80} erro={campos.nome} dica={avisoComoVaiAparecer(nome)} />
             <Campo
               rotulo="WhatsApp da loja"
               name="whatsapp"
+              tamanho="toque"
               {...fone.campo}
-              dica="Se deixar vazio, a vitrine usa o WhatsApp confirmado da sua conta. Um número comercial diferente só aparece após conferência da equipe. Até lá, a vitrine usa o número confirmado."
+              dica="A vitrine usa seu WhatsApp confirmado até a equipe aprovar outro número."
               erro={fone.erro ?? campos.whatsapp}
             />
           </>
         )}
-        {cidades.length > 0 ? (
-          <Seletor rotulo="Cidade" name="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} erro={campos.cidade}>
-            {cidadeFora && <option value={loja.cidade}>{loja.cidade}</option>}
-            {cidades.map((c) => (
-              <option key={`${c.nome}-${c.uf}`} value={c.nome}>
-                {c.nome} - {c.uf}
-              </option>
-            ))}
-          </Seletor>
-        ) : (
-          <Campo rotulo="Cidade" name="cidade" value={cidade} readOnly dica="A lista de cidades está indisponível. Sua cidade atual será mantida." erro={campos.cidade} />
-        )}
-        <Campo rotulo="Bairro" name="bairro" opcional value={bairro} onChange={(e) => setBairro(e.target.value)} maxLength={80} erro={campos.bairro} />
-      </section>
-
+        <div className="grid gap-3 sm:grid-cols-2">
+          {cidades.length > 0 ? (
+            <Seletor rotulo="Cidade" name="cidade" tamanho="toque" value={cidade} onChange={(e) => setCidade(e.target.value)} erro={campos.cidade}>
+              {cidadeFora && <option value={loja.cidade}>{loja.cidade}</option>}
+              {cidades.map((c) => (
+                <option key={`${c.nome}-${c.uf}`} value={c.nome}>
+                  {c.nome} - {c.uf}
+                </option>
+              ))}
+            </Seletor>
+          ) : (
+            <Campo rotulo="Cidade" name="cidade" tamanho="toque" value={cidade} readOnly dica="A lista de cidades está indisponível. Sua cidade atual será mantida." erro={campos.cidade} />
+          )}
+          <Campo rotulo="Bairro" name="bairro" tamanho="toque" opcional value={bairro} onChange={(e) => setBairro(e.target.value)} maxLength={80} erro={campos.bairro} />
+        </div>
+        <div className="border-t border-borda pt-3">
+          <EnvioImagem
+            qual="logo"
+            rotulo="Logo"
+            dica="Imagem quadrada de até 20 MB. Salve para aplicar as alterações na vitrine."
+            url={logo}
+            aoMudar={mudarLogo}
+            ocupado={enviando || subindo !== null}
+            aoSubir={setSubindo}
+            erro={campos.logo_url}
+          />
+          <input type="hidden" name="logo_url" value={logo} />
+        </div>
       </fieldset>
-      {estado?.erro && <p role="alert" className="text-sm font-semibold text-perigo">{estado.erro}</p>}
-      <Botao type="submit" larguraTotal icone={<Save />} carregando={enviando} textoCarregando="Salvando..." disabled={subindo !== null}>
+      {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
+      {mostrarSucesso && !enviando && estado?.ok && <Aviso tipo="ok">Dados da loja salvos.</Aviso>}
+      <Botao type="submit" tamanho="acao" larguraTotal className="sm:w-fit" icone={<Save />} carregando={enviando} textoCarregando="Salvando..." disabled={subindo !== null}>
         Salvar loja
       </Botao>
     </form>
@@ -170,13 +165,8 @@ function EnvioImagem({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <span id={`${id}-rotulo`} className="text-base font-semibold">
-        {rotulo} <span className="font-normal text-texto-suave">(opcional)</span>
-      </span>
-      <div
-        className="relative size-24 overflow-hidden rounded-full border-2 border-dashed border-borda bg-fundo"
-      >
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
+      <div className="relative size-16 overflow-hidden rounded-full border border-borda bg-fundo">
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element -- prévia da imagem enviada ao Storage
           <img src={url} alt={`${rotulo} atual`} className="absolute inset-0 size-full object-cover" />
@@ -191,9 +181,12 @@ function EnvioImagem({
           </span>
         )}
       </div>
-      <p id={`${id}-dica`} className="text-sm text-texto-suave">
-        {dica}
-      </p>
+      <div className="min-w-0">
+        <span id={`${id}-rotulo`} className="text-base font-semibold">
+          {rotulo} <span className="font-normal text-texto-suave">(opcional)</span>
+        </span>
+        <p id={`${id}-dica`} className="text-sm text-texto-suave">{dica}</p>
+      </div>
       <input
         ref={entrada}
         id={`${id}-arquivo`}
@@ -205,24 +198,25 @@ function EnvioImagem({
         onChange={(e) => escolher(e.target.files?.[0])}
         tabIndex={-1}
       />
-      <div className="flex flex-wrap gap-2">
+      <div className="col-span-2 flex flex-wrap gap-2">
         <Botao
           variante="secundario"
+          tamanho="toque"
           icone={<ImagePlus />}
           carregando={subindo}
           textoCarregando="Enviando..."
           disabled={ocupado}
           onClick={() => entrada.current?.click()}
         >
-          {url ? `Trocar ${qual}` : `Pôr ${qual}`}
+          {url ? "Trocar logo" : "Adicionar logo"}
         </Botao>
         {url && !subindo && (
-          <Botao variante="texto" icone={<Trash2 />} disabled={ocupado} onClick={() => aoMudar("")}>
+          <Botao variante="texto" tamanho="toque" icone={<Trash2 />} disabled={ocupado} onClick={() => aoMudar("")}>
             Remover logo
           </Botao>
         )}
       </div>
-      <div aria-live="polite">
+      <div className="col-span-2 empty:hidden" aria-live="polite">
         {mensagem && (
           <p role="alert" className="text-sm font-semibold text-perigo">
             {mensagem}

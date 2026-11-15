@@ -96,11 +96,8 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
 
   return (
     <PaginaConta larga>
-      <TopoConta titulo="Meus anúncios" texto={plano && !ajudante ? plano.uso : undefined}>
-        <Botao href="/anunciar" icone={<Plus />} larguraTotal className="sm:w-fit">
-          Novo anúncio
-        </Botao>
-      </TopoConta>
+      <TopoConta titulo="Meus anúncios" texto={plano && !ajudante ? plano.uso : undefined}
+        acao={lista.length > 0 || aba.chave !== "todos" ? <Botao href="/anunciar" icone={<Plus />} tamanho="acao">Novo anúncio</Botao> : undefined} />
 
       <SeletorLoja lojas={lojas} atual={lojaAtual} voltar="/minha-conta/anuncios" />
 
@@ -109,7 +106,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
       {sugestoesIA > 0 && (
         <Aviso tipo="info">
           <span>{sugestoesIA === 1 ? "Sugerimos uma categoria melhor para 1 anúncio." : `Sugerimos categorias melhores para ${sugestoesIA} anúncios.`} Confira e confirme.</span>
-          <Link href={LINK_LOJA_CATEGORIAS} className="inline-flex min-h-10 items-center underline underline-offset-4">
+          <Link href={LINK_LOJA_CATEGORIAS} className="inline-flex min-h-toque w-fit items-center underline underline-offset-4">
             Revisar categorias
           </Link>
         </Aviso>
@@ -121,7 +118,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
       {!conta.podePublicar && !ajudante && (
         <Aviso tipo="atencao">
           <span>Você está no limite do seu plano. Para pôr mais anúncios no ar, pause um ou troque de plano.</span>
-          <Link href="/minha-conta/plano" className="inline-flex min-h-10 items-center underline underline-offset-4">
+          <Link href="/minha-conta/plano" className="inline-flex min-h-toque w-fit items-center underline underline-offset-4">
             Ver planos
           </Link>
         </Aviso>
@@ -132,7 +129,7 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         <ul className="flex flex-wrap gap-2">
           {ABAS.map((a) => (
             <li key={a.chave}>
-              <Chip href={`/minha-conta/anuncios?aba=${a.chave}`} ativo={a.chave === aba.chave} scroll={false}>
+              <Chip href={`/minha-conta/anuncios?aba=${a.chave}`} ativo={a.chave === aba.chave} scroll={false} tamanho="toque">
                 {a.nome}
                 <span className="ml-1 opacity-80">({contagem[a.chave]})</span>
               </Chip>
@@ -141,30 +138,17 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
         </ul>
       </nav>
 
-      {loja && !podeFixar && (aba.chave === "ativos" || aba.chave === "todos") && lista.some((a) => a.status === "ativo") && (
-        <p className="flex flex-wrap items-center gap-x-2 text-legenda text-texto-suave">
-          <Pin className="size-3.5 shrink-0 text-laranja-escuro" aria-hidden />
-          <span>Fixar produtos no topo da loja: {disponivelFixar ?? "não faz parte do seu plano agora"}.</span>
-          <Link
-            href={`${LINK_PLANOS}?origem=vitrine`}
-            className="inline-flex min-h-8 items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
-          >
-            Ver os planos
-          </Link>
-        </p>
-      )}
-
       {aba.chave === "lixeira" && <Aviso>As fotos e o histórico ficam guardados. Ao restaurar, anúncios que estavam no ar voltam pausados. Vendas e bloqueios são preservados.</Aviso>}
-      <p className="text-sm text-texto-suave" aria-live="polite">{lista.length} {lista.length === 1 ? "anúncio" : "anúncios"} em {aba.nome.toLowerCase()}</p>
+      <p className="sr-only" aria-live="polite">{lista.length} {lista.length === 1 ? "anúncio" : "anúncios"} em {aba.nome.toLowerCase()}</p>
       {lista.length === 0 ? (
         <Vazio titulo={aba.chave === "lixeira" ? "Sua lixeira está vazia" : aba.chave === "todos" ? "Seus anúncios começam aqui" : `Nenhum anúncio em "${aba.nome}"`}
           texto={aba.chave === "lixeira" ? "Anúncios movidos para cá poderão ser restaurados." : aba.chave === "todos" ? "Crie um anúncio com fotos, preço e localização para vender na sua região." : "Escolha outra situação para encontrar seus anúncios."}>
-          <Botao href={aba.chave === "todos" ? "/anunciar" : "/minha-conta/anuncios"} larguraTotal>
+          <Botao href={aba.chave === "todos" ? "/anunciar" : "/minha-conta/anuncios"} variante={aba.chave === "todos" ? "primario" : "secundario"} tamanho="acao" larguraTotal>
             {aba.chave === "todos" ? "Criar anúncio" : "Ver meus anúncios"}
           </Botao>
         </Vazio>
       ) : (
-        <ul className="grid grid-cols-1 gap-3 md:auto-rows-fr md:grid-cols-2 md:gap-4">
+        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
           {lista.map((a) => (
             <li key={a.id} className="flex min-w-0">
               <LinhaAnuncio
@@ -179,6 +163,18 @@ export default async function PaginaMeusAnuncios({ searchParams }: { searchParam
             </li>
           ))}
         </ul>
+      )}
+      {loja && !podeFixar && (aba.chave === "ativos" || aba.chave === "todos") && lista.some((a) => a.status === "ativo") && (
+        <p className="flex flex-wrap items-center gap-x-2 text-legenda text-texto-suave">
+          <Pin className="size-3.5 shrink-0 text-laranja-escuro" aria-hidden />
+          <span>Fixar produtos no topo da loja: {disponivelFixar ?? "não faz parte do seu plano agora"}.</span>
+          <Link
+            href={`${LINK_PLANOS}?origem=vitrine`}
+            className="inline-flex min-h-toque items-center font-semibold text-laranja-escuro underline underline-offset-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+          >
+            Ver os planos
+          </Link>
+        </p>
       )}
     </PaginaConta>
   );
@@ -209,47 +205,34 @@ function LinhaAnuncio({
   const quando = tempoRelativo(a.status === "rascunho" ? a.atualizado_em : a.publicado_em ?? a.criado_em);
 
   const foto = <FotoMeuAnuncio key={a.fotos[0] ?? "sem-foto"} src={a.fotos[0]} />;
+  const localEData = [a.cidade && [a.bairro, a.cidade].filter(Boolean).join(", "), quando && (a.status === "rascunho" ? `Salvo ${quando}` : quando)].filter(Boolean).join(" · ");
+  const resumo = (
+    <>
+      {foto}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={rotulo.cor}>{rotulo.texto}</Badge>
+          {a.status === "rascunho" && a.pronto_em && <Badge variant="secondary">Pronto: vai ao ar quando o dono aceitar</Badge>}
+          {destaque && <Badge variant="featured">Destaque</Badge>}
+          {pago && <Badge variant="secondary">Avulso pago</Badge>}
+          {fixado && <Badge variant="default">No topo da loja</Badge>}
+        </div>
+        <h2 className="text-base leading-snug font-semibold [overflow-wrap:anywhere]">{titulo}</h2>
+        <p className="text-lg leading-snug font-bold text-beringela tabular-nums">{preco(a.preco_centavos)}</p>
+        {localEData && <p className="text-sm [overflow-wrap:anywhere] text-texto-suave">{localEData}</p>}
+      </div>
+    </>
+  );
 
   return (
-    <article aria-label={titulo} className="flex w-full min-w-0 flex-col gap-2 rounded-card bg-cartao p-3 shadow-1 md:p-4">
-      <div className="flex gap-3">
-        {publico ? (
-          <Link href={linkAnuncio(a.id, a.titulo, a.slug)} aria-hidden tabIndex={-1}>
-            {foto}
-          </Link>
-        ) : (
-          foto
-        )}
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={rotulo.cor}>{rotulo.texto}</Badge>
-            {a.status === "rascunho" && a.pronto_em && <Badge variant="secondary">Pronto: vai ao ar quando o dono aceitar</Badge>}
-            {destaque && <Badge variant="featured">Destaque</Badge>}
-            {pago && <Badge variant="secondary">Avulso pago</Badge>}
-            {fixado && <Badge variant="default">No topo da loja</Badge>}
-          </div>
-          <h2 className="line-clamp-2 text-base leading-5 font-semibold break-words">
-            {publico ? (
-              <Link href={linkAnuncio(a.id, a.titulo, a.slug)} className="hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
-                {titulo}
-              </Link>
-            ) : (
-              titulo
-            )}
-          </h2>
-          <p className="text-sm leading-5 font-semibold text-beringela">{preco(a.preco_centavos)}</p>
-          {a.cidade && <p className="text-sm break-words text-texto-suave">{[a.bairro, a.cidade].filter(Boolean).join(", ")}</p>}
-          {quando && <p className="text-legenda text-texto-suave">{a.status === "rascunho" ? `Salvo ${quando}` : quando}</p>}
-          {mudanca && (
-            <p className="text-legenda break-words text-texto-suave">
-              Última mudança: {fraseHistorico(mudanca)}.{" "}
-              <Link href={linkHistoricoAnuncio(a.id)} className="font-semibold text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
-                Ver histórico
-              </Link>
-            </p>
-          )}
-        </div>
-      </div>
+    <article aria-label={titulo} className="flex w-full min-w-0 flex-col gap-3 rounded-card border border-borda bg-cartao p-3 md:p-4">
+      {publico ? (
+        <Link href={linkAnuncio(a.id, a.titulo, a.slug)} aria-label={`Ver anúncio ${titulo}`} className="flex gap-3 rounded-campo hover:[&_h2]:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro">
+          {resumo}
+        </Link>
+      ) : (
+        <div className="flex gap-3">{resumo}</div>
+      )}
 
       {a.status === "excluido" && <p className="rounded-card bg-fundo p-3 text-sm text-texto-suave">Na lixeira{a.excluido_em ? ` ${tempoRelativo(a.excluido_em)}` : ""}. Antes: {a.status_antes_exclusao ? ROTULO[a.status_antes_exclusao].texto.toLowerCase() : "anúncio"}.</p>}
       {(a.status === "pausado" || a.status === "expirado") && <p className="text-sm text-texto-suave">Fora da busca. Revise os dados antes de reativar.</p>}
@@ -284,19 +267,21 @@ function LinhaAnuncio({
             <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
             Pagamento pendente: {p.tipo_nome} ({preco(p.preco_centavos)})
           </p>
-          <Botao href={linkDestacar(a.id, p.id)} variante="secundario" tamanho="pequeno" className="w-fit">
+          <Botao href={linkDestacar(a.id, p.id)} variante="secundario" tamanho="toque" className="w-fit max-w-full">
             Continuar o pagamento
           </Botao>
         </Alert>
       )}
 
-      <div className="mt-auto pt-1">
+      {mudanca && <p className="text-legenda [overflow-wrap:anywhere] text-texto-suave">{fraseHistorico(mudanca)}.</p>}
+      <div className="mt-auto border-t border-borda pt-2">
         <AcoesAnuncio
           id={a.id}
           status={a.status}
           titulo={titulo}
           temPagamento={pago || destaque || !!p}
           podeDestacar={podeDestacar}
+          historico={mudanca ? linkHistoricoAnuncio(a.id) : undefined}
           maisAcoes={a.status !== "excluido" && mostrarFixar && (a.status === "ativo" || fixado) ? <BotaoFixar anuncioId={a.id} fixado={fixado} comoItemDeMenu /> : undefined}
         />
       </div>
@@ -308,7 +293,7 @@ function Numero({ icone, rotulo, valor }: { icone: React.ReactNode; rotulo: stri
   return (
     <div className="flex items-center gap-1 text-legenda text-texto-suave">
       <dt className="order-2">{rotulo}</dt>
-      <dd className="order-1 flex items-center gap-1 font-semibold text-texto">
+      <dd className="order-1 flex items-center gap-1 font-semibold text-texto tabular-nums">
         <span className="inline-flex text-laranja-escuro [&>svg]:size-3.5" aria-hidden>
           {icone}
         </span>

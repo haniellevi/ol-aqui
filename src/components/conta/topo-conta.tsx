@@ -8,6 +8,7 @@ export function TopoConta({
   texto,
   voltar = "/minha-conta",
   textoVoltar = "Minha conta",
+  acao,
   children,
 }: {
   titulo: string;
@@ -15,6 +16,7 @@ export function TopoConta({
   /** Para onde o "Voltar" leva (padrão: Minha conta). */
   voltar?: string | null;
   textoVoltar?: string;
+  acao?: ReactNode;
   children?: ReactNode;
 }) {
   return (
@@ -22,14 +24,19 @@ export function TopoConta({
       {voltar && (
         <Link
           href={voltar}
-          className="olaki-controle -ml-2 inline-flex min-h-10 w-fit items-center gap-1 rounded-campo px-2 text-rotulo font-semibold text-texto-suave hover:text-texto focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+          className="-ml-2 inline-flex min-h-toque w-fit items-center gap-1 rounded-campo px-2 text-rotulo font-semibold text-texto-suave hover:text-texto focus-visible:outline-3 focus-visible:outline-laranja-escuro"
         >
           <ChevronLeft className="size-5" aria-hidden />
           {textoVoltar}
         </Link>
       )}
-      <h1 className="text-titulo font-semibold text-balance [overflow-wrap:anywhere] text-beringela">{titulo}</h1>
-      {texto && <p className="max-w-[65ch] text-sm text-pretty text-texto-suave">{texto}</p>}
+      <div className={acao ? "flex flex-wrap items-center justify-between gap-x-3 gap-y-2" : undefined}>
+        <div className={acao ? "min-w-0 flex-1 basis-28" : undefined}>
+          <h1 className="text-titulo font-semibold text-balance [overflow-wrap:anywhere] text-beringela">{titulo}</h1>
+          {texto && <p className="max-w-[65ch] text-sm text-pretty text-texto-suave">{texto}</p>}
+        </div>
+        {acao}
+      </div>
       {children}
     </header>
   );

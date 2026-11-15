@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, Ellipsis, Pause, Pencil, Play, Sparkles, Trash2, ArrowRight, RotateCcw } from "lucide-react";
+import { CheckCircle2, Ellipsis, History, Pause, Pencil, Play, Sparkles, Trash2, ArrowRight, RotateCcw } from "lucide-react";
 import { linkDestacar } from "@/lib/rotas";
 import { Botao, classesBotao } from "@/components/ui/botao";
 import { marcarVendido, moverParaLixeira, pausarAnuncio, reativarAnuncio, restaurarAnuncio } from "@/app/(conta)/minha-conta/anuncios/actions";
@@ -15,10 +15,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 type Acao = "pausar" | "reativar" | "vendido-sim" | "vendido-nao" | "excluir" | "restaurar";
 type Confirmacao = "pausar" | "vendido" | "excluir";
 
-// Plano de design: no card ficam à vista só a ação do momento e Editar (botões pequenos).
-// O resto (pausar, destacar, fixar, lixeira) fica no menu "Mais".
-export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAcoes, podeDestacar = true }: {
+// A ação da situação atual e Editar ficam à vista. As outras ficam em Mais.
+export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAcoes, podeDestacar = true, historico }: {
   id: string; status: StatusAnuncio; titulo: string; temPagamento?: boolean; podeDestacar?: boolean;
+  historico?: string;
   /** Ações extras que entram no menu "Mais" (ex.: fixar no topo da loja). */
   maisAcoes?: ReactNode;
 }) {
@@ -32,13 +32,18 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAco
   const [confirmacao, setConfirmacao] = useState<Confirmacao | null>(null);
   const dialogo = useRef<HTMLDialogElement>(null);
   const cancelar = useRef<HTMLButtonElement>(null);
+  const mais = useRef<HTMLButtonElement>(null);
+  const vendi = useRef<HTMLButtonElement>(null);
   const ocupado = pendente || emCurso !== null;
   const editar = `/anunciar/detalhes?rascunho=${id}&editar=1`;
 
   function abrir(tipo: Confirmacao) {
     setErro(null);
     setConfirmacao(tipo);
-    dialogo.current?.showModal();
+    if (dialogo.current) {
+      dialogo.current.returnValue = "";
+      dialogo.current.showModal();
+    }
     cancelar.current?.focus();
   }
 
@@ -58,7 +63,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAco
           setRecarregar(r.erro.codigo === "alteracao_incerta");
           return;
         }
-        dialogo.current?.close();
+        dialogo.current?.close("concluido");
         const restaurando = acao === "restaurar";
         const resultado = restaurando ? "restaurado" : r.dados;
         const aba = restaurando ? "lixeira" : abaDoStatus(r.dados);
@@ -84,33 +89,42 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAco
   );
 
   return (
-    <div className="flex flex-col gap-2" aria-label={`Ações de ${titulo}`}>
+    <div role="group" className="flex flex-col gap-2" aria-label={`Ações de ${titulo}`}>
       <div className="flex flex-wrap items-center gap-2">
         {status === "excluido" ? (
-          <Botao tamanho="pequeno" icone={<RotateCcw />} disabled={ocupado} carregando={emCurso === "restaurar"} textoCarregando="Restaurando..." onClick={() => rodar("restaurar", () => restaurarAnuncio(id))}>Restaurar anúncio</Botao>
+          <Botao variante="secundario" tamanho="toque" className="max-w-full" icone={<RotateCcw />} disabled={ocupado} carregando={emCurso === "restaurar"} textoCarregando="Restaurando..." onClick={() => rodar("restaurar", () => restaurarAnuncio(id))}>Restaurar anúncio</Botao>
         ) : (
           <>
-            {status === "rascunho" && <Botao tamanho="pequeno" href={`/anunciar/fotos?rascunho=${id}`} icone={<ArrowRight />} carregando={ocupado}>Continuar rascunho</Botao>}
-            {status === "ativo" && <Botao tamanho="pequeno" icone={<CheckCircle2 />} disabled={ocupado} onClick={() => abrir("vendido")}>Vendi</Botao>}
-            {(status === "pausado" || status === "expirado") && <Botao tamanho="pequeno" icone={<Play />} disabled={ocupado} carregando={emCurso === "reativar"} textoCarregando="Reativando..." onClick={() => rodar("reativar", () => reativarAnuncio(id))}>Reativar</Botao>}
-            {["ativo", "pausado", "expirado"].includes(status) && <Botao tamanho="pequeno" href={editar} variante="secundario" icone={<Pencil />} carregando={ocupado}>Editar</Botao>}
-            <DropdownMenu>
-              <DropdownMenuTrigger className={classesBotao("secundario", false, "cursor-pointer", "pequeno")} aria-label={`Mais ações de ${titulo}`}>
-                <Ellipsis className="size-4" aria-hidden /> Mais
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {status === "ativo" && <DropdownMenuItem disabled={ocupado} onClick={() => abrir("pausar")}><Pause aria-hidden />Pausar</DropdownMenuItem>}
-                {status === "ativo" && podeDestacar && <DropdownMenuItem render={<Link href={linkDestacar(id)} />}><Sparkles aria-hidden />Destacar</DropdownMenuItem>}
-                {maisAcoes}
-                <DropdownMenuItem variant="destructive" disabled={ocupado} onClick={() => abrir("excluir")}><Trash2 aria-hidden />Mover para lixeira</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {status === "rascunho" && <Botao variante="secundario" tamanho="toque" className="max-w-full px-3" href={`/anunciar/fotos?rascunho=${id}`} icone={<ArrowRight />} carregando={ocupado}>Continuar rascunho</Botao>}
+            {status === "ativo" && <Botao ref={vendi} variante="secundario" tamanho="toque" className="px-2" icone={<CheckCircle2 />} disabled={ocupado} onClick={() => abrir("vendido")}>Vendi</Botao>}
+            {(status === "pausado" || status === "expirado") && <Botao variante="secundario" tamanho="toque" className="px-2" icone={<Play />} disabled={ocupado} carregando={emCurso === "reativar"} textoCarregando="Reativando..." onClick={() => rodar("reativar", () => reativarAnuncio(id))}>Reativar</Botao>}
+            {["ativo", "pausado", "expirado"].includes(status) && <Botao tamanho="toque" href={editar} variante="texto" className="px-2" icone={<Pencil />} carregando={ocupado}>Editar</Botao>}
           </>
+        )}
+        {(status !== "excluido" || historico) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger ref={mais} disabled={ocupado} className={classesBotao("texto", false, "cursor-pointer px-2", "toque")} aria-label={`Mais ações de ${titulo}`}>
+              <Ellipsis className="size-4" aria-hidden /> Mais
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {status === "ativo" && <DropdownMenuItem onClick={() => abrir("pausar")}><Pause aria-hidden />Pausar</DropdownMenuItem>}
+              {status === "ativo" && podeDestacar && <DropdownMenuItem render={<Link href={linkDestacar(id)} />}><Sparkles aria-hidden />Destacar</DropdownMenuItem>}
+              {maisAcoes}
+              {historico && <DropdownMenuItem render={<Link href={historico} />}><History aria-hidden />Ver histórico</DropdownMenuItem>}
+              {status !== "excluido" && <DropdownMenuItem variant="destructive" onClick={() => abrir("excluir")}><Trash2 aria-hidden />Mover para lixeira</DropdownMenuItem>}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
       {!confirmacao && mensagemErro}
-      <dialog ref={dialogo} role="alertdialog" aria-labelledby={`confirmar-${id}`} aria-describedby={`explicacao-${id}`}
-        onClose={() => setConfirmacao(null)} onCancel={(e) => { if (trava.current) e.preventDefault(); }}
+      <dialog ref={dialogo} role="alertdialog" aria-modal="true" aria-labelledby={`confirmar-${id}`} aria-describedby={`explicacao-${id}`}
+        onClose={(e) => {
+          if (e.currentTarget.returnValue !== "concluido") {
+            (confirmacao === "vendido" ? vendi : mais).current?.focus({ preventScroll: true });
+          }
+          setConfirmacao(null);
+        }}
+        onCancel={(e) => { if (trava.current) e.preventDefault(); }}
         className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%_-_2rem)] max-w-sm overflow-y-auto rounded-folha bg-cartao p-5 text-texto shadow-2 backdrop:bg-beringela/50">
         <h2 id={`confirmar-${id}`} className="text-xl font-semibold">
           {confirmacao === "excluir" ? "Mover para a lixeira?" : confirmacao === "pausar" ? "Pausar este anúncio?" : "Vendeu pelo Mercado da Região?"}
@@ -125,7 +139,7 @@ export function AcoesAnuncio({ id, status, titulo, temPagamento = false, maisAco
         <div className="mt-3">{mensagemErro}</div>
         <div className="mt-4 flex flex-col gap-2">
           {confirmacao === "vendido" ? <>
-            <Botao larguraTotal disabled={ocupado} carregando={emCurso === "vendido-sim"} onClick={() => rodar("vendido-sim", () => marcarVendido(id, true))}>Sim, vendi pelo Mercado da Região</Botao>
+            <Botao tamanho="acao" larguraTotal disabled={ocupado} carregando={emCurso === "vendido-sim"} onClick={() => rodar("vendido-sim", () => marcarVendido(id, true))}>Sim, vendi pelo Mercado da Região</Botao>
             <Botao variante="secundario" larguraTotal disabled={ocupado} carregando={emCurso === "vendido-nao"} onClick={() => rodar("vendido-nao", () => marcarVendido(id, false))}>Não, vendi por fora</Botao>
           </> : <Botao variante={confirmacao === "excluir" ? "perigo" : "primario"} larguraTotal disabled={ocupado} carregando={emCurso !== null}
             onClick={() => confirmacao === "excluir" ? rodar("excluir", () => moverParaLixeira(id)) : rodar("pausar", () => pausarAnuncio(id))}>
