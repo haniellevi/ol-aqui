@@ -126,7 +126,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
       onClickCapture={(e) => { if ((e.target as HTMLElement).closest('button[type="button"]')) setMostrarSucesso(false); }}
       className="flex flex-col gap-5" noValidate
     >
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:absolute">
         {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
         {mostrarSucesso && !salvando && estado?.ok && <Aviso tipo="ok">Informações da loja salvas.</Aviso>}
       </div>
@@ -154,7 +154,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
           <p className="text-base font-semibold">
             Localização no mapa <span className="font-normal text-texto-suave">(opcional)</span>
           </p>
-          <p className="text-sm text-texto-suave">Estando na loja, toque no botão. O botão &quot;Como chegar&quot; da vitrine leva o cliente até aqui.</p>
+          <p className="text-sm text-texto-suave">Na loja, marque o local para mostrar &quot;Como chegar&quot; na vitrine.</p>
           {lat != null && lng != null ? (
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 text-base font-semibold text-verde-escuro">

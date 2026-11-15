@@ -86,7 +86,7 @@ export function GerenciarSecoes({
         </form>
       )}
 
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:absolute">
         {erro && (
           <Alert variant="destructive" role="alert">
             {erro}

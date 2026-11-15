@@ -74,7 +74,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
     <PaginaConta>
       <TopoConta
         titulo="Desempenho da loja"
-        texto="Quantas pessoas viram sua loja e chamaram você. Suas próprias visitas não contam."
+        texto="Visitas, visualizações e cliques na sua loja. Suas próprias visitas não contam."
         voltar={LINK_MINHA_LOJA}
         textoVoltar="Minha loja"
       />
@@ -148,7 +148,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
         {dicas === null ? (
           <Aviso tipo="atencao">Não conseguimos carregar as dicas agora. Atualize a página.</Aviso>
         ) : dicas.length === 0 ? (
-          <Vazio titulo="Tudo certo por aqui" texto="Seus produtos têm foto, preço e boa descrição. Continue assim." icone={<Lightbulb />} />
+          <p className="text-base text-texto-suave">Ainda não há sugestões para seus anúncios.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
             {dicas.map((t) => (

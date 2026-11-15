@@ -127,7 +127,7 @@ export function FormBanner({
       <input type="hidden" name="banner_cor" value={cor} />
       <input type="hidden" name="banner_modelo" value={modelo} />
 
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:absolute">
         {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
         {mostrarSucesso && !salvando && estado?.ok && <Aviso tipo="ok">Capa da loja salva.</Aviso>}
       </div>
