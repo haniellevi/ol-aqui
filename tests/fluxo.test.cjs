@@ -86,7 +86,7 @@ test('início com o bloco de lojas desligado mantém um acesso ao catálogo', as
   assert.match(html, /Ver todas as lojas/);
   assert.doesNotMatch(html, /id="titulo-lojas"|href="\/loja\/multi"/);
 });
-test('início destaca os atalhos do Radar e de Anunciar', async () => {
+test('início posiciona Criar anúncio na barra e mantém o Radar antes dos filtros', async () => {
   for (const anuncios of [[], [{ id: 'a1', titulo: 'Mesa da região' }]]) {
     const html = await htmlInicio({ anuncios });
     assert.match(html, /aria-labelledby="titulo-radar-inicio"/);
@@ -94,11 +94,12 @@ test('início destaca os atalhos do Radar e de Anunciar', async () => {
     assert.match(html, /Procurando algo\?/);
     assert.match(html, /aria-label="Como funciona o Radar"/);
     assert.match(html, /podem responder com ofertas/);
-    assert.match(html, />Anunciar</);
+    assert.match(html, />Criar anúncio</);
     assert.match(html, /bg-laranja/);
     assert.match(html, /bg-selecao/);
     assert.doesNotMatch(html, /titulo-vender|>Exemplo<|Anunciar grátis|Tem algo parado em casa/);
-    assert.ok(html.indexOf('titulo-lojas') < html.indexOf('href="/anunciar"'));
+    assert.ok(html.indexOf('action="/busca"') < html.indexOf('href="/anunciar"'));
+    assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('titulo-lojas'));
     assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('aria-label="Filtros rápidos"'));
     assert.ok(html.indexOf('aria-label="Filtros rápidos"') < html.indexOf('titulo-recentes'));
   }
@@ -134,7 +135,7 @@ test('início respeita textos, ordem e visibilidade definidos no painel', async 
   assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('href="/radar/pedir"'));
   const oculto = await htmlInicio({ blocos: blocos.map(b => ({ ...b, ativo: b.chave !== 'radar' })) });
   assert.doesNotMatch(oculto, /href="\/radar\/pedir"|Pedido em/);
-  assert.match(oculto, />Anunciar</);
+  assert.match(oculto, />Criar anúncio</);
 });
 test('início sem região mantém busca e não inventa localização', async () => {
   const pagina = inicio({ regiao: null });

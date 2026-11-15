@@ -2,8 +2,13 @@ import { Info, Plus } from "lucide-react";
 import { Botao, classesBotao } from "@/components/ui/botao";
 import { LINK_RADAR, linkPedirRadar } from "@/lib/rotas";
 
-export function AnunciarInicio() {
-  return <Botao href="/anunciar" tamanho="toque" icone={<Plus />} className="self-start">Anunciar</Botao>;
+export function CriarAnuncioInicio() {
+  return (
+    <Botao href="/anunciar" variante="secundario" tamanho="toque" className="shrink-0 whitespace-nowrap max-sm:px-2!">
+      <Plus className="hidden size-4 shrink-0 sm:block" aria-hidden />
+      Criar anúncio
+    </Botao>
+  );
 }
 
 export function RadarInicio({ titulo, texto, botao }: { titulo: string; texto: string; botao: string }) {

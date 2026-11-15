@@ -51,10 +51,10 @@ export function EntradaAssistente({ dono }: { dono: string | null }) {
           <h2 ref={titulo} tabIndex={-1} className="text-lg font-semibold">O que você quer fazer hoje?</h2>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(OBJETIVOS) as ObjetivoAssistente[]).map((objetivo) => (
-              <Botao key={objetivo} variante="secundario" onClick={() => iniciar(objetivo)}>{OBJETIVOS[objetivo]}</Botao>
+              <Botao key={objetivo} variante="secundario" tamanho="toque" onClick={() => iniciar(objetivo)}>{OBJETIVOS[objetivo]}</Botao>
             ))}
           </div>
-          <Botao className="self-start" variante="texto" onClick={() => setAberto(false)}>Fechar ajuda</Botao>
+          <Botao className="self-start" variante="texto" tamanho="toque" onClick={() => setAberto(false)}>Fechar ajuda</Botao>
         </div>
       ) : estado?.convite && !estado.atual ? (
         <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 rounded-card border border-verde-escuro/25 bg-sucesso-fundo px-3 py-2.5 sm:px-4">
@@ -65,15 +65,21 @@ export function EntradaAssistente({ dono }: { dono: string | null }) {
             <p className="text-sm font-semibold text-verde-escuro">Quer ajuda para dar o próximo passo?</p>
           </div>
           <div className="flex flex-wrap gap-2 max-sm:ml-13">
-            <Botao variante="whatsapp" onClick={() => { viuConvite(); setAberto(true); }}>Começar</Botao>
-            <Botao variante="texto" className="text-verde-escuro" onClick={viuConvite}>Agora não</Botao>
+            <Botao variante="secundario" tamanho="toque" onClick={() => { viuConvite(); setAberto(true); }}>Começar</Botao>
+            <Botao variante="texto" tamanho="toque" className="text-beringela!" onClick={viuConvite}>Agora não</Botao>
           </div>
         </div>
       ) : (
-        <>
-          {estado?.atual && <Botao href={linkAssistente(estado.atual.objetivo, estado.atual.tentativa) + (estado.atual.radar ? "&radar=1" : "")}>Continuar</Botao>}
-          <Botao variante="texto" disabled={!estado} onClick={() => setAberto(true)}>Preciso de ajuda</Botao>
-        </>
+        <div className="flex w-full flex-wrap items-center gap-2 rounded-card border border-verde-escuro/25 bg-sucesso-fundo px-2 py-1">
+          {estado?.atual && (
+            <Botao href={linkAssistente(estado.atual.objetivo, estado.atual.tentativa) + (estado.atual.radar ? "&radar=1" : "")} variante="secundario" tamanho="toque">
+              Continuar
+            </Botao>
+          )}
+          <Botao variante="texto" tamanho="toque" icone={<Compass />} className="text-beringela! hover:bg-verde-escuro/10" disabled={!estado} onClick={() => setAberto(true)}>
+            Preciso de ajuda
+          </Botao>
+        </div>
       )}
     </section>
   );
