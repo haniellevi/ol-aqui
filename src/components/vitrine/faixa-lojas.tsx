@@ -1,7 +1,7 @@
 "use client";
 
 import { formatarNome } from "@/lib/formatar-nome";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
@@ -23,7 +23,7 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
   const fila = useRef<HTMLUListElement>(null);
   const [rolar, setRolar] = useState({ antes: false, depois: false });
 
-  const visiveis = lojas.filter((l) => !tipo || l.tipos.includes(tipo));
+  const visiveis = useMemo(() => lojas.filter((l) => !tipo || l.tipos.includes(tipo)), [lojas, tipo]);
 
   useEffect(() => {
     const ul = fila.current;

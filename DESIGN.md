@@ -236,7 +236,7 @@ Os tokens ficam em `src/app/globals.css` (`@theme`). Nunca escreva cor em hexade
 - **Laranja Calado.** Sobre laranja, o texto é beringela. Branco sobre laranja é proibido.
 - **Laranja não escreve.** O laranja `#ff6a13` nunca é cor de letra. Texto laranja é sempre `laranja-escuro`.
 - **Um Laranja.** Um botão laranja por tela. A caixa de busca não é laranja.
-- **Verde é do WhatsApp.** Verde não vira cor de destaque, de preço nem de promoção.
+- **Verde é do WhatsApp.** Verde não vira cor de preço nem de promoção. O assistente de primeiros passos também pode usar o fundo verde-claro `sucesso-fundo`, com ações em beringela.
 - Proibido: roxo violeta vivo, bege, `laranja-claro` como superfície.
 
 ## 3. Letras
@@ -373,6 +373,7 @@ Página para ver as peças: `/admin/pecas`.
 
 - **`CardAnuncio`:** foto 4:3; coração no canto da foto (alvo de 44 px); **preço 16 px em 700**; título 14 px em até 2 linhas; cidade e data em 12 px `texto-suave`; no máximo um selo; "Patrocinado" escrito; card inteiro tocável. Duas colunas no celular, 4 a 5 no computador.
 - **`CampoBusca`:** uma só por tela, 44 px, texto "O que você procura?". Fundo branco com `borda-campo`; não é laranja.
+- **Barra de busca do Início:** Categorias à esquerda, busca com largura flexível e "Criar anúncio" à direita. Abaixo de 360 px, o controle de categorias mostra só o ícone e mantém o nome acessível.
 - **`FaixaCategorias`:** uma só lista de categorias por tela, rolável na horizontal com `scroll-snap`, ícone com nome, estado ativo em `selecao` com texto beringela.
 - **Filtros rápidos:** uma linha rolável de `Chip` logo abaixo da busca.
 - **`LojasDaRegiao`:** um só bloco de lojas por tela, com logo redondo, nome, selo "Loja verificada" **com a palavra escrita**, quantidade de anúncios e acesso à vitrine.

@@ -24,7 +24,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { LojasDaRegiao } from "@/components/vitrine/lojas-da-regiao";
 import { LojasEmDestaque } from "@/components/destaques/lojas-em-destaque";
 import { blocosHome } from "@/lib/dados/paginas";
-import { AnunciarInicio, RadarInicio } from "@/components/paginas/acoes-inicio";
+import { CriarAnuncioInicio, RadarInicio } from "@/components/paginas/acoes-inicio";
 import { RodapeInicio } from "@/components/paginas/rodape-inicio";
 import { linkPedirRadar } from "@/lib/rotas";
 import type { AnuncioCard } from "@/lib/tipos";
@@ -131,9 +131,10 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
       <div className="border-b border-borda bg-cartao">
         <div className="mx-auto flex w-full max-w-7xl items-center gap-2 px-4 py-2 sm:gap-3">
           <MenuCategoriasInicio categorias={categorias.map(({ id, slug, nome, icone }) => ({ id, slug, nome, icone }))} />
-          <div className={`@container/busca-topo w-full min-w-0 max-w-2xl ${estilos.busca}`}>
-            <CampoBusca id="busca-inicio" placeholder="Buscar algo" sugestoes regiao={regiao?.slug} toqueAmplo />
+          <div className={`@container/busca-topo min-w-0 flex-1 ${estilos.busca}`}>
+            <CampoBusca id="busca-inicio" placeholder="Buscar" sugestoes regiao={regiao?.slug} toqueAmplo />
           </div>
+          <CriarAnuncioInicio />
         </div>
       </div>
 
@@ -152,7 +153,6 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           ) : (
             <Botao href="/lojas" variante="secundario" tamanho="toque" className="self-start">Ver todas as lojas</Botao>
           )}
-          <AnunciarInicio />
         </div>
 
         <aside className={`${chamadaRadar ? "flex" : "hidden lg:flex"} min-w-0 flex-col gap-3 lg:sticky lg:top-20 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start`}>

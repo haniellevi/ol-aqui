@@ -35,14 +35,13 @@ export function MenuCategoriasInicio({ categorias }: { categorias: CategoriaMenu
         if (evento.relatedTarget && !evento.currentTarget.contains(evento.relatedTarget)) evento.currentTarget.open = false;
       }}
     >
-      <summary ref={botao} className="flex min-h-toque cursor-pointer list-none items-center gap-1.5 rounded-campo border border-borda bg-cartao px-2 text-sm font-semibold text-beringela hover:bg-selecao focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro sm:px-3 [&::-webkit-details-marker]:hidden">
-        <LayoutGrid className="hidden size-4 shrink-0 min-[375px]:block" aria-hidden />
-        Categorias
-        <ChevronDown className="size-4 shrink-0 group-open:rotate-180" aria-hidden />
+      <summary ref={botao} title="Categorias" className="flex min-h-toque min-w-toque cursor-pointer items-center justify-center list-none gap-1.5 rounded-campo border border-borda bg-cartao px-2 text-sm font-semibold text-beringela hover:bg-selecao focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro sm:px-3 [&::-webkit-details-marker]:hidden">
+        <LayoutGrid className="size-4 shrink-0 min-[360px]:max-[479px]:hidden" aria-hidden />
+        <span className="max-[359px]:sr-only">Categorias</span>
+        <ChevronDown className="hidden size-4 shrink-0 group-open:rotate-180 min-[480px]:block" aria-hidden />
       </summary>
       <nav aria-label="Categorias de anúncios"
         className="absolute left-0 top-full z-40 mt-2 max-h-[min(28rem,60dvh)] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-card border border-borda bg-cartao p-1 shadow-2 md:w-[30rem]"
-
       >
         <ul className="grid gap-0.5 md:grid-cols-2">
           {categorias.map((c) => (
