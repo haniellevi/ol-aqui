@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { COOKIE_MANUTENCAO, PAGINA_MANUTENCAO, decidirManutencao, liberacaoValida, manutencaoLigada } from "@/lib/manutencao";
+import { permitePrevia } from "@/lib/supabase/leitura";
 
 // Login pelo Clerk. Áreas que exigem conta: painel, Radar (menos a página que explica e o
 // "Estou procurando…", que se escreve antes de entrar; publicar continua exigindo conta)
@@ -29,6 +30,12 @@ const comClerk = clerkMiddleware(
 const VOLTA_EM_S = "600";
 
 export default async function middleware(req: NextRequest, evento: NextFetchEvent) {
+  if (process.env.CLOUDFLARE_SOMENTE_LEITURA === "1" && !permitePrevia(req.method, req.nextUrl.pathname)) {
+    return new NextResponse("Prévia somente para leitura.", { status: 403, headers: { "X-Robots-Tag": "noindex", "Cache-Control": "no-store" } });
+  }
+  if (process.env.CLOUDFLARE_SOMENTE_LEITURA === "1" && !(Date.now() < Date.parse(process.env.CLOUDFLARE_LEITURA_EXPIRA ?? ""))) {
+    return new NextResponse("Prévia de leitura expirada.", { status: 503, headers: { "X-Robots-Tag": "noindex", "Cache-Control": "no-store" } });
+  }
   if (manutencaoLigada()) {
     const equipe = await liberacaoValida(req.cookies.get(COOKIE_MANUTENCAO)?.value, Date.now());
     const decisao = decidirManutencao(req.nextUrl.pathname, true, equipe);
@@ -44,7 +51,12 @@ export default async function middleware(req: NextRequest, evento: NextFetchEven
       });
     }
   }
-  return comClerk(req, evento);
+  const resposta = await comClerk(req, evento);
+  if (process.env.CLOUDFLARE_SOMENTE_LEITURA === "1" && resposta instanceof Response) {
+    resposta.headers.set("X-Robots-Tag", "noindex, nofollow");
+    resposta.headers.set("Cache-Control", "no-store");
+  }
+  return resposta;
 }
 
 export const config = {
