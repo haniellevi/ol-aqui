@@ -31,7 +31,7 @@ export default async function PaginaFavoritos({ searchParams }: { searchParams: 
         <Botao href="/busca" larguraTotal icone={<Search />}>Encontrar anúncios</Botao>
       </Vazio> : <>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="text-lg font-bold">{dados.total} {dados.total === 1 ? "anúncio salvo" : "anúncios salvos"}</h2><p className="text-sm text-texto-suave">Mais recentes primeiro. Abra um card para ver os detalhes.</p></div>
+          <div><h2 className="text-lg font-semibold">{dados.total} {dados.total === 1 ? "anúncio salvo" : "anúncios salvos"}</h2><p className="text-sm text-texto-suave">Mais recentes primeiro. Abra um card para ver os detalhes.</p></div>
           <Botao href="/busca" variante="secundario" icone={<Search />}>Buscar mais anúncios</Botao>
         </div>
         <ListaFavoritos itens={dados.itens} radar={radar} />

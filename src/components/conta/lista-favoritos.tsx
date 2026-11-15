@@ -30,7 +30,7 @@ export function ListaFavoritos({ itens, radar = false }: { itens: Favorito[]; ra
               <p className="text-sm text-texto-suave">{radar ? "Ele saiu do ar. Peça parecido no Radar e as lojas da região mandam ofertas." : "Ele saiu do ar. Você pode removê-lo da lista."}</p>
             </div>}
           <p className="px-1 text-legenda text-texto-suave">Salvo em <time dateTime={f.salvoEm}>{new Date(f.salvoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time></p>
-          {radar && <div className="px-1"><Botao href={f.radar} tamanho="pequeno" variante={f.situacao === "ativo" ? "texto" : "primario"} icone={<Radar />}
+          {radar && <div className="px-1"><Botao href={f.radar} variante={f.situacao === "ativo" ? "texto" : "secundario"} icone={<Radar />}
             aria-label={f.anuncio ? `Estou procurando algo parecido com ${titulo}` : "Estou procurando algo parecido"}>Estou procurando…</Botao></div>}
           <div className="border-t border-borda pt-1"><BotaoRemoverFavorito anuncioId={f.id} titulo={titulo} comTexto onRemovido={() => setRemovido(titulo)} /></div>
         </li>;

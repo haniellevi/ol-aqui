@@ -113,7 +113,7 @@ function EtapasTocaveis({ passo, id, editar, daRevisao, assistente, formId }: { 
           const liberada = !ehAtual && (editar || feita);
           const marca = (
             <>
-              <span aria-hidden className={`grid size-7 place-items-center rounded-full text-xs font-semibold md:hidden ${ehAtual ? "bg-laranja text-beringela" : feita ? "bg-selecao text-beringela" : "border border-borda text-texto-suave"}`}>{n}</span>
+              <span aria-hidden className={`grid size-7 place-items-center rounded-full text-legenda font-semibold md:hidden ${ehAtual ? "bg-laranja text-beringela" : feita ? "bg-selecao text-beringela" : "border border-borda text-texto-suave"}`}>{n}</span>
               <span aria-hidden className={`hidden h-1.5 w-full rounded-full md:block ${ehAtual || feita ? "bg-laranja" : "bg-borda"}`} />
               <span className={`max-md:sr-only ${ehAtual ? "font-semibold text-beringela" : liberada ? "font-semibold text-laranja-escuro" : "text-texto-suave"}`}>{p.titulo}</span>
             </>

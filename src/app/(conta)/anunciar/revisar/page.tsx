@@ -210,7 +210,7 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
                   <dl className="mt-0.5 flex flex-col gap-2">
                     {linhas.filter((linha) => linha.passo === passo).map((linha) => (
                       <div key={linha.rotulo} className="min-w-0">
-                        <dt className={passo === "detalhes" ? "text-xs text-texto-suave" : "sr-only"}>{linha.rotulo}</dt>
+                        <dt className={passo === "detalhes" ? "text-legenda text-texto-suave" : "sr-only"}>{linha.rotulo}</dt>
                         <dd className={`whitespace-pre-wrap [overflow-wrap:anywhere] ${linha.falta ? "font-semibold text-perigo" : ""}`}>
                           {linha.expansivel ? (
                             <details>

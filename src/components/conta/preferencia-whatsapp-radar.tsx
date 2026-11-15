@@ -44,7 +44,7 @@ export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: Preferenci
         aria-pressed={ligado}
         aria-busy={pendente}
         onClick={alternar}
-        className="flex min-h-10 w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-not-allowed disabled:opacity-70"
+        className="flex min-h-toque w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-not-allowed disabled:opacity-70"
       >
         <span className="min-w-0 flex-1 text-rotulo font-normal break-words text-texto">Receber pedidos do Radar no WhatsApp (8h às 20h)</span>
         <span className={`inline-flex shrink-0 items-center gap-1 text-legenda ${ligado ? "font-semibold text-beringela" : "text-texto-suave"}`}>

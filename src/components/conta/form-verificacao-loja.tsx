@@ -250,7 +250,7 @@ export function PassoVerificacaoLoja({ passo, dados, erro, semCnpj, aoMudar, aoE
   return (
     <div className="flex flex-col gap-6">
       <section aria-labelledby="titulo-resumo" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h3 id="titulo-resumo" className="text-facil font-bold text-beringela">Sua verificação</h3>
+        <h3 id="titulo-resumo" className="text-facil font-semibold text-beringela">Sua verificação</h3>
         <dl className="flex flex-col gap-3 text-facil">
           {resumo(dados).map((l) => (
             <div key={l.rotulo} className="flex items-start justify-between gap-3">

@@ -169,7 +169,7 @@ components:
 
 As decisões foram tomadas pelo Raniel em 14/11/2026. **A base já está no código (onda 0):** fonte Figtree, régua de letras, `laranja-escuro` novo, alturas de 44/48 px, logo novo, botão único (`Botao` como casca do `Button`), preço do card em 16 px e o conferidor (`npm run design:conferir`).
 
-O que ainda segue o jeito antigo nas telas (ondas 1 a 5, seção 11):
+As ondas 1 a 4 (casca, Início, anúncio e área logada) também já estão no código. O que ainda segue o jeito antigo (onda 5, painel admin, e sobras fora da área logada):
 - listas de escolha e uma tabela escritas à mão (o ESLint avisa);
 - telas que escolhem `tamanho="pequeno"` ou alturas fixas por conta própria;
 - dívidas antigas registradas em `scripts/conferir-design.divida.json`.
@@ -278,7 +278,7 @@ const figtree = Figtree({ subsets: ["latin"], weight: ["400", "600", "700"], var
 | Qualquer coisa tocável | mínimo 44 × 44 px | Vale para ícone, chip, link de lista, coração, fechar |
 | Ação principal da tela e WhatsApp | 48 px | Uma por tela |
 | Botão, campo, chip, seletor | 44 px | 36 px só com mouse, a partir de 768 px |
-| Ação pequena em card, lista ou tabela | 36 px de altura visível | A área tocável continua com 44 px |
+| Ação pequena em card, lista ou tabela | 36 px de altura visível | A área tocável continua com 44 px (`Botao tamanho="pequeno"` já faz isso) |
 | Barra de busca | 44 px | |
 | Cabeçalho | 52 px (56 px a partir de 768 px) | |
 | Barra de baixo | 56 px + área segura | |
@@ -395,7 +395,7 @@ Cada onda é uma tarefa própria, pequena e testável. Nunca "refazer o site int
 1. **Casca do site (feita em 14/11/2026):** `CampoBusca` único (44 px, branco, lupa como botão, sem laranja); página com busca própria esconde a do cabeçalho; sugestões, seletor de cidade e links do rodapé com 44 px; links do cabeçalho em 14 px. A barra de baixo já seguia a regra.
 2. **Início e listagens (feita em 15/11/2026):** `Chip` como casca do `Toggle` (estilos em `src/components/ui/toggle-variants.ts`); chips da folha de filtros e da busca na mesma regra (borda beringela e ✓); Início com anúncios em duas colunas no celular (sem o modo `compacto`); um bloco de lojas só: as lojas pagas entram primeiro em `LojasDaRegiao`, com "Patrocinado", e "Loja verificada" aparece escrito. O Início já tinha uma lista de categorias só (o menu "Categorias"); `FaixaCategorias` segue sem uso.
 3. **Anúncio e conversão (feita em 15/11/2026):** preço do anúncio em 24 px (`text-3xl`, 700); "Vendido" e "Patrocinado" com `Badge`; barra de contato fixa no celular com fundo `olaki-material` e um botão "Chamar no WhatsApp" de 48 px (tamanho `acao`); parecidos em duas colunas; voltar, trilha de categorias, denúncia e favoritos com 44 px; foco da galeria em `laranja-escuro`.
-4. **Área logada:** anunciar, meus anúncios, minha loja, conta.
+4. **Área logada (feita em 15/11/2026):** anunciar, meus anúncios, minha loja e conta. As 5 listas de escolha escritas à mão (cidade e imagens da loja) viraram `Seletor`; alvos de toque de 40 px (links, resumos, sino, coração dos favoritos, botões de aviso) foram para 44 px (`min-h-toque`, `size-toque`) e os de 48 px usam `min-h-acao`; um laranja por tela: botões repetidos em lista (lojas, favoritos, sugestões de categoria, artes do marketing) viraram secundários; títulos de seção em 600 (o 700 ficou para preço e números); `text-xs` virou `text-legenda`; "Carregando…" solto virou esqueleto (`Skeleton`, `CarregandoLista`). O tamanho `pequeno` do `Botao` (36 px visíveis) ganhou área tocável de 44 px no toque, e só fica em ações dentro de listas. Meus anúncios e Minha loja já tinham sido compactados no PR #201.
 5. **Painel admin.**
 
 ## 12. Faça e não faça

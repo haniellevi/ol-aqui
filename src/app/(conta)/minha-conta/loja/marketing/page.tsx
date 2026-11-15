@@ -12,7 +12,7 @@ import { LINK_LOJA_DESEMPENHO, LINK_LOJA_MARKETING, LINK_MINHA_LOJA } from "@/li
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { Aviso } from "@/components/conta/aviso";
 import { Vazio } from "@/components/ui/vazio";
-import { Botao } from "@/components/ui/botao";
+import { Botao, classesBotao } from "@/components/ui/botao";
 import { BotaoNovoRascunho } from "@/components/anunciar/botao-novo-rascunho";
 import { urlPasso } from "@/components/anunciar/passos";
 import { CopiarLegenda } from "@/components/marketing/copiar-legenda";
@@ -63,13 +63,13 @@ export default async function PaginaMarketing() {
                 {/* eslint-disable-next-line @next/next/no-img-element -- foto real do anúncio, sem recorte */}
                 <img src={anuncio.foto} alt={titulo} width={400} height={300} className="aspect-[4/3] w-full bg-fundo object-contain" />
                 <div className="flex flex-1 flex-col gap-3 p-4">
-                  <div><h3 className="font-bold [overflow-wrap:anywhere]">{titulo}</h3>
+                  <div><h3 className="font-semibold [overflow-wrap:anywhere]">{titulo}</h3>
                     <p className="text-lg font-bold text-beringela">{antes !== null && <del className="mr-2 text-sm font-normal text-texto-suave">{preco(antes)}</del>}{preco(anuncio.preco_centavos)}</p></div>
                   <p className="text-sm">{anuncio.motivos.join(". ")}{anuncio.motivos.length ? "." : ""}</p>
                   <p className="text-legenda text-texto-suave">{anuncio.visualizacoes} {anuncio.visualizacoes === 1 ? "visualização" : "visualizações"} · {anuncio.cliques} {anuncio.cliques === 1 ? "clique" : "cliques"} no WhatsApp · {anuncio.favoritos} {anuncio.favoritos === 1 ? "favorito" : "favoritos"}</p>
                   <div className="mt-auto flex flex-col gap-2">
-                    <a href={`${arte}?formato=feed`} download className="inline-flex min-h-11 items-center justify-center gap-2 rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro"><Download className="size-4" aria-hidden />Baixar para feed</a>
-                    <a href={`${arte}?formato=stories`} download className="inline-flex min-h-11 items-center justify-center gap-2 rounded-campo border border-beringela px-3 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro"><Download className="size-4" aria-hidden />Baixar para stories</a>
+                    <a href={`${arte}?formato=feed`} download className={classesBotao("secundario")}><Download className="size-4" aria-hidden />Baixar para feed</a>
+                    <a href={`${arte}?formato=stories`} download className={classesBotao("secundario")}><Download className="size-4" aria-hidden />Baixar para stories</a>
                     <CopiarLegenda texto={legenda} />
                   </div>
                 </div>
@@ -87,7 +87,7 @@ export default async function PaginaMarketing() {
               : <Aviso tipo="atencao">Não conseguimos carregar os nichos agora. Atualize a página para tentar novamente.</Aviso>)}</div> : dados.oportunidades.length === 0 ?
             <Vazio titulo="Ainda não há novas sugestões para sua loja" texto="As oportunidades aparecem conforme chegam buscas e pedidos da região que combinam com o seu nicho." /> :
             <div className="grid gap-3 sm:grid-cols-2">{dados.oportunidades.map((o) => <article key={`${o.categoria_id}:${o.termo}`} className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
-              <div><h3 className="font-bold [overflow-wrap:anywhere]">{o.termo}</h3><p className="text-legenda text-texto-suave">{o.categoria_nome}</p></div>
+              <div><h3 className="font-semibold [overflow-wrap:anywhere]">{o.termo}</h3><p className="text-legenda text-texto-suave">{o.categoria_nome}</p></div>
               <p className="text-sm">{o.buscas} {o.buscas === 1 ? "busca" : "buscas"} · {o.pedidos} {o.pedidos === 1 ? "pedido" : "pedidos"} no Radar{o.sem_resultado > 0 ? ` · ${o.sem_resultado} ${o.sem_resultado === 1 ? "busca sem resultado" : "buscas sem resultado"}` : ""}</p>
               {o.buscas + o.pedidos < 5 && <p className="text-legenda text-texto-suave">Sinal inicial, com poucos registros.</p>}
               <p className="text-sm text-texto-suave">Se você vende esse produto, comece um rascunho e confira os dados antes de publicar.</p>
@@ -97,7 +97,7 @@ export default async function PaginaMarketing() {
         </section>
       </>}
       {dicas && dicas.length > 0 && <section aria-labelledby="titulo-melhorias" className="flex flex-col gap-3 border-t border-borda pt-5">
-        <h2 id="titulo-melhorias" className="text-lg font-bold">Melhorias nos seus anúncios</h2>
+        <h2 id="titulo-melhorias" className="text-lg font-semibold">Melhorias nos seus anúncios</h2>
         {dicas.map((dica) => <Link key={dica.anuncio_id} className="rounded-card border border-borda bg-cartao p-4 focus-visible:outline-3 focus-visible:outline-laranja-escuro"
           href={urlPasso(dica.motivo === "sem_foto" || dica.motivo === "poucas_fotos" ? "fotos" : dica.motivo === "sem_preco" ? "preco" : "detalhes", dica.anuncio_id, true)}>
           <span className="block font-semibold">{formatarNome(dica.titulo)}</span><span className="text-sm text-texto-suave">{dica.texto}</span></Link>)}

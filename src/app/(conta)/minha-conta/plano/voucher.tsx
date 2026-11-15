@@ -9,7 +9,7 @@ import { resgatarVoucher } from "./voucher-actions";
 export function Voucher({ codigos }: { codigos: { codigo: string; valido_ate: string; reservado_em: string | null }[] }) {
   const [estado, acao, pendente] = useActionState(resgatarVoucher, null);
   return <section className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1" aria-labelledby="titulo-cupom">
-    <h2 id="titulo-cupom" className="text-lg font-bold">Cupom de lançamento</h2>
+    <h2 id="titulo-cupom" className="text-lg font-semibold">Cupom de lançamento</h2>
     <p className="text-sm text-texto-suave">Aplique seu cupom para usar o plano completo por três meses, sem cobrança. Se houver um plano vigente ou cobrança pendente, o benefício pode ficar reservado para você ativar depois.</p>
     {codigos.map((v) => <p key={v.codigo} className="rounded-campo bg-selecao p-3 text-sm">Seu cupom: <strong>{v.codigo}</strong> · {v.reservado_em ? "reservado para ativação posterior" : `use até ${new Date(new Date(v.valido_ate).getTime() - 1).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}`}.</p>)}
     <form action={acao} className="flex flex-col gap-3">

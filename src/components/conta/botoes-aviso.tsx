@@ -42,7 +42,7 @@ export function MarcarAvisos({ desabilitado }: { desabilitado: boolean }) {
   return <div className="flex flex-col">
     <button type="button" disabled={desabilitado || pendente} aria-busy={pendente}
       onClick={() => executar(marcarTodasLidas)}
-      className="olaki-controle min-h-10 rounded-campo px-2 text-legenda font-semibold text-texto-suave underline-offset-4 hover:text-beringela hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:cursor-not-allowed disabled:opacity-50">
+      className="olaki-controle min-h-toque rounded-campo px-2 text-sm font-semibold text-texto-suave underline-offset-4 hover:text-beringela hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro disabled:cursor-not-allowed disabled:opacity-50">
       {pendente ? "Marcando..." : "Marcar lidas"}
       <span className="sr-only">: todas as notificações</span>
     </button>
@@ -86,7 +86,7 @@ export function PreferenciaAvisoBotao({ preferencia: p }: { preferencia: Prefere
   return <div className="flex flex-col">
     <button type="button" disabled={pendente} aria-pressed={p.ligado} aria-busy={pendente}
       onClick={() => executar(() => salvarPreferenciaAviso(p.tipo, !p.ligado))}
-      className="flex min-h-10 w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-wait">
+      className="flex min-h-toque w-full items-center gap-3 px-3 py-3 text-left hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro disabled:cursor-wait">
       <span className="min-w-0 flex-1 text-rotulo font-normal break-words text-texto">{p.nome}</span>
       <span className={`inline-flex shrink-0 items-center gap-1 text-legenda ${p.ligado ? "font-semibold text-beringela" : "text-texto-suave"}`}>
         {pendente ? "Salvando..." : p.ligado ? <><Check className="size-3.5" aria-hidden />Ligado</> : "Desligado"}
