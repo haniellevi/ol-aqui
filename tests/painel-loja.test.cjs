@@ -90,8 +90,25 @@ test('desempenho da loja: números com comparação, mais vistos e dicas com lin
 test('desempenho da loja: 30 dias, sem visitas, sem dicas e falhas de leitura', async () => {
   const { h, pedidos } = await tela({ sp: { dias: '30' }, d: { dias: 30, atual: zero, anterior: zero, mais_vistos: [] }, dicas: [] });
   assert.deepEqual(pedidos, [30]); assert.match(h, /Igual aos 30 dias anteriores/);
-  assert.match(h, /Nenhum produto foi visto neste período/); assert.match(h, /Tudo certo por aqui/);
+  assert.match(h, /Nenhum produto foi visto neste período/); assert.match(h, /Ainda não há sugestões para seus anúncios/);
+  assert.doesNotMatch(h, /Seus produtos têm foto, preço e boa descrição/);
   assert.deepEqual((await tela({ sp: { dias: '99' } })).pedidos, [7]);
   const falha = (await tela({ d: null, dicas: null })).h;
   assert.match(falha, /Não conseguimos carregar os números/); assert.match(falha, /Não conseguimos carregar as dicas/); assert.doesNotMatch(falha, /Produtos mais vistos/);
+});
+
+test('números por produto mostram eventos e mantêm os detalhes acessíveis', () => {
+  const { NumerosProdutos } = carregar('src/app/(conta)/minha-conta/loja/desempenho/numeros-produtos.tsx', {
+    '@/lib/dados/metricas-produtos': { PERIODOS_PRODUTOS: [7, 30, 90] },
+  });
+  const produto = { anuncio_id: P1, titulo: 'Sofá', foto: null, status: 'ativo', aparicoes: 10,
+    visualizacoes: 4, cliques_whatsapp: 2, favoritos: 1, posicao_media: 2, pct_chamou: 50,
+    termos: [{ termo: 'sofá', vezes: 3 }], tempo_ate_sair_dias: null };
+  const html = render(require('react').createElement(NumerosProdutos, { lista: [produto], periodo: 30, diasDaLoja: 7 }));
+  assert.match(html, /Visualizações/);
+  assert.match(html, /Cliques no WhatsApp/);
+  assert.doesNotMatch(html, /Pessoas que abriram|Chamaram no WhatsApp/);
+  assert.match(html, /<details[^>]*>.*Mais detalhes/s);
+  assert.match(html, /Cliques a cada 100 visualizações/);
+  assert.match(html, /sofá \(3\)/);
 });

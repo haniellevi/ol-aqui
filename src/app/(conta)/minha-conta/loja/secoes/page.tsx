@@ -44,7 +44,7 @@ export default async function PaginaSecoesLoja() {
       />
 
       {!noPlano && (
-        <UpsellPlano titulo="Seções próprias na vitrine" texto="Organize seus produtos do seu jeito, com o nome que quiser." disponivel={disponivel} />
+        <UpsellPlano titulo="Seções próprias na vitrine" disponivel={disponivel} />
       )}
       {noPlano && maximo !== null && (
         <p className="text-base font-semibold">
@@ -61,7 +61,7 @@ export default async function PaginaSecoesLoja() {
       )}
 
       {secoes.length === 0 && noPlano && (
-        <Vazio icone={<LayoutList />} titulo="Nenhuma seção ainda" texto="Comece com uma seção de promoções: é a que mais chama atenção. Escreva o nome logo abaixo." />
+        <Vazio icone={<LayoutList />} titulo="Nenhuma seção ainda" texto="Crie uma seção abaixo para organizar seus produtos." />
       )}
       {(secoes.length > 0 || noPlano) && <GerenciarSecoes secoes={secoes} maximo={maximo} podeCriar={noPlano && podeCriar} />}
     </PaginaConta>
