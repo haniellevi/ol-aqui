@@ -92,15 +92,15 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
         {d === null ? (
           <Aviso tipo="atencao">Não conseguimos carregar os números agora. Atualize a página.</Aviso>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <ul className="divide-y divide-borda overflow-hidden rounded-card border border-borda bg-cartao">
             {CARTOES.map((c) => (
-              <li key={c.chave} className="flex flex-col gap-1 rounded-card bg-cartao p-4 shadow-1">
-                <span className="flex items-start gap-2 text-sm text-texto-suave">
-                  <span className="mt-0.5 inline-flex [&>svg]:size-4" aria-hidden>{c.icone}</span>
-                  {c.titulo}
+              <li key={c.chave} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 px-4 py-3">
+                <span className="flex min-w-0 items-center gap-2 font-semibold text-texto">
+                  <span className="inline-flex shrink-0 text-beringela [&>svg]:size-4" aria-hidden>{c.icone}</span>
+                  <span>{c.titulo}</span>
                 </span>
-                <span className="text-2xl font-bold tabular-nums">{inteiro(d.atual[c.chave])}</span>
-                <span className="text-sm text-texto-suave">{comparacao(d.atual[c.chave], d.anterior[c.chave], d.dias)}</span>
+                <span className="row-span-2 text-right text-2xl font-bold tabular-nums text-beringela">{inteiro(d.atual[c.chave])}</span>
+                <span className="pl-6 text-sm text-texto-suave">{comparacao(d.atual[c.chave], d.anterior[c.chave], d.dias)}</span>
               </li>
             ))}
           </ul>
