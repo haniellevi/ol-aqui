@@ -56,7 +56,7 @@ export default async function PaginaBusca({ searchParams }: Props) {
         topo={
           <>
             <h1 className="sr-only md:not-sr-only md:text-titulo md:font-semibold">{q ? `Resultados para “${q}”` : "Buscar anúncios"}</h1>
-            <CampoBusca valor={q} manter={sp} sugestoes toqueAmplo />
+            <CampoBusca valor={q} manter={sp} sugestoes />
             {entendeu && (
               <p className="text-sm text-texto-suave">
                 Aplicamos filtros a partir da sua busca.{" "}

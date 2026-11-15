@@ -1,10 +1,13 @@
 import { Search } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { classesEntradaGrupo, classesGrupoCampo } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { manterFiltros, type ParametrosUrl } from "@/components/busca/parametros";
 import { EntradaComSugestoes } from "@/components/busca/entrada-com-sugestoes";
 
-const ESTILO_ENTRADA = "h-full min-w-0 flex-1 bg-transparent text-base text-texto placeholder:text-texto-suave focus:outline-none";
-
-// Busca grande "O que você procura?". Formulário GET para /busca: funciona sem JavaScript
+// Busca "O que você procura?" (DESIGN.md, seção 9): uma só por tela, sem laranja (o laranja da tela fica
+// para a ação principal). Estilo vem das peças oficiais: caixa de `input.tsx` e lupa do botão "ghost".
+// Formulário GET para /busca: funciona sem JavaScript
 // e o endereço do resultado pode ser compartilhado. Com `sugestoes`, mostra categorias, lojas
 // e anúncios enquanto a pessoa digita (precisa de JavaScript; sem ele, fica a busca de sempre).
 export function CampoBusca({
@@ -16,7 +19,6 @@ export function CampoBusca({
   caminho = "/busca",
   sugestoes = false,
   regiao = "",
-  toqueAmplo = false,
   placeholder,
 }: {
   valor?: string;
@@ -31,7 +33,6 @@ export function CampoBusca({
   sugestoes?: boolean;
   /** Cidade escolhida: ao trocar, o campo recomeça e esquece as sugestões da cidade anterior. */
   regiao?: string;
-  toqueAmplo?: boolean;
   placeholder?: string;
 }) {
   return (
@@ -42,30 +43,29 @@ export function CampoBusca({
       {Object.entries(manterFiltros(manter)).flatMap(([k, v]) =>
         (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean).map((valor, i) => <input key={`${k}-${i}`} type="hidden" name={k} value={valor} />),
       )}
-      <div className={`relative flex items-center gap-2 rounded-card bg-cartao pl-3 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-laranja-escuro ${toqueAmplo ? "h-[50px] border border-borda-campo md:h-10 md:pr-1" : "h-12 border-2 border-beringela pr-1 md:h-10"}`}>
-        <Search className="size-5 shrink-0 text-beringela @max-[12rem]/busca-topo:hidden" aria-hidden />
+      <div className={classesGrupoCampo}>
         {sugestoes ? (
-          <EntradaComSugestoes key={`${regiao}|${valor}`} id={id} valor={valor} autoFocus={autoFocus} className={ESTILO_ENTRADA} placeholder={placeholder ?? (toqueAmplo ? "Buscar anúncios" : undefined)} />
+          <EntradaComSugestoes key={`${regiao}|${valor}`} id={id} valor={valor} autoFocus={autoFocus} className={classesEntradaGrupo} placeholder={placeholder ?? "O que você procura?"} />
         ) : (
           <input
             id={id}
             type="search"
             name="q"
             defaultValue={valor}
-            placeholder={placeholder ?? (toqueAmplo ? "Buscar anúncios" : "Ex.: moto, geladeira, casa")}
+            placeholder={placeholder ?? "O que você procura?"}
             enterKeyHint="search"
             autoComplete="off"
             maxLength={120}
             autoFocus={autoFocus}
-            className={ESTILO_ENTRADA}
+            className={classesEntradaGrupo}
           />
         )}
         <button
           type="submit"
-          className={`inline-flex shrink-0 items-center rounded-campo bg-laranja px-3 text-sm font-semibold text-beringela hover:brightness-95 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro active:brightness-90 md:h-7 @max-[12rem]/busca-topo:h-8 @max-[12rem]/busca-topo:px-2 ${toqueAmplo ? "h-12 max-md:rounded-s-none" : "h-8"}`}
+          aria-label="Buscar"
+          className={cn(buttonVariants({ variant: "ghost", size: "icon-lg" }), "size-auto h-full aspect-square")}
         >
-          <Search className="hidden size-5 @max-[12rem]/busca-topo:block" aria-hidden />
-          <span className="@max-[12rem]/busca-topo:sr-only">Buscar</span>
+          <Search className="size-5" aria-hidden />
         </button>
       </div>
     </form>

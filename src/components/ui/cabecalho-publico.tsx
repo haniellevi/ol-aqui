@@ -16,7 +16,7 @@ import { MenuCidades } from "./menu-cidades";
 // Cabeçalho das páginas públicas e da conta: logo, cidade ("Corrente ▾") e Entrar/Conta.
 // No computador mostra também a busca sempre à vista, Radar e Anunciar (a barra de baixo some).
 
-const LINK = "inline-flex min-h-controle items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
+const LINK = "inline-flex min-h-controle items-center gap-2 rounded-campo px-3 text-base font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
 /**
  * O login só pode ser lido onde o middleware do Clerk rodou. Endereços que ele não cobre (ex.: um .png

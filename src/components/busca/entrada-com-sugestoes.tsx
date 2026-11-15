@@ -160,7 +160,7 @@ export function EntradaComSugestoes({
                         ir(s);
                       }}
                       onMouseEnter={() => setAtivo(i)}
-                      className={`min-h-10 cursor-pointer px-3 py-2 text-base text-beringela ${i === ativo ? "bg-selecao" : ""}`}
+                      className={`min-h-controle cursor-pointer px-3 py-2 text-base text-beringela ${i === ativo ? "bg-selecao" : ""}`}
                     >
                       <span className="block [overflow-wrap:anywhere]">{s.nome}</span>
                       {s.detalhe && <span className="block text-legenda text-texto-suave">{s.detalhe}</span>}

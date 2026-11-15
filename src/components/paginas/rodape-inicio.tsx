@@ -24,7 +24,7 @@ export function RodapeInicio() {
           <Link
             key={l.href}
             href={l.href}
-            className={`inline-flex min-h-10 items-center underline-offset-4 hover:underline ${l.destaque ? "font-semibold text-laranja-escuro" : "text-texto-suave"}`}
+            className={`inline-flex min-h-controle items-center underline-offset-4 hover:underline ${l.destaque ? "font-semibold text-laranja-escuro" : "text-texto-suave"}`}
           >
             {l.texto}
           </Link>

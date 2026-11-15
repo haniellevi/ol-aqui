@@ -54,7 +54,7 @@ export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEn
         <h1 className="min-w-0 text-titulo font-semibold [overflow-wrap:anywhere]">{categoria.nome}</h1>
       </div>
 
-      <CampoBusca valor={q} manter={sp} caminho={caminhoBusca} id="busca-categoria" toqueAmplo />
+      <CampoBusca valor={q} manter={sp} caminho={caminhoBusca} id="busca-categoria" />
 
       {grupo && chips.length > 0 && (
         <nav aria-label={`Dentro de ${grupo.nome}`} className="min-w-0">

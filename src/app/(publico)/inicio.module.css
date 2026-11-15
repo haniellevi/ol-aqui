@@ -51,20 +51,8 @@
   }
 }
 
-.busca form > div {
-  min-height: 3rem;
-}
-
+/* Início: a lupa de buscar fica em `selecao` para não competir com o laranja de "Criar anúncio" (#199).
+   Altura e tamanho seguem a peça oficial (44px, DESIGN.md seção 4). */
 .busca button[type="submit"] {
-  justify-content: center;
-  min-width: var(--spacing-toque);
-  min-height: var(--spacing-toque);
   background-color: var(--color-selecao);
-}
-
-@container busca-topo (width <= 12rem) {
-  .busca form > div {
-    gap: 0.25rem;
-    padding-inline-start: 0.5rem;
-  }
 }
