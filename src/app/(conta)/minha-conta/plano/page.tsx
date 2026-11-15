@@ -301,7 +301,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
                     <span>{dataPorExtenso(quando)}</span>
                     {p.forma && <span>· {FORMA[p.forma]}</span>}
                   </div>
-                  {p.status === "pendente" && p.tipo === "assinatura" ? (
+                  {pagamentoLigado && (p.status === "pendente" && p.tipo === "assinatura" ? (
                     <Link
                       href={linkMeuPlano({ pagamentoId: p.id })}
                       className="inline-flex min-h-10 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
@@ -327,7 +327,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
                         Pagar agora
                       </a>
                     )
-                  )}
+                  ))}
                 </li>
               );
             })}
