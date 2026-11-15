@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Configuração pessoal do Obsidian (o cofre é a pasta docs/)
 docs/.obsidian/
+
+.open-next
+.wrangler
