@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { traduzirErro } from "@/lib/erros";
-import { ehUuid } from "@/lib/formato";
+import { ehUuid, SITE } from "@/lib/formato";
+import { configuracaoEnvio, enviarTexto, type ResultadoEnvio } from "@/lib/whatsapp/envio";
 import { numeroWhatsapp } from "@/lib/whatsapp/servico";
 import { dddDaLoja, numeroComRegiao } from "@/lib/telefone-regiao";
 import type { EstadoVitrine } from "../loja/vitrine-actions";
 
-export type EstadoEquipe = { link?: string; erro?: string; ok?: string } | null;
+export type EstadoEquipe = { link?: string; erro?: string; ok?: string; envio?: ResultadoEnvio } | null;
 
 export async function convidarGerente(loja: string, _: EstadoEquipe, form: FormData): Promise<EstadoEquipe> {
   if (!ehUuid(loja)) return { erro: "Informe um celular brasileiro com DDD." };
@@ -18,7 +19,21 @@ export async function convidarGerente(loja: string, _: EstadoEquipe, form: FormD
   const { data, error } = await db.rpc("convidar_gerente_loja", { p_loja: loja, p_whatsapp: whatsapp });
   if (error || typeof data !== "string" || !ehUuid(data)) return { erro: traduzirErro(error).mensagem };
   revalidatePath(`/minha-conta/lojas/${loja}`);
-  return { link: `/convite-loja?codigo=${data}` };
+  const link = `/convite-loja?codigo=${data}`;
+  let envio: ResultadoEnvio = "falha";
+  try {
+    const config = configuracaoEnvio();
+    const { data: lojas } = await db.rpc("minhas_lojas");
+    const nome = Array.isArray(lojas) ? lojas.find((item) => item.id === loja && item.dono)?.nome : null;
+    const lojaTexto = typeof nome === "string" && nome.trim() ? `a loja ${nome.trim().replace(/\s+/g, " ").slice(0, 80)}` : "uma loja";
+    envio = await enviarTexto(whatsapp, `Você recebeu um convite para ajudar a gerenciar ${lojaTexto} no Mercado da Região. Para ver e aceitar o convite, acesse: ${SITE}${link}`, config, async () => {
+      const { data: permitido, error: falha } = await db.rpc("convite_gerente_reservar_envio", { p_loja: loja, p_token: data, p_whatsapp: whatsapp });
+      return !falha && permitido === true;
+    });
+  } catch {
+    envio = "falha";
+  }
+  return { link, envio };
 }
 
 export async function revogarGerente(loja: string, convite: string): Promise<EstadoEquipe> {

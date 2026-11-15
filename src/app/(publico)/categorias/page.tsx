@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Voltar } from "@/components/ui/voltar";
 import Link from "next/link";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { listarCategorias } from "@/lib/dados/categorias";
@@ -19,6 +20,7 @@ export default async function PaginaCategorias() {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4">
+      <Voltar />
       <h1 className="text-titulo font-semibold text-beringela">Todas as categorias</h1>
       {categorias.length === 0 ? (
         <Vazio titulo="Não conseguimos carregar as categorias." texto="Confira a internet e tente de novo.">

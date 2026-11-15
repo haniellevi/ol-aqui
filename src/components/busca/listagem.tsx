@@ -1,4 +1,5 @@
 import "server-only";
+import { Voltar } from "@/components/ui/voltar";
 import type { ReactNode } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -97,6 +98,7 @@ export async function Listagem({
 
   return (
     <main data-comprador={caminho === "/busca" ? "" : undefined} className={`mx-auto flex w-full max-w-6xl flex-col md:gap-4 md:px-4 md:py-4 ${caminho === "/busca" ? "gap-2 px-4 py-2" : "gap-3 px-4 py-3"}`}>
+      <Voltar />
       {topo}
       <ResultadosBusca
         caminho={caminho}

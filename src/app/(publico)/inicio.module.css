@@ -51,3 +51,8 @@
   }
 }
 
+/* Início: a lupa de buscar fica em `selecao` para não competir com o laranja de "Criar anúncio" (#199).
+   Altura e tamanho seguem a peça oficial (44px, DESIGN.md seção 4). */
+.busca button[type="submit"] {
+  background-color: var(--color-selecao);
+}

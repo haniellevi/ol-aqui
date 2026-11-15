@@ -18,6 +18,7 @@ import { Aviso } from "@/components/conta/aviso";
 import { dataPorExtenso, diaMesCurto, resumoPlano } from "@/components/conta/resumo-plano";
 import { minhaCortesiaRadar } from "@/lib/dados/radar";
 import { EscolherPlano } from "@/components/cobranca/escolher-plano";
+import { Voucher } from "./voucher";
 import { Badge, type TomSelo } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "Meu plano" };
@@ -116,6 +117,8 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
     );
   }
   const vitrine = conta.vitrine;
+  const { data: vouchers, error: erroVouchers } = await (await createClient()).rpc("meus_vouchers");
+  if (erroVouchers) throw new Error("Não foi possível consultar seus cupons.");
   const asaasLigado = asaasConfigurado();
   const [planos, historico, assinatura, opcoes, doc, retomado, ambiente, planoRpc, cortesiaAte] = await Promise.all([
     lerPlanos(),
@@ -133,6 +136,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
   const pagamentos = historico.lista;
   const resumo = resumoPlano(conta)!;
   const nomes = new Map(planos.map((p) => [p.codigo, p.nome]));
+  const limiteGratisLoja = planos.find((p) => p.codigo === "loja_gratis")?.limite_anuncios;
   const contratado = planoRpc?.e_teste ? "período grátis" : `plano ${planoRpc?.nome ?? vitrine.plano}`;
   const planoRecomendado = planos.find((p) => p.recomendado === true && p.ativo !== false && !p.e_teste);
   // Radar: o plano que vale agora dá o Radar; a cortesia é da própria loja e vale até a data (sem plano pago).
@@ -187,7 +191,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
           <Aviso tipo="atencao">
             <span>
               Seu {assinatura.e_teste ? "teste grátis" : `plano ${assinatura.plano_nome ?? ""}`} termina em {dataPorExtenso(assinatura.vence_em)}.
-              {" "}Pague o próximo período abaixo para não ficar sem anúncios no ar.
+              {" "}{vitrine.tipo === "loja" && limiteGratisLoja != null ? `Depois, sua loja continua grátis com até ${limiteGratisLoja} anúncios no ar. O excedente é pausado.` : "Confira os limites do seu plano gratuito em Meu plano."}
             </span>
           </Aviso>
         )}
@@ -247,6 +251,8 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
           </p>
         )}
       </section>
+
+      {vitrine.tipo === "loja" && !suspensa && <Voucher codigos={vouchers ?? []} />}
 
       {/* Planos à venda, com período e como o pagamento entra (antes de pagar) */}
       {assinatura && !suspensa && (

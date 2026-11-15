@@ -308,7 +308,7 @@ Rótulo longo quebra linha e o botão cresce; nunca cortar o texto para caber.
 ## 7. Ícones e imagens
 
 - **Lucide** (`lucide-react`), traço 2. Único pacote de ícones.
-- Ícone sempre com palavra. Sozinho só: lupa, coração, X e voltar.
+- Ícone sempre com palavra. Sozinho só: lupa, coração, X, voltar e o botão de informação do Radar no Início. O botão de informação tem nome acessível.
 - Categorias: círculo `selecao` com ícone beringela. Faltando ícone no Lucide (animais), desenhar no mesmo traço; não trazer outro pacote.
 - Foto de anúncio: 4:3, cortada no centro, sempre real. Nada de banco de imagens na home.
 - Quadro ilustrativo leva a etiqueta "Exemplo".
@@ -373,10 +373,12 @@ Página para ver as peças: `/admin/pecas`.
 
 - **`CardAnuncio`:** foto 4:3; coração no canto da foto (alvo de 44 px); **preço 16 px em 700**; título 14 px em até 2 linhas; cidade e data em 12 px `texto-suave`; no máximo um selo; "Patrocinado" escrito; card inteiro tocável. Duas colunas no celular, 4 a 5 no computador.
 - **`CampoBusca`:** uma só por tela, 44 px, texto "O que você procura?". Fundo branco com `borda-campo`; não é laranja. O botão de buscar é a lupa à direita (44 px). Página com `CampoBusca` próprio esconde a busca do cabeçalho (`globals.css`).
-- **Barra de busca do Início:** Categorias à esquerda, busca com largura flexível e "Criar anúncio" à direita. Abaixo de 360 px, o controle de categorias mostra só o ícone e mantém o nome acessível.
+- **Barra de busca do Início:** Categorias à esquerda, busca com largura flexível (lupa em `selecao`) e "Criar anúncio" em laranja à direita. Abaixo de 360 px, o controle de categorias mostra só o ícone e mantém o nome acessível.
 - **`FaixaCategorias`:** uma só lista de categorias por tela, rolável na horizontal com `scroll-snap`, ícone com nome, estado ativo em `selecao` com texto beringela.
 - **Filtros rápidos:** uma linha rolável de `Chip` logo abaixo da busca.
 - **`LojasDaRegiao`:** um só bloco de lojas por tela, com logo redondo, nome, selo "Loja verificada" **com a palavra escrita**, quantidade de anúncios e acesso à vitrine.
+- **Destaques da Região no Início:** logo inteiro em área própria, com o nome em uma faixa abaixo.
+- **Radar no Início:** botão de pedido e ícone de informação. O ícone abre a explicação no próprio Início.
 - **`BarraContato`:** fixa no rodapé da página do anúncio, **um** botão "Chamar no WhatsApp" de 48 px. Uma chamada de WhatsApp por tela.
 - **`BarraInferior`:** Início · Buscar · [+ Anunciar] · Radar · Conta. Ícone com nome em 12 px. Some a partir de 768 px.
 - **Tela vazia:** `Vazio` com uma frase e uma saída ("Pedir no Radar", "Anunciar").

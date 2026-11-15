@@ -44,6 +44,7 @@ test('planos só oferecem contratação para o público elegível e mantêm a or
     const { default: Planos } = carregar('src/app/(publico)/planos/page.tsx', {
       '@clerk/nextjs/server': { auth: async () => ({ userId: tipo ? 'usuario' : null }) },
       '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ vitrine: { tipo } }) },
+      '@/lib/supabase/server': { createClient: async () => ({ rpc: async () => ({ data: null, error: null }) }) },
       '@/lib/dados/vitrine-completa': { planosPublicos: async () => [plano], perguntasDosPlanos: async () => [] },
     });
     return render(await Planos({ searchParams: Promise.resolve({ origem: 'radar' }) }));

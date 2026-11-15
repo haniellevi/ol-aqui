@@ -24,7 +24,16 @@ try:
     init = (root/'supabase/testes/00_simula_supabase.sql').read_text()
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
+        if p.name == '20261202120000_voucher_lancamento.sql':
+            checked(sql("update public.modelos_mensagem set texto='Mensagem personalizada de teste.' where chave='plano_vencendo' and canal='whatsapp';"))
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+    checked(sql("""do $$ begin
+      assert (select texto='Mensagem personalizada de teste.' and texto_padrao like '%plano gratuito%' from public.modelos_mensagem where chave='plano_vencendo' and canal='whatsapp'), 'padrão ou personalização alterados incorretamente';
+      assert (select texto=texto_padrao and texto like '%plano gratuito%' from public.modelos_mensagem where chave='plano_vencendo' and canal='notificacao'), 'texto padrão não foi atualizado';
+    end $$;"""))
+    checked(sql("update public.modelos_mensagem set texto=texto_padrao where chave='plano_vencendo' and canal='whatsapp';"))
+    checked(sql((root/'supabase/testes/891_convite_envio.sql').read_text()))
+    checked(sql((root/'supabase/testes/890_voucher_lancamento.sql').read_text()))
     checked(sql((root/'supabase/testes/880_loja_ia_rascunhos.sql').read_text()))
     checked(sql("""insert into perfis(id,microrregiao_id,nome,cidade)
       select 'user_ia880conc',id,'IA concorrente','Corrente' from microrregioes where slug='corrente-pi';
@@ -421,5 +430,75 @@ try:
     for result in artes: checked(result)
     assert sum('nova' in r.stdout for r in artes)==1 and sum('sem_credito' in r.stdout for r in artes)==3, [r.stdout for r in artes]
     print('PASS: quatro pedidos simultâneos do Aki disputam um único crédito', flush=True)
+    checked(sql("""insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+      select 'user_conviteconc891',id,'Loja convite concorrente','Corrente','5589999900896',now() from public.microrregioes where slug='corrente-pi';
+      insert into public.vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo)
+      select '89100000-0000-4000-a000-000000000001','user_conviteconc891',microrregiao_id,'loja-convite-concorrente','Loja convite concorrente','Corrente','5589999900896','loja'
+      from public.perfis where id='user_conviteconc891';"""))
+    gerado=sql("begin; set local role authenticated; set local request.jwt.claim.sub='user_conviteconc891'; select public.convidar_gerente_loja('89100000-0000-4000-a000-000000000001','5589999900897'); commit;")
+    checked(gerado)
+    token_convite=re.search(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}',gerado.stdout).group(0)
+    def reservar_envio(_):
+        return sql(f"begin; set local role authenticated; set local request.jwt.claim.sub='user_conviteconc891'; select public.convite_gerente_reservar_envio('89100000-0000-4000-a000-000000000001','{token_convite}','5589999900897'); select pg_sleep(0.2); commit;")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        envios=list(pool.map(reservar_envio,range(2)))
+    for resultado in envios: checked(resultado)
+    assert sum(bool(re.search(r'^\s*t\s*$', r.stdout, re.M)) for r in envios)==1, [r.stdout for r in envios]
+    print('PASS: duas reservas simultâneas permitem um único envio de convite', flush=True)
+    checked(sql("""insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+      select 'user_voucherconc890',id,'Loja concorrente','Corrente','5589999900894',now() from public.microrregioes where slug='corrente-pi';
+      insert into public.vitrines_lojas(dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo)
+      select 'user_voucherconc890',microrregiao_id,'loja-conc-voucher-890','Loja concorrente','Corrente','5589999900894','loja'
+      from public.perfis where id='user_voucherconc890';
+      insert into public.voucher_campanhas(codigo,valido_ate) values ('CONCORRE890',now()+interval '1 month');"""))
+    def resgatar_concorrente(_):
+        return sql("begin; set local role authenticated; set local request.jwt.claim.sub='user_voucherconc890'; select public.resgatar_voucher('CONCORRE890'); select pg_sleep(0.2); commit;")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        tentativas=list(pool.map(resgatar_concorrente, range(2)))
+    assert sum(r.returncode == 0 for r in tentativas) == 1, [(r.stdout,r.stderr) for r in tentativas]
+    checked(sql("do $$ begin assert (select count(*)=1 from public.voucher_atribuicoes where dono_id='user_voucherconc890' and resgatado_em is not null), 'voucher aplicado mais de uma vez'; end $$;"))
+    print('PASS: resgate concorrente aplica o voucher uma única vez', flush=True)
+    checked(sql("""insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+      select 'user_voucherpag890',id,'Loja com cobrança','Corrente','5589999900895',now() from public.microrregioes where slug='corrente-pi';
+      insert into public.vitrines_lojas(dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo)
+      select 'user_voucherpag890',microrregiao_id,'loja-pag-voucher-890','Loja com cobrança','Corrente','5589999900895','loja'
+      from public.perfis where id='user_voucherpag890';
+      insert into public.pagamentos(vitrine_id,microrregiao_id,tipo,plano_codigo,valor_centavos,status,meses,asaas_cobranca_id)
+      select id,microrregiao_id,'assinatura','slim',2990,'pendente',1,'pay_concorrente890' from public.vitrines_lojas where dono_id='user_voucherpag890';"""))
+    def confirmar_ou_reservar(acao):
+        if acao == 'confirmar': return sql("begin; select public.confirmar_pagamento('pay_concorrente890'); select pg_sleep(0.2); commit;")
+        return sql("begin; set local role authenticated; set local request.jwt.claim.sub='user_voucherpag890'; select public.resgatar_voucher('CONCORRE890'); select pg_sleep(0.2); commit;")
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        resultados=list(pool.map(confirmar_ou_reservar,['confirmar','reservar']))
+    for resultado in resultados: checked(resultado)
+    checked(sql("do $$ begin assert (select v.plano='slim' and a.reservado_em is not null and a.resgatado_em is null from public.vitrines_lojas v join public.voucher_atribuicoes a on a.vitrine_id=v.id join public.voucher_campanhas c on c.id=a.campanha_id where v.dono_id='user_voucherpag890' and c.codigo='CONCORRE890'), 'confirmação concorrente alterou o benefício'; end $$;"))
+    print('PASS: confirmação e reserva simultâneas preservam o plano pago', flush=True)
+    checked(sql("""insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+      select 'user_limiteconc890',id,'Loja limite concorrente','Corrente','5589999900899',now() from public.microrregioes where slug='corrente-pi';
+      insert into public.vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo,plano,plano_expira_em)
+      select '89000000-0000-4000-a000-000000000009','user_limiteconc890',microrregiao_id,'loja-limite-concorrente','Loja limite concorrente','Corrente','5589999900899','loja','full',now()+interval '1 month'
+      from public.perfis where id='user_limiteconc890';
+      update public.configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
+      update public.configuracoes set valor='1' where chave='anuncio.fotos_minimo' and microrregiao_id is null;
+      with itens as (select gen_random_uuid() as id,n from generate_series(1,11) n)
+      insert into public.anuncios(id,vitrine_id,categoria_id,titulo,descricao,cidade,preco_centavos,atributos,status,fotos)
+      select i.id,'89000000-0000-4000-a000-000000000009',c.id,'Produto limite concorrente '||i.n,'Produto fictício para verificar limites.','Corrente',10000,'{"estado":"usado"}','ativo',
+        array['https://abc.supabase.co/storage/v1/object/public/anuncios/user_limiteconc890/'||i.id||'/1.webp']
+      from itens i cross join public.categorias c where c.slug='sofas-e-poltronas';
+      update public.vitrines_lojas set plano_expira_em=now()-interval '1 second' where id='89000000-0000-4000-a000-000000000009';"""))
+    def renovar_em_transacao():
+        return sql("begin; select pg_advisory_xact_lock(890890); update public.vitrines_lojas set plano_expira_em=now()+interval '30 days' where id='89000000-0000-4000-a000-000000000009'; select pg_sleep(1); commit;")
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        renovacao=pool.submit(renovar_em_transacao)
+        for _ in range(50):
+            prova=sql("select pg_try_advisory_lock(890890);")
+            checked(prova)
+            if re.search(r'^\s*f\s*$',prova.stdout,re.M): break
+            time.sleep(.05)
+        else: raise RuntimeError('Renovação não obteve a trava de teste')
+        checked(sql("select public.aplicar_limite_loja_gratis();"))
+        checked(renovacao.result())
+    checked(sql("do $$ begin assert (select count(*)=11 from public.anuncios where vitrine_id='89000000-0000-4000-a000-000000000009' and status='ativo'), 'rotina pausou anúncio após renovação'; end $$;"))
+    print('PASS: renovação concorrente impede pausa de anúncios', flush=True)
 finally:
     run('docker','stop',container)

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Copy, LocateFixed, MapPin, Plus, Save, Trash2, X } from "lucide-react";
+import { ChevronDown, Copy, LocateFixed, MapPin, Plus, Save, Trash2, X } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
@@ -126,7 +126,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
       onClickCapture={(e) => { if ((e.target as HTMLElement).closest('button[type="button"]')) setMostrarSucesso(false); }}
       className="flex flex-col gap-5" noValidate
     >
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:absolute">
         {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
         {mostrarSucesso && !salvando && estado?.ok && <Aviso tipo="ok">Informações da loja salvas.</Aviso>}
       </div>
@@ -154,7 +154,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
           <p className="text-base font-semibold">
             Localização no mapa <span className="font-normal text-texto-suave">(opcional)</span>
           </p>
-          <p className="text-sm text-texto-suave">Estando na loja, toque no botão. O botão &quot;Como chegar&quot; da vitrine leva o cliente até aqui.</p>
+          <p className="text-sm text-texto-suave">Na loja, marque o local para mostrar &quot;Como chegar&quot; na vitrine.</p>
           {lat != null && lng != null ? (
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 text-base font-semibold text-verde-escuro">
@@ -189,15 +189,21 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
         <h2 id="titulo-horarios" className="text-lg font-bold">
           Horário de funcionamento
         </h2>
-        <p className="text-sm text-texto-suave">A vitrine mostra &quot;Aberto agora&quot; ou &quot;Fechado agora&quot; pelo horário daqui. Deixe todos fechados para não mostrar horário.</p>
+        <p className="text-sm text-texto-suave">Toque em um dia para editar. Se todos estiverem fechados, o horário não aparece na vitrine.</p>
         <input type="hidden" name="horarios" value={paraJson(semana)} />
         <ul className="flex flex-col divide-y divide-borda">
           {DIAS_EM_ORDEM.map((d) => {
             const dia = semana[d];
             return (
-              <li key={d} className="flex flex-col gap-2 py-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-base font-semibold">{NOME_DIA[d]}</span>
+              <li key={d}>
+                <details className="group">
+                  <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 rounded-campo py-2 focus-visible:outline-3 focus-visible:outline-laranja-escuro [&::-webkit-details-marker]:hidden">
+                    <span className="min-w-0 flex-1 font-semibold">{NOME_DIA[d]}</span>
+                    <span className="text-right text-sm text-texto-suave">{dia.aberto ? dia.faixas.map((f) => `${f.abre}–${f.fecha}`).join(", ") : "Fechado"}</span>
+                    <ChevronDown className="size-4 shrink-0 text-beringela group-open:rotate-180" aria-hidden />
+                  </summary>
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
+                  <span className="text-sm font-semibold">Funcionamento</span>
                   <div className="flex gap-2">
                     <Chip aria-label={`Aberto: ${NOME_DIA[d]}`} ativo={dia.aberto} onClick={() => mudarDia(d, (x) => ({ ...x, aberto: true }))}>
                       Aberto
@@ -263,7 +269,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                           mudarDia(d, (x) => ({ ...x, faixas: [...x.faixas, { abre: ultimo?.fecha ?? "14:00", fecha: "23:59" }] }));
                         }}
                       >
-                        Outro horário no mesmo dia (ex.: depois do almoço)
+                        Adicionar outro horário
                       </Botao>
                     )}
                   </div>
@@ -273,6 +279,7 @@ export function FormInformacoes({ dados, formasDoPainel, salvarComoGerente }: {
                     Copiar segunda para os dias úteis
                   </Botao>
                 )}
+                </details>
               </li>
             );
           })}

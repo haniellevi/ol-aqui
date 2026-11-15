@@ -61,7 +61,7 @@ export default async function PaginaFixadosLoja() {
       />
 
       {!noPlano && (
-        <UpsellPlano titulo="Fixar produtos no topo" texto="Deixe seus melhores produtos sempre no alto da vitrine." disponivel={textoDisponivelEm(planos, "fixados")} />
+        <UpsellPlano titulo="Fixar produtos no topo" disponivel={textoDisponivelEm(planos, "fixados")} />
       )}
       {noPlano && maximo !== null && (
         <p className="text-base font-semibold">

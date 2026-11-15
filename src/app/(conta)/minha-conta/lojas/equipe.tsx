@@ -28,16 +28,18 @@ export function FormConvidarGerente({ loja }: { loja: string }) {
     <section className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
       <h2 className="text-lg font-semibold">Convidar gerente</h2>
       <p className="text-sm text-texto-suave">
-        Informe o WhatsApp da pessoa e compartilhe o link com ela. O convite vale por sete dias e só pode ser aceito pela conta com esse número confirmado.
+        Informe o WhatsApp da pessoa para enviarmos o convite. Ele vale por sete dias e só pode ser aceito pela conta com esse número confirmado.
       </p>
       <form action={acao} className="flex flex-col gap-3">
         <Campo rotulo="WhatsApp da pessoa convidada" name="whatsapp" {...telefone.campo} erro={telefone.erro} />
-        <Botao type="submit" carregando={pendente} disabled={!telefone.valido}>Gerar convite</Botao>
+        <Botao type="submit" carregando={pendente} disabled={!telefone.valido}>Enviar convite</Botao>
         {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
       </form>
       {link && (
         <div className="flex flex-col gap-2">
-          <Aviso tipo="ok">Convite criado. Copie o link agora para compartilhar.</Aviso>
+          {estado.envio === "enviado" ? <Aviso tipo="ok">Convite enviado pelo WhatsApp.</Aviso>
+            : estado.envio === "incerto" ? <Aviso tipo="atencao">Não foi possível confirmar o envio. Verifique com a pessoa antes de enviar novamente; você também pode copiar o link.</Aviso>
+            : <Aviso tipo="atencao">O convite foi criado, mas o envio não foi confirmado. Você pode copiar o link para compartilhar.</Aviso>}
           <Botao type="button" variante="secundario" onClick={() => copiar(link)}>
             {copiado === link ? "Link copiado" : "Copiar link do convite"}
           </Botao>
