@@ -32,7 +32,7 @@ function ambiente(op = {}) {
     '@/lib/supabase/admin': {supabaseAdmin:()=>db}, '@/lib/supabase/server':{createClient:async()=>db},
     '@/lib/dados/cobranca':{meuPagamento:async()=>({...pg,tipo:'assinatura',tem_cobranca:!!pg.asaas_cobranca_id})},
     '@/lib/asaas':{
-      ErroAsaas,STATUS_PAGO:new Set(['RECEIVED','CONFIRMED']),ambienteAsaas:async()=>'sandbox',asaasConfigurado:()=>true,
+      ErroAsaas,STATUS_PAGO:new Set(['RECEIVED','CONFIRMED']),ambienteAsaas:async()=>op.ambiente??'sandbox',asaasConfigurado:()=>true,cobrancaNoAmbiente:async()=>op.origemValida!==false,
       clienteDoAmbiente:(v)=>v?.split(':')[1],
       buscarCobrancaPorReferencia:async()=>encontrada,
       criarCobranca:async()=>{eventos.push('POST');await new Promise(r=>setTimeout(r,10));if(op.recusa)throw new ErroAsaas('documento recusado',400);if(op.timeout)throw new Error('timeout');return {id:'pay_1',value:29.9,billingType:'PIX',status:'PENDING',invoiceUrl:'https://sandbox.asaas.com/i/teste'};},
@@ -41,7 +41,7 @@ function ambiente(op = {}) {
     }
   });
   return { ...cobrar,pg,eventos,setEncontrada:(v)=>encontrada=v,
-    run:()=>cobrar.garantirCobranca({amb:'sandbox',pg:{...pg},userId:'user',forma:'pix',descricao:'Teste',naoEncontrado:'Não encontrado'}) };
+    run:()=>cobrar.garantirCobranca({amb:op.ambiente??'sandbox',pg:{...pg},userId:'user',forma:'pix',descricao:'Teste',naoEncontrado:'Não encontrado'}) };
 }
 
 test('cobrança: quatro solicitações simultâneas fazem no máximo um POST',async()=>{
@@ -168,6 +168,50 @@ test('webhook não confirma cobranças sandbox no site de produção', async () 
       'next/server': { NextResponse: { json: (body, op = {}) => ({ body, status: op.status ?? 200 }) } },
       '@/lib/asaas': { tokenWebhookConfere: () => true, ambienteAsaas: async () => 'sandbox' },
       '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async (...args) => { chamadas.push(args); return { error: null }; } }) },
+    });
+    const resposta = await webhook.POST({ headers: { get: () => 'token' }, json: async () => ({ event: 'PAYMENT_RECEIVED', payment: { id: 'pay_1' } }) });
+    assert.equal(resposta.status, 503);
+    assert.deepEqual(chamadas, []);
+  } finally {
+    if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
+  }
+});
+
+test('ambiente da cobrança é conferido com a reserva persistida', async () => {
+  let ambienteRegistrado = 'sandbox';
+  const db = { from: () => ({ select() { return this; }, eq() { return this; }, maybeSingle: async () => ({ data: ambienteRegistrado ? { ambiente: ambienteRegistrado } : null, error: null }) }) };
+  const { cobrancaNoAmbiente } = carregar('src/lib/asaas.ts', { '@/lib/supabase/admin': { supabaseAdmin: () => db } });
+  assert.equal(await cobrancaNoAmbiente(id, 'producao'), false);
+  ambienteRegistrado = 'producao';
+  assert.equal(await cobrancaNoAmbiente(id, 'producao'), true);
+  ambienteRegistrado = null;
+  assert.equal(await cobrancaNoAmbiente(id, 'producao'), false);
+});
+
+
+test('produção rejeita retomada e consulta de cobrança de outro ambiente', async () => {
+  const anterior = process.env.VERCEL_ENV;
+  try {
+    process.env.VERCEL_ENV = 'production';
+    const a = ambiente({ambiente:'producao', origemValida:false, pg:{asaas_cobranca_id:'pay_1',forma:'pix'}});
+    await assert.rejects(a.run(), /conferida/);
+    assert.equal(await a.conferirNoAsaas(id), false);
+    assert.equal(a.eventos.includes('confirmar_pagamento'), false);
+  } finally {
+    if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
+  }
+});
+
+test('webhook rejeita cobrança registrada em outro ambiente após migração', async () => {
+  const anterior = process.env.VERCEL_ENV;
+  const chamadas = [];
+  try {
+    process.env.VERCEL_ENV = 'production';
+    const q = { select() { return q; }, eq() { return q; }, maybeSingle: async () => ({ data: { id }, error: null }) };
+    const webhook = carregar('src/app/api/asaas/webhook/route.ts', {
+      'next/server': { NextResponse: { json: (body, op = {}) => ({ body, status: op.status ?? 200 }) } },
+      '@/lib/asaas': { tokenWebhookConfere: () => true, ambienteAsaas: async () => 'producao', cobrancaNoAmbiente: async () => false },
+      '@/lib/supabase/admin': { supabaseAdmin: () => ({ from: () => q, rpc: async (...args) => { chamadas.push(args); return { error: null }; } }) },
     });
     const resposta = await webhook.POST({ headers: { get: () => 'token' }, json: async () => ({ event: 'PAYMENT_RECEIVED', payment: { id: 'pay_1' } }) });
     assert.equal(resposta.status, 503);
