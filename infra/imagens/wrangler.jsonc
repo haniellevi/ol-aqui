@@ -1,0 +1,9 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "mercado-regiao-imagens",
+  "main": "index.js",
+  "workers_dev": false,
+  "preview_urls": false,
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"]
+}

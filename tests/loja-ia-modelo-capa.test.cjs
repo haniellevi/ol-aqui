@@ -36,3 +36,16 @@ test('preview autenticado nega imagem alheia sem consultar Storage', async () =>
   assert.match(resposta.headers.get('cache-control'), /no-store/);
   assert.equal(acessos, 0);
 });
+
+test('na Cloudflare, o modelo fixo vem do serviço interno', async (t) => {
+  const antes = process.env.CLOUDFLARE_IMAGENS;
+  process.env.CLOUDFLARE_IMAGENS = '1';
+  t.after(() => { if (antes === undefined) delete process.env.CLOUDFLARE_IMAGENS; else process.env.CLOUDFLARE_IMAGENS = antes; });
+  let destino = '';
+  const { desenharModeloCapa } = carregar('src/lib/loja-ia/modelo-capa.ts', {
+    sharp: { default: () => { throw new Error('sharp não funciona no Worker'); } },
+    '@opennextjs/cloudflare': { getCloudflareContext: () => ({ env: { IMAGENS_TRATAMENTO: { fetch: async (url) => { destino = url; return new Response('modelo'); } } } }) },
+  });
+  assert.equal((await desenharModeloCapa()).toString(), 'modelo');
+  assert.match(destino, /\/modelo-capa$/);
+});

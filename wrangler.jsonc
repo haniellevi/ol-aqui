@@ -1,12 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "mercado-regiao-teste",
+  "name": "mercado-regiao-candidato",
   "main": ".open-next/worker.js",
   "keep_vars": true,
-  "vars": { "CLOUDFLARE_SOMENTE_LEITURA": "1", "CLOUDFLARE_LEITURA_EXPIRA": "2026-11-15T05:30:00Z" },
+  "vars": { "CLOUDFLARE_IMAGENS": "1", "CLOUDFLARE_SOMENTE_LEITURA": "1", "CLOUDFLARE_LEITURA_EXPIRA": "2026-11-15T05:30:00Z" },
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
-  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "mercado-regiao-teste" }],
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "mercado-regiao-candidato" }, { "binding": "IMAGENS_TRATAMENTO", "service": "mercado-regiao-imagens" }],
   "images": { "binding": "IMAGES" }
 }

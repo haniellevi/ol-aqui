@@ -1,12 +1,20 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import sharp from "sharp";
 import { ehUuid } from "@/lib/formato";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 /** Arte fixa, sem texto do usuário ou chamada a provedor. */
 export async function desenharModeloCapa(): Promise<Buffer> {
+  if (process.env.CLOUDFLARE_IMAGENS === "1") {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const servico = getCloudflareContext().env.IMAGENS_TRATAMENTO;
+    if (!servico) throw new Error("Serviço de imagens indisponível.");
+    const resposta = await servico.fetch("https://imagens.interno/modelo-capa", { method: "GET" });
+    if (!resposta.ok) throw new Error("Não foi possível preparar o modelo de capa.");
+    return Buffer.from(await resposta.arrayBuffer());
+  }
+  const { default: sharp } = await import("sharp");
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="500" viewBox="0 0 1500 500">
     <defs><linearGradient id="f"><stop stop-color="#512d48"/><stop offset=".5" stop-color="#f8e7d9"/><stop offset="1" stop-color="#be674b"/></linearGradient></defs>
     <rect width="1500" height="500" fill="url(#f)"/>

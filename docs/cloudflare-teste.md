@@ -7,3 +7,10 @@ A prévia usa a chave pública do Supabase e acesso anônimo, bloqueia ações e
 O teste de gravação exige banco e integrações isolados. Não configurar credenciais de pagamento, WhatsApp ou chaves privilegiadas de produção neste Worker. A aplicação usa `VERCEL_ENV` em verificações de cobrança e na seleção de domínios do Turnstile; esses controles precisam ser revistos e testados antes de qualquer migração para produção.
 
 Execute `npm run build:cloudflare` e `npm run preview:cloudflare` para validar o pacote localmente. Antes de trocar domínios, valide login, revalidação, fotos, cadastro, webhooks, cobrança, WhatsApp e jobs em ambientes apropriados.
+
+
+## Candidato com processamento de imagens
+
+A branch `codex/cloudflare-producao` prepara o Worker `mercado-regiao-candidato` em modo somente leitura. O Worker `mercado-regiao-imagens`, configurado em `infra/imagens/wrangler.jsonc`, deve ser publicado primeiro pelo GitHub; ele não possui domínio público e é acessado pela associação `IMAGENS_TRATAMENTO`. Ambos precisam acompanhar a mesma versão da branch.
+
+O tratamento usa WebAssembly e valida formato, animação, tamanho e dimensões antes de processar. O teste local com os dois Workers usa imagens artificiais e não precisa de banco. Antes de usar em produção, confira as operações no ambiente real da Cloudflare, incluindo o consumo de CPU e memória, e valide novamente os fluxos de envio e publicação. O artefato fixo de capa é gerado da arte em `src/lib/loja-ia/modelo-capa.ts`; mudanças nessa arte exigem atualizar `infra/imagens/modelo-capa.js` e rodar os testes.

@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import sharp from "sharp";
 import { BANNER_ALTURA, BANNER_LARGURA, FOTO_FEED_ALTURA, FOTO_FEED_LARGURA } from "@/lib/tamanhos-imagem";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { clarearFundoLiso } from "@/lib/aki/fundo-foto";
@@ -90,6 +89,17 @@ class FotoInfiel extends Error {
 }
 
 async function ajustarTamanho(bytes: Buffer, produto: boolean): Promise<Buffer> {
+  if (process.env.CLOUDFLARE_IMAGENS === "1") {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const servico = getCloudflareContext().env.IMAGENS_TRATAMENTO;
+    if (!servico) throw new Error("Serviço de imagens indisponível.");
+    const resposta = await servico.fetch(`https://imagens.interno/ajustar-${produto ? "produto" : "banner"}`, {
+      method: "POST", headers: { "content-type": "image/webp" }, body: new Uint8Array(bytes),
+    });
+    if (!resposta.ok) throw new Error("Não foi possível ajustar a imagem.");
+    return Buffer.from(await resposta.arrayBuffer());
+  }
+  const { default: sharp } = await import("sharp");
   const imagem = sharp(bytes, { limitInputPixels: 16_000_000 }).autoOrient().flatten({ background: "#ffffff" });
   if (!produto) {
     return imagem.resize(BANNER_LARGURA, BANNER_ALTURA, { fit: "cover", position: "centre" })
