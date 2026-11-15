@@ -127,6 +127,16 @@ for (const a of achados) {
 }
 
 if (REGISTRAR) {
+  // A lista só pode diminuir: item novo ou número maior não vira dívida, tem de ser corrigido.
+  if (existsSync(ARQUIVO_DIVIDA)) {
+    const anterior = JSON.parse(readFileSync(ARQUIVO_DIVIDA, "utf8"));
+    const piorou = Object.entries(contagem).filter(([chave, n]) => n > (anterior[chave] ?? 0));
+    if (piorou.length) {
+      for (const [chave, n] of piorou) console.log(`RECUSADO  ${chave}: ${anterior[chave] ?? 0} → ${n}`);
+      console.log("\nA lista de dívidas só pode diminuir. Corrija os itens acima antes de registrar.");
+      process.exit(1);
+    }
+  }
   const ordenado = Object.fromEntries(Object.entries(contagem).sort(([a], [b]) => a.localeCompare(b)));
   writeFileSync(ARQUIVO_DIVIDA, JSON.stringify(ordenado, null, 2) + "\n");
   console.log(`Lista de dívidas regravada: ${Object.keys(ordenado).length} itens, ${achados.length} ocorrências.`);

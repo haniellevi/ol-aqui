@@ -1,6 +1,6 @@
 # Conferidor do design system · especificação
 
-**Estado: programado em 14/11/2026 (onda 0).** Comando: `npm run design:conferir`. Script: `scripts/conferir-design.mjs`. Dívidas: `scripts/conferir-design.divida.json` (35 ocorrências em 17 itens no dia em que nasceu).
+**Estado: programado em 14/11/2026 (onda 0).** Comando: `npm run design:conferir`. Script: `scripts/conferir-design.mjs`. Dívidas: `scripts/conferir-design.divida.json` (35 ocorrências em 17 itens no dia em que nasceu). A lista só diminui: `npm run design:conferir -- --registrar` recusa item novo ou número maior.
 
 Objetivo: acusar sozinho quando alguém (pessoa ou IA) foge do `DESIGN.md`, sem instalar pacote novo.
 

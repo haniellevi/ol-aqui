@@ -256,6 +256,10 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
     bottom: calc(var(--spacing-barra-nav) + 8.5rem + env(safe-area-inset-bottom));
   }
 
+  /* Logo de uma linha (~160px) + conversas, avisos e conta não deixam espaço para a cidade: fica só o símbolo. */
+  .linha-cabecalho:has(.conta-cabecalho > :nth-child(2)) .logo-nome { display: none; }
+  .linha-cabecalho:has(.conta-cabecalho > :nth-child(2)) .logo-simbolo { display: block; }
+
   .publico:has([data-comprador]) .linha-cabecalho {
     height: auto;
     min-height: 3rem;

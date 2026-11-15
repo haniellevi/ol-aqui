@@ -44,7 +44,9 @@ export async function CabecalhoPublico() {
       </a>
       <div className="linha-cabecalho mx-auto flex h-13 max-w-7xl items-center gap-2 px-4 md:h-14">
         <Link href="/" className="flex h-controle shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="Mercado da Região, página inicial">
-          <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={179} height={36} priority className="h-8 w-auto sm:h-9" />
+          <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={179} height={36} priority className="logo-nome h-8 w-auto sm:h-9" />
+          {/* Celular com a conta aberta (conversas, avisos e conta à direita): só o símbolo, para a cidade caber. */}
+          <Image src="/logo/mercado-da-regiao-simbolo.svg" alt="Mercado da Região" width={27} height={34} className="logo-simbolo hidden h-8 w-auto" />
         </Link>
 
         <MenuCidades cidade={cidade} regiao={regiao?.id} cidades={cidades} />
