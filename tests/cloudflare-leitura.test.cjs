@@ -50,3 +50,10 @@ test('prévia permite somente leitura REST e bloqueia logins e métodos de escri
   for (const path of ['/', '/busca', '/termos', '/privacidade', '/anuncio/1', '/loja/teste', '/planos']) assert.equal(permitePrevia('GET', path), true);
   for (const [method, path] of [['POST', '/'], ['POST', '/api/visita'], ['GET', '/api/visita'], ['GET', '/entrar'], ['GET', '/minha-conta'], ['GET', '/admin']]) assert.equal(permitePrevia(method, path), false);
 });
+
+test('candidato na Cloudflare ativa as proteções de cobrança do ambiente de produção', () => {
+  const fs = require('node:fs');
+  const config = JSON.parse(fs.readFileSync('wrangler.jsonc', 'utf8'));
+  assert.equal(config.vars.VERCEL_ENV, 'production');
+  assert.equal(config.vars.CLOUDFLARE_SOMENTE_LEITURA, '1');
+});
