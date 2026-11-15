@@ -44,14 +44,16 @@ export default async function PaginaMarketing() {
     <PaginaConta larga>
       <TopoConta titulo="Meu Marketing" texto={<span className="[overflow-wrap:anywhere]">{nome}</span>} voltar={LINK_MINHA_LOJA} textoVoltar="Minha loja" />
       {dados === null ? <Aviso tipo="atencao">Não conseguimos carregar as recomendações agora. <Link href={LINK_LOJA_MARKETING} className="underline">Tentar novamente</Link></Aviso> : <>
-        <section aria-labelledby="titulo-criativos" className="flex flex-col gap-4">
+        <section aria-labelledby="titulo-criativos" className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
-            <h2 id="titulo-criativos" className="flex items-center gap-2 text-lg font-bold"><Megaphone className="size-5" aria-hidden />Para divulgar agora</h2>
-            <p className="text-sm text-texto-suave">Escolhidos pelos contatos, favoritos e visualizações dos últimos 30 dias. As artes usam a foto e o preço atuais do anúncio.</p>
+            <h2 id="titulo-criativos" className="flex items-center gap-2 text-lg font-semibold"><Megaphone className="size-5" aria-hidden />Artes para divulgar</h2>
+            {dados.criativos.length > 0 && <p className="text-sm text-texto-suave">Produtos escolhidos pela atividade dos últimos 30 dias. As artes usam a foto e o preço atuais.</p>}
           </div>
-          {dados.criativos.length === 0 ? <Vazio titulo="Publique um anúncio com foto" texto="Quando houver produtos no ar com foto, você poderá baixar artes para divulgar sua loja.">
-            <Botao href="/anunciar">Criar anúncio</Botao>
-          </Vazio> : <div className="grid gap-4 md:grid-cols-3">
+          {dados.criativos.length === 0 ? <div className="flex flex-col items-start gap-2 rounded-card border border-borda bg-cartao p-3">
+            <p className="font-semibold text-beringela">Publique um anúncio com foto</p>
+            <p className="text-sm text-texto-suave">Depois, baixe artes para divulgar o produto.</p>
+            <Botao href="/anunciar" tamanho="toque">Criar anúncio</Botao>
+          </div> : <div className="grid gap-4 md:grid-cols-3">
             {dados.criativos.map((anuncio) => {
               const antes = precoAntesValido(anuncio.preco_antes_centavos, anuncio.preco_centavos);
               const titulo = formatarNome(anuncio.titulo);
@@ -75,9 +77,9 @@ export default async function PaginaMarketing() {
             })}
           </div>}
         </section>
-        <section aria-labelledby="titulo-oportunidades" className="flex flex-col gap-3 border-t border-borda pt-5">
-          <div className="flex flex-col gap-1"><h2 id="titulo-oportunidades" className="flex items-center gap-2 text-lg font-bold"><TrendingUp className="size-5" aria-hidden />O que procuram na sua região</h2>
-            <p className="text-sm text-texto-suave">{dados.regiao_nome} · últimos 30 dias. Buscas e pedidos do Radar que combinam com seu nicho e ainda não aparecem nos seus anúncios ativos.</p></div>
+        <section aria-labelledby="titulo-oportunidades" className="flex flex-col gap-3 border-t border-borda pt-4">
+          <div className="flex flex-col gap-1"><h2 id="titulo-oportunidades" className="flex items-center gap-2 text-lg font-semibold"><TrendingUp className="size-5" aria-hidden />O que procuram na região</h2>
+            {dados.nicho_definido && <p className="text-sm text-texto-suave">{dados.regiao_nome} · últimos 30 dias. Sugestões do seu nicho que ainda não estão nos seus anúncios.</p>}</div>
           {!dados.nicho_definido ? <div className="flex flex-col gap-3"><Aviso tipo="info">{loja.ajudante
             ? "Peça ao dono para definir o nicho da loja e receber sugestões da sua área."
             : "Escolha o nicho da loja para receber sugestões de produtos da sua área."}</Aviso>
@@ -91,7 +93,7 @@ export default async function PaginaMarketing() {
               <p className="text-sm text-texto-suave">Se você vende esse produto, comece um rascunho e confira os dados antes de publicar.</p>
               <div className="mt-auto"><BotaoNovoRascunho texto="Cadastrar produto" sugestao={{ vitrineId: loja.id, titulo: o.termo, categoriaId: o.categoria_id }} /></div>
             </article>)}</div>}
-          <p className="text-legenda text-texto-suave">Uma pessoa pode fazer várias buscas. Os números são agregados e não identificam compradores.</p>
+          {dados.nicho_definido && dados.oportunidades.length > 0 && <p className="text-legenda text-texto-suave">Buscas e pedidos são contagens, não pessoas. Os dados não identificam compradores.</p>}
         </section>
       </>}
       {dicas && dicas.length > 0 && <section aria-labelledby="titulo-melhorias" className="flex flex-col gap-3 border-t border-borda pt-5">

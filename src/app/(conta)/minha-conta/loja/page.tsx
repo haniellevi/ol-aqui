@@ -176,7 +176,7 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
           <h2 id="titulo-vitrine" className="text-lg font-bold">
             Sua vitrine
           </h2>
-          <div className="overflow-hidden rounded-card shadow-1">
+          <div className="w-2/3 max-w-sm overflow-hidden rounded-card shadow-1 md:w-full md:max-w-none">
             <BannerLoja
               tipo={recursos.foto_fachada ? completa.banner_tipo : "modelo"}
               url={completa.banner_url}

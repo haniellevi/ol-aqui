@@ -38,7 +38,7 @@ export function PropostasRecebidas({
   return (
     <section className="flex min-w-0 flex-col gap-2" aria-labelledby="titulo-propostas">
       <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <h2 id="titulo-propostas" className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-2xl font-semibold text-beringela">
+        <h2 id="titulo-propostas" className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-lg font-semibold text-beringela">
           Ofertas recebidas
           <span className="text-sm font-normal text-texto-suave">
             {propostas.length === 1 ? "1 proposta" : `${propostas.length} propostas`}
@@ -48,6 +48,7 @@ export function PropostasRecebidas({
       </header>
       {lista.length === 0 ? (
         <Vazio
+          className="gap-2 p-3 [&_[data-slot=empty-icon]]:hidden"
           icone={<Inbox />}
           titulo="Nenhuma proposta ainda"
           texto={modoPrazo ? "Você recebe um aviso quando chegar uma oferta." : "As lojas que se interessarem vão te chamar no WhatsApp."}
