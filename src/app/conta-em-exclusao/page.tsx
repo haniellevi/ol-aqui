@@ -26,7 +26,7 @@ export default async function ContaEmExclusao({ searchParams }: { searchParams: 
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 py-8 sm:py-12">
-      <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={123} height={45} priority className="self-center" />
+      <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={224} height={45} priority className="self-center" />
       <header>
         <h1 className="text-titulo font-semibold text-beringela">Sua conta está para ser excluída</h1>
         <p className="mt-2 text-texto-suave">

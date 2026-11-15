@@ -1,35 +1,35 @@
 # Style lock — Mercado da Região
 
-Established: 2026-11-10. Source: user-specified. Copiado de `docs/DESIGN-SYSTEM.md`, `docs/MARCA.md` e `src/app/globals.css` (ramo main, commit 0ec8b4f). Nenhuma cor, letra ou medida foi criada aqui. Se este arquivo e o `globals.css` divergirem, vale o `globals.css` e este arquivo deve ser corrigido.
+Established: 2026-11-10. Atualizado: 2026-11-14 (onda 0 do design system). Source: user-specified. Copiado do `DESIGN.md` da raiz, `docs/MARCA.md` e `src/app/globals.css`. Nenhuma cor, letra ou medida foi criada aqui. Se este arquivo e o `globals.css` divergirem, vale o `globals.css` e este arquivo deve ser corrigido.
 
 ## Palette
 - Background: #f7f8fa (`fundo`, fundo das telas)
 - Surface: #ffffff (`cartao`, cards, folhas, formulários)
 - Primary: #ff6a13 (`laranja`, botão principal, pin, etiquetas)
-- Accent: #c2410c (`laranja-escuro`, links e texto laranja sobre claro, foco)
+- Accent: #b84010 (`laranja-escuro`, links e texto laranja sobre claro, foco)
 - Brand dark: #4b1248 (`beringela`, títulos, marca, ícones, fundo escuro)
 - Text primary: #342b3b (`texto`) — contraste sobre o fundo: 12,71 (AA passa)
 - Text muted: #5e5266 (`texto-suave`)
 - Button label color: beringela #4b1248 — contraste sobre Primary: 4,95. Branco sobre o laranja reprova (2,87).
 - Semânticas: verde #12a150 (só ícone e selo), verde-escuro #0e7a3d (WhatsApp, sucesso), perigo #b91c1c, aviso #b45309, borda #e6e0e9 (decorativa), borda-campo #968b9e, selecao #f0eaf5.
-- Dark mode: not needed for this project — single mode only (modo escuro é fase 2 no DESIGN-SYSTEM).
+- Dark mode: not needed for this project — single mode only (DESIGN.md: só modo claro).
 
 ## Color contract
 
-Matriz de `scripts/check_contrast.py --matrix text=#342b3b bg=#f7f8fa surface=#ffffff primary=#ff6a13 accent=#c2410c border=#968b9e on-primary=#4b1248`, rodada em 2026-11-10:
+Matriz de `scripts/check_contrast.py --matrix text=#342b3b bg=#f7f8fa surface=#ffffff primary=#ff6a13 accent=#c2410c border=#968b9e on-primary=#4b1248`, rodada em 2026-11-10 (com o accent antigo; o novo #b84010 dá 5,56 sobre cartão, 5,23 sobre fundo e 4,71 sobre selecao, conferidos em 2026-11-14):
 
 - Text-safe (>=4.5): beringela/cartao 14,20 · texto/cartao 13,51 · beringela/fundo 13,36 · texto/fundo 12,71 · laranja-escuro/cartao 5,18 · beringela/laranja 4,95 · laranja-escuro/fundo 4,87 · texto/laranja 4,71
 - UI-safe (>=3.0 e <4.5): borda-campo/beringela 4,38 · borda-campo/texto 4,17 · borda-campo/cartao 3,24 · borda-campo/fundo 3,05
 - Decorative (<3.0): laranja/cartao 2,87 · laranja/fundo 2,70 · laranja-escuro/beringela 2,74 · laranja-escuro/texto 2,61 · laranja/laranja-escuro 1,81
 
-Fora da matriz, conferidos no DESIGN-SYSTEM: branco/laranja-escuro 5,2 · branco/verde-escuro 5,4 · branco/verde 3,4 (só ícone) · texto-suave/branco 7,3 · perigo/perigo-fundo 5,9 · verde-escuro/sucesso-fundo 5,0. Laranja-escuro sobre `selecao` não chega a 4,5: usar beringela.
+Fora da matriz, conferidos no DESIGN-SYSTEM: branco/laranja-escuro 5,2 · branco/verde-escuro 5,4 · branco/verde 3,4 (só ícone) · texto-suave/branco 7,3 · perigo/perigo-fundo 5,9 · verde-escuro/sucesso-fundo 5,0. Com o accent novo, laranja-escuro sobre `selecao` passa (4,71).
 
 A matriz não cobriu `selecao`, `aviso-fundo` e `patrocinado-fundo` como fundo. Rodar de novo antes de criar par novo com eles.
 
 ## Typography
-- Família única: Poppins (a do logo), pesos 400, 600 e 700, via `next/font`.
-- Escala em `globals.css` (rem): 11 legenda · 12 apoio, botões e rótulos · 13 texto · 14 título de card · 15 seção · 16 e 18 título da tela · 20 `text-3xl`.
-- Campos ficam em 16 px no toque (evita zoom do iPhone).
+- Família única: Figtree (também a do logo desde 2026-11-14), pesos 400, 600 e 700, via `next/font`.
+- Escala em `globals.css` (rem): 12 legenda (piso) · 13 rótulo e apoio · 14 texto, título de card e botão · 16 seção e preço do card · 18 e 20 título da tela · 24 `text-3xl` (preço do anúncio).
+- Campos ficam em 16 px no toque e 14 px com mouse. Controles com 44 px no toque, 48 px na ação principal.
 - Título da vitrine: `text-vitrine`, 22 px no celular até 32 px no computador, só no h1 do Início (criado em 2026-11-10 com a home "Duas portas").
 
 ## Shape language
@@ -72,7 +72,7 @@ Simples, confiável, da região.
 - Anchor asset: `public/logo/mercado-da-regiao-marca.svg`
 - Asset style: ícones lucide-react, traço 2 px, sempre com palavra ao lado nos menus.
 - Illustration vs. photography split: fotos reais dos produtos e das lojas. Nenhuma ilustração em uso.
-- Logo: `public/logo/mercado-da-regiao-*.svg` — marca existente preservada (M beringela segurando o pin laranja), Poppins Bold.
+- Logo: `public/logo/mercado-da-regiao-*.svg` — símbolo preservado (M beringela segurando o pin laranja); nome em uma linha, todo beringela, Figtree Bold.
 
 ## Motion
 - Feel: rápido e contido.

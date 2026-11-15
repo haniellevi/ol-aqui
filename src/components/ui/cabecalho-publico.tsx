@@ -16,7 +16,7 @@ import { MenuCidades } from "./menu-cidades";
 // Cabeçalho das páginas públicas e da conta: logo, cidade ("Corrente ▾") e Entrar/Conta.
 // No computador mostra também a busca sempre à vista, Radar e Anunciar (a barra de baixo some).
 
-const LINK = "inline-flex h-10 items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
+const LINK = "inline-flex min-h-controle items-center gap-2 rounded-campo px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
 /**
  * O login só pode ser lido onde o middleware do Clerk rodou. Endereços que ele não cobre (ex.: um .png
@@ -43,8 +43,10 @@ export async function CabecalhoPublico() {
         Pular para o conteúdo
       </a>
       <div className="linha-cabecalho mx-auto flex h-13 max-w-7xl items-center gap-2 px-4 md:h-14">
-        <Link href="/" className="flex h-10 shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="Mercado da Região, página inicial">
-          <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={98} height={36} priority className="h-7 w-auto sm:h-8" />
+        <Link href="/" className="flex h-controle shrink-0 items-center rounded-card focus-visible:outline-3 focus-visible:outline-laranja-escuro" aria-label="Mercado da Região, página inicial">
+          <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={179} height={36} priority className="logo-nome h-8 w-auto sm:h-9" />
+          {/* Celular com a conta aberta (conversas, avisos e conta à direita): só o símbolo, para a cidade caber. */}
+          <Image src="/logo/mercado-da-regiao-simbolo.svg" alt="Mercado da Região" width={27} height={34} className="logo-simbolo hidden h-8 w-auto" />
         </Link>
 
         <MenuCidades cidade={cidade} regiao={regiao?.id} cidades={cidades} />

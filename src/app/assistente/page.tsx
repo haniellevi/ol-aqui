@@ -88,7 +88,7 @@ export default async function PaginaAssistente({ searchParams }: { searchParams:
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-4 py-8">
-      <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região" width={152} height={73} priority />
+      <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região" width={200} height={52} priority />
       {conteudo}
       {userId && <VincularAssistente dono={userId} objetivo={objetivo} tentativa={tentativa} destino={pendencia} />}
       <EntradaAssistente dono={userId} />

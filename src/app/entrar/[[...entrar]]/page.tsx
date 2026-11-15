@@ -59,7 +59,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
     : destino === "/" ? LINK_ENTRAR_PERFIL : `${LINK_ENTRAR_PERFIL}?redirect_url=${encodeURIComponent(destino)}`;
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-3 px-4 py-4 sm:gap-4 sm:py-8">
-      <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região, aqui a sua cidade aparece" width={132} height={63} priority />
+      <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região, aqui a sua cidade aparece" width={200} height={52} priority />
       <SignIn
         path="/entrar"
         routing="path"

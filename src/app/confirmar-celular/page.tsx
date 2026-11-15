@@ -30,7 +30,7 @@ export default async function ConfirmarCelular({ searchParams }: { searchParams:
   let siteKey = "";
   try { siteKey = configuracaoWhatsapp().siteKey; } catch { /* Indisponível: nunca aceitar um telefone sem confirmação. */ }
   return <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 py-5 sm:py-12">
-    <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={110} height={40} priority className="self-center" />
+    <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={199} height={40} priority className="self-center" />
     <header><h1 className="text-titulo font-semibold text-beringela">Confirme seu WhatsApp</h1><p className="mt-1 text-sm text-texto-suave">Use um número seu para receber o código de confirmação e negociar.</p></header>
     {parametros.aviso === "numero_vinculado" && <Aviso tipo="atencao">{WHATSAPP_JA_VINCULADO} Use outro número ou procure o suporte.</Aviso>}
     {siteKey ? <ConfirmarWhatsapp siteKey={siteKey} destino={depoisDeConfirmar} numero={conta?.perfil.whatsapp ?? ""} /> : <div role="status" className="rounded-card bg-cartao p-5 shadow-1"><h2 className="font-bold">Confirmação temporariamente indisponível</h2><p className="mt-2">Não conseguimos enviar códigos agora. Seus dados continuam guardados. Tente novamente mais tarde.</p></div>}

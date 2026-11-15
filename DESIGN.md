@@ -165,21 +165,17 @@ components:
 > Se outro documento disser um número diferente (tamanho, cor, altura), **vale o que está aqui**.
 > As pesquisas que sustentam cada decisão estão em [docs/design-system/pesquisa/](docs/design-system/pesquisa/). As versões antigas estão em [docs/design-system/historico/](docs/design-system/historico/).
 
-## 0. Estado: decidido, ainda não aplicado
+## 0. Estado da aplicação
 
-As decisões abaixo foram tomadas pelo Raniel em 14/11/2026. **O código ainda está na versão anterior.** Enquanto a migração não termina:
+As decisões foram tomadas pelo Raniel em 14/11/2026. **A base já está no código (onda 0):** fonte Figtree, régua de letras, `laranja-escuro` novo, alturas de 44/48 px, logo novo, botão único (`Botao` como casca do `Button`), preço do card em 16 px e o conferidor (`npm run design:conferir`).
 
-| Assunto | Regra (este documento) | No código hoje |
-|---|---|---|
-| Fonte | Figtree 400/600/700 | Poppins 400/600/700 (`src/app/layout.tsx`) |
-| Texto normal | 14 px | 13 px (`--text-base`) |
-| Menor letra permitida | 12 px | 11 px (legenda, preço e meta do card) |
-| Preço no card | 16 px, peso 700 | 11 px (`card-anuncio.tsx`) |
-| Área de toque | 44 px; ação principal 48 px | 40 px (`--spacing-controle`) |
-| Laranja-escuro | `#b84010` | `#c2410c` |
-| Nome do logo | Uma linha, tudo beringela, Figtree Bold | Duas linhas, "da Região" em laranja, Poppins Bold |
+O que ainda segue o jeito antigo nas telas (ondas 1 a 5, seção 11):
+- duas buscas, três listas de categorias e dois blocos de lojas no Início;
+- listas de escolha e uma tabela escritas à mão (o ESLint avisa);
+- telas que escolhem `tamanho="pequeno"` ou alturas fixas por conta própria;
+- dívidas antigas registradas em `scripts/conferir-design.divida.json`.
 
-**Tela nova ou tela mexida segue este documento.** Tela antiga muda nas ondas da seção 11. Não misture: ao mexer numa tela, leve a tela inteira para a regra nova.
+**Tela nova ou tela mexida segue este documento.** Ao mexer numa tela, leve a tela inteira para a regra nova.
 
 ## 1. Para quem e com que cara
 
@@ -340,7 +336,7 @@ Rótulo longo quebra linha e o botão cresce; nunca cortar o texto para caber.
 
 | Função | Oficial (shadcn) | Casca em português | Não fazer |
 |---|---|---|---|
-| Botão | `button.tsx` | `botao.tsx` (`Botao`) | `<button className="...">` com estilo à mão |
+| Botão | `button.tsx` (estilos em `button-variants.ts`) | `botao.tsx` (`Botao`) | `<button className="...">` com estilo à mão |
 | Campo de texto | `field.tsx` + `input.tsx` + `textarea.tsx` | `campo.tsx` (`Campo`) | Borda e foco próprios num `<input>` |
 | Lista de escolha | `native-select.tsx` | `Seletor` (`src/components/conta/seletor.tsx`) | `select.tsx` em tela pública (o nativo abre a lista do celular) |
 | Selo e etiqueta | `badge.tsx` | `vitrine/selos.tsx` (`SeloLoja`) | `<span className="rounded-full bg-...">` |
@@ -393,7 +389,7 @@ Só resposta ao toque: o botão encolhe para 97% em 100 ms (`olaki-acao`), o car
 
 Cada onda é uma tarefa própria, pequena e testável. Nunca "refazer o site inteiro".
 
-0. **Base:** trocar a fonte para Figtree, atualizar os tokens do `globals.css` (régua nova, `laranja-escuro`, toque 44/48), transformar `Botao`, `Campo`, `Vazio`, `Folha` e `confirmar` em cascas das peças do shadcn, gerar os arquivos do logo novo (`docs/marca/gerar-logos.mjs`, `public/logo/`, ícones e imagem de compartilhar) e construir o conferidor ([docs/design-system/CONFERIDOR.md](docs/design-system/CONFERIDOR.md)).
+0. **Base (feita em 14/11/2026):** fonte Figtree, tokens do `globals.css` (régua nova, `laranja-escuro`, toque 44/48), `Botao` como casca do `Button` (estilos em `src/components/ui/button-variants.ts`; `Campo`, `Vazio`, `Folha` e `confirmar` já usavam as peças do shadcn), logo novo (`docs/marca/gerar-logos.mjs`, `public/logo/`, imagem de compartilhar), preço do card em 16 px e o conferidor ([docs/design-system/CONFERIDOR.md](docs/design-system/CONFERIDOR.md)). `Chip` continua com estilo próprio até a onda 2.
 1. **Casca do site:** cabeçalho, busca única, barra de baixo, rodapé.
 2. **Início e listagens:** uma faixa de categorias, chips de filtro, `GradeAnuncios` com o card novo, um bloco de lojas.
 3. **Anúncio e conversão:** página do anúncio, galeria, barra de contato fixa.
@@ -427,4 +423,3 @@ Cada onda é uma tarefa própria, pequena e testável. Nunca "refazer o site int
 - Não há pesquisa com usuários reais nem números de uso. As decisões vêm de fontes públicas e da comparação com OLX e Mercado Livre (o Facebook Marketplace exige login e não foi medido).
 - O tamanho de 14 px foi escolha do Raniel entre três opções; a pesquisa de público recomendava 16 px. **Validar com as cinco pessoas do teste de corredor** (docs/USABILIDADE.md), em especial as de mais de 50 anos. Se travarem na leitura, subir a régua um degrau.
 - Custo medido da letra maior num celular de 360 px: 3,6 anúncios visíveis sem rolar (eram 3,9 no compacto; seriam 3,3 com 16 px).
-- `.impeccable/design.json` e `.tastemaker/style-lock.md` ainda refletem a versão anterior e precisam ser regenerados na onda 0.

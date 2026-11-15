@@ -1,1 +1,120 @@
-{ "extends": ["next/core-web-vitals", "next/typescript"] }
+{
+  "extends": [
+    "next/core-web-vitals",
+    "next/typescript"
+  ],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "antd",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "daisyui",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "flowbite",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "flowbite-react",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "embla-carousel",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "embla-carousel-react",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "sonner",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "framer-motion",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "motion",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "motion/react",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "vaul",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "react-icons",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          },
+          {
+            "name": "@tabler/icons-react",
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          }
+        ],
+        "patterns": [
+          {
+            "group": [
+              "@radix-ui/*",
+              "@headlessui/*",
+              "@mui/*",
+              "@chakra-ui/*",
+              "@heroicons/*",
+              "@phosphor-icons/*",
+              "react-icons/*",
+              "antd/*"
+            ],
+            "message": "Biblioteca de interface fora do DESIGN.md (seção 8). Peça o \"sim\" do Raniel antes de trazer uma nova."
+          }
+        ]
+      }
+    ],
+    "no-restricted-globals": [
+      "error",
+      {
+        "name": "confirm",
+        "message": "Use useConfirmar (src/components/ui/confirmar.tsx)."
+      },
+      {
+        "name": "alert",
+        "message": "Use um aviso na tela (Alert) em vez de alert()."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/**/*.tsx"
+      ],
+      "excludedFiles": [
+        "src/components/ui/**"
+      ],
+      "rules": {
+        "no-restricted-syntax": [
+          "warn",
+          {
+            "selector": "JSXOpeningElement[name.name='table']",
+            "message": "Use Table (src/components/ui/table.tsx)."
+          },
+          {
+            "selector": "JSXOpeningElement[name.name='hr']",
+            "message": "Use Separator (src/components/ui/separator.tsx)."
+          },
+          {
+            "selector": "JSXOpeningElement[name.name='select']",
+            "message": "Use NativeSelect (src/components/ui/native-select.tsx) ou Seletor."
+          }
+        ]
+      }
+    }
+  ]
+}

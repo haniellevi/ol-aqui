@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins } from "next/font/google";
+import { Figtree } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ptBR } from "@clerk/localizations";
 import { SITE } from "@/lib/formato";
@@ -7,10 +7,11 @@ import { AvisoSemInternet } from "@/components/paginas/aviso-sem-internet";
 import { RastreioVisitas } from "@/components/paginas/rastreio-visitas";
 import "./globals.css";
 
-const poppins = Poppins({
+// Fonte única do site (DESIGN.md, seção 3): Figtree em 400, 600 e 700.
+const figtree = Figtree({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
-  variable: "--font-poppins",
+  variable: "--font-figtree",
   display: "swap",
 });
 
@@ -54,16 +55,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           colorDanger: "#b91c1c", // perigo
           colorSuccess: "#0e7a3d", // verde-escuro
           colorWarning: "#b45309", // aviso
-          fontFamily: "var(--font-poppins), system-ui, sans-serif",
-          // Campo com 16px (evita o zoom do iPhone) e nada menor que 13px
+          fontFamily: "var(--font-figtree), system-ui, sans-serif",
+          // Campo com 16px (evita o zoom do iPhone) e nada menor que 13px (piso do site: 12px)
           fontSize: { xs: "0.8125rem", sm: "0.875rem", md: "1rem", lg: "1.25rem", xl: "1.5rem" },
-          // A Poppins só é carregada em 400, 600 e 700
+          // A Figtree só é carregada em 400, 600 e 700
           fontWeight: { normal: 400, medium: 600, semibold: 600, bold: 700 },
           borderRadius: "0.75rem",
         },
       }}
     >
-      <html lang="pt-BR" className={poppins.variable}>
+      <html lang="pt-BR" className={figtree.variable}>
         <body className="font-sans antialiased">
           {children}
           <AvisoSemInternet />

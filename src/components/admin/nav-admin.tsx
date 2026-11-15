@@ -37,7 +37,7 @@ export function NavAdmin({ pendencias, papel, inicio, aberta = true }: { pendenc
       <Sidebar collapsible="icon" className="border-sidebar-border">
         <SidebarHeader className="h-16 flex-row items-center justify-between gap-2 px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <Link href={inicio} className="flex items-center gap-2 group-data-[collapsible=icon]:hidden focus-visible:outline-2 focus-visible:outline-laranja-escuro">
-            <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={98} height={36} />
+            <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={179} height={36} />
             <span className="text-legenda text-texto-suave">Painel</span>
           </Link>
           <SidebarTrigger className="text-texto-suave" />

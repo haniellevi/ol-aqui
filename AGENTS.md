@@ -24,7 +24,7 @@ Projeto: **Mercado da Região** (classificados regionais). Dono: Raniel, que nã
 
 ## Ao terminar uma tela
 
-- Rode `npm run lint`, `npm run typecheck` e, quando existir, `npm run design:conferir` (especificado em [`docs/design-system/CONFERIDOR.md`](docs/design-system/CONFERIDOR.md)).
+- Rode `npm run lint`, `npm run typecheck` e `npm run design:conferir` ([`docs/design-system/CONFERIDOR.md`](docs/design-system/CONFERIDOR.md)). Erro do conferidor é para corrigir, não para registrar como dívida.
 - Confira o checklist do fim do `docs/USABILIDADE.md` numa tela de 360 px.
 - Se precisar fugir de uma regra, pare e pergunte. Se a regra mudar, mude primeiro o `DESIGN.md`, depois o código.
 
