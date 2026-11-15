@@ -1,5 +1,7 @@
 # Mercado da Região · Guia de usabilidade · 07/11/2026
 
+> Números de letra, toque e cor: vale o [`DESIGN.md`](../DESIGN.md) (atualizado em 14/11/2026). Os valores citados aqui foram alinhados a ele; a decisão de 14 px ainda precisa passar pelo teste de corredor descrito abaixo.
+
 Para quem estamos desenhando: gente de **Corrente e região**, de 16 a 70 anos, quase sempre no **celular Android de entrada**, muitas vezes com **internet fraca ou pacote de dados acabando**, que usa **WhatsApp o dia todo** e pouco mais que isso. Muitos leem devagar, alguns quase não leem, muitos mandam **áudio** em vez de escrever. Comerciantes ocupados, com uma mão no balcão.
 
 Se uma tela funciona para a **dona Maria, 62 anos, vendendo uma geladeira com o celular do neto**, funciona para todo mundo.
@@ -32,11 +34,11 @@ Frases curtas, sem gerúndio enrolado, sem inglês. Números como as pessoas fal
 **5. Ícone sempre com palavra.**
 Só lupa, coração, X e seta voltar podem ficar sem texto. O resto tem nome escrito embaixo.
 
-**6. Letra grande e contraste forte.**
-Texto mínimo 16, legenda mínima 13. Respeitar a letra grande que a pessoa colocou no celular. Contraste conferido (ver DESIGN-SYSTEM.md): nada de texto branco no laranja, nada de cinza clarinho. Tem que dar para ler **no sol do meio-dia**.
+**6. Letra legível e contraste forte.**
+Texto normal de 14 px, preço do card de 16 px e nenhuma letra abaixo de 12 px (régua completa no `DESIGN.md`, seção 3). Respeitar a letra grande que a pessoa colocou no celular. Contraste conferido (ver `DESIGN.md`, seção 2): nada de texto branco no laranja, nada de cinza clarinho. Tem que dar para ler **no sol do meio-dia**.
 
 **7. Toque fácil.**
-Tudo que se toca tem pelo menos 48 × 48 px e 8 px de espaço do vizinho. Nada de gesto escondido (apertar e segurar, deslizar para apagar) como único jeito de fazer algo.
+Tudo que se toca tem pelo menos 44 × 44 px e 8 px de espaço do vizinho; o botão principal da tela e o do WhatsApp têm 48 px (`DESIGN.md`, seção 4). Nada de gesto escondido (apertar e segurar, deslizar para apagar) como único jeito de fazer algo.
 
 **8. Leve e tolerante à internet ruim.**
 - Mostrar o esqueleto da tela na hora e preencher depois.
@@ -103,8 +105,9 @@ Meta: **WCAG 2.1 nível AA** (é a referência da Lei Brasileira de Inclusão).
 - [ ] Tem só um botão laranja, e ele diz o que faz?
 - [ ] Dá para fazer sem digitar quase nada?
 - [ ] Alguma palavra técnica ou em inglês?
-- [ ] Letra mínima 16 (13 em legenda) e contraste conferido?
-- [ ] Botões com 48px?
+- [ ] Texto de 14 px, nada abaixo de 12 px, preço como o texto mais forte do card e contraste conferido?
+- [ ] Tudo que se toca com 44 px ou mais, e o botão principal com 48 px?
+- [ ] Só uma busca, uma lista de categorias e um bloco de lojas na tela?
 - [ ] O que acontece com internet lenta, sem internet e com erro?
 - [ ] Tela vazia tem saída?
 - [ ] Pede conta só quando precisa?

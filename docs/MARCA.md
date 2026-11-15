@@ -3,7 +3,9 @@
 O projeto, que nasceu como OLAKI, agora se chama **Mercado da Região**. Decisão do Raniel em 10/11/2026.
 Endereço oficial: **mercadodaregiao.com.br** (ainda não ligado; o site segue na prévia até o lançamento).
 
-Este guia é a fonte da marca. As medidas de tela (tamanhos de letra, botões, espaços) ficam no [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md).
+Este guia é a fonte da marca. As medidas de tela (tamanhos de letra, botões, espaços, cores) ficam no [`DESIGN.md`](../DESIGN.md), que é o único documento que manda no visual.
+
+> **Decisão de 14/11/2026 (ainda não aplicada nos arquivos do logo):** a fonte da marca passa a ser a **Figtree** e o nome escrito passa a ser **uma linha, tudo beringela**. O símbolo (M com o pin) não muda. Os arquivos em `public/logo/` e o gerador `docs/marca/gerar-logos.mjs` ainda estão na versão anterior e serão refeitos na onda 0 da migração (`DESIGN.md`, seção 11).
 
 ## 1. A ideia
 
@@ -37,7 +39,7 @@ Todos os arquivos saem do gerador `docs/marca/gerar-logos.mjs` (letras viram des
 
 ### Regras do logo
 
-- "Mercado" em **beringela** (branco no fundo escuro) e "da Região" em **laranja**. Sempre nessa ordem, sempre em Poppins Bold.
+- "Mercado da Região" em **uma linha, tudo em beringela** (tudo branco no fundo escuro), em Figtree Bold. O laranja fica só no pin. Motivo: laranja como letra sobre branco reprova no contraste (2,87:1) e o nome em duas linhas ficava com letra de cerca de 7 px no cabeçalho do celular.
 - Escreve-se **Mercado da Região**, com M e R maiúsculos e "da" minúsculo. Nunca "MERCADO DA REGIÃO" em texto corrido, nunca "Mercado Região", nunca sigla "MR" ou "MdR" para o público.
 - Área livre em volta: a largura de uma perna do M.
 - Tamanho mínimo: marca com 24 px de altura na tela. Abaixo disso, só o símbolo ou o ícone.
@@ -46,17 +48,17 @@ Todos os arquivos saem do gerador `docs/marca/gerar-logos.mjs` (letras viram des
 
 ### Franquias por cidade
 
-O nome da cidade entra **embaixo do logo**, em Poppins SemiBold, maiúsculas espaçadas, com um fio fino separando: `Mercado da Região` + `CORRENTE`.
+O nome da cidade entra **embaixo do logo**, em Figtree SemiBold, maiúsculas espaçadas, com um fio fino separando: `Mercado da Região` + `CORRENTE`.
 No texto corrido: "Mercado da Região de Corrente". A unidade nunca cria logo próprio nem muda cor.
 
 ## 3. Cores
 
-As mesmas de antes. Valores e contraste completos no DESIGN-SYSTEM.md, seção 1.
+Valores e contraste completos no `DESIGN.md`, seção 2.
 
 | Cor | Valor | Papel na marca |
 |---|---|---|
 | Beringela | `#4B1248` | "Mercado", o M, textos de título, fundo do ícone |
-| Laranja | `#FF6A13` | "da Região", o pin, botão principal |
+| Laranja | `#FF6A13` | O pin e o fundo do botão principal; nunca como cor de letra |
 | Branco | `#FFFFFF` | M e "Mercado" no fundo escuro |
 | Fundo | `#F7F8FA` | Fundo das telas |
 
@@ -65,7 +67,7 @@ As mesmas de antes. Valores e contraste completos no DESIGN-SYSTEM.md, seção 1
 
 ## 4. Letras
 
-**Poppins** em tudo (logo, site, materiais). Bold no logo e em títulos fortes, SemiBold em títulos de tela e botões, Regular no texto.
+**Figtree** em tudo (logo, site, materiais). Bold no logo, no preço e no título da vitrine, SemiBold em títulos de tela e botões, Regular no texto. Substitui a Poppins desde 14/11/2026.
 
 ## 5. Tom de voz
 

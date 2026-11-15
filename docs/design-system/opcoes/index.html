@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opções do design system · Mercado da Região</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Figtree:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --beringela: #4b1248; --laranja: #ff6a13; --laranja-escuro: #c2410c;
+    --verde: #12a150; --verde-escuro: #0e7a3d; --fundo: #f7f8fa; --cartao: #fff;
+    --texto: #342b3b; --texto-suave: #5e5266; --borda: #e6e0e9; --borda-campo: #968b9e;
+    --selecao: #f0eaf5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #ecebef; color: var(--texto); font: 16px/1.5 system-ui, sans-serif; }
+  .pagina { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; color: var(--beringela); }
+  h2 { font-size: 20px; margin: 40px 0 6px; color: var(--beringela); }
+  p { margin: 0 0 12px; max-width: 70ch; }
+  .nota { font-size: 14px; color: var(--texto-suave); }
+
+  .controles { background: #ecebef; padding: 12px 0; border-bottom: 1px solid #d6d2dc; display: grid; gap: 10px; }
+  @media (min-width: 900px) { .controles { position: sticky; top: 0; z-index: 5; } }
+  .grupo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .grupo b { min-width: 150px; font-size: 14px; }
+  .grupo button { font: inherit; font-size: 14px; min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--borda-campo); background: #fff; color: var(--beringela); cursor: pointer; }
+  .grupo button[aria-pressed="true"] { background: var(--beringela); color: #fff; border-color: var(--beringela); font-weight: 600; }
+
+  .celulares { display: flex; gap: 24px; overflow-x: auto; padding: 20px 0 12px; align-items: flex-start; }
+  .coluna { flex: 0 0 360px; }
+  .coluna h3 { margin: 0 0 2px; font-size: 17px; color: var(--beringela); }
+  .coluna .sub { font-size: 13px; color: var(--texto-suave); margin: 0 0 10px; min-height: 40px; }
+  .conta { margin: 10px 0 0; font-size: 14px; }
+  .conta strong { font-size: 18px; color: var(--beringela); }
+
+  /* ---------- o celular ---------- */
+  .tela { width: 360px; height: 700px; background: var(--fundo); border-radius: 22px; outline: 8px solid #1d1620; overflow: hidden; position: relative; font-family: var(--fonte); font-size: var(--corpo); line-height: 1.5; color: var(--texto); }
+  .topo { height: 52px; background: var(--cartao); border-bottom: 1px solid var(--borda); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  .cidade { font-size: var(--legenda); font-weight: 600; color: var(--beringela); border: 1px solid var(--borda-campo); border-radius: 999px; min-height: calc(var(--toque) - 8px); padding: 0 12px; display: flex; align-items: center; background: #fff; }
+  .logo { display: flex; align-items: center; gap: 7px; }
+  .logo svg { height: 30px; width: auto; flex: none; }
+  .logo.atual svg { height: 28px; }
+  .nome { font-weight: 700; color: var(--beringela); letter-spacing: -0.02em; line-height: 1.02; }
+  .nome .r { color: var(--cor-regiao); }
+  .nome.uma { font-size: 17px; white-space: nowrap; }
+  .nome.duas { font-size: 15px; }
+  .nome.duas span { display: block; }
+
+  .miolo { padding: 12px 16px 0; display: grid; gap: 12px; }
+  .busca { min-height: var(--toque); border: 1px solid var(--borda-campo); border-radius: 8px; background: #fff; display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--texto-suave); font-size: var(--corpo); }
+  .busca svg, .nav svg { width: 20px; height: 20px; flex: none; }
+  .chips { display: flex; gap: 8px; overflow: hidden; }
+  .chip { flex: none; min-height: var(--toque); padding: 0 12px; border: 1px solid var(--borda-campo); border-radius: 8px; background: #fff; color: var(--beringela); font-size: var(--botao); font-weight: 600; display: flex; align-items: center; }
+  .chip.on { background: var(--selecao); border-color: var(--beringela); }
+  .secao { display: flex; justify-content: space-between; align-items: baseline; }
+  .secao b { font-size: calc(var(--corpo) + 2px); color: var(--beringela); font-weight: 600; }
+  .secao a { font-size: var(--botao); color: var(--laranja-escuro); font-weight: 600; text-decoration: none; }
+  .grade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { background: var(--cartao); border-radius: 10px; box-shadow: 0 1px 2px rgb(75 18 72 / .08); overflow: hidden; }
+  .foto { aspect-ratio: 4 / 3; display: grid; place-items: center; font-size: 11px; font-family: system-ui, sans-serif; color: #5e5266; letter-spacing: .04em; text-transform: uppercase; }
+  .info { padding: 8px 10px 10px; display: grid; gap: 2px; }
+  .preco { font-size: var(--preco); font-weight: 700; color: var(--beringela); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; line-height: 1.25; }
+  .titulo { font-size: var(--cardt); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .meta { font-size: var(--legenda); color: var(--texto-suave); line-height: 1.4; }
+  .selo { font-size: var(--legenda); color: var(--verde-escuro); font-weight: 600; }
+  .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 58px; background: var(--cartao); border-top: 1px solid var(--borda); display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; text-align: center; font-size: var(--legenda); font-weight: 600; color: var(--texto-suave); }
+  .nav div { display: grid; justify-items: center; gap: 1px; }
+  .nav .on { color: var(--beringela); }
+  .nav .mais { width: 44px; height: 44px; border-radius: 10px; background: var(--laranja); color: var(--beringela); display: grid; place-items: center; margin: -18px auto 0; box-shadow: 0 -2px 12px rgb(75 18 72 / .12); }
+
+  /* ---------- provas ---------- */
+  .provas { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .prova { background: #fff; border-radius: 12px; padding: 16px; border: 1px solid var(--borda); }
+  .prova h4 { margin: 0 0 10px; font: 600 14px system-ui; color: var(--texto-suave); }
+  .prova .linha { margin: 0 0 6px; color: var(--texto); }
+  .prova .precos { font-size: 20px; font-weight: 700; color: var(--beringela); font-variant-numeric: tabular-nums; text-align: right; width: 150px; }
+  .faixa { width: 288px; max-width: 100%; border-left: 2px solid var(--laranja); padding-left: 8px; font-size: 16px; }
+  table { border-collapse: collapse; width: 100%; max-width: 760px; background: #fff; border-radius: 12px; overflow: hidden; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--borda); vertical-align: middle; }
+  th { background: var(--selecao); color: var(--beringela); font-weight: 600; }
+  .am { display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border-radius: 6px; font-weight: 600; }
+  .ok { color: var(--verde-escuro); font-weight: 600; } .ruim { color: #b91c1c; font-weight: 600; }
+  .logos { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+  .logos .prova { display: grid; gap: 14px; }
+  .logos .grande .logo svg { height: 64px; } .logos .grande .nome.uma { font-size: 34px; } .logos .grande .nome.duas { font-size: 30px; } .logos .grande .logo.atual svg { height: 64px; }
+  .logos .pequeno { border-top: 1px dashed var(--borda); padding-top: 12px; }
+  select { font: inherit; min-height: 44px; border-radius: 8px; border: 1px solid var(--borda-campo); padding: 0 10px; background: #fff; }
+</style>
+</head>
+<body>
+<div class="pagina">
+  <h1>Mercado da Região · escolha de fonte, tamanho, nome do logo e cores</h1>
+  <p>Os três celulares abaixo mostram a <b>mesma tela de exemplo</b>, cada um com uma fonte. Use os botões para trocar o tamanho, o nome escrito do logo e as cores. Os anúncios são inventados, só para comparar.</p>
+  <p class="nota">Se as três colunas parecerem iguais, as fontes não carregaram (precisa de internet). Em tela estreita, arraste para o lado para ver as outras.</p>
+
+  <div class="controles">
+    <div class="grupo" data-grupo="tamanho"><b>1. Tamanho da letra</b>
+      <button data-v="hoje">Como está hoje (13)</button>
+      <button data-v="medio">Médio (14)</button>
+      <button data-v="grande" aria-pressed="true">Grande (16)</button>
+    </div>
+    <div class="grupo" data-grupo="logo"><b>2. Nome do logo</b>
+      <button data-v="atual">Atual</button>
+      <button data-v="a" aria-pressed="true">A · uma linha, uma cor</button>
+      <button data-v="b">B · duas linhas</button>
+      <button data-v="c">C · uma linha, duas cores</button>
+    </div>
+    <div class="grupo" data-grupo="cores"><b>3. Cores</b>
+      <button data-v="atuais">Atuais</button>
+      <button data-v="afinadas" aria-pressed="true">Afinadas</button>
+    </div>
+  </div>
+
+  <div class="celulares" id="celulares"></div>
+
+  <h2>Prova de leitura das três fontes</h2>
+  <p>Mesmo texto, mesmo tamanho (16). Repare nos preços (devem alinhar em coluna), nos acentos e em letras parecidas.</p>
+  <div class="provas" id="provas"></div>
+
+  <h2>Nome do logo, grande e no tamanho do cabeçalho</h2>
+  <p>O símbolo (M com o pin) não muda. Muda só como o nome é escrito. Hoje, no cabeçalho do celular, as letras do nome ficam com cerca de 7 px de altura.</p>
+  <p><label>Ver na fonte: <select id="fonteLogo"><option value="'Figtree'">Figtree</option><option value="'Poppins'">Poppins</option><option value="'Atkinson Hyperlegible Next'">Atkinson Hyperlegible Next</option></select></label></p>
+  <div class="logos" id="logos"></div>
+
+  <h2>Cores: o que muda na versão afinada</h2>
+  <p>A identidade fica igual (beringela e laranja). Só uma cor é ajustada, e muda uma regra de uso.</p>
+  <table>
+    <tr><th>Onde</th><th>Atual</th><th>Afinada</th></tr>
+    <tr><td>Texto laranja sobre o lilás de seleção</td>
+      <td><span class="am" style="background:#f0eaf5;color:#c2410c">Ver todos</span> <span class="ruim">4,39 · reprova</span></td>
+      <td><span class="am" style="background:#f0eaf5;color:#b84010">Ver todos</span> <span class="ok">4,71 · passa</span></td></tr>
+    <tr><td>Texto laranja sobre branco (links)</td>
+      <td><span class="am" style="background:#fff;color:#c2410c">Ver todos</span> <span class="ok">5,18 · passa</span></td>
+      <td><span class="am" style="background:#fff;color:#b84010">Ver todos</span> <span class="ok">5,56 · passa</span></td></tr>
+    <tr><td>"da Região" escrito no logo, sobre branco</td>
+      <td><span class="am" style="background:#fff;color:#ff6a13">da Região</span> <span class="ruim">2,87 · reprova</span></td>
+      <td><span class="am" style="background:#fff;color:#b84010">da Região</span> <span class="ok">5,56 · passa</span> (opções B e C) ou tudo beringela (opção A)</td></tr>
+    <tr><td>Botão principal</td>
+      <td colspan="2"><span class="am" style="background:#ff6a13;color:#4b1248">Anunciar</span> <span class="ok">4,95 · passa</span> — não muda</td></tr>
+    <tr><td>Botão do WhatsApp</td>
+      <td colspan="2"><span class="am" style="background:#0e7a3d;color:#fff">Chamar no WhatsApp</span> <span class="ok">5,43 · passa</span> — não muda</td></tr>
+  </table>
+  <p class="nota" style="margin-top:10px">Número = contraste entre a letra e o fundo. A norma de acessibilidade pede no mínimo 4,5 para texto normal.</p>
+</div>
+
+<script>
+const FONTES = [
+  { id: "poppins", css: "'Poppins'", nome: "1 · Poppins (a atual)", sub: "Redonda e larga. Não tem números alinhados para preço." },
+  { id: "figtree", css: "'Figtree'", nome: "2 · Figtree (recomendada)", sub: "Calorosa, mais estreita, números alinhados, arquivo pequeno." },
+  { id: "atkinson", css: "'Atkinson Hyperlegible Next'", nome: "3 · Atkinson Hyperlegible Next", sub: "Feita para baixa visão. Mais legível, com tom um pouco mais frio." },
+];
+const TAMANHOS = {
+  hoje:   { corpo: 13, cardt: 12, preco: 11, legenda: 11, botao: 12, toque: 40 },
+  medio:  { corpo: 14, cardt: 14, preco: 16, legenda: 12, botao: 14, toque: 44 },
+  grande: { corpo: 16, cardt: 15, preco: 18, legenda: 13, botao: 15, toque: 48 },
+};
+const ANUNCIOS = [
+  ["R$ 11.500", "Honda Biz 125 2021, único dono", "Corrente · hoje", "#e9dccf"],
+  ["R$ 2.800", "Bezerro Nelore desmamado, 8 meses", "Formosa do Rio Preto · ontem", "#dfe7d6"],
+  ["R$ 1.350", "Geladeira Consul frost free 340 litros", "Corrente · há 2 dias", "#d9e4ec"],
+  ["R$ 185.000", "Casa 3 quartos no Centro, com quintal", "Corrente · há 3 dias", "#eadfe6"],
+  ["R$ 68.000", "Trator Massey Ferguson 275 revisado", "Gilbués · há 4 dias", "#e6e2cf"],
+  ["R$ 600", "Sofá 3 lugares seminovo", "Corrente · há 5 dias", "#dde0ea"],
+  ["R$ 950", "Bicicleta aro 29 com 21 marchas", "Cristalândia · há 6 dias", "#e3ead9"],
+  ["R$ 4.200", "Celular Samsung A55 na caixa", "Corrente · há 1 semana", "#ecdcd6"],
+];
+const SIMBOLO = '<svg viewBox="0 0 108 136" aria-hidden="true"><path fill="none" stroke="#4B1248" stroke-width="23" stroke-linejoin="round" stroke-linecap="round" d="M15.5 120.5V43.5L54 98L92.5 43.5V120.5"/><path fill="#FF6A13" d="M54 65C46.4 50.75 35 34.78 35 23A19 19 0 1 1 73 23C73 34.78 61.6 50.75 54 65Z"/><circle cx="54" cy="23" r="7.2" fill="#fff"/></svg>';
+const LOGO_ATUAL = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 409 150\" role=\"img\" aria-label=\"Mercado da Região\"><path fill=\"none\" stroke=\"#4B1248\" stroke-width=\"23\" stroke-linejoin=\"round\" stroke-linecap=\"round\" d=\"M15.5 120.5V43.5L54 98L92.5 43.5V120.5\"/><path fill=\"#FF6A13\" d=\"M54 65C46.4 50.75 35 34.78 35 23A19 19 0 1 1 73 23C73 34.78 61.6 50.75 54 65Z\"/><circle cx=\"54\" cy=\"23\" r=\"7.2\" fill=\"#FFFFFF\"/><path fill=\"#4B1248\" d=\"M161.42 36.16L172.28 36.16L172.28 74.07L163.04 74.07L163.04 51.34L154.57 74.07L147.11 74.07L138.58 51.28L138.58 74.07L129.35 74.07L129.35 36.16L140.26 36.16L150.89 62.41L161.42 36.16M207.32 58.52Q207.32 59.81 207.16 61.22L186.26 61.22Q186.48 64.03 188.07 65.51Q189.67 67 191.99 67Q195.44 67 196.79 64.08L206.62 64.08Q205.87 67.05 203.90 69.43Q201.92 71.80 198.95 73.15Q195.98 74.50 192.31 74.50Q187.88 74.50 184.43 72.61Q180.97 70.72 179.03 67.21Q177.08 63.70 177.08 59Q177.08 54.31 179 50.80Q180.92 47.29 184.37 45.40Q187.83 43.51 192.31 43.51Q196.69 43.51 200.09 45.34Q203.49 47.18 205.41 50.58Q207.32 53.98 207.32 58.52M186.32 56.09L197.87 56.09Q197.87 53.71 196.25 52.31Q194.63 50.90 192.20 50.90Q189.88 50.90 188.29 52.25Q186.70 53.60 186.32 56.09M221.42 48.96Q223.04 46.48 225.47 45.04Q227.90 43.61 230.87 43.61L230.87 53.39L228.33 53.39Q224.87 53.39 223.15 54.87Q221.42 56.36 221.42 60.08L221.42 74.07L212.18 74.07L212.18 43.94L221.42 43.94L221.42 48.96M233.46 59Q233.46 54.31 235.38 50.80Q237.29 47.29 240.72 45.40Q244.15 43.51 248.58 43.51Q254.25 43.51 258.06 46.48Q261.86 49.45 263.05 54.85L253.22 54.85Q251.98 51.39 248.42 51.39Q245.88 51.39 244.37 53.36Q242.86 55.33 242.86 59Q242.86 62.68 244.37 64.65Q245.88 66.62 248.42 66.62Q251.98 66.62 253.22 63.16L263.05 63.16Q261.86 68.45 258.03 71.48Q254.20 74.50 248.58 74.50Q244.15 74.50 240.72 72.61Q237.29 70.72 235.38 67.21Q233.46 63.70 233.46 59M266.13 58.95Q266.13 54.31 267.88 50.80Q269.64 47.29 272.66 45.40Q275.69 43.51 279.41 43.51Q282.60 43.51 285 44.80Q287.41 46.10 288.70 48.20L288.70 43.94L297.94 43.94L297.94 74.07L288.70 74.07L288.70 69.80Q287.35 71.91 284.95 73.21Q282.55 74.50 279.36 74.50Q275.69 74.50 272.66 72.58Q269.64 70.67 267.88 67.13Q266.13 63.59 266.13 58.95M288.70 59Q288.70 55.55 286.78 53.55Q284.87 51.55 282.11 51.55Q279.36 51.55 277.44 53.52Q275.53 55.49 275.53 58.95Q275.53 62.41 277.44 64.43Q279.36 66.46 282.11 66.46Q284.87 66.46 286.78 64.46Q288.70 62.46 288.70 59M302.80 58.95Q302.80 54.31 304.55 50.80Q306.31 47.29 309.33 45.40Q312.35 43.51 316.08 43.51Q319.05 43.51 321.51 44.75Q323.96 45.99 325.37 48.10L325.37 34.11L334.60 34.11L334.60 74.07L325.37 74.07L325.37 69.75Q324.07 71.91 321.67 73.21Q319.27 74.50 316.08 74.50Q312.35 74.50 309.33 72.58Q306.31 70.67 304.55 67.13Q302.80 63.59 302.80 58.95M325.37 59Q325.37 55.55 323.45 53.55Q321.53 51.55 318.78 51.55Q316.03 51.55 314.11 53.52Q312.19 55.49 312.19 58.95Q312.19 62.41 314.11 64.43Q316.03 66.46 318.78 66.46Q321.53 66.46 323.45 64.46Q325.37 62.46 325.37 59M355.01 74.50Q350.59 74.50 347.05 72.61Q343.51 70.72 341.49 67.21Q339.46 63.70 339.46 59Q339.46 54.36 341.51 50.82Q343.57 47.29 347.13 45.40Q350.69 43.51 355.12 43.51Q359.55 43.51 363.11 45.40Q366.68 47.29 368.73 50.82Q370.78 54.36 370.78 59Q370.78 63.65 368.70 67.18Q366.62 70.72 363.03 72.61Q359.44 74.50 355.01 74.50M355.01 66.51Q357.66 66.51 359.52 64.57Q361.39 62.62 361.39 59Q361.39 55.39 359.58 53.44Q357.77 51.50 355.12 51.50Q352.42 51.50 350.64 53.41Q348.86 55.33 348.86 59Q348.86 62.62 350.61 64.57Q352.37 66.51 355.01 66.51\"/><path fill=\"#FF6A13\" d=\"M127.51 111.88Q127.51 107.24 129.27 103.73Q131.02 100.22 134.05 98.33Q137.07 96.44 140.80 96.44Q143.77 96.44 146.22 97.68Q148.68 98.92 150.08 101.03L150.08 87.04L159.32 87.04L159.32 127L150.08 127L150.08 122.68Q148.79 124.84 146.38 126.14Q143.98 127.43 140.80 127.43Q137.07 127.43 134.05 125.52Q131.02 123.60 129.27 120.06Q127.51 116.52 127.51 111.88M150.08 111.93Q150.08 108.48 148.17 106.48Q146.25 104.48 143.50 104.48Q140.74 104.48 138.82 106.45Q136.91 108.42 136.91 111.88Q136.91 115.34 138.82 117.36Q140.74 119.39 143.50 119.39Q146.25 119.39 148.17 117.39Q150.08 115.39 150.08 111.93M164.18 111.88Q164.18 107.24 165.93 103.73Q167.69 100.22 170.71 98.33Q173.74 96.44 177.46 96.44Q180.65 96.44 183.05 97.73Q185.45 99.03 186.75 101.13L186.75 96.87L195.98 96.87L195.98 127L186.75 127L186.75 122.73Q185.40 124.84 183 126.14Q180.59 127.43 177.41 127.43Q173.74 127.43 170.71 125.52Q167.69 123.60 165.93 120.06Q164.18 116.52 164.18 111.88M186.75 111.93Q186.75 108.48 184.83 106.48Q182.92 104.48 180.16 104.48Q177.41 104.48 175.49 106.45Q173.57 108.42 173.57 111.88Q173.57 115.34 175.49 117.36Q177.41 119.39 180.16 119.39Q182.92 119.39 184.83 117.39Q186.75 115.39 186.75 111.93M243.88 127L233.46 127L225.58 112.69L223.36 112.69L223.36 127L214.13 127L214.13 89.09L229.63 89.09Q234.11 89.09 237.27 90.66Q240.43 92.22 241.99 94.95Q243.56 97.68 243.56 101.03Q243.56 104.81 241.43 107.78Q239.29 110.75 235.13 111.99L243.88 127M223.36 96.76L223.36 106.16L229.09 106.16Q231.62 106.16 232.89 104.91Q234.16 103.67 234.16 101.40Q234.16 99.24 232.89 98Q231.62 96.76 229.09 96.76L223.36 96.76M277.74 111.45Q277.74 112.74 277.58 114.15L256.68 114.15Q256.90 116.96 258.49 118.44Q260.08 119.93 262.40 119.93Q265.86 119.93 267.21 117.01L277.04 117.01Q276.28 119.98 274.31 122.36Q272.34 124.73 269.37 126.08Q266.40 127.43 262.73 127.43Q258.30 127.43 254.84 125.54Q251.39 123.65 249.44 120.14Q247.50 116.63 247.50 111.93Q247.50 107.24 249.42 103.73Q251.33 100.22 254.79 98.33Q258.25 96.44 262.73 96.44Q267.10 96.44 270.50 98.27Q273.91 100.11 275.82 103.51Q277.74 106.91 277.74 111.45M256.73 109.02L268.29 109.02Q268.29 106.64 266.67 105.24Q265.05 103.83 262.62 103.83Q260.30 103.83 258.70 105.18Q257.11 106.53 256.73 109.02M294.05 96.44Q297.23 96.44 299.64 97.73Q302.04 99.03 303.34 101.13L303.34 96.87L312.57 96.87L312.57 126.95Q312.57 131.10 310.92 134.48Q309.28 137.85 305.90 139.85Q302.53 141.85 297.50 141.85Q290.81 141.85 286.65 138.69Q282.49 135.53 281.90 130.13L291.02 130.13Q291.46 131.86 293.08 132.86Q294.70 133.86 297.07 133.86Q299.93 133.86 301.63 132.21Q303.34 130.56 303.34 126.95L303.34 122.68Q301.99 124.79 299.61 126.11Q297.23 127.43 294.05 127.43Q290.32 127.43 287.30 125.52Q284.27 123.60 282.52 120.06Q280.76 116.52 280.76 111.88Q280.76 107.24 282.52 103.73Q284.27 100.22 287.30 98.33Q290.32 96.44 294.05 96.44M303.34 111.93Q303.34 108.48 301.42 106.48Q299.50 104.48 296.75 104.48Q293.99 104.48 292.08 106.45Q290.16 108.42 290.16 111.88Q290.16 115.34 292.08 117.36Q293.99 119.39 296.75 119.39Q299.50 119.39 301.42 117.39Q303.34 115.39 303.34 111.93M323.91 93.74Q321.48 93.74 319.94 92.31Q318.40 90.87 318.40 88.77Q318.40 86.61 319.94 85.18Q321.48 83.75 323.91 83.75Q326.29 83.75 327.82 85.18Q329.36 86.61 329.36 88.77Q329.36 90.87 327.82 92.31Q326.29 93.74 323.91 93.74M319.27 96.87L328.50 96.87L328.50 127L319.27 127L319.27 96.87M333.36 111.88Q333.36 107.24 335.12 103.73Q336.87 100.22 339.89 98.33Q342.92 96.44 346.64 96.44Q349.83 96.44 352.23 97.73Q354.64 99.03 355.93 101.13L355.93 96.87L365.17 96.87L365.17 127L355.93 127L355.93 122.73Q354.58 124.84 352.18 126.14Q349.78 127.43 346.59 127.43Q342.92 127.43 339.89 125.52Q336.87 123.60 335.12 120.06Q333.36 116.52 333.36 111.88M355.93 111.93Q355.93 108.48 354.01 106.48Q352.10 104.48 349.34 104.48Q346.59 104.48 344.67 106.45Q342.76 108.42 342.76 111.88Q342.76 115.34 344.67 117.36Q346.59 119.39 349.34 119.39Q352.10 119.39 354.01 117.39Q355.93 115.39 355.93 111.93M339.57 94.33Q340.87 86.34 347.02 86.34Q348.21 86.34 349.10 86.69Q349.99 87.04 351.29 87.74Q352.26 88.28 352.85 88.53Q353.45 88.77 354.10 88.77Q356.09 88.77 356.42 86.34L361.17 86.34Q359.87 94.33 353.72 94.33Q352.53 94.33 351.64 93.98Q350.75 93.63 349.45 92.93Q348.48 92.39 347.89 92.14Q347.29 91.90 346.64 91.90Q344.65 91.90 344.27 94.33L339.57 94.33M385.58 127.43Q381.15 127.43 377.61 125.54Q374.08 123.65 372.05 120.14Q370.03 116.63 370.03 111.93Q370.03 107.29 372.08 103.75Q374.13 100.22 377.69 98.33Q381.26 96.44 385.69 96.44Q390.11 96.44 393.68 98.33Q397.24 100.22 399.29 103.75Q401.35 107.29 401.35 111.93Q401.35 116.58 399.27 120.11Q397.19 123.65 393.60 125.54Q390.01 127.43 385.58 127.43M385.58 119.44Q388.22 119.44 390.09 117.50Q391.95 115.55 391.95 111.93Q391.95 108.32 390.14 106.37Q388.33 104.43 385.69 104.43Q382.99 104.43 381.20 106.34Q379.42 108.26 379.42 111.93Q379.42 115.55 381.18 117.50Q382.93 119.44 385.58 119.44\"/></svg>";
+const I = {
+  lupa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  casa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  mais: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  radar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 19.1a10 10 0 0 1 0-14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg>',
+  conta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+};
+const estado = { tamanho: "grande", logo: "a", cores: "afinadas" };
+
+function logoHTML(tipo) {
+  if (tipo === "atual") return '<div class="logo atual">' + LOGO_ATUAL + '</div>';
+  if (tipo === "a") return `<div class="logo">${SIMBOLO}<span class="nome uma">Mercado da Região</span></div>`;
+  if (tipo === "b") return `<div class="logo">${SIMBOLO}<span class="nome duas"><span>Mercado</span><span class="r">da Região</span></span></div>`;
+  return `<div class="logo">${SIMBOLO}<span class="nome uma">Mercado <span class="r">da Região</span></span></div>`;
+}
+
+function telaHTML() {
+  const cards = ANUNCIOS.map((a, i) => `<div class="card"><div class="foto" style="background:${a[3]}">foto</div><div class="info"><div class="preco">${a[0]}</div><div class="titulo">${a[1]}</div><div class="meta">${a[2]}</div>${i === 1 ? '<div class="selo">✓ Loja verificada</div>' : ""}</div></div>`).join("");
+  return `<div class="topo">${logoHTML(estado.logo)}<span class="cidade">Corrente ▾</span></div>
+    <div class="miolo">
+      <div class="busca">${I.lupa}<span>O que você procura?</span></div>
+      <div class="chips"><span class="chip on">✓ Só em Corrente</span><span class="chip">Até R$ 100</span><span class="chip">Menor preço</span></div>
+      <div class="secao"><b>Anúncios recentes</b><a>Ver todos</a></div>
+      <div class="grade">${cards}</div>
+    </div>
+    <div class="nav"><div class="on">${I.casa}Início</div><div>${I.lupa}Buscar</div><div><span class="mais">${I.mais}</span>Anunciar</div><div>${I.radar}Radar</div><div>${I.conta}Conta</div></div>`;
+}
+
+function desenhar() {
+  const t = TAMANHOS[estado.tamanho];
+  const afinada = estado.cores === "afinadas";
+  const vars = `--corpo:${t.corpo}px;--cardt:${t.cardt}px;--preco:${t.preco}px;--legenda:${t.legenda}px;--botao:${t.botao}px;--toque:${t.toque}px;--laranja-escuro:${afinada ? "#b84010" : "#c2410c"};--cor-regiao:${afinada ? "#b84010" : "#ff6a13"}`;
+  document.getElementById("celulares").innerHTML = FONTES.map(f =>
+    `<div class="coluna"><h3>${f.nome}</h3><p class="sub">${f.sub}</p><div class="tela" style="--fonte:${f.css},system-ui,sans-serif;${vars}">${telaHTML()}</div><p class="conta">Anúncios que aparecem sem rolar: <strong data-conta>–</strong></p></div>`).join("");
+  document.querySelectorAll(".coluna").forEach(col => {
+    const tela = col.querySelector(".tela"), limite = col.querySelector(".nav").getBoundingClientRect().top;
+    const n = [...tela.querySelectorAll(".card")].reduce((s, c) => { const r = c.getBoundingClientRect(); return s + Math.max(0, Math.min(1, (limite - r.top) / r.height)); }, 0);
+    col.querySelector("[data-conta]").textContent = n.toFixed(1).replace(".", ",");
+  });
+  desenharLogos();
+}
+
+function desenharLogos() {
+  const fonte = document.getElementById("fonteLogo").value;
+  const cor = estado.cores === "afinadas" ? "#b84010" : "#ff6a13";
+  const itens = [["atual", "Atual (Poppins, duas linhas, laranja vivo)"], ["a", "A · uma linha, tudo beringela"], ["b", "B · duas linhas, “da Região” laranja"], ["c", "C · uma linha, duas cores"]];
+  document.getElementById("logos").innerHTML = itens.map(([k, rot]) =>
+    `<div class="prova" style="font-family:${fonte},system-ui,sans-serif;--cor-regiao:${cor}"><h4>${rot}</h4><div class="grande">${logoHTML(k)}</div><div class="pequeno">${logoHTML(k)}</div></div>`).join("");
+}
+
+document.getElementById("provas").innerHTML = FONTES.map(f =>
+  `<div class="prova" style="font-family:${f.css},system-ui,sans-serif"><h4>${f.nome}</h4>
+   <p class="linha faixa">Geladeira Consul frost free 340 litros, seminova, com garantia até março</p>
+   <p class="linha">Ação, coração, pão, você, avô, três, última</p>
+   <p class="linha">Il1 O0 · Ilha 1001 · R$ 1.110,00</p>
+   <div class="precos">R$ 1.111,00<br>R$ 8.888,00<br>R$ 185.000</div></div>`).join("");
+
+document.querySelectorAll(".grupo").forEach(g => g.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  g.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  estado[g.dataset.grupo] = b.dataset.v; desenhar();
+}));
+document.getElementById("fonteLogo").addEventListener("change", desenharLogos);
+document.fonts.ready.then(desenhar); desenhar(); addEventListener("load", desenhar);
+</script>
+</body>
+</html>
