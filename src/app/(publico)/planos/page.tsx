@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { Check, ChevronDown, Minus } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { perguntasDosPlanos, planosPublicos } from "@/lib/dados/vitrine-completa";
 import { preco } from "@/lib/formato";
@@ -48,6 +49,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
   const [sp, { userId }] = await Promise.all([searchParams, auth()]);
   const origem = lerOrigem(sp.origem);
   const [planos, perguntas, conta] = await Promise.all([planosPublicos(), perguntasDosPlanos(), userId ? meuPerfilEVitrine() : Promise.resolve(null)]);
+  const { data: promocao } = await (await createClient()).rpc("voucher_promocao_ativa");
   const voltar = `/planos${origem ? `?origem=${origem}` : ""}`;
   const entrar = `/entrar?redirect_url=${encodeURIComponent(voltar)}`;
   const vendedor = !!conta?.vitrine;
@@ -59,6 +61,7 @@ export default async function PaginaPlanos({ searchParams }: Props) {
     if (vendedor && p.publico !== "todos" && p.publico !== (loja ? "pj" : "pf")) return null;
     if (!userId) return { href: entrar, texto: p.preco_centavos > 0 ? "Entrar para assinar" : "Entrar e começar" };
     if (p.e_teste) return vendedor ? null : { href: "/quero-vender/loja", texto: "Abrir minha loja grátis" };
+    if (p.publico === "pj" && p.preco_centavos === 0) return vendedor ? null : { href: "/quero-vender/loja", texto: "Criar loja grátis" };
     if (p.publico === "pf" && p.preco_centavos === 0) return vendedor ? null : { href: "/quero-vender", texto: "Começar a vender" };
     if (!vendedor) return { href: p.publico === "pf" ? "/quero-vender" : "/quero-vender/loja", texto: "Começar a vender" };
     return { href: `/minha-conta/plano?origem=${encodeURIComponent(origem ?? "planos")}&plano=${encodeURIComponent(p.codigo)}`, texto: `Quero o ${p.nome.replace(/^Plano\s+/i, "")}` };
@@ -83,6 +86,11 @@ export default async function PaginaPlanos({ searchParams }: Props) {
           </p>
         )}
       </header>
+
+      {promocao && <aside className="rounded-card border border-laranja-escuro bg-selecao p-4 text-beringela">
+        <strong>Promoção de lançamento para lojas</strong>
+        <p className="mt-1 text-sm">Use o cupom da sua conta até {new Date(new Date(promocao).getTime() - 1).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} e ganhe três meses do plano completo. O benefício mantém a duração mesmo depois dessa data.</p>
+      </aside>}
 
       {planos.length === 0 ? (
         <Vazio titulo="Os planos estão sendo atualizados" texto="Volte daqui a pouco ou fale com o suporte do Mercado da Região.">
