@@ -4,10 +4,12 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { lojasCatalogo } from "@/lib/dados/catalogo";
 import type { Regiao } from "@/lib/tipos";
+import { Badge } from "@/components/ui/badge";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
 import { linkLoja } from "@/lib/formato";
 
-// "Lojas em destaque" no Início: lojas que contrataram o tipo "loja" na região.
+// "Lojas em destaque" no Início: lojas que contrataram o tipo "loja" na região. Só aparece com o bloco
+// "Lojas da região" desligado; ligado, as pagas entram nele (um bloco de lojas por tela, DESIGN.md seção 12).
 // Lugar pago: sempre com a etiqueta "Patrocinado" (Código de Defesa do Consumidor).
 // titulo: vem do painel (tela 12, home_blocos); sem ele, o de sempre.
 export async function LojasEmDestaque({ regiao, titulo = "Lojas em destaque" }: { regiao: Regiao; titulo?: string }) {
@@ -17,7 +19,7 @@ export async function LojasEmDestaque({ regiao, titulo = "Lojas em destaque" }: 
     <section aria-labelledby="titulo-lojas-destaque" className="flex flex-col gap-3">
       <h2 id="titulo-lojas-destaque" className="flex items-center gap-2 text-lg font-semibold">
         {titulo}
-        <span className="rounded-full bg-patrocinado-fundo px-2 py-0.5 text-xs font-semibold text-beringela">Patrocinado</span>
+        <Badge variant="featured" className="font-semibold">Patrocinado</Badge>
       </h2>
       <ul className="flex md:-mx-4 snap-x gap-3 overflow-x-auto md:px-4 pb-1 [scrollbar-width:none]">
         {lojas.map((l) => (
@@ -32,7 +34,7 @@ export async function LojasEmDestaque({ regiao, titulo = "Lojas em destaque" }: 
               {l.verificada && (
                 <span className="flex items-center gap-1 text-legenda leading-[18px] font-semibold text-verde-escuro">
                   <ShieldCheck className="size-4" aria-hidden />
-                  Verificada
+                  Loja verificada
                 </span>
               )}
             </Link>

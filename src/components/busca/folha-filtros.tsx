@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Check, X } from "lucide-react";
+import { Chip } from "@/components/ui/chip";
 import { classesBotao } from "@/components/ui/botao";
 import { ID_FOLHA, ID_RESULTADOS, ORDENS, comParametros, lerEstadoBusca, paramCampo, type EstadoBusca } from "@/components/busca/parametros";
 import { inteiro, valorDoCampo } from "@/lib/formato";
@@ -14,17 +15,12 @@ import { classesCampo } from "@/components/ui/input";
 
 const SELECT = `${classesCampo} h-toque!`;
 const ENTRADA = SELECT;
-// Chip de escolha (igual ao <Chip>): selecionado = borda laranja-escuro, fundo laranja-claro, texto beringela e ✓.
+// Opção com caixa de marcar escondida, no visual do <Chip>: selecionado = borda beringela, fundo `selecao` e ✓.
 const OPCAO =
-  "group inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-campo border border-borda bg-cartao px-4 text-base font-semibold text-beringela " +
-  "has-checked:border-laranja-escuro has-checked:bg-selecao " +
+  "group inline-flex min-h-controle cursor-pointer items-center gap-2 rounded-campo border border-borda-campo bg-cartao px-4 text-base font-semibold text-beringela " +
+  "has-checked:border-beringela has-checked:bg-selecao " +
   "has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-laranja-escuro";
 const LEGENDA = "mb-2 text-base font-semibold";
-// Chip de categoria (botão): as filhas da categoria escolhida, em qualquer nível.
-const CHIP_CATEGORIA =
-  "inline-flex min-h-11 items-center rounded-campo border border-borda bg-cartao px-4 text-base font-semibold text-beringela hover:bg-fundo " +
-  "aria-pressed:border-laranja-escuro aria-pressed:bg-selecao " +
-  "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 
 export function FolhaFiltros({
   caminho,
@@ -189,15 +185,15 @@ export function FolhaFiltros({
             {escolhida && escolhida.filhas.length > 0 && (
               <ul aria-label={`Dentro de ${escolhida.nome}`} className="mt-3 flex flex-wrap gap-2">
                 <li>
-                  <button type="button" aria-pressed={categoria === escolhida.slug} onClick={() => setCategoria(escolhida.slug)} className={CHIP_CATEGORIA}>
+                  <Chip tamanho="toque" ativo={categoria === escolhida.slug} onClick={() => setCategoria(escolhida.slug)}>
                     Tudo em {escolhida.nome}
-                  </button>
+                  </Chip>
                 </li>
                 {escolhida.filhas.map((f) => (
                   <li key={f.id}>
-                    <button type="button" aria-pressed={categoria === f.slug} onClick={() => setCategoria(f.slug)} className={CHIP_CATEGORIA}>
+                    <Chip tamanho="toque" ativo={categoria === f.slug} onClick={() => setCategoria(f.slug)}>
                       {f.nome}
-                    </button>
+                    </Chip>
                   </li>
                 ))}
               </ul>

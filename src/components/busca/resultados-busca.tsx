@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowDownUp, ChevronLeft, ChevronRight, LayoutGrid, List, SlidersHorizontal, X } from "lucide-react";
+import { ArrowDownUp, Check, ChevronLeft, ChevronRight, LayoutGrid, List, SlidersHorizontal, X } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { FolhaFiltros } from "@/components/busca/folha-filtros";
@@ -12,7 +12,7 @@ import { Alert } from "@/components/ui/alert";
 // Corpo comum da busca (T5) e das listas de categoria (T4):
 // chips de filtro, "N anúncios em ...", grade, paginação e a folha de filtros.
 
-const controle = "inline-flex min-h-11 items-center gap-1 rounded-campo px-1.5 text-sm sm:gap-1.5 sm:px-2 font-semibold text-beringela hover:bg-selecao focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
+const controle = "inline-flex min-h-controle items-center gap-1 rounded-campo px-1.5 text-sm sm:gap-1.5 sm:px-2 font-semibold text-beringela hover:bg-selecao focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
 
 export function ResultadosBusca({
   caminho,
@@ -98,9 +98,9 @@ export function ResultadosBusca({
                   key={modo}
                   href={comParametros(caminho, sp, { visualizacao: modo === "grade" ? modo : null, pagina: paginaAtual })}
                   aria-current={selecionada ? "true" : undefined}
-                  className={`inline-flex min-h-11 items-center gap-1 rounded-campo px-1.5 text-xs sm:px-2 font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${selecionada ? "bg-selecao" : ""}`}
+                  className={`inline-flex min-h-controle items-center gap-1 rounded-campo px-1.5 text-sm sm:px-2 font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${selecionada ? "bg-selecao" : ""}`}
                 >
-                  <Icone className="size-4" aria-hidden /> {texto}
+                  {selecionada ? <Check className="size-4" aria-hidden /> : <Icone className="size-4" aria-hidden />} {texto}
                 </Link>
               );
             })}
@@ -115,7 +115,7 @@ export function ResultadosBusca({
                   <Link
                     href={comParametros(caminho, sp, Object.fromEntries(a.parametros.map((p) => [p, null])))}
                     aria-label={`Remover filtro: ${a.rotulo}`}
-                    className="flex h-full min-h-11 items-center gap-2 rounded-campo bg-selecao px-2.5 py-1 text-xs leading-tight text-beringela hover:bg-borda focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
+                    className="flex h-full min-h-controle items-center gap-2 rounded-campo bg-selecao px-2.5 py-1 text-sm leading-tight text-beringela hover:bg-borda focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
                   >
                     <span className="min-w-0 [overflow-wrap:anywhere]">{a.rotulo.replace(/^(Cidade|Preço): /, "")}</span><X className="size-3 shrink-0" aria-hidden />
                   </Link>
