@@ -8,6 +8,7 @@ import { CabecalhoVitrine } from "@/components/vitrine/cabecalho-vitrine";
 import { primeiroNome } from "@/components/vitrine/util";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
 import { Vazio } from "@/components/ui/vazio";
+import { Voltar } from "@/components/ui/voltar";
 import { Botao } from "@/components/ui/botao";
 import { ehUuid, inteiro, linkLoja } from "@/lib/formato";
 import type { Vitrine } from "@/lib/tipos";
@@ -42,6 +43,7 @@ export default async function PaginaVendedor({ params }: Props) {
   const href = `/vendedor/${encodeURIComponent(id)}`;
   if (v === undefined) return (
     <main className="mx-auto w-full max-w-lg px-4 py-4">
+      <Voltar />
       <Vazio titulo="Não conseguimos carregar o perfil">
         <Botao href={href} tamanho="toque">Tentar novamente</Botao>
         <Botao href="/busca" tamanho="toque" variante="secundario">Ver anúncios da região</Botao>
@@ -57,6 +59,7 @@ export default async function PaginaVendedor({ params }: Props) {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pt-3 pb-8 md:pt-4">
+      <Voltar />
       <CabecalhoVitrine nome={nome} cidade={v.cidade} criadoEm={v.criado_em} />
       <section aria-labelledby="titulo-anuncios-vendedor" className="flex flex-col gap-2">
         <h2 id="titulo-anuncios-vendedor" className="text-lg font-semibold [overflow-wrap:anywhere]">

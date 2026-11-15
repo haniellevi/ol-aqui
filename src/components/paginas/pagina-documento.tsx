@@ -1,4 +1,5 @@
 import { ChevronDown, FileText, History } from "lucide-react";
+import { Voltar } from "@/components/ui/voltar";
 import { documentoAtivo, documentoVersao, versoesDocumento } from "@/lib/dados/paginas";
 import { linkDocumentoLegal, LINK_AJUDA } from "@/lib/rotas";
 import { NOME_DOCUMENTO, type TipoDocumento } from "@/lib/tipos-paginas";
@@ -32,6 +33,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
     const inexistente = versao !== null && pedida === null;
     return (
       <main className={pagina}>
+        <Voltar />
         <h1 className="text-titulo font-semibold text-beringela">{NOME_DOCUMENTO[tipo]}</h1>
         <Vazio titulo={inexistente ? `Versão ${versao} não encontrada` : "Não conseguimos abrir o documento"} icone={<FileText />}>
           {inexistente || atual ? (
@@ -52,6 +54,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
 
   return (
     <main className={pagina}>
+      <Voltar />
       <header className="flex flex-col gap-1">
         <h1 className="text-titulo font-semibold text-beringela">{doc.titulo}</h1>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-texto-suave">
