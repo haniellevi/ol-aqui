@@ -22,8 +22,8 @@ before(async () => {
   throw ultima || new Error('Worker de imagens não iniciou');
 });
 after(() => worker?.kill('SIGTERM'));
-async function processar(caminho, bytes, mime) {
-  const resposta = await fetch(base + caminho, { method: 'POST', headers: { 'content-type': mime }, body: bytes });
+async function processar(caminho, bytes, mime, extras = {}) {
+  const resposta = await fetch(base + caminho, { method: 'POST', headers: { 'content-type': mime, ...extras }, body: bytes });
   return { resposta, bytes: Buffer.from(await resposta.arrayBuffer()) };
 }
 test('normaliza JPEG orientado e preserva proporção em WebP', async () => {
@@ -117,7 +117,7 @@ test('foto tratada de 1600 por 1200 preserva pixels do produto ao enquadrar', as
   for (let y=300;y<900;y++) dados.fill(Buffer.from([28,78,130]),pos(300,y),pos(1300,y));
   dados.set([250,250,245],pos(680,550)); dados.set([143,176,197],pos(740,790));
   const original=await sharp(dados,{raw:{width:w,height:h,channels:3}}).webp({lossless:true}).toBuffer();
-  const resultado=await processar('/ajustar-produto',original,'image/webp');
+  const resultado=await processar('/ajustar-produto',original,'image/webp', {'x-fundo-clareado':'1'});
   assert.equal(resultado.resposta.status,200);
   const saida=await sharp(resultado.bytes).removeAlpha().raw().toBuffer();
   for(let y=300;y<900;y++) assert.deepEqual(saida.subarray(pos(300,y),pos(1300,y)),dados.subarray(pos(300,y),pos(1300,y)));

@@ -13,7 +13,7 @@ Execute `npm run build:cloudflare` e `npm run preview:cloudflare` para validar o
 
 A branch `codex/cloudflare-producao` prepara o Worker `mercado-regiao-teste` em modo somente leitura. O Worker `mercado-regiao-imagens`, configurado em `infra/imagens/wrangler.jsonc`, deve ser publicado primeiro pelo GitHub; ele não possui domínio público e é acessado pela associação `IMAGENS_TRATAMENTO`. Ambos precisam acompanhar a mesma versão da branch.
 
-O tratamento usa WebAssembly e valida formato, animação, tamanho e dimensões antes de processar. O teste local com os dois Workers usa imagens artificiais e não precisa de banco. Antes de usar em produção, confira as operações no ambiente real da Cloudflare, incluindo o consumo de CPU e memória, e valide novamente os fluxos de envio e publicação. O artefato fixo de capa é gerado da arte em `src/lib/loja-ia/modelo-capa.ts`; mudanças nessa arte exigem atualizar `infra/imagens/modelo-capa.js` e rodar os testes.
+O tratamento valida formato, animação, tamanho e dimensões antes de processar. A normalização e o ajuste usam a associação Images da Cloudflare; o tratamento de fundo liso usa WebAssembly e retorna ao fluxo alternativo quando não for possível processar. A cota gratuita de transformações precisa ser acompanhada para evitar falhas após seu esgotamento. O teste local com os dois Workers usa imagens artificiais e não precisa de banco. Antes de usar em produção, confira as operações no ambiente real da Cloudflare, incluindo o consumo de CPU e memória, e valide novamente os fluxos de envio e publicação. O artefato fixo de capa é gerado da arte em `src/lib/loja-ia/modelo-capa.ts`; mudanças nessa arte exigem atualizar `infra/imagens/modelo-capa.js` e rodar os testes.
 
 ## Integrações e troca do domínio
 

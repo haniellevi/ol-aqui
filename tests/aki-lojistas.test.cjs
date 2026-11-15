@@ -200,3 +200,20 @@ test('Cloudflare ajusta banner usando o serviço interno antes de armazenar', as
   assert.match(destino, /\/ajustar-banner$/);
   assert.equal(a.uploads(), 1);
 });
+
+test('marca somente o resultado local de fundo como seguro para preservar os pixels', async (t) => {
+  const anterior = process.env.CLOUDFLARE_IMAGENS;
+  process.env.CLOUDFLARE_IMAGENS = '1';
+  t.after(() => { if (anterior === undefined) delete process.env.CLOUDFLARE_IMAGENS; else process.env.CLOUDFLARE_IMAGENS = anterior; });
+  const foto = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: 'white' } }).webp({ lossless: true }).toBuffer();
+  const chamadas = [];
+  const a = ambiente(t, { fotoOriginal: foto, cloudflareImageService: { fetch: async (url, init) => {
+    chamadas.push({ url, marcado: init.headers['x-fundo-clareado'] });
+    return new Response(foto);
+  } } });
+  assert.equal((await a.gerar({ tipo: 'produto', anuncio, foto: origem + uid + '/' + anuncio + '/original.webp' })).status, 200);
+  assert.equal(chamadas.length, 2);
+  assert.match(chamadas[0].url, /\/clarear-fundo$/);
+  assert.match(chamadas[1].url, /\/ajustar-produto$/);
+  assert.equal(chamadas[1].marcado, '1');
+});
