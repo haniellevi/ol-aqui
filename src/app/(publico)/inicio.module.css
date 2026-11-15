@@ -59,6 +59,7 @@
   justify-content: center;
   min-width: var(--spacing-toque);
   min-height: var(--spacing-toque);
+  background-color: var(--color-selecao);
 }
 
 @container busca-topo (width <= 12rem) {
