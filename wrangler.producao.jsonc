@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mercado-regiao-producao",
+  "main": ".open-next/worker.js",
+  "workers_dev": false,
+  "preview_urls": false,
+  "keep_vars": true,
+  "vars": { "VERCEL_ENV": "production", "CLOUDFLARE_IMAGENS": "1" },
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "services": [
+    { "binding": "WORKER_SELF_REFERENCE", "service": "mercado-regiao-producao" },
+    { "binding": "IMAGENS_TRATAMENTO", "service": "mercado-regiao-imagens" }
+  ],
+  "images": { "binding": "IMAGES" },
+  "observability": { "enabled": true, "logs": { "enabled": true }, "traces": { "enabled": true }, "redact_query_string": true }
+}

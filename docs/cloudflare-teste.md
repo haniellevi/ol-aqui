@@ -22,3 +22,9 @@ O domínio permanece na Vercel enquanto o candidato usa autenticação de teste 
 No banco de produção, as funções `categorizacao_ia_disparar`, `limpeza_disparar`, `moderacao_ia_disparar`, `radar_ia_novidades_disparar`, `verificacao_loja_disparar`, `verificacao_loja_reconferir_disparar` e `whatsapp_fila_disparar` ainda usam `ol-aqui.vercel.app`. Planejar uma migração revisada e reversível para o domínio principal antes de desligar a Vercel; não mudar os jobs durante a prévia. O endereço `olaki_loja_ia_endpoint` no Vault já usa o domínio principal. Os segredos de limpeza e moderação permanecem no Vault e não devem aparecer em código ou logs.
 
 A zona DNS da Cloudflare está pendente e os sete registros foram comparados com o Registro.br. Antes da delegação, conferir novamente todos os registros, planejar a transição do DNSSEC e manter a possibilidade de retornar à Vercel. A ativação da zona e a mudança do destino do domínio só devem ocorrer depois dos testes de produção.
+
+## Worker de produção isolado
+
+A branch `codex/cloudflare-release` usa `wrangler.producao.jsonc` e cria `mercado-regiao-producao` sem domínio, rota, URL de preview ou gatilho cron. O comando de implantação é `npx opennextjs-cloudflare deploy --config wrangler.producao.jsonc`. A build deve usar as chaves públicas de produção e manter a proteção de leitura ativada durante a geração das páginas. Segredos são configurados como secrets somente no Worker de produção e nunca no repositório ou na build.
+
+A disponibilidade de uma chave no cofre não prova que ela corresponda ao ambiente correto. Valide pares de chaves, hosts autorizados e assinaturas de webhooks antes de apontar tráfego real para o Worker, e verifique que as integrações agendadas tenham um único destino ativo. O plano gratuito de Images limita as transformações mensais; acompanhe a cota e obtenha aprovação antes de contratar um plano pago.
