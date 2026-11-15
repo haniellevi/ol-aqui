@@ -4,7 +4,7 @@ import { LINK_RADAR, linkPedirRadar } from "@/lib/rotas";
 
 export function CriarAnuncioInicio() {
   return (
-    <Botao href="/anunciar" variante="secundario" tamanho="toque" className="shrink-0 whitespace-nowrap max-sm:px-2!">
+    <Botao href="/anunciar" tamanho="toque" className="shrink-0 whitespace-nowrap max-sm:px-2!">
       <Plus className="hidden size-4 shrink-0 sm:block" aria-hidden />
       Criar anúncio
     </Botao>
