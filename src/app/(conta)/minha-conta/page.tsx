@@ -1,4 +1,5 @@
 import { formatarNome } from "@/lib/formatar-nome";
+import { Voltar } from "@/components/ui/voltar";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SignOutButton } from "@clerk/nextjs";
@@ -41,6 +42,7 @@ export default async function PaginaMinhaConta() {
   if (!conta) {
     return (
       <PaginaConta>
+        <Voltar />
         <Vazio titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
           <Botao href="/minha-conta" larguraTotal>Tentar de novo</Botao>
         </Vazio>
@@ -87,6 +89,7 @@ export default async function PaginaMinhaConta() {
 
   return (
     <PaginaConta larga>
+      <Voltar />
       <h1 className="text-titulo font-semibold text-beringela">Minha conta</h1>
       <div className="flex flex-col gap-4">
         <div className="flex min-w-0 flex-col gap-4">

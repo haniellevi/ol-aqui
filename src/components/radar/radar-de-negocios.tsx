@@ -2,6 +2,7 @@ import { formatarNome } from "@/lib/formatar-nome";
 // components/radar/radar-de-negocios.tsx
 // Radar de Negócios: a "lista quente" invertida do Mercado da Região.
 // "Propor" abre a tela do pedido (/radar/[id]) com a folha de proposta: anúncio ou foto, preço e mensagem.
+import { Voltar } from "@/components/ui/voltar";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BadgeCheck, Clock, Flame, Hourglass, Lock, MapPin, MapPinOff, Lightbulb, MessageCircle, Radar, Send, ShieldCheck, Users } from "lucide-react";
@@ -93,6 +94,7 @@ export function RadarDeNegocios({
   // Usa os mesmos tamanhos de texto e controles das demais áreas do site.
   return (
     <main className="mx-auto min-h-dvh max-w-5xl bg-fundo pb-6">
+      <div className="px-4 pt-3"><Voltar /></div>
       <header className=" border-b border-borda bg-cartao px-4 py-3">
         <div className="flex items-center gap-2">
           <Radar className="size-5 text-laranja-escuro" aria-hidden />

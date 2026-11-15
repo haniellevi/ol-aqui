@@ -1,4 +1,5 @@
 import { formatarNome } from "@/lib/formatar-nome";
+import { Voltar } from "@/components/ui/voltar";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
@@ -124,7 +125,7 @@ function agrupar(anuncios: AnuncioVitrine[]) {
 export default async function PaginaLoja({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const v = await vitrinePublica(slug).catch(() => undefined);
-  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8"><h1 className="text-titulo font-semibold text-balance">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} tamanho="toque" larguraTotal>Tentar novamente</Botao></main>;
+  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8"><Voltar /><h1 className="text-titulo font-semibold text-balance">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} tamanho="toque" larguraTotal>Tentar novamente</Botao></main>;
   if (!v) notFound();
   const ordem = lerOrdem(sp.ordem);
   const pagina = lerPagina(sp.pagina);
@@ -183,6 +184,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
 
   return (
     <main className={`mx-auto flex w-full max-w-6xl flex-col gap-4 md:px-4 md:pt-4 ${temBarra ? "pb-18 md:pb-8" : "pb-8"}`}>
+      <div className="px-4 pt-3 md:px-0 md:pt-0"><Voltar /></div>
       {v.status !== "ativa" && (
         <Alert variant="warning" role="status" className="mx-4 mt-3 md:mx-0 md:mt-0">
           Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : v.status === "montagem" ? "em montagem" : "plano vencido"}). Visível apenas para o responsável e a equipe Mercado da Região.

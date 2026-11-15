@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Voltar } from "@/components/ui/voltar";
 import { FileText, LifeBuoy } from "lucide-react";
 import { regiaoAtual } from "@/lib/dados/regiao";
 import { ajudaCompleta, contatoEquipe, precosDestaqueAjuda } from "@/lib/dados/paginas";
@@ -72,6 +73,7 @@ export default async function PaginaAjuda() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-4 [overflow-wrap:anywhere]">
+      <Voltar />
       <header className="flex flex-wrap items-center justify-between gap-x-2">
         <h1 className="text-titulo font-semibold text-beringela">Ajuda</h1>
         <a href="#titulo-contato" className={classesBotao("texto", false, "", "toque")}>
