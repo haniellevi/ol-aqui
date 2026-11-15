@@ -246,7 +246,8 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
   --sidebar-ring: var(--color-laranja-escuro);
 }
 
-.publico:has([data-inicio]) .busca-cabecalho { display: none; }
+/* Uma busca só por tela (DESIGN.md, seção 9): página com busca própria esconde a do cabeçalho. */
+.publico:has(#conteudo form[role="search"]) .busca-cabecalho { display: none; }
 
 @media (width < 48rem) {
   .publico:has([data-barra-loja]) [data-aki-atalho] {

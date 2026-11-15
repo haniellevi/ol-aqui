@@ -8,7 +8,7 @@ import { escolherCidade } from "@/app/(publico)/cidades/actions";
 import type { Cidade } from "@/lib/tipos";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "./dropdown-menu";
 
-const estilo = "ml-1 inline-flex min-h-11 min-w-0 items-center gap-1 rounded-full border border-borda bg-cartao px-2 md:px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
+const estilo = "ml-1 inline-flex min-h-controle min-w-0 items-center gap-1 rounded-full border border-borda bg-cartao px-2 md:px-3 text-rotulo font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro";
 
 export function MenuCidades({ cidade, regiao, cidades }: { cidade: string | null; regiao?: string; cidades: Cidade[] }) {
   const rotulo = cidade ?? "Escolher cidade";
@@ -45,7 +45,7 @@ function OpcoesCidade({ cidade, regiao, cidades, rotulo, children }: {
             {cidades.map((opcao) => {
               const atual = opcao.microrregiao_id === regiao && opcao.nome === cidade;
               return (
-                <DropdownMenuItem key={opcao.id} className="min-h-11" label={opcao.nome} aria-current={atual ? "true" : undefined}
+                <DropdownMenuItem key={opcao.id} className="min-h-controle" label={opcao.nome} aria-current={atual ? "true" : undefined}
                   onClick={() => {
                     if (!id.current) return;
                     id.current.value = opcao.id;

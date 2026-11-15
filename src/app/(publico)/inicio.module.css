@@ -51,19 +51,3 @@
   }
 }
 
-.busca form > div {
-  min-height: 3rem;
-}
-
-.busca button[type="submit"] {
-  justify-content: center;
-  min-width: var(--spacing-toque);
-  min-height: var(--spacing-toque);
-}
-
-@container busca-topo (width <= 12rem) {
-  .busca form > div {
-    gap: 0.25rem;
-    padding-inline-start: 0.5rem;
-  }
-}
