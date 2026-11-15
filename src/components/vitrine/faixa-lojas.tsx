@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
+import { Badge } from "@/components/ui/badge";
 import { Chip } from "@/components/ui/chip";
 import { IconeCategoria } from "@/components/ui/icone-categoria";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
@@ -12,7 +13,7 @@ import { linkLoja } from "@/lib/formato";
 import type { TipoLoja } from "@/lib/tipos-de-loja";
 
 // A home mostra a fileira de lojas. A busca fica no catálogo /lojas.
-type LojaFaixa = { id: string; slug: string; nome: string; logo_url: string | null; verificada: boolean; tipos: string[] };
+type LojaFaixa = { id: string; slug: string; nome: string; logo_url: string | null; verificada: boolean; patrocinada?: boolean; tipos: string[] };
 
 const SETA =
   "grid size-11 shrink-0 place-items-center rounded-campo border border-borda bg-cartao text-beringela " +
@@ -66,11 +67,17 @@ export function FaixaLojas({ titulo, lojas, tipos }: { titulo: string; lojas: Lo
                     const nome = formatarNome(l.nome);
                     return (
                       <li key={l.id} className="shrink-0 snap-start">
-                        <Link href={linkLoja(l.slug)} title={nome} className="olaki-toque grid aspect-[4/5] w-24 grid-rows-[minmax(0,1fr)_auto] overflow-hidden rounded-card border border-borda bg-cartao hover:border-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro md:aspect-square md:w-36">
+                        <Link href={linkLoja(l.slug)} title={nome} className="olaki-toque relative grid aspect-[4/5] w-24 grid-rows-[minmax(0,1fr)_auto] overflow-hidden rounded-card border border-borda bg-cartao hover:border-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro md:aspect-square md:w-36">
                           <AvatarVitrine nome={l.nome} logo={l.logo_url} tamanho="cartao" />
-                          <span className="flex min-h-10 items-center justify-between gap-1 bg-beringela px-2 py-1 text-legenda leading-tight font-semibold text-white">
+                          {l.patrocinada && <Badge variant="featured" className="absolute top-1 left-1 font-semibold">Patrocinado</Badge>}
+                          <span className="flex min-h-10 flex-col justify-center gap-0.5 bg-beringela px-2 py-1 text-legenda leading-tight font-semibold text-white">
                             <span className="line-clamp-2 [overflow-wrap:anywhere]">{nome}</span>
-                            {l.verificada && <ShieldCheck className="size-4 shrink-0" aria-label="Loja verificada" role="img" />}
+                            {l.verificada && (
+                              <span className="flex items-center gap-1 font-normal">
+                                <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
+                                Loja verificada
+                              </span>
+                            )}
                           </span>
                         </Link>
                       </li>

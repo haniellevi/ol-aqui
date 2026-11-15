@@ -31,6 +31,7 @@ export function GradeAnuncios({
 }) {
   if (anuncios.length === 0) return <>{vazio ?? null}</>;
   const colunas = horizontal ? "grid-cols-1 gap-2 md:gap-3" : compacto
+    // compacto: lista de uma coluna no celular (escolha "Lista" da busca); o Início usa a grade normal.
     ? "grid-cols-1 gap-1.5 md:grid-cols-3 md:gap-3 lg:grid-cols-4 xl:grid-cols-5"
     : "grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
   return (

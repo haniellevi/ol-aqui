@@ -63,7 +63,7 @@ test('início mantém os destaques regionais no feed, com tipo de loja e um só 
   assert.match(html, /role="group" aria-label="Tipo de loja"/);
   for (const nome of ['>Todos os tipos<', '>Pet<', '>Veículos<']) assert.ok(html.includes(nome), nome);
   for (const slug of ['multi', 'rvs']) assert.ok(html.includes(`href="/loja/${slug}"`));
-  assert.match(html, /aria-label="Loja verificada"/);
+  assert.match(html, />Loja verificada</);
   assert.match(html, /id="lojas-da-regiao"/);
   assert.match(html, /\[overflow-wrap:anywhere\][^>]*>Rvs Tecnologia e Comunicação do Extremo Sul<\/span>/);
   const lojasEm = html.indexOf('titulo-lojas');

@@ -170,7 +170,6 @@ components:
 As decisões foram tomadas pelo Raniel em 14/11/2026. **A base já está no código (onda 0):** fonte Figtree, régua de letras, `laranja-escuro` novo, alturas de 44/48 px, logo novo, botão único (`Botao` como casca do `Button`), preço do card em 16 px e o conferidor (`npm run design:conferir`).
 
 O que ainda segue o jeito antigo nas telas (ondas 1 a 5, seção 11):
-- três listas de categorias e dois blocos de lojas no Início;
 - listas de escolha e uma tabela escritas à mão (o ESLint avisa);
 - telas que escolhem `tamanho="pequeno"` ou alturas fixas por conta própria;
 - dívidas antigas registradas em `scripts/conferir-design.divida.json`.
@@ -340,7 +339,7 @@ Rótulo longo quebra linha e o botão cresce; nunca cortar o texto para caber.
 | Campo de texto | `field.tsx` + `input.tsx` + `textarea.tsx` | `campo.tsx` (`Campo`) | Borda e foco próprios num `<input>` |
 | Lista de escolha | `native-select.tsx` | `Seletor` (`src/components/conta/seletor.tsx`) | `select.tsx` em tela pública (o nativo abre a lista do celular) |
 | Selo e etiqueta | `badge.tsx` | `vitrine/selos.tsx` (`SeloLoja`) | `<span className="rounded-full bg-...">` |
-| Chip de filtro | `toggle.tsx` / `toggle-group.tsx` | `chip.tsx` (`Chip`) | Estado só por cor: selecionado leva ✓ |
+| Chip de filtro | `toggle.tsx` / `toggle-group.tsx` (estilos em `toggle-variants.ts`) | `chip.tsx` (`Chip`) | Estado só por cor: selecionado leva ✓ |
 | Cartão | `card.tsx` | `Cartao` do admin | `<div>` com borda e sombra à mão |
 | Carregando | `skeleton.tsx` | `carregando.tsx` (`CarregandoGrade`, `CarregandoLista`) | Texto "Carregando…" |
 | Tela vazia | `empty.tsx` | `vazio.tsx` (`Vazio`) | Tela vazia sem saída |
@@ -392,9 +391,9 @@ Só resposta ao toque: o botão encolhe para 97% em 100 ms (`olaki-acao`), o car
 
 Cada onda é uma tarefa própria, pequena e testável. Nunca "refazer o site inteiro".
 
-0. **Base (feita em 14/11/2026):** fonte Figtree, tokens do `globals.css` (régua nova, `laranja-escuro`, toque 44/48), `Botao` como casca do `Button` (estilos em `src/components/ui/button-variants.ts`; `Campo`, `Vazio`, `Folha` e `confirmar` já usavam as peças do shadcn), logo novo (`docs/marca/gerar-logos.mjs`, `public/logo/`, imagem de compartilhar), preço do card em 16 px e o conferidor ([docs/design-system/CONFERIDOR.md](docs/design-system/CONFERIDOR.md)). `Chip` continua com estilo próprio até a onda 2.
+0. **Base (feita em 14/11/2026):** fonte Figtree, tokens do `globals.css` (régua nova, `laranja-escuro`, toque 44/48), `Botao` como casca do `Button` (estilos em `src/components/ui/button-variants.ts`; `Campo`, `Vazio`, `Folha` e `confirmar` já usavam as peças do shadcn), logo novo (`docs/marca/gerar-logos.mjs`, `public/logo/`, imagem de compartilhar), preço do card em 16 px e o conferidor ([docs/design-system/CONFERIDOR.md](docs/design-system/CONFERIDOR.md)). `Chip` virou casca do `Toggle` na onda 2.
 1. **Casca do site (feita em 14/11/2026):** `CampoBusca` único (44 px, branco, lupa como botão, sem laranja); página com busca própria esconde a do cabeçalho; sugestões, seletor de cidade e links do rodapé com 44 px; links do cabeçalho em 14 px. A barra de baixo já seguia a regra.
-2. **Início e listagens:** uma faixa de categorias, chips de filtro, `GradeAnuncios` com o card novo, um bloco de lojas.
+2. **Início e listagens (feita em 15/11/2026):** `Chip` como casca do `Toggle` (estilos em `src/components/ui/toggle-variants.ts`); chips da folha de filtros e da busca na mesma regra (borda beringela e ✓); Início com anúncios em duas colunas no celular (sem o modo `compacto`); um bloco de lojas só: as lojas pagas entram primeiro em `LojasDaRegiao`, com "Patrocinado", e "Loja verificada" aparece escrito. O Início já tinha uma lista de categorias só (o menu "Categorias"); `FaixaCategorias` segue sem uso.
 3. **Anúncio e conversão:** página do anúncio, galeria, barra de contato fixa.
 4. **Área logada:** anunciar, meus anúncios, minha loja, conta.
 5. **Painel admin.**

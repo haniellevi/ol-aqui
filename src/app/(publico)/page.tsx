@@ -183,12 +183,14 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                     <h2 id="titulo-destaques" className="text-lg font-semibold">
                       {textoDe(bloco.titulo, "Destaques perto de você", lugar)}
                     </h2>
-                    <GradeAnuncios anuncios={destaques} acao={coracao} compacto voltarHref={voltarHref} className={estilos.trilhoDestaques} />
+                    <GradeAnuncios anuncios={destaques} acao={coracao} voltarHref={voltarHref} className={estilos.trilhoDestaques} />
                   </section>
                 ) : null;
 
               case "lojas_destaque":
-                return regiao ? (
+                // Um bloco de lojas por tela (DESIGN.md, seção 12): com "Lojas da região" ligado, as pagas
+                // entram nele, primeiro e com "Patrocinado". Desligado, as pagas continuam aqui.
+                return regiao && !blocoLojas ? (
                   <div key={bloco.chave} className="min-w-0 max-md:order-3 [&:empty]:hidden"><LojasEmDestaque regiao={regiao} titulo={textoDe(bloco.titulo, "Lojas em destaque", lugar)} /></div>
                 ) : null;
 
@@ -212,7 +214,6 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                         prioridade={destaques.length ? 0 : 2}
                         acao={coracao}
                         medirEm="inicio"
-                        compacto
                         voltarHref={voltarHref}
                         className="xl:grid-cols-4"
                         vazio={

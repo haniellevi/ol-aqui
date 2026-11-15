@@ -17,16 +17,16 @@ export function VistosRecentemente({ voltarHref }: { voltarHref?: string } = {})
         <button
           type="button"
           onClick={() => { limparVistos(); setVistos([]); }}
-          className="inline-flex min-h-11 items-center rounded-campo px-2 text-sm font-semibold text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+          className="inline-flex min-h-controle items-center rounded-campo px-2 text-sm font-semibold text-laranja-escuro hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro"
         >
           Limpar
         </button>
       </div>
-      <ul className="flex flex-col gap-1.5 md:-mx-4 md:flex-row md:snap-x md:snap-mandatory md:gap-3 md:overflow-x-auto md:px-4 md:pb-1 md:[scrollbar-width:none] lg:mx-0 lg:px-0">
+      <ul className="grid grid-cols-2 gap-3 md:-mx-4 md:flex md:flex-row md:snap-x md:snap-mandatory md:gap-3 md:overflow-x-auto md:px-4 md:pb-1 md:[scrollbar-width:none] lg:mx-0 lg:px-0">
         {vistos.map((a) => (
           <li key={a.id} className="flex md:w-44 md:shrink-0 md:snap-start">
             <div className="flex w-full flex-col [&>article]:flex-1">
-              <CardAnuncio anuncio={a} compacto voltarHref={voltarHref} />
+              <CardAnuncio anuncio={a} voltarHref={voltarHref} />
             </div>
           </li>
         ))}
