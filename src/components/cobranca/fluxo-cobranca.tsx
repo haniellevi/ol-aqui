@@ -226,7 +226,7 @@ export function FluxoCobranca({
     if (pagamento.devolver_motivo) {
       return (
         <CaixaResultado icone="erro" titulo="Recebemos seu pagamento, mas não deu para aplicar">
-          <p className="max-w-sm text-base text-texto-suave">
+          <p className="max-w-sm text-sm text-texto-suave">
             {pagamento.devolver_motivo} A equipe Mercado da Região vai devolver o seu dinheiro. Se tiver dúvida, fale com a gente.
           </p>
         </CaixaResultado>
@@ -240,12 +240,12 @@ export function FluxoCobranca({
     const devolvido = pagamento?.status === "estornado";
     return (
       <CaixaResultado icone="erro" titulo={devolvido ? "Este pagamento foi devolvido" : "Esta cobrança não vale mais"}>
-        <p className="max-w-sm text-base text-texto-suave">
+        <p className="max-w-sm text-sm text-texto-suave">
           {devolvido
             ? "O dinheiro voltou para você e o que ele dava foi desfeito. Se quiser, faça um pedido novo."
-            : "O prazo para pagar acabou ou você escolheu outra opção. Faça um pedido novo para gerar outro Pix."}
+            : "O prazo para pagar acabou ou você escolheu outra opção. Faça um pedido novo para gerar outra cobrança."}
         </p>
-        <Botao larguraTotal className="max-w-sm" onClick={recomecar}>
+        <Botao tamanho="acao" larguraTotal className="max-w-sm" onClick={recomecar}>
           Fazer um pedido novo
         </Botao>
       </CaixaResultado>
@@ -255,23 +255,30 @@ export function FluxoCobranca({
   /* ---------------------------- Aguardando ---------------------------- */
   if (etapa === "aguardando") {
     return (
-      <section className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
+      <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-3 sm:p-4">
         <Alert variant="warning" role="status" aria-live="polite" className="flex items-center gap-2">
-          <Loader2 className="size-5 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden />
-          <p className="text-base font-semibold">Aguardando pagamento{pagamento ? ` de ${preco(pagamento.valor_centavos)}` : ""}...</p>
+          <p className="text-sm font-semibold">Aguardando pagamento{pagamento ? ` de ${preco(pagamento.valor_centavos)}` : ""}</p>
         </Alert>
 
         {!cobranca ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-base text-texto-suave">{erro ? "A cobrança ainda não foi carregada." : "Carregando o pagamento..."}</p>
-            <Botao variante="secundario" disabled={pendente || desligado} carregando={emCurso === "trocar"} onClick={() => pagar(forma, "trocar")}>Recarregar cobrança</Botao>
-          </div>
+          desligado ? (
+            <Aviso tipo="info">O pagamento online não está disponível agora. Se já pagou, confira o status abaixo.</Aviso>
+          ) : erro ? (
+            <Botao variante="secundario" tamanho="toque" className="self-start" disabled={pendente || desligado} carregando={emCurso === "trocar"} onClick={() => pagar(forma, "trocar")}>
+              Recarregar cobrança
+            </Botao>
+          ) : (
+            <p role="status" className="flex items-center gap-2 text-sm text-texto-suave">
+              <Loader2 className="size-4 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden />
+              Carregando a cobrança…
+            </p>
+          )
         ) : cobranca.forma === "pix" ? (
           <PagarPix cobranca={cobranca} />
         ) : (
-          <div className="flex flex-col gap-3">
-            <p className="text-base">Toque no botão para abrir a página segura do cartão. Depois de pagar, volte aqui: a tela muda sozinha.</p>
-            <Botao href={cobranca.link} target="_blank" rel="noopener noreferrer" larguraTotal icone={<ExternalLink />}>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-texto-suave">Pague na página segura do Asaas. Ao voltar, confira o status aqui.</p>
+            <Botao href={cobranca.link} tamanho="acao" target="_blank" rel="noopener noreferrer" larguraTotal icone={<ExternalLink />}>
               Pagar no cartão
             </Botao>
           </div>
@@ -289,24 +296,25 @@ export function FluxoCobranca({
           </Aviso>
         )}
 
-        <div className="flex flex-col gap-2 border-t border-borda pt-3">
-          <Botao variante="secundario" larguraTotal carregando={emCurso === "conferir"} textoCarregando="Conferindo..." disabled={pendente} onClick={conferirAgora}>
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-1 border-t border-borda pt-2">
+          <Botao variante="secundario" tamanho="toque" carregando={emCurso === "conferir"} textoCarregando="Conferindo..." disabled={pendente} onClick={conferirAgora}>
             Já paguei
           </Botao>
           {cobranca && (
             <Botao
               variante="texto"
-              larguraTotal
+              tamanho="toque"
+              className="justify-start px-2 text-left"
               icone={cobranca.forma === "pix" ? <CreditCard /> : <QrCode />}
               carregando={emCurso === "trocar"}
               textoCarregando="Trocando..."
               disabled={pendente || desligado}
               onClick={() => pagar(cobranca.forma === "pix" ? "cartao" : "pix", "trocar")}
             >
-              {cobranca.forma === "pix" ? "Prefiro pagar no cartão" : "Prefiro pagar com Pix"}
+              {cobranca.forma === "pix" ? "Trocar para cartão" : "Trocar para Pix"}
             </Botao>
           )}
-          <Botao variante="texto" larguraTotal disabled={pendente} onClick={recomecar}>
+          <Botao variante="texto" tamanho="toque" className="col-span-2 justify-self-start" disabled={pendente} onClick={recomecar}>
             Escolher outra opção
           </Botao>
         </div>
@@ -316,15 +324,15 @@ export function FluxoCobranca({
 
   /* ----------------------------- Escolher ----------------------------- */
   return (
-    <section aria-labelledby="titulo-pagar" className="flex flex-col gap-4 rounded-card bg-cartao p-4 shadow-1">
+    <section aria-labelledby="titulo-pagar" className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-3 sm:p-4">
       <h2 id="titulo-pagar" className="text-lg font-semibold">
         Como você quer pagar?
       </h2>
       <div className="flex flex-wrap gap-2" role="group" aria-label="Forma de pagamento">
-        <Chip disabled={pendente} ativo={forma === "pix"} icone={<QrCode />} onClick={() => setForma("pix")}>
+        <Chip tamanho="toque" disabled={pendente} ativo={forma === "pix"} icone={<QrCode />} onClick={() => setForma("pix")}>
           Pix
         </Chip>
-        <Chip disabled={pendente} ativo={forma === "cartao"} icone={<CreditCard />} onClick={() => setForma("cartao")}>
+        <Chip tamanho="toque" disabled={pendente} ativo={forma === "cartao"} icone={<CreditCard />} onClick={() => setForma("cartao")}>
           Cartão
         </Chip>
       </div>
@@ -342,20 +350,21 @@ export function FluxoCobranca({
             setErroDoc(null);
           }}
           erro={erroDoc}
-          dica="O banco pede para gerar o pagamento. O Mercado da Região não guarda esse número."
+          dica="O Asaas pede esse número para gerar a cobrança. O Mercado da Região não o guarda."
         />
       )}
+      {nota && <div className="rounded-campo bg-fundo p-2.5 text-sm text-texto-suave">{nota}</div>}
       <Botao
+        tamanho="acao"
         larguraTotal
         icone={forma === "pix" ? <QrCode /> : <CreditCard />}
         carregando={emCurso === "pagar"}
-        textoCarregando={forma === "pix" ? "Gerando o Pix..." : "Abrindo o pagamento..."}
+        textoCarregando={forma === "pix" ? "Gerando o Pix..." : "Gerando a cobrança..."}
         disabled={pendente || desligado}
         onClick={() => pagar()}
       >
         {`Pagar ${preco(pagamento?.valor_centavos ?? valorCentavos)} ${forma === "pix" ? "com Pix" : "no cartão"}`}
       </Botao>
-      {nota && <div className="text-sm text-texto-suave">{nota}</div>}
       {erro && (
         <Aviso tipo="erro">
           <span>{erro.mensagem}</span>
@@ -366,17 +375,17 @@ export function FluxoCobranca({
   );
 }
 
-/** Caixa de resultado (pronto, cancelado, devolver) com ícone grande. */
+/** Caixa de resultado (pronto, cancelado, devolver) com o status da cobrança. */
 export function CaixaResultado({ icone, titulo, children }: { icone: "ok" | "erro"; titulo: string; children?: ReactNode }) {
   return (
-    <section className="flex flex-col items-center gap-4 rounded-card bg-cartao p-6 text-center shadow-1" aria-live="polite">
+    <section className="flex flex-col items-center gap-2 rounded-card border border-borda bg-cartao p-4 text-center" aria-live="polite">
       <span
-        className={`grid size-20 place-items-center rounded-full ${icone === "ok" ? "bg-sucesso-fundo text-verde-escuro" : "bg-perigo-fundo text-perigo"}`}
+        className={`grid size-10 place-items-center rounded-full ${icone === "ok" ? "bg-sucesso-fundo text-verde-escuro" : "bg-perigo-fundo text-perigo"}`}
         aria-hidden
       >
-        {icone === "ok" ? <CheckCircle2 className="size-10" /> : <XCircle className="size-10" />}
+        {icone === "ok" ? <CheckCircle2 className="size-6" /> : <XCircle className="size-6" />}
       </span>
-      <h2 className="text-xl font-semibold">{titulo}</h2>
+      <h2 className="text-lg font-semibold text-beringela">{titulo}</h2>
       {children}
     </section>
   );

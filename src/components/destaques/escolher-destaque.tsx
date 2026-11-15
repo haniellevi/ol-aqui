@@ -498,9 +498,9 @@ export function PagarPix({ cobranca }: { cobranca: Extract<Cobranca, { forma: "p
   if (!cobranca.copiaECola && !cobranca.qrCodeBase64) {
     return (
       <div className="flex flex-col gap-3">
-        <p className="text-base">Toque no botão para ver o Pix na página segura de pagamento.</p>
+        <p className="text-sm text-texto-suave">Abra a página segura do Asaas para ver o Pix.</p>
         {cobranca.link && (
-          <Botao href={cobranca.link} target="_blank" rel="noopener noreferrer" larguraTotal icone={<ExternalLink />}>
+          <Botao href={cobranca.link} tamanho="acao" target="_blank" rel="noopener noreferrer" larguraTotal icone={<ExternalLink />}>
             Ver o Pix
           </Botao>
         )}
@@ -510,19 +510,19 @@ export function PagarPix({ cobranca }: { cobranca: Extract<Cobranca, { forma: "p
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <ol className="w-full list-decimal space-y-1 pl-5 text-base">
-        <li>Toque em &quot;Copiar código Pix&quot;.</li>
-        <li>Abra o app do seu banco e escolha Pix &gt; Copia e cola.</li>
-        <li>Cole o código e confirme. A tela muda sozinha.</li>
-      </ol>
+      <p className="w-full text-sm text-texto-suave">
+        {cobranca.copiaECola
+          ? "Copie o código e cole na opção Pix Copia e Cola do app do seu banco."
+          : "Escaneie o QR Code com o app do seu banco para pagar."}
+      </p>
       {cobranca.qrCodeBase64 && (
         // eslint-disable-next-line @next/next/no-img-element -- QR em base64 vindo do Asaas
         <img
           src={`data:image/png;base64,${cobranca.qrCodeBase64}`}
           alt="QR Code do Pix"
-          width={220}
-          height={220}
-          className="size-56 rounded-card border border-borda bg-white p-2"
+          width={192}
+          height={192}
+          className="aspect-square w-48 max-w-full rounded-card border border-borda bg-white p-2"
         />
       )}
       {cobranca.copiaECola && (
@@ -534,13 +534,14 @@ export function PagarPix({ cobranca }: { cobranca: Extract<Cobranca, { forma: "p
             id="pix-copia-e-cola"
             readOnly
             value={cobranca.copiaECola}
-            rows={3}
-            className="w-full resize-none rounded-campo border border-borda bg-fundo p-3 font-mono text-legenda leading-5 break-all"
+            rows={2}
+            className="w-full resize-none rounded-campo border border-borda bg-fundo p-2.5 font-mono text-legenda leading-5 break-all"
             onFocus={(e) => e.currentTarget.select()}
           />
-          <Botao larguraTotal icone={copiado ? <CheckCircle2 /> : <Copy />} onClick={copiar}>
-            {copiado ? "Código copiado!" : "Copiar código Pix"}
+          <Botao tamanho="acao" larguraTotal icone={copiado ? <CheckCircle2 /> : <Copy />} onClick={copiar}>
+            {copiado ? "Código copiado" : "Copiar código Pix"}
           </Botao>
+          <span role="status" className="sr-only">{copiado ? "Código Pix copiado." : ""}</span>
           {erroCopia && <p role="status" className="text-sm text-perigo">Não foi possível copiar automaticamente. Selecione e copie o código acima.</p>}
         </>
       )}

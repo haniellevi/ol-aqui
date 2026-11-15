@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LINK_PLANOS, linkAvulso, linkMeuPlano } from "@/lib/rotas";
 import { auth } from "@clerk/nextjs/server";
-import { Radar } from "lucide-react";
+import { ExternalLink, Radar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { ehUuid, preco } from "@/lib/formato";
@@ -51,7 +51,7 @@ const TIPO_PAGAMENTO: Record<Pagamento["tipo"], string> = {
   destaque: "Destaque",
 };
 const STATUS_PAGAMENTO: Record<Pagamento["status"], { texto: string; cor: TomSelo }> = {
-  pendente: { texto: "Aguardando", cor: "warning" },
+  pendente: { texto: "Pendente", cor: "warning" },
   pago: { texto: "Pago", cor: "success" },
   vencido: { texto: "Vencido", cor: "destructive" },
   estornado: { texto: "Devolvido", cor: "secondary" },
@@ -153,17 +153,20 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
 
   return (
     <PaginaConta>
-      <TopoConta titulo="Meu plano" />
+      <TopoConta
+        titulo="Meu plano"
+        acao={<Botao href="#pagamentos" variante="secundario" tamanho="toque">Ver pagamentos</Botao>}
+      />
 
       {pagamentoLigado && ambiente === "sandbox" && <Aviso tipo="atencao">Pagamentos em ambiente de teste. Cobranças geradas aqui não têm valor real.</Aviso>}
       {busca.p && (!pagamentoPedido || !retomado || retomado.tipo !== "assinatura") && <Aviso tipo="atencao">Esse pagamento não está disponível nesta conta. Confira seu histórico abaixo.</Aviso>}
       {/* Plano atual */}
-      <section aria-labelledby="plano-atual" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h2 id="plano-atual" className="text-sm font-semibold text-texto-suave uppercase">
-          Plano atual
-        </h2>
-        <p className="text-xl font-bold">{resumo.nome ?? planoRpc?.nome ?? "Sem plano ativo"}</p>
-        {conta.plano?.descricao && <p className="text-base text-texto-suave">{conta.plano.descricao}</p>}
+      <section aria-labelledby="plano-atual" className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-3 sm:p-4">
+        <div className="space-y-1">
+          <h2 id="plano-atual" className="text-sm font-semibold text-texto-suave">Plano atual</h2>
+          <p className="text-lg font-semibold leading-tight text-beringela [overflow-wrap:anywhere]">{resumo.nome ?? planoRpc?.nome ?? "Sem plano ativo"}</p>
+          {conta.plano?.descricao && <p className="text-sm text-texto-suave">{conta.plano.descricao}</p>}
+        </div>
 
         {resumo.venceu && (
           <Aviso tipo="atencao">
@@ -204,8 +207,8 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
           </Aviso>
         )}
 
-        <div className="flex flex-col gap-2">
-          <p className="text-base font-semibold">{resumo.uso}</p>
+        <div className="flex flex-col gap-1.5 border-t border-borda pt-3">
+          <p className="text-sm font-semibold tabular-nums">{resumo.uso}</p>
           {pct !== null && (
             <div
               role="progressbar"
@@ -214,7 +217,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
               aria-valuemax={conta.limite ?? 0}
               aria-valuenow={Math.min(conta.ativos, conta.limite ?? conta.ativos)}
               aria-valuetext={resumo.uso}
-              className="h-3 w-full overflow-hidden rounded-full bg-borda"
+              className="h-2 w-full overflow-hidden rounded-full bg-borda"
             >
               <div className={`h-full rounded-full ${pct >= 100 ? "bg-perigo" : "bg-laranja"}`} style={{ width: `${pct}%` }} />
             </div>
@@ -227,7 +230,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
         </div>
 
         {resumo.venceEm && (
-          <p className="text-base">
+          <p className="text-sm">
             {conta.plano?.e_teste ? "Teste grátis até " : "Vale até "}
             <strong>{dataPorExtenso(resumo.venceEm)}</strong>
             {resumo.diasRestantes !== null && (
@@ -239,14 +242,14 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
           </p>
         )}
         {linhaRadarPlano && (
-          <p className="flex items-center gap-2 text-base">
-            <Radar className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
+          <p className="flex items-start gap-2 text-sm">
+            <Radar className="mt-0.5 size-4 shrink-0 text-laranja-escuro" aria-hidden />
             {linhaRadarPlano}
           </p>
         )}
         {cortesiaAte && (
-          <p className="flex items-center gap-2 text-base">
-            <Radar className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
+          <p className="flex items-start gap-2 text-sm">
+            <Radar className="mt-0.5 size-4 shrink-0 text-laranja-escuro" aria-hidden />
             Radar liberado por cortesia até {diaMesCurto(cortesiaAte)}
           </p>
         )}
@@ -258,10 +261,10 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
       {assinatura && !suspensa && (
         <section aria-labelledby="planos" className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 id="planos" className="text-lg font-bold">
+            <h2 id="planos" tabIndex={-1} className="scroll-mt-24 text-lg font-semibold">
               {assinatura.situacao === "ativa" ? "Renovar ou trocar de plano" : "Assinar um plano"}
             </h2>
-            <Link href={LINK_PLANOS} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+            <Link href={LINK_PLANOS} className="inline-flex min-h-toque items-center text-sm font-semibold text-laranja-escuro underline underline-offset-4">
               Comparar todos os planos
             </Link>
           </div>
@@ -275,76 +278,65 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
             pagamentoInicial={retomado?.tipo === "assinatura" ? retomado : null}
           />
           <p className="text-sm text-texto-suave">
-            Sem renovação automática: cada pagamento vale por um período. Você decide quando renovar em Meu plano.
+            A renovação é manual. Você decide quando pagar de novo.
           </p>
         </section>
       )}
 
       {/* Pagamentos */}
       <section aria-labelledby="pagamentos" className="flex flex-col gap-3">
-        <h2 id="pagamentos" className="text-lg font-bold">
-          Pagamentos
-        </h2>
+        <h2 id="pagamentos" tabIndex={-1} className="scroll-mt-24 text-lg font-semibold">Pagamentos</h2>
         {pagamentos.length === 0 ? (
-          <p className="rounded-card bg-cartao p-4 text-base text-texto-suave shadow-1">{pagina > 1 ? "Não há pagamentos nesta página." : "Você ainda não tem pagamentos."}</p>
+          <p className="rounded-card border border-borda bg-cartao p-3 text-sm text-texto-suave sm:p-4">{pagina > 1 ? "Não há pagamentos nesta página." : "Você ainda não tem pagamentos."}</p>
         ) : (
-          <ul className="divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
+          <ul className="divide-y divide-borda rounded-card border border-borda bg-cartao">
             {pagamentos.map((p) => {
               const st = STATUS_PAGAMENTO[p.status] ?? { texto: "Em análise", cor: "secondary" };
               const linkSeguro = linkPagamentoSeguro(p.link_pagamento);
               const quando = p.pago_em ?? p.vencimento ?? p.criado_em;
+              const rotuloData = p.pago_em ? "Pago em" : p.vencimento ? (p.status === "vencido" ? "Venceu em" : "Vencimento:") : "Criado em";
+              const destino = pagamentoLigado && p.status === "pendente"
+                ? p.tipo === "assinatura"
+                  ? `${linkMeuPlano({ pagamentoId: p.id })}#planos`
+                  : p.tipo === "anuncio_avulso" && p.anuncio_id
+                    ? linkAvulso(p.anuncio_id, p.id)
+                    : linkSeguro
+                : null;
+              const externo = Boolean(destino && destino === linkSeguro);
               return (
-                <li key={p.id} className="flex flex-col gap-1 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-base font-semibold">
-                      {TIPO_PAGAMENTO[p.tipo]}
-                      {p.tipo === "assinatura" && p.plano_codigo ? ` · ${nomes.get(p.plano_codigo) ?? p.plano_codigo}` : ""}
-                    </span>
-                    <span className="text-base font-bold tabular-nums">{preco(p.valor_centavos)}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-sm text-texto-suave">
+                <li key={p.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-1.5 p-3 sm:p-4">
+                  <span className="pt-0.5 text-sm font-semibold [overflow-wrap:anywhere]">
+                    {(p.tipo === "assinatura" && p.plano_codigo && nomes.get(p.plano_codigo)) || TIPO_PAGAMENTO[p.tipo]}
+                  </span>
+                  <span className="text-right text-lg leading-tight font-bold whitespace-nowrap text-beringela tabular-nums">{preco(p.valor_centavos)}</span>
+                  <div className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-texto-suave">
                     <Badge variant={st.cor}>{st.texto}</Badge>
-                    <span>{dataPorExtenso(quando)}</span>
-                    {p.forma && <span>· {FORMA[p.forma]}</span>}
+                    <span>{rotuloData} {dataPorExtenso(quando)}{p.forma && ` · ${FORMA[p.forma]}`}</span>
                   </div>
-                  {pagamentoLigado && (p.status === "pendente" && p.tipo === "assinatura" ? (
-                    <Link
-                      href={linkMeuPlano({ pagamentoId: p.id })}
-                      className="inline-flex min-h-10 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
+                  {destino && (
+                    <Botao
+                      href={destino}
+                      variante="texto"
+                      tamanho="toque"
+                      className="col-span-2 w-fit px-0"
+                      target={externo ? "_blank" : undefined}
+                      rel={externo ? "noopener noreferrer" : undefined}
+                      icone={externo ? <ExternalLink /> : undefined}
                     >
-                      Pagar agora
-                    </Link>
-                  ) : p.status === "pendente" && p.tipo === "anuncio_avulso" && p.anuncio_id ? (
-                    <Link
-                      href={linkAvulso(p.anuncio_id, p.id)}
-                      className="inline-flex min-h-10 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
-                    >
-                      Pagar agora
-                    </Link>
-                  ) : (
-                    p.status === "pendente" &&
-                    linkSeguro && (
-                      <a
-                        href={linkSeguro!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-10 w-fit items-center font-semibold text-laranja-escuro underline underline-offset-4"
-                      >
-                        Pagar agora
-                      </a>
-                    )
-                  ))}
+                      Retomar pagamento
+                    </Botao>
+                  )}
                 </li>
               );
             })}
           </ul>
         )}
         {historico.total > 12 && <nav aria-label="Páginas de pagamentos" className="flex flex-wrap items-center justify-between gap-3">
-          {pagina > 1 && <Botao variante="secundario" href={`/minha-conta/plano?pagina=${pagina - 1}#pagamentos`}>Mais recentes</Botao>}
+          {pagina > 1 && <Botao variante="secundario" tamanho="toque" href={`/minha-conta/plano?pagina=${pagina - 1}#pagamentos`}>Mais recentes</Botao>}
           <span className="text-sm text-texto-suave tabular-nums">Página {pagina} de {Math.max(1, Math.ceil(historico.total / 12))}</span>
-          {pagina * 12 < historico.total && <Botao variante="secundario" href={`/minha-conta/plano?pagina=${pagina + 1}#pagamentos`}>Mais antigos</Botao>}
+          {pagina * 12 < historico.total && <Botao variante="secundario" tamanho="toque" href={`/minha-conta/plano?pagina=${pagina + 1}#pagamentos`}>Mais antigos</Botao>}
         </nav>}
-        {pagina > 1 && historico.total <= 12 && <Botao variante="secundario" href="/minha-conta/plano#pagamentos">Voltar aos pagamentos</Botao>}
+        {pagina > 1 && historico.total <= 12 && <Botao variante="secundario" tamanho="toque" href="/minha-conta/plano#pagamentos">Voltar aos pagamentos</Botao>}
       </section>
     </PaginaConta>
   );
