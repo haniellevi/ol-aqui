@@ -94,7 +94,7 @@ export async function PaginaDocumento({ tipo, versao }: { tipo: TipoDocumento; v
       )}
 
       <article aria-label={NOME_DOCUMENTO[tipo]} className="rounded-card border border-borda bg-cartao p-4 sm:p-6">
-        <Markdown texto={doc.conteudo} className="text-[0.9375rem]!" />
+        <Markdown texto={doc.conteudo} className="text-lg!" />
       </article>
 
       {historico && (

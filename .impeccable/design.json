@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-10T23:16:39-03:00",
+  "generatedAt": "2026-11-14T21:22:34-03:00",
   "title": "Design System: Mercado da Região",
   "extensions": {
     "colorMeta": {
@@ -37,16 +37,16 @@
       "laranja-escuro": {
         "role": "secondary",
         "displayName": "Laranja Tijolo",
-        "canonical": "#c2410c",
+        "canonical": "#b84010",
         "tonalRamp": [
-          "#481804",
-          "#782807",
-          "#a8380a",
-          "#d8480d",
-          "#f36c35",
-          "#f79d79",
-          "#fbcbb7",
-          "#feeee7"
+          "#461806",
+          "#75290a",
+          "#a4390e",
+          "#d34912",
+          "#ee6d3a",
+          "#f49e7c",
+          "#f9cbb9",
+          "#fdeee8"
         ]
       },
       "verde-escuro": {
@@ -213,23 +213,98 @@
           "#fbd4b6",
           "#fef1e7"
         ]
+      },
+      "perigo-fundo": {
+        "role": "error",
+        "displayName": "Rosa Alerta",
+        "canonical": "#fef2f2",
+        "tonalRamp": [
+          "#470505",
+          "#760909",
+          "#a60d0d",
+          "#d51010",
+          "#f03838",
+          "#f57a7a",
+          "#fab8b8",
+          "#fde7e7"
+        ]
+      },
+      "aviso-fundo": {
+        "role": "warning",
+        "displayName": "Creme Aviso",
+        "canonical": "#fffbeb",
+        "tonalRamp": [
+          "#4c3d00",
+          "#806600",
+          "#b28f00",
+          "#e6b800",
+          "#ffd429",
+          "#ffe270",
+          "#fff0b2",
+          "#fffae5"
+        ]
+      },
+      "sucesso-fundo": {
+        "role": "tertiary",
+        "displayName": "Verde Claro Sucesso",
+        "canonical": "#ecf8f1",
+        "tonalRamp": [
+          "#153823",
+          "#225d3b",
+          "#308252",
+          "#3ea86a",
+          "#62c58c",
+          "#97d9b2",
+          "#c7ead6",
+          "#ecf8f1"
+        ]
+      },
+      "patrocinado-fundo": {
+        "role": "secondary",
+        "displayName": "Pêssego Patrocinado",
+        "canonical": "#ffe4d1",
+        "tonalRamp": [
+          "#4c2000",
+          "#803500",
+          "#b24a00",
+          "#e65f00",
+          "#ff8129",
+          "#ffab70",
+          "#ffd2b2",
+          "#fff0e5"
+        ]
+      },
+      "coracao": {
+        "role": "error",
+        "displayName": "Coração Favorito",
+        "canonical": "#e11d48",
+        "tonalRamp": [
+          "#440916",
+          "#710f24",
+          "#9e1433",
+          "#cb1a41",
+          "#e74166",
+          "#ef8199",
+          "#f6bbc8",
+          "#fce8ed"
+        ]
       }
     },
     "shadows": [
       {
-        "name": "sombra-rasa",
+        "name": "shadow-1",
         "value": "0 1px 2px rgb(75 18 72 / 0.08)",
-        "purpose": "Cards públicos de anúncio."
+        "purpose": "Card público de anúncio."
       },
       {
-        "name": "sombra-base",
+        "name": "shadow-2",
         "value": "0 -2px 12px rgb(75 18 72 / 0.12)",
         "purpose": "Folhas, menus e o + Anunciar."
       },
       {
         "name": "fio-de-luz",
         "value": "0 0 0 0.5px rgb(75 18 72 / 0.12)",
-        "purpose": "Contorno do material translúcido das barras."
+        "purpose": "Contorno do material translúcido (.olaki-material) do cabeçalho, barra de baixo e barra de contato."
       }
     ],
     "motion": [
@@ -260,97 +335,113 @@
       "name": "Botão principal",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "O único botão laranja da tela.",
+      "description": "O único botão laranja da tela: ação principal, 48 px.",
       "html": "<button class=\"ds-btn-primario\">Publicar anúncio</button>",
-      "css": ".ds-btn-primario{font-family:Poppins,system-ui,sans-serif;min-height:40px;padding:0 16px;border-radius:8px;font-size:12px;font-weight:600;line-height:20px;cursor:pointer;transition:transform 100ms ease-out,background-color 150ms ease,filter 150ms ease;border:0;background:#ff6a13;color:#4b1248}.ds-btn-primario:hover{filter:brightness(.95)}.ds-btn-primario:active{transform:scale(.97)}.ds-btn-primario:focus-visible{outline:3px solid #c2410c;outline-offset:2px}"
+      "css": ".ds-btn-primario{font-family:Figtree,system-ui,sans-serif;padding:0 16px;border-radius:8px;font-size:14px;font-weight:600;line-height:1.45;cursor:pointer;transition:transform 100ms ease-out,background-color 150ms ease,filter 150ms ease;min-height:48px;border:0;background:#ff6a13;color:#4b1248}.ds-btn-primario:hover{filter:brightness(.95)}.ds-btn-primario:active{transform:scale(.97)}.ds-btn-primario:focus-visible{outline:3px solid #b84010;outline-offset:2px}"
     },
     {
       "name": "Botão WhatsApp",
       "kind": "button",
       "refersTo": "button-whatsapp",
-      "description": "Só para chamar o vendedor ou o comprador.",
+      "description": "Só para chamar o vendedor ou o comprador; um por tela, 48 px.",
       "html": "<button class=\"ds-btn-whats\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/></svg>Chamar no WhatsApp</button>",
-      "css": ".ds-btn-whats{font-family:Poppins,system-ui,sans-serif;min-height:40px;padding:0 16px;border-radius:8px;font-size:12px;font-weight:600;line-height:20px;cursor:pointer;transition:transform 100ms ease-out,background-color 150ms ease,filter 150ms ease;display:inline-flex;align-items:center;gap:8px;border:0;background:#0e7a3d;color:#fff}.ds-btn-whats:hover{filter:brightness(.95)}.ds-btn-whats:active{transform:scale(.97)}.ds-btn-whats:focus-visible{outline:3px solid #c2410c;outline-offset:2px}"
+      "css": ".ds-btn-whats{font-family:Figtree,system-ui,sans-serif;padding:0 16px;border-radius:8px;font-size:14px;font-weight:600;line-height:1.45;cursor:pointer;transition:transform 100ms ease-out,background-color 150ms ease,filter 150ms ease;min-height:48px;display:inline-flex;align-items:center;gap:8px;border:0;background:#0e7a3d;color:#fff}.ds-btn-whats:hover{filter:brightness(.95)}.ds-btn-whats:active{transform:scale(.97)}.ds-btn-whats:focus-visible{outline:3px solid #b84010;outline-offset:2px}"
     },
     {
       "name": "Botão secundário",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Ações de apoio como Salvar rascunho.",
+      "description": "Ações de apoio como Salvar rascunho; 44 px.",
       "html": "<button class=\"ds-btn-sec\">Salvar rascunho</button>",
-      "css": ".ds-btn-sec{font-family:Poppins,system-ui,sans-serif;min-height:40px;padding:0 16px;border-radius:8px;font-size:12px;font-weight:600;line-height:20px;cursor:pointer;transition:transform 100ms ease-out,background-color 150ms ease,filter 150ms ease;border:1px solid #4b1248;background:#fff;color:#4b1248}.ds-btn-sec:hover{background:#f7f8fa}.ds-btn-sec:active{transform:scale(.97)}.ds-btn-sec:focus-visible{outline:3px solid #c2410c;outline-offset:2px}"
+      "css": ".ds-btn-sec{font-family:Figtree,system-ui,sans-serif;padding:0 16px;border-radius:8px;font-size:14px;font-weight:600;line-height:1.45;cursor:pointer;transition:transform 100ms ease-out,background-color 150ms ease,filter 150ms ease;min-height:44px;border:1px solid #4b1248;background:#fff;color:#4b1248}.ds-btn-sec:hover{background:#f7f8fa}.ds-btn-sec:active{transform:scale(.97)}.ds-btn-sec:focus-visible{outline:3px solid #b84010;outline-offset:2px}"
     },
     {
       "name": "Campo",
       "kind": "input",
       "refersTo": "input",
-      "description": "Uma caixa só: rótulo visível, foco com anel, erro escrito.",
+      "description": "Uma caixa só: rótulo visível de 13 px, campo de 44 px com letra de 16 px no toque, foco com anel, erro escrito.",
       "html": "<label class=\"ds-campo\"><span>Preço</span><input placeholder=\"R$ 8.500\" inputmode=\"numeric\"></label>",
-      "css": ".ds-campo{font-family:Poppins,system-ui,sans-serif;display:flex;flex-direction:column;gap:4px;color:#342b3b}.ds-campo span{font-size:12px;font-weight:600}.ds-campo input{font-family:Poppins,system-ui,sans-serif;height:40px;padding:0 12px;border:1px solid #968b9e;border-radius:8px;background:#fff;color:#342b3b;font-size:13px}.ds-campo input::placeholder{color:#5e5266}.ds-campo input:focus-visible{outline:none;border-color:#c2410c;box-shadow:0 0 0 2px rgb(194 65 12 / .3)}"
+      "css": ".ds-campo{font-family:Figtree,system-ui,sans-serif;display:flex;flex-direction:column;gap:4px;color:#342b3b}.ds-campo span{font-size:13px;font-weight:600;line-height:1.45}.ds-campo input{font-family:Figtree,system-ui,sans-serif;height:44px;padding:0 12px;border:1px solid #968b9e;border-radius:8px;background:#fff;color:#342b3b;font-size:16px;caret-color:#b84010}.ds-campo input::placeholder{color:#5e5266}.ds-campo input:focus-visible{outline:none;border-color:#b84010;box-shadow:0 0 0 2px rgb(184 64 16 / .3)}"
     },
     {
       "name": "Chip de filtro",
       "kind": "chip",
       "refersTo": "chip",
-      "description": "Selecionado com lavanda, borda beringela e ✓.",
+      "description": "Chip de 44 px; selecionado com lavanda, borda beringela e ✓ (estado nunca só por cor).",
       "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">✓ Corrente</button><button class=\"ds-chip\" aria-pressed=\"false\">Até R$ 10 mil</button></div>",
-      "css": ".ds-chips{display:flex;gap:8px}.ds-chip{font-family:Poppins,system-ui,sans-serif;min-height:40px;padding:0 12px;border:1px solid #968b9e;border-radius:8px;background:#fff;color:#4b1248;font-size:12px;font-weight:600;cursor:pointer;transition:background-color 150ms ease}.ds-chip:hover{background:#f7f8fa}.ds-chip[aria-pressed=\"true\"]{background:#f0eaf5;border-color:#4b1248}.ds-chip:focus-visible{outline:3px solid #c2410c;outline-offset:2px}"
+      "css": ".ds-chips{display:flex;gap:8px}.ds-chip{font-family:Figtree,system-ui,sans-serif;min-height:44px;padding:0 12px;border:1px solid #968b9e;border-radius:8px;background:#fff;color:#4b1248;font-size:14px;font-weight:600;cursor:pointer;transition:background-color 150ms ease}.ds-chip:hover{background:#f7f8fa}.ds-chip[aria-pressed=\"true\"]{background:#f0eaf5;border-color:#4b1248}.ds-chip:focus-visible{outline:3px solid #b84010;outline-offset:2px}"
     },
     {
       "name": "Card de anúncio",
       "kind": "card",
       "refersTo": "card-anuncio",
-      "description": "Foto 4:3, preço, título em até 2 linhas, cidade e data.",
+      "description": "Foto 4:3, preço 16 px em 700, título 14 px em até 2 linhas, cidade e data em 12 px.",
       "html": "<article class=\"ds-card\"><div class=\"ds-card-foto\"></div><div class=\"ds-card-corpo\"><strong>R$ 8.500</strong><p>Moto Honda CG 160 Fan 2021, revisada</p><small>Corrente · há 2 dias</small></div></article>",
-      "css": ".ds-card{font-family:Poppins,system-ui,sans-serif;width:170px;overflow:hidden;border-radius:10px;background:#fff;box-shadow:0 1px 2px rgb(75 18 72 / .08);transition:transform 100ms ease-out}.ds-card:active{transform:scale(.98)}.ds-card-foto{aspect-ratio:4/3;background:#e6e0e9}.ds-card-corpo{padding:10px;display:flex;flex-direction:column;gap:2px}.ds-card-corpo strong{font-size:15px;font-weight:700;color:#4b1248;letter-spacing:-.01em}.ds-card-corpo p{margin:0;font-size:13px;line-height:1.45;color:#342b3b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ds-card-corpo small{font-size:11px;letter-spacing:.01em;color:#5e5266}"
+      "css": ".ds-card{font-family:Figtree,system-ui,sans-serif;width:170px;overflow:hidden;border-radius:10px;background:#fff;box-shadow:0 1px 2px rgb(75 18 72 / .08);transition:transform 100ms ease-out}.ds-card:active{transform:scale(.98)}.ds-card-foto{aspect-ratio:4/3;background:#e6e0e9}.ds-card-corpo{padding:10px;display:flex;flex-direction:column;gap:2px}.ds-card-corpo strong{font-size:16px;font-weight:700;line-height:1.25;color:#4b1248;font-variant-numeric:tabular-nums}.ds-card-corpo p{margin:0;font-size:14px;line-height:1.35;color:#342b3b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ds-card-corpo small{font-size:12px;line-height:1.4;letter-spacing:.01em;color:#5e5266}"
     },
     {
       "name": "Barra de baixo",
       "kind": "nav",
       "refersTo": "nav-bottom",
-      "description": "Navegação do celular sobre material translúcido, com o + Anunciar no meio.",
+      "description": "Navegação do celular sobre material translúcido, com o + Anunciar no meio; nomes em 12 px; some a partir de 768 px.",
       "html": "<nav class=\"ds-nav\"><a aria-current=\"page\">Início</a><a>Buscar</a><a class=\"ds-nav-mais\"><span>+</span>Anunciar</a><a>Radar</a><a>Conta</a></nav>",
-      "css": ".ds-nav{font-family:Poppins,system-ui,sans-serif;display:grid;grid-template-columns:repeat(5,1fr);height:56px;max-width:420px;background:color-mix(in srgb,#fff 74%,transparent);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:0 0 0 .5px rgb(75 18 72 / .12)}.ds-nav a{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px;font-size:11px;font-weight:600;color:#5e5266;cursor:pointer}.ds-nav a[aria-current]{color:#4b1248;text-decoration:underline 2px;text-underline-offset:4px}.ds-nav-mais{color:#4b1248!important}.ds-nav-mais span{display:grid;place-items:center;width:40px;height:40px;margin-top:-16px;margin-bottom:2px;border-radius:10px;background:#ff6a13;color:#4b1248;font-size:22px;font-weight:700;box-shadow:0 -2px 12px rgb(75 18 72 / .12)}"
+      "css": ".ds-nav{font-family:Figtree,system-ui,sans-serif;display:grid;grid-template-columns:repeat(5,1fr);height:56px;max-width:420px;background:color-mix(in srgb,#fff 74%,transparent);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:0 0 0 .5px rgb(75 18 72 / .12)}.ds-nav a{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px;font-size:12px;line-height:1.4;font-weight:600;color:#5e5266;cursor:pointer}.ds-nav a[aria-current]{color:#4b1248;text-decoration:underline 2px;text-underline-offset:4px}.ds-nav-mais{color:#4b1248!important}.ds-nav-mais span{display:grid;place-items:center;width:44px;height:44px;margin-top:-16px;margin-bottom:2px;border-radius:10px;background:#ff6a13;color:#4b1248;font-size:22px;font-weight:700;box-shadow:0 -2px 12px rgb(75 18 72 / .12)}"
     },
     {
       "name": "Logo",
       "kind": "custom",
       "refersTo": "header",
-      "description": "Marca do cabeçalho: M com o pin, Mercado em beringela e da Região em laranja.",
-      "html": "<span class=\"ds-logo\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 409 150\" width=\"98\" height=\"36\" role=\"img\" aria-label=\"Mercado da Região\">\n<path fill=\"none\" stroke=\"#4B1248\" stroke-width=\"23\" stroke-linejoin=\"round\" stroke-linecap=\"round\" d=\"M15.5 120.5V43.5L54 98L92.5 43.5V120.5\"/><path fill=\"#FF6A13\" d=\"M54 65C46.4 50.75 35 34.78 35 23A19 19 0 1 1 73 23C73 34.78 61.6 50.75 54 65Z\"/><circle cx=\"54\" cy=\"23\" r=\"7.2\" fill=\"#FFFFFF\"/><path fill=\"#4B1248\" d=\"M161.42 36.16L172.28 36.16L172.28 74.07L163.04 74.07L163.04 51.34L154.57 74.07L147.11 74.07L138.58 51.28L138.58 74.07L129.35 74.07L129.35 36.16L140.26 36.16L150.89 62.41L161.42 36.16M207.32 58.52Q207.32 59.81 207.16 61.22L186.26 61.22Q186.48 64.03 188.07 65.51Q189.67 67 191.99 67Q195.44 67 196.79 64.08L206.62 64.08Q205.87 67.05 203.90 69.43Q201.92 71.80 198.95 73.15Q195.98 74.50 192.31 74.50Q187.88 74.50 184.43 72.61Q180.97 70.72 179.03 67.21Q177.08 63.70 177.08 59Q177.08 54.31 179 50.80Q180.92 47.29 184.37 45.40Q187.83 43.51 192.31 43.51Q196.69 43.51 200.09 45.34Q203.49 47.18 205.41 50.58Q207.32 53.98 207.32 58.52M186.32 56.09L197.87 56.09Q197.87 53.71 196.25 52.31Q194.63 50.90 192.20 50.90Q189.88 50.90 188.29 52.25Q186.70 53.60 186.32 56.09M221.42 48.96Q223.04 46.48 225.47 45.04Q227.90 43.61 230.87 43.61L230.87 53.39L228.33 53.39Q224.87 53.39 223.15 54.87Q221.42 56.36 221.42 60.08L221.42 74.07L212.18 74.07L212.18 43.94L221.42 43.94L221.42 48.96M233.46 59Q233.46 54.31 235.38 50.80Q237.29 47.29 240.72 45.40Q244.15 43.51 248.58 43.51Q254.25 43.51 258.06 46.48Q261.86 49.45 263.05 54.85L253.22 54.85Q251.98 51.39 248.42 51.39Q245.88 51.39 244.37 53.36Q242.86 55.33 242.86 59Q242.86 62.68 244.37 64.65Q245.88 66.62 248.42 66.62Q251.98 66.62 253.22 63.16L263.05 63.16Q261.86 68.45 258.03 71.48Q254.20 74.50 248.58 74.50Q244.15 74.50 240.72 72.61Q237.29 70.72 235.38 67.21Q233.46 63.70 233.46 59M266.13 58.95Q266.13 54.31 267.88 50.80Q269.64 47.29 272.66 45.40Q275.69 43.51 279.41 43.51Q282.60 43.51 285 44.80Q287.41 46.10 288.70 48.20L288.70 43.94L297.94 43.94L297.94 74.07L288.70 74.07L288.70 69.80Q287.35 71.91 284.95 73.21Q282.55 74.50 279.36 74.50Q275.69 74.50 272.66 72.58Q269.64 70.67 267.88 67.13Q266.13 63.59 266.13 58.95M288.70 59Q288.70 55.55 286.78 53.55Q284.87 51.55 282.11 51.55Q279.36 51.55 277.44 53.52Q275.53 55.49 275.53 58.95Q275.53 62.41 277.44 64.43Q279.36 66.46 282.11 66.46Q284.87 66.46 286.78 64.46Q288.70 62.46 288.70 59M302.80 58.95Q302.80 54.31 304.55 50.80Q306.31 47.29 309.33 45.40Q312.35 43.51 316.08 43.51Q319.05 43.51 321.51 44.75Q323.96 45.99 325.37 48.10L325.37 34.11L334.60 34.11L334.60 74.07L325.37 74.07L325.37 69.75Q324.07 71.91 321.67 73.21Q319.27 74.50 316.08 74.50Q312.35 74.50 309.33 72.58Q306.31 70.67 304.55 67.13Q302.80 63.59 302.80 58.95M325.37 59Q325.37 55.55 323.45 53.55Q321.53 51.55 318.78 51.55Q316.03 51.55 314.11 53.52Q312.19 55.49 312.19 58.95Q312.19 62.41 314.11 64.43Q316.03 66.46 318.78 66.46Q321.53 66.46 323.45 64.46Q325.37 62.46 325.37 59M355.01 74.50Q350.59 74.50 347.05 72.61Q343.51 70.72 341.49 67.21Q339.46 63.70 339.46 59Q339.46 54.36 341.51 50.82Q343.57 47.29 347.13 45.40Q350.69 43.51 355.12 43.51Q359.55 43.51 363.11 45.40Q366.68 47.29 368.73 50.82Q370.78 54.36 370.78 59Q370.78 63.65 368.70 67.18Q366.62 70.72 363.03 72.61Q359.44 74.50 355.01 74.50M355.01 66.51Q357.66 66.51 359.52 64.57Q361.39 62.62 361.39 59Q361.39 55.39 359.58 53.44Q357.77 51.50 355.12 51.50Q352.42 51.50 350.64 53.41Q348.86 55.33 348.86 59Q348.86 62.62 350.61 64.57Q352.37 66.51 355.01 66.51\"/><path fill=\"#FF6A13\" d=\"M127.51 111.88Q127.51 107.24 129.27 103.73Q131.02 100.22 134.05 98.33Q137.07 96.44 140.80 96.44Q143.77 96.44 146.22 97.68Q148.68 98.92 150.08 101.03L150.08 87.04L159.32 87.04L159.32 127L150.08 127L150.08 122.68Q148.79 124.84 146.38 126.14Q143.98 127.43 140.80 127.43Q137.07 127.43 134.05 125.52Q131.02 123.60 129.27 120.06Q127.51 116.52 127.51 111.88M150.08 111.93Q150.08 108.48 148.17 106.48Q146.25 104.48 143.50 104.48Q140.74 104.48 138.82 106.45Q136.91 108.42 136.91 111.88Q136.91 115.34 138.82 117.36Q140.74 119.39 143.50 119.39Q146.25 119.39 148.17 117.39Q150.08 115.39 150.08 111.93M164.18 111.88Q164.18 107.24 165.93 103.73Q167.69 100.22 170.71 98.33Q173.74 96.44 177.46 96.44Q180.65 96.44 183.05 97.73Q185.45 99.03 186.75 101.13L186.75 96.87L195.98 96.87L195.98 127L186.75 127L186.75 122.73Q185.40 124.84 183 126.14Q180.59 127.43 177.41 127.43Q173.74 127.43 170.71 125.52Q167.69 123.60 165.93 120.06Q164.18 116.52 164.18 111.88M186.75 111.93Q186.75 108.48 184.83 106.48Q182.92 104.48 180.16 104.48Q177.41 104.48 175.49 106.45Q173.57 108.42 173.57 111.88Q173.57 115.34 175.49 117.36Q177.41 119.39 180.16 119.39Q182.92 119.39 184.83 117.39Q186.75 115.39 186.75 111.93M243.88 127L233.46 127L225.58 112.69L223.36 112.69L223.36 127L214.13 127L214.13 89.09L229.63 89.09Q234.11 89.09 237.27 90.66Q240.43 92.22 241.99 94.95Q243.56 97.68 243.56 101.03Q243.56 104.81 241.43 107.78Q239.29 110.75 235.13 111.99L243.88 127M223.36 96.76L223.36 106.16L229.09 106.16Q231.62 106.16 232.89 104.91Q234.16 103.67 234.16 101.40Q234.16 99.24 232.89 98Q231.62 96.76 229.09 96.76L223.36 96.76M277.74 111.45Q277.74 112.74 277.58 114.15L256.68 114.15Q256.90 116.96 258.49 118.44Q260.08 119.93 262.40 119.93Q265.86 119.93 267.21 117.01L277.04 117.01Q276.28 119.98 274.31 122.36Q272.34 124.73 269.37 126.08Q266.40 127.43 262.73 127.43Q258.30 127.43 254.84 125.54Q251.39 123.65 249.44 120.14Q247.50 116.63 247.50 111.93Q247.50 107.24 249.42 103.73Q251.33 100.22 254.79 98.33Q258.25 96.44 262.73 96.44Q267.10 96.44 270.50 98.27Q273.91 100.11 275.82 103.51Q277.74 106.91 277.74 111.45M256.73 109.02L268.29 109.02Q268.29 106.64 266.67 105.24Q265.05 103.83 262.62 103.83Q260.30 103.83 258.70 105.18Q257.11 106.53 256.73 109.02M294.05 96.44Q297.23 96.44 299.64 97.73Q302.04 99.03 303.34 101.13L303.34 96.87L312.57 96.87L312.57 126.95Q312.57 131.10 310.92 134.48Q309.28 137.85 305.90 139.85Q302.53 141.85 297.50 141.85Q290.81 141.85 286.65 138.69Q282.49 135.53 281.90 130.13L291.02 130.13Q291.46 131.86 293.08 132.86Q294.70 133.86 297.07 133.86Q299.93 133.86 301.63 132.21Q303.34 130.56 303.34 126.95L303.34 122.68Q301.99 124.79 299.61 126.11Q297.23 127.43 294.05 127.43Q290.32 127.43 287.30 125.52Q284.27 123.60 282.52 120.06Q280.76 116.52 280.76 111.88Q280.76 107.24 282.52 103.73Q284.27 100.22 287.30 98.33Q290.32 96.44 294.05 96.44M303.34 111.93Q303.34 108.48 301.42 106.48Q299.50 104.48 296.75 104.48Q293.99 104.48 292.08 106.45Q290.16 108.42 290.16 111.88Q290.16 115.34 292.08 117.36Q293.99 119.39 296.75 119.39Q299.50 119.39 301.42 117.39Q303.34 115.39 303.34 111.93M323.91 93.74Q321.48 93.74 319.94 92.31Q318.40 90.87 318.40 88.77Q318.40 86.61 319.94 85.18Q321.48 83.75 323.91 83.75Q326.29 83.75 327.82 85.18Q329.36 86.61 329.36 88.77Q329.36 90.87 327.82 92.31Q326.29 93.74 323.91 93.74M319.27 96.87L328.50 96.87L328.50 127L319.27 127L319.27 96.87M333.36 111.88Q333.36 107.24 335.12 103.73Q336.87 100.22 339.89 98.33Q342.92 96.44 346.64 96.44Q349.83 96.44 352.23 97.73Q354.64 99.03 355.93 101.13L355.93 96.87L365.17 96.87L365.17 127L355.93 127L355.93 122.73Q354.58 124.84 352.18 126.14Q349.78 127.43 346.59 127.43Q342.92 127.43 339.89 125.52Q336.87 123.60 335.12 120.06Q333.36 116.52 333.36 111.88M355.93 111.93Q355.93 108.48 354.01 106.48Q352.10 104.48 349.34 104.48Q346.59 104.48 344.67 106.45Q342.76 108.42 342.76 111.88Q342.76 115.34 344.67 117.36Q346.59 119.39 349.34 119.39Q352.10 119.39 354.01 117.39Q355.93 115.39 355.93 111.93M339.57 94.33Q340.87 86.34 347.02 86.34Q348.21 86.34 349.10 86.69Q349.99 87.04 351.29 87.74Q352.26 88.28 352.85 88.53Q353.45 88.77 354.10 88.77Q356.09 88.77 356.42 86.34L361.17 86.34Q359.87 94.33 353.72 94.33Q352.53 94.33 351.64 93.98Q350.75 93.63 349.45 92.93Q348.48 92.39 347.89 92.14Q347.29 91.90 346.64 91.90Q344.65 91.90 344.27 94.33L339.57 94.33M385.58 127.43Q381.15 127.43 377.61 125.54Q374.08 123.65 372.05 120.14Q370.03 116.63 370.03 111.93Q370.03 107.29 372.08 103.75Q374.13 100.22 377.69 98.33Q381.26 96.44 385.69 96.44Q390.11 96.44 393.68 98.33Q397.24 100.22 399.29 103.75Q401.35 107.29 401.35 111.93Q401.35 116.58 399.27 120.11Q397.19 123.65 393.60 125.54Q390.01 127.43 385.58 127.43M385.58 119.44Q388.22 119.44 390.09 117.50Q391.95 115.55 391.95 111.93Q391.95 108.32 390.14 106.37Q388.33 104.43 385.69 104.43Q382.99 104.43 381.20 106.34Q379.42 108.26 379.42 111.93Q379.42 115.55 381.18 117.50Q382.93 119.44 385.58 119.44\"/>\n</svg>\n</span>",
+      "description": "Marca do cabeçalho: M beringela segurando o pin laranja e \"Mercado da Região\" em uma linha, tudo beringela, Figtree Bold. O laranja fica só no pin. Arquivo: public/logo/mercado-da-regiao-marca.svg.",
+      "html": "<span class=\"ds-logo\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 677 136\" width=\"179\" height=\"36\" role=\"img\" aria-label=\"Mercado da Região\">\n<path fill=\"none\" stroke=\"#4B1248\" stroke-width=\"23\" stroke-linejoin=\"round\" stroke-linecap=\"round\" d=\"M15.5 120.5V43.5L54 98L92.5 43.5V120.5\"/><path fill=\"#FF6A13\" d=\"M54 65C46.4 50.75 35 34.78 35 23A19 19 0 1 1 73 23C73 34.78 61.6 50.75 54 65Z\"/><circle cx=\"54\" cy=\"23\" r=\"7.2\" fill=\"#FFFFFF\"/><path fill=\"#4B1248\" d=\"M137.21 103.70L128.71 103.70L128.71 60.30L137.95 60.30L150.60 79.02L163.25 60.30L172.42 60.30L172.42 103.70L163.99 103.70L163.99 73.57L150.60 93.28L137.21 73.63L137.21 103.70ZM194.68 104.44L194.68 104.44Q190.09 104.44 186.56 102.37Q183.02 100.29 181.01 96.63Q178.99 92.97 178.99 88.20L178.99 88.20Q178.99 83.43 181.07 79.77Q183.15 76.11 186.78 74.03Q190.40 71.96 195.11 71.96L195.11 71.96Q199.21 71.96 202.65 74.09Q206.09 76.23 208.17 80.36Q210.24 84.48 210.24 90.37L210.24 90.37L187.55 90.37Q187.86 93.47 190.22 95.30Q192.57 97.13 195.55 97.13L195.55 97.13Q198.09 97.13 199.70 96.04Q201.31 94.96 202.18 93.22L202.18 93.22L209.50 96.07Q207.51 100.04 203.86 102.24Q200.20 104.44 194.68 104.44ZM187.98 84.29L187.98 84.29L201.38 84.29Q201.19 82.37 200.14 81.19Q199.08 80.02 197.66 79.46Q196.23 78.90 194.87 78.90L194.87 78.90Q193.56 78.90 192.05 79.43Q190.53 79.95 189.38 81.13Q188.23 82.31 187.98 84.29ZM223.20 103.70L215.02 103.70L215.02 72.70L223.20 72.70L223.20 78.40Q225.12 75.49 228.07 74.03Q231.01 72.58 234.17 72.58L234.17 72.58L234.17 80.51Q231.32 80.51 228.81 81.22Q226.30 81.94 224.75 83.46Q223.20 84.98 223.20 87.39L223.20 87.39L223.20 103.70ZM253.46 104.44L253.46 104.44Q248.56 104.44 244.84 102.37Q241.12 100.29 238.98 96.63Q236.84 92.97 236.84 88.20L236.84 88.20Q236.84 83.43 238.95 79.77Q241.06 76.11 244.78 74.03Q248.50 71.96 253.33 71.96L253.33 71.96Q257.98 71.96 261.80 74.28Q265.61 76.61 267.41 80.88L267.41 80.88L259.72 83.61Q258.85 81.81 257.02 80.73Q255.19 79.64 252.96 79.64L252.96 79.64Q249.55 79.64 247.38 82.03Q245.21 84.42 245.21 88.20L245.21 88.20Q245.21 91.98 247.41 94.37Q249.61 96.76 253.08 96.76L253.08 96.76Q255.32 96.76 257.15 95.58Q258.97 94.40 259.84 92.48L259.84 92.48L267.59 95.21Q265.79 99.61 261.98 102.03Q258.17 104.44 253.46 104.44ZM282.41 104.44L282.41 104.44Q276.83 104.44 273.76 101.96Q270.69 99.48 270.69 94.96L270.69 94.96Q270.69 90.00 274.01 87.49Q277.33 84.98 283.34 84.98L283.34 84.98L290.66 84.98Q290.22 82.12 288.86 80.61Q287.49 79.09 284.95 79.09L284.95 79.09Q280.80 79.09 278.63 82.62L278.63 82.62L271.44 80.14Q272.30 78.16 273.98 76.27Q275.65 74.37 278.35 73.17Q281.05 71.96 284.95 71.96L284.95 71.96Q292.02 71.96 295.52 75.92Q299.03 79.89 298.90 86.53L298.90 86.53L298.72 103.70L291.09 103.70L290.97 100.10Q289.79 102.21 287.65 103.33Q285.51 104.44 282.41 104.44ZM283.77 97.62L283.77 97.62Q285.76 97.62 287.37 96.69Q288.98 95.76 289.91 94.28Q290.84 92.79 290.84 91.18L290.84 91.18L290.84 91.05L286.19 91.05Q282.16 91.05 280.61 92.01Q279.06 92.97 279.06 94.71L279.06 94.71Q279.06 96.07 280.30 96.85Q281.54 97.62 283.77 97.62ZM317.75 104.44L317.75 104.44Q313.47 104.44 310.34 102.46Q307.21 100.48 305.47 96.82Q303.74 93.16 303.74 88.20L303.74 88.20Q303.74 83.24 305.47 79.58Q307.21 75.92 310.34 73.94Q313.47 71.96 317.75 71.96L317.75 71.96Q320.79 71.96 323.14 73.23Q325.50 74.50 327.05 76.85L327.05 76.85L327.05 60.30L335.23 60.30L335.23 103.70L327.48 103.70L327.24 99.36Q325.69 101.78 323.27 103.11Q320.85 104.44 317.75 104.44ZM319.86 96.94L319.86 96.94Q322.90 96.94 324.91 94.65Q326.93 92.35 327.05 88.82L327.05 88.82L327.05 87.58Q326.93 84.05 324.88 81.78Q322.83 79.52 319.80 79.52L319.80 79.52Q316.45 79.52 314.34 81.94Q312.23 84.36 312.23 88.20L312.23 88.20Q312.23 92.04 314.37 94.49Q316.51 96.94 319.86 96.94ZM356.87 104.44L356.87 104.44Q352.10 104.44 348.44 102.37Q344.78 100.29 342.70 96.63Q340.63 92.97 340.63 88.20L340.63 88.20Q340.63 83.43 342.70 79.77Q344.78 76.11 348.41 74.03Q352.04 71.96 356.75 71.96L356.75 71.96Q361.52 71.96 365.18 74.03Q368.84 76.11 370.88 79.77Q372.93 83.43 372.93 88.20L372.93 88.20Q372.93 92.97 370.88 96.63Q368.84 100.29 365.21 102.37Q361.58 104.44 356.87 104.44ZM356.87 96.88L356.87 96.88Q360.28 96.88 362.42 94.46Q364.56 92.04 364.56 88.20L364.56 88.20Q364.56 84.36 362.39 81.94Q360.22 79.52 356.75 79.52L356.75 79.52Q353.34 79.52 351.17 81.94Q349.00 84.36 349.00 88.20L349.00 88.20Q349.00 92.04 351.20 94.46Q353.40 96.88 356.87 96.88ZM405.42 104.44L405.42 104.44Q401.14 104.44 398.01 102.46Q394.88 100.48 393.14 96.82Q391.41 93.16 391.41 88.20L391.41 88.20Q391.41 83.24 393.14 79.58Q394.88 75.92 398.01 73.94Q401.14 71.96 405.42 71.96L405.42 71.96Q408.46 71.96 410.81 73.23Q413.17 74.50 414.72 76.85L414.72 76.85L414.72 60.30L422.90 60.30L422.90 103.70L415.15 103.70L414.90 99.36Q413.35 101.78 410.94 103.11Q408.52 104.44 405.42 104.44ZM407.53 96.94L407.53 96.94Q410.56 96.94 412.58 94.65Q414.59 92.35 414.72 88.82L414.72 88.82L414.72 87.58Q414.59 84.05 412.55 81.78Q410.50 79.52 407.46 79.52L407.46 79.52Q404.12 79.52 402.01 81.94Q399.90 84.36 399.90 88.20L399.90 88.20Q399.90 92.04 402.04 94.49Q404.18 96.94 407.53 96.94ZM440.01 104.44L440.01 104.44Q434.43 104.44 431.36 101.96Q428.30 99.48 428.30 94.96L428.30 94.96Q428.30 90.00 431.61 87.49Q434.93 84.98 440.94 84.98L440.94 84.98L448.26 84.98Q447.83 82.12 446.46 80.61Q445.10 79.09 442.56 79.09L442.56 79.09Q438.40 79.09 436.23 82.62L436.23 82.62L429.04 80.14Q429.91 78.16 431.58 76.27Q433.26 74.37 435.95 73.17Q438.65 71.96 442.56 71.96L442.56 71.96Q449.62 71.96 453.13 75.92Q456.63 79.89 456.51 86.53L456.51 86.53L456.32 103.70L448.69 103.70L448.57 100.10Q447.39 102.21 445.25 103.33Q443.11 104.44 440.01 104.44ZM441.38 97.62L441.38 97.62Q443.36 97.62 444.97 96.69Q446.59 95.76 447.52 94.28Q448.45 92.79 448.45 91.18L448.45 91.18L448.45 91.05L443.80 91.05Q439.77 91.05 438.22 92.01Q436.67 92.97 436.67 94.71L436.67 94.71Q436.67 96.07 437.91 96.85Q439.15 97.62 441.38 97.62ZM487.44 103.70L478.95 103.70L478.95 60.30L495.07 60.30Q499.66 60.30 503.19 62.07Q506.73 63.83 508.71 67.00Q510.69 70.16 510.69 74.31L510.69 74.31Q510.69 78.59 508.40 81.84Q506.11 85.10 502.39 86.77L502.39 86.77L512.43 103.70L502.82 103.70L493.95 88.32Q493.52 88.32 493.15 88.32Q492.78 88.32 492.34 88.32L492.34 88.32L487.44 88.32L487.44 103.70ZM487.44 68.05L487.44 80.57L495.13 80.57Q497.98 80.57 499.94 78.81Q501.89 77.04 501.89 74.31L501.89 74.31Q501.89 71.52 499.87 69.79Q497.86 68.05 494.70 68.05L494.70 68.05L487.44 68.05ZM531.77 104.44L531.77 104.44Q527.19 104.44 523.65 102.37Q520.12 100.29 518.10 96.63Q516.09 92.97 516.09 88.20L516.09 88.20Q516.09 83.43 518.16 79.77Q520.24 76.11 523.87 74.03Q527.50 71.96 532.21 71.96L532.21 71.96Q536.30 71.96 539.74 74.09Q543.18 76.23 545.26 80.36Q547.34 84.48 547.34 90.37L547.34 90.37L524.64 90.37Q524.95 93.47 527.31 95.30Q529.67 97.13 532.64 97.13L532.64 97.13Q535.18 97.13 536.80 96.04Q538.41 94.96 539.28 93.22L539.28 93.22L546.59 96.07Q544.61 100.04 540.95 102.24Q537.29 104.44 531.77 104.44ZM525.08 84.29L525.08 84.29L538.47 84.29Q538.28 82.37 537.23 81.19Q536.18 80.02 534.75 79.46Q533.32 78.90 531.96 78.90L531.96 78.90Q530.66 78.90 529.14 79.43Q527.62 79.95 526.47 81.13Q525.33 82.31 525.08 84.29ZM566.06 116.91L566.06 116.91Q560.67 116.91 557.29 115.82Q553.91 114.74 552.17 113.50L552.17 113.50L555.40 106.92Q556.70 107.67 559.24 108.66Q561.78 109.65 565.69 109.65L565.69 109.65Q569.35 109.65 571.73 107.48Q574.12 105.31 574.12 100.60L574.12 100.60L574.12 97.62Q572.57 100.10 570.09 101.47Q567.61 102.83 564.45 102.83L564.45 102.83Q560.17 102.83 557.04 100.97Q553.91 99.11 552.17 95.76Q550.44 92.42 550.44 87.83L550.44 87.83Q550.44 82.99 552.17 79.43Q553.91 75.86 557.04 73.91Q560.17 71.96 564.45 71.96L564.45 71.96Q567.61 71.96 570.09 73.41Q572.57 74.87 574.12 77.54L574.12 77.54L574.12 72.70L582.30 72.70L582.30 100.35Q582.30 108.23 577.93 112.57Q573.56 116.91 566.06 116.91ZM566.80 95.95L566.80 95.95Q569.97 95.95 571.89 93.59Q573.81 91.24 573.81 87.58L573.81 87.58Q573.81 83.92 571.86 81.60Q569.90 79.27 566.74 79.27L566.74 79.27Q563.46 79.27 561.41 81.60Q559.36 83.92 559.30 87.58L559.30 87.58Q559.36 91.24 561.44 93.59Q563.52 95.95 566.80 95.95ZM598.05 103.70L589.87 103.70L589.87 72.70L598.05 72.70L598.05 103.70ZM593.96 67.68L593.96 67.68Q592.04 67.68 590.64 66.28Q589.25 64.89 589.25 62.97L589.25 62.97Q589.25 61.04 590.64 59.65Q592.04 58.25 593.96 58.25L593.96 58.25Q595.88 58.25 597.28 59.65Q598.67 61.04 598.67 62.97L598.67 62.97Q598.67 64.89 597.28 66.28Q595.88 67.68 593.96 67.68ZM615.66 104.44L615.66 104.44Q610.08 104.44 607.01 101.96Q603.94 99.48 603.94 94.96L603.94 94.96Q603.94 90.00 607.26 87.49Q610.58 84.98 616.59 84.98L616.59 84.98L623.91 84.98Q623.47 82.12 622.11 80.61Q620.74 79.09 618.20 79.09L618.20 79.09Q614.05 79.09 611.88 82.62L611.88 82.62L604.69 80.14Q605.55 78.16 607.23 76.27Q608.90 74.37 611.60 73.17Q614.30 71.96 618.20 71.96L618.20 71.96Q625.27 71.96 628.77 75.92Q632.28 79.89 632.15 86.53L632.15 86.53L631.97 103.70L624.34 103.70L624.22 100.10Q623.04 102.21 620.90 103.33Q618.76 104.44 615.66 104.44ZM617.02 97.62L617.02 97.62Q619.01 97.62 620.62 96.69Q622.23 95.76 623.16 94.28Q624.09 92.79 624.09 91.18L624.09 91.18L624.09 91.05L619.44 91.05Q615.41 91.05 613.86 92.01Q612.31 92.97 612.31 94.71L612.31 94.71Q612.31 96.07 613.55 96.85Q614.79 97.62 617.02 97.62ZM622.73 69.66L622.73 69.66Q620.68 69.66 619.47 68.98Q618.26 68.30 617.55 67.43Q616.84 66.56 616.25 65.88Q615.66 65.20 614.73 65.20L614.73 65.20Q613.99 65.20 613.43 65.63Q612.87 66.07 612.56 67.55L612.56 67.55L607.04 67.55Q607.91 59.87 614.48 59.87L614.48 59.87Q616.59 59.87 617.83 60.55Q619.07 61.23 619.81 62.10Q620.56 62.97 621.18 63.65Q621.80 64.33 622.73 64.33L622.73 64.33Q623.66 64.33 624.06 63.65Q624.46 62.97 624.59 61.91L624.59 61.91L630.11 61.91Q629.67 65.38 627.90 67.52Q626.14 69.66 622.73 69.66ZM652.92 104.44L652.92 104.44Q648.15 104.44 644.49 102.37Q640.83 100.29 638.75 96.63Q636.68 92.97 636.68 88.20L636.68 88.20Q636.68 83.43 638.75 79.77Q640.83 76.11 644.46 74.03Q648.09 71.96 652.80 71.96L652.80 71.96Q657.57 71.96 661.23 74.03Q664.89 76.11 666.93 79.77Q668.98 83.43 668.98 88.20L668.98 88.20Q668.98 92.97 666.93 96.63Q664.89 100.29 661.26 102.37Q657.63 104.44 652.92 104.44ZM652.92 96.88L652.92 96.88Q656.33 96.88 658.47 94.46Q660.61 92.04 660.61 88.20L660.61 88.20Q660.61 84.36 658.44 81.94Q656.27 79.52 652.80 79.52L652.80 79.52Q649.39 79.52 647.22 81.94Q645.05 84.36 645.05 88.20L645.05 88.20Q645.05 92.04 647.25 94.46Q649.45 96.88 652.92 96.88Z\"/>\n</svg></span>",
       "css": ".ds-logo{display:inline-flex;padding:8px;background:#fff;border-radius:10px}.ds-logo svg{height:32px;width:auto}"
     }
   ],
   "narrative": {
     "northStar": "A feira da cidade",
-    "overview": "**Creative North Star: \"A feira da cidade\"**\n\nO Mercado da Região deve parecer a feira da cidade: tudo perto, conhecido e direto. Cada anúncio é uma barraca organizada, com a foto do produto de verdade, o preço à vista e o vendedor a um toque, no WhatsApp. O logo diz isso sozinho: o \"M\" de Mercado segura o pin laranja da Região, e a cidade aparece no mapa. Nada de vitrine de shopping nacional, nada de brilho de startup.\n\nA interface é compacta e calma. Uma família de letra só (Poppins), duas cores da marca (beringela e laranja), cartões brancos sobre um fundo cinza bem claro e frio. A hierarquia vem do tamanho, do peso e do espaço, não de enfeite. Cada tela tem um botão principal laranja; o resto fica em beringela, borda ou texto. O cabeçalho e a barra de baixo flutuam como um material translúcido, e o conteúdo passa desfocado por baixo. O movimento só responde ao toque: o botão encolhe um pouco na hora em que o dedo encosta.\n\nO sistema é feito para o celular de entrada, de 360 px, no sol e com internet fraca. A escala foi compactada de propósito em 10/11/2026 para tirar o peso das telas; contraste forte e ícone com palavra seguram a leitura.",
+    "overview": "**Creative North Star: \"A feira da cidade\"**\n\nO Mercado da Região deve parecer a feira da cidade: tudo perto, conhecido e direto. Cada anúncio é uma barraca organizada, com a foto do produto de verdade, o preço à vista e o vendedor a um toque, no WhatsApp. O logo diz isso sozinho: o \"M\" beringela segura o pin laranja da Região, e o nome vem numa linha só, todo em beringela. Nada de vitrine de shopping nacional, nada de brilho de startup.\n\nA interface é calma e legível. Uma família de letra só (Figtree, 400/600/700), duas cores da marca (beringela e laranja), cartões brancos sobre um fundo cinza bem claro e frio. Só modo claro. A hierarquia vem do tamanho, do peso e do espaço, não de enfeite. Cada tela tem um botão principal laranja; o resto fica em beringela, borda ou texto. O cabeçalho e a barra de baixo flutuam como um material translúcido, e o conteúdo passa desfocado por baixo. O movimento só responde ao toque: o botão encolhe um pouco na hora em que o dedo encosta.\n\nO sistema é feito para o celular de entrada, de 360 a 412 px, no sol e com internet fraca. A régua de 14/11/2026 subiu o texto para 14 px, pôs piso de 12 px em toda letra e alvo de toque de 44 px (48 px na ação principal e no WhatsApp).",
     "keyCharacteristics": [
-      "Beringela para marca, títulos e texto de ação; laranja para o único botão principal, o pin do logo e o \"+ Anunciar\".",
-      "Fundo frio `fundo` com cartões brancos; bege e laranja-claro saíram da interface.",
-      "Poppins em três pesos (400, 600, 700), com letras mais juntas nos títulos e um pouco abertas nas legendas.",
-      "Escala compacta: texto de 13 px, controles de 40 px no toque e 36 px com mouse.",
-      "Cabeçalho e barra de baixo translúcidos com desfoque, sólidos quando o celular pede menos transparência.",
-      "Componentes shadcn/ui ligados aos mesmos tokens: um componente novo já nasce com as cores da marca."
+      "Beringela para marca, nome do logo, títulos e texto de ação; laranja só para o único botão principal, o pin do logo e o \"+ Anunciar\".",
+      "Fundo frio `fundo` com cartões brancos; bege e laranja-claro fora da interface; só modo claro.",
+      "Figtree em três pesos (400, 600, 700), com letras mais juntas nos títulos e um pouco abertas nas legendas.",
+      "Régua: legenda 12 px, rótulo 13, texto e título de card 14, seção e preço do card 16 (700), título da tela 18 (20 no computador), preço do anúncio 24.",
+      "Alturas: controles de 44 px no toque e 36 px com mouse; ação principal e WhatsApp com 48 px; ação pequena com 36 px visíveis.",
+      "Cabeçalho e barra de baixo translúcidos com desfoque, sólidos quando o celular pede menos transparência ou mais contraste.",
+      "Peças do shadcn/ui (sobre Base UI) ligadas aos mesmos tokens; as peças em português são cascas finas em volta delas."
     ],
     "rules": [
       {
         "name": "The Laranja Calado Rule",
-        "body": "Texto branco nunca vai sobre o laranja (2,9:1). Sobre laranja, o texto é beringela. Onde precisar de branco, o fundo é `laranja-escuro` ou beringela.",
+        "body": "Sobre laranja, o texto é beringela (4,95:1). Branco sobre laranja é proibido (2,87:1).",
+        "section": "colors"
+      },
+      {
+        "name": "The Laranja Não Escreve Rule",
+        "body": "O laranja `#ff6a13` nunca é cor de letra. Texto laranja é sempre `laranja-escuro` (`#b84010`, 5,56:1 sobre branco).",
         "section": "colors"
       },
       {
         "name": "The Um Laranja Rule",
-        "body": "Um botão laranja por tela. Dois laranjas brigando é erro, não destaque.",
+        "body": "Um botão laranja por tela. A caixa de busca não é laranja.",
         "section": "colors"
       },
       {
-        "name": "The Lavanda Calada Rule",
-        "body": "Sobre `selecao`, o texto é beringela; laranja-escuro ali não passa 4,5:1 em letra pequena.",
+        "name": "The Verde é do WhatsApp Rule",
+        "body": "Verde não vira cor de destaque, de preço nem de promoção. `verde-escuro` é do botão do WhatsApp e do sucesso; `verde` só de ícone e selo.",
         "section": "colors"
+      },
+      {
+        "name": "The Piso 12 Rule",
+        "body": "Nenhuma letra abaixo de 12 px, em lugar nenhum.",
+        "section": "typography"
+      },
+      {
+        "name": "The Preço Manda Rule",
+        "body": "O preço é sempre o texto mais forte do card: peso 700, beringela, nunca menor que o título, com `tabular-nums`.",
+        "section": "typography"
       },
       {
         "name": "The Três Pesos Rule",
-        "body": "Só 400, 600 e 700. O peso 700 é do preço, da vitrine e do logo; título e botão usam 600; valor de formulário e `<dd>` ficam em 400.",
+        "body": "Só 400, 600 e 700. O 700 é do preço, da vitrine e do logo.",
         "section": "typography"
       },
       {
@@ -360,12 +451,12 @@
       },
       {
         "name": "The Zoom Livre Rule",
-        "body": "Tamanhos em rem e zoom nunca travado. Muita gente da região usa letra grande no celular, e a tela tem que crescer junto.",
+        "body": "Tamanhos em rem e zoom nunca travado.",
         "section": "typography"
       },
       {
         "name": "The Borda Antes Rule",
-        "body": "Primeiro separe com `borda` ou com o contraste fundo/cartão. Sombra só nos casos acima.",
+        "body": "Separe com `borda` ou com o contraste fundo/cartão. Sombra só no card público (`shadow-1`), folhas, menus e o \"+ Anunciar\" (`shadow-2`), sempre tingida de beringela.",
         "section": "elevation"
       },
       {
@@ -377,21 +468,22 @@
     "dos": [
       "Do usar um único botão laranja com texto beringela por tela.",
       "Do escrever o nome ao lado de todo ícone importante; ícone sozinho só para lupa, coração, X e voltar.",
-      "Do usar os nomes da régua (`text-base`, `min-h-10`, `rounded-campo`) e as peças do shadcn ligadas aos tokens.",
-      "Do mostrar o preço sempre, com \"a combinar\" claro quando não houver valor.",
-      "Do escrever \"Patrocinado\" em anúncio pago e \"Exemplo\" em quadro ilustrativo.",
-      "Do usar fotos reais do produto anunciado.",
-      "Do dar uma saída em toda tela vazia (\"Pedir no Radar\", \"Perguntar ao Merc\")."
+      "Do dar 44 px a tudo que é tocável e 48 px à ação principal e ao WhatsApp.",
+      "Do mostrar o preço sempre, com \"a combinar\" quando não houver valor.",
+      "Do escrever \"Patrocinado\" em anúncio pago, \"Exemplo\" em quadro ilustrativo e \"Loja verificada\" por extenso.",
+      "Do dar uma saída em toda tela vazia (\"Pedir no Radar\", \"Anunciar\").",
+      "Do reutilizar as peças oficiais (CardAnuncio, CampoBusca, FaixaCategorias, BarraContato) e os nomes da régua."
     ],
     "donts": [
-      "Don't colocar texto branco sobre o laranja `#ff6a13`.",
-      "Don't usar roxo violeta vivo; o roxo da marca é só o beringela.",
-      "Don't esticar, inclinar, recolorir, sombrear ou tirar o pin do logo.",
-      "Don't voltar com bege ou `laranja-claro` como superfície.",
-      "Don't usar negrito fora de título, valor-chave, preço e botão.",
-      "Don't mostrar mais de duas ações à vista num card.",
-      "Don't usar imagem de banco de imagens na home.",
-      "Don't criar animação de entrada, movimento contínuo ou vídeo tocando sozinho."
+      "Don't escrever cor em hexadecimal ou tamanho à mão num componente.",
+      "Don't usar letra abaixo de 12 px ou alvo de toque abaixo de 44 px.",
+      "Don't colocar texto branco sobre o laranja nem usar o laranja como cor de letra.",
+      "Don't pôr duas buscas, duas listas de categorias ou dois blocos de lojas na mesma tela.",
+      "Don't mostrar mais de uma chamada de WhatsApp por tela nem mais de duas ações à vista num card.",
+      "Don't usar negrito fora de título, preço, valor-chave e botão.",
+      "Don't esticar, inclinar, recolorir, sombrear ou tirar o pin do logo, nem pintar o nome de laranja.",
+      "Don't usar roxo violeta vivo, bege ou `laranja-claro` como superfície.",
+      "Don't criar modo escuro, animação de entrada, movimento contínuo ou imagem de banco de imagens."
     ]
   }
 }

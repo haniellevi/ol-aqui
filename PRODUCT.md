@@ -50,7 +50,7 @@ Ideia da marca (docs/MARCA.md): o site grande de classificados engole cidade peq
 ## Brand Commitments
 
 - **Nome:** Mercado da Região (decidido pelo Raniel em 10/11/2026). Escreve-se com M e R maiúsculos e "da" minúsculo; nunca sigla para o público. O robô se chama **Merc** (decidido em 11/11/2026; antes era Aki).
-- **Logo oficial:** o "M" de Mercado segurando o pin laranja da Região, com o nome "Mercado da Região" em uma linha, todo em beringela, em Figtree Bold (decisão de 14/11/2026; os arquivos do logo ainda serão refeitos). Arquivos em `public/logo/` e `docs/marca/`, gerados por `docs/marca/gerar-logos.mjs`. Regras completas em `docs/MARCA.md`.
+- **Logo oficial:** o "M" de Mercado segurando o pin laranja da Região, com o nome "Mercado da Região" em uma linha, todo em beringela, em Figtree Bold (decisão de 14/11/2026). Arquivos em `public/logo/` e `docs/marca/`, gerados por `docs/marca/gerar-logos.mjs`. Regras completas em `docs/MARCA.md`.
 - **Frase:** "aqui a sua cidade aparece." Frases de apoio: "Compre, venda e peça perto de casa." · "O que a região tem, está aqui." · "Negócio fechado com quem é daqui."
 - **Tom:** fala como um vizinho que entende de negócio: direto, simples, bem-humorado, do interior com orgulho. Trata por "você". Provoca o site grande pela ideia, nunca pelo nome. Não promete venda garantida.
 

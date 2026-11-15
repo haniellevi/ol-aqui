@@ -18,7 +18,7 @@ export default async function Manutencao({ searchParams }: { searchParams: Promi
 
   return (
     <main id="conteudo" className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 py-8 sm:py-12">
-      <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={123} height={45} priority className="self-center" />
+      <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={224} height={45} priority className="self-center" />
       <header className="flex flex-col items-center gap-3 text-center">
         <span className="grid size-14 place-items-center rounded-full bg-selecao text-beringela" aria-hidden>
           <Wrench className="size-8" />

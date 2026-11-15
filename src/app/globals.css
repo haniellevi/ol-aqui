@@ -4,12 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Tokens do Mercado da Região (docs/DESIGN-SYSTEM.md, seção 6).
+/* Tokens do Mercado da Região (DESIGN.md, seções 2 a 5).
    Botão primário = fundo laranja + texto beringela (4,95:1). Branco sobre laranja reprova (2,87:1). */
 @theme {
   --color-beringela: #4b1248;
   --color-laranja: #ff6a13;
-  --color-laranja-escuro: #c2410c;
+  --color-laranja-escuro: #b84010; /* 5,56:1 sobre branco e 4,71:1 sobre selecao */
   --color-verde: #12a150;
   --color-verde-escuro: #0e7a3d;
   --color-fundo: #f7f8fa;
@@ -27,25 +27,26 @@
   --color-coracao: #e11d48; /* coração de favorito salvo: 4,7:1 sobre branco */
   --color-sucesso-fundo: #ecf8f1; /* verde-escuro sobre ele: 5,0:1 */
 
-  --font-sans: var(--font-poppins), system-ui, sans-serif;
-  /* Escala de letras (plano de design, 4ª passada de 10/11/2026): mais um degrau abaixo.
-     11 legenda · 12 apoio, botões e rótulos · 13 texto · 14 título de card · 15 seção · 16/18 título da tela. */
-  --text-xs: 0.6875rem;
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+  /* Régua de letras (DESIGN.md, seção 3, decisão de 14/11/2026). Piso de 12px em todo o site.
+     12 legenda · 13 rótulo e apoio · 14 texto, título de card e botão · 16 seção e preço do card
+     18 título da tela (20 no computador) · 24 preço na página do anúncio. */
+  --text-xs: 0.75rem;
   --text-xs--line-height: 1.4;
   --text-xs--letter-spacing: 0.01em;
-  --text-sm: 0.75rem;
+  --text-sm: 0.8125rem;
   --text-sm--line-height: 1.45;
-  --text-base: 0.8125rem;
+  --text-base: 0.875rem;
   --text-base--line-height: 1.5;
-  --text-lg: 0.875rem;
-  --text-lg--line-height: 1.45;
-  --text-xl: 0.9375rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.125rem;
   --text-xl--line-height: 1.35;
   --text-xl--letter-spacing: -0.01em;
-  --text-2xl: 1.125rem;
+  --text-2xl: 1.25rem;
   --text-2xl--line-height: 1.25;
   --text-2xl--letter-spacing: -0.02em;
-  --text-3xl: 1.25rem;
+  --text-3xl: 1.5rem;
   --text-3xl--line-height: 1.2;
   --text-3xl--letter-spacing: -0.02em;
   /* Modo fácil do Radar (docs/designs/radar-v2.md): corpo 18px e título 24px. */
@@ -54,16 +55,16 @@
   --text-facil-titulo: 1.5rem;
   --text-facil-titulo--line-height: 1.25;
   --text-facil-titulo--letter-spacing: -0.015em;
-  --text-titulo: 1rem;
+  --text-titulo: 1.125rem;
   --text-titulo--line-height: 1.25;
   --text-titulo--letter-spacing: -0.015em;
   /* Título da vitrine (h1 do Início): 22px no celular, cresce até 32px no computador. */
   --text-vitrine: clamp(1.375rem, 1.1rem + 1.6vw, 2rem);
   --text-vitrine--line-height: 1.15;
   --text-vitrine--letter-spacing: -0.02em;
-  --text-rotulo: 0.75rem;
+  --text-rotulo: 0.8125rem;
   --text-rotulo--line-height: 1.45;
-  --text-legenda: 0.6875rem;
+  --text-legenda: 0.75rem;
   --text-legenda--line-height: 1.4;
   --text-legenda--letter-spacing: 0.01em;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -79,9 +80,10 @@
   --spacing-reserva-nav: calc(var(--spacing-barra-nav) + 1.5rem + env(safe-area-inset-bottom));
   --spacing-toque: 2.75rem; /* 44px, área mínima de toque */
 
-  /* Régua de tamanhos (docs/DESIGN-SYSTEM.md, seção 3). Toque / mouse. */
-  --spacing-controle: 2.5rem;       /* 40px: botão normal, campo, select */
-  --spacing-controle-pequeno: 2rem; /* 32px: ações dentro de cards, listas e tabelas */
+  /* Régua de alturas (DESIGN.md, seção 4). Toque / mouse. */
+  --spacing-controle: 2.75rem;      /* 44px: botão normal, campo, select, chip (36px com mouse) */
+  --spacing-acao: 3rem;             /* 48px: ação principal da tela e botão do WhatsApp */
+  --spacing-controle-pequeno: 2.25rem; /* 36px visíveis: ações dentro de cards, listas e tabelas */
 }
 
 body {
@@ -99,19 +101,19 @@ body {
 
 input, textarea { caret-color: var(--color-laranja-escuro); }
 
-/* Campos acompanham o texto (13px). Só o iPhone/iPad recebe 16px, porque o Safari do iOS
-   dá zoom sozinho em campo com letra menor; Android e computador não têm esse problema. */
+/* Campos: 16px no toque (o Safari do iOS dá zoom em letra menor e o público lê melhor) e 14px
+   com mouse a partir de 768px (DESIGN.md, seção 3). */
 @layer base {
-  input, select, textarea { font-size: 0.8125rem; }
-  @supports (-webkit-touch-callout: none) {
-    input, select, textarea { font-size: 1rem; }
+  input, select, textarea { font-size: 1rem; }
+  @media (min-width: 48rem) and (pointer: fine) {
+    input, select, textarea { font-size: 0.875rem; }
   }
 }
 
 @layer utilities {
-  /* Título da tela: 16px no celular, 18px do tablet para cima. */
+  /* Título da tela: 18px no celular, 20px do tablet para cima. */
   @media (min-width: 48rem) {
-    .text-titulo { font-size: 1.125rem; line-height: 1.3; }
+    .text-titulo { font-size: 1.25rem; line-height: 1.3; }
   }
   @supports (-webkit-touch-callout: none) {
     :is(.text-base, .text-sm):where(input, select, textarea) { font-size: 1rem; }
@@ -128,7 +130,7 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
 
 @media (min-width: 48rem) and (pointer: fine) {
   .olaki-controle { min-height: 2.25rem; }
-  .olaki-controle-pequeno { min-height: 1.75rem; }
+  .olaki-controle-pequeno { min-height: 2rem; }
   :is(input, select).olaki-campo { height: 2.25rem; }
   select:not([multiple]):not([size]) { min-height: 2.25rem; }
 }
@@ -172,7 +174,7 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
 }
 
 /* shadcn/ui: os nomes que os componentes usam (primary, muted, border...) apontam para os
-   tokens do OLAKI acima. Assim um componente novo já nasce com as cores da marca.
+   tokens da marca acima. Assim um componente novo já nasce com as cores da marca.
    Arredondamentos e fonte continuam os do Tailwind/OLAKI; nada aqui muda as telas atuais. */
 @theme inline {
   --color-background: var(--background);

@@ -1,6 +1,6 @@
 # Conferidor do design system · especificação
 
-**Estado: especificado, ainda não programado.** Entra na onda 0 da migração (`DESIGN.md`, seção 11).
+**Estado: programado em 14/11/2026 (onda 0).** Comando: `npm run design:conferir`. Script: `scripts/conferir-design.mjs`. Dívidas: `scripts/conferir-design.divida.json` (35 ocorrências em 17 itens no dia em que nasceu).
 
 Objetivo: acusar sozinho quando alguém (pessoa ou IA) foge do `DESIGN.md`, sem instalar pacote novo.
 
@@ -33,10 +33,12 @@ Exceções ficam numa lista no topo do script, cada uma com o motivo. Não aceit
 
 Situação medida em 14/11/2026 (pesquisa 04): 61 cores soltas em 20 arquivos e 5 tamanhos à mão no `card-anuncio.tsx`. Para não travar o trabalho no primeiro dia, o script começa com uma **lista de dívidas** (arquivos já conhecidos): neles só avisa; em arquivo novo ou fora da lista, falha. A lista só pode diminuir.
 
-## Parte 2 · regras nativas do ESLint 8 (`.eslintrc.json`)
+## Parte 2 · regras nativas do ESLint 8 (`.eslintrc.json`) — ligadas
+
+Bibliotecas proibidas e `confirm`/`alert` dão **erro**. Tabela, divisória e lista de escolha escritas à mão dão **aviso** (eram 62 no dia em que a regra entrou; somem nas ondas 1 a 5).
 
 - `no-restricted-imports`: proibir `@radix-ui/*`, `@headlessui/*`, `@mui/*`, `antd`, `@chakra-ui/*`, `daisyui`, `flowbite*`, `embla-carousel*`, `sonner`, `framer-motion`, `motion`, e qualquer pacote de ícones que não seja `lucide-react`.
-- `no-restricted-syntax`: proibir `<table>`, `<hr>` e `<select>` escritos à mão fora de `src/components/ui/`, apontando para `Table`, `Separator` e `NativeSelect`.
+- `no-restricted-syntax` (aviso): `<table>`, `<hr>` e `<select>` escritos à mão fora de `src/components/ui/`, apontando para `Table`, `Separator` e `NativeSelect`.
 - `no-restricted-globals`: `confirm`, `alert`.
 
 ## Parte 3 · revisão por agente

@@ -1,4 +1,6 @@
-// Gera a identidade do Mercado da Região: símbolo (M + pin), logotipos, ícones. Texto em caminhos (Poppins), sem fonte externa.
+// Gera a identidade do Mercado da Região: símbolo (M + pin), logotipos, ícones. Texto em caminhos (Figtree), sem fonte externa.
+// Decisão de 14/11/2026 (DESIGN.md, seção 6): nome em uma linha, todo na cor da tinta (beringela ou branco); o laranja fica só no pin.
+// Uso: FONTS=pasta/com/Figtree-*.ttf/ OUT=pasta/de/saida node docs/marca/gerar-logos.mjs (precisa do pacote opentype.js).
 import opentype from 'opentype.js'
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs'
 const carregar = (c) => { const b = readFileSync(c); return opentype.parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)) }
@@ -7,9 +9,10 @@ const OUT = process.env.OUT || 'saida'
 const BER = '#4B1248', LAR = '#FF6A13', WHT = '#FFFFFF'
 mkdirSync(OUT, { recursive: true })
 const f2 = (n) => Number(n.toFixed(2))
-const bold = carregar(FONTS + 'Poppins-Bold.ttf')
-const regular = carregar(FONTS + 'Poppins-Regular.ttf')
-const semi = carregar(FONTS + 'Poppins-SemiBold.ttf')
+const bold = carregar(FONTS + 'Figtree-Bold.ttf')
+const regular = carregar(FONTS + 'Figtree-Regular.ttf')
+const semi = carregar(FONTS + 'Figtree-SemiBold.ttf')
+const NOME = 'Mercado da Região'
 const capH = (font, size) => (font.tables.os2.sCapHeight / font.unitsPerEm) * size
 const width = (font, text, size, ls = 0) => font.getAdvanceWidth(text, size, { kerning: true }) + ls * (text.length - 1)
 function texto(font, text, x, y, size, fill, ls = 0) {
@@ -32,44 +35,37 @@ function simbolo(x, y, s, { m = BER, pin = LAR, furo = WHT } = {}) {
 const svg = (W, H, corpo, fundo) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Mercado da Região">\n${fundo ? `<rect width="${W}" height="${H}" fill="${fundo}"/>` : ''}${corpo}\n</svg>\n`
 const TAG = 'aqui a sua cidade aparece'
 
-// Marca horizontal: símbolo + "Mercado" / "da Região" em duas linhas. Com ou sem a frase.
-function marca({ dark, tag, cidade }) {
+// Marca horizontal: símbolo + "Mercado da Região" numa linha, centrado na altura do M. Com ou sem a frase.
+function marca({ dark, tag, cidade, s = 1 }) {
   const pad = dark ? 20 : 4
-  const sH = 128, s = 1
-  const size = 54
+  const size = 62 * s
   const cH = capH(bold, size)
-  const gap = 22
+  const gap = 20 * s
   const tx = pad + 100 * s + gap
-  const l1 = pad + 28 + cH + 4            // "Mercado": topo alinhado com o topo do M
-  const l2 = pad + 28 + 100 - 5            // "da Região": base alinhada com a base do M (g desce)
-  const w = Math.max(width(bold, 'Mercado', size), width(bold, 'da Região', size))
-  let W = Math.ceil(tx + w + pad + 2), H = pad + sH + pad + 14
+  const base = pad + (28 + 50) * s + cH / 2   // meio da letra maiúscula no meio do M
+  const w = width(bold, NOME, size)
+  let W = Math.ceil(tx + w + pad + 2), H = Math.ceil(pad + 128 * s + pad)
   const ink = dark ? WHT : BER
-  let corpo = simbolo(pad, pad, s, { m: ink, furo: dark ? BER : WHT })
-  corpo += texto(bold, 'Mercado', tx, l1, size, ink) + texto(bold, 'da Região', tx, l2, size, LAR)
+  let corpo = simbolo(pad, pad, s, { m: ink, furo: dark ? BER : WHT }) + texto(bold, NOME, tx, base, size, ink)
   if (tag || cidade) {
     const t = cidade ? cidade.toUpperCase() : TAG
     const font = cidade ? semi : regular
     const ls = cidade ? 5 : 0
-    const ts = cidade ? 22 : (W - 2 * pad) / width(regular, TAG, 1)
-    const base = H + (cidade ? 26 : 30)
-    if (cidade) { corpo += `<rect x="${pad}" y="${H + 2}" width="${W - 2 * pad}" height="2" fill="${dark ? '#7A3F76' : '#E6E0E9'}"/>`; corpo += texto(font, t, (W - width(font, t, ts, ls)) / 2, base + 14, ts, dark ? WHT : BER, ls); H = base + 14 + pad + 8 }
-    else { corpo += texto(font, t, pad, base, ts, dark ? '#E9DCEA' : '#5E5266'); H = base + pad + 12 }
+    const ts = cidade ? 22 : w / width(regular, TAG, 1)
+    if (cidade) {
+      corpo += `<rect x="${pad}" y="${H + 4}" width="${W - 2 * pad}" height="2" fill="${dark ? '#7A3F76' : '#E6E0E9'}"/>`
+      corpo += texto(font, t, (W - width(font, t, ts, ls)) / 2, H + 40, ts, dark ? WHT : BER, ls)
+      H = H + 40 + pad + 10
+    } else {
+      corpo += texto(font, t, tx, H + 26, ts, dark ? '#E9DCEA' : '#5E5266')
+      H = H + 26 + pad + 10
+    }
   }
   return svg(W, H, corpo, dark ? BER : null)
 }
 
-// Marca em uma linha só (rodapé, assinatura, documentos).
-function linha({ dark }) {
-  const pad = dark ? 16 : 4, size = 54, s = 0.62
-  const cH = capH(bold, size)
-  const tx = pad + 100 * s + 16
-  const base = pad + 128 * s - 12 * s - 6
-  const w1 = width(bold, 'Mercado ', size)
-  const W = Math.ceil(tx + w1 + width(bold, 'da Região', size) + pad + 2), H = Math.ceil(pad * 2 + 128 * s + 10)
-  const ink = dark ? WHT : BER
-  return svg(W, H, simbolo(pad, pad, s, { m: ink, furo: dark ? BER : WHT }) + texto(bold, 'Mercado', tx, base, size, ink) + texto(bold, 'da Região', tx + w1, base, size, LAR), dark ? BER : null)
-}
+// Marca em uma linha, menor (rodapé, assinatura, documentos). Mesmo desenho da marca.
+const linha = ({ dark }) => marca({ dark, s: 0.62 })
 
 // Só o símbolo.
 const soSimbolo = (dark) => svg(dark ? 140 : 108, dark ? 168 : 136, simbolo(dark ? 20 : 4, dark ? 20 : 4, 1, { m: dark ? WHT : BER, furo: dark ? BER : WHT }), dark ? BER : null)
@@ -81,16 +77,17 @@ function icone({ lado = 512, raio = 0, fundo = BER, m = WHT, pin = LAR, margem =
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${lado} ${lado}" width="${lado}" height="${lado}" role="img" aria-label="Mercado da Região">\n<rect width="${lado}" height="${lado}" rx="${raio}" fill="${fundo}"/>${simbolo(x, y, s, { m, pin, furo: fundo })}\n</svg>\n`
 }
 
-// Imagem de compartilhamento (WhatsApp, Facebook): 1200 x 630.
+// Imagem de compartilhamento (WhatsApp, Facebook): 1200 x 630. Nome numa linha, centrado.
 function og() {
-  const W = 1200, H = 630, s = 2.1, size = 122
-  const w = width(bold, 'da Região', size)
-  const total = 100 * s + 46 + w, x0 = (W - total) / 2, y0 = 118
-  const tx = x0 + 100 * s + 46
+  const W = 1200, H = 630, s = 1.55
+  const size = 62 * s, gap = 20 * s
+  const w = width(bold, NOME, size)
+  const total = 100 * s + gap + w, x0 = (W - total) / 2, y0 = 150
+  const tx = x0 + 100 * s + gap
   let c = simbolo(x0, y0, s, { m: WHT, furo: BER })
-  c += texto(bold, 'Mercado', tx, y0 + 28 * s + capH(bold, size) + 8, size, WHT) + texto(bold, 'da Região', tx, y0 + 128 * s - 10, size, LAR)
+  c += texto(bold, NOME, tx, y0 + (28 + 50) * s + capH(bold, size) / 2, size, WHT)
   const ts = 44
-  c += texto(regular, TAG, (W - width(regular, TAG, ts)) / 2, 510, ts, '#E9DCEA')
+  c += texto(regular, TAG, (W - width(regular, TAG, ts)) / 2, 470, ts, '#E9DCEA')
   c += `<rect x="0" y="${H - 14}" width="${W}" height="14" fill="${LAR}"/>`
   return svg(W, H, c, BER)
 }

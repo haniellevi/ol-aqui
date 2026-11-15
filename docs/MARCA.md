@@ -5,7 +5,7 @@ Endereço oficial: **mercadodaregiao.com.br** (ainda não ligado; o site segue n
 
 Este guia é a fonte da marca. As medidas de tela (tamanhos de letra, botões, espaços, cores) ficam no [`DESIGN.md`](../DESIGN.md), que é o único documento que manda no visual.
 
-> **Decisão de 14/11/2026 (ainda não aplicada nos arquivos do logo):** a fonte da marca passa a ser a **Figtree** e o nome escrito passa a ser **uma linha, tudo beringela**. O símbolo (M com o pin) não muda. Os arquivos em `public/logo/` e o gerador `docs/marca/gerar-logos.mjs` ainda estão na versão anterior e serão refeitos na onda 0 da migração (`DESIGN.md`, seção 11).
+> **Decisão de 14/11/2026, já aplicada nos arquivos:** a fonte da marca é a **Figtree** e o nome escrito é **uma linha, tudo beringela**. O símbolo (M com o pin) não muda. Para gerar de novo: `docs/marca/gerar-logos.mjs` (instruções no topo do arquivo).
 
 ## 1. A ideia
 

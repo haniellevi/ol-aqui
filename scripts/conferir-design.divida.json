@@ -1,0 +1,19 @@
+{
+  "carregando-solto src/app/admin/relatorios/loading.tsx": 1,
+  "cor-solta src/app/admin/compliance/relatorio/[id]/page.tsx": 1,
+  "cor-solta src/app/admin/lojas/gestao-formularios.tsx": 1,
+  "cor-solta src/app/admin/visitas/gerador-link.tsx": 2,
+  "cor-solta src/app/api/aki/lojista/route.ts": 3,
+  "cor-solta src/components/vitrine/banner-loja.tsx": 2,
+  "cor-solta src/components/vitrine/editor-banner-aki.tsx": 1,
+  "cor-solta src/components/vitrine/form-banner.tsx": 1,
+  "cor-solta src/components/vitrine/regras.ts": 6,
+  "cor-solta src/lib/aki/fundo-foto.ts": 1,
+  "cor-solta src/lib/cor-logo.ts": 3,
+  "cor-solta src/lib/loja-ia/modelo-capa.ts": 7,
+  "modo-escuro src/app/admin/visitas/gerador-link.tsx": 1,
+  "tamanho-a-mao src/app/admin/textos/publicar-documento.tsx": 1,
+  "tamanho-a-mao src/components/admin/nav-admin.tsx": 1,
+  "tamanho-a-mao src/components/busca/campo-busca.tsx": 1,
+  "tamanho-a-mao src/components/ui/switch.tsx": 2
+}

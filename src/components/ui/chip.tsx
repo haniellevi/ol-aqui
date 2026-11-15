@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
 // Chip de filtro/escolha. Selecionado = fundo lavanda, borda beringela e um ✓.
-// Área de toque 44px; com mouse, 40px.
+// Área de toque 44px; com mouse, 36px (DESIGN.md, seção 4).
 
 // grande = Modo fácil do Radar: 48px e letra 18px em qualquer tela.
 
@@ -11,8 +11,8 @@ const BASE =
   "inline-flex shrink-0 items-center gap-2 rounded-campo border font-semibold " +
   "transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 const TAMANHOS = {
-  normal: "whitespace-nowrap olaki-controle min-h-10 px-3 text-rotulo",
-  toque: "min-h-toque min-w-toque max-w-full px-3 text-rotulo whitespace-normal",
+  normal: "whitespace-nowrap olaki-controle min-h-controle px-3 text-base",
+  toque: "min-h-toque min-w-toque max-w-full px-3 text-base whitespace-normal",
   grande: "whitespace-nowrap min-h-12 px-4 text-facil",
 } as const;
 export type TamanhoChip = keyof typeof TAMANHOS;

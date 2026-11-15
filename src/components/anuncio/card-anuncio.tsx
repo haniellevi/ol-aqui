@@ -62,7 +62,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
         )}
       </div>
       <div className={`flex min-w-0 flex-1 flex-col px-2.5 pt-2 pb-2.5 ${horizontal ? "md:px-4 md:py-3" : ""} ${compacto ? "max-md:justify-center max-md:px-2 max-md:py-1" : ""}`}>
-        <h3 className={`line-clamp-2 text-sm leading-[18px] font-semibold text-texto [overflow-wrap:anywhere] ${horizontal ? "md:text-[18px] md:leading-6" : "md:text-[16px] md:leading-5"} ${compacto ? "max-md:text-[13px] max-md:leading-4" : ""}`}>{formatarNome(a.titulo)}</h3>
+        <h3 className={`line-clamp-2 text-base leading-5 font-normal text-texto [overflow-wrap:anywhere] ${horizontal ? "md:text-xl md:leading-6" : "md:text-lg md:leading-6"} ${compacto ? "max-md:text-sm max-md:leading-4" : ""}`}>{formatarNome(a.titulo)}</h3>
         <p className={`mt-1 flex flex-wrap items-baseline gap-x-1.5 ${compacto ? "max-md:mt-0.5" : ""}`}>
           {antes != null && (
             <s className="text-legenda leading-4 text-texto-suave tabular-nums">
@@ -70,12 +70,12 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
               {preco(antes)}
             </s>
           )}
-          <span className={`text-xs leading-4 font-semibold text-beringela tabular-nums md:leading-5 ${horizontal ? "md:text-[15px]" : "md:text-base"}`}>
+          <span className={`text-lg leading-6 font-bold text-beringela tabular-nums ${horizontal ? "md:text-xl" : ""}`}>
             {antes != null && <span className="sr-only">Agora: </span>}
             {preco(a.preco_centavos)}
           </span>
         </p>
-        <span className={`pt-1 text-legenda leading-[18px] text-texto-suave [overflow-wrap:anywhere] ${compacto ? "max-md:mt-0 max-md:pt-0 max-md:text-[11px] max-md:leading-[14px]" : ""}`}>
+        <span className={`pt-1 text-legenda leading-[18px] text-texto-suave [overflow-wrap:anywhere] ${compacto ? "max-md:mt-0 max-md:pt-0 max-md:text-legenda max-md:leading-4" : ""}`}>
           {quando && (compacto ? (
             <span className="hidden md:inline">
               <time dateTime={a.criado_em} suppressHydrationWarning>{quando}</time>

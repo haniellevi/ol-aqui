@@ -9,7 +9,7 @@ import { ChevronDownIcon } from "lucide-react"
 function NativeSelect({ className, ...props }: React.ComponentProps<"select">) {
   return (
     <div className={cn("group/native-select relative w-full", className)} data-slot="native-select-wrapper">
-      <select data-slot="native-select" className={cn(classesCampo, "h-10 appearance-none pr-9")} {...props} />
+      <select data-slot="native-select" className={cn(classesCampo, "h-controle appearance-none pr-9")} {...props} />
       <ChevronDownIcon
         className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground select-none"
         aria-hidden="true"

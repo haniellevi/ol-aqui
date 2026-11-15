@@ -38,7 +38,7 @@ export default async function CompletarPerfil({ searchParams }: { searchParams: 
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-4 py-5 sm:py-10">
-      <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={110} height={40} priority className="self-center" />
+      <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={199} height={40} priority className="self-center" />
       <header className="flex flex-col gap-1">
         <h1 className="text-titulo font-semibold text-beringela">Termos e privacidade</h1>
         <p className="text-sm text-texto-suave">
