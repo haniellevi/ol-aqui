@@ -13,6 +13,7 @@ import { salvarVitrineGerenciada } from "../actions";
 import type { LojaDaConta } from "../page";
 
 export const metadata: Metadata = { title: "Gerenciar loja" };
+export const maxDuration = 60;
 type DadosGerente = Omit<DadosInformacoes, "instagram" | "formas_pagamento">;
 type Convite = { id: string; final_telefone: string; expira_em: string; gerente: string | null; e_equipe?: boolean };
 const dataCurta = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" });
