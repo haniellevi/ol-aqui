@@ -36,7 +36,7 @@ export function CartaoVendedor({ v }: { v: Dados }) {
         </span>
         {desdeTexto && <span className="text-legenda text-texto-suave">{desdeTexto}</span>}
       </span>
-      <span className="text-xs font-semibold text-laranja-escuro">{loja ? "Ver loja" : "Ver anúncios"}</span>
+      <span className="text-sm font-semibold text-laranja-escuro">{loja ? "Ver loja" : "Ver anúncios"}</span>
       <ChevronRight className="size-4 shrink-0 text-laranja-escuro" aria-hidden />
     </Link>
   );

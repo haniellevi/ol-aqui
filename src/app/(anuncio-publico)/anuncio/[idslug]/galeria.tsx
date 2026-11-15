@@ -106,7 +106,7 @@ export function Galeria({ fotos, titulo }: { fotos: string[]; titulo: string }) 
               type="button"
               tabIndex={i === atual ? 0 : -1}
               onClick={() => abrir(i)}
-              className="block size-full focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja"
+              className="block size-full focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
               aria-label={`Foto ${i + 1} de ${total} de ${titulo}. Abrir em tela cheia`}
             >
               <Foto src={f} alt={`Foto ${i + 1} de ${total} de ${titulo}`} principal={i === 0} />

@@ -13,6 +13,7 @@ import { RegistrarVisita } from "./registrar-visita";
 import { Denunciar } from "./denunciar";
 import { CompartilharAnuncio } from "./compartilhar";
 import { DescricaoAnuncio } from "./descricao";
+import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 import { ehTelefoneGuardado } from "@/lib/telefone";
 
@@ -71,7 +72,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
 
   return (
     <main data-comprador data-detalhe-anuncio className={`mx-auto w-full max-w-6xl px-4 md:py-4 ${whatsappHref ? "pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-8" : "pb-8"}`}>
-      <Link href={voltarHref} className="inline-flex min-h-11 items-center gap-2 rounded-campo px-1 text-sm font-semibold text-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro">
+      <Link href={voltarHref} className="inline-flex min-h-controle items-center gap-2 rounded-campo px-1 text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro">
         <ArrowLeft className="size-5" aria-hidden /> Voltar
       </Link>
       {jsonLd && (
@@ -93,7 +94,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
         <nav aria-label="Você está em" className="hidden text-base text-texto-suave md:block">
           <ol className="flex flex-wrap items-center gap-1">
             <li>
-              <Link href={linkCategoria(a.categoria_pai_slug)} className="inline-flex min-h-10 items-center underline-offset-4 hover:underline">
+              <Link href={linkCategoria(a.categoria_pai_slug)} className="inline-flex min-h-controle items-center underline-offset-4 hover:underline">
                 {a.categoria_pai_nome}
               </Link>
             </li>
@@ -101,7 +102,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
               <ChevronRight className="size-4" aria-hidden />
               <Link
                 href={linkCategoria(a.categoria_pai_slug, a.categoria_slug)}
-                className="inline-flex min-h-10 items-center underline-offset-4 hover:underline"
+                className="inline-flex min-h-controle items-center underline-offset-4 hover:underline"
               >
                 {a.categoria_nome}
               </Link>
@@ -115,7 +116,7 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
           <p className="text-base font-semibold">Prévia: só você vê esta página.</p>
           <p className="text-base">{STATUS_PREVIA[a.status] ?? "Fora do ar."}</p>
           {a.e_dono && (
-            <Link href="/minha-conta/anuncios" className="inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4">
+            <Link href="/minha-conta/anuncios" className="inline-flex min-h-controle items-center self-start font-semibold underline underline-offset-4">
               Ir para Meus anúncios
             </Link>
           )}
@@ -126,10 +127,10 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
         <header className="flex min-w-0 flex-col gap-1.5 md:col-start-2 md:row-start-1">
           <h1 className="text-titulo font-semibold text-beringela [overflow-wrap:anywhere]">{titulo}</h1>
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-titulo font-bold text-beringela tabular-nums">{preco(a.preco_centavos)}</p>
-            {vendido && <span className="rounded-full bg-beringela px-3 py-0.5 text-legenda font-bold text-white">Vendido</span>}
+            <p className="text-3xl font-bold text-beringela tabular-nums">{preco(a.preco_centavos)}</p>
+            {vendido && <Badge variant="solid" className="font-semibold">Vendido</Badge>}
             {a.destaque && ativo && (
-              <span className="rounded-full bg-patrocinado-fundo px-3 py-0.5 text-legenda font-bold text-beringela">Patrocinado</span>
+              <Badge variant="featured" className="font-semibold">Patrocinado</Badge>
             )}
           </div>
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-texto-suave">
@@ -237,11 +238,11 @@ export function ConteudoAnuncio({ a, favorito, logado, parecidos, extra, convers
               <h2 id="titulo-parecidos" className="text-lg font-semibold">
                 Parecidos na região
               </h2>
-              <GradeAnuncios anuncios={parecidos} prioridade={0} compacto voltarHref={voltarHref} />
+              <GradeAnuncios anuncios={parecidos} prioridade={0} voltarHref={voltarHref} />
               {a.categoria_pai_slug && a.categoria_slug && (
                 <Link
                   href={linkCategoria(a.categoria_pai_slug, a.categoria_slug)}
-                  className="inline-flex min-h-11 items-center self-start font-semibold text-laranja-escuro underline-offset-4 hover:underline"
+                  className="inline-flex min-h-controle items-center self-start font-semibold text-laranja-escuro underline-offset-4 hover:underline"
                 >
                   Ver todos em {a.categoria_nome}
                 </Link>
