@@ -2,6 +2,7 @@
 // Server Component: busca os pedidos e decide, NO SERVIDOR, o que o usuário pode ver.
 // Quem não tem acesso ao Radar nunca recebe detalhes nem nome do comprador no HTML.
 // Preços dos planos vêm da tabela `planos` (editável no painel), nunca do código.
+import { Voltar } from "@/components/ui/voltar";
 import { formatarNome } from "@/lib/formatar-nome";
 import { auth } from "@clerk/nextjs/server";
 import { Radar } from "lucide-react";
@@ -177,6 +178,7 @@ export default async function RadarPage({ searchParams }: { searchParams: Parame
 function Moldura({ titulo, abas, children }: { titulo: string; abas: React.ReactNode; children: React.ReactNode }) {
   return (
     <main className="mx-auto min-h-dvh max-w-3xl bg-fundo pb-6">
+      <div className="px-4 pt-3"><Voltar /></div>
       <header className="sticky top-13 z-10 border-b border-borda bg-cartao/95 px-4 py-3 backdrop-blur md:top-14">
         <div className="flex items-center gap-2">
           <Radar className="size-5 text-laranja-escuro" aria-hidden />

@@ -1,4 +1,5 @@
 import { MessageCircle, Megaphone, PenLine, Radar, Store } from "lucide-react";
+import { Voltar } from "@/components/ui/voltar";
 import { Botao } from "@/components/ui/botao";
 import { linkPedirRadar } from "@/lib/rotas";
 
@@ -12,6 +13,7 @@ const PASSOS = [
 export function ExplicacaoRadar({ textoBusca, visitante = true }: { textoBusca?: string | null; visitante?: boolean }) {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-4">
+      <Voltar />
       <header className="flex flex-col gap-2">
         <h1 className="flex items-center gap-2 text-titulo font-semibold text-beringela">
           <Radar className="size-6 text-laranja-escuro" aria-hidden />
