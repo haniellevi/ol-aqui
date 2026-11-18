@@ -1,6 +1,5 @@
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
-import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ehUuid } from "@/lib/formato";
@@ -15,6 +14,21 @@ type Registro = { id: string; caminho: string; mime: string; tamanho: number; ti
 export async function normalizarMaterial(bytes: Buffer, mime: string): Promise<Buffer> {
   if (!bytes.length || bytes.length > MAXIMO) throw new Error("Escolha uma imagem de até 20 MB.");
   try {
+    if (process.env.CLOUDFLARE_IMAGENS === "1") {
+      const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+      const servico = getCloudflareContext().env.IMAGENS_TRATAMENTO;
+      if (!servico) throw new Error("Serviço de imagens indisponível.");
+      const resposta = await servico.fetch("https://imagens.interno/normalizar", {
+        method: "POST", headers: { "content-type": mime }, body: new Uint8Array(bytes),
+      });
+      if (resposta.status === 413) throw new Error("Escolha uma imagem de até 20 MB.");
+      if (resposta.status === 400) throw new Error("Formato da imagem inválido.");
+      if (!resposta.ok) throw new Error("Serviço de imagens indisponível.");
+      const normalizada = Buffer.from(await resposta.arrayBuffer());
+      if (normalizada.length > MAXIMO) throw new Error("Escolha uma imagem de até 20 MB.");
+      return normalizada;
+    }
+    const { default: sharp } = await import("sharp");
     const original = sharp(bytes, { limitInputPixels: 16_000_000, animated: false });
     const metadados = await original.metadata();
     const esperado = mime === "image/jpeg" ? "jpeg" : mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "";
@@ -23,7 +37,7 @@ export async function normalizarMaterial(bytes: Buffer, mime: string): Promise<B
     if (normalizada.length > MAXIMO) throw new Error("Escolha uma imagem de até 20 MB.");
     return normalizada;
   } catch (e) {
-    if (e instanceof Error && /20 MB|Formato da imagem/.test(e.message)) throw e;
+    if (e instanceof Error && /20 MB|Formato da imagem|Serviço de imagens indisponível/.test(e.message)) throw e;
     throw new Error("Formato da imagem inválido ou arquivo danificado.");
   }
 }

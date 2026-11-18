@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import sharp from "sharp";
 import { BANNER_ALTURA, BANNER_LARGURA, FOTO_FEED_ALTURA, FOTO_FEED_LARGURA } from "@/lib/tamanhos-imagem";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { clarearFundoLiso } from "@/lib/aki/fundo-foto";
@@ -89,7 +88,18 @@ class FotoInfiel extends Error {
   }
 }
 
-async function ajustarTamanho(bytes: Buffer, produto: boolean): Promise<Buffer> {
+async function ajustarTamanho(bytes: Buffer, produto: boolean, fundoClareado = false): Promise<Buffer> {
+  if (process.env.CLOUDFLARE_IMAGENS === "1") {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const servico = getCloudflareContext().env.IMAGENS_TRATAMENTO;
+    if (!servico) throw new Error("Serviço de imagens indisponível.");
+    const resposta = await servico.fetch(`https://imagens.interno/ajustar-${produto ? "produto" : "banner"}`, {
+      method: "POST", headers: { "content-type": "image/webp", ...(fundoClareado ? { "x-fundo-clareado": "1" } : {}) }, body: new Uint8Array(bytes),
+    });
+    if (!resposta.ok) throw new Error("Não foi possível ajustar a imagem.");
+    return Buffer.from(await resposta.arrayBuffer());
+  }
+  const { default: sharp } = await import("sharp");
   const imagem = sharp(bytes, { limitInputPixels: 16_000_000 }).autoOrient().flatten({ background: "#ffffff" });
   if (!produto) {
     return imagem.resize(BANNER_LARGURA, BANNER_ALTURA, { fit: "cover", position: "centre" })
@@ -178,6 +188,7 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
     let resposta: Response | undefined;
     let bytes: Buffer | null = null;
     let entrada: Blob | null = null;
+    let fundoClareado = false;
     if (original) {
       const { data: arquivo, error: download } = await storage.download(original);
       const extensao = original.split(".").at(-1)?.toLowerCase();
@@ -186,6 +197,7 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
       if (download || !arquivo || arquivo.size > MAX_FOTO || !mime) throw new Error("Foto original indisponível ou em formato inválido");
       entrada = arquivo.slice(0, arquivo.size, mime);
       bytes = await clarearFundoLiso(Buffer.from(await entrada.arrayBuffer()));
+      fundoClareado = !!bytes && bytes.length <= MAX_FOTO;
       if (!bytes || bytes.length > MAX_FOTO) {
         bytes = null;
         const form = new FormData();
@@ -218,7 +230,7 @@ async function gerarImagem(db: Admin, uid: string, chave: string, corpo: Record<
     }
     if (bytes.length < 12 || bytes.toString("ascii", 0, 4) !== "RIFF" || bytes.toString("ascii", 8, 12) !== "WEBP") throw new Error("Formato da imagem inválido");
 
-    bytes = await ajustarTamanho(bytes, Boolean(entrada));
+    bytes = await ajustarTamanho(bytes, Boolean(entrada), fundoClareado);
     if (bytes.length > MAX_FOTO) throw new Error("A imagem final ficou grande demais");
     if (entrada && modeloTexto) await conferirFoto(chave, modeloTexto, entrada, bytes);
 

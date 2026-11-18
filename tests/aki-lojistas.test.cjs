@@ -9,7 +9,7 @@ const uid = 'user_akiloja';
 const origem = 'https://abc.supabase.co/storage/v1/object/public/anuncios/';
 const webp = sharp({ create: { width: 320, height: 240, channels: 3, background: "#ddd" } }).webp().toBuffer();
 
-function ambiente(t, { fiel = true, detalhe = '', logado = true, contaBloqueada = null, fotoOriginal = Buffer.from('foto indisponível para recorte local'), imagemProvedor = webp } = {}) {
+function ambiente(t, { fiel = true, detalhe = '', logado = true, contaBloqueada = null, fotoOriginal = Buffer.from('foto indisponível para recorte local'), imagemProvedor = webp, cloudflareImageService = null } = {}) {
   const chamadas = [];
   let reserva = null;
   let uploads = 0;
@@ -64,6 +64,7 @@ function ambiente(t, { fiel = true, detalhe = '', logado = true, contaBloqueada 
   };
   const { POST } = carregar('src/app/api/aki/lojista/route.ts', {
     sharp: { default: sharp },
+    '@opennextjs/cloudflare': { getCloudflareContext: () => ({ env: { IMAGENS_TRATAMENTO: cloudflareImageService } }) },
     '@clerk/nextjs/server': { auth: async () => ({ userId: logado ? uid : null }) },
     '@/lib/supabase/admin': { supabaseAdmin: () => db },
   });
@@ -165,4 +166,54 @@ test('foto vertical entra inteira no quadro do feed, com margens brancas', async
   assert.deepEqual(rgb(1500, 600), [255, 255, 255]);
   assert.deepEqual(rgb(800, 1), rgb(800, 1198));
   assert.ok(rgb(800, 1)[2] > rgb(800, 1)[0], 'A imagem deve chegar inteira às bordas de cima e de baixo');
+});
+
+test('Cloudflare usa serviço interno para clarear fundo e preserva fallback por IA', async (t) => {
+  const antes = process.env.CLOUDFLARE_IMAGENS;
+  process.env.CLOUDFLARE_IMAGENS = '1';
+  t.after(() => { if (antes === undefined) delete process.env.CLOUDFLARE_IMAGENS; else process.env.CLOUDFLARE_IMAGENS = antes; });
+  let destino = '', tipo = '', status = 200;
+  const { clarearFundoLiso } = carregar('src/lib/aki/fundo-foto.ts', {
+    sharp: { default: () => { throw new Error('sharp não funciona no Worker'); } },
+    '@opennextjs/cloudflare': { getCloudflareContext: () => ({ env: { IMAGENS_TRATAMENTO: { fetch: async (url, init) => { destino = url; tipo = init.headers['content-type']; return status === 204 ? new Response(null, { status }) : new Response('tratada'); } } } }) },
+  });
+  const arquivo = await sharp({ create: { width: 80, height: 80, channels: 3, background: 'white' } }).webp().toBuffer();
+  assert.equal((await clarearFundoLiso(arquivo)).toString(), 'tratada');
+  assert.match(destino, /\/clarear-fundo$/);
+  assert.equal(tipo, 'image/webp');
+  status = 204;
+  assert.equal(await clarearFundoLiso(arquivo), null);
+});
+
+
+test('Cloudflare ajusta banner usando o serviço interno antes de armazenar', async (t) => {
+  const anterior = process.env.CLOUDFLARE_IMAGENS;
+  process.env.CLOUDFLARE_IMAGENS = '1';
+  t.after(() => { if (anterior === undefined) delete process.env.CLOUDFLARE_IMAGENS; else process.env.CLOUDFLARE_IMAGENS = anterior; });
+  let destino = '';
+  const a = ambiente(t, { cloudflareImageService: { fetch: async (url) => {
+    destino = url;
+    return new Response(await sharp({ create: { width: 1500, height: 500, channels: 3, background: 'white' } }).webp().toBuffer());
+  } } });
+  const resposta = await a.gerar({ tipo: 'banner' });
+  assert.equal(resposta.status, 200);
+  assert.match(destino, /\/ajustar-banner$/);
+  assert.equal(a.uploads(), 1);
+});
+
+test('marca somente o resultado local de fundo como seguro para preservar os pixels', async (t) => {
+  const anterior = process.env.CLOUDFLARE_IMAGENS;
+  process.env.CLOUDFLARE_IMAGENS = '1';
+  t.after(() => { if (anterior === undefined) delete process.env.CLOUDFLARE_IMAGENS; else process.env.CLOUDFLARE_IMAGENS = anterior; });
+  const foto = await sharp({ create: { width: 1600, height: 1200, channels: 3, background: 'white' } }).webp({ lossless: true }).toBuffer();
+  const chamadas = [];
+  const a = ambiente(t, { fotoOriginal: foto, cloudflareImageService: { fetch: async (url, init) => {
+    chamadas.push({ url, marcado: init.headers['x-fundo-clareado'] });
+    return new Response(foto);
+  } } });
+  assert.equal((await a.gerar({ tipo: 'produto', anuncio, foto: origem + uid + '/' + anuncio + '/original.webp' })).status, 200);
+  assert.equal(chamadas.length, 2);
+  assert.match(chamadas[0].url, /\/clarear-fundo$/);
+  assert.match(chamadas[1].url, /\/ajustar-produto$/);
+  assert.equal(chamadas[1].marcado, '1');
 });

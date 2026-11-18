@@ -1,6 +1,7 @@
 import "server-only";
 import { auth } from "@clerk/nextjs/server";
 import { createClient as criar } from "@supabase/supabase-js";
+import { criarFetchLeitura } from "./leitura";
 
 /**
  * Cliente Supabase com a sessão do usuário do Clerk (integração "third-party auth").
@@ -12,8 +13,10 @@ const chavePublica =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export async function createClient() {
+  const apenasLeitura = process.env.CLOUDFLARE_SOMENTE_LEITURA === "1";
   return criar(process.env.NEXT_PUBLIC_SUPABASE_URL!, chavePublica!, {
-    accessToken: tokenDoClerk,
+    accessToken: apenasLeitura ? async () => null : tokenDoClerk,
+    ...(apenasLeitura ? { global: { fetch: criarFetchLeitura(process.env.NEXT_PUBLIC_SUPABASE_URL!, chavePublica!, Date.parse(process.env.CLOUDFLARE_LEITURA_EXPIRA ?? "")) } } : {}),
   });
 }
 

@@ -64,3 +64,29 @@ test('coleta de materiais usa só imagens prontas do rascunho', async () => {
   assert.equal(resultado.evidencias[0].campo, 'logo');
   assert.equal(resultado.evidencias[0].valor, imagem);
 });
+
+test('na Cloudflare, normalização usa o serviço interno sem carregar sharp', async (t) => {
+  const anterior = process.env.CLOUDFLARE_IMAGENS;
+  process.env.CLOUDFLARE_IMAGENS = '1';
+  t.after(() => { if (anterior === undefined) delete process.env.CLOUDFLARE_IMAGENS; else process.env.CLOUDFLARE_IMAGENS = anterior; });
+  let recebido = null;
+  const { normalizarMaterial: normalizar } = carregar('src/lib/loja-ia/imagens.ts', {
+    sharp: { default: () => { throw new Error('sharp não funciona no Worker'); } },
+    '@opennextjs/cloudflare': { getCloudflareContext: () => ({ env: { IMAGENS_TRATAMENTO: { fetch: async (url, init) => { recebido = { url, tipo: init.headers['content-type'], bytes: Buffer.from(init.body) }; return new Response(Buffer.from('webp')); } } } }) },
+  });
+  const resultado = await normalizar(Buffer.from('foto de teste'), 'image/png');
+  assert.equal(resultado.toString(), 'webp');
+  assert.equal(recebido.tipo, 'image/png');
+  assert.equal(recebido.bytes.toString(), 'foto de teste');
+  assert.match(recebido.url, /\/normalizar$/);
+});
+
+test('falha do serviço de imagens não acusa arquivo válido como inválido', async (t) => {
+  const antes = process.env.CLOUDFLARE_IMAGENS;
+  process.env.CLOUDFLARE_IMAGENS = '1';
+  t.after(() => { if (antes === undefined) delete process.env.CLOUDFLARE_IMAGENS; else process.env.CLOUDFLARE_IMAGENS = antes; });
+  const { normalizarMaterial: normalizar } = carregar('src/lib/loja-ia/imagens.ts', {
+    '@opennextjs/cloudflare': { getCloudflareContext: () => ({ env: { IMAGENS_TRATAMENTO: { fetch: async () => new Response(null, { status: 503 }) } } }) },
+  });
+  await assert.rejects(normalizar(Buffer.from('imagem'), 'image/png'), /serviço de imagens indisponível/i);
+});
