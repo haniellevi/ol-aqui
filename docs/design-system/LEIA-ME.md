@@ -9,7 +9,7 @@ O documento que manda é o [`DESIGN.md`](../../DESIGN.md) da raiz. Esta pasta gu
 | [pesquisa/03-auditoria-publico.md](pesquisa/03-auditoria-publico.md) | Dados públicos sobre a região, aparelhos, visão e toque |
 | [pesquisa/04-tipografia-e-bibliotecas.md](pesquisa/04-tipografia-e-bibliotecas.md) | Fontes comparadas, bibliotecas, peças duplicadas, como travar o padrão |
 | [opcoes/index.html](opcoes/index.html) | Página mostrada ao Raniel para escolher fonte, tamanho, nome do logo e cores |
-| [CONFERIDOR.md](CONFERIDOR.md) | Especificação da conferência automática (ainda não programada) |
+| [CONFERIDOR.md](CONFERIDOR.md) | Especificação e estado do conferidor de design |
 | [historico/](historico/) | Versões antigas do `DESIGN.md` e do `docs/DESIGN-SYSTEM.md` |
 
 ## Decisões do Raniel em 14/11/2026
@@ -29,9 +29,9 @@ O documento que manda é o [`DESIGN.md`](../../DESIGN.md) da raiz. Esta pasta gu
 | Documentos | Um só manda (`DESIGN.md`); os outros apontam para ele |
 | Trava para a IA | `AGENTS.md` + `CLAUDE.md` + conferidor automático |
 
-## O que ainda não foi feito
+## Estado da migração
 
-Nada do código mudou. A ordem está na seção 11 do `DESIGN.md`. Pontos de atenção:
+A base e as ondas 1 a 3 foram implementadas; a área logada está parcialmente revisada e o painel administrativo permanece pendente. A seção 11 do `DESIGN.md` registra os lotes e o trabalho restante. Pontos de atenção:
 
 - A pesquisa de público recomendava texto de 16 px; a escolha foi 14 px. Validar no teste de corredor.
 - Sem pesquisa com usuários reais e sem números de uso.
