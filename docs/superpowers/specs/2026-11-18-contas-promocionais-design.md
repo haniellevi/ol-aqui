@@ -1,111 +1,49 @@
-# Contas Gratuita, Full e Promocional
+# Cupons de acesso ao plano Promocional
 
-## Pedido e resultado esperado
+## Direção definida por Raniel em 18/11/2026
 
-Raniel definiu três tipos de conta para os lojistas. A conta Gratuita mantém os limites gratuitos. A Full oferece os recursos completos mediante pagamento, com possibilidade de concessão pelo administrador master. A Promocional oferece os mesmos recursos da Full durante a promoção controlada pelo master.
+O projeto ainda não foi lançado e não tem pagamentos realizados. Raniel corrigiu o modelo anterior e pediu a criação do sistema de cupons promocionais. O administrador master escolhe o código, a quantidade de dias de acesso contada desde a ativação e as permissões do plano Promocional. Qualquer conta autenticada pode ativar um código válido, independentemente do plano atual.
 
-O master pode liberar a promoção para todas as lojas, encerrar essa liberação quando decidir e editar individualmente o tipo de conta no painel. O site deve mostrar o tipo e os recursos efetivamente disponíveis.
+## Funcionamento
 
-## Situação existente
+- O painel oferece a configuração de um plano Promocional comum aos cupons. Reutiliza os recursos já controlados por plano, com caixas para habilitar/desabilitar e campos de limite para anúncios, Radar, propostas e avisos do Radar, fachada, seções e produtos fixados.
+- A configuração inicial copia os recursos do Full vigente no banco. Depois o master pode alterá-los no painel.
+- Cada código define uma duração em dias, ativo/inativo e, opcionalmente, uma data limite para novas ativações. A data limite do código é diferente do vencimento do acesso concedido.
+- Os novos códigos ficam disponíveis para o master distribuir. O site oferece o campo para digitar o cupom e não revela a lista de campanhas a todos os usuários.
+- A ativação começa imediatamente e vence exatamente após a quantidade configurada de dias corridos. Um código pode ser usado uma vez por conta.
+- A ativação fica vinculada à conta, incluindo contas sem loja e vendedores individuais. Os direitos comuns, como limite de anúncios e Radar, usam os recursos promocionais durante a vigência. Recursos próprios de loja ficam disponíveis quando a conta cria ou converte sua vitrine em loja, sem conversão automática pelo cupom. Ajudar em outra loja não transfere o benefício para essa loja.
+- A loja ou vitrine conserva seu plano de origem. Durante o acesso promocional, os recursos efetivos vêm do plano Promocional. Depois do vencimento, o plano de origem volta a ser avaliado pelas regras existentes.
+- Ativar outro código válido cria outro período contado da nova ativação. Se os períodos se sobrepõem, o acesso dura até o último vencimento, sem encurtar um benefício já ativo. Não se somam dias nem se reinicia o prazo ao repetir o mesmo código.
+- Alterar as permissões do plano Promocional atualiza os recursos dos acessos promocionais vigentes. Alterar a duração de um código afeta apenas ativações futuras.
+- Desativar um código impede novas ativações e conserva os prazos já concedidos.
+- A configuração promocional concede direitos de uso, sem gerar cobrança ou registro de pagamento no Asaas.
+- Exigências de cadastro, segurança, moderação e verificação dos recursos continuam aplicadas.
+- No vencimento, os anúncios excedentes são pausados pela rotina existente, preservando os produtos. Uma nova liberação permite reativá-los pelas ações existentes.
 
-- Os direitos e pagamentos são associados à loja. A conta de pessoa física possui seu próprio plano gratuito.
-- O plano gratuito da loja tem limite de 10 anúncios. O Full e seus recursos são configurados no painel.
-- O banco calcula o plano efetivo, limita a publicação e protege os pagamentos contra duplicidade.
-- A rotina `aplicar_limite_loja_gratis` pausa os anúncios comuns mais antigos que excedem o limite, conservando os dados dos produtos.
-- O cupom atual concede três meses de Full. Os códigos, mensagens e datas existentes refletem essa oferta.
-- Existe distinção entre super admin (administrador master), administrador e demais operadores.
+## Administração e apresentação
 
-## Abordagens
+O master configura o plano e cria/edita códigos no painel de Planos e preços. Novos códigos nascem ativos e podem ser desativados na edição. A tela explica que os recursos são comuns a todos os códigos e que cada código tem sua duração. As permissões só podem ser alteradas pelo master, inclusive por chamadas diretas ao banco.
 
-Raniel escolheu o controle por tipo de conta e uma promoção geral, substituindo o planejamento de uma carteira de créditos.
+Qualquer usuário autenticado encontra o campo de cupom em Meu plano, mesmo sem loja. A tela apresenta o plano Promocional vigente, a data da ativação, o vencimento e o uso disponível. Contas com restrições continuam vendo o prazo concedido, sem que o cupom remova a restrição. Erros de código inválido, fora da validade, desativado ou já usado têm mensagens próprias. Os formulários seguem DESIGN.md e os componentes existentes.
 
-Regravar todos os contratos ao ligar e desligar a promoção poderia alterar direitos comprados e dificultar desfazer a operação. A proposta técnica é uma configuração geral combinada com uma escolha individual, mantendo os registros de pagamentos e períodos concedidos.
+## Compatibilidade
 
-Uma promoção controlada por chave atende ao período de lançamento sem exigir que cada lojista resgate um cupom.
-
-## Regras propostas
-
-### Três tipos visíveis
-
-| Tipo | Recursos | Duração |
-| --- | --- | --- |
-| Gratuita | Recursos do plano gratuito da loja, inicialmente 10 anúncios ativos | Sem vencimento |
-| Full | Recursos do Full configurado no painel | Período comprado ou concessão do master |
-| Promocional | Os mesmos recursos do Full | Até o master encerrar a promoção |
-
-Os preços, limites e nomes continuam vindo das configurações do painel. Alterar os recursos do Full deve atualizar também os recursos da Promocional. A promoção concede os direitos do plano, incluindo os limites próprios de IA. As exigências de verificação da loja continuam iguais às do Full.
-
-### Promoção geral
-
-- O comando “Liberar conta promocional para todas as lojas” alcança as lojas existentes e as criadas enquanto a chave estiver ligada.
-- Uma loja com Full pago e vigente continua reconhecida como Full. O pagamento fica registrado e a data contratada é preservada.
-- Uma loja sem Full pago fica Promocional enquanto a regra geral se aplicar, ressalvadas as escolhas individuais do master.
-- O comando “Encerrar promoção e voltar ao gratuito” encerra as liberações promocionais gerais e individuais existentes naquele momento. As lojas sem outro direito Full vigente passam ao gratuito.
-- Ao encerrar a promoção, nenhum produto é apagado. A rotina existente aplica o limite gratuito e pausa os excedentes.
-- Ligar a promoção novamente devolve a possibilidade de publicar acima do limite gratuito. A reativação dos anúncios pausados é feita pelo lojista.
-
-### Edição individual pelo master
-
-- A ficha da loja exibe o tipo atual, a origem da liberação e o eventual período Full comprado.
-- O master pode escolher Gratuita, Full ou Promocional e devolver a loja à regra geral.
-- Uma escolha individual de Gratuita pode retirar a liberação promocional dessa loja durante a campanha. Períodos Full pagos e vigentes são preservados.
-- Uma concessão manual de Full é identificada como concessão administrativa. O master pode definir uma validade ou manter a concessão até uma alteração manual.
-- Uma liberação individual de Promocional pode ser concedida mesmo fora da promoção geral. O comando geral de encerramento deve indicar que encerra também essas liberações promocionais.
-- Alterações individuais e gerais exigem motivo e são registradas com operador, horário e estado anterior e posterior.
-- Somente o master pode alterar a chave geral e os tipos individuais. As permissões são verificadas no banco e no servidor.
-- Os caminhos antigos de troca de plano e cortesia também devem exigir master quando alterarem esses direitos. A restrição cobre os formulários existentes e as funções do banco, inclusive `admin_acao_loja`.
-
-### Prioridade dos direitos
-
-1. Suspensão, arquivo, lixeira e montagem continuam impedindo as operações correspondentes.
-2. Full pago vigente e os períodos de cupom já concedidos prevalecem até o vencimento.
-3. Uma concessão administrativa Full vigente prevalece sobre a promoção geral. O master pode substituí-la por outro tipo.
-4. Uma escolha individual Gratuita ou Promocional prevalece sobre a regra geral.
-5. Na ausência das condições anteriores, a promoção geral determina o acesso Promocional. Com a chave desligada, vale a conta Gratuita.
-
-O master deve ver essa prioridade no resultado de sua ação. Escolher Gratuita para uma loja que já tem período comprado deve informar a data até a qual o direito comprado permanece.
-
-### Pagamento
-
-- A loja pode contratar Full durante ou depois da promoção. A compra usa o fluxo Asaas existente.
-- A promoção não é uma cobrança paga nem uma assinatura com renovação automática.
-- A data da compra Full passa a contar conforme o período vendido no pagamento. A tela deve avisar quando esse período começa antes de confirmar a compra.
-- Encerrar a promoção não cancela nem encurta períodos pagos.
-
-### Promoções e direitos já concedidos
-
-- Os períodos Full já concedidos pelo LANCAMENTO2026 continuam válidos até a data original.
-- A oferta de três meses por cupom sai dos novos cadastros e da contratação assim que o novo modelo entrar em vigor.
-- Os registros dos cupons e pagamentos anteriores ficam disponíveis para histórico.
-- Os planos técnicos antigos continuam disponíveis para ler direitos e pagamentos já existentes, enquanto a apresentação comercial passa aos três tipos definidos.
-
-## Painel e site
-
-Em “Planos e preços”, o master encontra a situação da promoção e as ações de início e encerramento. Antes de encerrar, vê a quantidade de lojas afetadas e a informação sobre a aplicação do limite gratuito.
-
-Na ficha da loja, um formulário permite editar o tipo individual e a validade opcional de uma concessão Full. Na conta do lojista e na página de planos, os nomes e recursos devem refletir o tipo efetivo. A conta Promocional mostra que é gratuita e que a liberação será encerrada pelo administrador, sem inventar uma data final. O resumo não deve mostrar aviso de plano vencido por haver uma liberação Promocional sobre um contrato antigo.
-
-As telas seguem DESIGN.md, USABILIDADE.md e os componentes existentes.
+As campanhas, atribuições e datas antigas ficam preservadas. Reservas pendentes anteriores conservam a elegibilidade após o fim ou a desativação da campanha; seu novo resgate ativa o Promocional imediatamente pela duração vigente do código. O código LANCAMENTO2026 passa a ter duração configurável em dias para novas ativações, inicialmente 90 dias. Períodos já ativados conservam suas datas. O modelo anterior de promoção geral em massa e o planejamento de saldo monetário foram substituídos pelo pedido mais recente.
 
 ## Verificação
 
-1. Ligar a promoção libera Full para lojas gratuitas existentes e novas.
-2. Encerrar a promoção devolve as lojas promocionais ao gratuito.
-3. Full pago e períodos de cupom já concedidos conservam suas datas.
-4. O excedente gratuito é pausado, com todos os produtos preservados.
-5. Uma loja que volta a Full ou Promocional pode reativar os produtos pelo fluxo existente.
-6. Operadores sem permissão de master não conseguem alterar os direitos, inclusive chamando o banco diretamente.
-7. Compras, renovação, cancelamento e repetição de notificações de pagamento conservam a consistência existente.
-8. As telas funcionam em 360 px e passam nos conferidores do projeto.
-9. Testes de produção, se necessários, usam dados temporários e têm limpeza confirmada.
-10. Alterar a promoção enquanto a rotina pausa anúncios ou enquanto um pagamento Full é confirmado mantém os direitos consistentes. A operação final revalida as condições e a quantidade de lojas afetadas, além da prévia do painel.
+- Ativação por conta sem vitrine, por pessoa física, loja gratuita e loja Full.
+- Duração exata a partir da ativação, sem dependência da data de criação da conta.
+- Bloqueio de resgate duplicado e concorrente, de código vencido ou desativado e de usuário sem sessão.
+- Alteração das permissões refletida nas restrições reais de uso e protegida contra operadores sem acesso master.
+- Retorno ao plano anterior no vencimento, com pausa dos excedentes e conservação dos produtos.
+- Compatibilidade dos períodos e campanhas existentes.
+- Testes de banco e ações, lint, tipos, conferidor de design e verificação em 360 px.
 
-## Escolhas propostas para aprovação
+## Escolhas de implementação comunicadas ao usuário
 
-O escopo inicial é o das lojas, incluindo as que pertencem a contas pessoa física. Os vendedores individuais sem loja mantêm o plano próprio. Essa delimitação segue o modelo atual do produto e precisa ser confirmada por Raniel.
-
-Preservar direitos Full pagos e benefícios de cupom já concedidos, oferecer validade opcional para concessões manuais de Full e encerrar liberações promocionais individuais junto com a promoção geral são propostas técnicas e de operação, ainda sujeitas à aprovação de Raniel.
+Um plano Promocional comum aos cupons, em vez de um conjunto de permissões por código. Cada código mantém duração própria. A sobreposição de períodos usa o maior vencimento. A alteração de permissões afeta acessos vigentes. Essas escolhas seguem a configuração singular do plano pedida pelo usuário e evitam perda de dias ao ativar outro código.
 
 ## Estado
 
-Proposta em revisão. A implementação depende da aprovação do desenho.
+Escopo corrigido pela instrução direta de Raniel para criar este sistema. Execução no worktree codex/contas-promocionais.
