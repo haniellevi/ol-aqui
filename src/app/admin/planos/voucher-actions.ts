@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { exigirSuperAdmin } from "@/lib/admin/auth";
 import type { EstadoForm } from "@/lib/admin/estado";
-import { diaDoCupom, normalizarCodigoCupom } from "@/lib/cupons";
+import { diaDoCupom, diaLimiteCupom, normalizarCodigoCupom } from "@/lib/cupons";
 import { ehUuid } from "@/lib/formato";
 
 export async function salvarVoucher(_: EstadoForm, form: FormData): Promise<EstadoForm> {
@@ -40,6 +40,13 @@ export async function salvarVoucher(_: EstadoForm, form: FormData): Promise<Esta
   }
 
   try {
+    if (id) {
+      const { data: campanha, error } = await supabase.from("voucher_campanhas").select("valido_ate").eq("id", id).maybeSingle();
+      if (error) return { erro: "Não foi possível consultar o cupom. Tente novamente." };
+      if (!campanha) return { erro: "Cupom não encontrado." };
+      if (data === diaLimiteCupom(campanha.valido_ate)) validoAte = campanha.valido_ate;
+    }
+
     const { error } = id
       ? await supabase.rpc("voucher_admin_configurar", { p_id: id, p_ativo: form.get("ativo") === "on", p_duracao_dias: duracao, p_valido_ate: validoAte })
       : await supabase.rpc("voucher_admin_criar", { p_codigo: codigo!, p_duracao_dias: duracao, p_valido_ate: validoAte });

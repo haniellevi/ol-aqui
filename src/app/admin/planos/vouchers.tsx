@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { Aviso, Cartao } from "@/components/admin/ui";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
-import { diaDoCupom } from "@/lib/cupons";
+import { diaLimiteCupom } from "@/lib/cupons";
 import { salvarVoucher } from "./voucher-actions";
 
 export type CampanhaVoucher = { id: string; codigo: string; valido_ate: string | null; duracao_dias: number; ativo: boolean };
@@ -12,7 +12,7 @@ export type CampanhaVoucher = { id: string; codigo: string; valido_ate: string |
 export function FormVoucher({ campanha }: { campanha?: CampanhaVoucher }) {
   const [estado, acao, pendente] = useActionState(salvarVoucher, null);
   const chave = campanha?.id ?? "novo";
-  const dia = campanha?.valido_ate ? diaDoCupom.format(new Date(Date.parse(campanha.valido_ate) - 1)) : "";
+  const dia = diaLimiteCupom(campanha?.valido_ate ?? null);
 
   return (
     <Cartao aria-labelledby={`cupom-${chave}`}>

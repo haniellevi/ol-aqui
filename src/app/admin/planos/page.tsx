@@ -24,7 +24,7 @@ export default async function PlanosPage() {
 
   return (
     <>
-      <Titulo sub="Mudanças valem para novas assinaturas. Campos vazios em limite ou propostas significam ilimitado. Tudo fica registrado no histórico.">
+      <Titulo sub="Mudanças nos planos comerciais valem para novas assinaturas. As permissões do Promocional mudam também para quem já tem acesso. Campos vazios em limite ou propostas significam ilimitado. Tudo fica registrado no histórico.">
         Planos e preços
       </Titulo>
       {master && <div className="mb-5 grid gap-5">

@@ -33,15 +33,85 @@ test('cria cupom com código normalizado, dias inteiros e prazo opcional', async
   assert.equal(chamadas.length, 1);
 });
 
-test('edita cupom com prazo exclusivo no fim do dia de São Paulo e aceita prazo passado', async () => {
+const campanhaId = '7d1352f2-4904-4107-af0f-146619c30d58';
+
+function consultaCampanha(resposta) {
+  return (tabela) => {
+    assert.equal(tabela, 'voucher_campanhas');
+    return { select: () => ({ eq: (campo, valor) => {
+      assert.deepEqual([campo, valor], ['id', campanhaId]);
+      return { maybeSingle: async () => resposta };
+    } }) };
+  };
+}
+
+test('salva duração e status de campanha legada preservando o instante exibido como dia', async () => {
+  const React = require('react');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const { FormVoucher } = carregar('src/app/admin/planos/vouchers.tsx', {
+    './voucher-actions': { salvarVoucher: async () => null },
+  });
+  const legado = '2025-12-31T15:00:00.123456+00:00';
+  const html = renderToStaticMarkup(React.createElement(FormVoucher, {
+    campanha: { id: campanhaId, codigo: 'LEGADO', valido_ate: legado, duracao_dias: 90, ativo: true },
+  }));
+  const dia = html.match(/<input(?=[^>]*name="validade")[^>]*value="([^"]+)"/)?.[1];
+  assert.equal(dia, '2025-12-31');
+
   const chamadas = [];
-  const { salvarVoucher } = admin('voucher-actions', { rpc: async (...args) => { chamadas.push(args); return respostas(null); } });
-  const id = '7d1352f2-4904-4107-af0f-146619c30d58';
-  assert.ok((await salvarVoucher(null, form({ id, duracao_dias: '2', validade: '2025-12-31' }))).ok);
-  assert.deepEqual(chamadas, [['voucher_admin_configurar', { p_id: id, p_duracao_dias: 2, p_ativo: false, p_valido_ate: '2026-01-01T03:00:00.000Z' }]]);
-  assert.match((await salvarVoucher(null, form({ id, duracao_dias: '2', validade: '2025-02-29' }))).erro, /data/);
+  const { salvarVoucher } = admin('voucher-actions', {
+    from: consultaCampanha({ data: { valido_ate: legado }, error: null }),
+    rpc: async (...args) => { chamadas.push(args); return respostas(null); },
+  });
+  assert.ok((await salvarVoucher(null, form({ id: campanhaId, duracao_dias: '2', validade: dia }))).ok);
+  assert.deepEqual(chamadas, [['voucher_admin_configurar', {
+    p_id: campanhaId, p_duracao_dias: 2, p_ativo: false, p_valido_ate: legado,
+  }]]);
+});
+
+test('muda a data de cupom para o fim do novo dia em São Paulo, aceita prazo passado e pode remover prazo', async () => {
+  const chamadas = [];
+  const { salvarVoucher } = admin('voucher-actions', {
+    from: consultaCampanha({ data: { valido_ate: '2025-12-30T15:00:00Z' }, error: null }),
+    rpc: async (...args) => { chamadas.push(args); return respostas(null); },
+  });
+  assert.ok((await salvarVoucher(null, form({ id: campanhaId, duracao_dias: '2', validade: '2025-12-31', ativo: 'on' }))).ok);
+  assert.ok((await salvarVoucher(null, form({ id: campanhaId, duracao_dias: '2', validade: '' }))).ok);
+  assert.deepEqual(chamadas, [
+    ['voucher_admin_configurar', { p_id: campanhaId, p_duracao_dias: 2, p_ativo: true, p_valido_ate: '2026-01-01T03:00:00.000Z' }],
+    ['voucher_admin_configurar', { p_id: campanhaId, p_duracao_dias: 2, p_ativo: false, p_valido_ate: null }],
+  ]);
+  assert.match((await salvarVoucher(null, form({ id: campanhaId, duracao_dias: '2', validade: '2025-02-29' }))).erro, /data/);
   assert.match((await salvarVoucher(null, form({ codigo: 'NOVO', duracao_dias: '2', validade: '2025-12-31' }))).erro, /data/);
-  assert.equal(chamadas.length, 1);
+  assert.equal(chamadas.length, 2);
+});
+
+test('edição de cupom falha sem gravar quando a leitura falha ou o código não existe', async () => {
+  for (const [resposta, mensagem] of [
+    [respostas({ code: '500', message: 'Erro interno' }), /consultar o cupom/i],
+    [respostas(null), /Cupom não encontrado/],
+  ]) {
+    const { salvarVoucher } = admin('voucher-actions', {
+      from: consultaCampanha(resposta), rpc: async () => assert.fail('chamou RPC'),
+    });
+    assert.match((await salvarVoucher(null, form({ id: campanhaId, duracao_dias: '2', validade: '2025-12-31' }))).erro, mensagem);
+  }
+});
+
+test('painel vincula novas assinaturas aos planos comerciais e permissões vigentes ao Promocional', async () => {
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const { default: PlanosPage } = carregar('src/app/admin/planos/page.tsx', {
+    '@/lib/admin/auth': {
+      exigirAdmin: async () => ({ supabase: { from: () => ({ select: () => ({ order: async () => respostas(null) }) }) } }),
+      eSuperAdmin: async () => true,
+    },
+    './form-plano': { FormPlano: () => null },
+    './vouchers': { FormVoucher: () => null },
+    './promocional': { FormPromocional: () => null },
+  });
+  const html = renderToStaticMarkup(await PlanosPage());
+  assert.match(html, /Mudanças nos planos comerciais valem para novas assinaturas\./);
+  assert.match(html, /As permissões do Promocional mudam também para quem já tem acesso\./);
 });
 
 test('ações de plano promocional e cupom não escrevem sem acesso master', async () => {

@@ -126,7 +126,6 @@ do $$ declare v public.vitrines_lojas; begin
   select * into v from public.vitrines_lojas where dono_id='user_cliente895';
   assert v.plano='pf_gratis' and (public.plano_efetivo(v)).codigo='promocional', 'PF perdeu plano base ou não recebeu direitos';
   assert public.limite_anuncios(v)=7, 'limite promocional não chegou à publicação';
-  assert (select foto_fachada and secoes_max=4 and fixados_max=2 from public.recursos_vitrine(v)), 'limites de vitrine incorretos';
   assert not public.pode_atender_radar(v.dono_id), 'Radar liberado sem verificação';
   v.arquivada_em := now();
   assert (public.plano_efetivo(v)).codigo is distinct from 'promocional', 'promoção em vitrine arquivada';
@@ -175,34 +174,53 @@ select set_config('olaki.sistema','1',true);
 update public.perfis set whatsapp='5589999990895',whatsapp_verificado_em=now() where id='user_cliente895';
 update public.vitrines_lojas set plano='full',plano_expira_em=now()+interval '30 days' where dono_id='user_cliente895';
 select set_config('olaki.sistema','',true);
-set local role authenticated;
-select public.quero_vender('loja','Loja convertida 895','loja-convertida-895','89999990895');
-reset role;
-do $$ begin
-  assert (select tipo='loja' and plano='full' and plano_expira_em=now()+interval '30 days'
-          from public.vitrines_lojas where dono_id='user_cliente895'), 'converter PF em loja durante promoção descartou o Full';
-end $$;
-update public.voucher_atribuicoes set concedido_de=now()-interval '20 days', concedido_ate=now()-interval '1 second'
-where dono_id='user_cliente895';
-do $$ begin
-  assert (select (public.plano_efetivo(v)).codigo='full' from public.vitrines_lojas v where dono_id='user_cliente895');
-end $$;
--- A rotina de limite também trata a vitrine PF e preserva os anúncios avulsos.
 update public.configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;
 update public.configuracoes set valor='1' where chave='anuncio.fotos_minimo' and microrregiao_id is null;
-update public.perfis set whatsapp='5589999990897',whatsapp_verificado_em=now() where id='user_pfpausa895';
+insert into public.anuncios(id,vitrine_id,categoria_id,titulo,descricao,cidade,preco_centavos,atributos,status,fotos)
+select '89500000-0000-4000-a000-000000000001',v.id,c.id,'Sofá de teste','Produto fictício para verificar limites.',
+       'Corrente',10000,'{"estado":"usado"}','ativo',
+       array['https://abc.supabase.co/storage/v1/object/public/anuncios/user_cliente895/89500000-0000-4000-a000-000000000001/1.webp']
+from public.vitrines_lojas v cross join public.categorias c
+where v.dono_id='user_cliente895' and c.slug='sofas-e-poltronas';
+
 set local role authenticated;
-select set_config('request.jwt.claim.sub','user_master895',true);
-update public.planos set limite_anuncios=12 where codigo='promocional';
-select set_config('request.jwt.claim.sub','user_pfpausa895',true);
-select public.resgatar_voucher('CURTO895');
-select public.quero_vender('pf');
 do $$ declare vitrine uuid; begin
-  select id into vitrine from public.vitrines_lojas where dono_id='user_pfpausa895';
-  perform set_config('teste.vitrine_pf',vitrine::text,true);
+  select id into strict vitrine from public.vitrines_lojas where dono_id='user_cliente895';
+  begin
+    insert into public.loja_secoes(vitrine_id,nome) values(vitrine,'Seção da PF');
+    raise exception 'PF promocional criou seção';
+  exception when insufficient_privilege then
+    assert sqlerrm = 'Só lojas têm seções na vitrine.';
+  end;
+  begin
+    update public.vitrines_lojas set banner_tipo='foto',
+      banner_url='https://abc.supabase.co/storage/v1/object/public/anuncios/user_cliente895/vitrine/banner.webp'
+    where id=vitrine;
+    raise exception 'PF promocional gravou foto de fachada';
+  exception when insufficient_privilege then
+    assert sqlerrm like 'A foto da fachada %';
+  end;
+  begin
+    perform public.fixar_anuncio('89500000-0000-4000-a000-000000000001');
+    raise exception 'PF promocional fixou anúncio';
+  exception when raise_exception then
+    assert sqlerrm like 'Fixar produtos no topo %', sqlerrm;
+  end;
+  assert (select not foto_fachada and secoes_max=0 and fixados_max=0 from public.recursos_vitrine_id(vitrine)),
+    'PF recebeu recursos próprios de loja';
+  perform set_config('teste.promocao_pf895',(select to_jsonb(p)::text from public.meu_promocional() p),true);
+end $$;
+
+select public.quero_vender('loja','Loja convertida 895','loja-convertida-895','89999990895');
+do $$ declare vitrine uuid; begin
+  select id into strict vitrine from public.vitrines_lojas where dono_id='user_cliente895';
+  assert (select to_jsonb(p)=current_setting('teste.promocao_pf895')::jsonb from public.meu_promocional() p),
+    'conversão alterou a concessão vigente';
+  assert (select foto_fachada and secoes_max=4 and fixados_max=2 from public.recursos_vitrine_id(vitrine)),
+    'loja convertida não recebeu os recursos promocionais';
   begin
     insert into public.loja_secoes(vitrine_id,nome) values(vitrine,'Maconha boa');
-    raise exception 'PF gravou nome bloqueado pela moderação';
+    raise exception 'loja convertida gravou nome bloqueado pela moderação';
   exception when check_violation then
     assert sqlerrm like '%palavra%não é permitida%';
   end;
@@ -212,17 +230,43 @@ do $$ declare vitrine uuid; begin
     insert into public.loja_secoes(vitrine_id,nome) values(vitrine,'Seção excedente');
     raise exception 'limite de seções ignorado';
   exception when raise_exception then
-    assert sqlerrm like 'Seu plano permite até 4 seções.%';
+    assert sqlerrm like 'Seu plano permite até 4 seções.%', sqlerrm;
   end;
+  update public.vitrines_lojas set banner_tipo='foto',
+    banner_url='https://abc.supabase.co/storage/v1/object/public/anuncios/user_cliente895/vitrine/banner.webp'
+  where id=vitrine;
+  assert found, 'loja convertida não gravou foto de fachada';
+  assert public.fixar_anuncio('89500000-0000-4000-a000-000000000001') = 1, 'loja convertida não fixou anúncio';
+  perform set_config('teste.vitrine_convertida895',vitrine::text,true);
 end $$;
 select set_config('request.jwt.claim.sub','user_outro895',true);
 do $$ begin
   begin
-    insert into public.loja_secoes(vitrine_id,nome) values(current_setting('teste.vitrine_pf')::uuid,'Seção de terceiros');
-    raise exception 'outra conta criou seção na vitrine PF';
+    insert into public.loja_secoes(vitrine_id,nome)
+    values(current_setting('teste.vitrine_convertida895')::uuid,'Seção de terceiros');
+    raise exception 'outra conta criou seção na loja convertida';
   exception when insufficient_privilege then null; end;
 end $$;
+reset role;
+do $$ begin
+  assert (select tipo='loja' and plano='full' and plano_expira_em=now()+interval '30 days'
+          from public.vitrines_lojas where dono_id='user_cliente895'), 'converter PF em loja durante promoção descartou o Full';
+  assert (select fixado_na_loja=1 from public.anuncios where id='89500000-0000-4000-a000-000000000001'),
+    'fixação da loja convertida não foi gravada';
+end $$;
+update public.voucher_atribuicoes set concedido_de=now()-interval '20 days', concedido_ate=now()-interval '1 second'
+where dono_id='user_cliente895';
+do $$ begin
+  assert (select (public.plano_efetivo(v)).codigo='full' from public.vitrines_lojas v where dono_id='user_cliente895');
+end $$;
+-- A rotina de limite também trata a vitrine PF e preserva os anúncios avulsos.
+update public.perfis set whatsapp='5589999990897',whatsapp_verificado_em=now() where id='user_pfpausa895';
+set local role authenticated;
+select set_config('request.jwt.claim.sub','user_master895',true);
+update public.planos set limite_anuncios=12 where codigo='promocional';
 select set_config('request.jwt.claim.sub','user_pfpausa895',true);
+select public.resgatar_voucher('CURTO895');
+select public.quero_vender('pf');
 reset role;
 with itens as (select gen_random_uuid() as id,n from generate_series(1,13) n)
 insert into public.anuncios(id,vitrine_id,categoria_id,titulo,descricao,cidade,preco_centavos,atributos,status,fotos,pago_ate)
@@ -262,7 +306,6 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','user_pfpausa895',true);
 do $$ declare vitrine uuid; begin
   select id into vitrine from public.vitrines_lojas where dono_id='user_pfpausa895';
-  delete from public.loja_secoes where vitrine_id=vitrine and nome='Seção 4';
   begin
     insert into public.loja_secoes(vitrine_id,nome) values(vitrine,'Seção após vencimento');
     raise exception 'PF criou seção depois do vencimento';
