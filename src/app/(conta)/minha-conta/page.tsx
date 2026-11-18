@@ -66,9 +66,9 @@ export default async function PaginaMinhaConta() {
           icone: <Megaphone />,
           detalhe: conta.rascunhos > 0 ? `${conta.rascunhos} ${conta.rascunhos === 1 ? "rascunho" : "rascunhos"}` : undefined,
         },
-        { href: "/minha-conta/plano", nome: "Meu plano", icone: <CreditCard /> },
-        ...(!ehLoja ? [{ href: "/minha-conta/verificacao", nome: "Verificação de vendedor", icone: <ShieldCheck /> }] : []),
       ] : []),
+    { href: "/minha-conta/plano", nome: "Meu plano", icone: <CreditCard /> },
+    ...(vitrine && !ehLoja ? [{ href: "/minha-conta/verificacao", nome: "Verificação de vendedor", icone: <ShieldCheck /> }] : []),
   ];
   const comprasEConversas: Item[] = [
     { href: LINK_ATENDIMENTO, nome: "Atendimento", icone: <MessagesSquare /> },

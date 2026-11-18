@@ -53,6 +53,8 @@ export async function acaoLoja(_: EstadoForm, form: FormData): Promise<EstadoFor
     const dias = precisaDias ? inteiroOuNulo(form.get("dias")) : null;
     const plano = acao === "trocar_plano" ? String(form.get("plano") ?? "").trim() || null : null;
 
+    if (plano === "promocional") return { erro: "Escolha um plano da lista." };
+
     const { error } = await supabase.rpc("admin_acao_loja", {
       p_vitrine: vitrine,
       p_acao: acao,

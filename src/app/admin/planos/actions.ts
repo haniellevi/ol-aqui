@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { exigirAdmin } from "@/lib/admin/auth";
+import { exigirAdmin, exigirSuperAdmin } from "@/lib/admin/auth";
 import { centavosDe, inteiroOuNulo } from "@/lib/admin/formato";
 import type { EstadoForm } from "@/lib/admin/estado";
 
@@ -33,6 +33,7 @@ export async function salvarPlano(_: EstadoForm, form: FormData): Promise<Estado
   try {
     const { supabase, userId } = await exigirAdmin();
     const codigo = String(form.get("codigo"));
+    if (codigo === "promocional") return { erro: "Este código é reservado ao plano Promocional." };
     const dados = lerPlano(form);
     if (!dados.nome) return { erro: "Dê um nome ao plano." };
     const { error } = await supabase
@@ -59,6 +60,7 @@ export async function criarPlano(_: EstadoForm, form: FormData): Promise<EstadoF
       .replace(/[̀-ͯ]/g, "")
       .replace(/[^a-z0-9]+/g, "_")
       .replace(/^_|_$/g, "");
+    if (codigo === "promocional") return { erro: "Este código é reservado ao plano Promocional." };
     if (!/^[a-z0-9_]{2,30}$/.test(codigo)) return { erro: "Código inválido. Use letras, números e _ (ex.: ouro)." };
     const dados = lerPlano(form);
     if (!dados.nome) return { erro: "Dê um nome ao plano." };
@@ -69,5 +71,39 @@ export async function criarPlano(_: EstadoForm, form: FormData): Promise<EstadoF
     return { ok: `Plano "${dados.nome}" criado.` };
   } catch (e) {
     return { erro: e instanceof Error ? e.message : "Erro ao criar." };
+  }
+}
+
+export async function salvarPromocional(_: EstadoForm, form: FormData): Promise<EstadoForm> {
+  let acesso;
+  try {
+    acesso = await exigirSuperAdmin();
+  } catch {
+    return { erro: "Acesso restrito ao administrador master." };
+  }
+
+  try {
+    const marcado = (nome: string) => form.get(nome) === "on";
+    const limite = (habilitado: string, nome: string) => marcado(habilitado) ? inteiroOuNulo(form.get(nome)) : 0;
+    const radar = marcado("acesso_radar");
+    const { error } = await acesso.supabase
+      .from("planos")
+      .update({
+        limite_anuncios: limite("publicar_anuncios", "limite_anuncios"),
+        acesso_radar: radar,
+        aviso_radar_na_hora: radar && marcado("aviso_radar_na_hora"),
+        propostas_radar_mes: limite("acesso_radar", "propostas_radar_mes"),
+        vitrine_foto_fachada: marcado("vitrine_foto_fachada"),
+        vitrine_secoes_max: limite("vitrine_secoes", "vitrine_secoes_max"),
+        vitrine_fixados_max: limite("vitrine_fixados", "vitrine_fixados_max"),
+        atualizado_em: new Date().toISOString(),
+        atualizado_por: acesso.userId,
+      })
+      .eq("codigo", "promocional");
+    if (error) return { erro: "Não foi possível salvar os recursos. Confira os limites e tente novamente." };
+    revalidatePath("/", "layout");
+    return { ok: "Recursos do plano Promocional salvos." };
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : "Não foi possível salvar os recursos." };
   }
 }

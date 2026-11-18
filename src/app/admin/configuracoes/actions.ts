@@ -74,6 +74,7 @@ async function valorForaDaLista(supabase: SupabaseClient, chave: string, valor: 
   const fixas = OPCOES_FIXAS[chave];
   if (fixas) return fixas.some((o) => o.valor === valor) ? null : "Escolha uma das opções da lista.";
   if (CHAVES_DE_PLANO.has(chave)) {
+    if (valor === "promocional") return "Escolha um plano da lista.";
     const { data } = await supabase.from("planos").select("codigo").eq("codigo", String(valor)).maybeSingle();
     return data ? null : "Esse plano não existe.";
   }
