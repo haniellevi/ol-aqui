@@ -372,7 +372,7 @@ Página para ver as peças: `/admin/pecas`.
 
 - **`CardAnuncio`:** foto 4:3; coração no canto da foto (alvo de 44 px); **preço 16 px em 700**; título 14 px em até 2 linhas; cidade e data em 12 px `texto-suave`; no máximo um selo; "Patrocinado" escrito; card inteiro tocável. Duas colunas no celular, 4 a 5 no computador.
 - **`CampoBusca`:** uma só por tela, 44 px, texto "O que você procura?". Fundo branco com `borda-campo`; não é laranja. O botão de buscar é a lupa à direita (44 px). Página com `CampoBusca` próprio esconde a busca do cabeçalho (`globals.css`).
-- **Barra de busca do Início:** Categorias à esquerda, busca com largura flexível (lupa em `selecao`) e "Criar anúncio" em laranja à direita. Abaixo de 360 px, o controle de categorias mostra só o ícone e mantém o nome acessível.
+- **Barra de busca do Início:** Categorias à esquerda, busca com largura flexível (lupa em `selecao`) e "Criar anúncio" em laranja à direita. O texto de orientação da busca é "Buscar", para caber no celular; o rótulo acessível continua "O que você procura?". Abaixo de 360 px, o controle de categorias mostra só o ícone e mantém o nome acessível.
 - **`FaixaCategorias`:** uma só lista de categorias por tela, rolável na horizontal com `scroll-snap`, ícone com nome, estado ativo em `selecao` com texto beringela.
 - **Filtros rápidos:** uma linha rolável de `Chip` logo abaixo da busca.
 - **`LojasDaRegiao`:** um só bloco de lojas por tela, com logo redondo, nome, selo "Loja verificada" **com a palavra escrita**, quantidade de anúncios e acesso à vitrine.
@@ -395,8 +395,10 @@ Cada onda é uma tarefa própria, pequena e testável. Nunca "refazer o site int
 1. **Casca do site (feita em 14/11/2026):** `CampoBusca` único (44 px, branco, lupa como botão, sem laranja); página com busca própria esconde a do cabeçalho; sugestões, seletor de cidade e links do rodapé com 44 px; links do cabeçalho em 14 px. A barra de baixo já seguia a regra.
 2. **Início e listagens (feita em 15/11/2026):** `Chip` como casca do `Toggle` (estilos em `src/components/ui/toggle-variants.ts`); chips da folha de filtros e da busca na mesma regra (borda beringela e ✓); Início com anúncios em duas colunas no celular (sem o modo `compacto`); um bloco de lojas só: as lojas pagas entram primeiro em `LojasDaRegiao`, com "Patrocinado", e "Loja verificada" aparece escrito. O Início já tinha uma lista de categorias só (o menu "Categorias"); `FaixaCategorias` segue sem uso.
 3. **Anúncio e conversão (feita em 15/11/2026):** preço do anúncio em 24 px (`text-3xl`, 700); "Vendido" e "Patrocinado" com `Badge`; barra de contato fixa no celular com fundo `olaki-material` e um botão "Chamar no WhatsApp" de 48 px (tamanho `acao`); parecidos em duas colunas; voltar, trilha de categorias, denúncia e favoritos com 44 px; foco da galeria em `laranja-escuro`.
-4. **Área logada:** anunciar, meus anúncios, minha loja, conta.
-5. **Painel admin.**
+4. **Área logada (parcial):** criação de anúncio e cadastro de loja revisados ([#181](https://github.com/haniellevi/ol-aqui/pull/181), [#184](https://github.com/haniellevi/ol-aqui/pull/184)); Minha loja, horários, marketing, desempenho e Meus anúncios compactados ([#197](https://github.com/haniellevi/ol-aqui/pull/197), [#198](https://github.com/haniellevi/ol-aqui/pull/198), [#200](https://github.com/haniellevi/ol-aqui/pull/200), [#201](https://github.com/haniellevi/ol-aqui/pull/201)); Meu plano e pagamentos revisados ([#204](https://github.com/haniellevi/ol-aqui/pull/204)). Falta conferir as demais telas e estados, incluindo conta, permissões de proprietário e ajudante, verificação, cobranças e convites. Os lotes feitos não equivalem à validação completa da onda.
+5. **Painel admin (pendente):** revisar jornadas, tabelas e formulários por papel, incluindo estados de erro e confirmação.
+
+**Verificação pendente:** validar a leitura de 14 px com participantes do público, os fluxos e estados ainda não cobertos e o desempenho em celular e conexão lenta. Em 15/11/2026, o conferidor registrou 34 avisos de dívida antiga e o lint, 72 avisos; são levantamentos daquela versão, não uma garantia para versões posteriores.
 
 ## 12. Faça e não faça
 
