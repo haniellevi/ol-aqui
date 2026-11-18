@@ -197,6 +197,32 @@ update public.planos set limite_anuncios=12 where codigo='promocional';
 select set_config('request.jwt.claim.sub','user_pfpausa895',true);
 select public.resgatar_voucher('CURTO895');
 select public.quero_vender('pf');
+do $$ declare vitrine uuid; begin
+  select id into vitrine from public.vitrines_lojas where dono_id='user_pfpausa895';
+  perform set_config('teste.vitrine_pf',vitrine::text,true);
+  begin
+    insert into public.loja_secoes(vitrine_id,nome) values(vitrine,'Maconha boa');
+    raise exception 'PF gravou nome bloqueado pela moderação';
+  exception when check_violation then
+    assert sqlerrm like '%palavra%não é permitida%';
+  end;
+  insert into public.loja_secoes(vitrine_id,nome)
+  select vitrine,'Seção '||n from generate_series(1,4) n;
+  begin
+    insert into public.loja_secoes(vitrine_id,nome) values(vitrine,'Seção excedente');
+    raise exception 'limite de seções ignorado';
+  exception when raise_exception then
+    assert sqlerrm like 'Seu plano permite até 4 seções.%';
+  end;
+end $$;
+select set_config('request.jwt.claim.sub','user_outro895',true);
+do $$ begin
+  begin
+    insert into public.loja_secoes(vitrine_id,nome) values(current_setting('teste.vitrine_pf')::uuid,'Seção de terceiros');
+    raise exception 'outra conta criou seção na vitrine PF';
+  exception when insufficient_privilege then null; end;
+end $$;
+select set_config('request.jwt.claim.sub','user_pfpausa895',true);
 reset role;
 with itens as (select gen_random_uuid() as id,n from generate_series(1,13) n)
 insert into public.anuncios(id,vitrine_id,categoria_id,titulo,descricao,cidade,preco_centavos,atributos,status,fotos,pago_ate)
@@ -231,5 +257,15 @@ do $$ begin
           where v.dono_id='user_pfpausa895' and a.status='ativo' and a.pago_ate>now()), 'rotina pausou avulso pago';
   assert (select count(*)=9 from public.anuncios a join public.vitrines_lojas v on v.id=a.vitrine_id
           where v.dono_id='user_pfpausa895' and a.status='pausado'), 'anúncios excedentes não foram preservados';
+end $$;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','user_pfpausa895',true);
+do $$ declare vitrine uuid; begin
+  select id into vitrine from public.vitrines_lojas where dono_id='user_pfpausa895';
+  delete from public.loja_secoes where vitrine_id=vitrine and nome='Seção 4';
+  begin
+    insert into public.loja_secoes(vitrine_id,nome) values(vitrine,'Seção após vencimento');
+    raise exception 'PF criou seção depois do vencimento';
+  exception when insufficient_privilege then null; end;
 end $$;
 rollback;

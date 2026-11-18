@@ -1,6 +1,24 @@
 -- Compatibilidade dos wrappers antigos e dos períodos Full já concedidos.
 \set ON_ERROR_STOP on
 begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','user_reserva890',true);
+do $$ begin
+  assert exists (select 1 from public.meus_vouchers() where codigo='RESERVA890' and reservado_em is not null),
+    'reserva anterior sumiu depois que a campanha encerrou';
+end $$;
+reset role;
+update public.voucher_campanhas set duracao_dias=13 where codigo='RESERVA890';
+set local role authenticated;
+do $$ begin
+  assert public.resgatar_voucher('RESERVA890') is not null, 'reserva anterior não pode ser ativada';
+  assert not exists (select 1 from public.meus_vouchers() where codigo='RESERVA890'), 'reserva consumida ainda aparece';
+end $$;
+do $$ begin
+  assert exists (select 1 from public.meu_promocional() where codigo='RESERVA890' and vence_em-ativado_em=interval '312 hours'),
+    'reserva não ativou o Promocional de imediato com a duração vigente';
+end $$;
+reset role;
 insert into public.perfis(id,microrregiao_id,nome,cidade,e_admin,e_super_admin)
 select 'user_adminvoucher890',id,'Master voucher','Corrente',true,true from public.microrregioes where slug='corrente-pi';
 insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
@@ -16,6 +34,15 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','user_adminvoucher890',true);
 select public.voucher_admin_criar('TESTE890', now()+interval '1 month');
 select set_config('request.jwt.claim.sub','user_legado890',true);
+do $$ begin
+  assert not exists (select 1 from public.meus_vouchers() where codigo='RESERVA890');
+  begin
+    perform public.resgatar_voucher('RESERVA890');
+    raise exception 'conta sem reserva ativou campanha encerrada';
+  exception when invalid_parameter_value then
+    assert sqlerrm='Cupom desativado.';
+  end;
+end $$;
 select public.quero_vender('loja','Loja legada','loja-legada-890','89999990890');
 select set_config('request.jwt.claim.sub','user_pagovoucher890',true);
 select public.quero_vender('loja','Loja paga voucher','loja-paga-voucher-890','89999990891');

@@ -87,7 +87,8 @@ language sql stable security definer set search_path='' as $$
   select c.codigo,c.valido_ate,a.resgatado_em,a.reservado_em,c.duracao_dias
   from public.voucher_atribuicoes a join public.voucher_campanhas c on c.id=a.campanha_id
   where a.dono_id=public.usuario_id() and a.resgatado_em is null
-    and c.ativo and (c.valido_ate is null or c.valido_ate>statement_timestamp())
+    and ((a.reservado_em is not null and not a.acesso_promocional)
+         or (c.ativo and (c.valido_ate is null or c.valido_ate>statement_timestamp())))
   order by c.valido_ate,c.codigo
 $$;
 
@@ -96,6 +97,7 @@ language plpgsql security definer set search_path='' as $$
 declare
   dono text := public.usuario_id();
   c public.voucher_campanhas;
+  a public.voucher_atribuicoes;
   inicio timestamptz;
   fim timestamptz;
 begin
@@ -107,21 +109,24 @@ begin
   perform 1 from public.vitrines_lojas where dono_id=dono for update;
   select * into c from public.voucher_campanhas where codigo=upper(btrim(coalesce(p_codigo,''))) for share;
   if c.id is null then raise exception 'Cupom inválido.' using errcode='22023'; end if;
-  if not c.ativo then raise exception 'Cupom desativado.' using errcode='22023'; end if;
 
   insert into public.voucher_atribuicoes(campanha_id,dono_id)
   values(c.id,dono) on conflict(campanha_id,dono_id) do nothing;
-  perform 1 from public.voucher_atribuicoes where campanha_id=c.id and dono_id=dono for update;
+  select * into a from public.voucher_atribuicoes where campanha_id=c.id and dono_id=dono for update;
+  if a.resgatado_em is not null then raise exception 'Você já usou este cupom.' using errcode='22023'; end if;
   inicio := clock_timestamp();
-  if c.valido_ate is not null and c.valido_ate<=inicio then
-    raise exception 'Cupom vencido.' using errcode='22023';
+  -- Uma reserva antiga conserva a elegibilidade mesmo depois do fim da campanha.
+  if a.reservado_em is null or a.acesso_promocional then
+    if not c.ativo then raise exception 'Cupom desativado.' using errcode='22023'; end if;
+    if c.valido_ate is not null and c.valido_ate<=inicio then
+      raise exception 'Cupom vencido.' using errcode='22023';
+    end if;
   end if;
   fim := public.voucher_fim_promocional(inicio,c.duracao_dias);
   update public.voucher_atribuicoes
     set vitrine_id=null,reservado_em=null,resgatado_em=inicio,
         concedido_de=inicio,concedido_ate=fim,acesso_promocional=true
-    where campanha_id=c.id and dono_id=dono and resgatado_em is null;
-  if not found then raise exception 'Você já usou este cupom.' using errcode='22023'; end if;
+    where id=a.id;
   return fim;
 end $$;
 
@@ -323,6 +328,66 @@ begin
     return;
   end if;
   return query select p.vitrine_foto_fachada, p.vitrine_secoes_max, p.vitrine_fixados_max;
+end $$;
+
+-- A escrita de seções usa os direitos da vitrine, inclusive para PF em promoção.
+create or replace function public.validar_secao_loja()
+returns trigger language plpgsql
+set search_path = public, extensions
+as $$
+declare
+  sistema boolean := public.acesso_sistema();
+  v       record;
+  rec     record;
+  total   integer;
+  nomes   text;
+begin
+  if tg_op = 'UPDATE' then
+    new.vitrine_id := old.vitrine_id;
+    new.criado_em := old.criado_em;
+  end if;
+  new.nome := regexp_replace(btrim(coalesce(new.nome, '')), '\s+', ' ', 'g');
+  if char_length(new.nome) not between 2 and 40 then
+    raise exception using errcode = '23514', message = 'Escreva o nome da seção (de 2 a 40 letras).', detail = 'campo:nome';
+  end if;
+  select x.id, x.tipo, x.microrregiao_id, x.dono_id into v from public.vitrines_lojas x where x.id = new.vitrine_id;
+  if v.id is null or (not sistema and not public.pode_mexer_vitrine(v.id)) then
+    raise exception using errcode = '42501', message = 'Loja não encontrada.';
+  end if;
+  if tg_op = 'INSERT' and not sistema then
+    perform 1 from public.vitrines_lojas where id = v.id for update;   -- duas abas ao mesmo tempo não passam do limite
+  end if;
+  select * into rec from public.recursos_vitrine_id(v.id);
+  if v.tipo <> 'loja' and rec.secoes_max = 0 then
+    raise exception using errcode = '42501', message = 'Seções próprias não fazem parte do seu plano.';
+  end if;
+  if not sistema and (tg_op = 'INSERT' or new.nome is distinct from old.nome) then
+    if public.texto_bloqueado(new.nome, v.microrregiao_id) is not null then
+      raise exception using errcode = '23514', detail = 'campo:nome',
+        message = 'O nome da seção tem uma palavra que não é permitida no OLAKI.';
+    end if;
+  end if;
+  if exists (select 1 from public.loja_secoes s
+              where s.vitrine_id = new.vitrine_id and lower(s.nome) = lower(new.nome) and s.id <> new.id) then
+    raise exception using errcode = '23505', message = 'Você já tem uma seção com esse nome.', detail = 'campo:nome';
+  end if;
+  if tg_op = 'INSERT' then
+    if not sistema then
+      select count(*) into total from public.loja_secoes s where s.vitrine_id = v.id;
+      if rec.secoes_max is not null and total >= rec.secoes_max then
+        nomes := public.planos_com_recurso('secoes');
+        raise exception using errcode = 'P0001',
+          message = case
+            when rec.secoes_max = 0 and nomes is null then 'Seções próprias não fazem parte do seu plano.'
+            when rec.secoes_max = 0 then format('Seções próprias fazem parte destes planos: %s.', nomes)
+            else format('Seu plano permite até %s seções. Apague uma ou troque de plano.', rec.secoes_max) end;
+      end if;
+    end if;
+    new.ordem := least(coalesce((select max(s.ordem) from public.loja_secoes s where s.vitrine_id = v.id), 0) + 1, 10000);
+    new.criado_em := now();
+  end if;
+  new.atualizado_em := now();
+  return new;
 end $$;
 
 -- A conversão de PF em loja e a lista de assinaturas preservam o plano comercial.
