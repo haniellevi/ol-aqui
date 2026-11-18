@@ -8,7 +8,7 @@ export function FiltroMeusAnuncios({ aba, contagem }: { aba: string; contagem: R
   const router = useRouter();
   const [pendente, iniciar] = useTransition();
   return <div className="sm:hidden">
-    <Seletor rotulo="Situação dos anúncios" name="situacao" key={aba} defaultValue={aba} disabled={pendente}
+    <Seletor rotulo="Situação dos anúncios" name="situacao" tamanho="toque" key={aba} defaultValue={aba} disabled={pendente}
       onChange={(e) => {
         const destino = e.target.value;
         iniciar(() => router.push(`/minha-conta/anuncios?aba=${destino}`, { scroll: false }));

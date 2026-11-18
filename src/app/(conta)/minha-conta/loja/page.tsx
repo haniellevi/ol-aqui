@@ -7,7 +7,8 @@ import { meusRecursosVitrine, minhaVitrineCompleta, planosPublicos, vitrineNovaA
 import { minhasSugestoesCategoria } from "@/lib/dados/categorias-ia";
 import { lerHistorico } from "@/lib/dados/historico";
 import { fraseHistorico } from "@/lib/historico";
-import { linkLoja, preco, urlAbsoluta } from "@/lib/formato";
+import { linkLoja, preco } from "@/lib/formato";
+import { formatarNome } from "@/lib/formatar-nome";
 import { LINK_DESTACAR_LOJA, LINK_LOJA_BANNER, LINK_LOJA_CATEGORIAS, LINK_LOJA_DESEMPENHO, LINK_LOJA_FIXADOS, LINK_LOJA_HISTORICO, LINK_LOJA_INFORMACOES, LINK_LOJA_SECOES, LINK_LOJA_VERIFICAR, linkDestacarLoja } from "@/lib/rotas";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
@@ -16,6 +17,7 @@ import { Aviso } from "@/components/conta/aviso";
 import { FormMinhaLoja } from "@/components/conta/form-minha-loja";
 import { DestaquesAtivos } from "@/components/destaques/destaques-ativos";
 import { resultadosDestaques } from "@/lib/dados/destaques";
+import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
 import { BannerLoja } from "@/components/vitrine/banner-loja";
 import { textoDisponivelEm } from "@/components/vitrine/regras";
 import { createClient } from "@/lib/supabase/server";
@@ -90,11 +92,9 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
     : undefined;
   const podeVerificar = verificacao?.estado === "correcao" || verificacao?.estado === "recusada"
     || (verificacao?.estado === "pendente" && (envioStatus === "nao_enviada" || envioStatus === "obsoleta"));
-  const completa = v;
   const destaquesLoja = destaques.filter((d) => d.tipo === "loja");
   const lojaPendente = destaquesLoja.find((d) => d.status === "aguardando_pagamento" && d.pagamento_status === "pendente");
-  const endereco = urlAbsoluta(linkLoja(v.slug)).replace(/^https?:\/\//, "");
-  const fotoGuardadaSemPlano = completa?.banner_tipo === "foto" && !recursos.foto_fachada;
+  const fotoGuardadaSemPlano = v.banner_tipo === "foto" && !recursos.foto_fachada;
 
   const usoSecoes =
     recursos.secoes_max === 0
@@ -111,17 +111,23 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
 
   return (
     <PaginaConta>
-      <TopoConta titulo="Minha loja">
-        {lojaAtual && <SeletorLoja lojas={lojas} atual={lojaAtual} voltar="/minha-conta/loja" />}
-        <p className="text-base break-all text-texto-suave">
-          Sua vitrine: <strong className="text-texto">{endereco}</strong>
-        </p>
-        {v.status === "ativa" && (
-          <Botao href={linkLoja(v.slug)} variante="secundario" icone={<ExternalLink />} larguraTotal className="sm:w-fit">
-            Ver minha vitrine
+      <TopoConta titulo="Minha loja" acao={v.status === "ativa" ? (
+          <Botao href={linkLoja(v.slug)} variante="secundario" tamanho="toque" icone={<ExternalLink />} className="max-w-full">
+            Ver vitrine
           </Botao>
-        )}
-      </TopoConta>
+      ) : undefined} />
+      <SeletorLoja lojas={lojas} atual={lojaAtual} voltar="/minha-conta/loja" />
+
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-borda bg-cartao p-3">
+        <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
+          <AvatarVitrine nome={v.nome} logo={v.logo_url} tamanho="md" />
+          <div className="min-w-0 [overflow-wrap:anywhere]">
+            <h2 className="text-lg font-semibold text-beringela">{formatarNome(v.nome)}</h2>
+            <p className="text-sm text-texto-suave">{[v.bairro, v.cidade].filter(Boolean).join(", ")}</p>
+          </div>
+        </div>
+        <Botao href="#dados-da-loja" variante="texto" tamanho="toque">Editar dados</Botao>
+      </div>
 
       {/* P5c: loja montada pela equipe (só ela vê) e loja recém-recebida pelo dono. */}
       {v.status === "montagem" ? (
@@ -156,10 +162,12 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
         </Aviso>
       ) : verificacao?.estado === "correcao" || verificacao?.estado === "recusada" ? (
         <Aviso tipo="atencao">
-          {verificacao.estado === "correcao" ? "A loja precisa de correções." : "A verificação da loja foi recusada."}
+          <p>{verificacao.estado === "correcao" ? "A loja precisa de correções." : "A verificação da loja foi recusada."}</p>
           <p className="font-normal">{textoMotivoVerificacaoLoja(verificacao.motivo ?? "outro")}</p>
-          <BotaoVerificar />
-          <Link href="/ajuda" className="w-fit underline">Ajuda e segurança</Link>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <BotaoVerificar />
+            <Botao href="/ajuda" variante="texto" tamanho="toque" className="px-2">Ajuda</Botao>
+          </div>
         </Aviso>
       ) : (
         <Aviso tipo="atencao">A situação da verificação está indisponível agora. Atualize a página para consultar novamente.</Aviso>
@@ -171,47 +179,45 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
         </Aviso>
       )}
 
-      {completa && (
-        <section aria-labelledby="titulo-vitrine" className="flex flex-col gap-3">
-          <h2 id="titulo-vitrine" className="text-lg font-bold">
-            Sua vitrine
-          </h2>
-          <div className="mx-auto w-2/3 max-w-sm overflow-hidden rounded-card shadow-1 md:w-full md:max-w-none">
-            <BannerLoja
-              tipo={recursos.foto_fachada ? completa.banner_tipo : "modelo"}
-              url={completa.banner_url}
-              modelo={completa.banner_modelo}
-              cor={completa.banner_cor}
-              nome={completa.nome}
-              logo={completa.logo_url}
-            />
-          </div>
-          {fotoGuardadaSemPlano && (
-            <p className="text-sm text-texto-suave">
-              Sua foto da fachada está guardada, mas o seu plano de agora mostra o banner modelo. Ela volta quando o plano tiver foto.
-            </p>
+      <section aria-labelledby="titulo-vitrine" className="flex flex-col gap-3">
+        <h2 id="titulo-vitrine" className="text-lg font-semibold text-beringela">
+          Sua vitrine
+        </h2>
+        <div className="mx-auto w-2/3 max-w-sm overflow-hidden rounded-card border border-borda md:w-full md:max-w-none">
+          <BannerLoja
+            tipo={recursos.foto_fachada ? v.banner_tipo : "modelo"}
+            url={v.banner_url}
+            modelo={v.banner_modelo}
+            cor={v.banner_cor}
+            nome={v.nome}
+            logo={v.logo_url}
+          />
+        </div>
+        <ul className="divide-y divide-borda rounded-card border border-borda bg-cartao">
+          <ItemMenu href={LINK_LOJA_BANNER} icone={<IconeImagem />} titulo="Capa da loja" detalhe={fotoGuardadaSemPlano ? "Modelo em uso. Foto guardada." : v.banner_tipo === "foto" ? "Foto da fachada" : "Modelo com cor"} />
+          <ItemMenu href={LINK_LOJA_INFORMACOES} icone={<Store />} titulo="Horários e informações" detalhe="Endereço, Instagram, pagamento e entrega" />
+          <ItemMenu href={LINK_LOJA_SECOES} icone={<LayoutList />} titulo="Seções próprias" detalhe={usoSecoes} />
+          <ItemMenu href={LINK_LOJA_FIXADOS} icone={<Pin />} titulo="Produtos no topo" detalhe={usoFixados} />
+          {sugestoesIA !== undefined && (
+            <ItemMenu href={LINK_LOJA_CATEGORIAS} icone={<Tags />} titulo="Revise suas categorias"
+              detalhe={sugestoesIA === null ? "Nicho e categorias sugeridos pela IA" : sugestoesIA.length === 0 ? "Tudo organizado" : sugestoesIA.length === 1 ? "1 sugestão da IA" : `${sugestoesIA.length} sugestões da IA`} />
           )}
-          <ul className="flex flex-col divide-y divide-borda overflow-hidden rounded-card bg-cartao shadow-1">
-            <ItemMenu href={LINK_LOJA_BANNER} icone={<IconeImagem />} titulo="Capa da loja" detalhe={completa.banner_tipo === "foto" && recursos.foto_fachada ? "Foto da fachada" : "Modelo com cor"} />
-            <ItemMenu href={LINK_LOJA_INFORMACOES} icone={<Store />} titulo="Horários e informações" detalhe="Endereço, Instagram, pagamento e entrega" />
-            <ItemMenu href={LINK_LOJA_MARKETING} icone={<Megaphone />} titulo="Meu Marketing" detalhe="Artes para divulgar e produtos procurados na região" />
-            <ItemMenu href={LINK_LOJA_SECOES} icone={<LayoutList />} titulo="Seções próprias" detalhe={usoSecoes} />
-            <ItemMenu href={LINK_LOJA_FIXADOS} icone={<Pin />} titulo="Produtos no topo" detalhe={usoFixados} />
-            <ItemMenu href={LINK_LOJA_HISTORICO} icone={<History />} titulo="Histórico da loja"
-              detalhe={ultimaMudanca ? `Última mudança: ${fraseHistorico(ultimaMudanca, new Date(), "loja")}` : "Quem mudou os dados da loja e quando"} />
-            {vitrineNova && (
-              <ItemMenu href={LINK_LOJA_DESEMPENHO} icone={<ChartNoAxesColumn />} titulo="Desempenho da loja" detalhe="Visitas, cliques no WhatsApp e dicas" />
-            )}
-            {sugestoesIA !== undefined && (
-              <ItemMenu href={LINK_LOJA_CATEGORIAS} icone={<Tags />} titulo="Revise suas categorias"
-                detalhe={sugestoesIA === null ? "Nicho e categorias sugeridos pela IA" : sugestoesIA.length === 0 ? "Tudo organizado" : sugestoesIA.length === 1 ? "1 sugestão da IA" : `${sugestoesIA.length} sugestões da IA`} />
-            )}
-          </ul>
-        </section>
-      )}
+        </ul>
+      </section>
 
-      <section aria-labelledby="titulo-dados" className="flex flex-col gap-3">
-        <h2 id="titulo-dados" className="text-lg font-bold">
+      <section aria-labelledby="titulo-gestao-loja" className="flex flex-col gap-3">
+        <h2 id="titulo-gestao-loja" className="text-lg font-semibold text-beringela">Gestão da loja</h2>
+        <ul className="divide-y divide-borda rounded-card border border-borda bg-cartao">
+          {vitrineNova && (
+            <ItemMenu href={LINK_LOJA_DESEMPENHO} icone={<ChartNoAxesColumn />} titulo="Desempenho da loja" detalhe="Visitas, cliques no WhatsApp e dicas" />
+          )}
+          <ItemMenu href={LINK_LOJA_MARKETING} icone={<Megaphone />} titulo="Meu marketing" detalhe="Artes para divulgar e produtos procurados na região" />
+          <ItemMenu href={LINK_LOJA_HISTORICO} icone={<History />} titulo="Histórico da loja"
+            detalhe={ultimaMudanca ? fraseHistorico(ultimaMudanca, new Date(), "loja") : "Quem mudou os dados da loja e quando"} />
+        </ul>
+      </section>
+      <section aria-labelledby="dados-da-loja" className="flex flex-col gap-3">
+        <h2 id="dados-da-loja" tabIndex={-1} className="scroll-mt-20 text-lg font-semibold text-beringela">
           Dados da loja
         </h2>
         {/* key: ao trocar de loja no seletor, o formulário recomeça com os dados da loja nova. */}
@@ -229,24 +235,24 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
         />
       </section>
       {v.status === "ativa" && !ajudante && (
-        <section aria-labelledby="titulo-destacar-loja" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
+        <section aria-labelledby="titulo-destacar-loja" className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-3 sm:p-4">
           <h2 id="titulo-destacar-loja" className="flex items-center gap-2 text-lg font-semibold">
             <Sparkles className="size-5 text-laranja-escuro" aria-hidden />
             Destacar minha loja
           </h2>
-          <p className="text-base text-texto-suave">Sua loja aparece em &quot;Lojas em destaque&quot; na página inicial da sua região.</p>
+          <p className="text-base text-texto-suave">Apareça em Destaques da Região na página inicial.</p>
           {lojaPendente ? (
             <>
               <Alert variant="warning" role="note" className="flex items-start gap-2">
                 <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
                 Pagamento pendente: {lojaPendente.tipo_nome} ({preco(lojaPendente.preco_centavos)})
               </Alert>
-              <Botao href={linkDestacarLoja(lojaPendente.id)} variante="secundario" larguraTotal className="sm:w-fit">
+              <Botao href={linkDestacarLoja(lojaPendente.id)} variante="secundario" tamanho="toque" larguraTotal className="sm:w-fit">
                 Continuar o pagamento
               </Botao>
             </>
           ) : (
-            <Botao href={LINK_DESTACAR_LOJA} variante="secundario" larguraTotal icone={<Sparkles />} className="sm:w-fit">
+            <Botao href={LINK_DESTACAR_LOJA} variante="secundario" tamanho="toque" larguraTotal icone={<Sparkles />} className="sm:w-fit">
               Ver opções de destaque
             </Botao>
           )}
@@ -255,7 +261,7 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
       <DestaquesAtivos lista={destaquesLoja} titulo="Destaques da loja" />
       {exclusao && !ajudante && v.status !== "suspensa" && (
         <section aria-labelledby="titulo-excluir-loja" className="flex flex-col gap-3">
-          <h2 id="titulo-excluir-loja" className="text-lg font-bold">
+          <h2 id="titulo-excluir-loja" className="text-lg font-semibold text-beringela">
             Excluir loja
           </h2>
           <p className="text-base text-texto-suave">Tira a vitrine e os anúncios da loja do ar. Você tem 30 dias para desistir.</p>
@@ -269,7 +275,7 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
 
 function BotaoVerificar() {
   return (
-    <Botao href={LINK_LOJA_VERIFICAR} className="mt-2 w-fit font-semibold">
+    <Botao href={LINK_LOJA_VERIFICAR} variante="secundario" tamanho="toque" className="w-fit max-w-full">
       Verificar minha loja
     </Botao>
   );
@@ -280,12 +286,12 @@ function ItemMenu({ href, icone, titulo, detalhe }: { href: string; icone: React
     <li>
       <Link
         href={href}
-        className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
+        className="flex min-h-toque items-center gap-3 rounded-campo px-3 py-2 hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
       >
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-selecao text-beringela [&>svg]:size-5" aria-hidden>
+        <span className="grid size-8 shrink-0 place-items-center rounded-campo bg-selecao text-beringela [&>svg]:size-4" aria-hidden>
           {icone}
         </span>
-        <span className="flex min-w-0 flex-1 flex-col">
+        <span className="flex min-w-0 flex-1 flex-col [overflow-wrap:anywhere]">
           <span className="text-base font-semibold">{titulo}</span>
           <span className="text-sm text-texto-suave">{detalhe}</span>
         </span>

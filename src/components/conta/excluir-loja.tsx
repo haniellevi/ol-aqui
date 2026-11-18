@@ -22,6 +22,7 @@ export function ExcluirLoja({ temPagamentos }: { temPagamentos: boolean }) {
   const [texto, setTexto] = useState("");
   const [estado, acao, enviando] = useActionState<EstadoExcluirLoja, FormData>(excluirMinhaLoja, null);
   const campo = useRef<HTMLDivElement>(null);
+  const botaoExcluir = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (aberto) campo.current?.querySelector("input")?.focus();
@@ -33,7 +34,7 @@ export function ExcluirLoja({ temPagamentos }: { temPagamentos: boolean }) {
 
   if (!aberto) {
     return (
-      <Botao variante="perigo" larguraTotal icone={<Trash2 />} onClick={() => setAberto(true)} className="sm:w-fit">
+      <Botao ref={botaoExcluir} variante="perigo" tamanho="toque" larguraTotal icone={<Trash2 />} onClick={() => setAberto(true)} className="sm:w-fit">
         Excluir minha loja
       </Botao>
     );
@@ -64,7 +65,11 @@ export function ExcluirLoja({ temPagamentos }: { temPagamentos: boolean }) {
       <Botao type="submit" variante="perigo" larguraTotal icone={<Trash2 />} disabled={!confere} carregando={enviando} textoCarregando="Excluindo...">
         Excluir minha loja
       </Botao>
-      <Botao variante="secundario" larguraTotal disabled={enviando} onClick={() => { setAberto(false); setTexto(""); }}>
+      <Botao variante="secundario" larguraTotal disabled={enviando} onClick={() => {
+        setAberto(false);
+        setTexto("");
+        requestAnimationFrame(() => botaoExcluir.current?.focus({ preventScroll: true }));
+      }}>
         Não, manter minha loja
       </Botao>
     </form>

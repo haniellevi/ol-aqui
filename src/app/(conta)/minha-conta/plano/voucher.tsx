@@ -8,13 +8,13 @@ import { resgatarVoucher } from "./voucher-actions";
 
 export function Voucher({ codigos }: { codigos: { codigo: string; valido_ate: string; reservado_em: string | null }[] }) {
   const [estado, acao, pendente] = useActionState(resgatarVoucher, null);
-  return <section className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1" aria-labelledby="titulo-cupom">
-    <h2 id="titulo-cupom" className="text-lg font-bold">Cupom de lançamento</h2>
-    <p className="text-sm text-texto-suave">Aplique seu cupom para usar o plano completo por três meses, sem cobrança. Se houver um plano vigente ou cobrança pendente, o benefício pode ficar reservado para você ativar depois.</p>
-    {codigos.map((v) => <p key={v.codigo} className="rounded-campo bg-selecao p-3 text-sm">Seu cupom: <strong>{v.codigo}</strong> · {v.reservado_em ? "reservado para ativação posterior" : `use até ${new Date(new Date(v.valido_ate).getTime() - 1).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}`}.</p>)}
+  return <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-3 sm:p-4" aria-labelledby="titulo-cupom">
+    <h2 id="titulo-cupom" className="text-lg font-semibold">Cupom de lançamento</h2>
+    <p className="text-sm text-texto-suave">Use o cupom para ter três meses de plano completo grátis. Se você já tem um plano ativo ou uma cobrança pendente, o cupom pode ficar reservado para uso depois.</p>
+    {codigos.map((v) => <p key={v.codigo} className="rounded-campo bg-selecao p-2 text-sm [overflow-wrap:anywhere]">Seu cupom: <strong>{v.codigo}</strong> · {v.reservado_em ? "reservado para ativação posterior" : `use até ${new Date(new Date(v.valido_ate).getTime() - 1).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}`}.</p>)}
     <form action={acao} className="flex flex-col gap-3">
       <Campo rotulo="Código do cupom" name="codigo" autoComplete="off" maxLength={32} required />
-      <Botao type="submit" carregando={pendente}>Aplicar cupom</Botao>
+      <Botao type="submit" variante="secundario" tamanho="toque" className="self-start" carregando={pendente}>Aplicar cupom</Botao>
       {estado?.erro && <Aviso tipo="erro">{estado.erro}</Aviso>}
       {estado?.ok && <Aviso tipo="ok">{estado.ok}</Aviso>}
     </form>
