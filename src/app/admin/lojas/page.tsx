@@ -133,7 +133,7 @@ export default async function LojasPage({ searchParams }: { searchParams: Params
       p_deslocamento: (pagina - 1) * POR_PAGINA,
     }),
     supabase.from("microrregioes").select("id, nome").order("nome"),
-    supabase.from("planos").select("codigo, nome, ordem").order("ordem"),
+    supabase.from("planos").select("codigo, nome, ordem").neq("codigo", "promocional").order("ordem"),
     franqueado
       ? Promise.resolve({ data: [] })
       : supabase
