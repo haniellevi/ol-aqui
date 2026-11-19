@@ -26,6 +26,26 @@ try:
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         if p.name == '20261202120000_voucher_lancamento.sql':
             checked(sql("update public.modelos_mensagem set texto='Mensagem personalizada de teste.' where chave='plano_vencendo' and canal='whatsapp';"))
+        if p.name == '20261202130000_cupons_promocionais.sql':
+            checked(sql("""begin;
+              insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+              select 'user_reserva890',id,'Reserva anterior','Corrente','5589999990898',now()
+              from public.microrregioes where slug='corrente-pi';
+              insert into public.vitrines_lojas(dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo)
+              select id,microrregiao_id,'loja-reserva-890',nome,cidade,whatsapp,'loja'
+              from public.perfis where id='user_reserva890';
+              insert into public.voucher_campanhas(codigo,valido_ate) values('RESERVA890',now()+interval '1 day');
+              insert into public.pagamentos(vitrine_id,microrregiao_id,tipo,plano_codigo,valor_centavos,status,meses,asaas_cobranca_id)
+              select id,microrregiao_id,'assinatura','slim',2990,'pendente',1,'pay_reserva890'
+              from public.vitrines_lojas where dono_id='user_reserva890';
+              set local role authenticated;
+              set local request.jwt.claim.sub='user_reserva890';
+              do $$ begin
+                assert public.resgatar_voucher('RESERVA890') is null;
+              end $$;
+              reset role;
+              update public.voucher_campanhas set ativo=false, valido_ate=now()-interval '1 day' where codigo='RESERVA890';
+              commit;"""))
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
     checked(sql("""do $$ begin
       assert (select texto='Mensagem personalizada de teste.' and texto_padrao like '%plano gratuito%' from public.modelos_mensagem where chave='plano_vencendo' and canal='whatsapp'), 'padrão ou personalização alterados incorretamente';
@@ -33,7 +53,12 @@ try:
     end $$;"""))
     checked(sql("update public.modelos_mensagem set texto=texto_padrao where chave='plano_vencendo' and canal='whatsapp';"))
     checked(sql((root/'supabase/testes/891_convite_envio.sql').read_text()))
+    checked(sql((root/'supabase/testes/895_cupons_promocionais.sql').read_text()))
     checked(sql((root/'supabase/testes/890_voucher_lancamento.sql').read_text()))
+    checked(sql("""delete from public.pagamentos where asaas_cobranca_id='pay_reserva890';
+      delete from public.voucher_atribuicoes where dono_id='user_reserva890';
+      delete from public.voucher_campanhas where codigo='RESERVA890';
+      delete from public.perfis where id='user_reserva890';"""))
     checked(sql((root/'supabase/testes/880_loja_ia_rascunhos.sql').read_text()))
     checked(sql("""insert into perfis(id,microrregiao_id,nome,cidade)
       select 'user_ia880conc',id,'IA concorrente','Corrente' from microrregioes where slug='corrente-pi';
@@ -447,17 +472,15 @@ try:
     print('PASS: duas reservas simultâneas permitem um único envio de convite', flush=True)
     checked(sql("""insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
       select 'user_voucherconc890',id,'Loja concorrente','Corrente','5589999900894',now() from public.microrregioes where slug='corrente-pi';
-      insert into public.vitrines_lojas(dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo)
-      select 'user_voucherconc890',microrregiao_id,'loja-conc-voucher-890','Loja concorrente','Corrente','5589999900894','loja'
-      from public.perfis where id='user_voucherconc890';
       insert into public.voucher_campanhas(codigo,valido_ate) values ('CONCORRE890',now()+interval '1 month');"""))
     def resgatar_concorrente(_):
         return sql("begin; set local role authenticated; set local request.jwt.claim.sub='user_voucherconc890'; select public.resgatar_voucher('CONCORRE890'); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=2) as pool:
         tentativas=list(pool.map(resgatar_concorrente, range(2)))
     assert sum(r.returncode == 0 for r in tentativas) == 1, [(r.stdout,r.stderr) for r in tentativas]
-    checked(sql("do $$ begin assert (select count(*)=1 from public.voucher_atribuicoes where dono_id='user_voucherconc890' and resgatado_em is not null), 'voucher aplicado mais de uma vez'; end $$;"))
-    print('PASS: resgate concorrente aplica o voucher uma única vez', flush=True)
+    assert sum('Você já usou este cupom.' in r.stderr for r in tentativas) == 1
+    checked(sql("do $$ begin assert (select count(*)=1 from public.voucher_atribuicoes where dono_id='user_voucherconc890' and acesso_promocional and resgatado_em is not null), 'voucher aplicado mais de uma vez'; end $$;"))
+    print('PASS: resgate concorrente sem vitrine aplica o cupom uma única vez', flush=True)
     checked(sql("""insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
       select 'user_voucherpag890',id,'Loja com cobrança','Corrente','5589999900895',now() from public.microrregioes where slug='corrente-pi';
       insert into public.vitrines_lojas(dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo)
@@ -465,14 +488,14 @@ try:
       from public.perfis where id='user_voucherpag890';
       insert into public.pagamentos(vitrine_id,microrregiao_id,tipo,plano_codigo,valor_centavos,status,meses,asaas_cobranca_id)
       select id,microrregiao_id,'assinatura','slim',2990,'pendente',1,'pay_concorrente890' from public.vitrines_lojas where dono_id='user_voucherpag890';"""))
-    def confirmar_ou_reservar(acao):
+    def confirmar_ou_resgatar(acao):
         if acao == 'confirmar': return sql("begin; select public.confirmar_pagamento('pay_concorrente890'); select pg_sleep(0.2); commit;")
         return sql("begin; set local role authenticated; set local request.jwt.claim.sub='user_voucherpag890'; select public.resgatar_voucher('CONCORRE890'); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=2) as pool:
-        resultados=list(pool.map(confirmar_ou_reservar,['confirmar','reservar']))
+        resultados=list(pool.map(confirmar_ou_resgatar,['confirmar','resgatar']))
     for resultado in resultados: checked(resultado)
-    checked(sql("do $$ begin assert (select v.plano='slim' and a.reservado_em is not null and a.resgatado_em is null from public.vitrines_lojas v join public.voucher_atribuicoes a on a.vitrine_id=v.id join public.voucher_campanhas c on c.id=a.campanha_id where v.dono_id='user_voucherpag890' and c.codigo='CONCORRE890'), 'confirmação concorrente alterou o benefício'; end $$;"))
-    print('PASS: confirmação e reserva simultâneas preservam o plano pago', flush=True)
+    checked(sql("do $$ begin assert (select v.plano='slim' and a.reservado_em is null and a.resgatado_em is not null and a.acesso_promocional from public.vitrines_lojas v join public.voucher_atribuicoes a on a.dono_id=v.dono_id join public.voucher_campanhas c on c.id=a.campanha_id where v.dono_id='user_voucherpag890' and c.codigo='CONCORRE890'), 'confirmação concorrente alterou o benefício'; end $$;"))
+    print('PASS: confirmação e resgate simultâneos preservam o plano pago', flush=True)
     checked(sql("""insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
       select 'user_limiteconc890',id,'Loja limite concorrente','Corrente','5589999900899',now() from public.microrregioes where slug='corrente-pi';
       insert into public.vitrines_lojas(id,dono_id,microrregiao_id,slug,nome,cidade,whatsapp,tipo,plano,plano_expira_em)

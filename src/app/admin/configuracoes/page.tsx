@@ -53,7 +53,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
   const [{ data: configs, error: erroConfigs }, { data: regioes }, { data: planos }, { data: modelos }] = await Promise.all([
     supabase.from("configuracoes").select("*").order("chave"),
     supabase.from("microrregioes").select("id, nome").order("nome"),
-    supabase.from("planos").select("codigo, nome").order("nome"),
+    supabase.from("planos").select("codigo, nome").neq("codigo", "promocional").order("nome"),
     supabase.from("robo_modelos").select("provedor, modelo, nome").eq("ativo", true).order("nome"),
   ]);
   const opcoesPlano: Opcao[] = (planos ?? []).map((p) => ({ valor: p.codigo, nome: `${p.nome} (${p.codigo})` }));

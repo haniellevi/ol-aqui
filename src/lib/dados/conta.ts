@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { seguro } from "@/lib/dados/seguro";
 import { COLUNAS_VITRINE } from "@/lib/dados/vitrines";
 import { lojaEscolhida, lojasQueCuido } from "@/lib/dados/loja-ativa";
-import type { MeuPerfil, MinhaConta, MinhaVitrine, Plano } from "@/lib/tipos";
+import type { AcessoPromocional, MeuPerfil, MinhaConta, MinhaVitrine, Plano } from "@/lib/tipos";
 
 /**
  * Perfil + vitrine + plano que vale agora + limite e uso de anúncios do usuário logado.
@@ -72,6 +72,9 @@ async function lerConta(exigirLeitura = false, lojaAjudada?: string): Promise<Mi
       .eq("status", "rascunho"),
   ]);
   if (exigirLeitura && (ativosRes.error || rascunhosRes.error || ativosRes.count === null || rascunhosRes.count === null)) throw new Error("Não foi possível carregar o uso do plano.");
+  const promocional = plano?.codigo === "promocional" && !lojaAjudada
+    ? await (exigirLeitura ? lerAcessoPromocional(db) : seguro(() => lerAcessoPromocional(db), null))
+    : null;
   const limite = plano ? plano.limite_anuncios : 0;
   const ativos = ativosRes.count ?? 0;
   return {
@@ -82,6 +85,7 @@ async function lerConta(exigirLeitura = false, lojaAjudada?: string): Promise<Mi
     ativos,
     rascunhos: rascunhosRes.count ?? 0,
     podePublicar: limite === null || ativos < limite,
+    ...(promocional ? { promocional } : {}),
     ...(lojaAjudada ? { ajudante: true } : {}),
   };
 }
@@ -99,6 +103,12 @@ async function planoEfetivo(exigirLeitura = false, loja?: string): Promise<Plano
   }
   const linha = (Array.isArray(data) ? data[0] : data) as Plano | null | undefined;
   return linha?.codigo ? linha : null;
+}
+
+export async function lerAcessoPromocional(db: Awaited<ReturnType<typeof createClient>>): Promise<AcessoPromocional | null> {
+  const { data, error } = await db.rpc("meu_promocional");
+  if (error) throw new Error("Não foi possível carregar as datas do plano Promocional.");
+  return data?.[0] ?? null;
 }
 
 function paraPerfil(l: Record<string, unknown>): MeuPerfil {

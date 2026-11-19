@@ -74,13 +74,13 @@ export function resumoPropostas(total: number, menor: number | null): string {
 export const textoPrecoProposta = (centavos: number | null) => centavos === null ? "" : (centavos / 100).toFixed(2).replace(".", ",");
 
 /**
- * Loja (ou PF) ativa com plano pago que tem Radar, mas sem acesso: o que falta é a verificação,
+ * Loja (ou PF) ativa com plano que tem Radar, mas sem acesso: o que falta é a verificação,
  * não um plano. Devolve a página de verificação; null quando o caminho é mesmo "Ver planos".
  */
 export function linkVerificarParaRadar(conta: Pick<MinhaConta, "vitrine" | "plano"> | null | undefined, temAcesso: boolean): string | null {
   const v = conta?.vitrine;
   const p = conta?.plano;
   if (temAcesso || !v || v.status !== "ativa" || !p) return null;
-  if (!p.acesso_radar || p.e_teste || p.preco_centavos <= 0) return null;
+  if (!p.acesso_radar || p.e_teste || (p.preco_centavos <= 0 && p.codigo !== "promocional")) return null;
   return v.tipo === "pf" ? LINK_VERIFICACAO_VENDEDOR : LINK_LOJA_VERIFICAR;
 }
