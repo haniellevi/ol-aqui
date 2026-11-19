@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mercado-regiao-teste",
   "main": ".open-next/worker.js",
+  "preview_urls": false,
   "keep_vars": true,
   "vars": { "VERCEL_ENV": "production", "CLOUDFLARE_IMAGENS": "1", "CLOUDFLARE_SOMENTE_LEITURA": "1", "CLOUDFLARE_LEITURA_EXPIRA": "2026-11-20T00:00:00Z" },
   "compatibility_date": "2026-11-01",
