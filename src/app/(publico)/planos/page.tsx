@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { Check, ChevronDown, Minus } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { perguntasDosPlanos, planosPublicos } from "@/lib/dados/vitrine-completa";
 import { preco } from "@/lib/formato";
@@ -49,8 +48,8 @@ export default async function PaginaPlanos({ searchParams }: Props) {
   const [sp, { userId }] = await Promise.all([searchParams, auth()]);
   const origem = lerOrigem(sp.origem);
   const [planos, perguntas, conta] = await Promise.all([planosPublicos(), perguntasDosPlanos(), userId ? meuPerfilEVitrine() : Promise.resolve(null)]);
-  const { data: promocao } = await (await createClient()).rpc("voucher_promocao_ativa");
   const voltar = `/planos${origem ? `?origem=${origem}` : ""}`;
+  const linkCupom = "/minha-conta/plano#cupom";
   const entrar = `/entrar?redirect_url=${encodeURIComponent(voltar)}`;
   const vendedor = !!conta?.vitrine;
   const loja = conta?.vitrine?.tipo === "loja";
@@ -87,10 +86,9 @@ export default async function PaginaPlanos({ searchParams }: Props) {
         )}
       </header>
 
-      {promocao && <aside className="rounded-card border border-laranja-escuro bg-selecao p-4 text-beringela">
-        <strong>Promoção de lançamento para lojas</strong>
-        <p className="mt-1 text-sm">Use o cupom da sua conta até {new Date(new Date(promocao).getTime() - 1).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} e ganhe três meses do plano completo. O benefício mantém a duração mesmo depois dessa data.</p>
-      </aside>}
+      <Botao href={userId ? linkCupom : `/entrar?redirect_url=${encodeURIComponent(linkCupom)}`} variante="texto" tamanho="toque" className="self-start">
+        Tem um cupom?
+      </Botao>
 
       {planos.length === 0 ? (
         <Vazio titulo="Os planos estão sendo atualizados" texto="Volte daqui a pouco ou fale com o suporte do Mercado da Região.">

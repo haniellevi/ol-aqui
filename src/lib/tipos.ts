@@ -230,6 +230,8 @@ export type MeuPerfil = {
   aceitou_termos_em: string | null;
 };
 
+export type AcessoPromocional = { codigo: string; ativado_em: string; vence_em: string };
+
 /** Tudo que as telas da conta precisam saber sobre quem está logado. */
 export type MinhaConta = {
   perfil: MeuPerfil;
@@ -239,6 +241,7 @@ export type MinhaConta = {
   ativos: number; // anúncios ativos que contam no limite
   rascunhos: number;
   podePublicar: boolean; // limite null ou ativos < limite
+  promocional?: AcessoPromocional;
   ajudante?: boolean; // P5b: true quando a loja é de outra pessoa (a pessoa ajuda)
   equipe?: boolean; // P5b-2a: super admin editando anúncio de outra pessoa
 };

@@ -66,7 +66,7 @@ export default async function DestaquesAdminPage() {
   const [tiposRes, creditosRes, planosRes, configsRes, ativosRes, pendentesRes, precosRes, regioesRes, devolverRes] = await Promise.all([
     supabase.from("destaque_tipos").select("*").order("ordem"),
     supabase.from("destaque_creditos_plano").select("plano_codigo, tipo, quantidade_mes"),
-    supabase.from("planos").select("codigo, nome, ordem").order("ordem"),
+    supabase.from("planos").select("codigo, nome, ordem").neq("codigo", "promocional").order("ordem"),
     supabase.from("configuracoes").select("id, chave, valor, descricao").in("chave", CHAVES_CONFIG).is("microrregiao_id", null),
     supabase.rpc("resultados_destaques", { p_anuncio_id: null, p_todos: true, p_limite: 200 }),
     supabase

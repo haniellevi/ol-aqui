@@ -20,11 +20,12 @@ const DIA = 86_400_000;
 
 export function resumoPlano(conta: MinhaConta, agora: number = Date.now()): ResumoPlano | null {
   const v = conta.vitrine;
-  if (!v) return null;
   const plano = conta.plano;
-  const contratadoVale = !!plano && plano.codigo === v.plano;
-  let venceEm: string | null = null;
-  if (plano && contratadoVale) {
+  const promocional = plano?.codigo === "promocional";
+  if (!v && !promocional) return null;
+  const contratadoVale = !!plano && plano.codigo === v?.plano;
+  let venceEm = promocional && !conta.ajudante ? conta.promocional?.vence_em ?? null : null;
+  if (v && plano && contratadoVale) {
     if (plano.e_teste) venceEm = v.teste_expira_em;
     else if (plano.preco_centavos > 0) venceEm = v.plano_expira_em;
   }
@@ -37,7 +38,7 @@ export function resumoPlano(conta: MinhaConta, agora: number = Date.now()): Resu
     diasRestantes === null ? null : diasRestantes === 0 ? "termina hoje" : diasRestantes === 1 ? "falta 1 dia" : `faltam ${diasRestantes} dias`;
   const nome = plano?.nome ?? null;
   const linha = [nome ? `Plano ${nome.replace(/^Plano\s+/i, "")}` : "Sem plano ativo", prazo, uso].filter(Boolean).join(" · ");
-  return { nome, venceEm, diasRestantes, venceu: !contratadoVale, uso, linha };
+  return { nome, venceEm, diasRestantes, venceu: !promocional && !contratadoVale, uso, linha };
 }
 
 const diaMes = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Fortaleza" });
