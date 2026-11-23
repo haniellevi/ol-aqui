@@ -111,10 +111,13 @@ select pg_temp.confere898(:'opt_comp1' = 't'
   and (minha_preferencia_whatsapp_radar()->>'parcial')::boolean = false,
   'comprador 1 faz opt-in completo');
 set local request.jwt.claim.sub = 'user_898comp2';
+select salvar_preferencia_whatsapp_radar_tipo(t,true) from unnest(array['pedido_novo','proposta_nova','proposta_escolhida']) t;
 select pg_temp.confere898(salvar_preferencia_whatsapp_radar_completa(true) = true, 'comprador 2 faz opt-in completo');
 set local request.jwt.claim.sub = 'user_898loja1';
+select salvar_preferencia_whatsapp_radar_tipo(t,true) from unnest(array['pedido_novo','proposta_nova','proposta_escolhida']) t;
 select pg_temp.confere898(salvar_preferencia_whatsapp_radar_completa(true) = true, 'loja 1 faz opt-in completo');
 set local request.jwt.claim.sub = 'user_898loja2';
+select salvar_preferencia_whatsapp_radar_tipo(t,true) from unnest(array['pedido_novo','proposta_nova','proposta_escolhida']) t;
 select pg_temp.confere898(salvar_preferencia_whatsapp_radar_completa(true) = true, 'loja 2 faz opt-in completo');
 reset role;
 
@@ -513,11 +516,11 @@ select whatsapp_mensagem_recebida('5589998980014', 'voltar', pg_temp.h898('volta
 select whatsapp_sair('5589998980014', 'SAIR') as ant_saiu \gset
 select whatsapp_mensagem_recebida('5589998980014', 'voltar', pg_temp.h898('voltar antiga')) as ant_voltou \gset
 reset role;
-select pg_temp.confere898(:'ant_ja' = 'ja_ativo' and :'ant_saiu' = 't' and :'ant_voltou' = 'voltou',
-  'conta antiga: VOLTAR antes do SAIR diz ja_ativo e SAIR -> VOLTAR funciona');
-select pg_temp.confere898((select ligado from preferencias_avisos where usuario_id = 'user_898antiga' and tipo = 'pedido_novo' and canal = 'whatsapp')
+select pg_temp.confere898(:'ant_ja' = 'ja_ativo' and :'ant_saiu' = 't' and :'ant_voltou' = 'orientacao',
+  'conta antiga: VOLTAR antes do SAIR diz ja_ativo e SAIR -> VOLTAR orienta voltar pelo site');
+select pg_temp.confere898((select not ligado from preferencias_avisos where usuario_id = 'user_898antiga' and tipo = 'pedido_novo' and canal = 'whatsapp')
   and (select count(*) = 0 from preferencias_avisos where usuario_id = 'user_898antiga' and canal = 'whatsapp' and tipo in ('proposta_nova', 'proposta_escolhida')),
-  'SAIR -> VOLTAR de conta antiga reativa só pedido_novo e nunca assina proposta_nova/proposta_escolhida');
+  'SAIR -> VOLTAR sem prova deixa pedido_novo desligado e não assina propostas');
 
 -- Conta com opt-in completo recebe confirmação explícita mencionando pedidos e propostas no VOLTAR
 select pg_temp.confere898((select count(*) >= 1 and bool_and(texto like '%pedidos e propostas do Radar%')

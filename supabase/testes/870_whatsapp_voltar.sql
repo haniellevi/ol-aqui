@@ -35,6 +35,10 @@ insert into preferencias_avisos (usuario_id, tipo, canal, ligado) values ('user_
 insert into preferencias_avisos (usuario_id, tipo, canal, ligado) values ('user_870sino', 'pedido_novo', 'app', false);
 insert into preferencias_avisos (usuario_id, tipo, canal, ligado) values ('user_870sinl', 'pedido_novo', 'app', false);
 insert into preferencias_avisos (usuario_id, tipo, canal, ligado) values ('user_870sinl', 'pedido_novo', 'whatsapp', true);
+-- Contas do cenário de retomada haviam dado aceite para pedido novo no site.
+insert into preferencias_avisos (usuario_id, tipo, canal, ligado, consentido_em)
+select id, 'pedido_novo', 'whatsapp', true, now() from perfis
+ where id in ('user_870saiu','user_870lim','user_870pausa','user_870sino','user_870sim');
 insert into whatsapp_respostas (usuario_id, comando) values ('user_870nao', 'SAIR');
 insert into contas_revogadas (usuario_id) values ('user_870rev');
 update configuracoes set valor = 'true'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
@@ -183,8 +187,9 @@ begin
     perform whatsapp_fila_pegar_em(5, madrugada);
   end loop;
 end $$;
-select pg_temp.confere870((select count(*) = 3 from whatsapp_fila where numero = '5589999970004'
-  and (chave like 'whatsapp_saida:%' or chave like 'whatsapp_resposta:%') and estado = 'enviando'), 'madrugada: as respostas automáticas saem mesmo com o Radar desligado');
+select pg_temp.confere870((select count(*) = 2 from whatsapp_fila where numero = '5589999970004'
+  and (chave like 'whatsapp_saida:%' or chave like 'whatsapp_resposta:%') and estado = 'enviando'), 'madrugada: confirmação e orientação saem mesmo com o Radar desligado');
+select pg_temp.confere870((select estado = 'cancelada' from whatsapp_fila where chave like 'whatsapp_resposta:5589999970004:pergunta:%'), 'pergunta automática antiga é cancelada');
 select pg_temp.confere870((select estado = 'pendente' from whatsapp_fila where chave = 'teste-870-verificacao'), 'madrugada: aviso de verificação espera');
 select pg_temp.confere870((select estado = 'cancelada' and erro = 'pedido_fechado' from whatsapp_fila where chave like 'radar_pedido_novo:87000000%'), 'madrugada: aviso do Radar sem pedido aberto é cancelado');
 select pg_temp.confere870(whatsapp_fila_confirmar_envio((select id from whatsapp_fila where chave = 'whatsapp_saida:5589999970004:' || to_char(now() at time zone 'America/Fortaleza', 'YYYY-MM-DD'))) = 'pode',
@@ -265,7 +270,7 @@ select pg_temp.confere870((select count(*) = 0 from whatsapp_respostas where usu
 -- [16] Conta antiga com apenas pedido_novo=true: SAIR -> VOLTAR mantém apenas pedido_novo=true sem criar proposta_nova/proposta_escolhida
 insert into perfis(id, microrregiao_id, nome, cidade, whatsapp, whatsapp_verificado_em) values
   ('user_870antiga', :'reg', 'Loja 870 antiga só pedido_novo', 'Corrente', '5589999970011', now());
-insert into preferencias_avisos(usuario_id, tipo, canal, ligado) values ('user_870antiga', 'pedido_novo', 'whatsapp', true);
+insert into preferencias_avisos(usuario_id, tipo, canal, ligado, consentido_em) values ('user_870antiga', 'pedido_novo', 'whatsapp', true, now());
 set local role service_role;
 select whatsapp_sair('5589999970011', 'SAIR') as ant870_s \gset
 select whatsapp_mensagem_recebida('5589999970011', 'voltar', pg_temp.h870('voltar')) as ant870_v \gset
