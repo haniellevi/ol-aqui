@@ -22,6 +22,6 @@ export function AtualizarConversa({ recentes }: { recentes: boolean }) {
     };
   }, [recentes, router]);
 
-  return <Botao variante="secundario" icone={<RefreshCw />} carregando={pendente} textoCarregando="Atualizando..."
+  return <Botao variante="secundario" tamanho="toque" className="shrink-0 px-3" icone={<RefreshCw />} carregando={pendente} textoCarregando="Atualizando..."
     onClick={() => iniciar(() => router.refresh())}>Atualizar</Botao>;
 }

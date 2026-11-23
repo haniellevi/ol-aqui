@@ -162,8 +162,12 @@ test('erro preserva o texto e a chave de reenvio, sem atualizar como sucesso', a
   }
 });
 
-test('atalho para equipe respeita a validação do formulário', async () => {
+test('atalho para equipe respeita a validação do formulário e mantém uma única ação primária com toque >= 44px', async () => {
   const f = formulario({ valido: false });
+  assert.equal(f.botao('button').variante, 'secundario');
+  assert.equal(f.botao('button').tamanho, 'toque');
+  assert.equal(f.botao('submit').variante, undefined);
+  assert.equal(f.botao('submit').tamanho, 'acao');
   f.iniciar('equipe');
   await f.concluir();
   assert.equal(f.chamadas.length, 0);
