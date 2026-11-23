@@ -101,17 +101,21 @@ select pg_temp.confere898(:'conf_sem_opt_n' = 'cancelada' and :'conf_sem_opt_e' 
   'confirmação cancela linha sem opt-in explícito com radar_desligado');
 delete from whatsapp_fila where id in ('89800000-0000-4000-d000-000000000001', '89800000-0000-4000-d000-000000000002', '89800000-0000-4000-d000-000000000003', '89800000-0000-4000-d000-000000000004');
 
--- Agora compradores e lojistas ligam o opt-in explicitamente pelo site
+-- Agora compradores e lojistas ligam o opt-in explicitamente pelo site (RPC completa)
+-- e validamos que a RPC legada salvar_preferencia_whatsapp_radar(true) inscreve SOMENTE em pedido_novo.
 set local role authenticated;
 set local request.jwt.claim.sub = 'user_898comp';
-select salvar_preferencia_whatsapp_radar(true) as opt_comp1 \gset
-select pg_temp.confere898(:'opt_comp1' = 't' and (minha_preferencia_whatsapp_radar()->>'ligado')::boolean = true, 'comprador 1 faz opt-in');
+select salvar_preferencia_whatsapp_radar_completa(true) as opt_comp1 \gset
+select pg_temp.confere898(:'opt_comp1' = 't'
+  and (minha_preferencia_whatsapp_radar()->>'ligado')::boolean = true
+  and (minha_preferencia_whatsapp_radar()->>'parcial')::boolean = false,
+  'comprador 1 faz opt-in completo');
 set local request.jwt.claim.sub = 'user_898comp2';
-select pg_temp.confere898(salvar_preferencia_whatsapp_radar(true) = true, 'comprador 2 faz opt-in');
+select pg_temp.confere898(salvar_preferencia_whatsapp_radar_completa(true) = true, 'comprador 2 faz opt-in completo');
 set local request.jwt.claim.sub = 'user_898loja1';
-select pg_temp.confere898(salvar_preferencia_whatsapp_radar(true) = true, 'loja 1 faz opt-in');
+select pg_temp.confere898(salvar_preferencia_whatsapp_radar_completa(true) = true, 'loja 1 faz opt-in completo');
 set local request.jwt.claim.sub = 'user_898loja2';
-select pg_temp.confere898(salvar_preferencia_whatsapp_radar(true) = true, 'loja 2 faz opt-in');
+select pg_temp.confere898(salvar_preferencia_whatsapp_radar_completa(true) = true, 'loja 2 faz opt-in completo');
 reset role;
 
 -- [3] Chave geral ligada + opt-in explícito: proposta_nova vai ao comprador (com instrução SAIR e sem duplicar em edição) e proposta_escolhida vai ao lojista (sem duplicar ao repetir escolha)
@@ -161,6 +165,18 @@ reset role;
 select pg_temp.confere898((select texto = 'Compare Loja 898 Dois em "Procuro aparador 898" sem sair de casa. Responda SAIR para parar estes avisos.'
   from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2_b' || ':' || :'prop2_custom2'),
   'falso positivo "sem sair de casa" ainda recebe instrução explícita de SAIR');
+
+-- Título do pedido contendo "Responda SAIR para parar" nunca mascara modelo estático sem instrução de SAIR
+update modelos_mensagem set texto = 'Recebemos uma proposta de {loja} para o pedido “{pedido}”.' where chave = 'proposta_nova' and canal = 'whatsapp';
+set local role authenticated;
+set local request.jwt.claim.sub = 'user_898comp2';
+select criar_pedido_radar_site('89800000-0000-4000-a000-000000000013', 'Camiseta - Responda SAIR para parar', 'Corrente', 'propostas_prazo', 72, null, :'sofas'::uuid) ->> 'id' as ped2_mascara \gset
+set local request.jwt.claim.sub = 'user_898loja2';
+select proposta_id as prop2_mascara from propor_radar(:'ped2_mascara'::uuid, '89800000-0000-4000-c000-000000000002'::uuid, null, 45000, 'Camiseta') \gset
+reset role;
+select pg_temp.confere898((select texto = 'Recebemos uma proposta de Loja 898 Dois para o pedido “Camiseta - Responda SAIR para parar”. Responda SAIR para parar estes avisos.'
+  from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2_mascara' || ':' || :'prop2_mascara'),
+  'variável {pedido} com texto de SAIR não suprime rodapé quando modelo estático não tem SAIR');
 
 -- Modelo de até 1.000 chars com {pedido} grande (estouraria 1.000 após variáveis) preserva espaço para SAIR completo no fim
 update modelos_mensagem
@@ -414,7 +430,21 @@ insert into pegos898_sair select * from whatsapp_fila_pegar_em(5, :'t_janela'::t
 select pg_temp.confere898(whatsapp_fila_confirmar_envio((select id from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped8' || ':' || :'prop8_pos')) = 'pode',
   'aviso criado após VOLTAR passa na confirmação');
 
--- [6c] Conta antiga (somente pedido_novo=true): aparece ativa (parcial=true), pode desligar em 1 clique mesmo com recurso pausado,
+-- [6c] Conta antiga e RPC legada:
+-- 1) Conta nova chamando RPC legada salvar_preferencia_whatsapp_radar(true) inscreve SOMENTE em pedido_novo (blindagem entre migration e deploy).
+insert into perfis(id, microrregiao_id, nome, cidade, whatsapp, whatsapp_verificado_em)
+values ('user_898legado', :'reg', 'Conta 898 Tela Antiga', 'Corrente', '5589998980015', now());
+set local role authenticated;
+set local request.jwt.claim.sub = 'user_898legado';
+select pg_temp.confere898(salvar_preferencia_whatsapp_radar(true) = true, 'RPC legada continua retornando true');
+select minha_preferencia_whatsapp_radar() as pref_legada \gset
+reset role;
+select pg_temp.confere898((select ligado from preferencias_avisos where usuario_id = 'user_898legado' and tipo = 'pedido_novo' and canal = 'whatsapp')
+  and (select count(*) = 0 from preferencias_avisos where usuario_id = 'user_898legado' and canal = 'whatsapp' and tipo in ('proposta_nova', 'proposta_escolhida'))
+  and ((:'pref_legada'::jsonb)->>'ligado')::boolean = true and ((:'pref_legada'::jsonb)->>'parcial')::boolean = true,
+  'RPC legada inscreve apenas pedido_novo e marca parcial=true');
+
+-- 2) Conta antiga (somente pedido_novo=true): aparece ativa (parcial=true), pode desligar em 1 clique mesmo com recurso pausado,
 -- responde ja_ativo coerente ao mandar VOLTAR e SAIR -> VOLTAR preserva somente pedido_novo sem assinar propostas
 insert into perfis(id, microrregiao_id, nome, cidade, whatsapp, whatsapp_verificado_em)
 values ('user_898antiga', :'reg', 'Loja 898 Antiga', 'Corrente', '5589998980014', now());
@@ -430,7 +460,7 @@ select pg_temp.confere898(((:'pref_antiga'::jsonb)->>'ligado')::boolean = true
   and ((:'pref_antiga'::jsonb)->>'parcial')::boolean = true
   and ((:'pref_antiga'::jsonb)->>'ativo')::boolean = false,
   'conta antiga (só pedido_novo=true) retorna ligado=true e parcial=true mesmo com chave desligada');
-select salvar_preferencia_whatsapp_radar(false) as desligou_antiga \gset
+select salvar_preferencia_whatsapp_radar_completa(false) as desligou_antiga \gset
 select minha_preferencia_whatsapp_radar() as pref_antiga_desl \gset
 select pg_temp.confere898(:'desligou_antiga' = 'f' and ((:'pref_antiga_desl'::jsonb)->>'ligado')::boolean = false
   and ((:'pref_antiga_desl'::jsonb)->>'parcial')::boolean = false,
@@ -463,7 +493,11 @@ select pg_temp.confere898(
   and not has_function_privilege('authenticated', 'whatsapp_fila_confirmar_envio_anterior_ia(uuid)', 'execute')
   and not has_function_privilege('service_role', 'whatsapp_fila_confirmar_envio_anterior_ia(uuid)', 'execute')
   and has_function_privilege('authenticated', 'minha_preferencia_whatsapp_radar()', 'execute')
-  and not has_function_privilege('anon', 'minha_preferencia_whatsapp_radar()', 'execute'),
-  'funções internas permanecem restritas e preferência acessível só autenticado');
+  and not has_function_privilege('anon', 'minha_preferencia_whatsapp_radar()', 'execute')
+  and has_function_privilege('authenticated', 'salvar_preferencia_whatsapp_radar(boolean)', 'execute')
+  and not has_function_privilege('anon', 'salvar_preferencia_whatsapp_radar(boolean)', 'execute')
+  and has_function_privilege('authenticated', 'salvar_preferencia_whatsapp_radar_completa(boolean)', 'execute')
+  and not has_function_privilege('anon', 'salvar_preferencia_whatsapp_radar_completa(boolean)', 'execute'),
+  'funções internas permanecem restritas e preferências acessíveis só autenticado');
 
 rollback;

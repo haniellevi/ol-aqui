@@ -151,11 +151,15 @@ declare
   p         public.radar_pedidos;
   v         public.vitrines_lojas;
   vars      jsonb;
-  ligados     jsonb;
-  modelo_wa   public.modelos_mensagem;
-  texto_cheio text;
-  sufixo_sair text := ' Responda SAIR para parar estes avisos.';
-  texto_wa    text;
+  ligados       jsonb;
+  modelo_wa     public.modelos_mensagem;
+  modelo_static text;
+  partes_sair   text[];
+  corpo_wa      text;
+  rodape_wa     text;
+  texto_cheio   text;
+  sufixo_sair   text := ' Responda SAIR para parar estes avisos.';
+  texto_wa      text;
 begin
   select * into p from public.radar_pedidos x where x.id = new.pedido_id;
   select * into v from public.vitrines_lojas x where x.id = new.vitrine_id;
@@ -194,16 +198,29 @@ begin
      where x.chave = 'proposta_nova' and x.canal = 'whatsapp';
     if modelo_wa.id is not null and modelo_wa.ativo then
       begin
-        texto_cheio := public.mensagem_montar(modelo_wa.texto, vars, 4000);
-        -- Exige instrução explícita de descadastro no texto final (após variáveis e dentro de 1.000 chars),
-        -- evitando falso positivo como "sem sair de casa" e evitando corte da instrução pelo limite de tamanho.
-        if texto_cheio ~* '(\m(responda|envie|mande|digite|escreva)\s+["''“”]?sair\M|\msair\s+(para\s+(parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)\M)'
-           and (
-             char_length(texto_cheio) <= 1000
-             or left(texto_cheio, 1000) ~* '\m(responda|envie|mande|digite|escreva)\s+["''“”]?sair\s+(para\s+(parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)(\s+estes\s+avisos)?\s*[.!]'
-           ) then
-          texto_wa := left(texto_cheio, 1000);
+        -- Verifica instrução de saída SOMENTE no texto estático do modelo (antes de substituir {pedido}/{loja}),
+        -- para que título do pedido ou nome da loja nunca mascarem a ausência do rodapé de SAIR.
+        modelo_static := regexp_replace(modelo_wa.texto, '\{[^{}]*\}', ' ', 'g');
+        if modelo_static ~* '(\m(responda|envie|mande|digite|escreva)\s+["''“”]?sair\M|\msair\s+(para\s+(parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)\M)' then
+          texto_cheio := public.mensagem_montar(modelo_wa.texto, vars, 4000);
+          if char_length(texto_cheio) <= 1000 then
+            texto_wa := texto_cheio;
+          else
+            partes_sair := regexp_match(
+              modelo_wa.texto,
+              '^(.*?)(\s*(?:[^.!?{}]*\m(?:responda|envie|mande|digite|escreva)\s+["''“”]?sair\M|\msair\s+(?:para\s+(?:parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)\M)[^{}]*)$',
+              'i'
+            );
+            rodape_wa := case when partes_sair is not null then btrim(regexp_replace(partes_sair[2], '\s+', ' ', 'g')) else null end;
+            if rodape_wa is not null and char_length(rodape_wa) between 5 and 200 then
+              corpo_wa := public.mensagem_montar(partes_sair[1], vars, 4000);
+              texto_wa := rtrim(left(corpo_wa, 1000 - 1 - char_length(rodape_wa))) || ' ' || rodape_wa;
+            else
+              texto_wa := rtrim(left(texto_cheio, 1000 - char_length(sufixo_sair))) || sufixo_sair;
+            end if;
+          end if;
         else
+          texto_cheio := public.mensagem_montar(modelo_wa.texto, vars, 4000);
           texto_wa := rtrim(left(texto_cheio, 1000 - char_length(sufixo_sair))) || sufixo_sair;
         end if;
         perform public.whatsapp_enfileirar(
@@ -235,11 +252,15 @@ declare
   p         public.radar_pedidos;
   fone      text;
   vars      jsonb;
-  ligados     jsonb;
-  modelo_wa   public.modelos_mensagem;
-  texto_cheio text;
-  sufixo_sair text := ' Responda SAIR para parar estes avisos.';
-  texto_wa    text;
+  ligados       jsonb;
+  modelo_wa     public.modelos_mensagem;
+  modelo_static text;
+  partes_sair   text[];
+  corpo_wa      text;
+  rodape_wa     text;
+  texto_cheio   text;
+  sufixo_sair   text := ' Responda SAIR para parar estes avisos.';
+  texto_wa      text;
 begin
   if uid is null then
     raise exception 'Entre na sua conta para continuar.' using errcode = '28000';
@@ -571,7 +592,47 @@ begin
     'ativo', coalesce(public.config('radar.whatsapp_ativo', null, 'false'::jsonb) = 'true'::jsonb, false));
 end $$;
 
+-- RPC legada (preservada para a tela anterior antes do deploy): liga SOMENTE pedido_novo; desliga o que existir.
 create or replace function public.salvar_preferencia_whatsapp_radar(p_ligado boolean)
+returns boolean language plpgsql security definer
+set search_path = public, extensions
+as $$
+declare
+  uid text := public.usuario_id();
+begin
+  if uid is null then
+    raise exception 'Entre na sua conta para continuar.' using errcode = '28000';
+  end if;
+  if p_ligado is null then
+    raise exception 'Escolha ligar ou desligar.' using errcode = '22023';
+  end if;
+  if p_ligado and not public.whatsapp_confirmado(uid) then
+    raise exception 'Confirme seu WhatsApp antes de ligar os avisos por WhatsApp.' using errcode = '42501';
+  end if;
+  if p_ligado and (public.config('radar.whatsapp_ativo', null, 'false'::jsonb) is distinct from 'true'::jsonb) then
+    raise exception 'Este aviso ainda não está disponível.' using errcode = '55000';
+  end if;
+  if p_ligado then
+    insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
+    values (uid, 'pedido_novo', 'whatsapp', true, now())
+    on conflict (usuario_id, tipo, canal) do update set ligado = true, atualizado_em = now();
+  else
+    update public.preferencias_avisos pa
+       set ligado = false, atualizado_em = now()
+     where pa.usuario_id = uid
+       and pa.canal = 'whatsapp'
+       and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida');
+    if not found then
+      insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
+      values (uid, 'pedido_novo', 'whatsapp', false, now())
+      on conflict (usuario_id, tipo, canal) do update set ligado = false, atualizado_em = now();
+    end if;
+  end if;
+  return p_ligado;
+end $$;
+
+-- Nova RPC usada pela tela atualizada: liga os 3 avisos informados ao usuário; desliga apenas os existentes.
+create or replace function public.salvar_preferencia_whatsapp_radar_completa(p_ligado boolean)
 returns boolean language plpgsql security definer
 set search_path = public, extensions
 as $$
@@ -839,12 +900,14 @@ revoke all on function public.radar_cancelar_fila_pedido(uuid),
 revoke all on function public.fechar_pedido_radar(uuid, text),
   public.escolher_proposta(uuid),
   public.minha_preferencia_whatsapp_radar(),
-  public.salvar_preferencia_whatsapp_radar(boolean)
+  public.salvar_preferencia_whatsapp_radar(boolean),
+  public.salvar_preferencia_whatsapp_radar_completa(boolean)
   from public, anon;
 grant execute on function public.fechar_pedido_radar(uuid, text),
   public.escolher_proposta(uuid),
   public.minha_preferencia_whatsapp_radar(),
-  public.salvar_preferencia_whatsapp_radar(boolean)
+  public.salvar_preferencia_whatsapp_radar(boolean),
+  public.salvar_preferencia_whatsapp_radar_completa(boolean)
   to authenticated;
 
 revoke all on function public.whatsapp_sair(text, text),

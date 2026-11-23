@@ -41,7 +41,7 @@ export async function salvarPreferenciaWhatsappRadar(ligar: boolean): Promise<Re
   if (!userId) return { ok: false, erro: SEM_LOGIN };
   if (typeof ligar !== "boolean") return { ok: false, erro: "Escolha ligar ou desligar." };
   const db = await createClient();
-  const { data, error } = await db.rpc("salvar_preferencia_whatsapp_radar", { p_ligado: ligar });
+  const { data, error } = await db.rpc("salvar_preferencia_whatsapp_radar_completa", { p_ligado: ligar });
   if (error?.code === "42501") return { ok: false, erro: "Confirme seu WhatsApp antes de ligar os avisos por WhatsApp." };
   if (error?.code === "55000") return { ok: false, erro: "Este aviso ainda não está disponível." };
   if (error || data !== ligar) return { ok: false, erro: "Não conseguimos salvar sua preferência. Tente novamente." };

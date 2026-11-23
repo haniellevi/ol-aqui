@@ -206,11 +206,12 @@ test('preferência Radar WhatsApp: estado parcial de conta antiga permite deslig
 
   const desligarParcial = await ambiente(false).salvarPreferenciaWhatsappRadar(false);
   assert.equal(desligarParcial.ok, true);
-  assert.deepEqual(chamadas[0], ['salvar_preferencia_whatsapp_radar', { p_ligado: false }]);
+  assert.deepEqual(chamadas[0], ['salvar_preferencia_whatsapp_radar_completa', { p_ligado: false }]);
 
   const ok = await ambiente(true).salvarPreferenciaWhatsappRadar(true);
   assert.equal(ok.ok, true);
   assert.match(ok.mensagem, /Avisos do Radar por WhatsApp ligados/);
+  assert.deepEqual(chamadas[1], ['salvar_preferencia_whatsapp_radar_completa', { p_ligado: true }]);
 
   const semTel = await ambiente(null, { code: '42501', message: 'Confirme' }).salvarPreferenciaWhatsappRadar(true);
   assert.equal(semTel.ok, false);
