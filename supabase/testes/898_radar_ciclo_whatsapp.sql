@@ -358,7 +358,7 @@ reset role;
 
 -- Comprador 2 responde SAIR (sem o 9): cancela a proposta_nova pendente e bloqueia futuras
 set local role service_role;
-select whatsapp_sair('558998980002', 'SAIR') as comp_saiu \gset
+select (whatsapp_radar_evento('558998980002','sair','SAIR',encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null)='saiu') as comp_saiu \gset
 reset role;
 select pg_temp.confere898(:'comp_saiu' = 't', 'SAIR sem o 9 encontra o comprador');
 select pg_temp.confere898((select estado = 'cancelada' and erro = 'saiu'
@@ -451,7 +451,7 @@ create temp table pegos898_sair as select * from whatsapp_fila_pegar_em(5, :'t_j
 select pg_temp.confere898((select count(*) = 1 and bool_and(estado = 'enviando') from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped8' || ':' || :'prop8_ant'),
   'aviso pré-SAIR entrou em enviando');
 set local role service_role;
-select whatsapp_sair('5589998980002', 'SAIR') as comp2_saiu \gset
+select (whatsapp_radar_evento('5589998980002','sair','SAIR',encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null)='saiu') as comp2_saiu \gset
 select whatsapp_radar_evento('5589998980002','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as comp2_voltou \gset
 reset role;
 select pg_temp.confere898(:'comp2_saiu' = 't' and :'comp2_voltou' = 'voltou', 'SAIR seguido de VOLTAR concluído');

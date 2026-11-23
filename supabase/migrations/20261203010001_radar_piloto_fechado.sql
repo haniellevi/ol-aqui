@@ -188,7 +188,7 @@ begin
     perform pg_advisory_xact_lock(chave_trava);
   end loop;
   instante := clock_timestamp();
-  origem_incompativel := coalesce(p_ocorreu_em > statement_timestamp() + interval '1 minute', false);
+  origem_incompativel := p_ocorreu_em is null or p_ocorreu_em > statement_timestamp() + interval '1 minute';
   for alvo in select pf.id from public.perfis pf where pf.id = any(alvos) and pf.whatsapp = any(variantes) order by pf.id loop
     achou := true;
     primeiro := coalesce(primeiro, alvo.id);
@@ -691,7 +691,13 @@ begin
   return case when inseridas > 0 then 'enviada' else 'repetida' end;
 end $$;
 
-create function public.whatsapp_radar_fila_pegar_em(p_limite integer, p_quando timestamptz, p_pode_comprovar boolean)
+create function public.radar_fila_exige_worker_atual(p_item public.whatsapp_fila)
+returns boolean language sql immutable set search_path = '' as $$
+  select p_item.radar_piloto_id is not null or public.radar_eh_pergunta_whatsapp(p_item.chave);
+$$;
+revoke all on function public.radar_fila_exige_worker_atual(public.whatsapp_fila) from public, anon, authenticated, service_role;
+
+create function public.whatsapp_radar_fila_pegar_em(p_limite integer, p_quando timestamptz, p_worker_atual boolean)
 returns table (id uuid, numero text, texto text, link text, tentativas smallint)
 language plpgsql
 set search_path = public, extensions
@@ -788,7 +794,7 @@ begin
     with escolhidas as materialized (
       select x.id from public.whatsapp_fila x
        where x.estado = 'pendente' and x.enviar_apos <= p_quando
-         and (p_pode_comprovar or not public.radar_eh_pergunta_whatsapp(x.chave))
+         and (p_worker_atual or not public.radar_fila_exige_worker_atual(x))
          and public.radar_fila_permite(x,p_quando)
          and (dentro_janela or x.chave like 'whatsapp_saida:%' or x.chave like 'whatsapp_resposta:%')
          and (radar_ligado or x.chave is null or (
@@ -804,7 +810,7 @@ begin
     returning f.id, f.numero, f.texto, f.link, f.tentativas;
 end $$;
 
--- Só o Worker que grava comprovante pode colher perguntas de SIM.
+-- Só o Worker atual pode colher perguntas de SIM ou avisos vinculados ao piloto.
 create or replace function public.whatsapp_fila_pegar(p_limite integer default 5)
 returns table (id uuid, numero text, texto text, link text, tentativas smallint)
 language sql security definer set search_path = '' as $$
@@ -826,6 +832,56 @@ $$;
 revoke all on function public.whatsapp_radar_fila_pegar_em(integer,timestamptz,boolean),
   public.whatsapp_radar_fila_pegar(integer) from public, anon, authenticated, service_role;
 grant execute on function public.whatsapp_radar_fila_pegar(integer) to service_role;
+
+-- Reusar as operações existentes, incluindo a conferência de outros serviços.
+alter function public.whatsapp_fila_confirmar_envio(uuid) rename to whatsapp_fila_confirmar_interna;
+alter function public.whatsapp_fila_resultado(uuid,text) rename to whatsapp_fila_resultado_interno;
+alter function public.whatsapp_fila_devolver(uuid[]) rename to whatsapp_fila_devolver_interna;
+revoke all on function public.whatsapp_fila_confirmar_interna(uuid),
+  public.whatsapp_fila_resultado_interno(uuid,text), public.whatsapp_fila_devolver_interna(uuid[])
+  from public, anon, authenticated, service_role;
+
+create function public.whatsapp_fila_confirmar_envio(p_id uuid, p_worker_atual boolean)
+returns text language sql security definer set search_path = '' as $$
+  select case when not coalesce(p_worker_atual,false) and exists (
+      select from public.whatsapp_fila f where f.id=p_id and public.radar_fila_exige_worker_atual(f)
+    ) then 'ignorada' else public.whatsapp_fila_confirmar_interna(p_id) end;
+$$;
+create function public.whatsapp_fila_confirmar_envio(p_id uuid)
+returns text language sql security definer set search_path = '' as $$
+  select public.whatsapp_fila_confirmar_envio(p_id,false);
+$$;
+
+create function public.whatsapp_fila_resultado(p_id uuid, p_resultado text, p_worker_atual boolean)
+returns text language sql security definer set search_path = '' as $$
+  select case when not coalesce(p_worker_atual,false) and exists (
+      select from public.whatsapp_fila f where f.id=p_id and public.radar_fila_exige_worker_atual(f)
+    ) then 'ignorado' else public.whatsapp_fila_resultado_interno(p_id,p_resultado) end;
+$$;
+create function public.whatsapp_fila_resultado(p_id uuid, p_resultado text)
+returns text language sql security definer set search_path = '' as $$
+  select public.whatsapp_fila_resultado(p_id,p_resultado,false);
+$$;
+
+create function public.whatsapp_fila_devolver(p_ids uuid[], p_worker_atual boolean)
+returns integer language sql security definer set search_path = '' as $$
+  select public.whatsapp_fila_devolver_interna(case when p_worker_atual then p_ids else array(
+    select f.id from public.whatsapp_fila f where f.id=any(p_ids) and not public.radar_fila_exige_worker_atual(f)
+  ) end);
+$$;
+create function public.whatsapp_fila_devolver(p_ids uuid[])
+returns integer language sql security definer set search_path = '' as $$
+  select public.whatsapp_fila_devolver(p_ids,false);
+$$;
+
+revoke all on function public.whatsapp_fila_confirmar_envio(uuid), public.whatsapp_fila_confirmar_envio(uuid,boolean),
+  public.whatsapp_fila_resultado(uuid,text), public.whatsapp_fila_resultado(uuid,text,boolean),
+  public.whatsapp_fila_devolver(uuid[]), public.whatsapp_fila_devolver(uuid[],boolean)
+  from public, anon, authenticated, service_role;
+grant execute on function public.whatsapp_fila_confirmar_envio(uuid), public.whatsapp_fila_confirmar_envio(uuid,boolean),
+  public.whatsapp_fila_resultado(uuid,text), public.whatsapp_fila_resultado(uuid,text,boolean),
+  public.whatsapp_fila_devolver(uuid[]), public.whatsapp_fila_devolver(uuid[],boolean)
+  to service_role;
 
 create or replace function public.whatsapp_fila_confirmar_envio_anterior_ia(p_id uuid)
 returns text
@@ -1098,7 +1154,7 @@ begin
   -- Processar SAIR já tarde não estabelece ordem quando sua origem contradiz o relógio local.
   -- Outra saída, inclusive tardia, não resolve essa contradição. Um SIM causal confirmado pode resolvê-la.
   select max(r.criado_em), max(greatest(r.criado_em,r.radar_ocorreu_em)),
-         coalesce(bool_or(r.radar_origem_incompativel)
+         coalesce(bool_or(r.radar_ocorreu_em is null or r.radar_origem_incompativel)
            filter (where ultimo_voltar is null or r.criado_em >= ultimo_voltar),false)
     into ultima_saida, limite_saida, ordem_comprometida from public.whatsapp_respostas r
    where r.usuario_id = uid and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR');
@@ -1199,9 +1255,13 @@ returns text language plpgsql security definer set search_path = '' as $$
 declare
   resultado text;
 begin
-  if p_evento is null or p_evento !~ '^[a-f0-9]{64}$' or p_intencao is null or p_intencao not in ('sair','voltar','sim')
+  if p_intencao is null or p_intencao not in ('sair','voltar','sim')
+     or (p_evento is null and p_intencao <> 'sair') or p_evento !~ '^[a-f0-9]{64}$'
      or (p_citada is not null and (p_intencao <> 'sim' or p_citada !~ '^[a-f0-9]{64}$')) then
     raise exception 'Evento inválido.' using errcode = '22023';
+  end if;
+  if p_evento is null then
+    return case when public.whatsapp_radar_sair(p_numero,p_comando,p_ocorreu_em) then 'saiu' else 'sem_conta' end;
   end if;
   with antigos as materialized (
     select evento from public.whatsapp_radar_eventos
@@ -1235,13 +1295,13 @@ begin
   end if;
   select * into f from public.whatsapp_fila where id=p_id;
   if f.id is null or not public.radar_eh_pergunta_whatsapp(f.chave) then
-    return public.whatsapp_fila_resultado(p_id,'enviado');
+    return public.whatsapp_fila_resultado(p_id,'enviado',true);
   end if;
 
   -- Mesma ordem do webhook: controle, conta, depois a fila. Nunca aguarda conta mantendo trava da fila.
   perform 1 from public.radar_piloto_controle where id for share;
   perform pg_advisory_xact_lock(hashtext('whatsapp_voltar:' || f.usuario_id));
-  resultado := public.whatsapp_fila_resultado(p_id,'enviado');
+  resultado := public.whatsapp_fila_resultado(p_id,'enviado',true);
   if resultado <> 'enviada' then return resultado; end if;
   update public.whatsapp_fila set radar_comprovante_pergunta=p_comprovante where id=p_id;
   for e in select evento, citada from public.whatsapp_radar_eventos

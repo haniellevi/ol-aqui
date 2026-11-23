@@ -34,14 +34,15 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ ok: false }, { status: 503 });
   }
-  const { error } = pedido.evento && pedido.intencao !== "outra"
+  const horaSaida = pedido.intencao === "sair" ? pedido.ocorreuEm : undefined;
+  const { error } = pedido.intencao !== "outra" && (pedido.evento || horaSaida)
     ? await db.rpc("whatsapp_radar_evento", {
       p_numero: pedido.numero,
       p_intencao: pedido.intencao,
       p_comando: pedido.intencao === "sair" ? pedido.comando : null,
-      p_evento: pedido.evento.id,
-      p_ocorreu_em: pedido.evento.ocorreuEm,
-      p_citada: pedido.intencao === "sim" ? pedido.evento.citada : null,
+      p_evento: pedido.evento?.id ?? null,
+      p_ocorreu_em: pedido.evento?.ocorreuEm ?? horaSaida ?? null,
+      p_citada: pedido.intencao === "sim" ? pedido.evento?.citada ?? null : null,
     })
     : pedido.intencao === "sair"
     ? await db.rpc("whatsapp_sair", { p_numero: pedido.numero, p_comando: pedido.comando })

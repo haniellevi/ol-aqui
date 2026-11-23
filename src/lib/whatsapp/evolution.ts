@@ -194,21 +194,22 @@ export function hashIdWhatsapp(id: unknown, escopo = ""): string | null {
     ? createHash("sha256").update(escopo + "\0" + id).digest("hex") : null;
 }
 
+function horaDaMensagem(timestamp: unknown): string | null {
+  const segundos = typeof timestamp === "string" && /^[0-9]{1,10}$/.test(timestamp)
+    ? Number(timestamp) : timestamp;
+  return typeof segundos === "number" && Number.isInteger(segundos) && segundos > 0 && segundos <= 9999999999
+    ? new Date(segundos * 1000).toISOString() : null;
+}
+
 function eventoDaMensagem(msg: MensagemRecebida, numero: string) {
   const canonico = numero.length === 13 ? numero : numero.slice(0, 4) + "9" + numero.slice(4);
   const id = hashIdWhatsapp(msg.key.id, canonico);
   if (!id) return undefined;
-  const segundos = typeof msg.timestamp === "string" && /^[0-9]{1,10}$/.test(msg.timestamp)
-    ? Number(msg.timestamp) : msg.timestamp;
-  return {
-    id, citada: hashIdWhatsapp(msg.citada),
-    ocorreuEm: typeof segundos === "number" && Number.isInteger(segundos) && segundos > 0 && segundos <= 9999999999
-      ? new Date(segundos * 1000).toISOString() : null,
-  };
+  return { id, citada: hashIdWhatsapp(msg.citada), ocorreuEm: horaDaMensagem(msg.timestamp) };
 }
 
 export type PedidoDeMensagem = (
-  | { numero: string; intencao: "sair"; comando: ComandoSaida }
+  | { numero: string; intencao: "sair"; comando: ComandoSaida; ocorreuEm?: string }
   | { numero: string; intencao: "voltar" | "sim" | "outra"; hash: string }
 ) & { evento?: ReturnType<typeof eventoDaMensagem> };
 
@@ -226,7 +227,8 @@ export function pedidoDeMensagem(corpo: unknown): PedidoDeMensagem | null {
   const dados = evento ? { numero, evento } : { numero };
   if (intencao === "sair") {
     const comando = comandoDeSaida(msg.texto);
-    return comando ? { ...dados, intencao, comando } : null;
+    const ocorreuEm = evento ? null : horaDaMensagem(msg.timestamp);
+    return comando ? { ...dados, intencao, comando, ...(ocorreuEm ? { ocorreuEm } : {}) } : null;
   }
   return { ...dados, intencao, hash: hashDaMensagem(msg.texto) };
 }

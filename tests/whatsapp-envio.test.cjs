@@ -140,7 +140,7 @@ test('rota: envia uma por vez, com 1,5 s entre as mensagens, e acrescenta o ende
   const pegar = estado.rpcs.find((c) => c[0] === 'whatsapp_radar_fila_pegar');
   assert.deepEqual(pegar[1], { p_limite: 5 });
   assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado').map((c) => c[1]),
-    [1, 2, 3].map((n) => ({ p_id: `id-${n}`, p_resultado: 'enviado' })));
+    [1, 2, 3].map((n) => ({ p_id: `id-${n}`, p_resultado: 'enviado', p_worker_atual: true })));
 });
 
 test('rota: nunca passa de 5 por rodada', async () => {
@@ -219,7 +219,7 @@ test('rota: passou do prazo, devolve à fila o que não foi tentado e não come�
   assert.equal(estado.envios.length, 2);
   const devolver = estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_devolver');
   assert.equal(devolver.length, 1);
-  assert.deepEqual(devolver[0][1], { p_ids: ['id-3', 'id-4'] });
+  assert.deepEqual(devolver[0][1], { p_ids: ['id-3', 'id-4'], p_worker_atual: true });
   assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_resultado').map((c) => c[1].p_id), ['id-1', 'id-2']);
 });
 
@@ -257,7 +257,7 @@ test('rota: confere cada mensagem logo antes de enviar, uma por vez', async () =
   const { mod, estado } = rota({ linhas: [linha(1), linha(2)] });
   await mod.POST(req);
   assert.deepEqual(estado.ordem, ['confirma', 'envio', 'pausa', 'confirma', 'envio']);
-  assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_confirmar_envio').map((c) => c[1]), [{ p_id: 'id-1' }, { p_id: 'id-2' }]);
+  assert.deepEqual(estado.rpcs.filter((c) => c[0] === 'whatsapp_fila_confirmar_envio').map((c) => c[1]), [{ p_id: 'id-1', p_worker_atual: true }, { p_id: 'id-2', p_worker_atual: true }]);
 });
 
 test('rota: mensagem cancelada pelo banco (SAIR, preferência, pedido fechado) não é enviada e não grava resultado', async () => {
@@ -345,6 +345,6 @@ test('C2: fila entrega o comprovante só quando há sucesso indicado pelo proved
   assert.equal((await mod.POST(req)).corpo.ok, true);
   assert.deepEqual(estado.rpcs.filter(([nome]) => ['whatsapp_radar_resultado_enviado','whatsapp_fila_resultado'].includes(nome)), [
     ['whatsapp_radar_resultado_enviado', { p_id:'id-1', p_comprovante:comprovante }],
-    ['whatsapp_fila_resultado', { p_id:'id-2', p_resultado:'incerto' }],
+    ['whatsapp_fila_resultado', { p_id:'id-2', p_resultado:'incerto', p_worker_atual: true }],
   ]);
 });

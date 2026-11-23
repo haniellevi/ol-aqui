@@ -84,31 +84,36 @@ do $$ begin
   assert exists(select from notificacoes where usuario_id='user_899out' and tipo='pedido_novo'), 'sino de fora preservado';
 end $$;
 
+\if :{?evolution899}
+commit;
+\quit
+\endif
+
 update whatsapp_fila set estado='enviando' where usuario_id in ('user_899buyer','user_899shop');
 do $$ declare item uuid; begin
   for item in select id from whatsapp_fila where usuario_id in ('user_899buyer','user_899shop')
-  loop assert whatsapp_fila_confirmar_envio(item)='pode', 'item válido chegou à conferência'; end loop;
+  loop assert whatsapp_fila_confirmar_envio(item,true)='pode', 'item válido chegou à conferência'; end loop;
 end $$;
 update radar_piloto_participantes set revogado_em=clock_timestamp() where usuario_id='user_899shop';
 do $$ declare item uuid; begin
   for item in select id from whatsapp_fila where usuario_id='user_899shop'
-  loop assert whatsapp_fila_confirmar_envio(item)='cancelada', 'retirada após colher bloqueia envio'; end loop;
+  loop assert whatsapp_fila_confirmar_envio(item,true)='cancelada', 'retirada após colher bloqueia envio'; end loop;
 end $$;
 update radar_piloto_participantes set fim_em=clock_timestamp() where usuario_id='user_899buyer';
 do $$ begin
-  assert (select whatsapp_fila_confirmar_envio(id)='cancelada' from whatsapp_fila where usuario_id='user_899buyer'),
+  assert (select whatsapp_fila_confirmar_envio(id,true)='cancelada' from whatsapp_fila where usuario_id='user_899buyer'),
     'expiração após colher bloqueia envio';
 end $$;
 update radar_piloto_participantes set fim_em=clock_timestamp()+interval '1 day' where usuario_id='user_899buyer';
 
 do $$ begin
-  assert whatsapp_sair('5589998990010','SAIR');
+  assert whatsapp_radar_evento('5589998990010','sair','SAIR',repeat('a',64),clock_timestamp(),null)='saiu';
   assert whatsapp_radar_mensagem_com_contexto('5589998990010',repeat('b',64))='pergunta';
 end $$;
 update whatsapp_fila set estado='enviando' where usuario_id='user_899buyer' and split_part(chave,':',3)='pergunta';
 update radar_piloto_controle set modo='pausado';
 do $$ begin
-  assert (select whatsapp_fila_confirmar_envio(id)='cancelada'
+  assert (select whatsapp_fila_confirmar_envio(id,true)='cancelada'
     from whatsapp_fila where usuario_id='user_899buyer' and split_part(chave,':',3)='pergunta'), 'pergunta colhida cancelada na pausa';
   assert (select estado='pendente' from whatsapp_fila where usuario_id='user_899buyer' and chave like 'whatsapp_saida:%');
 end $$;

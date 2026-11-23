@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       try {
         const { error: erroResultado } = comprovante && resultado === "enviado"
           ? await db.rpc("whatsapp_radar_resultado_enviado", { p_id: id, p_comprovante: comprovante })
-          : await db.rpc("whatsapp_fila_resultado", { p_id: id, p_resultado: resultado });
+          : await db.rpc("whatsapp_fila_resultado", { p_id: id, p_resultado: resultado, p_worker_atual: true });
         if (erroResultado) { total.erros_resultado++; console.error("whatsapp-fila: erro ao gravar o resultado do envio"); }
       } catch {
         total.erros_resultado++;
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         // Sem tempo: o que não foi tentado volta para a fila (sem gastar tentativa) em vez de ficar "enviando".
         const sobras = linhas.slice(i).map((l) => l.id);
         try {
-          const { data: n, error: erroDevolver } = await db.rpc("whatsapp_fila_devolver", { p_ids: sobras });
+          const { data: n, error: erroDevolver } = await db.rpc("whatsapp_fila_devolver", { p_ids: sobras, p_worker_atual: true });
           if (erroDevolver) console.error("whatsapp-fila: erro ao devolver mensagens não tentadas");
           else total.devolvidas = typeof n === "number" ? n : sobras.length;
         } catch {
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       const conf: { decisao: Decisao | null } = { decisao: null };
       const conferir = async (): Promise<boolean> => {
         try {
-          const { data: d, error: erroConferir } = await db.rpc("whatsapp_fila_confirmar_envio", { p_id: linha.id });
+          const { data: d, error: erroConferir } = await db.rpc("whatsapp_fila_confirmar_envio", { p_id: linha.id, p_worker_atual: true });
           if (erroConferir) { conf.decisao = "erro"; return false; }
           conf.decisao = d === "pode" || d === "cancelada" || d === "ignorada" ? d : "erro";
           return conf.decisao === "pode";

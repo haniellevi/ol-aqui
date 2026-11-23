@@ -73,7 +73,7 @@ test('fila WhatsApp: envia proposta_nova ao comprador e cancela proposta_escolhi
       texto: `Loja Centro mandou uma proposta no Radar do Mercado da Região para “Sofá”. https://mercadodaregiao.test/radar/pedido/${PEDIDO_ID}`,
     },
   ]);
-  assert.deepEqual(resultados, [{ p_id: 'fila-prop-nova', p_resultado: 'enviado' }]);
+  assert.deepEqual(resultados, [{ p_id: 'fila-prop-nova', p_resultado: 'enviado', p_worker_atual: true }]);
 });
 
 test('webhook Evolution: encaminha SAIR e VOLTAR de comprador ou lojista (inclusive @lid)', async () => {

@@ -88,7 +88,7 @@ def verificar_radar_piloto(container, sql, checked, fixture):
         tag = f'radar_{tipo}'
         with ThreadPoolExecutor(max_workers=1) as pool:
             with transacao('select pg_advisory_xact_lock(89900001);'):
-                desligar = sessao(destino, f"select salvar_preferencia_whatsapp_radar_tipo('{tipo}',false);") if pelo_site else f"select whatsapp_sair('{numero}','SAIR');"
+                desligar = sessao(destino, f"select salvar_preferencia_whatsapp_radar_tipo('{tipo}',false);") if pelo_site else f"select whatsapp_radar_evento('{numero}','sair','SAIR',encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null);"
                 with transacao(desligar):
                     produtor = pool.submit(sql, f"""begin; set local statement_timeout='12s';
                         set local application_name='radar899-produtor'; {preparar}
@@ -112,7 +112,7 @@ def verificar_radar_piloto(container, sql, checked, fixture):
             assert item.radar_autorizacao_id <> (select radar_autorizacao_id from preferencias_avisos
               where usuario_id='{destino}' and canal='whatsapp' and tipo='{tipo}');
             update whatsapp_fila set estado='enviando' where id=item.id;
-            assert whatsapp_fila_confirmar_envio(item.id)='cancelada';
+            assert whatsapp_fila_confirmar_envio(item.id,true)='cancelada';
           end $$;
         """))
         preparar, produzir = evento(20 + indice)
@@ -123,8 +123,8 @@ def verificar_radar_piloto(container, sql, checked, fixture):
               and split_part(chave,':',1)='{tag}' order by criado_em desc limit 1;
             update whatsapp_fila set estado='enviando' where id=item and estado='pendente';
             assert found, 'aviso novo de {tipo} após reativação deveria estar pendente no cenário {indice}';
-            assert whatsapp_fila_confirmar_envio(item)='pode';
-            perform whatsapp_fila_resultado(item,'enviado');
+            assert whatsapp_fila_confirmar_envio(item,true)='pode';
+            perform whatsapp_fila_resultado(item,'enviado',true);
           end $$;
         """))
 
@@ -185,7 +185,7 @@ def verificar_radar_piloto(container, sql, checked, fixture):
     assert set(ids) == {'radar_pedido_novo','radar_proposta_nova','radar_proposta_escolhida'}, ids
     with ThreadPoolExecutor(max_workers=3) as pool:
         with transacao("select id from whatsapp_fila where id in (" + ",".join(f"'{v}'" for v in ids.values()) + ") for update;"):
-            consultas = [pool.submit(sql, f"begin; set local application_name='radar899-final{i}'; select whatsapp_fila_confirmar_envio('{item}'); commit;")
+            consultas = [pool.submit(sql, f"begin; set local application_name='radar899-final{i}'; select whatsapp_fila_confirmar_envio('{item}',true); commit;")
                          for i, item in enumerate(ids.values())]
             for i in range(3):
                 esperar_bloqueio(f'radar899-final{i}')

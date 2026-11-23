@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { resolve } = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { setTimeout: esperar } = require('node:timers/promises');
 const { test } = require('node:test');
@@ -79,14 +81,14 @@ function conta(n, modo = 'legado') {
   `) === 't' };
 }
 
-async function entrada(numero, texto, id, { hora = Math.floor(Date.now()/1000), externa, interna } = {}) {
+async function entrada(numero, texto, id, { hora = Math.floor(Date.now()/1000), externa, interna, receber = webhook } = {}) {
   const data = {
     key: { remoteJid: numero + '@s.whatsapp.net', fromMe: false, id },
     message: interna ? { extendedTextMessage: { text: texto, contextInfo: { stanzaId: interna } } } : { conversation: texto },
     messageTimestamp: hora,
   };
   if (externa) data.contextInfo = { stanzaId: externa, quotedMessage: { conversation: 'Pergunta fictícia' } };
-  assert.equal((await webhook(requisicao({ event: 'messages.upsert', data }))).status, 200);
+  assert.equal((await receber(requisicao({ event: 'messages.upsert', data }))).status, 200);
 }
 
 async function rodada() {
@@ -243,6 +245,119 @@ test('compatibilidade: coleta antiga preserva confirmação e deixa pergunta nov
   assert.equal(sql(`select estado from whatsapp_fila where usuario_id=${uid} and radar_eh_pergunta_whatsapp(chave)`), 'pendente');
   assert.equal(sql(`select has_function_privilege('anon','whatsapp_radar_fila_pegar(integer)','execute')
     or has_function_privilege('authenticated','whatsapp_radar_mensagem_com_contexto(text,text)','execute')`), 'f');
+});
+
+// Quando disponível, usar as rotas e adaptadores da release anterior extraídos com git archive.
+const anterior = process.env.RADAR_WORKER_ANTERIOR_DIR;
+const webhookAnterior = anterior ? carregar(resolve(anterior, 'src/app/api/whatsapp/evolution/route.ts'), {
+  ...fronteiras, '@/lib/whatsapp/evolution': carregar(resolve(anterior, 'src/lib/whatsapp/evolution.ts')),
+}).POST : undefined;
+const filaAnterior = anterior ? carregar(resolve(anterior, 'src/app/api/interno/whatsapp-fila/route.ts'), {
+  ...fronteiras,
+  '@/lib/whatsapp/envio': carregar(resolve(anterior, 'src/lib/whatsapp/envio.ts')),
+  '@/lib/moderacao-ia': { segredoModeracaoConfere: () => true },
+  '@/lib/formato': { SITE: 'https://site.test' },
+  'node:timers/promises': { setTimeout: async () => {} },
+}).POST : undefined;
+
+for (const [n, origemSaida] of [[81, 'legado'], [82, 'sem-id'], [83, 'sem-hora']]) {
+  test('C3: SAIR por ' + origemSaida + ' preserva a retirada após VOLTAR atrasado', async () => {
+    const { numero, uid, ligado } = conta(n, 'fechado');
+    const t = Math.floor(Date.now()/1000);
+    if (origemSaida === 'legado' && !webhookAnterior) {
+      assert.equal((await rpc('whatsapp_sair', { p_numero: numero, p_comando: 'SAIR' })).data, true);
+    } else {
+      await entrada(numero, 'SAIR', origemSaida === 'sem-id' ? undefined : 'saida-' + n, {
+        hora: origemSaida === 'sem-hora' ? null : t + 100,
+        receber: origemSaida === 'legado' ? webhookAnterior : webhook,
+      });
+    }
+    assert.equal(ligado(), false);
+    await esperar(Math.max(0, (t+2)*1000-Date.now()));
+    await entrada(numero, 'VOLTAR', 'voltar-inicial-' + n, { hora: t + 1 });
+    assert.equal(ligado(), false);
+    await entrada(numero, 'SAIR', 'saida-com-ordem-' + n, { hora: t + 1 });
+    const posterior = Number(sql('select ceil(extract(epoch from clock_timestamp()))'));
+    await esperar(Math.max(0, posterior*1000-Date.now()+25));
+    await entrada(numero, 'VOLTAR', 'voltar-posterior-' + n, { hora: posterior });
+    assert.equal(ligado(), false, 'a retirada posterior com hora conhecida não apaga a anterior sem ordem');
+    assert.match(sql(`select texto from whatsapp_fila where usuario_id=${uid} and chave like '%:orientacao:%'`), /Minha conta > Notificações/);
+    await entrada(numero, 'Olá', 'oi-sem-ordem-' + n);
+    const id = 'pergunta-sem-ordem-' + n;
+    global.fetch = async (url, op) => url.includes('connectionState')
+      ? Response.json({ instance: { state: 'open' } })
+      : Response.json({ key: { id: JSON.parse(op.body).text.includes('Use Responder') ? id : 'outra-' + n, fromMe: true } });
+    await rodada();
+    await entrada(numero, 'SIM', 'sim-sem-ordem-' + n, { externa: id });
+    assert.equal(ligado(), true, 'SIM pode recuperar a preferência com vínculo posterior comprovado');
+  });
+}
+
+test('C3: hora válida de SAIR sem ID continua utilizável e uma saída sem ordem posterior bloqueia VOLTAR', async () => {
+  const { numero, uid, ligado } = conta(84, 'fechado');
+  const origem = Math.floor(Date.now()/1000)-1;
+  await entrada(numero, 'SAIR', undefined, { hora: origem });
+  assert.equal(sql(`select extract(epoch from radar_ocorreu_em)::bigint from whatsapp_respostas where usuario_id=${uid} and comando='SAIR'`), String(origem));
+  const posterior = Number(sql('select ceil(extract(epoch from clock_timestamp()))'));
+  await esperar(Math.max(0, posterior*1000-Date.now()+25));
+  await entrada(numero, 'VOLTAR', 'voltar-possivel-84', { hora: posterior });
+  assert.equal(ligado(), true);
+  await entrada(numero, 'SAIR', 'saida-conhecida-84', { hora: posterior });
+  await entrada(numero, 'SAIR', undefined, { hora: null });
+  const novaHora = Number(sql('select ceil(extract(epoch from clock_timestamp()))'));
+  await esperar(Math.max(0, novaHora*1000-Date.now()+25));
+  await entrada(numero, 'VOLTAR', 'voltar-bloqueado-84', { hora: novaHora });
+  assert.equal(ligado(), false);
+  sql(`begin; set local role authenticated; set local request.jwt.claim.sub=${uid};
+    select salvar_preferencia_whatsapp_radar_tipo('proposta_nova',true); commit;`);
+  assert.equal(ligado(), true, 'o aceite autenticado por tipo continua disponível');
+});
+
+test('HTTP 400: RPCs públicas antigas não reservam nem devolvem ou finalizam os três itens piloto', async () => {
+  sql("update whatsapp_fila set estado='cancelada' where estado in ('pendente','enviando'); update radar_piloto_controle set modo='legado';");
+  const restaurarJanela = sql("select pg_get_functiondef('proxima_janela_whatsapp(timestamptz)'::regprocedure)");
+  // Abrir a janela só na fixture, sob as duas RPCs públicas reais, sem depender da hora local.
+  sql(`create or replace function public.proxima_janela_whatsapp(p_quando timestamptz default now())
+    returns timestamptz language sql stable as 'select p_quando';`);
+  try {
+    sql('\\set evolution899 on\n' + readFileSync('supabase/testes/899_radar_piloto_fechado.sql', 'utf8'));
+    const avisos = "usuario_id in ('user_899buyer','user_899shop') and chave like 'radar_%'";
+    const estados = () => sql(`select string_agg(estado||'/'||tentativas, ',' order by chave) from whatsapp_fila where ${avisos}`);
+    const ids = sql(`select '{'||string_agg(id::text,',')||'}' from whatsapp_fila where ${avisos}`);
+    assert.equal(estados(), 'pendente/0,pendente/0,pendente/0');
+    let posts = 0;
+    global.fetch = async (url, op) => {
+      if (url.includes('connectionState')) return Response.json({ instance: { state: 'open' } });
+      assert.equal(op.method, 'POST');
+      posts++;
+      return Response.json({ error: 'Bad Request' }, { status: 400 });
+    };
+    if (filaAnterior) assert.equal((await filaAnterior(requisicao({}))).status, 200);
+    assert.deepEqual((await rpc('whatsapp_fila_pegar', { p_limite: 5 })).data, []);
+    assert.equal(posts, 0);
+    // Reservas obtidas pelo Worker novo podem estar abertas quando o antigo volta.
+    const reservadas = (await rpc('whatsapp_radar_fila_pegar', { p_limite: 5 })).data;
+    assert.equal(reservadas.length, 3);
+    sql("update radar_piloto_controle set modo='pausado';");
+    for (const { id } of reservadas) {
+      assert.equal((await rpc('whatsapp_fila_confirmar_envio', { p_id: id })).data, 'ignorada');
+      assert.equal((await rpc('whatsapp_fila_resultado', { p_id: id, p_resultado: 'falha' })).data, 'ignorado');
+    }
+    assert.equal((await rpc('whatsapp_fila_devolver', { p_ids: ids })).data, 0);
+    assert.equal(estados(), 'enviando/1,enviando/1,enviando/1');
+    sql("update radar_piloto_controle set modo='fechado';");
+    // A versão que fez a reserva sabe que ainda não submeteu nenhum POST.
+    const devolvidas = await rpc('whatsapp_fila_devolver', { p_ids: ids, p_worker_atual: true });
+    assert.equal(devolvidas.data, 3);
+    await rodada();
+    assert.equal(posts, 3);
+    assert.equal(estados(), 'incerta/1,incerta/1,incerta/1');
+    sql(`update whatsapp_fila set enviar_apos=now()-interval '1 second' where ${avisos}`);
+    await rodada();
+    assert.equal(posts, 3);
+  } finally {
+    sql(restaurarJanela);
+  }
 });
 
 test('minimização: comandos ignorados de número sem conta não deixam identificadores', async () => {

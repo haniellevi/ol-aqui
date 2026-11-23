@@ -45,7 +45,7 @@ update configuracoes set valor = 'true'::jsonb where chave = 'radar.whatsapp_ati
 
 -- [1] SAIR: desliga o aviso no WhatsApp e a confirmação já traz a volta
 set local role service_role;
-select whatsapp_sair('5589999970001', 'SAIR') as achou \gset
+select (whatsapp_radar_evento('5589999970001','sair','SAIR',encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null)='saiu') as achou \gset
 reset role;
 select pg_temp.confere870(:'achou' = 't', 'SAIR acha a conta de quem mandou');
 select pg_temp.confere870((select ligado = false from preferencias_avisos where usuario_id = 'user_870saiu' and tipo = 'pedido_novo' and canal = 'whatsapp'), 'SAIR desliga o aviso no WhatsApp');
@@ -105,7 +105,7 @@ select pg_temp.confere870((select count(*) = 3 from whatsapp_fila where numero =
 
 -- [6] Chave geral desligada: VOLTAR responde que está pausado e não liga; com a chave ligada de novo, a volta funciona
 set local role service_role;
-select whatsapp_sair('5589999970005', 'PARAR') as saiu_pausa \gset
+select (whatsapp_radar_evento('5589999970005','sair','PARAR',encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null)='saiu') as saiu_pausa \gset
 reset role;
 update configuracoes set valor = 'false'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
 set local role service_role;
@@ -153,7 +153,7 @@ select pg_temp.confere870((select count(*) = 0 from whatsapp_respostas where usu
 -- [9] Limite de 3 respostas automáticas por número e dia: saída (1), pergunta (2), pausado (3); a volta fica registrada,
 -- mas a resposta dela não sai pelo limite
 set local role service_role;
-select whatsapp_sair('5589999970004', 'SAIR') as l0 \gset
+select (whatsapp_radar_evento('5589999970004','sair','SAIR',encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null)='saiu') as l0 \gset
 select whatsapp_radar_mensagem_com_contexto('5589999970004',pg_temp.h870('oi')) as l1 \gset
 reset role;
 update configuracoes set valor = 'false'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
@@ -211,7 +211,7 @@ select pg_temp.confere870((select estado = 'enviando' from whatsapp_fila where c
 -- [11] Sino do pedido novo no app desligado: a volta não liga o WhatsApp nem mexe no sino; responde para ligar o sino antes.
 -- Quem tem o WhatsApp ligado mas o sino desligado também não recebe "já recebe".
 set local role service_role;
-select whatsapp_sair('5589999970007', 'SAIR') as sino_saiu \gset
+select (whatsapp_radar_evento('5589999970007','sair','SAIR',encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null)='saiu') as sino_saiu \gset
 select whatsapp_radar_evento('5589999970007','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as sino1 \gset
 select whatsapp_radar_evento('5589999970008','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as sino2 \gset
 reset role;
@@ -274,7 +274,7 @@ insert into perfis(id, microrregiao_id, nome, cidade, whatsapp, whatsapp_verific
   ('user_870antiga', :'reg', 'Loja 870 antiga só pedido_novo', 'Corrente', '5589999970011', now());
 insert into preferencias_avisos(usuario_id, tipo, canal, ligado, consentido_em) values ('user_870antiga', 'pedido_novo', 'whatsapp', true, now());
 set local role service_role;
-select whatsapp_sair('5589999970011', 'SAIR') as ant870_s \gset
+select (whatsapp_radar_evento('5589999970011','sair','SAIR',encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null)='saiu') as ant870_s \gset
 select whatsapp_radar_evento('5589999970011','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as ant870_v \gset
 reset role;
 select pg_temp.confere870(:'ant870_s' = 't' and :'ant870_v' = 'voltou', 'conta antiga 870 faz SAIR -> VOLTAR');
