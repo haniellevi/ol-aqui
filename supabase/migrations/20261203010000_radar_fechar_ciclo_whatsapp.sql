@@ -25,33 +25,39 @@ select 'proposta_escolhida', 'whatsapp', 76, 'Proposta escolhida (para a loja)',
     where m.chave = 'proposta_escolhida' and m.canal = 'whatsapp'
  );
 
--- Quem já respondeu SAIR antes desta migração e não voltou depois também fica fora dos novos avisos.
+-- Quem já desligou no WhatsApp (SAIR sem VOLTAR depois) ou pelo site antes desta migração também fica fora dos novos avisos.
 insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
 select pf.id, t.tipo, 'whatsapp', false, now()
   from public.perfis pf
   cross join (values ('proposta_nova'), ('proposta_escolhida')) as t(tipo)
  where exists (
-         select 1 from public.whatsapp_respostas r
-          where r.usuario_id = pf.id and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')
+         select 1 from public.preferencias_avisos pa
+          where pa.usuario_id = pf.id and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp' and not pa.ligado
        )
-   and coalesce(
-         (select max(r.criado_em) from public.whatsapp_respostas r
-           where r.usuario_id = pf.id and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')),
-         '-infinity'::timestamptz
-       ) > coalesce(
-         (select max(r.criado_em) from public.whatsapp_respostas r
-           where r.usuario_id = pf.id and r.comando = 'VOLTAR'),
-         '-infinity'::timestamptz
-       )
-   and coalesce(
-         (select max(r.criado_em) from public.whatsapp_respostas r
-           where r.usuario_id = pf.id and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')),
-         '-infinity'::timestamptz
-       ) >= coalesce(
-         (select pa.atualizado_em from public.preferencias_avisos pa
-           where pa.usuario_id = pf.id and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp'),
-         '-infinity'::timestamptz
-       )
+    or (
+      exists (
+        select 1 from public.whatsapp_respostas r
+         where r.usuario_id = pf.id and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')
+      )
+      and coalesce(
+            (select max(r.criado_em) from public.whatsapp_respostas r
+              where r.usuario_id = pf.id and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')),
+            '-infinity'::timestamptz
+          ) > coalesce(
+            (select max(r.criado_em) from public.whatsapp_respostas r
+              where r.usuario_id = pf.id and r.comando = 'VOLTAR'),
+            '-infinity'::timestamptz
+          )
+      and coalesce(
+            (select max(r.criado_em) from public.whatsapp_respostas r
+              where r.usuario_id = pf.id and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')),
+            '-infinity'::timestamptz
+          ) >= coalesce(
+            (select pa.atualizado_em from public.preferencias_avisos pa
+              where pa.usuario_id = pf.id and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp'),
+            '-infinity'::timestamptz
+          )
+    )
 on conflict (usuario_id, tipo, canal) do nothing;
 
 -- ---------------------------------------------------------------------

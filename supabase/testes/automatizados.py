@@ -46,7 +46,22 @@ try:
               reset role;
               update public.voucher_campanhas set ativo=false, valido_ate=now()-interval '1 day' where codigo='RESERVA890';
               commit;"""))
+        if p.name == '20261203010000_radar_fechar_ciclo_whatsapp.sql':
+            checked(sql("""begin;
+              insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+              select 'user_pre898',id,'Desligado antes','Corrente','5589998980898',now()
+              from public.microrregioes where slug='corrente-pi';
+              insert into public.preferencias_avisos(usuario_id,tipo,canal,ligado)
+              values ('user_pre898','pedido_novo','whatsapp',false);
+              commit;"""))
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+        if p.name == '20261203010000_radar_fechar_ciclo_whatsapp.sql':
+            checked(sql("""do $$ begin
+              assert (select count(*)=2 and bool_and(not ligado) from public.preferencias_avisos
+                where usuario_id='user_pre898' and canal='whatsapp' and tipo in ('proposta_nova','proposta_escolhida')),
+                'backfill não preservou preferência desligada antes da migração';
+            end $$;
+            delete from public.perfis where id='user_pre898';"""))
     checked(sql("""do $$ begin
       assert (select texto='Mensagem personalizada de teste.' and texto_padrao like '%plano gratuito%' from public.modelos_mensagem where chave='plano_vencendo' and canal='whatsapp'), 'padrão ou personalização alterados incorretamente';
       assert (select texto=texto_padrao and texto like '%plano gratuito%' from public.modelos_mensagem where chave='plano_vencendo' and canal='notificacao'), 'texto padrão não foi atualizado';
