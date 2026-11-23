@@ -226,7 +226,7 @@ reset role;
 select pg_temp.confere898((select count(*) = 1 from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped6' || ':' || :'prop6_2'),
   'após VOLTAR e sino ligado, proposta_nova volta a enfileirar');
 
--- Lojista 2 responde SAIR: não recebe proposta_escolhida; salvar_preferencia_whatsapp_radar(true) religa
+-- Lojista 2 responde SAIR: não recebe proposta_escolhida; salvar_preferencia_whatsapp_radar(true) religa e (false) desliga os três
 set local role service_role;
 select whatsapp_sair('5589998980012', 'PARAR') as loja_saiu \gset
 reset role;
@@ -241,11 +241,29 @@ select pg_temp.confere898((select count(*) = 0 from whatsapp_fila where chave = 
 set local role authenticated;
 set local request.jwt.claim.sub = 'user_898loja2';
 select pg_temp.confere898(salvar_preferencia_whatsapp_radar(true) = true, 'loja religa avisos pelo site');
+select pg_temp.confere898(salvar_preferencia_whatsapp_radar(false) = false, 'loja desliga avisos pelo site');
+reset role;
+select pg_temp.confere898((select count(*) = 3 and bool_and(not ligado) from preferencias_avisos
+  where usuario_id = 'user_898loja2' and canal = 'whatsapp' and tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida')),
+  'desligar pelo site desliga os três tipos de aviso do Radar no WhatsApp');
+
+set local role authenticated;
 set local request.jwt.claim.sub = 'user_898comp2';
 select * from escolher_proposta(:'prop6_1'::uuid);
 reset role;
 select pg_temp.confere898((select count(*) = 1 from whatsapp_fila where chave = 'radar_proposta_escolhida:' || :'ped6' || ':' || :'prop6_1'),
   'outra loja ativa recebe proposta_escolhida normalmente');
+
+-- Desligar pelo site após SAIR/ligar também bloqueia proposta_nova para quem desligou
+set local role authenticated;
+set local request.jwt.claim.sub = 'user_898comp';
+select pg_temp.confere898(salvar_preferencia_whatsapp_radar(false) = false, 'comprador desliga WhatsApp pelo site');
+select criar_pedido_radar_site('89800000-0000-4000-a000-000000000007', 'Procuro rack desligado 898', 'Corrente', 'propostas_prazo', 72, null, :'sofas'::uuid) ->> 'id' as ped7 \gset
+set local request.jwt.claim.sub = 'user_898loja1';
+select proposta_id as prop7_1 from propor_radar(:'ped7'::uuid, '89800000-0000-4000-c000-000000000001'::uuid, null, 45000, 'Rack teste') \gset
+reset role;
+select pg_temp.confere898((select count(*) = 0 from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped7' || ':' || :'prop7_1'),
+  'quem desligou o WhatsApp pelo site não recebe proposta_nova');
 
 -- [7] Permissões fechadas
 select pg_temp.confere898(

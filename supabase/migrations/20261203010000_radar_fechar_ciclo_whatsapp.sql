@@ -522,14 +522,10 @@ begin
     raise exception 'Este aviso ainda não está disponível.' using errcode = '55000';
   end if;
   insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
-  values (uid, 'pedido_novo', 'whatsapp', p_ligado, now())
+  values (uid, 'pedido_novo', 'whatsapp', p_ligado, now()),
+         (uid, 'proposta_nova', 'whatsapp', p_ligado, now()),
+         (uid, 'proposta_escolhida', 'whatsapp', p_ligado, now())
   on conflict (usuario_id, tipo, canal) do update set ligado = excluded.ligado, atualizado_em = now();
-  if p_ligado then
-    insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
-    values (uid, 'proposta_nova', 'whatsapp', true, now()),
-           (uid, 'proposta_escolhida', 'whatsapp', true, now())
-    on conflict (usuario_id, tipo, canal) do update set ligado = true, atualizado_em = now();
-  end if;
   return p_ligado;
 end $$;
 
