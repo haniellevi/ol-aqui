@@ -103,7 +103,7 @@ export async function garantirCobranca(opcoes: {
   const db = supabaseAdmin();
   const { data: vitrine } = await db
     .from("vitrines_lojas")
-    .select("id, nome, tipo, dono_id, gateway_cliente_id, perfis(nome)")
+    .select("id, nome, tipo, dono_id, gateway_cliente_id, perfis!vitrines_lojas_dono_id_fkey(nome)")
     .eq("id", pg.vitrine_id)
     .maybeSingle<{ id: string; nome: string; tipo: string; dono_id: string; gateway_cliente_id: string | null; perfis: { nome: string } | null }>();
   if (!vitrine || vitrine.dono_id !== userId) throw new ErroCobranca(naoEncontrado);
