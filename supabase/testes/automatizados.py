@@ -51,17 +51,23 @@ try:
               insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
               select 'user_pre898',id,'Desligado antes','Corrente','5589998980898',now()
               from public.microrregioes where slug='corrente-pi';
-              insert into public.preferencias_avisos(usuario_id,tipo,canal,ligado)
-              values ('user_pre898','pedido_novo','whatsapp',false);
+              insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
+              select 'user_pre898ant',id,'Antigo ativo antes','Corrente','5589998980899',now()
+              from public.microrregioes where slug='corrente-pi';
+              insert into public.preferencias_avisos(usuario_id,tipo,canal,ligado) values
+                ('user_pre898','pedido_novo','whatsapp',false),
+                ('user_pre898ant','pedido_novo','whatsapp',true);
               commit;"""))
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
         if p.name == '20261203010000_radar_fechar_ciclo_whatsapp.sql':
             checked(sql("""do $$ begin
-              assert (select count(*)=2 and bool_and(not ligado) from public.preferencias_avisos
-                where usuario_id='user_pre898' and canal='whatsapp' and tipo in ('proposta_nova','proposta_escolhida')),
-                'backfill não preservou preferência desligada antes da migração';
+              assert not exists (select 1 from public.preferencias_avisos
+                where usuario_id in ('user_pre898','user_pre898ant') and canal='whatsapp' and tipo in ('proposta_nova','proposta_escolhida')),
+                'migração não deve criar linhas de proposta_nova/proposta_escolhida sem opt-in';
+              assert (select ligado from public.preferencias_avisos where usuario_id='user_pre898ant' and tipo='pedido_novo' and canal='whatsapp'),
+                'conta antiga com pedido_novo=true deve preservar consentimento existente';
             end $$;
-            delete from public.perfis where id='user_pre898';"""))
+            delete from public.perfis where id in ('user_pre898','user_pre898ant');"""))
     checked(sql("""do $$ begin
       assert (select texto='Mensagem personalizada de teste.' and texto_padrao like '%plano gratuito%' from public.modelos_mensagem where chave='plano_vencendo' and canal='whatsapp'), 'padrão ou personalização alterados incorretamente';
       assert (select texto=texto_padrao and texto like '%plano gratuito%' from public.modelos_mensagem where chave='plano_vencendo' and canal='notificacao'), 'texto padrão não foi atualizado';

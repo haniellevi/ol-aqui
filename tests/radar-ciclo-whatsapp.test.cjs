@@ -164,19 +164,49 @@ test('actions Radar: escolherProposta e fecharPedido chamam as RPCs corretas e r
   ]);
 });
 
-test('preferência Radar WhatsApp: copy cobre pedidos, propostas e escolha e action mapeia permissões', async () => {
+test('preferência Radar WhatsApp: estado parcial de conta antiga permite desligar em 1 clique e action mapeia permissões', async () => {
   const fs = require('node:fs');
   const componente = fs.readFileSync(require.resolve('../src/components/conta/preferencia-whatsapp-radar.tsx'), 'utf8');
   assert.match(componente, /Receber avisos do Radar no WhatsApp/);
+  assert.match(componente, /Ligado \(só pedidos\)/);
+  assert.match(componente, /só os avisos de pedidos novos no WhatsApp/);
   assert.match(componente, /propostas novas/i);
   assert.match(componente, /proposta da loja escolhida/i);
   assert.match(componente, /SAIR/);
 
+  const dadosRadar = carregar('src/lib/dados/radar.ts', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_antiga' }) },
+    '@/lib/dados/config': {},
+    '@/lib/supabase/server': {
+      createClient: async () => ({
+        rpc: async () => ({ data: { ligado: true, parcial: true, confirmado: true, ativo: false }, error: null }),
+      }),
+    },
+  });
+  assert.deepEqual(await dadosRadar.minhaPreferenciaWhatsappRadar(), {
+    ligado: true,
+    parcial: true,
+    confirmado: true,
+    ativo: false,
+  });
+
+  const chamadas = [];
   const ambiente = (resultado, rpcError = null) => carregar('src/app/(conta)/minha-conta/notificacoes/actions.ts', {
     '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_teste' }) },
     'next/cache': { revalidatePath: () => {} },
-    '@/lib/supabase/server': { createClient: async () => ({ rpc: async () => ({ data: resultado, error: rpcError }) }) },
+    '@/lib/supabase/server': {
+      createClient: async () => ({
+        rpc: async (...args) => {
+          chamadas.push(args);
+          return { data: resultado, error: rpcError };
+        },
+      }),
+    },
   });
+
+  const desligarParcial = await ambiente(false).salvarPreferenciaWhatsappRadar(false);
+  assert.equal(desligarParcial.ok, true);
+  assert.deepEqual(chamadas[0], ['salvar_preferencia_whatsapp_radar', { p_ligado: false }]);
 
   const ok = await ambiente(true).salvarPreferenciaWhatsappRadar(true);
   assert.equal(ok.ok, true);

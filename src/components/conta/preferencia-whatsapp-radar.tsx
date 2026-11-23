@@ -8,11 +8,12 @@ import type { PreferenciaWhatsappRadar } from "@/lib/tipos-radar";
 // Avisos do Radar por WhatsApp (pedidos novos, propostas e escolha): a pessoa liga ou desliga. Desligado por padrão.
 export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: PreferenciaWhatsappRadar }) {
   const [ligado, setLigado] = useState(inicial.ligado);
+  const [parcial, setParcial] = useState(Boolean(inicial.parcial));
   const [erro, setErro] = useState<string | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
   const trava = useRef(false);
   const [pendente, iniciar] = useTransition();
-  // Ligar exige o aviso liberado e o celular confirmado; desligar é sempre permitido.
+  // Ligar exige o aviso liberado e o celular confirmado; desligar é sempre permitido (inclusive conta antiga só com pedidos novos).
   const bloqueado = !ligado && (!inicial.ativo || !inicial.confirmado);
 
   function alternar() {
@@ -26,6 +27,7 @@ export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: Preferenci
         if (!r.ok) setErro(r.erro);
         else {
           setLigado(!ligado);
+          setParcial(false);
           setMensagem(r.mensagem);
         }
       } catch {
@@ -48,7 +50,7 @@ export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: Preferenci
       >
         <span className="min-w-0 flex-1 text-rotulo font-normal break-words text-texto">Receber avisos do Radar no WhatsApp (8h às 20h)</span>
         <span className={`inline-flex shrink-0 items-center gap-1 text-legenda ${ligado ? "font-semibold text-beringela" : "text-texto-suave"}`}>
-          {pendente ? "Salvando..." : ligado ? <><Check className="size-3.5" aria-hidden />Ligado</> : "Desligado"}
+          {pendente ? "Salvando..." : ligado ? <><Check className="size-3.5" aria-hidden />{parcial ? "Ligado (só pedidos)" : "Ligado"}</> : "Desligado"}
         </span>
       </button>
       <p className="px-3 pb-3 text-legenda text-texto-suave">
@@ -58,7 +60,9 @@ export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: Preferenci
             ? "Este aviso está pausado agora. Você pode desligá-lo aqui."
             : !inicial.confirmado && !ligado
               ? "Confirme seu WhatsApp em Meus dados para ligar este aviso."
-              : "Avisamos pelo WhatsApp sobre novidades do Radar: pedidos novos na categoria dos seus anúncios (loja verificada com plano que inclui o alerta ou com cortesia), propostas novas nos seus pedidos e proposta da loja escolhida. Só enviamos os avisos que também estiverem ligados acima. Responda SAIR para parar, ou desligue aqui."}
+              : parcial && ligado
+                ? "Hoje esta conta recebe só os avisos de pedidos novos no WhatsApp. Toque acima para desligar agora (e, se quiser receber também propostas novas e proposta escolhida, ligue de novo depois)."
+                : "Avisamos pelo WhatsApp sobre novidades do Radar: pedidos novos na categoria dos seus anúncios (loja verificada com plano que inclui o alerta ou com cortesia), propostas novas nos seus pedidos e proposta da loja escolhida. Só enviamos os avisos que também estiverem ligados acima. Responda SAIR para parar, ou desligue aqui."}
       </p>
       {erro && <p role="alert" className="px-3 pb-3 text-legenda font-semibold text-perigo">{erro}</p>}
       {mensagem && <p role="status" className="sr-only">{mensagem}</p>}

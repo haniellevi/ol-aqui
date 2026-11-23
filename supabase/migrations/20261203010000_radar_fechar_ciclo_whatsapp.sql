@@ -20,7 +20,7 @@ update public.modelos_mensagem
            '{loja} mandou uma proposta no Radar do OLAKI para “{pedido}”. Abra o OLAKI para ver e comparar.'
          )
          then '{loja} mandou uma proposta no Radar do Mercado da Região para “{pedido}”. Abra o Mercado da Região para ver e comparar. Responda SAIR para parar estes avisos.'
-         else replace(texto, 'OLAKI', 'Mercado da Região')
+         else texto
        end,
        texto_padrao = '{loja} mandou uma proposta no Radar do Mercado da Região para “{pedido}”. Abra o Mercado da Região para ver e comparar. Responda SAIR para parar estes avisos.'
  where chave = 'proposta_nova' and canal = 'whatsapp';
@@ -43,40 +43,8 @@ select 'proposta_escolhida', 'whatsapp', 76, 'Proposta escolhida (para a loja)',
 -- Ordem cronológica exata entre enfileiramento e comandos SAIR/VOLTAR mesmo na mesma transação.
 alter table public.whatsapp_fila alter column criado_em set default clock_timestamp();
 
--- Quem já desligou no WhatsApp (SAIR sem VOLTAR depois) ou pelo site antes desta migração também fica fora dos novos avisos.
-insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
-select pf.id, t.tipo, 'whatsapp', false, now()
-  from public.perfis pf
-  cross join (values ('proposta_nova'), ('proposta_escolhida')) as t(tipo)
- where exists (
-         select 1 from public.preferencias_avisos pa
-          where pa.usuario_id = pf.id and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp' and not pa.ligado
-       )
-    or (
-      exists (
-        select 1 from public.whatsapp_respostas r
-         where r.usuario_id = pf.id and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')
-      )
-      and coalesce(
-            (select max(r.criado_em) from public.whatsapp_respostas r
-              where r.usuario_id = pf.id and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')),
-            '-infinity'::timestamptz
-          ) > coalesce(
-            (select max(r.criado_em) from public.whatsapp_respostas r
-              where r.usuario_id = pf.id and r.comando = 'VOLTAR'),
-            '-infinity'::timestamptz
-          )
-      and coalesce(
-            (select max(r.criado_em) from public.whatsapp_respostas r
-              where r.usuario_id = pf.id and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')),
-            '-infinity'::timestamptz
-          ) >= coalesce(
-            (select pa.atualizado_em from public.preferencias_avisos pa
-              where pa.usuario_id = pf.id and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp'),
-            '-infinity'::timestamptz
-          )
-    )
-on conflict (usuario_id, tipo, canal) do nothing;
+-- Como proposta_nova e proposta_escolhida exigem opt-in explícito (linha ausente = desligado),
+-- não criamos linhas falsas para contas antigas; assim SAIR -> VOLTAR reativa apenas o que já existia.
 
 -- ---------------------------------------------------------------------
 -- 2. Cancelamento imediato na fila quando o pedido fecha ou a proposta sai do ar
@@ -183,9 +151,11 @@ declare
   p         public.radar_pedidos;
   v         public.vitrines_lojas;
   vars      jsonb;
-  ligados   jsonb;
-  modelo_wa public.modelos_mensagem;
-  texto_wa  text;
+  ligados     jsonb;
+  modelo_wa   public.modelos_mensagem;
+  texto_cheio text;
+  sufixo_sair text := ' Responda SAIR para parar estes avisos.';
+  texto_wa    text;
 begin
   select * into p from public.radar_pedidos x where x.id = new.pedido_id;
   select * into v from public.vitrines_lojas x where x.id = new.vitrine_id;
@@ -224,10 +194,17 @@ begin
      where x.chave = 'proposta_nova' and x.canal = 'whatsapp';
     if modelo_wa.id is not null and modelo_wa.ativo then
       begin
-        if modelo_wa.texto ~* '\msair\M' then
-          texto_wa := public.mensagem_montar(modelo_wa.texto, vars, 1000);
+        texto_cheio := public.mensagem_montar(modelo_wa.texto, vars, 4000);
+        -- Exige instrução explícita de descadastro no texto final (após variáveis e dentro de 1.000 chars),
+        -- evitando falso positivo como "sem sair de casa" e evitando corte da instrução pelo limite de tamanho.
+        if texto_cheio ~* '(\m(responda|envie|mande|digite|escreva)\s+["''“”]?sair\M|\msair\s+(para\s+(parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)\M)'
+           and (
+             char_length(texto_cheio) <= 1000
+             or left(texto_cheio, 1000) ~* '\m(responda|envie|mande|digite|escreva)\s+["''“”]?sair\s+(para\s+(parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)(\s+estes\s+avisos)?\s*[.!]'
+           ) then
+          texto_wa := left(texto_cheio, 1000);
         else
-          texto_wa := public.mensagem_montar(modelo_wa.texto, vars, 960) || ' Responda SAIR para parar estes avisos.';
+          texto_wa := rtrim(left(texto_cheio, 1000 - char_length(sufixo_sair))) || sufixo_sair;
         end if;
         perform public.whatsapp_enfileirar(
           p.comprador_id, texto_wa, '/radar/pedido/' || p.id::text,
@@ -258,9 +235,11 @@ declare
   p         public.radar_pedidos;
   fone      text;
   vars      jsonb;
-  ligados   jsonb;
-  modelo_wa public.modelos_mensagem;
-  texto_wa  text;
+  ligados     jsonb;
+  modelo_wa   public.modelos_mensagem;
+  texto_cheio text;
+  sufixo_sair text := ' Responda SAIR para parar estes avisos.';
+  texto_wa    text;
 begin
   if uid is null then
     raise exception 'Entre na sua conta para continuar.' using errcode = '28000';
@@ -571,18 +550,23 @@ set search_path = public, extensions
 as $$
 declare
   uid text := public.usuario_id();
+  algum_ligado boolean := false;
+  todos_ligados boolean := false;
 begin
   if uid is null then
     raise exception 'Entre na sua conta para continuar.' using errcode = '28000';
   end if;
+  select coalesce(bool_or(pa.ligado), false),
+         coalesce(count(*) = 3 and bool_and(pa.ligado), false)
+    into algum_ligado, todos_ligados
+    from public.preferencias_avisos pa
+   where pa.usuario_id = uid
+     and pa.canal = 'whatsapp'
+     and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida');
+
   return jsonb_build_object(
-    'ligado', coalesce((
-      select count(*) = 3 and bool_and(pa.ligado)
-        from public.preferencias_avisos pa
-       where pa.usuario_id = uid
-         and pa.canal = 'whatsapp'
-         and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida')
-    ), false),
+    'ligado', algum_ligado,
+    'parcial', (algum_ligado and not todos_ligados),
     'confirmado', coalesce(public.whatsapp_confirmado(uid), false),
     'ativo', coalesce(public.config('radar.whatsapp_ativo', null, 'false'::jsonb) = 'true'::jsonb, false));
 end $$;
@@ -606,11 +590,24 @@ begin
   if p_ligado and (public.config('radar.whatsapp_ativo', null, 'false'::jsonb) is distinct from 'true'::jsonb) then
     raise exception 'Este aviso ainda não está disponível.' using errcode = '55000';
   end if;
-  insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
-  values (uid, 'pedido_novo', 'whatsapp', p_ligado, now()),
-         (uid, 'proposta_nova', 'whatsapp', p_ligado, now()),
-         (uid, 'proposta_escolhida', 'whatsapp', p_ligado, now())
-  on conflict (usuario_id, tipo, canal) do update set ligado = excluded.ligado, atualizado_em = now();
+  if p_ligado then
+    insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
+    values (uid, 'pedido_novo', 'whatsapp', true, now()),
+           (uid, 'proposta_nova', 'whatsapp', true, now()),
+           (uid, 'proposta_escolhida', 'whatsapp', true, now())
+    on conflict (usuario_id, tipo, canal) do update set ligado = true, atualizado_em = now();
+  else
+    update public.preferencias_avisos pa
+       set ligado = false, atualizado_em = now()
+     where pa.usuario_id = uid
+       and pa.canal = 'whatsapp'
+       and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida');
+    if not found then
+      insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
+      values (uid, 'pedido_novo', 'whatsapp', false, now())
+      on conflict (usuario_id, tipo, canal) do update set ligado = false, atualizado_em = now();
+    end if;
+  end if;
   return p_ligado;
 end $$;
 
@@ -639,10 +636,20 @@ begin
     achou := true;
     primeiro := coalesce(primeiro, alvo.id);
     perform pg_advisory_xact_lock(hashtext('whatsapp_voltar:' || alvo.id));
+    -- Desliga apenas os tipos já existentes na conta (sem criar consentimento prévio para propostas em conta antiga).
+    update public.preferencias_avisos pa
+       set ligado = false, atualizado_em = now()
+     where pa.usuario_id = alvo.id
+       and pa.canal = 'whatsapp'
+       and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida');
     insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
-    values (alvo.id, 'pedido_novo', 'whatsapp', false, now()),
-           (alvo.id, 'proposta_nova', 'whatsapp', false, now()),
-           (alvo.id, 'proposta_escolhida', 'whatsapp', false, now())
+    select alvo.id, 'pedido_novo', 'whatsapp', false, now()
+     where not exists (
+       select 1 from public.preferencias_avisos pa
+        where pa.usuario_id = alvo.id
+          and pa.canal = 'whatsapp'
+          and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida')
+     )
     on conflict (usuario_id, tipo, canal) do update set ligado = false, atualizado_em = now();
     update public.whatsapp_fila f set estado = 'cancelada', erro = 'saiu'
      where f.usuario_id = alvo.id and f.estado = 'pendente'
@@ -676,6 +683,7 @@ declare
   radar_ligado boolean;
   pref_ligada boolean;
   pref_existe boolean;
+  tem_propostas boolean;
   sino_desligado boolean;
   pref_mudou_em timestamptz;
   ultima_saida timestamptz;
@@ -686,6 +694,7 @@ declare
   hash_anterior text;
   recebido_anterior timestamptz;
   resultado text;
+  escopo_texto text;
 begin
   if coalesce(auth.role(), '') <> 'service_role' and session_user not in ('postgres', 'supabase_admin') then
     raise exception 'Acesso restrito.' using errcode = '42501';
@@ -721,14 +730,35 @@ begin
   end if;
 
   radar_ligado := public.config('radar.whatsapp_ativo', null, 'false'::jsonb) = 'true'::jsonb;
-  select exists (select 1 from public.preferencias_avisos pa
-                  where pa.usuario_id = uid and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp' and pa.ligado) into pref_ligada;
-  select exists (select 1 from public.preferencias_avisos pa
-                  where pa.usuario_id = uid and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp') into pref_existe;
-  select exists (select 1 from public.preferencias_avisos pa
-                  where pa.usuario_id = uid and pa.tipo = 'pedido_novo' and pa.canal = 'app' and not pa.ligado) into sino_desligado;
-  select pa.atualizado_em into pref_mudou_em from public.preferencias_avisos pa
-   where pa.usuario_id = uid and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp';
+  select coalesce(bool_or(pa.ligado), false),
+         count(*) > 0,
+         coalesce(bool_or(pa.tipo in ('proposta_nova', 'proposta_escolhida')), false),
+         max(pa.atualizado_em)
+    into pref_ligada, pref_existe, tem_propostas, pref_mudou_em
+    from public.preferencias_avisos pa
+   where pa.usuario_id = uid
+     and pa.canal = 'whatsapp'
+     and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida');
+
+  if pref_existe then
+    sino_desligado := not exists (
+      select 1 from public.preferencias_avisos pa
+       where pa.usuario_id = uid
+         and pa.canal = 'whatsapp'
+         and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida')
+         and not exists (
+           select 1 from public.preferencias_avisos a
+            where a.usuario_id = uid and a.canal = 'app' and a.tipo = pa.tipo and not a.ligado
+         )
+    );
+  else
+    select exists (
+      select 1 from public.preferencias_avisos pa
+       where pa.usuario_id = uid and pa.tipo = 'pedido_novo' and pa.canal = 'app' and not pa.ligado
+    ) into sino_desligado;
+  end if;
+
+  escopo_texto := case when tem_propostas then 'pedidos e propostas do Radar' else 'pedidos do Radar' end;
   select max(r.criado_em) into ultima_saida from public.whatsapp_respostas r
    where r.usuario_id = uid and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR');
   select max(r.criado_em) into ultimo_voltar from public.whatsapp_respostas r
@@ -752,20 +782,32 @@ begin
       return 'orientacao';
     end if;
     if sino_desligado then
-      perform public.whatsapp_resposta_automatica(uid, p_numero, 'sino', 'Para voltar a receber pedidos do Radar pelo WhatsApp, ligue antes o aviso de pedido novo no app em Minha conta > Notificações. Depois responda VOLTAR.');
+      perform public.whatsapp_resposta_automatica(
+        uid, p_numero, 'sino',
+        case
+          when tem_propostas then 'Para voltar a receber pedidos e propostas do Radar pelo WhatsApp, ligue antes os avisos no app em Minha conta > Notificações. Depois responda VOLTAR.'
+          else 'Para voltar a receber pedidos do Radar pelo WhatsApp, ligue antes o aviso de pedido novo no app em Minha conta > Notificações. Depois responda VOLTAR.'
+        end
+      );
       return 'sino_desligado';
     end if;
     if pref_ligada then
-      perform public.whatsapp_resposta_automatica(uid, p_numero, 'ja_ativo', 'Você já recebe os pedidos do Radar pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR.');
+      perform public.whatsapp_resposta_automatica(uid, p_numero, 'ja_ativo', format('Você já recebe os %s pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR.', escopo_texto));
       return 'ja_ativo';
     end if;
-    insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
-    values (uid, 'pedido_novo', 'whatsapp', true, now()),
-           (uid, 'proposta_nova', 'whatsapp', true, now()),
-           (uid, 'proposta_escolhida', 'whatsapp', true, now())
-    on conflict (usuario_id, tipo, canal) do update set ligado = true, atualizado_em = now();
+    -- Reativa apenas os tipos que a conta já tinha optado antes; nunca ativa tipos novos sem consentimento.
+    update public.preferencias_avisos pa
+       set ligado = true, atualizado_em = now()
+     where pa.usuario_id = uid
+       and pa.canal = 'whatsapp'
+       and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida');
+    if not found then
+      insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
+      values (uid, 'pedido_novo', 'whatsapp', true, now())
+      on conflict (usuario_id, tipo, canal) do update set ligado = true, atualizado_em = now();
+    end if;
     insert into public.whatsapp_respostas (usuario_id, comando) values (uid, 'VOLTAR');
-    perform public.whatsapp_resposta_automatica(uid, p_numero, 'voltar' || to_char(clock_timestamp(), 'HH24MISSUS'), 'Pronto! Você volta a receber pedidos do Radar pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR.');
+    perform public.whatsapp_resposta_automatica(uid, p_numero, 'voltar' || to_char(clock_timestamp(), 'HH24MISSUS'), format('Pronto! Você volta a receber %s pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR.', escopo_texto));
     return 'voltou';
   end if;
 
@@ -775,7 +817,7 @@ begin
     if ultima_pergunta is not null and ultima_pergunta > now() - interval '7 days' then
       return 'ja_perguntou';
     end if;
-    resultado := public.whatsapp_resposta_automatica(uid, p_numero, 'pergunta', 'Oi! Você pediu para não receber pedidos do Radar pelo WhatsApp. Quer voltar a receber? Responda SIM.');
+    resultado := public.whatsapp_resposta_automatica(uid, p_numero, 'pergunta', format('Oi! Você pediu para não receber %s pelo WhatsApp. Quer voltar a receber? Responda SIM.', escopo_texto));
     if resultado <> 'enviada' then return resultado; end if;
     insert into public.whatsapp_respostas (usuario_id, comando) values (uid, 'PERGUNTA_VOLTAR');
     return 'pergunta';

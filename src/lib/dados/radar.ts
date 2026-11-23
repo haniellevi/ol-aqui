@@ -245,7 +245,7 @@ export async function minhaCortesiaRadar(): Promise<string | null> {
   return typeof data === "string" ? data : null;
 }
 
-/** Aviso de pedido novo por WhatsApp: a preferência de quem pergunta (padrão desligado). */
+/** Avisos do Radar por WhatsApp: preferência atual (ligado, parcial para conta antiga só com pedido_novo), confirmado e ativo. */
 export async function minhaPreferenciaWhatsappRadar(): Promise<PreferenciaWhatsappRadar> {
   const { userId } = await auth();
   if (!userId) throw new Error("Entre na sua conta para acessar suas preferências.");
@@ -253,5 +253,5 @@ export async function minhaPreferenciaWhatsappRadar(): Promise<PreferenciaWhatsa
   const { data, error } = await db.rpc("minha_preferencia_whatsapp_radar");
   if (error || !data || typeof data !== "object") throw new Error("Não foi possível carregar o aviso por WhatsApp.");
   const d = data as Record<string, unknown>;
-  return { ligado: d.ligado === true, confirmado: d.confirmado === true, ativo: d.ativo === true };
+  return { ligado: d.ligado === true, parcial: d.parcial === true, confirmado: d.confirmado === true, ativo: d.ativo === true };
 }

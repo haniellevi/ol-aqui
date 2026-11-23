@@ -70,7 +70,8 @@ select pg_temp.confere898((select count(*) = 1 and bool_and(ativo and texto like
 update configuracoes set valor = 'true'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
 set local role authenticated;
 set local request.jwt.claim.sub = 'user_898comp';
-select pg_temp.confere898((minha_preferencia_whatsapp_radar()->>'ligado')::boolean = false, 'preferência de WhatsApp começa desligada (opt-in obrigatório)');
+select pg_temp.confere898((minha_preferencia_whatsapp_radar()->>'ligado')::boolean = false and (minha_preferencia_whatsapp_radar()->>'parcial')::boolean = false,
+  'preferência de WhatsApp começa desligada (opt-in obrigatório)');
 select criar_pedido_radar_site('89800000-0000-4000-a000-000000000008', 'Procuro rack sem opt-in 898', 'Corrente', 'propostas_prazo', 72, null, :'sofas'::uuid) ->> 'id' as ped_sem_opt \gset
 set local request.jwt.claim.sub = 'user_898loja1';
 select proposta_id as prop_sem_opt from propor_radar(:'ped_sem_opt'::uuid, '89800000-0000-4000-c000-000000000001'::uuid, null, 75000, 'Rack loja 1') \gset
@@ -138,7 +139,7 @@ select pg_temp.confere898((select count(*) = 1 and bool_and(
   and texto like '%Procuro mesa de jantar 898%' and texto like '%Loja 898 Um%' and texto not like '%OLAKI%'
 ) from whatsapp_fila where chave = 'radar_proposta_escolhida:' || :'ped2' || ':' || :'prop2_1'), 'proposta_escolhida enfileirada uma vez, dentro da janela, para o lojista');
 
--- Personalização existente que já cita SAIR não é alterada; personalização sem SAIR recebe a instrução sem quebrar o texto customizado
+-- Personalização existente que já cita SAIR não é alterada; "sem sair de casa" e modelo perto de 1.000 chars com variável grande mantêm SAIR intacto
 alter table public.modelos_mensagem disable trigger modelos_mensagem_proteger;
 select texto as modelo_orig_nova from modelos_mensagem where chave = 'proposta_nova' and canal = 'whatsapp' \gset
 update modelos_mensagem set texto = 'Custom {loja}: veja "{pedido}". Responda SAIR para parar.' where chave = 'proposta_nova' and canal = 'whatsapp';
@@ -149,16 +150,48 @@ reset role;
 select pg_temp.confere898((select texto = 'Custom Loja 898 Dois: veja "Procuro mesa de jantar 898". Responda SAIR para parar.'
   from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2' || ':' || :'prop2_custom1'),
   'personalização de proposta_nova que já menciona SAIR é preservada');
-update modelos_mensagem set texto = 'Personalizado {loja} para "{pedido}".' where chave = 'proposta_nova' and canal = 'whatsapp';
+
+update modelos_mensagem set texto = 'Compare {loja} em "{pedido}" sem sair de casa.' where chave = 'proposta_nova' and canal = 'whatsapp';
 set local role authenticated;
 set local request.jwt.claim.sub = 'user_898comp2';
 select criar_pedido_radar_site('89800000-0000-4000-a000-000000000009', 'Procuro aparador 898', 'Corrente', 'propostas_prazo', 72, null, :'sofas'::uuid) ->> 'id' as ped2_b \gset
 set local request.jwt.claim.sub = 'user_898loja2';
 select proposta_id as prop2_custom2 from propor_radar(:'ped2_b'::uuid, '89800000-0000-4000-c000-000000000002'::uuid, null, 41000, 'Aparador') \gset
 reset role;
-select pg_temp.confere898((select texto = 'Personalizado Loja 898 Dois para "Procuro aparador 898". Responda SAIR para parar estes avisos.'
+select pg_temp.confere898((select texto = 'Compare Loja 898 Dois em "Procuro aparador 898" sem sair de casa. Responda SAIR para parar estes avisos.'
   from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2_b' || ':' || :'prop2_custom2'),
-  'personalização sem SAIR garante instrução de SAIR no envio ao comprador');
+  'falso positivo "sem sair de casa" ainda recebe instrução explícita de SAIR');
+
+-- Modelo de até 1.000 chars com {pedido} grande (estouraria 1.000 após variáveis) preserva espaço para SAIR completo no fim
+update modelos_mensagem
+   set texto = repeat('A', 935) || ' {loja} "{pedido}". Responda SAIR para parar estes avisos.'
+ where chave = 'proposta_nova' and canal = 'whatsapp';
+set local role authenticated;
+set local request.jwt.claim.sub = 'user_898comp2';
+select criar_pedido_radar_site('89800000-0000-4000-a000-000000000012', 'Procuro guarda-roupa planejado de seis portas em madeira maciça para quarto 898', 'Corrente', 'propostas_prazo', 72, null, :'sofas'::uuid) ->> 'id' as ped2_c \gset
+set local request.jwt.claim.sub = 'user_898loja2';
+select proposta_id as prop2_custom3 from propor_radar(:'ped2_c'::uuid, '89800000-0000-4000-c000-000000000002'::uuid, null, 42000, 'Mesa longa') \gset
+reset role;
+select pg_temp.confere898((select char_length(texto) <= 1000 and right(texto, 38) = 'Responda SAIR para parar estes avisos.'
+  from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2_c' || ':' || :'prop2_custom3'),
+  'expansão de variável acima de 1.000 chars reserva espaço e mantém instrução de SAIR intacta');
+
+-- Personalização legítima de 1.000 chars com 'OLAKI' não é expandida pela lógica da migração (evita models_mensagem_check2)
+update modelos_mensagem set texto = repeat('x', 989) || 'OLAKI{loja}' where chave = 'proposta_nova' and canal = 'whatsapp';
+update public.modelos_mensagem
+   set texto = case
+         when texto in (
+           '{loja} mandou uma proposta no Radar do Mercado da Região para “{pedido}”. Abra o Mercado da Região para ver e comparar.',
+           '{loja} mandou uma proposta no Radar do OLAKI para “{pedido}”. Abra o OLAKI para ver e comparar.'
+         )
+         then '{loja} mandou uma proposta no Radar do Mercado da Região para “{pedido}”. Abra o Mercado da Região para ver e comparar. Responda SAIR para parar estes avisos.'
+         else texto
+       end,
+       texto_padrao = '{loja} mandou uma proposta no Radar do Mercado da Região para “{pedido}”. Abra o Mercado da Região para ver e comparar. Responda SAIR para parar estes avisos.'
+ where chave = 'proposta_nova' and canal = 'whatsapp';
+select pg_temp.confere898((select char_length(texto) = 1000 and texto like '%OLAKI{loja}' from modelos_mensagem where chave = 'proposta_nova' and canal = 'whatsapp'),
+  'migração preserva personalização de 1.000 chars contendo OLAKI sem estourar check');
+
 update modelos_mensagem set texto = :'modelo_orig_nova' where chave = 'proposta_nova' and canal = 'whatsapp';
 alter table public.modelos_mensagem enable trigger modelos_mensagem_proteger;
 
@@ -380,6 +413,48 @@ delete from pegos898_sair;
 insert into pegos898_sair select * from whatsapp_fila_pegar_em(5, :'t_janela'::timestamptz);
 select pg_temp.confere898(whatsapp_fila_confirmar_envio((select id from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped8' || ':' || :'prop8_pos')) = 'pode',
   'aviso criado após VOLTAR passa na confirmação');
+
+-- [6c] Conta antiga (somente pedido_novo=true): aparece ativa (parcial=true), pode desligar em 1 clique mesmo com recurso pausado,
+-- responde ja_ativo coerente ao mandar VOLTAR e SAIR -> VOLTAR preserva somente pedido_novo sem assinar propostas
+insert into perfis(id, microrregiao_id, nome, cidade, whatsapp, whatsapp_verificado_em)
+values ('user_898antiga', :'reg', 'Loja 898 Antiga', 'Corrente', '5589998980014', now());
+insert into preferencias_avisos(usuario_id, tipo, canal, ligado)
+values ('user_898antiga', 'pedido_novo', 'whatsapp', true);
+
+-- Mesmo com chave geral desligada, conta antiga enxerga ligado=true, parcial=true e consegue desligar com 1 clique
+update configuracoes set valor = 'false'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
+set local role authenticated;
+set local request.jwt.claim.sub = 'user_898antiga';
+select minha_preferencia_whatsapp_radar() as pref_antiga \gset
+select pg_temp.confere898(((:'pref_antiga'::jsonb)->>'ligado')::boolean = true
+  and ((:'pref_antiga'::jsonb)->>'parcial')::boolean = true
+  and ((:'pref_antiga'::jsonb)->>'ativo')::boolean = false,
+  'conta antiga (só pedido_novo=true) retorna ligado=true e parcial=true mesmo com chave desligada');
+select salvar_preferencia_whatsapp_radar(false) as desligou_antiga \gset
+select minha_preferencia_whatsapp_radar() as pref_antiga_desl \gset
+select pg_temp.confere898(:'desligou_antiga' = 'f' and ((:'pref_antiga_desl'::jsonb)->>'ligado')::boolean = false
+  and ((:'pref_antiga_desl'::jsonb)->>'parcial')::boolean = false,
+  'conta antiga desliga seus avisos com 1 clique pelo site');
+reset role;
+update configuracoes set valor = 'true'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
+
+-- Conta antiga ativa: VOLTAR antes do SAIR retorna ja_ativo; SAIR -> VOLTAR reativa APENAS pedido_novo
+update preferencias_avisos set ligado = true where usuario_id = 'user_898antiga' and tipo = 'pedido_novo' and canal = 'whatsapp';
+set local role service_role;
+select whatsapp_mensagem_recebida('5589998980014', 'voltar', pg_temp.h898('voltar ativo')) as ant_ja \gset
+select whatsapp_sair('5589998980014', 'SAIR') as ant_saiu \gset
+select whatsapp_mensagem_recebida('5589998980014', 'voltar', pg_temp.h898('voltar antiga')) as ant_voltou \gset
+reset role;
+select pg_temp.confere898(:'ant_ja' = 'ja_ativo' and :'ant_saiu' = 't' and :'ant_voltou' = 'voltou',
+  'conta antiga: VOLTAR antes do SAIR diz ja_ativo e SAIR -> VOLTAR funciona');
+select pg_temp.confere898((select ligado from preferencias_avisos where usuario_id = 'user_898antiga' and tipo = 'pedido_novo' and canal = 'whatsapp')
+  and (select count(*) = 0 from preferencias_avisos where usuario_id = 'user_898antiga' and canal = 'whatsapp' and tipo in ('proposta_nova', 'proposta_escolhida')),
+  'SAIR -> VOLTAR de conta antiga reativa só pedido_novo e nunca assina proposta_nova/proposta_escolhida');
+
+-- Conta com opt-in completo recebe confirmação explícita mencionando pedidos e propostas no VOLTAR
+select pg_temp.confere898((select count(*) >= 1 and bool_and(texto like '%pedidos e propostas do Radar%')
+  from whatsapp_fila where numero = '5589998980002' and chave like 'whatsapp_resposta:5589998980002:voltar%'),
+  'conta com propostas no WhatsApp recebe confirmação de VOLTAR citando pedidos e propostas');
 
 -- [7] Permissões fechadas
 select pg_temp.confere898(
