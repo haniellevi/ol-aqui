@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
+import { ChevronLeft } from "lucide-react";
+import { Aviso } from "@/components/conta/aviso";
 import { ConversaAtendimento } from "@/components/atendimento/conversa";
 import { BalaoAki } from "@/components/aki/balao-aki";
 import { Botao } from "@/components/ui/botao";
@@ -32,13 +34,16 @@ export default async function PaginaAki({ searchParams }: {
   const { userId } = await auth();
   const conversa = userId ? await atendimentoCadastro(await createClient(), { dono: userId }) : null;
   if (atendimento === "1" && (conversa?.data || conversa?.error)) {
-    return <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-5 bg-fundo p-4">
-      <Botao href={chat} variante="texto">Voltar ao Merc</Botao>
-      <h1 className="text-xl font-semibold">Atendimento com a equipe</h1>
+    return <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-4 bg-fundo px-4 py-4">
+      <Botao href={chat} variante="texto" tamanho="toque" icone={<ChevronLeft />} className="-ml-2 self-start px-2">Voltar ao Merc</Botao>
+      <h1 className="text-titulo font-semibold text-beringela">Atendimento com a equipe</h1>
       {conversa.data ? <>
-        <p role="status">{conversa.data.aguarda_equipe ? "Aguardando resposta da equipe." : "A equipe respondeu."}</p>
+        <p role="status" className="text-sm text-texto-suave">{conversa.data.aguarda_equipe ? "Aguardando resposta da equipe." : "A equipe respondeu."}</p>
         <ConversaAtendimento id={conversa.data.id} caminho={equipe} antes={antes} aki={false} cadastro />
-      </> : <p role="alert">Não foi possível carregar o atendimento. Atualize a página.</p>}
+      </> : <Aviso tipo="erro">
+        <span>Não foi possível carregar o atendimento. Atualize a página.</span>
+        <Botao href={equipe} variante="secundario" tamanho="toque" className="w-fit">Tentar de novo</Botao>
+      </Aviso>}
     </main>;
   }
   return (

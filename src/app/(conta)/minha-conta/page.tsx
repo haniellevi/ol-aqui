@@ -71,7 +71,7 @@ export default async function PaginaMinhaConta() {
     ...(vitrine && !ehLoja ? [{ href: "/minha-conta/verificacao", nome: "Verificação de vendedor", icone: <ShieldCheck /> }] : []),
   ];
   const comprasEConversas: Item[] = [
-    { href: LINK_ATENDIMENTO, nome: "Atendimento", icone: <MessagesSquare /> },
+    { href: LINK_ATENDIMENTO, nome: "Atendimento", icone: <MessagesSquare />, detalhe: "Conversas e canais da equipe" },
     { href: "/radar", nome: "Radar", icone: <Radar /> },
     { href: "/minha-conta/favoritos", nome: "Favoritos", icone: <Heart /> },
     {

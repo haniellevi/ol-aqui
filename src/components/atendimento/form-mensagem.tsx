@@ -15,7 +15,6 @@ export function FormMensagemAtendimento({ id, ofereceAki }: { id: string; oferec
   const formulario = useRef<HTMLFormElement>(null);
   const chave = useRef<string | null>(null);
   const router = useRouter();
-  const botaoCompacto = ofereceAki ? "max-[360px]:min-w-0 max-[360px]:px-1 max-[360px]:text-legenda" : "";
   function enviar(aoAki: boolean) {
     if (pendente) return;
     setErro(null);
@@ -40,22 +39,20 @@ export function FormMensagemAtendimento({ id, ofereceAki }: { id: string; oferec
     });
   }
   return <form ref={formulario} onSubmit={(evento) => { evento.preventDefault(); enviar(ofereceAki); }} className="space-y-2 border-t border-borda pt-3" aria-busy={pendente}>
-    <label htmlFor="mensagem-atendimento" className="sr-only">Mensagem</label>
+    <label htmlFor="mensagem-atendimento" className="block text-rotulo font-semibold text-beringela">Mensagem</label>
     <textarea id="mensagem-atendimento" rows={2} maxLength={2000} required value={texto} disabled={pendente}
       placeholder="Escreva sua mensagem..." aria-describedby={ofereceAki ? "aviso-ia-atendimento" : undefined}
       onChange={(e) => { chave.current = null; setAviso(null); setTexto(e.target.value); }}
-      className={`${classesCampo} min-h-16 resize-y py-2 leading-6`} />
+      className={`${classesCampo} min-h-20 resize-y py-2 leading-6`} />
     {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
-    <p role="status" className="text-legenda text-texto-suave empty:hidden">{pendente ? destino === "aki" ? "O Merc está respondendo..." : "Enviando mensagem..." : aviso}</p>
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      {ofereceAki && <span id="aviso-ia-atendimento" className="text-legenda text-texto-suave">Merc usa IA.</span>}
-      <div className={`ml-auto flex flex-wrap gap-2 ${ofereceAki ? "max-[360px]:grid max-[360px]:w-full max-[360px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] max-[360px]:gap-2" : ""}`}>
-        {ofereceAki && <Botao type="button" variante="texto" className={botaoCompacto} disabled={pendente} carregando={pendente && destino === "equipe"} textoCarregando="Enviando..."
-          onClick={() => { if (formulario.current?.reportValidity()) enviar(false); }}>Falar com a equipe</Botao>}
-        <Botao type="submit" className={botaoCompacto} disabled={pendente} carregando={pendente && destino === (ofereceAki ? "aki" : "equipe")} textoCarregando={ofereceAki ? "Aguarde..." : "Enviando..."}>
-          {ofereceAki ? "Enviar ao Merc" : "Enviar mensagem"}
-        </Botao>
-      </div>
+    <p role="status" className="text-sm text-texto-suave empty:hidden">{pendente ? destino === "aki" ? "O Merc está respondendo..." : "Enviando mensagem..." : aviso}</p>
+    {ofereceAki && <p id="aviso-ia-atendimento" className="text-legenda text-texto-suave">O Merc usa IA para tirar dúvidas rápidas.</p>}
+    <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+      {ofereceAki && <Botao type="button" variante="secundario" tamanho="toque" className="w-full sm:w-auto" disabled={pendente} carregando={pendente && destino === "equipe"} textoCarregando="Enviando..."
+        onClick={() => { if (formulario.current?.reportValidity()) enviar(false); }}>Falar com a equipe</Botao>}
+      <Botao type="submit" tamanho="acao" className="w-full sm:w-auto" disabled={pendente} carregando={pendente && destino === (ofereceAki ? "aki" : "equipe")} textoCarregando={ofereceAki ? "Aguarde..." : "Enviando..."}>
+        {ofereceAki ? "Enviar ao Merc" : "Enviar mensagem"}
+      </Botao>
     </div>
   </form>;
 }

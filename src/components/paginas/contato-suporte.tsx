@@ -10,13 +10,13 @@ export function ContatoSuporte({ contato }: { contato: ContatoEquipe }) {
       {(contato.texto || !temContato) && (
         <p className="text-base">{temContato ? contato.texto : "O atendimento da equipe está indisponível nesta página."}</p>
       )}
-      {temContato && <div className="flex flex-wrap gap-2">
+      {temContato && <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {contato.whatsapp && <Botao
-          variante="whatsapp" tamanho="toque" icone={<MessageCircle />}
+          variante="whatsapp" tamanho="acao" icone={<MessageCircle />} className="w-full sm:w-auto"
           href={`https://wa.me/${contato.whatsapp}?text=${encodeURIComponent("Olá! Preciso de ajuda com o Mercado da Região.")}`}
           target="_blank" rel="noopener noreferrer"
         >Chamar a equipe no WhatsApp</Botao>}
-        {contato.email && <Botao variante="secundario" tamanho="toque" icone={<Mail />} href={`mailto:${contato.email}`}>
+        {contato.email && <Botao variante="secundario" tamanho="toque" icone={<Mail />} className="w-full sm:w-auto" href={`mailto:${contato.email}`}>
           Mandar e-mail
         </Botao>}
       </div>}

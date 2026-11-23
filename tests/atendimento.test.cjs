@@ -112,3 +112,64 @@ test('agradecimentos e cumprimentos recebem uma resposta aprovada', async () => 
     assert.match(a.chamadas.find(c => c[0] === 'concluir_atendimento_aki')[1].p_resposta, esperado);
   }
 });
+
+test('ListaAtendimentos usa Vazio com saída e linhas tocáveis >= 44px para o usuário', () => {
+  const React = require('react');
+  const { renderToStaticMarkup: render } = require('react-dom/server');
+  const { ListaAtendimentos } = carregar('src/components/atendimento/lista.tsx', {
+    '@/lib/admin/formato': { quando: (v) => v },
+  });
+
+  const vazioUsuario = render(React.createElement(ListaAtendimentos, {
+    dados: [], caminho: '/minha-conta/atendimento', link: (c) => `/minha-conta/atendimento/${c.id}`, pagina: 1, total: 0,
+  }));
+  assert.match(vazioUsuario, /Nenhuma conversa por enquanto/);
+  assert.match(vazioUsuario, /href="\/ajuda"/);
+
+  const vazioEquipe = render(React.createElement(ListaAtendimentos, {
+    dados: [], caminho: '/admin/anuncios/conversas', link: (c) => `/admin/anuncios/conversas/${c.id}`, pagina: 1, total: 0, equipe: true,
+  }));
+  assert.match(vazioEquipe, /href="\/admin\/anuncios"/);
+
+  const listaUsuario = render(React.createElement(ListaAtendimentos, {
+    dados: [{
+      id: conversa,
+      anuncio_id: '20000000-0000-4000-a000-000000000001',
+      aki_ativo: false,
+      aguarda_equipe: true,
+      atualizado_em: '2026-11-23T12:00:00Z',
+      anuncios: { titulo: 'Bicicleta aro 29' },
+    }],
+    caminho: '/minha-conta/atendimento',
+    link: (c) => `/minha-conta/atendimento/${c.id}`,
+    pagina: 1,
+    total: 1,
+  }));
+  assert.match(listaUsuario, /min-h-toque/);
+  assert.match(listaUsuario, /Aguardando equipe/);
+  assert.match(listaUsuario, /Bicicleta aro 29/);
+});
+
+test('AtendimentoConta exibe canais de contato da equipe e acesso à Ajuda sem botão laranja primário', async () => {
+  const React = require('react');
+  const { renderToStaticMarkup: render } = require('react-dom/server');
+  const { default: AtendimentoConta } = carregar('src/app/(conta)/minha-conta/atendimento/page.tsx', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_anunciante' }) },
+    'next/navigation': { redirect: () => { throw new Error('redirect'); } },
+    '@/lib/supabase/server': { createClient: async () => ({}) },
+    '@/lib/dados/atendimento': {
+      paginaAtendimento: () => 1,
+      listarAtendimentos: async () => ({ data: [], count: 0, error: null }),
+    },
+    '@/lib/dados/regiao': { regiaoAtual: async () => ({ id: 'reg_1' }) },
+    '@/lib/dados/paginas': {
+      contatoEquipe: async () => ({ whatsapp: '5589999990000', email: 'ajuda@mercadodaregiao.com.br', texto: 'Atendimento em horário comercial.' }),
+    },
+  });
+  const html = render(await AtendimentoConta({ searchParams: Promise.resolve({}) }));
+  assert.match(html, /Fale com a equipe/);
+  assert.match(html, /https:\/\/wa\.me\/5589999990000/);
+  assert.match(html, /mailto:ajuda@mercadodaregiao\.com\.br/);
+  assert.match(html, /href="\/ajuda"/);
+  assert.doesNotMatch(html, /bg-laranja/);
+});

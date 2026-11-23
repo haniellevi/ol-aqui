@@ -513,7 +513,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
               <div className="border-b border-borda bg-fundo px-4 py-3 text-sm text-texto-suave">
                 <p>Conte ao Merc o que aconteceu com a confirmação do WhatsApp. Nunca envie o código pelo bate-papo.</p>
                 <p>Ao tocar em <strong>Não ajudou</strong>, a equipe recebe sua pergunta e a resposta do Merc.</p>
-                {atendimentoAberto && <Botao href={atendimentoHref} variante="texto">Ver atendimento com a equipe</Botao>}
+                {atendimentoAberto && <Botao href={atendimentoHref} variante="texto" tamanho="toque" className="-ml-3 px-3">Ver atendimento com a equipe</Botao>}
               </div>
             )}
 
