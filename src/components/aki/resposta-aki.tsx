@@ -46,8 +46,8 @@ function BotaoRadar({
   return (
     <div className="space-y-2">
       <div className="rounded-card border border-borda px-3 py-2 text-sm">
-        <p className="font-semibold">{acao.dados.titulo}</p>
-        {acao.dados.detalhes && <p className="text-texto-suave">{acao.dados.detalhes}</p>}
+        <p className="font-semibold [overflow-wrap:anywhere]">{acao.dados.titulo}</p>
+        {acao.dados.detalhes && <p className="[overflow-wrap:anywhere] text-texto-suave">{acao.dados.detalhes}</p>}
         <p className="text-legenda text-texto-suave">{acao.dados.cidade ?? "Toda a região"}</p>
       </div>
       <Botao
@@ -100,7 +100,7 @@ function CardRascunho({ acao }: { acao: Extract<AcaoAki, { tipo: "rascunho" }> }
         <div className="min-w-0 flex-1">
           <p className="text-legenda font-semibold text-texto-suave">Rascunho guardado · ainda não publicado</p>
           <p className="text-lg leading-6 font-bold">{preco(acao.preco_centavos)}</p>
-          <p className="line-clamp-2 text-base leading-5">{acao.titulo ?? "Sem título ainda"}</p>
+          <p className="line-clamp-2 text-base leading-5 [overflow-wrap:anywhere]">{acao.titulo ?? "Sem título ainda"}</p>
           <p className="text-legenda text-texto-suave">{acao.fotos === 1 ? "1 foto" : `${acao.fotos} fotos`}</p>
         </div>
       </div>
@@ -149,11 +149,11 @@ function Avaliacao({ mensagem, aoAvaliar, atendimentoHref }: {
   }
 
   const estiloIcone = (ativo: boolean) =>
-    `grid size-10 place-items-center rounded-campo border ${ativo ? "border-laranja-escuro bg-selecao" : "border-transparent"} text-beringela disabled:opacity-50`;
+    `grid size-toque place-items-center rounded-campo border ${ativo ? "border-laranja-escuro bg-selecao" : "border-transparent"} text-beringela disabled:opacity-50`;
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <span className="mr-1 text-legenda text-texto-suave">Ajudou?</span>
         <button type="button" aria-label="Ajudou" aria-pressed={mensagem.nota === 1} disabled={salvando} onClick={() => void marcar(1)} className={estiloIcone(mensagem.nota === 1)}>
           <ThumbsUp className="size-5" aria-hidden />
@@ -217,10 +217,10 @@ export function RespostaAki({
       <MascoteAki tamanho={28} className="mt-1 shrink-0" />
       <div className="min-w-0 flex-1 space-y-3">
         {(c.texto || pensando) && (
-          <div className="rounded-card rounded-tl-none bg-fundo px-3 py-2">
-            {c.texto && <p className="text-base leading-6 break-words whitespace-pre-wrap">{c.texto}</p>}
+          <div className="min-w-0 rounded-card rounded-tl-none bg-fundo px-3 py-2">
+            {c.texto && <p className="text-base leading-6 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">{c.texto}</p>}
             {pensando && (
-              <p className="flex items-center gap-2 text-sm text-texto-suave">
+              <p className="flex items-center gap-2 text-sm [overflow-wrap:anywhere] text-texto-suave">
                 <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />
                 {pensando}
               </p>
