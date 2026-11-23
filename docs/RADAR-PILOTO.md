@@ -1,6 +1,6 @@
 # Radar piloto: o que mudou e o que falta para ligar
 
-Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produção.
+O texto até a seção de operação é o histórico do ramo `claude/radar-piloto`. O roteiro vigente para esta candidata está em [Operação do piloto fechado de 30 dias](#operação-do-piloto-fechado-de-30-dias).
 
 ## O que mudou
 
