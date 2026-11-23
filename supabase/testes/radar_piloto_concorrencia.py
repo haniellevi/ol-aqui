@@ -95,6 +95,8 @@ def verificar_radar_piloto(container, sql, checked, fixture):
                         set local test.radar_barreira='{tag}'; {produzir}
                         commit;""")
                     esperar_bloqueio('radar899-produtor')
+                desligado_em = valor(f"select atualizado_em as marca from preferencias_avisos where usuario_id='{destino}' " +
+                                     f"and canal='whatsapp' and tipo='{tipo}' \\gset\n\\echo :marca")
                 if pelo_site:
                     checked(sql("begin; " + sessao(destino, f"select salvar_preferencia_whatsapp_radar_tipo('{tipo}',true);") + " commit;"))
                 else:
@@ -106,8 +108,7 @@ def verificar_radar_piloto(container, sql, checked, fixture):
           do $$ declare item whatsapp_fila; begin
             select * into strict item from whatsapp_fila where usuario_id='{destino}'
               and split_part(chave,':',1)='{tag}' order by criado_em desc limit 1;
-            assert item.criado_em > (select atualizado_em from preferencias_avisos
-              where usuario_id='{destino}' and canal='whatsapp' and tipo='{tipo}');
+            assert item.criado_em > '{desligado_em}'::timestamptz, 'a fila pode parecer posterior à saída';
             assert item.radar_autorizacao_id <> (select radar_autorizacao_id from preferencias_avisos
               where usuario_id='{destino}' and canal='whatsapp' and tipo='{tipo}');
             update whatsapp_fila set estado='enviando' where id=item.id;
