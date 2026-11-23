@@ -131,7 +131,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
         {resumo && promocional && <PrazoPromocional acesso={promocional} titulo={`Plano ${resumo.nome}`} uso={resumo.uso} />}
         <Voucher codigos={vouchers ?? []} />
         <Vazio titulo="Você ainda não vende no Mercado da Região" texto={resumo ? "Escolha como quer vender para usar os recursos do seu plano." : "Escolha como quer vender e seu plano aparece aqui."}>
-          <Botao href="/quero-vender" larguraTotal>Quero vender</Botao>
+          <Botao href="/quero-vender" tamanho="acao" larguraTotal>Quero vender</Botao>
         </Vazio>
       </PaginaConta>
     );

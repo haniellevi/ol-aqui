@@ -52,7 +52,7 @@ export default async function PaginaMarketing() {
           {dados.criativos.length === 0 ? <div className="flex flex-col items-start gap-2 rounded-card border border-borda bg-cartao p-3">
             <p className="font-semibold text-beringela">Publique um anúncio com foto</p>
             <p className="text-sm text-texto-suave">Depois, baixe artes para divulgar o produto.</p>
-            <Botao href="/anunciar" tamanho="toque">Criar anúncio</Botao>
+            <Botao href="/anunciar" tamanho="acao">Criar anúncio</Botao>
           </div> : <div className="grid gap-4 md:grid-cols-3">
             {dados.criativos.map((anuncio) => {
               const antes = precoAntesValido(anuncio.preco_antes_centavos, anuncio.preco_centavos);
@@ -91,7 +91,7 @@ export default async function PaginaMarketing() {
               <p className="text-sm">{o.buscas} {o.buscas === 1 ? "busca" : "buscas"} · {o.pedidos} {o.pedidos === 1 ? "pedido" : "pedidos"} no Radar{o.sem_resultado > 0 ? ` · ${o.sem_resultado} ${o.sem_resultado === 1 ? "busca sem resultado" : "buscas sem resultado"}` : ""}</p>
               {o.buscas + o.pedidos < 5 && <p className="text-legenda text-texto-suave">Sinal inicial, com poucos registros.</p>}
               <p className="text-sm text-texto-suave">Se você vende esse produto, comece um rascunho e confira os dados antes de publicar.</p>
-              <div className="mt-auto"><BotaoNovoRascunho texto="Cadastrar produto" sugestao={{ vitrineId: loja.id, titulo: o.termo, categoriaId: o.categoria_id }} /></div>
+              <div className="mt-auto"><BotaoNovoRascunho variante="secundario" texto="Cadastrar produto" sugestao={{ vitrineId: loja.id, titulo: o.termo, categoriaId: o.categoria_id }} /></div>
             </article>)}</div>}
           {dados.nicho_definido && dados.oportunidades.length > 0 && <p className="text-legenda text-texto-suave">Buscas e pedidos são contagens, não pessoas. Os dados não identificam compradores.</p>}
         </section>

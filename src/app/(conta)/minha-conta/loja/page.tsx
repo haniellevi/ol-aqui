@@ -47,7 +47,7 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
           titulo="Você ainda não tem uma loja"
           texto="Com uma loja você ganha uma vitrine com seu nome e seu link no Mercado da Região."
         >
-          <Botao href="/quero-vender/loja" larguraTotal>
+          <Botao href="/quero-vender/loja" tamanho="acao" larguraTotal>
             Abrir minha loja
           </Botao>
         </Vazio>

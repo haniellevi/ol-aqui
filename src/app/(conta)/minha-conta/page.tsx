@@ -44,7 +44,7 @@ export default async function PaginaMinhaConta() {
       <PaginaConta>
         <Voltar />
         <Vazio titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
-          <Botao href="/minha-conta" larguraTotal>Tentar de novo</Botao>
+          <Botao href="/minha-conta" tamanho="acao" larguraTotal>Tentar de novo</Botao>
         </Vazio>
       </PaginaConta>
     );
@@ -133,7 +133,7 @@ export default async function PaginaMinhaConta() {
           {!vitrine && (
             <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
               <p className="text-base font-semibold">Tem algo para vender? Anuncie de graça para a região.</p>
-              <Botao href="/quero-vender" larguraTotal icone={<Tag />}>
+              <Botao href="/quero-vender" tamanho="acao" larguraTotal icone={<Tag />}>
                 Quero vender
               </Botao>
             </section>
