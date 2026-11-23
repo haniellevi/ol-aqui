@@ -35,7 +35,7 @@ export async function salvarPreferenciaAviso(tipo: string, ligar: boolean): Prom
   return { ok: true, mensagem: ligar ? "Aviso ligado." : "Aviso desligado. Os avisos anteriores continuam disponíveis." };
 }
 
-/** Aviso de pedido novo do Radar por WhatsApp. Desligado por padrão; ligar exige celular confirmado (o banco confere). */
+/** Avisos do Radar por WhatsApp. Desligado por padrão; ligar exige celular confirmado (o banco confere). */
 export async function salvarPreferenciaWhatsappRadar(ligar: boolean): Promise<RespostaAviso> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: SEM_LOGIN };
@@ -46,7 +46,7 @@ export async function salvarPreferenciaWhatsappRadar(ligar: boolean): Promise<Re
   if (error?.code === "55000") return { ok: false, erro: "Este aviso ainda não está disponível." };
   if (error || data !== ligar) return { ok: false, erro: "Não conseguimos salvar sua preferência. Tente novamente." };
   revalidatePath(LINK_AVISOS);
-  return { ok: true, mensagem: ligar ? "Aviso por WhatsApp ligado." : "Aviso por WhatsApp desligado." };
+  return { ok: true, mensagem: ligar ? "Avisos do Radar por WhatsApp ligados." : "Avisos do Radar por WhatsApp desligados." };
 }
 
 /** O destino vem do aviso da própria pessoa no banco, nunca de um campo enviado pelo navegador. */

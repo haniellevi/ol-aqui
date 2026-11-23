@@ -163,3 +163,30 @@ test('actions Radar: escolherProposta e fecharPedido chamam as RPCs corretas e r
     { p_pedido: PEDIDO_ID, p_motivo: 'resolvido' },
   ]);
 });
+
+test('preferência Radar WhatsApp: copy cobre pedidos, propostas e escolha e action mapeia permissões', async () => {
+  const fs = require('node:fs');
+  const componente = fs.readFileSync(require.resolve('../src/components/conta/preferencia-whatsapp-radar.tsx'), 'utf8');
+  assert.match(componente, /Receber avisos do Radar no WhatsApp/);
+  assert.match(componente, /propostas novas/i);
+  assert.match(componente, /proposta da loja escolhida/i);
+  assert.match(componente, /SAIR/);
+
+  const ambiente = (resultado, rpcError = null) => carregar('src/app/(conta)/minha-conta/notificacoes/actions.ts', {
+    '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_teste' }) },
+    'next/cache': { revalidatePath: () => {} },
+    '@/lib/supabase/server': { createClient: async () => ({ rpc: async () => ({ data: resultado, error: rpcError }) }) },
+  });
+
+  const ok = await ambiente(true).salvarPreferenciaWhatsappRadar(true);
+  assert.equal(ok.ok, true);
+  assert.match(ok.mensagem, /Avisos do Radar por WhatsApp ligados/);
+
+  const semTel = await ambiente(null, { code: '42501', message: 'Confirme' }).salvarPreferenciaWhatsappRadar(true);
+  assert.equal(semTel.ok, false);
+  assert.match(semTel.erro, /Confirme seu WhatsApp/);
+
+  const pausado = await ambiente(null, { code: '55000', message: 'Indisponivel' }).salvarPreferenciaWhatsappRadar(true);
+  assert.equal(pausado.ok, false);
+  assert.match(pausado.erro, /ainda não está disponível/);
+});

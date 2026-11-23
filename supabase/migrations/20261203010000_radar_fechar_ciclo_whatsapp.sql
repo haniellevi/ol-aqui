@@ -9,8 +9,23 @@
 -- 4. SAIR/VOLTAR e salvar_preferencia_whatsapp_radar passam a cobrir os três avisos do Radar no WhatsApp.
 
 -- ---------------------------------------------------------------------
--- 1. Modelo WhatsApp de proposta escolhida (proposta_nova já existe)
+-- 1. Modelos WhatsApp de proposta nova (com SAIR) e proposta escolhida
 -- ---------------------------------------------------------------------
+-- O protetor congela os textos padrão pelo painel; a pausa dura só esta transação.
+alter table public.modelos_mensagem disable trigger modelos_mensagem_proteger;
+update public.modelos_mensagem
+   set texto = case
+         when texto in (
+           '{loja} mandou uma proposta no Radar do Mercado da Região para “{pedido}”. Abra o Mercado da Região para ver e comparar.',
+           '{loja} mandou uma proposta no Radar do OLAKI para “{pedido}”. Abra o OLAKI para ver e comparar.'
+         )
+         then '{loja} mandou uma proposta no Radar do Mercado da Região para “{pedido}”. Abra o Mercado da Região para ver e comparar. Responda SAIR para parar estes avisos.'
+         else replace(texto, 'OLAKI', 'Mercado da Região')
+       end,
+       texto_padrao = '{loja} mandou uma proposta no Radar do Mercado da Região para “{pedido}”. Abra o Mercado da Região para ver e comparar. Responda SAIR para parar estes avisos.'
+ where chave = 'proposta_nova' and canal = 'whatsapp';
+alter table public.modelos_mensagem enable trigger modelos_mensagem_proteger;
+
 insert into public.modelos_mensagem (
   chave, canal, ordem, nome, quando, variaveis, titulo, texto, titulo_padrao, texto_padrao
 )
@@ -24,6 +39,9 @@ select 'proposta_escolhida', 'whatsapp', 76, 'Proposta escolhida (para a loja)',
    select 1 from public.modelos_mensagem m
     where m.chave = 'proposta_escolhida' and m.canal = 'whatsapp'
  );
+
+-- Ordem cronológica exata entre enfileiramento e comandos SAIR/VOLTAR mesmo na mesma transação.
+alter table public.whatsapp_fila alter column criado_em set default clock_timestamp();
 
 -- Quem já desligou no WhatsApp (SAIR sem VOLTAR depois) ou pelo site antes desta migração também fica fora dos novos avisos.
 insert into public.preferencias_avisos (usuario_id, tipo, canal, ligado, atualizado_em)
@@ -82,17 +100,16 @@ returns trigger language plpgsql security definer
 set search_path = public, extensions
 as $$
 begin
-  if new.status <> 'aberto' then
-    perform public.radar_cancelar_fila_pedido(new.id);
+  if tg_op = 'DELETE' or new.status <> 'aberto' then
+    perform public.radar_cancelar_fila_pedido(case when tg_op = 'DELETE' then old.id else new.id end);
   end if;
   return null;
 end $$;
 
 drop trigger if exists z_radar_pedido_fechado_cancelar_whatsapp on public.radar_pedidos;
 create trigger z_radar_pedido_fechado_cancelar_whatsapp
-  after update of status on public.radar_pedidos
+  after update of status or delete on public.radar_pedidos
   for each row
-  when (new.status <> 'aberto')
   execute function public.radar_pedido_fechado_cancelar_whatsapp();
 
 create function public.radar_proposta_fechada_cancelar_whatsapp()
@@ -193,16 +210,25 @@ begin
      and not exists (select 1 from public.contas_revogadas r where r.usuario_id = p.comprador_id)
      and not exists (select 1 from public.contas_bloqueadas b where b.usuario_id = p.comprador_id)
      and not exists (select 1 from public.lixeira_contas l where l.usuario_id = p.comprador_id)
+     and exists (
+       select 1 from public.preferencias_avisos pa
+        where pa.usuario_id = p.comprador_id and pa.tipo = 'proposta_nova'
+          and pa.canal = 'whatsapp' and pa.ligado
+     )
      and not exists (
        select 1 from public.preferencias_avisos pa
         where pa.usuario_id = p.comprador_id and pa.tipo = 'proposta_nova'
-          and pa.canal in ('app', 'whatsapp') and not pa.ligado
+          and pa.canal = 'app' and not pa.ligado
      ) then
     select * into modelo_wa from public.modelos_mensagem x
      where x.chave = 'proposta_nova' and x.canal = 'whatsapp';
     if modelo_wa.id is not null and modelo_wa.ativo then
       begin
-        texto_wa := public.mensagem_montar(modelo_wa.texto, vars, 1000);
+        if modelo_wa.texto ~* '\msair\M' then
+          texto_wa := public.mensagem_montar(modelo_wa.texto, vars, 1000);
+        else
+          texto_wa := public.mensagem_montar(modelo_wa.texto, vars, 960) || ' Responda SAIR para parar estes avisos.';
+        end if;
         perform public.whatsapp_enfileirar(
           p.comprador_id, texto_wa, '/radar/pedido/' || p.id::text,
           'radar_proposta_nova:' || p.id::text || ':' || new.id::text
@@ -275,10 +301,15 @@ begin
        and not exists (select 1 from public.contas_revogadas r where r.usuario_id = v.dono_id)
        and not exists (select 1 from public.contas_bloqueadas b where b.usuario_id = v.dono_id)
        and not exists (select 1 from public.lixeira_contas l where l.usuario_id = v.dono_id)
+       and exists (
+         select 1 from public.preferencias_avisos pa
+          where pa.usuario_id = v.dono_id and pa.tipo = 'proposta_escolhida'
+            and pa.canal = 'whatsapp' and pa.ligado
+       )
        and not exists (
          select 1 from public.preferencias_avisos pa
           where pa.usuario_id = v.dono_id and pa.tipo = 'proposta_escolhida'
-            and pa.canal in ('app', 'whatsapp') and not pa.ligado
+            and pa.canal = 'app' and not pa.ligado
        ) then
       select * into modelo_wa from public.modelos_mensagem x
        where x.chave = 'proposta_escolhida' and x.canal = 'whatsapp';
@@ -346,25 +377,39 @@ begin
           and rp.status = 'aberto' and rp.expira_em > p_quando
           and pr.status = 'ativa' and pr.escolhida);
 
-  -- Aviso do Radar de quem desligou (SAIR ou Minha conta) não sai mais
+  -- Aviso do Radar de quem desligou (ou pediu SAIR antes da criação do aviso) ou não tem opt-in ativo não sai mais
   update public.whatsapp_fila f set estado = 'cancelada', erro = 'radar_desligado'
    where f.estado = 'pendente' and f.chave like 'radar_pedido_novo:%'
      and (not exists (select 1 from public.preferencias_avisos pa
                        where pa.usuario_id = f.usuario_id and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp' and pa.ligado)
           or exists (select 1 from public.preferencias_avisos pa
-                      where pa.usuario_id = f.usuario_id and pa.tipo = 'pedido_novo' and pa.canal = 'app' and not pa.ligado));
+                      where pa.usuario_id = f.usuario_id and pa.tipo = 'pedido_novo' and pa.canal = 'app' and not pa.ligado)
+          or exists (select 1 from public.whatsapp_respostas r
+                      where r.usuario_id = f.usuario_id
+                        and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')
+                        and r.criado_em >= f.criado_em));
 
   update public.whatsapp_fila f set estado = 'cancelada', erro = 'radar_desligado'
    where f.estado = 'pendente' and f.chave like 'radar_proposta_nova:%'
-     and exists (select 1 from public.preferencias_avisos pa
-                  where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_nova'
-                    and pa.canal in ('whatsapp', 'app') and not pa.ligado);
+     and (not exists (select 1 from public.preferencias_avisos pa
+                       where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_nova' and pa.canal = 'whatsapp' and pa.ligado)
+          or exists (select 1 from public.preferencias_avisos pa
+                      where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_nova' and pa.canal = 'app' and not pa.ligado)
+          or exists (select 1 from public.whatsapp_respostas r
+                      where r.usuario_id = f.usuario_id
+                        and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')
+                        and r.criado_em >= f.criado_em));
 
   update public.whatsapp_fila f set estado = 'cancelada', erro = 'radar_desligado'
    where f.estado = 'pendente' and f.chave like 'radar_proposta_escolhida:%'
-     and exists (select 1 from public.preferencias_avisos pa
-                  where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_escolhida'
-                    and pa.canal in ('whatsapp', 'app') and not pa.ligado);
+     and (not exists (select 1 from public.preferencias_avisos pa
+                       where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_escolhida' and pa.canal = 'whatsapp' and pa.ligado)
+          or exists (select 1 from public.preferencias_avisos pa
+                      where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_escolhida' and pa.canal = 'app' and not pa.ligado)
+          or exists (select 1 from public.whatsapp_respostas r
+                      where r.usuario_id = f.usuario_id
+                        and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')
+                        and r.criado_em >= f.criado_em));
 
   return query
     update public.whatsapp_fila f set estado = 'enviando', tentativas = f.tentativas + 1, enviar_apos = p_quando
@@ -449,9 +494,10 @@ begin
      where pr.id::text = substring(f.chave from '([^:]+)$') and pr.pedido_id = pedido.id;
     ligados := case when pedido.id is not null then public.config('radar.avisos_ligados', pedido.microrregiao_id, null) else null end;
 
-    if exists (select 1 from public.preferencias_avisos pa
-                where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_nova'
-                  and pa.canal in ('whatsapp', 'app') and not pa.ligado)
+    if not exists (select 1 from public.preferencias_avisos pa
+                    where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_nova' and pa.canal = 'whatsapp' and pa.ligado)
+       or exists (select 1 from public.preferencias_avisos pa
+                   where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_nova' and pa.canal = 'app' and not pa.ligado)
        or (jsonb_typeof(ligados) = 'array' and not (ligados ? 'proposta_nova'))
        or not exists (select 1 from public.modelos_mensagem m where m.chave = 'proposta_nova' and m.canal = 'whatsapp' and m.ativo) then
       motivo := 'radar_desligado';
@@ -475,9 +521,10 @@ begin
      where pr.id::text = substring(f.chave from '([^:]+)$') and pr.pedido_id = pedido.id;
     ligados := case when pedido.id is not null then public.config('radar.avisos_ligados', pedido.microrregiao_id, null) else null end;
 
-    if exists (select 1 from public.preferencias_avisos pa
-                where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_escolhida'
-                  and pa.canal in ('whatsapp', 'app') and not pa.ligado)
+    if not exists (select 1 from public.preferencias_avisos pa
+                    where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_escolhida' and pa.canal = 'whatsapp' and pa.ligado)
+       or exists (select 1 from public.preferencias_avisos pa
+                   where pa.usuario_id = f.usuario_id and pa.tipo = 'proposta_escolhida' and pa.canal = 'app' and not pa.ligado)
        or (jsonb_typeof(ligados) = 'array' and not (ligados ? 'proposta_escolhida'))
        or not exists (select 1 from public.modelos_mensagem m where m.chave = 'proposta_escolhida' and m.canal = 'whatsapp' and m.ativo) then
       motivo := 'radar_desligado';
@@ -500,6 +547,16 @@ begin
     end if;
   end if;
 
+  -- Mesmo após VOLTAR (ou religar no site), aviso do Radar criado antes de um SAIR nunca é liberado.
+  if motivo is null and exists (
+    select 1 from public.whatsapp_respostas r
+     where r.usuario_id = f.usuario_id
+       and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')
+       and r.criado_em >= f.criado_em
+  ) then
+    motivo := 'radar_desligado';
+  end if;
+
   if motivo is null then return 'pode'; end if;
   update public.whatsapp_fila set estado = 'cancelada', erro = motivo where id = f.id;
   return 'cancelada';
@@ -508,6 +565,28 @@ end $$;
 -- ---------------------------------------------------------------------
 -- 6. SAIR, VOLTAR e preferência do site cobrem os 3 avisos do Radar
 -- ---------------------------------------------------------------------
+create or replace function public.minha_preferencia_whatsapp_radar()
+returns jsonb language plpgsql stable security definer
+set search_path = public, extensions
+as $$
+declare
+  uid text := public.usuario_id();
+begin
+  if uid is null then
+    raise exception 'Entre na sua conta para continuar.' using errcode = '28000';
+  end if;
+  return jsonb_build_object(
+    'ligado', coalesce((
+      select count(*) = 3 and bool_and(pa.ligado)
+        from public.preferencias_avisos pa
+       where pa.usuario_id = uid
+         and pa.canal = 'whatsapp'
+         and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida')
+    ), false),
+    'confirmado', coalesce(public.whatsapp_confirmado(uid), false),
+    'ativo', coalesce(public.config('radar.whatsapp_ativo', null, 'false'::jsonb) = 'true'::jsonb, false));
+end $$;
+
 create or replace function public.salvar_preferencia_whatsapp_radar(p_ligado boolean)
 returns boolean language plpgsql security definer
 set search_path = public, extensions
@@ -717,10 +796,12 @@ revoke all on function public.radar_cancelar_fila_pedido(uuid),
 
 revoke all on function public.fechar_pedido_radar(uuid, text),
   public.escolher_proposta(uuid),
+  public.minha_preferencia_whatsapp_radar(),
   public.salvar_preferencia_whatsapp_radar(boolean)
   from public, anon;
 grant execute on function public.fechar_pedido_radar(uuid, text),
   public.escolher_proposta(uuid),
+  public.minha_preferencia_whatsapp_radar(),
   public.salvar_preferencia_whatsapp_radar(boolean)
   to authenticated;
 
