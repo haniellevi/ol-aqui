@@ -43,7 +43,7 @@ export function ExcluirLoja({ temPagamentos }: { temPagamentos: boolean }) {
   const confere = texto.trim().toUpperCase() === PALAVRA;
   return (
     <form action={acao} className="flex flex-col gap-3 rounded-card border border-perigo bg-perigo-fundo p-4">
-      <h3 className="text-lg font-bold text-perigo">Tem certeza?</h3>
+      <h3 className="text-lg font-semibold text-perigo">Tem certeza?</h3>
       <ul className="flex list-disc flex-col gap-1 pl-5 text-base">
         <li>Sua vitrine e os anúncios da loja saem do ar na hora.</li>
         <li>Tudo fica guardado por 30 dias. Nesse prazo, você pode restaurar aqui.</li>

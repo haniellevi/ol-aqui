@@ -61,7 +61,7 @@ export function FotoPerfil({ foto }: { foto: string | null }) {
   }
   return (
     <section aria-labelledby="titulo-foto" className="flex flex-col gap-4 rounded-card bg-cartao p-5 shadow-1">
-      <h2 id="titulo-foto" className="text-lg font-bold">Sua foto</h2>
+      <h2 id="titulo-foto" className="text-lg font-semibold">Sua foto</h2>
       <div className="flex items-center gap-4">
         {previa || atual ? (
           // eslint-disable-next-line @next/next/no-img-element -- prévia local ou foto do Clerk

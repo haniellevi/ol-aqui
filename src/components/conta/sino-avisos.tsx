@@ -7,6 +7,7 @@ import { Popover } from "@base-ui/react/popover";
 import { Bell } from "lucide-react";
 import { LINK_AVISOS } from "@/lib/rotas";
 import type { Notificacao } from "@/lib/tipos-radar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LinhaAviso } from "./botoes-aviso";
 
 export function SinoAvisos() {
@@ -62,7 +63,7 @@ function PreviaAvisos({ nome, total }: { nome: string; total: number | null }) {
   const titulo = useRef<HTMLHeadingElement>(null);
   return (
     <Popover.Root open={aberto} onOpenChange={setAberto}>
-      <Popover.Trigger aria-label={nome} className="relative grid size-10 shrink-0 place-items-center rounded-card text-texto hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro">
+      <Popover.Trigger aria-label={nome} className="relative grid size-toque shrink-0 place-items-center rounded-card text-texto hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro">
         <Bell className="size-5" aria-hidden />
         {total !== null && total > 0 && <span aria-hidden className="absolute top-0 right-0 min-w-5 rounded-full bg-laranja-escuro px-1 text-center text-legenda leading-5 font-bold text-white tabular-nums">{total > 99 ? "99+" : total}</span>}
       </Popover.Trigger>
@@ -74,7 +75,7 @@ function PreviaAvisos({ nome, total }: { nome: string; total: number | null }) {
             <Link
               href={LINK_AVISOS}
               onClick={() => setAberto(false)}
-              className="flex min-h-11 shrink-0 items-center justify-center border-t border-borda px-3 text-sm font-semibold text-beringela hover:bg-fundo hover:underline focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
+              className="flex min-h-toque shrink-0 items-center justify-center border-t border-borda px-3 text-sm font-semibold text-beringela hover:bg-fundo hover:underline focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro"
             >
               Ver todas
             </Link>
@@ -124,7 +125,9 @@ function ListaPrevia({ fechar }: { fechar: () => void }) {
       {falhou ? (
         <p role="status" className="px-3 py-3 text-sm text-texto-suave">Não foi possível carregar as notificações.</p>
       ) : avisos === null ? (
-        <p role="status" className="px-3 py-3 text-sm text-texto-suave">Carregando notificações…</p>
+        <div role="status" aria-label="Carregando notificações" className="flex flex-col gap-3 px-3 py-3">
+          {[0, 1, 2].map((i) => <div key={i} className="flex items-center gap-3"><Skeleton className="size-8 shrink-0 rounded-full" /><div className="flex flex-1 flex-col gap-2"><Skeleton className="h-4 w-3/4" /><Skeleton className="h-3 w-1/3" /></div></div>)}
+        </div>
       ) : avisos.length === 0 ? (
         <p className="px-3 py-3 text-sm text-texto-suave">Você ainda não tem notificações.</p>
       ) : (

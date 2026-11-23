@@ -71,7 +71,7 @@ export default async function PaginaFixadosLoja() {
 
       {fixados.length > 0 && (
         <section aria-labelledby="titulo-fixados" className="flex flex-col gap-3">
-          <h2 id="titulo-fixados" className="text-lg font-bold">
+          <h2 id="titulo-fixados" className="text-lg font-semibold">
             No topo agora
           </h2>
           <ul className="flex flex-col gap-3">
@@ -89,7 +89,7 @@ export default async function PaginaFixadosLoja() {
 
       {noPlano && (
         <section aria-labelledby="titulo-outros" className="flex flex-col gap-3">
-          <h2 id="titulo-outros" className="text-lg font-bold">
+          <h2 id="titulo-outros" className="text-lg font-semibold">
             Outros produtos no ar
           </h2>
           {cheio && <p className="text-base text-texto-suave">Para fixar outro, tire um do topo primeiro.</p>}

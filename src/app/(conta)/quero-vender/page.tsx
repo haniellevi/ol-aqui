@@ -73,7 +73,7 @@ export default async function PaginaQueroVender() {
           </Botao>
         </section>
       </div>
-      <p className="text-xs leading-relaxed text-texto-suave">Para responder no Radar, a loja precisa ser verificada e ter acesso pelo plano ou por cortesia.</p>
+      <p className="text-legenda leading-relaxed text-texto-suave">Para responder no Radar, a loja precisa ser verificada e ter acesso pelo plano ou por cortesia.</p>
     </main>
   );
 }
