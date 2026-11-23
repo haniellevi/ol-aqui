@@ -45,6 +45,8 @@ export async function POST(req: Request) {
     })
     : pedido.intencao === "sair"
     ? await db.rpc("whatsapp_sair", { p_numero: pedido.numero, p_comando: pedido.comando })
+    : pedido.intencao === "outra"
+    ? await db.rpc("whatsapp_radar_mensagem_com_contexto", { p_numero: pedido.numero, p_hash: pedido.hash })
     : await db.rpc("whatsapp_mensagem_recebida", { p_numero: pedido.numero, p_intencao: pedido.intencao, p_hash: pedido.hash });
   if (error) {
     console.error("whatsapp evolution: falha ao registrar a mensagem", error.code);

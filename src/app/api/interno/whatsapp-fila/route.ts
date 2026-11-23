@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   try {
     const config = configuracaoEnvio(); // antes de pegar a fila: sem configuração, nada fica "enviando"
     const db = supabaseAdmin();
-    const { data, error } = await db.rpc("whatsapp_fila_pegar", { p_limite: POR_RODADA });
+    const { data, error } = await db.rpc("whatsapp_radar_fila_pegar", { p_limite: POR_RODADA });
     if (error || !Array.isArray(data)) return NextResponse.json({ ok: false }, { status: 503 });
     const linhas = (data as Linha[]).slice(0, POR_RODADA);
     const total = { enviadas: 0, falhas: 0, incertas: 0, erros_resultado: 0, devolvidas: 0, canceladas: 0 };

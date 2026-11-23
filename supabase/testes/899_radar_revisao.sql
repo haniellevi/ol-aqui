@@ -8,7 +8,7 @@ insert into preferencias_avisos(usuario_id,tipo,canal,ligado,consentido_em)
 values ('user_revisao899','proposta_nova','whatsapp',true,clock_timestamp());
 do $$ begin
   assert whatsapp_sair('5589998994100','SAIR');
-  assert whatsapp_mensagem_recebida('5589998994100','outra',repeat('e',64))='pergunta';
+  assert whatsapp_radar_mensagem_com_contexto('5589998994100',repeat('e',64))='pergunta';
   assert whatsapp_mensagem_recebida('5589998994100','sim',repeat('d',64))='nada',
     'C2: uma pergunta pendente não permite reativação pelo SIM';
   assert not (select ligado from preferencias_avisos where usuario_id='user_revisao899');

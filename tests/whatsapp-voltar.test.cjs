@@ -97,7 +97,7 @@ test('rota preserva metadados dos comandos e mantém os contratos antigos quando
       p_ocorreu_em: new Date(1785000001000).toISOString(), p_citada: null }],
     ['whatsapp_radar_evento', { p_numero: NUMERO, p_intencao: 'sim', p_comando: null, p_evento: lib.hashIdWhatsapp('MSG2', NUMERO),
       p_ocorreu_em: new Date(1785000002000).toISOString(), p_citada: lib.hashIdWhatsapp('PERGUNTA1') }],
-    ['whatsapp_mensagem_recebida', { p_numero: NUMERO, p_intencao: 'outra', p_hash: lib.hashDaMensagem('quero um sofá') }],
+    ['whatsapp_radar_mensagem_com_contexto', { p_numero: NUMERO, p_hash: lib.hashDaMensagem('quero um sofá') }],
     ['whatsapp_sair', { p_numero: NUMERO, p_comando: 'SAIR' }],
   ]);
 });

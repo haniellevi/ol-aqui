@@ -103,7 +103,7 @@ update radar_piloto_participantes set fim_em=clock_timestamp()+interval '1 day' 
 
 do $$ begin
   assert whatsapp_sair('5589998990010','SAIR');
-  assert whatsapp_mensagem_recebida('5589998990010','outra',repeat('b',64))='pergunta';
+  assert whatsapp_radar_mensagem_com_contexto('5589998990010',repeat('b',64))='pergunta';
 end $$;
 update whatsapp_fila set estado='enviando' where usuario_id='user_899buyer' and split_part(chave,':',3)='pergunta';
 update radar_piloto_controle set modo='pausado';

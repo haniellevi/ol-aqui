@@ -27,7 +27,7 @@ test('fila WhatsApp: envia proposta_nova ao comprador e cancela proposta_escolhi
     '@/lib/supabase/admin': {
       supabaseAdmin: () => ({
         rpc: async (nome, args) => {
-          if (nome === 'whatsapp_fila_pegar') {
+          if (nome === 'whatsapp_radar_fila_pegar') {
             return {
               data: [
                 {

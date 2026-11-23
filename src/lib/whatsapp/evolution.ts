@@ -120,15 +120,20 @@ function mensagemRecebida(corpo: unknown): MensagemRecebida | null {
   const { event, data } = corpo as { event?: unknown; data?: unknown };
   if (typeof event !== "string" || event.toLowerCase().replace(/_/g, ".") !== "messages.upsert") return null;
   if (!data || typeof data !== "object") return null;
-  const { key, message, messageTimestamp } = data as {
+  const { key, message, messageTimestamp, contextInfo } = data as {
     key?: MensagemRecebida["key"];
     messageTimestamp?: unknown;
+    contextInfo?: { stanzaId?: unknown };
     message?: { conversation?: unknown; extendedTextMessage?: { text?: unknown; contextInfo?: { stanzaId?: unknown } } };
   };
   if (!key || key.fromMe !== false) return null;
+  const externa = contextInfo?.stanzaId;
+  const interna = message?.extendedTextMessage?.contextInfo?.stanzaId;
+  // A Evolution 2.3.7 publica a citação ao lado de message.conversation.
+  const citada = externa != null && interna != null && externa !== interna ? null : externa ?? interna;
   return {
     key, texto: message?.conversation ?? message?.extendedTextMessage?.text,
-    timestamp: messageTimestamp, citada: message?.extendedTextMessage?.contextInfo?.stanzaId,
+    timestamp: messageTimestamp, citada,
   };
 }
 
@@ -159,7 +164,7 @@ export type IntencaoMensagem = "sair" | "voltar" | "sim" | "outra";
 const FRASES_VOLTAR = new Set([
   "voltar", "volta", "quero voltar", "ativar", "ativa", "reativar", "quero receber", "quero receber de novo", "voltar a receber", "religar",
 ]);
-// "sim" (e as parecidas) só conta como volta quando há uma pergunta de volta pendente (decide o banco). Fora disso não faz nada.
+// "sim" (e as parecidas) só reativa quando cita uma pergunta válida com comprovante de envio.
 const FRASES_SIM = new Set(["sim", "s", "sim quero", "pode", "quero", "ligar"]);
 
 function fraseDaMensagem(texto: string): string {

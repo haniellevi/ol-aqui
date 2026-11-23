@@ -56,9 +56,9 @@ select pg_temp.confere870((select count(*) = 1 from whatsapp_fila where chave li
 -- [2] Outra mensagem depois do SAIR faz a pergunta UMA vez; a mesma mensagem de novo é repetida (nada);
 -- outra mensagem no mesmo período não pergunta de novo
 set local role service_role;
-select whatsapp_mensagem_recebida('5589999970001', 'outra', pg_temp.h870('oi')) as p1 \gset
-select whatsapp_mensagem_recebida('5589999970001', 'outra', pg_temp.h870('oi')) as p_rep \gset
-select whatsapp_mensagem_recebida('5589999970001', 'outra', pg_temp.h870('quero um sofá')) as p2 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970001',pg_temp.h870('oi')) as p1 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970001',pg_temp.h870('oi')) as p_rep \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970001',pg_temp.h870('quero um sofá')) as p2 \gset
 reset role;
 select pg_temp.confere870(:'p1' = 'pergunta', 'outra mensagem depois do SAIR faz a pergunta de volta');
 select pg_temp.confere870(:'p_rep' = 'mensagem_repetida', 'mesma mensagem logo em seguida: não responde');
@@ -72,7 +72,7 @@ delete from whatsapp_fila where chave like 'whatsapp_resposta:5589999970001:%';
 update whatsapp_respostas set criado_em = now() - interval '8 days' where usuario_id = 'user_870saiu' and comando = 'PERGUNTA_VOLTAR';
 set local role service_role;
 select whatsapp_mensagem_recebida('5589999970001', 'sim', pg_temp.h870('sim')) as s_vencida \gset
-select whatsapp_mensagem_recebida('5589999970001', 'outra', pg_temp.h870('tudo bem')) as p_nova \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970001',pg_temp.h870('tudo bem')) as p_nova \gset
 reset role;
 select pg_temp.confere870(:'s_vencida' = 'nada', 'SIM depois de 7 dias não ativa e não faz nada');
 select pg_temp.confere870(:'p_nova' = 'pergunta', 'depois de 7 dias, outra mensagem gera a pergunta de novo');
@@ -127,7 +127,7 @@ set local role service_role;
 select whatsapp_radar_evento('5589999970002','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as o1 \gset
 select whatsapp_radar_evento('5589999970002','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as o2 \gset
 select whatsapp_mensagem_recebida('5589999970002', 'sim', pg_temp.h870('sim')) as o3 \gset
-select whatsapp_mensagem_recebida('5589999970002', 'outra', pg_temp.h870('oi')) as o4 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970002',pg_temp.h870('oi')) as o4 \gset
 reset role;
 select pg_temp.confere870(:'o1' = 'orientacao' and :'o2' = 'orientacao', 'VOLTAR de quem nunca teve o aviso: orientação');
 select pg_temp.confere870((select count(*) = 1 from whatsapp_fila where chave like 'whatsapp_resposta:5589999970002:orientacao:%'
@@ -138,11 +138,11 @@ select pg_temp.confere870(:'o3' = 'nada' and :'o4' = 'nada', 'SIM e outra mensag
 
 -- [8] Número sem conta, conta não confirmada ou conta revogada: nada, nenhuma resposta, nada registrado
 set local role service_role;
-select whatsapp_mensagem_recebida('5589999970003', 'outra', pg_temp.h870('oi')) as n1 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970003',pg_temp.h870('oi')) as n1 \gset
 select whatsapp_radar_evento('5589999970003','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as n2 \gset
 select whatsapp_radar_evento('5589999979999','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as n3 \gset
-select whatsapp_mensagem_recebida('5589999979999', 'outra', pg_temp.h870('oi')) as n4 \gset
-select whatsapp_mensagem_recebida('5589999970006', 'outra', pg_temp.h870('oi')) as n5 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999979999',pg_temp.h870('oi')) as n4 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970006',pg_temp.h870('oi')) as n5 \gset
 reset role;
 select pg_temp.confere870(:'n1' = 'sem_conta' and :'n2' = 'sem_conta' and :'n3' = 'sem_conta' and :'n4' = 'sem_conta' and :'n5' = 'sem_conta', 'sem conta, não confirmada ou revogada: sem_conta');
 select pg_temp.confere870((select count(*) = 0 from whatsapp_fila where numero in ('5589999970003', '5589999979999', '5589999970006')), 'nenhuma resposta para esses números');
@@ -154,17 +154,17 @@ select pg_temp.confere870((select count(*) = 0 from whatsapp_respostas where usu
 -- mas a resposta dela não sai pelo limite
 set local role service_role;
 select whatsapp_sair('5589999970004', 'SAIR') as l0 \gset
-select whatsapp_mensagem_recebida('5589999970004', 'outra', pg_temp.h870('oi')) as l1 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970004',pg_temp.h870('oi')) as l1 \gset
 reset role;
 update configuracoes set valor = 'false'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
 set local role service_role;
 select whatsapp_radar_evento('5589999970004','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as l2 \gset
-select whatsapp_mensagem_recebida('5589999970004', 'outra', pg_temp.h870('tudo')) as l3 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970004',pg_temp.h870('tudo')) as l3 \gset
 reset role;
 update configuracoes set valor = 'true'::jsonb where chave = 'radar.whatsapp_ativo' and microrregiao_id is null;
 set local role service_role;
 select whatsapp_radar_evento('5589999970004','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null) as l4 \gset
-select whatsapp_mensagem_recebida('5589999970004', 'outra', pg_temp.h870('oi de novo')) as l5 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970004',pg_temp.h870('oi de novo')) as l5 \gset
 reset role;
 select pg_temp.confere870(:'l1' = 'pergunta' and :'l2' = 'pausado' and :'l3' = 'nada' and :'l4' = 'voltou' and :'l5' = 'nada',
   'sequência de respostas da conta de limite');
@@ -241,14 +241,14 @@ select pg_temp.confere870((select count(*) = 0 from whatsapp_respostas where usu
 
 -- [13] Mensagem repetida (bot): mesma mensagem em até 1 dia não responde; depois de 1 dia, vale de novo
 set local role service_role;
-select whatsapp_mensagem_recebida('5589999970009', 'outra', pg_temp.h870('oi')) as r1 \gset
-select whatsapp_mensagem_recebida('5589999970009', 'outra', pg_temp.h870('oi')) as r2 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970009',pg_temp.h870('oi')) as r1 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970009',pg_temp.h870('oi')) as r2 \gset
 reset role;
 select pg_temp.confere870(:'r1' = 'pergunta' and :'r2' = 'mensagem_repetida', 'bot repetindo a mesma mensagem: uma pergunta e nada depois');
 select pg_temp.confere870((select count(*) = 1 from whatsapp_fila where chave like 'whatsapp_resposta:5589999970009:pergunta:%'), 'bot repetindo: a pergunta sai uma vez');
 update whatsapp_ultima_mensagem set recebido_em = now() - interval '25 hours' where numero = '5589999970009';
 set local role service_role;
-select whatsapp_mensagem_recebida('5589999970009', 'outra', pg_temp.h870('oi')) as r3 \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970009',pg_temp.h870('oi')) as r3 \gset
 reset role;
 select pg_temp.confere870(:'r3' = 'ja_perguntou', 'mesma mensagem depois de 1 dia: volta a valer (aqui, a pergunta já foi feita no período)');
 select pg_temp.confere870((select count(*) = 0 from information_schema.columns where table_schema = 'public' and table_name = 'whatsapp_ultima_mensagem'
@@ -264,7 +264,7 @@ reset role;
 update preferencias_avisos set ligado = true, atualizado_em = clock_timestamp() where usuario_id = 'user_870site' and tipo = 'pedido_novo' and canal = 'whatsapp';
 update preferencias_avisos set ligado = false, atualizado_em = clock_timestamp() where usuario_id = 'user_870site' and tipo = 'pedido_novo' and canal = 'whatsapp';
 set local role service_role;
-select whatsapp_mensagem_recebida('5589999970010', 'outra', pg_temp.h870('oi')) as site_msg \gset
+select whatsapp_radar_mensagem_com_contexto('5589999970010',pg_temp.h870('oi')) as site_msg \gset
 reset role;
 select pg_temp.confere870(:'site_msg' = 'nada', 'desligou pelo site depois da saída: a mensagem não gera pergunta');
 select pg_temp.confere870((select count(*) = 0 from whatsapp_respostas where usuario_id = 'user_870site' and comando = 'PERGUNTA_VOLTAR'), 'desligou pelo site: nada registrado como pergunta');

@@ -239,7 +239,7 @@ try:
     """))
     # Cada chamada tem resumo diferente, para a trava (e não o bloqueio de repetida) é o que segura as simultâneas
     def pergunta_870(i):
-        return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','outra', encode(sha256(convert_to('pergunta{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
+        return sql(f"begin; select whatsapp_radar_mensagem_com_contexto('5589999971001',encode(sha256(convert_to('pergunta{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
     def volta_870(i):
         return sql(f"begin; select whatsapp_radar_evento('5589999971001','sim',null,encode(sha256(convert_to('sim{i}','UTF8')),'hex'),clock_timestamp(),repeat('f',64)); select pg_sleep(0.2); commit;")
     def voltar_870(i):
@@ -554,6 +554,9 @@ try:
     print('PASS: renovação concorrente impede pausa de anúncios', flush=True)
     verificar_radar_piloto(container, sql, checked, radar_fechado)
     print('PASS: autorização da fila sob SAIR/VOLTAR concorrentes nos três produtores e opt-in durante fechamento', flush=True)
+    evolution = run('node', 'supabase/testes/radar_evolution_local.cjs', container, cwd=root)
+    checked(evolution)
+    print(evolution.stdout, end='', flush=True)
 
 finally:
     run('docker','stop',container)
