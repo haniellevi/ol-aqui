@@ -372,7 +372,7 @@ Página para ver as peças: `/admin/pecas`.
 
 - **`CardAnuncio`:** foto 4:3; coração no canto da foto (alvo de 44 px); **preço 16 px em 700**; título 14 px em até 2 linhas; cidade e data em 12 px `texto-suave`; no máximo um selo; "Patrocinado" escrito; card inteiro tocável. Duas colunas no celular, 4 a 5 no computador.
 - **`CampoBusca`:** uma só por tela, 44 px, texto "O que você procura?". Fundo branco com `borda-campo`; não é laranja. O botão de buscar é a lupa à direita (44 px). Página com `CampoBusca` próprio esconde a busca do cabeçalho (`globals.css`).
-- **Barra de busca do Início:** Categorias à esquerda, busca com largura flexível (lupa em `selecao`) e "Criar anúncio" em laranja à direita. Abaixo de 360 px, o controle de categorias mostra só o ícone e mantém o nome acessível.
+- **Barra de busca do Início:** Categorias à esquerda, busca com largura flexível (lupa em `selecao`) e "Criar anúncio" em laranja à direita. O texto de orientação da busca é "Buscar", para caber no celular; o rótulo acessível continua "O que você procura?". Abaixo de 360 px, o controle de categorias mostra só o ícone e mantém o nome acessível.
 - **`FaixaCategorias`:** uma só lista de categorias por tela, rolável na horizontal com `scroll-snap`, ícone com nome, estado ativo em `selecao` com texto beringela.
 - **Filtros rápidos:** uma linha rolável de `Chip` logo abaixo da busca.
 - **`LojasDaRegiao`:** um só bloco de lojas por tela, com logo redondo, nome, selo "Loja verificada" **com a palavra escrita**, quantidade de anúncios e acesso à vitrine.
