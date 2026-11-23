@@ -71,7 +71,7 @@ export default async function PaginaNotificacoes({ searchParams }: { searchParam
               </div>)}</dl>
             </details>
           </>}
-        <h3 className="mt-4 text-rotulo font-semibold text-beringela">Pedidos do Radar</h3>
+        <h3 className="mt-4 text-rotulo font-semibold text-beringela">Radar no WhatsApp</h3>
         {radarWhatsapp.status === "rejected" ? <Aviso tipo="erro">Não conseguimos carregar o aviso por WhatsApp. Use Atualizar para tentar novamente.</Aviso> : (
           <ul className="overflow-hidden rounded-card border border-borda bg-cartao">
             <li><PreferenciaWhatsappRadarBotao inicial={radarWhatsapp.value} /></li>

@@ -262,6 +262,19 @@ reset role;
 select pg_temp.confere870(:'site_msg' = 'nada', 'desligou pelo site depois da saída: a mensagem não gera pergunta');
 select pg_temp.confere870((select count(*) = 0 from whatsapp_respostas where usuario_id = 'user_870site' and comando = 'PERGUNTA_VOLTAR'), 'desligou pelo site: nada registrado como pergunta');
 
+-- [16] Conta antiga com apenas pedido_novo=true: SAIR -> VOLTAR mantém apenas pedido_novo=true sem criar proposta_nova/proposta_escolhida
+insert into perfis(id, microrregiao_id, nome, cidade, whatsapp, whatsapp_verificado_em) values
+  ('user_870antiga', :'reg', 'Loja 870 antiga só pedido_novo', 'Corrente', '5589999970011', now());
+insert into preferencias_avisos(usuario_id, tipo, canal, ligado) values ('user_870antiga', 'pedido_novo', 'whatsapp', true);
+set local role service_role;
+select whatsapp_sair('5589999970011', 'SAIR') as ant870_s \gset
+select whatsapp_mensagem_recebida('5589999970011', 'voltar', pg_temp.h870('voltar')) as ant870_v \gset
+reset role;
+select pg_temp.confere870(:'ant870_s' = 't' and :'ant870_v' = 'voltou', 'conta antiga 870 faz SAIR -> VOLTAR');
+select pg_temp.confere870((select ligado from preferencias_avisos where usuario_id = 'user_870antiga' and tipo = 'pedido_novo' and canal = 'whatsapp')
+  and (select count(*) = 0 from preferencias_avisos where usuario_id = 'user_870antiga' and canal = 'whatsapp' and tipo in ('proposta_nova', 'proposta_escolhida')),
+  'conta antiga 870 reativa só pedido_novo sem assinar propostas');
+
 -- [14] Permissões: a decisão é só do servidor; a conta e o visitante não chamam; a resposta automática é interna
 select pg_temp.confere870(has_function_privilege('service_role', 'whatsapp_mensagem_recebida(text,text,text)', 'execute'), 'decisão do WhatsApp é do servidor');
 select pg_temp.confere870(not has_function_privilege('authenticated', 'whatsapp_mensagem_recebida(text,text,text)', 'execute')
