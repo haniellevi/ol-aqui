@@ -726,7 +726,7 @@ begin
                         and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR')
                         and r.criado_em >= f.criado_em));
 
-  with invalidas as (
+  with invalidas as materialized (
     select f.id, case when public.radar_eh_pergunta_whatsapp(f.chave) then 'radar_pergunta_invalida'
                       else 'radar_piloto_inapto' end as motivo
       from public.whatsapp_fila f
@@ -739,19 +739,21 @@ begin
   update public.whatsapp_fila f set estado='cancelada', erro=i.motivo from invalidas i where f.id=i.id;
 
   return query
+    with escolhidas as materialized (
+      select x.id from public.whatsapp_fila x
+       where x.estado = 'pendente' and x.enviar_apos <= p_quando
+         and public.radar_fila_permite(x,p_quando)
+         and (dentro_janela or x.chave like 'whatsapp_saida:%' or x.chave like 'whatsapp_resposta:%')
+         and (radar_ligado or x.chave is null or (
+               x.chave not like 'radar_pedido_novo:%'
+               and x.chave not like 'radar_proposta_nova:%'
+               and x.chave not like 'radar_proposta_escolhida:%'))
+       order by x.enviar_apos, x.criado_em
+       limit greatest(least(coalesce(p_limite, 5), 5), 1)
+       for update skip locked
+    )
     update public.whatsapp_fila f set estado = 'enviando', tentativas = f.tentativas + 1, enviar_apos = p_quando
-     where f.id in (
-       select x.id from public.whatsapp_fila x
-        where x.estado = 'pendente' and x.enviar_apos <= p_quando
-          and public.radar_fila_permite(x,p_quando)
-          and (dentro_janela or x.chave like 'whatsapp_saida:%' or x.chave like 'whatsapp_resposta:%')
-          and (radar_ligado or x.chave is null or (
-                x.chave not like 'radar_pedido_novo:%'
-                and x.chave not like 'radar_proposta_nova:%'
-                and x.chave not like 'radar_proposta_escolhida:%'))
-        order by x.enviar_apos, x.criado_em
-        limit greatest(least(coalesce(p_limite, 5), 5), 1)
-        for update skip locked)
+      from escolhidas e where f.id = e.id
     returning f.id, f.numero, f.texto, f.link, f.tentativas;
 end $$;
 

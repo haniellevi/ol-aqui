@@ -179,13 +179,15 @@ def verificar_radar_piloto(container, sql, checked, fixture):
     checked(sql("""insert into whatsapp_fila(usuario_id,numero,texto,chave,enviar_apos)
       select 'user_899buyer','5589998990010','Fila alheia fictícia','teste899-concorrente:'||n,now()
       from generate_series(1,12) n;"""))
-    colher = r"""select jsonb_agg(id)::text as ids from whatsapp_fila_pegar_em(5,
+    colher = r"""select coalesce(jsonb_agg(id), '[]'::jsonb)::text as ids from whatsapp_fila_pegar_em(5,
       (date_trunc('day',clock_timestamp() at time zone 'America/Fortaleza')+interval '1 day 10 hours')
          at time zone 'America/Fortaleza') \gset
       \echo :ids"""
     with ThreadPoolExecutor(max_workers=2) as pool:
         a, b = list(pool.map(lambda _: set(json.loads(valor(colher))), range(2)))
-    assert len(a) == len(b) == 5 and a.isdisjoint(b), (a,b)
+    assert len(a) == len(b) == 5 and a.isdisjoint(b), (a,b,valor(
+        "select estado,count(*) from whatsapp_fila where chave like 'teste899-concorrente:%' group by estado;"
+    ))
 
     checked(sql("""
       drop trigger test_899_barreira on whatsapp_fila;
