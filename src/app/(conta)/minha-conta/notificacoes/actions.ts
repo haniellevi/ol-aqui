@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ehUuid } from "@/lib/formato";
 import { LINK_AVISOS } from "@/lib/rotas";
+import { TIPOS_AVISO_WHATSAPP_RADAR, type TipoAvisoWhatsappRadar } from "@/lib/tipos-radar";
 
 type RespostaAviso = { ok: true; mensagem: string; destino?: string } | { ok: false; erro: string };
 const SEM_LOGIN = "Entre na sua conta para acessar seus avisos.";
@@ -36,17 +37,19 @@ export async function salvarPreferenciaAviso(tipo: string, ligar: boolean): Prom
 }
 
 /** Avisos do Radar por WhatsApp. Desligado por padrão; ligar exige celular confirmado (o banco confere). */
-export async function salvarPreferenciaWhatsappRadar(ligar: boolean): Promise<RespostaAviso> {
+export async function salvarPreferenciaWhatsappRadar(tipo: TipoAvisoWhatsappRadar, ligar: boolean): Promise<RespostaAviso> {
   const { userId } = await auth();
   if (!userId) return { ok: false, erro: SEM_LOGIN };
-  if (typeof ligar !== "boolean") return { ok: false, erro: "Escolha ligar ou desligar." };
+  if (!TIPOS_AVISO_WHATSAPP_RADAR.includes(tipo) || typeof ligar !== "boolean") {
+    return { ok: false, erro: "Escolha um aviso válido do Radar." };
+  }
   const db = await createClient();
-  const { data, error } = await db.rpc("salvar_preferencia_whatsapp_radar_completa", { p_ligado: ligar });
+  const { data, error } = await db.rpc("salvar_preferencia_whatsapp_radar_tipo", { p_tipo: tipo, p_ligado: ligar });
   if (error?.code === "42501") return { ok: false, erro: "Confirme seu WhatsApp antes de ligar os avisos por WhatsApp." };
   if (error?.code === "55000") return { ok: false, erro: "Este aviso ainda não está disponível." };
   if (error || data !== ligar) return { ok: false, erro: "Não conseguimos salvar sua preferência. Tente novamente." };
   revalidatePath(LINK_AVISOS);
-  return { ok: true, mensagem: ligar ? "Avisos do Radar por WhatsApp ligados." : "Avisos do Radar por WhatsApp desligados." };
+  return { ok: true, mensagem: ligar ? "Aviso ligado no WhatsApp." : "Aviso desligado no WhatsApp." };
 }
 
 /** O destino vem do aviso da própria pessoa no banco, nunca de um campo enviado pelo navegador. */
