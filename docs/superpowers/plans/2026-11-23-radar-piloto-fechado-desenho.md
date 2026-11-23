@@ -14,7 +14,7 @@ SAIR interrompe os três tipos existentes e mantém a confirmação diária para
 
 A retirada confirmada antes da última leitura no banco bloqueia a tentativa. Depois dessa leitura, a chamada à Evolution pode já estar liberada. O registro no provedor e a entrega no aparelho são verificados separadamente.
 
-## Escolhas para aprovação
+## Escolhas aprovadas no Item 15
 
 1. **Alcance e prazo.** Recomendo restringir os três avisos em todo o serviço aos convidados de Corrente e região durante o piloto e suspender os envios ao fim dos 30 dias até nova decisão. Uma restrição só na microrregião manteria os avisos legados nas demais regiões. Uma volta expressa ao legado pode reabrir avisos futuros a contas elegíveis de qualquer região com preferência ativa.
 2. **Aceites antigos sem prova.** Recomendo confirmação por tipo para entrar no piloto e prova de aceite para VOLTAR ou SIM desde a implantação da migração, inclusive no legado e fora da coorte. Quem tinha um aceite legítimo antigo sem prova e ainda está ativo em legado continua apto a receber até a transição. Se enviar SAIR ou estiver com o tipo desligado, terá de ligar esse aviso no site. A preferência e o histórico ficam guardados.

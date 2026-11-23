@@ -101,3 +101,32 @@ Ramo `claude/radar-piloto`. Nada foi enviado ao GitHub nem aplicado em produçã
 - **Pedido do Radar em geral sem backfill:** pedidos já criados antes da migração 20261128030000 não geram sugestão.
 - **Nada foi testado com a Evolution de verdade.** O webhook foi testado com banco simulado.
 - **Sem `next build` nesta rodada.**
+
+## Operação do piloto fechado de 30 dias
+
+O Item 15 e468 aprovou a restrição dos três avisos em todo o serviço aos convidados de Corrente e região e a suspensão ao fim. Também aprovou a prova de aceite por tipo para VOLTAR e SIM em qualquer modo. Uma conta com preferência antiga ativa continua elegível em legado. Se usar SAIR e faltar prova do aceite, a pessoa deve ligar o aviso no site. O registro anterior permanece. A aprovação autoriza implementação local. Implantação, teste no aparelho, cadastro real, início e eventual volta ao legado exigem decisões próprias.
+
+### Conferência e ativação
+
+1. Com autorização de implantação, confirmar a release, versão de catálogo, privilégios de fila e webhook e acesso da sessão de manutenção. Registrar somente contagens dos três avisos por estado, perguntas automáticas, opt-ins por tipo e estado da chave geral e dos modelos. A fotografia do Item 11 serve de referência histórica.
+2. Na mesma janela, instalar primeiro a migração em `legado` e depois o Worker com a escolha por tipo. Entre essas duas etapas, VOLTAR e SIM já exigirão prova, e a tela anterior ainda não oferecerá confirmação individual. Confirmar Notificações e webhook antes de mudar o modo. Preservar a chave global `radar.whatsapp_ativo` e os limites do painel.
+3. Identificar a microrregião no cadastro. A sessão de manutenção autorizada trava a linha de `radar_piloto_controle` com `FOR UPDATE` em toda mudança do modo ou da participação. Gravar região, ID próprio da rodada, início, fim e piso. Usar limites em UTC apresentados em Fortaleza. A vigência usa início inclusivo e fim exclusivo. Teste e piloto oficial recebem IDs distintos. O piloto oficial dura 30 dias desde o início aprovado.
+4. Na mesma ordem de trava, validar conta, região e rodada antes de escrever em `radar_piloto_participantes`. Limitar o convite ao período da rodada e registrar retirada em `revogado_em`. Se a pessoa reentrar por decisão da equipe, usar um novo início após obter a trava e limpar a revogação. Repetir a mesma ação conserva o estado atual. Registrar operador, horário e motivo no controle operacional restrito. O aceite é feito pela própria conta em Notificações.
+5. Explicar o descarte das pendências legadas antes de fechar. Avisos e perguntas do estoque incompatível são cancelados pelo banco. Depois da troca, conferir agregados e acompanhar a drenagem. Nenhum evento antigo é reprocessado.
+
+### Pausa, estoque e reversão
+
+- Alterar para `pausado` sob a trava de controle e confirmar a transação. Limpar pendências numa transação separada. A última leitura do banco bloqueia a tentativa quando pausa ou retirada já confirmou. A partir dessa leitura, uma chamada pode estar liberada ou em trânsito. SAIR, verificação, OTP, loja IA e respostas a VOLTAR explícito mantêm seu tratamento.
+- Antes de retomar dentro do prazo, reconciliar pendentes e itens em envio com agregados restritos. Elevar `piso_fila_em` ao instante da retomada, depois de obter a trava, e manter a data final. Avisos e perguntas anteriores ao piso continuam inválidos. Preservar registros enviados, falhas definitivas e incertos. Incertos exigem investigação e ficam fora de reenvio automático.
+- Ao fim do prazo, o banco bloqueia os avisos e perguntas do piloto sem reabrir o legado. Para reabrir expressamente, manter o modo pausado enquanto reconcilia e cancela o estoque anterior dos três tipos e perguntas; conferir ausência de tentativas em andamento e executar a mudança sob a trava de controle. Novos eventos elegíveis podem voltar a gerar aviso em qualquer região.
+- Na reversão do Worker, usar versão compatível com as RPCs da fila/webhook e as credenciais recuperadas da versão 22. O Worker anterior perde a tela de aceite por tipo e conserva desligamento em bloco e SAIR. Pausar se for necessário aguardar o restabelecimento da tela. Manter a guarda no banco; uma correção de banco segue em nova migração.
+
+### Teste com autorização separada
+
+Abrir uma rodada curta, com comprador e loja controlados. Usar como controle uma loja apta com preferência ativa, fora do grupo. O próprio controle registra seu aceite em legado enquanto ainda não tem elegibilidade para receber pedido novo. Depois do fechamento, conferir que passaria pelos filtros de pedido sem a regra da coorte. Usar nicho e área reduzidos e pausar se chegar um evento fora do roteiro aos destinatários controlados.
+
+Criar pedidos e propostas controlados, verificar cada aviso no aparelho e comprovar a ausência de aviso na conta de controle. Conferir que link e instrução SAIR são legíveis, sem dado desnecessário no texto ou título. Exercitar SAIR no aparelho, VOLTAR, retirada com pendência e um evento posterior para provar que itens anteriores não voltam. A corrida de um item já colhido é testada no banco descartável. Em qualquer falha, pausar e investigar antes de abrir os 30 dias.
+
+### Medição
+
+Nos primeiros sete dias, conferir diariamente. No restante, conferir semanalmente. Registrar opt-ins por tipo, fila por estado e motivo, tempo entre criação e envio por janela, comandos e contas distintas, pedidos com proposta e tempo até a primeira proposta. Ao fim, registrar totais, incidentes, pausas e indicadores com seus denominadores. Manter telefones, IDs de participantes e textos fora do relatório compartilhado. `enviada` é sucesso registrado na Evolution; a chegada no aparelho exige confirmação do teste controlado. O Radar não mede venda concluída.

@@ -25,7 +25,7 @@
 - Falha de confirmação ou entrega incerta não pode resultar em envio desautorizado ou repetição automática. Cobertura na tarefa 2.
 - Pergunta automática já enfileirada perde validade em pausa ou retirada. A confirmação de SAIR e a orientação solicitada por VOLTAR continuam disponíveis. Cobertura nas tarefas 1 e 2.
 
-## Decisões para a revisão única
+## Decisões aprovadas no Item 15
 
 O e448 aprovou a preparação do piloto fechado. O dono aprovou ambas as escolhas no Item 15, evento e468, após a apresentação no e466. A autorização cobre implementação e testes locais.
 
@@ -66,7 +66,7 @@ As leituras após esperas são instruções distintas nas funções de gravaçã
 | [radar-ciclo-whatsapp.test.cjs](../../../tests/radar-ciclo-whatsapp.test.cjs) e [whatsapp-envio.test.cjs](../../../tests/whatsapp-envio.test.cjs) | Estender as provas de ação, webhook e confirmação imediatamente antes do POST. |
 | [RADAR-PILOTO.md](../../RADAR-PILOTO.md) | Acrescentar a rotina de operação e o registro agregado da rodada. |
 
-## Tarefa 1 · Controle no banco e consentimento por tipo
+### Task 1 · Controle no banco e consentimento por tipo
 
 **Arquivos** · Migração futura, `supabase/testes/899_radar_piloto_fechado.sql`, `supabase/testes/automatizados.py` e fixtures em `supabase/testes/840_whatsapp_sair_completo.sql`, `870_whatsapp_voltar.sql`, `871_whatsapp_voltar_ajustes.sql` e `898_radar_ciclo_whatsapp.sql`.
 
@@ -83,7 +83,7 @@ As leituras após esperas são instruções distintas nas funções de gravaçã
 - [ ] Testar em conexões distintas as duas ordens de habilitação e fechamento/retirada. Se a manutenção bloqueia primeiro, a ação que começou antes da mudança lê o novo modo ou convite e recusa sem tocar em preferências, prova ou retomada. Se a habilitação toma o controle compartilhado primeiro, a manutenção espera o commit dela; ao concluir, bloqueia o envio. Cobrir RPC nova, as duas antigas e VOLTAR/SIM. Manter a trava de conta ocupada até o convite expirar para provar que a decisão usa a hora após a espera. Com controle bloqueado, confirmar que SAIR e desligamento pelo site ainda completam. Usar barreiras e inspecionar sessões bloqueadas com tempo limite no executor isolado.
 - [ ] Rodar `npm run test:db`. Esperado: novos controles aprovados e as suítes de SAIR/VOLTAR e consentimento passando. Registrar um commit local da migração e dos testes com `git commit -m "feat(radar): controlar a participação e o aceite por tipo"` quando autorizada a implementação.
 
-## Tarefa 2 · Três produtores e última conferência
+### Task 2 · Três produtores e última conferência
 
 **Arquivos** · Mesma migração e suíte SQL, executor de concorrência e `tests/whatsapp-envio.test.cjs`.
 
@@ -101,7 +101,7 @@ As leituras após esperas são instruções distintas nas funções de gravaçã
 - [ ] Provar pergunta pendente e pergunta em `enviando` durante pausa, retirada, expiração, reentrada e troca de piso: nenhuma chega ao POST, mesmo após retomada. SIM da pergunta invalidada não habilita tipo. Uma pergunta nova depois das transições ainda segue os limites existentes. Na mesma rodada, a confirmação de SAIR e a orientação explícita continuam elegíveis. Em Node usar os mocks existentes para provar zero POST em erro, resposta inesperada ou cancelamento, e um POST autorizado. Testar tentativa incerta sem repetição e sem transformar uma entrega desconhecida em falha definida. Preservar recuperação de `enviando` travada, devolução, limite de falhas definidas, verificação, loja IA e OTP.
 - [ ] Rodar `npm run test:db` e `npm test` localmente. Esperado: os três gatilhos, concorrências e regressões passam com zero envio real. Registrar commit local com `git commit -m "feat(radar): vincular a fila ao piloto fechado"` quando autorizado.
 
-## Tarefa 3 · Preferências em Minha conta
+### Task 3 · Preferências em Minha conta
 
 **Arquivos** · Os cinco arquivos de Notificações e leitura do mapa e `tests/radar-ciclo-whatsapp.test.cjs`.
 
@@ -113,7 +113,7 @@ As leituras após esperas são instruções distintas nas funções de gravaçã
 - [ ] Mostrar três controles na seção existente, com rótulos “Pedidos novos”, “Propostas nos meus pedidos” e “Minha proposta foi escolhida”. Mostrar quando a conta não pode ligar avisos e manter disponíveis as opções de desligar. Em fechado, mostrar ação “Confirmar” para aviso antigo ativo sem prova, separada da ação de desligar. Sem novas telas ou dependências. Descrever que o sino do tipo também precisa estar ligado e que SAIR para todos. Usar componentes da seção 9 do DESIGN, estado com texto e mensagens acessíveis de erro e sucesso. A página antiga recebe as chaves antigas da RPC até a troca do Worker.
 - [ ] Rodar `node --test tests/radar-ciclo-whatsapp.test.cjs`, `npm run lint`, `npm run typecheck` e `npm run design:conferir`. Conferir o checklist de Usabilidade a 360 px com conta fictícia convidada, fora do grupo, com preferência antiga e com telefone pendente. Provar toque mínimo, foco, zoom, ordem de leitura, texto de erro e que ligar um tipo deixa os outros como estavam. Registrar commit local com `git commit -m "feat(radar): oferecer escolha de aviso por tipo"` quando autorizado.
 
-## Tarefa 4 · Operação, pausa e aceite
+### Task 4 · Operação, pausa e aceite
 
 **Arquivo** · `docs/RADAR-PILOTO.md`, com operação revisada junto do projeto. A execução desta etapa antes de produção é uma simulação local.
 
@@ -130,7 +130,7 @@ As leituras após esperas são instruções distintas nas funções de gravaçã
 - A suíte SQL prova nos três produtores que uma leitura antiga da preferência não é liberada por VOLTAR ou pelo site, que um evento anterior à habilitação não entra quando o produtor lê a versão nova e que um evento posterior tem caminho até `pode`. As transições concorrentes obedecem à ordem das travas, sem deadlocks nos cenários exercitados, e nenhuma gravação atravessa o fechamento ou a retirada com autorização vencida.
 - Perguntas automáticas antigas recebem cancelamento na fila ou na última conferência, sem reativar pelo SIM. A confirmação de SAIR e orientações explícitas continuam elegíveis. Os mocks provam zero POST em recusas e zero repetição automática de tentativas incertas. O teste de 360 px prova opt-in independente com saída acessível.
 - `npm run test:db`, `npm test`, `npm run lint`, `npm run typecheck` e `npm run design:conferir` passam na implementação, com banco descartável sem rede e sem dados reais. O executor Python usa `supabase/testes/`, portanto não substituir pela descoberta pgTAP padrão da CLI.
-- O dono valida as duas decisões de produto desta revisão. A revisão de implantação confere a janela controlada, os papéis de operação, os modelos/retenção e o plano de reversão. A abertura dos 30 dias requer registro separado do teste no aparelho e decisão de início.
+- As duas decisões de produto foram aprovadas no e468. A revisão de implantação confere a janela controlada, os papéis de operação, os modelos/retenção e o plano de reversão. A abertura dos 30 dias requer registro separado do teste no aparelho e decisão de início.
 
 ## Referências técnicas
 
