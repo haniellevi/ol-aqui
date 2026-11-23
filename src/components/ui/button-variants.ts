@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 // Botão oficial do Mercado da Região (DESIGN.md, seções 4 e 9). Todo estilo de botão mora aqui:
 // o <Button> do shadcn e a casca <Botao> (botao.tsx) usam as mesmas classes.
-// Alturas: normal 44px no toque e 36px com mouse; pequeno 36/32px; acao 48px (ação principal e WhatsApp);
+// Alturas: normal 44px no toque e 36px com mouse; pequeno 36/32px visíveis (no toque a área tocável cresce para 44px); acao 48px (ação principal e WhatsApp);
 // grande = Modo fácil do Radar (48px, letra 18px). Rótulo longo quebra linha e o botão cresce.
 // Principal = laranja com texto beringela (nunca branco no laranja). Laranja nunca vira cor de letra.
 export const buttonVariants = cva(
@@ -28,7 +28,7 @@ export const buttonVariants = cva(
       },
       size: {
         normal: "olaki-controle min-h-controle px-4 text-base leading-5",
-        pequeno: "olaki-controle-pequeno min-h-controle-pequeno px-3 text-sm leading-4",
+        pequeno: "olaki-controle-pequeno relative min-h-controle-pequeno px-3 text-sm leading-4 after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] pointer-fine:md:after:hidden",
         toque: "min-h-toque min-w-toque px-4 text-base leading-5",
         acao: "min-h-acao px-5 text-base leading-5",
         grande: "min-h-12 px-5 text-facil leading-6",

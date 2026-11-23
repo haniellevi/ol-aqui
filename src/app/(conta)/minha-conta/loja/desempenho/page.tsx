@@ -85,7 +85,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
       </nav>
 
       <section aria-labelledby="titulo-numeros" className="flex flex-col gap-3">
-        <h2 id="titulo-numeros" className="flex items-center gap-2 text-lg font-bold">
+        <h2 id="titulo-numeros" className="flex items-center gap-2 text-lg font-semibold">
           <ChartNoAxesColumn className="size-5 text-laranja-escuro" aria-hidden />
           Números
         </h2>
@@ -111,7 +111,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
 
       {d !== null && (
         <section aria-labelledby="titulo-mais-vistos" className="flex flex-col gap-3">
-          <h2 id="titulo-mais-vistos" className="flex items-center gap-2 text-lg font-bold">
+          <h2 id="titulo-mais-vistos" className="flex items-center gap-2 text-lg font-semibold">
             <Eye className="size-5 text-laranja-escuro" aria-hidden />
             Produtos mais vistos
           </h2>
@@ -141,7 +141,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
       )}
 
       <section aria-labelledby="titulo-dicas" className="flex flex-col gap-3">
-        <h2 id="titulo-dicas" className="flex items-center gap-2 text-lg font-bold">
+        <h2 id="titulo-dicas" className="flex items-center gap-2 text-lg font-semibold">
           <Lightbulb className="size-5 text-laranja-escuro" aria-hidden />
           Dicas para vender mais
         </h2>
@@ -165,7 +165,7 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
                 </Link>
                 {comIA && (
                   <Link href={linkMelhorarComIA(t.anuncio_id)} aria-label={`Melhorar ${formatarNome(t.titulo)} com IA`}
-                    className="-mt-2 flex min-h-10 items-center gap-1 px-3 pb-3 text-sm font-semibold text-laranja-escuro underline underline-offset-4">
+                    className="-mt-2 flex min-h-toque items-center gap-1 px-3 pb-3 text-sm font-semibold text-laranja-escuro underline underline-offset-4">
                     <Sparkles className="size-4" aria-hidden />
                     Melhorar com IA
                   </Link>

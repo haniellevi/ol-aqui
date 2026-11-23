@@ -3,9 +3,9 @@
 import { useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
+import { Seletor } from "@/components/conta/seletor";
 import { Botao, classesBotao } from "@/components/ui/botao";
 import { AvisoErro } from "./aviso-erro";
-import { classesCampo } from "@/components/ui/input";
 import { enviarFoto } from "@/lib/fotos";
 import { dadosLojaIa, type RespostaLojaIa } from "@/lib/loja-ia/tipos";
 
@@ -132,13 +132,10 @@ export function FormLojaIa({ andamento = "/quero-vender/loja/criar-com-ia", rasc
       <fieldset disabled={ocupado} className="min-w-0 rounded-card border border-borda bg-cartao p-3 sm:p-4">
       {etapa === 0 && <div className="flex flex-col gap-3">
         <Campo tamanho="toque" rotulo="Nome da loja" name="nome" value={entrada.nome} onChange={(e) => atualizar({ nome: e.target.value })} required />
-        <div className="flex flex-col gap-1">
-          <label className="text-rotulo font-semibold" htmlFor="coleta-cidade">Cidade</label>
-          <select id="coleta-cidade" className={`${classesCampo} h-toque!`} value={entrada.cidade} onChange={(e) => atualizar({ cidade: e.target.value })} required>
-            <option value="">Escolha a cidade</option>
-            {cidades.map((cidade) => <option key={`${cidade.nome}-${cidade.uf}`} value={cidade.nome}>{cidade.nome} - {cidade.uf}</option>)}
-          </select>
-        </div>
+        <Seletor tamanho="toque" rotulo="Cidade" id="coleta-cidade" name="cidade" value={entrada.cidade} onChange={(e) => atualizar({ cidade: e.target.value })} required>
+          <option value="">Escolha a cidade</option>
+          {cidades.map((cidade) => <option key={`${cidade.nome}-${cidade.uf}`} value={cidade.nome}>{cidade.nome} - {cidade.uf}</option>)}
+        </Seletor>
         {!cidades.length && <p className="text-sm text-perigo">Não há cidades disponíveis agora. Tente novamente mais tarde.</p>}
       </div>}
       {etapa === 1 && <div className="flex flex-col gap-3">

@@ -33,7 +33,7 @@ export const metadata: Metadata = { title: "Minha conta" };
 type Item = { href: string; nome: string; icone: React.ReactNode; detalhe?: string };
 
 const CLASSE_ITEM =
-  "flex min-h-12 w-full items-center gap-3 px-3 py-2 text-left text-base font-semibold hover:bg-fundo " +
+  "flex min-h-acao w-full items-center gap-3 px-3 py-2 text-left text-base font-semibold hover:bg-fundo " +
   "focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro";
 
 // T31 · Minha conta: lista simples com ícone + nome. Itens de vendedor só para quem vende.
@@ -44,7 +44,7 @@ export default async function PaginaMinhaConta() {
       <PaginaConta>
         <Voltar />
         <Vazio titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
-          <Botao href="/minha-conta" larguraTotal>Tentar de novo</Botao>
+          <Botao href="/minha-conta" tamanho="acao" larguraTotal>Tentar de novo</Botao>
         </Vazio>
       </PaginaConta>
     );
@@ -66,9 +66,9 @@ export default async function PaginaMinhaConta() {
           icone: <Megaphone />,
           detalhe: conta.rascunhos > 0 ? `${conta.rascunhos} ${conta.rascunhos === 1 ? "rascunho" : "rascunhos"}` : undefined,
         },
-        { href: "/minha-conta/plano", nome: "Meu plano", icone: <CreditCard /> },
-        ...(!ehLoja ? [{ href: "/minha-conta/verificacao", nome: "Verificação de vendedor", icone: <ShieldCheck /> }] : []),
       ] : []),
+    { href: "/minha-conta/plano", nome: "Meu plano", icone: <CreditCard /> },
+    ...(vitrine && !ehLoja ? [{ href: "/minha-conta/verificacao", nome: "Verificação de vendedor", icone: <ShieldCheck /> }] : []),
   ];
   const comprasEConversas: Item[] = [
     { href: LINK_ATENDIMENTO, nome: "Atendimento", icone: <MessagesSquare /> },
@@ -101,7 +101,7 @@ export default async function PaginaMinhaConta() {
                 // eslint-disable-next-line @next/next/no-img-element -- foto do Clerk, host externo
                 <img src={perfil.avatar_url} alt="" width={48} height={48} className="size-12 shrink-0 rounded-full bg-white/20 object-cover" />
               ) : (
-                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-laranja text-xl font-bold text-beringela" aria-hidden>
+                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-laranja text-xl font-semibold text-beringela" aria-hidden>
                   {iniciais}
                 </span>
               )}
@@ -116,13 +116,13 @@ export default async function PaginaMinhaConta() {
                 )}
               </div>
             </div>
-            <Link href="/minha-conta/dados" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-campo bg-white/10 px-3 py-2 font-semibold hover:bg-white/15 focus-visible:outline-3 focus-visible:outline-laranja">
+            <Link href="/minha-conta/dados" className="inline-flex min-h-toque items-center justify-center gap-2 rounded-campo bg-white/10 px-3 py-2 font-semibold hover:bg-white/15 focus-visible:outline-3 focus-visible:outline-laranja">
               <Pencil className="size-4" aria-hidden />Editar perfil, foto e WhatsApp
             </Link>
             {plano && (
               <Link
                 href="/minha-conta/plano"
-                className="flex min-h-10 items-center justify-between gap-2 rounded-campo bg-white/10 px-3 py-2 text-base font-semibold hover:bg-white/15 focus-visible:outline-3 focus-visible:outline-laranja"
+                className="flex min-h-toque items-center justify-between gap-2 rounded-campo bg-white/10 px-3 py-2 text-base font-semibold hover:bg-white/15 focus-visible:outline-3 focus-visible:outline-laranja"
               >
                 <span>{plano.linha}</span>
                 <ChevronRight className="size-5 shrink-0" aria-hidden />
@@ -133,7 +133,7 @@ export default async function PaginaMinhaConta() {
           {!vitrine && (
             <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
               <p className="text-base font-semibold">Tem algo para vender? Anuncie de graça para a região.</p>
-              <Botao href="/quero-vender" larguraTotal icone={<Tag />}>
+              <Botao href="/quero-vender" tamanho="acao" larguraTotal icone={<Tag />}>
                 Quero vender
               </Botao>
             </section>
@@ -160,7 +160,7 @@ export default async function PaginaMinhaConta() {
           {vitrine?.tipo === "pf" && (
             <p className="text-base text-texto-suave md:col-span-2">
               Tem uma loja?{" "}
-              <Link href="/quero-vender/loja" className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+              <Link href="/quero-vender/loja" className="inline-flex min-h-toque items-center font-semibold text-laranja-escuro underline underline-offset-4">
                 Abrir minha loja no Mercado da Região
               </Link>
             </p>

@@ -31,7 +31,7 @@ export default async function PaginaAnunciar({ searchParams }: { searchParams: P
     return (
       <main className="mx-auto w-full max-w-xl px-4 py-6">
         <Vazio titulo="Algo deu errado" texto="Não conseguimos abrir sua conta agora. Tente de novo.">
-          <Botao href="/anunciar" tamanho="toque" larguraTotal>Tentar de novo</Botao>
+          <Botao href="/anunciar" tamanho="acao" larguraTotal>Tentar de novo</Botao>
         </Vazio>
       </main>
     );
@@ -81,7 +81,7 @@ export default async function PaginaAnunciar({ searchParams }: { searchParams: P
         {rascunhos.length > 0 && (
           <p className="text-center text-base text-texto-suave">
             Seus rascunhos continuam guardados em{" "}
-            <Link href="/minha-conta/anuncios" className="font-semibold text-laranja-escuro underline underline-offset-4">
+            <Link href="/minha-conta/anuncios" className="inline-flex min-h-toque items-center font-semibold text-laranja-escuro underline underline-offset-4">
               Meus anúncios
             </Link>
             .
@@ -136,7 +136,7 @@ export default async function PaginaAnunciar({ searchParams }: { searchParams: P
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="line-clamp-2 text-sm font-semibold [overflow-wrap:anywhere] md:text-base">{formatarNome(r.titulo) || "Anúncio sem título"}</span>
-                <span className="flex items-center gap-1 text-xs text-texto-suave md:text-sm">
+                <span className="flex items-center gap-1 text-legenda text-texto-suave md:text-sm">
                   <FileClock className="size-4 shrink-0" aria-hidden />
                   Editado {tempoRelativo(r.atualizado_em)}
                 </span>

@@ -4,14 +4,15 @@ import { LINK_PLANOS, linkAvulso, linkMeuPlano } from "@/lib/rotas";
 import { auth } from "@clerk/nextjs/server";
 import { ExternalLink, Radar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { meuPerfilEVitrine } from "@/lib/dados/conta";
+import { lerAcessoPromocional, meuPerfilEVitrine } from "@/lib/dados/conta";
 import { ehUuid, preco } from "@/lib/formato";
 import { ambienteAsaas, asaasConfigurado } from "@/lib/asaas";
 import { precisaDocumento } from "@/lib/cobranca-destaque";
 import { meuPagamento, minhaAssinatura, opcoesAssinatura } from "@/lib/dados/cobranca";
 import { linkPagamentoSeguro } from "@/lib/link-pagamento";
-import type { Plano } from "@/lib/tipos";
+import type { AcessoPromocional, Plano } from "@/lib/tipos";
 import { Botao } from "@/components/ui/botao";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { Aviso } from "@/components/conta/aviso";
@@ -106,19 +107,35 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
   const numeroPagina = Number(busca.pagina);
   const pagina = Number.isInteger(numeroPagina) && numeroPagina > 0 && numeroPagina <= 1000 ? numeroPagina : 1;
   const conta = await meuPerfilEVitrine(true);
-  if (!conta?.vitrine) {
+  if (!conta) throw new Error("Não foi possível carregar sua conta.");
+  const db = await createClient();
+  const vitrine = conta.vitrine;
+  const [{ data: vouchers, error: erroVouchers }, promocional] = await Promise.all([
+    db.rpc("meus_vouchers"),
+    conta.promocional ?? lerAcessoPromocional(db),
+  ]);
+  if (erroVouchers) throw new Error("Não foi possível consultar seus cupons.");
+
+  if (!vitrine) {
+    const acesso = promocional
+      ? await db.from("planos").select(COLUNAS_PLANO).eq("codigo", "promocional").maybeSingle<Plano>()
+      : null;
+    if (acesso?.error) throw new Error("Não foi possível carregar o plano Promocional.");
+    const plano = acesso?.data;
+    const resumo = plano && promocional
+      ? resumoPlano({ ...conta, plano, promocional, limite: plano.limite_anuncios })
+      : null;
     return (
       <PaginaConta>
         <TopoConta titulo="Meu plano" />
-        <Vazio titulo="Você ainda não vende no Mercado da Região" texto="Escolha como quer vender e o plano aparece aqui.">
-          <Botao href="/quero-vender" larguraTotal>Quero vender</Botao>
+        {resumo && promocional && <PrazoPromocional acesso={promocional} titulo={`Plano ${resumo.nome}`} uso={resumo.uso} />}
+        <Voucher codigos={vouchers ?? []} />
+        <Vazio titulo="Você ainda não vende no Mercado da Região" texto={resumo ? "Escolha como quer vender para usar os recursos do seu plano." : "Escolha como quer vender e seu plano aparece aqui."}>
+          <Botao href="/quero-vender" tamanho="acao" larguraTotal>Quero vender</Botao>
         </Vazio>
       </PaginaConta>
     );
   }
-  const vitrine = conta.vitrine;
-  const { data: vouchers, error: erroVouchers } = await (await createClient()).rpc("meus_vouchers");
-  if (erroVouchers) throw new Error("Não foi possível consultar seus cupons.");
   const asaasLigado = asaasConfigurado();
   const [planos, historico, assinatura, opcoes, doc, retomado, ambiente, planoRpc, cortesiaAte] = await Promise.all([
     lerPlanos(),
@@ -135,16 +152,18 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
   if (!assinatura || assinatura.vitrine_id !== vitrine.id) throw new Error("Não foi possível confirmar sua assinatura.");
   const pagamentos = historico.lista;
   const resumo = resumoPlano(conta)!;
+  const planoPromocional = conta.plano?.codigo === "promocional";
   const nomes = new Map(planos.map((p) => [p.codigo, p.nome]));
   const limiteGratisLoja = planos.find((p) => p.codigo === "loja_gratis")?.limite_anuncios;
   const contratado = planoRpc?.e_teste ? "período grátis" : `plano ${planoRpc?.nome ?? vitrine.plano}`;
   const planoRecomendado = planos.find((p) => p.recomendado === true && p.ativo !== false && !p.e_teste);
   // Radar: o plano que vale agora dá o Radar; a cortesia é da própria loja e vale até a data (sem plano pago).
   // Sem verificação, o Radar não atende (só a cortesia libera): não promete o número de propostas.
+  const radarVerificado = vitrine.tipo === "loja" ? vitrine.selo_loja_verificada : conta.perfil.selo_negociador_certificado;
   const linhaRadarPlano = conta.plano && !conta.plano.e_teste
     ? conta.plano.acesso_radar
-      ? !conta.vitrine.selo_loja_verificada && !cortesiaAte
-        ? "Radar: depois que a loja for verificada"
+      ? !radarVerificado && !cortesiaAte
+        ? `Radar: depois da verificação ${vitrine.tipo === "loja" ? "da loja" : "de vendedor"}`
         : conta.plano.propostas_radar_mes === null ? "Radar de Negócios sem limite de propostas" : `Radar: até ${conta.plano.propostas_radar_mes} propostas por mês`
       : cortesiaAte ? null : "Sem acesso ao Radar de Negócios"
     : null;
@@ -177,7 +196,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
           </Aviso>
         )}
 
-        {planoRpc && !planoRpc.ativo && (
+        {!planoPromocional && planoRpc && !planoRpc.ativo && (
           <Aviso tipo="info">
             <span>
               O {planoRpc.nome} saiu de venda. Na renovação, você passa para o {planoRecomendado ? `plano recomendado, o ${planoRecomendado.nome}` : "plano recomendado"}.
@@ -190,7 +209,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
             <span>Sua conta de vendedor está suspensa. Fale com o suporte do Mercado da Região para saber o que aconteceu.</span>
           </Aviso>
         )}
-        {!suspensa && assinatura?.renovar_agora && assinatura.situacao !== "vencida" && assinatura.situacao !== "teste_vencido" && assinatura.vence_em && (
+        {!suspensa && !planoPromocional && assinatura?.renovar_agora && assinatura.situacao !== "vencida" && assinatura.situacao !== "teste_vencido" && assinatura.vence_em && (
           <Aviso tipo="atencao">
             <span>
               Seu {assinatura.e_teste ? "teste grátis" : `plano ${assinatura.plano_nome ?? ""}`} termina em {dataPorExtenso(assinatura.vence_em)}.
@@ -229,6 +248,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
           )}
         </div>
 
+        {planoPromocional && promocional && <p className="text-sm">Ativado em {dataPorExtenso(promocional.ativado_em)}</p>}
         {resumo.venceEm && (
           <p className="text-sm">
             {conta.plano?.e_teste ? "Teste grátis até " : "Vale até "}
@@ -255,7 +275,8 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
         )}
       </section>
 
-      {vitrine.tipo === "loja" && !suspensa && <Voucher codigos={vouchers ?? []} />}
+      {!planoPromocional && promocional && <PrazoPromocional acesso={promocional} titulo="Cupom promocional" bloqueado />}
+      <Voucher codigos={vouchers ?? []} />
 
       {/* Planos à venda, com período e como o pagamento entra (antes de pagar) */}
       {assinatura && !suspensa && (
@@ -274,7 +295,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
             assinatura={assinatura}
             pagamentoLigado={pagamentoLigado}
             precisaDocumento={doc}
-            planoInicial={planoPedido}
+            planoInicial={planoPedido === "promocional" ? null : planoPedido}
             pagamentoInicial={retomado?.tipo === "assinatura" ? retomado : null}
           />
           <p className="text-sm text-texto-suave">
@@ -339,5 +360,21 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
         {pagina > 1 && historico.total <= 12 && <Botao variante="secundario" tamanho="toque" href="/minha-conta/plano#pagamentos">Voltar aos pagamentos</Botao>}
       </section>
     </PaginaConta>
+  );
+}
+
+function PrazoPromocional({ acesso, titulo, uso, bloqueado }: { acesso: AcessoPromocional; titulo: string; uso?: string; bloqueado?: boolean }) {
+  return (
+    <Card role="region" aria-labelledby="prazo-promocional">
+      <CardHeader>
+        <h2 id="prazo-promocional" className="text-lg font-semibold text-beringela">{titulo}</h2>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2 text-base">
+        <p>Ativado em {dataPorExtenso(acesso.ativado_em)}</p>
+        <p>Vale até <strong>{dataPorExtenso(acesso.vence_em)}</strong></p>
+        {uso && <p>{uso}</p>}
+        {bloqueado && <p className="text-texto-suave">Os bloqueios da sua conta continuam. O prazo do cupom já está correndo.</p>}
+      </CardContent>
+    </Card>
   );
 }

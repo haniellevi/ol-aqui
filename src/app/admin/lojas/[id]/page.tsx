@@ -60,7 +60,7 @@ export default async function FichaLojaPage({ params }: { params: Promise<{ id: 
   const [lojas, fichaR, planos, regiao, gestaoR, locais, lixeiraR, superAdmin, conviteR, cortesiaR] = await Promise.all([
     supabase.rpc("admin_lojas", { p_busca: id, p_limite: 1 }),
     supabase.rpc("admin_ficha_loja", { p_loja: id }),
-    admin ? supabase.from("planos").select("codigo, nome").order("ordem") : Promise.resolve({ data: [], error: null }),
+    admin ? supabase.from("planos").select("codigo, nome").neq("codigo", "promocional").order("ordem") : Promise.resolve({ data: [], error: null }),
     supabase.from("microrregioes").select("id, nome"),
     admin ? supabase.rpc("admin_loja_detalhe", { p_id: id }) : Promise.resolve({data:null,error:null}),
     admin ? localidadesGestao(supabase) : Promise.resolve(null),

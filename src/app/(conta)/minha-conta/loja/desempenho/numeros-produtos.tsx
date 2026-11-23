@@ -32,7 +32,7 @@ export function NumerosProdutos({
 }) {
   return (
     <section aria-labelledby="titulo-numeros-produtos" className="flex flex-col gap-3">
-      <h2 id="titulo-numeros-produtos" className="flex items-center gap-2 text-lg font-bold">
+      <h2 id="titulo-numeros-produtos" className="flex items-center gap-2 text-lg font-semibold">
         Números por produto
       </h2>
       <p className="text-base text-texto-suave">Visualizações e cliques de cada produto. Suas próprias visitas não contam.</p>
@@ -72,7 +72,7 @@ export function NumerosProdutos({
                 <div><dt className="text-texto-suave">Novos favoritos</dt><dd className="text-lg font-bold tabular-nums">{inteiro(p.favoritos)}</dd></div>
               </dl>
               <details className="group border-t border-borda">
-                <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro [&::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-acao cursor-pointer list-none items-center gap-2 font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro [&::-webkit-details-marker]:hidden">
                   <ChevronDown className="size-4 shrink-0 group-open:rotate-180" aria-hidden /> Mais detalhes
                 </summary>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3 pb-1 text-sm sm:grid-cols-4">

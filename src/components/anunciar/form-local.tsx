@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
 import { Campo } from "@/components/ui/campo";
+import { Seletor } from "@/components/conta/seletor";
 import { salvarLocal } from "@/app/(conta)/anunciar/actions";
 import { AvisoErro } from "./aviso-erro";
 import { useEnvioAnuncio } from "./enviar";
 import { BarraContinuar, BotaoPasso } from "./barra-continuar";
-import { classesCampo } from "@/components/ui/input";
 
 // Passo 5 · Local: cidade (lista da região) e bairro, já preenchidos do perfil.
 // Nunca pede endereço exato: só o bairro aparece no anúncio.
@@ -45,35 +44,22 @@ export function FormLocal({
       <AvisoErro mensagem={estado?.erro?.mensagem} />
 
       {cidades.length ? (
-        <div className="flex flex-col gap-2">
-          <label htmlFor="campo-cidade" className="text-base font-semibold">
-            Cidade
-          </label>
-          <div className="relative">
-            <select
-              id="campo-cidade"
-              name="cidade"
-              value={cidade}
-              onChange={(e) => setCidade(e.target.value)}
-              aria-invalid={erroCidade ? true : undefined}
-              aria-describedby={erroCidade ? "campo-cidade-erro" : undefined}
-              className={`${classesCampo} h-toque! appearance-none pr-10`}
-            >
-              <option value="">Escolha a cidade</option>
-              {cidades.map((c) => (
-                <option key={c.nome} value={c.nome}>
-                  {c.nome} – {c.uf}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
-          </div>
-          {erroCidade && (
-            <p id="campo-cidade-erro" role="alert" className="text-sm font-semibold text-perigo">
-              {erroCidade}
-            </p>
-          )}
-        </div>
+        <Seletor
+          tamanho="toque"
+          rotulo="Cidade"
+          id="campo-cidade"
+          name="cidade"
+          value={cidade}
+          onChange={(e) => setCidade(e.target.value)}
+          erro={erroCidade}
+        >
+          <option value="">Escolha a cidade</option>
+          {cidades.map((c) => (
+            <option key={c.nome} value={c.nome}>
+              {c.nome} – {c.uf}
+            </option>
+          ))}
+        </Seletor>
       ) : (
         <>
           <input type="hidden" name="cidade" value={cidade} />

@@ -46,7 +46,7 @@ export default async function PaginaCategoriasLoja() {
       />
       {loja && iaAtiva && (
         <section aria-labelledby="titulo-nicho" className="flex flex-col gap-3">
-          <h2 id="titulo-nicho" className="flex items-center gap-2 text-lg font-bold">
+          <h2 id="titulo-nicho" className="flex items-center gap-2 text-lg font-semibold">
             <Store className="size-5 text-laranja-escuro" aria-hidden />
             Nicho da loja
           </h2>
@@ -56,7 +56,7 @@ export default async function PaginaCategoriasLoja() {
         </section>
       )}
       <section aria-labelledby="titulo-sugestoes" className="flex flex-col gap-3">
-        <h2 id="titulo-sugestoes" className="flex items-center gap-2 text-lg font-bold">
+        <h2 id="titulo-sugestoes" className="flex items-center gap-2 text-lg font-semibold">
           <Sparkles className="size-5 text-laranja-escuro" aria-hidden />
           Categorias dos anúncios
         </h2>

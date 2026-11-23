@@ -25,13 +25,13 @@ export default async function PaginaFavoritos({ searchParams }: { searchParams: 
   return <PaginaConta larga>
     <TopoConta titulo="Favoritos" texto="Guarde o que chamou sua atenção e encontre de novo quando quiser." />
     {!dados ? <Vazio titulo="Não conseguimos carregar seus favoritos" texto="Sua lista continua guardada. Tente carregar novamente." icone={<Heart />}>
-      <Botao href={`${caminho}?pagina=${pagina}`} larguraTotal>Tentar novamente</Botao>
+      <Botao href={`${caminho}?pagina=${pagina}`} tamanho="acao" larguraTotal>Tentar novamente</Botao>
     </Vazio> : dados.total === 0 ?
       <Vazio titulo="Você ainda não tem favoritos" texto="Abra um anúncio e toque no coração para salvar. Seus favoritos ficam disponíveis na sua conta." icone={<Heart />} className="mx-auto w-full max-w-xl">
-        <Botao href="/busca" larguraTotal icone={<Search />}>Encontrar anúncios</Botao>
+        <Botao href="/busca" tamanho="acao" larguraTotal icone={<Search />}>Encontrar anúncios</Botao>
       </Vazio> : <>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="text-lg font-bold">{dados.total} {dados.total === 1 ? "anúncio salvo" : "anúncios salvos"}</h2><p className="text-sm text-texto-suave">Mais recentes primeiro. Abra um card para ver os detalhes.</p></div>
+          <div><h2 className="text-lg font-semibold">{dados.total} {dados.total === 1 ? "anúncio salvo" : "anúncios salvos"}</h2><p className="text-sm text-texto-suave">Mais recentes primeiro. Abra um card para ver os detalhes.</p></div>
           <Botao href="/busca" variante="secundario" icone={<Search />}>Buscar mais anúncios</Botao>
         </div>
         <ListaFavoritos itens={dados.itens} radar={radar} />

@@ -29,7 +29,7 @@ type Item = {
 };
 
 const BOTAO_FOTO =
-  "flex min-h-12 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-card border border-beringela bg-cartao px-2 py-2 text-center sm:gap-2 sm:px-3 " +
+  "flex min-h-acao min-w-0 flex-1 items-center justify-center gap-1.5 rounded-card border border-beringela bg-cartao px-2 py-2 text-center sm:gap-2 sm:px-3 " +
   "text-sm font-semibold text-beringela md:text-base hover:bg-fundo active:bg-borda disabled:cursor-not-allowed disabled:opacity-60 " +
   "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro";
 

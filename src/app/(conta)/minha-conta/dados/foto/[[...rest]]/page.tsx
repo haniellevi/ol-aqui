@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ConcluirDadosClerk } from "@/components/conta/concluir-dados-clerk";
 import { UserProfile } from "@clerk/nextjs";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
+import { CarregandoLista } from "@/components/ui/carregando";
 
 export const metadata: Metadata = { title: "Dados de acesso" };
 
@@ -12,9 +13,9 @@ export default function PaginaFotoCelular() {
       <TopoConta titulo="Dados de acesso" voltar="/minha-conta/dados" textoVoltar="Editar perfil"
         texto="Gerencie sua foto e as formas de entrar na conta. Para confirmar o WhatsApp de contato, volte a Editar perfil." />
       <div className="flex justify-center [&_.cl-cardBox]:w-full [&_.cl-cardBox]:max-w-none [&_.cl-rootBox]:w-full">
-        <UserProfile routing="path" path="/minha-conta/dados/foto" fallback={<p role="status" className="p-5">Carregando os dados de acesso...</p>}
+        <UserProfile routing="path" path="/minha-conta/dados/foto" fallback={<CarregandoLista rotulo="Carregando os dados de acesso" linhas={3} />}
           // Sem o "Excluir conta" do Clerk: ele apagaria na hora, pulando a lixeira de 30 dias (fica o de Privacidade).
-          appearance={{ elements: { cardBox: "shadow-none border border-borda", formButtonPrimary: "min-h-10", formFieldInput: "min-h-10 text-base", profileSection__danger: "hidden" } }} />
+          appearance={{ elements: { cardBox: "shadow-none border border-borda", formButtonPrimary: "min-h-toque", formFieldInput: "min-h-toque text-base", profileSection__danger: "hidden" } }} />
       </div>
       <ConcluirDadosClerk />
     </PaginaConta>
