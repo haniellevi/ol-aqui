@@ -24,12 +24,12 @@ export default async function LayoutConta({ children }: { children: React.ReactN
   const loja = await atalhoLoja();
   return (
     <>
-      <CabecalhoPublico />
+      <CabecalhoPublico destacarAtalho={false} />
       <div id="conteudo" className="pb-reserva-nav md:pb-0">
         <AvisoTermos />
         {children}
       </div>
-      <BarraInferior loja={loja} />
+      <BarraInferior loja={loja} destacarAtalho={false} />
       <BalaoAki />
     </>
   );

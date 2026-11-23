@@ -154,7 +154,7 @@ export default async function PaginaAvulso({ searchParams }: { searchParams: Par
 
       <p className="text-center text-base text-texto-suave">
         Prefere mais anúncios todo mês?{" "}
-        <Link href={LINK_PLANOS} className="inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_PLANOS} className="inline-flex min-h-toque items-center font-semibold text-laranja-escuro underline underline-offset-4">
           Ver planos
         </Link>
       </p>

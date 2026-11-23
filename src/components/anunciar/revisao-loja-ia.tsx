@@ -5,8 +5,8 @@ import { useState } from "react";
 import type { EstadoLoja } from "@/app/(conta)/quero-vender/actions";
 import { dadosLojaIa, type CamposRascunho, type FonteLoja, type RascunhoLoja, type RespostaLojaIa } from "@/lib/loja-ia/tipos";
 import { Campo } from "@/components/ui/campo";
+import { Seletor } from "@/components/conta/seletor";
 import { Botao } from "@/components/ui/botao";
-import { classesCampo } from "@/components/ui/input";
 import { AvisoErro } from "./aviso-erro";
 
 type NomeCampo = keyof CamposRascunho;
@@ -134,19 +134,18 @@ export function RevisaoLojaIa({ assistente, rascunho: inicial, cidades, whatsapp
     {revogarWhatsapp && (rascunho.entrada.consultarWhatsapp || rascunho.entrada.avisarWhatsapp) && <Botao type="button" tamanho="toque" variante="secundario" disabled={ocupado} onClick={() => void executar("revogarWhatsapp")}>Retirar autorização do WhatsApp</Botao>}
     <fieldset disabled={ocupado} className="flex min-w-0 flex-col gap-3 rounded-card border border-borda bg-cartao p-3 sm:p-4">
       {campos.filter(c => c !== "logo" && c !== "capa").map(campo => <div key={campo} className="flex flex-col gap-2">
-        {campo === "cidade" && cidades.length ? <div className="flex flex-col gap-1"><label className="text-sm font-semibold" htmlFor="revisao-cidade">Cidade da loja</label><select id="revisao-cidade" name="cidade" className={`${classesCampo} h-toque!`} value={valores.cidade} onChange={e => atualizar("cidade", e.target.value)} aria-invalid={!!erroCampo("cidade")}><option value="">Escolha a cidade</option>{cidades.map(c => <option key={`${c.nome}-${c.uf}`} value={c.nome}>{c.nome} - {c.uf}</option>)}</select>{erroCampo("cidade") && <p role="alert" className="text-sm text-perigo">{erroCampo("cidade")}</p>}</div> : campo === "sobre" ? <Campo tamanho="toque" multilinha rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} maxLength={1500} rows={4} erro={erroCampo(campo)} opcional /> : <Campo tamanho="toque" rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} erro={erroCampo(campo)} opcional={!['nome','cidade','slug','whatsapp'].includes(campo)} />}
+        {campo === "cidade" && cidades.length ? <Seletor tamanho="toque" rotulo="Cidade da loja" id="revisao-cidade" name="cidade" value={valores.cidade} onChange={e => atualizar("cidade", e.target.value)} erro={erroCampo("cidade")}><option value="">Escolha a cidade</option>{cidades.map(c => <option key={`${c.nome}-${c.uf}`} value={c.nome}>{c.nome} - {c.uf}</option>)}</Seletor> : campo === "sobre" ? <Campo tamanho="toque" multilinha rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} maxLength={1500} rows={4} erro={erroCampo(campo)} opcional /> : <Campo tamanho="toque" rotulo={rotulos[campo]} name={nomesForm[campo]} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)} erro={erroCampo(campo)} opcional={!['nome','cidade','slug','whatsapp'].includes(campo)} />}
         {detalhes(campo)}
       </div>)}
       {(["logo", "capa"] as const).map(campo => <div key={campo} className="flex flex-col gap-2">
-        <label htmlFor={`revisao-${campo}`} className="text-sm font-semibold">{rotulos[campo]}</label>
-        <select id={`revisao-${campo}`} className={`${classesCampo} h-toque!`} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)}>
+        <Seletor tamanho="toque" rotulo={rotulos[campo]} id={`revisao-${campo}`} name={campo} value={valores[campo]} onChange={e => atualizar(campo, e.target.value)}>
           <option value="">Nenhuma imagem</option>
           {Object.keys(imagensDisponiveis).map((id, i) => {
             const logo = rascunho.campos.logo;
             const doWhatsapp = (logo.origem?.fonte === "whatsapp" && logo.valor === id) || (logo.sugestao?.origem.fonte === "whatsapp" && logo.sugestao.valor === id);
             return <option key={id} value={id}>{doWhatsapp ? "Foto do WhatsApp Business" : `Imagem ${i + 1}`}</option>;
           })}
-        </select>
+        </Seletor>
         {valores[campo] && imagensDisponiveis[valores[campo]] && <a href={imagensDisponiveis[valores[campo]]} target="_blank" rel="noreferrer" className="w-fit rounded-lg border border-borda p-2 focus-visible:outline-2 focus-visible:outline-offset-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={imagensDisponiveis[valores[campo]]} alt={`Prévia ${campo === "logo" ? "do logo" : "da capa"} da loja`} className="h-32 max-w-full object-contain" />

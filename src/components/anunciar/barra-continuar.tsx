@@ -7,7 +7,7 @@ export function BarraContinuar({ children, aviso }: { children: ReactNode; aviso
     <div className="fixed inset-x-0 bottom-0 z-20 border-t border-borda bg-cartao px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:px-6">
       <div className="mx-auto flex w-full max-w-[33rem] flex-col gap-1 sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-3">
         {children}
-        {aviso && <p className="text-xs text-texto-suave">{aviso}</p>}
+        {aviso && <p className="text-legenda text-texto-suave">{aviso}</p>}
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ export function BotaoNovoRascunho({
   return (
     <form action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col has-[[role=alert]]:gap-2">
       <AvisoErro mensagem={estado?.erro?.mensagem} />
-      <Botao type="submit" variante={variante} tamanho="toque" larguraTotal carregando={enviando} textoCarregando="Abrindo..." icone={<Plus />}>
+      <Botao type="submit" variante={variante} tamanho={variante === "primario" ? "acao" : "toque"} larguraTotal carregando={enviando} textoCarregando="Abrindo..." icone={<Plus />}>
         {texto}
       </Botao>
     </form>

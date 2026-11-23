@@ -22,7 +22,7 @@ const ITENS: Item[] = [
 
 // A página reserva o espaço embaixo com pb-reserva-nav md:pb-0 (ver os layouts).
 
-export function BarraInferior({ loja = null }: { loja?: AtalhoLoja | null }) {
+export function BarraInferior({ loja = null, destacarAtalho = true }: { loja?: AtalhoLoja | null; destacarAtalho?: boolean }) {
   const caminho = usePathname() ?? "/";
   const itens = ITENS.map((item) => {
     if (loja && item.href === "/anunciar") {
@@ -41,7 +41,8 @@ export function BarraInferior({ loja = null }: { loja?: AtalhoLoja | null }) {
       <ul className="mx-auto grid h-barra-nav max-w-lg grid-cols-5">
         {itens.map(({ href, rotulo, Icone, ativo }, index) => {
           const atual = ativo(caminho);
-          const principal = index === 2;
+          const atalho = index === 2;
+          const principal = atalho && destacarAtalho;
           const classe = `flex w-full flex-col items-center justify-center gap-0.5 text-legenda font-semibold leading-4 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro ${atual || principal ? "text-beringela" : "text-texto-suave"}`;
           const conteudo = <>
             {principal ? (
@@ -53,7 +54,7 @@ export function BarraInferior({ loja = null }: { loja?: AtalhoLoja | null }) {
           </>;
           return (
             <li key={href} className="flex">
-              {principal && loja?.id ? (
+              {atalho && loja?.id ? (
                 <form action={escolherLoja} className="flex w-full">
                   <input type="hidden" name="loja" value={loja.id} />
                   <input type="hidden" name="voltar" value={loja.href} />

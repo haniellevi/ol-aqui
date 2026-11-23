@@ -36,7 +36,7 @@ export function PedirMelhoria({ anuncioId, restam, limite }: { anuncioId: string
 function AntesDepois({ rotulo, antes, depois }: { rotulo: string; antes: string | null; depois: string }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-base font-bold">{rotulo}</h3>
+      <h3 className="text-base font-semibold">{rotulo}</h3>
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="flex flex-col gap-1 rounded-campo bg-fundo p-3">
           <span className="text-sm font-semibold text-texto-suave">Antes</span>
@@ -62,7 +62,7 @@ export function SugestaoMelhoria({ m, anuncioId, fotos }: { m: Melhoria; anuncio
     <div className="flex flex-col gap-4" aria-busy={pendente || undefined}>
       {temTexto && (
         <section aria-labelledby="titulo-texto" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-          <h2 id="titulo-texto" className="flex items-center gap-2 text-lg font-bold">
+          <h2 id="titulo-texto" className="flex items-center gap-2 text-lg font-semibold">
             <Sparkles className="size-5 text-laranja-escuro" aria-hidden />
             Texto sugerido
           </h2>
@@ -81,7 +81,7 @@ export function SugestaoMelhoria({ m, anuncioId, fotos }: { m: Melhoria; anuncio
       )}
       {m.dicas_foto.length > 0 && (
         <section aria-labelledby="titulo-fotos" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-          <h2 id="titulo-fotos" className="text-lg font-bold">Dicas para as fotos</h2>
+          <h2 id="titulo-fotos" className="text-lg font-semibold">Dicas para as fotos</h2>
           <ul className="flex flex-col gap-3">
             {m.dicas_foto.map((d) => (
               <li key={d.indice} className="flex gap-3">

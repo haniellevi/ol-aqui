@@ -50,7 +50,7 @@ export default async function PaginaPrivacidade() {
       <TopoConta titulo="Privacidade" texto="Seus dados são seus. Aqui você pode baixar os dados da sua conta ou solicitar a exclusão." />
 
       <section aria-labelledby="baixar" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h2 id="baixar" className="text-lg font-bold">
+        <h2 id="baixar" className="text-lg font-semibold">
           Baixar meus dados
         </h2>
         <p className="text-base text-texto-suave">
@@ -64,7 +64,7 @@ export default async function PaginaPrivacidade() {
       </section>
 
       <section aria-labelledby="aki" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h2 id="aki" className="text-lg font-bold">
+        <h2 id="aki" className="text-lg font-semibold">
           Conversas com o Merc
         </h2>
         <p className="text-base text-texto-suave">
@@ -79,7 +79,7 @@ export default async function PaginaPrivacidade() {
 
       {aceites.length > 0 && (
         <section aria-labelledby="textos" className="flex flex-col gap-2 rounded-card bg-cartao p-4 shadow-1">
-          <h2 id="textos" className="text-lg font-bold">
+          <h2 id="textos" className="text-lg font-semibold">
             Termos que você aceitou
           </h2>
           <ul className="flex flex-col">
@@ -87,7 +87,7 @@ export default async function PaginaPrivacidade() {
               <li key={tipo}>
                 <Link
                   href={linkDocumentoLegal(tipo, ultimo?.versao)}
-                  className="flex min-h-10 flex-col justify-center text-base font-semibold text-laranja-escuro underline-offset-4 hover:underline"
+                  className="flex min-h-toque flex-col justify-center text-base font-semibold text-laranja-escuro underline-offset-4 hover:underline"
                 >
                   {NOME_DOCUMENTO[tipo]}
                   <span className="text-legenda font-normal text-texto-suave">
@@ -101,7 +101,7 @@ export default async function PaginaPrivacidade() {
       )}
 
       <section aria-labelledby="excluir" className="flex flex-col gap-3 rounded-card bg-cartao p-4 shadow-1">
-        <h2 id="excluir" className="text-lg font-bold">
+        <h2 id="excluir" className="text-lg font-semibold">
           Excluir minha conta
         </h2>
         <p className="text-base text-texto-suave">Tira sua conta e seus anúncios do ar. Você tem 30 dias para desistir.</p>

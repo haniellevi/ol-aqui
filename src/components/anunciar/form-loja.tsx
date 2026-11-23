@@ -3,17 +3,17 @@
 import { linkAssistente } from "@/lib/assistente";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { CheckCircle2, ChevronDown, Loader2, MessageCircle, Plus, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, MessageCircle, Plus, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { CadastroLojaAki } from "@/components/aki/cadastro-loja-aki";
 import { Campo } from "@/components/ui/campo";
+import { Seletor } from "@/components/conta/seletor";
 import { avisoComoVaiAparecer } from "@/lib/formatar-nome";
 import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
 import { criarLoja, verificarSlug, type EstadoLoja } from "@/app/(conta)/quero-vender/actions";
 import { linkLoja, slugDoTitulo, urlAbsoluta } from "@/lib/formato";
 import { AvisoErro } from "./aviso-erro";
 import { aoEnviar } from "./enviar";
-import { classesCampo } from "@/components/ui/input";
 
 // T15 · Dados da loja: nome, link (com conferência na hora se está livre), WhatsApp e cidade.
 // Depois mostra "Sua vitrine: mercadodaregiao.com.br/loja/..." com Compartilhar e "Criar primeiro anúncio".
@@ -215,35 +215,22 @@ export function FormLoja({
         />
 
         {cidades.length ? (
-          <div className="flex flex-col gap-1">
-            <label htmlFor="campo-cidade" className="text-rotulo font-semibold">
-              Cidade da loja
-            </label>
-            <div className="relative">
-              <select
-                id="campo-cidade"
-                name="cidade"
-                value={cidade}
-                onChange={(e) => setCidade(e.target.value)}
-                aria-invalid={erroDe("cidade") ? true : undefined}
-                aria-describedby={erroDe("cidade") ? "campo-cidade-erro" : undefined}
-                className={`${classesCampo} h-toque! appearance-none pr-10`}
-              >
-                <option value="">Escolha a cidade</option>
-                {cidades.map((c) => (
-                  <option key={c.nome} value={c.nome}>
-                    {c.nome} – {c.uf}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-texto-suave" aria-hidden />
-            </div>
-            {erroDe("cidade") && (
-              <p id="campo-cidade-erro" role="alert" className="text-sm font-semibold text-perigo">
-                {erroDe("cidade")}
-              </p>
-            )}
-          </div>
+          <Seletor
+            tamanho="toque"
+            rotulo="Cidade da loja"
+            id="campo-cidade"
+            name="cidade"
+            value={cidade}
+            onChange={(e) => setCidade(e.target.value)}
+            erro={erroDe("cidade")}
+          >
+            <option value="">Escolha a cidade</option>
+            {cidades.map((c) => (
+              <option key={c.nome} value={c.nome}>
+                {c.nome} – {c.uf}
+              </option>
+            ))}
+          </Seletor>
         ) : (
           <Campo tamanho="toque" rotulo="Cidade da loja" name="cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} maxLength={80} erro={erroDe("cidade")} />
         )}

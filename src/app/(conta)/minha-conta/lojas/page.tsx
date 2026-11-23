@@ -40,14 +40,14 @@ export default async function MinhasLojas() {
                     <form action={escolherLoja}>
                       <input type="hidden" name="loja" value={loja.id} />
                       <input type="hidden" name="voltar" value="/minha-conta/loja" />
-                      <Botao type="submit">Editar minha loja</Botao>
+                      <Botao type="submit" variante="secundario">Editar minha loja</Botao>
                     </form>
                   )}
                   {!loja.dono && (
                     <form action={escolherLoja}>
                       <input type="hidden" name="loja" value={loja.id} />
                       <input type="hidden" name="voltar" value="/minha-conta/anuncios" />
-                      <Botao type="submit">Cuidar dos anúncios</Botao>
+                      <Botao type="submit" variante="secundario">Cuidar dos anúncios</Botao>
                     </form>
                   )}
                   {/* P5b-2b: o ajudante cuida da Minha loja da loja escolhida. */}

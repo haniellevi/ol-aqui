@@ -60,11 +60,11 @@ export function EscolherNicho({ sugestao, nichos, vitrineId }: { sugestao: Suges
             Pelos seus produtos, sua loja parece ser de <strong>{sugestao.sugerido_nome}</strong>.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Botao tamanho="pequeno" icone={<Check />} carregando={pendente} textoCarregando="Salvando..."
+            <Botao icone={<Check />} carregando={pendente} textoCarregando="Salvando..."
               onClick={() => executar(() => definirNicho(sugestao.sugerido_id, vitrineId), `Nicho salvo: ${sugestao.sugerido_nome}.`)}>
               Sim, é isso
             </Botao>
-            <Botao tamanho="pequeno" variante="texto" disabled={pendente}
+            <Botao variante="texto" disabled={pendente}
               onClick={() => executar(() => definirNicho(null, vitrineId), "Sugestão dispensada. Escolha o nicho na lista quando quiser.")}>
               Não é
             </Botao>
@@ -103,7 +103,7 @@ export function RevisarCategorias({ itens }: { itens: SugestaoCategoria[] }) {
             <Sparkles className="size-5 shrink-0 text-laranja-escuro" aria-hidden />
             {itens.length} sugestões da IA
           </p>
-          <Botao icone={<Check />} disabled={pendente}
+          <Botao variante="secundario" icone={<Check />} disabled={pendente}
             onClick={() => executar(async () => {
               const r = await decidirTodasCategorias(true);
               return r.ok ? { ok: true } : r;
@@ -133,11 +133,11 @@ export function RevisarCategorias({ itens }: { itens: SugestaoCategoria[] }) {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Botao tamanho="pequeno" icone={<Check />} disabled={pendente} aria-label={`Aceitar ${s.sugerida} para ${formatarNome(s.titulo)}`}
+              <Botao tamanho="pequeno" variante="secundario" icone={<Check />} disabled={pendente} aria-label={`Aceitar ${s.sugerida} para ${formatarNome(s.titulo)}`}
                 onClick={() => executar(() => decidirCategoria(s.anuncio_id, true), `${formatarNome(s.titulo)} agora está em ${s.sugerida}.`)}>
                 Aceitar
               </Botao>
-              <Botao tamanho="pequeno" variante="secundario" disabled={pendente} aria-label={`Manter a categoria atual de ${formatarNome(s.titulo)}`}
+              <Botao tamanho="pequeno" variante="texto" disabled={pendente} aria-label={`Manter a categoria atual de ${formatarNome(s.titulo)}`}
                 onClick={() => executar(() => decidirCategoria(s.anuncio_id, false), `${formatarNome(s.titulo)} continua em ${s.categoria_atual ?? "sua categoria"}.`)}>
                 Manter atual
               </Botao>
