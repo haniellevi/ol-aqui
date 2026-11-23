@@ -55,6 +55,8 @@ try:
     checked(sql((root/'supabase/testes/891_convite_envio.sql').read_text()))
     checked(sql((root/'supabase/testes/895_cupons_promocionais.sql').read_text()))
     checked(sql((root/'supabase/testes/890_voucher_lancamento.sql').read_text()))
+    checked(sql((root/'supabase/testes/898_radar_ciclo_whatsapp.sql').read_text()))
+    print('PASS: ciclo WhatsApp do Radar (proposta_nova, proposta_escolhida, fechar_pedido_radar, janela, SAIR/VOLTAR e permissões)', flush=True)
     checked(sql("""delete from public.pagamentos where asaas_cobranca_id='pay_reserva890';
       delete from public.voucher_atribuicoes where dono_id='user_reserva890';
       delete from public.voucher_campanhas where codigo='RESERVA890';
