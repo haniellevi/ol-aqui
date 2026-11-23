@@ -178,6 +178,19 @@ select pg_temp.confere898((select texto = 'Recebemos uma proposta de Loja 898 Do
   from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2_mascara' || ':' || :'prop2_mascara'),
   'variável {pedido} com texto de SAIR não suprime rodapé quando modelo estático não tem SAIR');
 
+-- Marcador entre verbo e SAIR ("Digite {loja} SAIR.") não cria falso positivo atravessando marcador
+update modelos_mensagem set texto = 'Chegou proposta para {pedido}. Digite {loja} SAIR.' where chave = 'proposta_nova' and canal = 'whatsapp';
+set local role authenticated;
+set local request.jwt.claim.sub = 'user_898comp2';
+select criar_pedido_radar_site('89800000-0000-4000-a000-000000000014', 'Armário 898', 'Corrente', 'propostas_prazo', 72, null, :'sofas'::uuid) ->> 'id' as ped2_barreira \gset
+set local request.jwt.claim.sub = 'user_898loja2';
+select proposta_id as prop2_barreira from propor_radar(:'ped2_barreira'::uuid, '89800000-0000-4000-c000-000000000002'::uuid, null, 46000, 'Armário') \gset
+reset role;
+select pg_temp.confere898((select char_length(texto) <= 1000
+  and texto = 'Chegou proposta para Armário 898. Digite Loja 898 Dois SAIR. Responda SAIR para parar estes avisos.'
+  from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2_barreira' || ':' || :'prop2_barreira'),
+  'barreira entre marcadores impede falso positivo em "Digite {loja} SAIR." e anexa rodapé padrão');
+
 -- Modelo de até 1.000 chars com {pedido} grande (estouraria 1.000 após variáveis) preserva espaço para SAIR completo no fim
 update modelos_mensagem
    set texto = repeat('A', 935) || ' {loja} "{pedido}". Responda SAIR para parar estes avisos.'
