@@ -5,10 +5,10 @@ import type { ContatoEquipe } from "@/lib/tipos-paginas";
 export function ContatoSuporte({ contato }: { contato: ContatoEquipe }) {
   const temContato = !!(contato.whatsapp || contato.email);
   return (
-    <section aria-labelledby="titulo-contato" className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
+    <section aria-labelledby="titulo-contato" className="flex min-w-0 flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
       <h2 id="titulo-contato" className="scroll-mt-20 text-lg font-semibold">Fale com a equipe</h2>
       {(contato.texto || !temContato) && (
-        <p className="text-base">{temContato ? contato.texto : "O atendimento da equipe está indisponível nesta página."}</p>
+        <p className="text-base [overflow-wrap:anywhere] break-words">{temContato ? contato.texto : "O atendimento da equipe está indisponível nesta página."}</p>
       )}
       {temContato && <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {contato.whatsapp && <Botao
@@ -20,7 +20,7 @@ export function ContatoSuporte({ contato }: { contato: ContatoEquipe }) {
           Mandar e-mail
         </Botao>}
       </div>}
-      <p className="text-sm text-texto-suave">A equipe do Mercado da Região nunca pede o código que chega no seu celular nem manda link de pagamento por mensagem.</p>
+      <p className="text-sm [overflow-wrap:anywhere] break-words text-texto-suave">A equipe do Mercado da Região nunca pede o código que chega no seu celular nem manda link de pagamento por mensagem.</p>
     </section>
   );
 }

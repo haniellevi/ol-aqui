@@ -426,11 +426,11 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           <button
             type="button"
             onClick={() => abrir(dica.pedido)}
-            className="min-h-10 flex-1 py-2 pr-2 pl-4 text-left text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
+            className="min-h-toque flex-1 py-2 pr-2 pl-4 text-left text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro"
           >
             {dica.texto}
           </button>
-          <button type="button" onClick={fecharDica} aria-label="Fechar o convite do Merc" className="grid size-10 shrink-0 place-items-center text-texto-suave">
+          <button type="button" onClick={fecharDica} aria-label="Fechar o convite do Merc" className="grid size-toque shrink-0 place-items-center text-texto-suave">
             <X className="size-5" aria-hidden />
           </button>
         </div>
@@ -441,7 +441,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           type="button"
           onClick={() => abrir()}
           data-aki-atalho
-          className={`fixed right-4 z-30 flex h-10 items-center gap-2 rounded-full bg-cartao pl-2 pr-4 text-sm font-semibold text-beringela shadow-2 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:right-6 ${posicao} ${semAtalhoMovel}`}
+          className={`fixed right-4 z-30 flex min-h-toque items-center gap-2 rounded-full bg-cartao pl-2 pr-4 text-sm font-semibold text-beringela shadow-2 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:right-6 ${posicao} ${semAtalhoMovel}`}
           aria-haspopup="dialog"
         >
           <MascoteAki tamanho={30} />
@@ -466,7 +466,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           >
             <header className={`flex items-center gap-2 border-b border-borda py-1 pr-1 ${pagina ? "pl-1" : "pl-4"}`}>
               {pagina && (
-                <Link href={voltarDaAjuda ?? "/"} aria-label={voltarDaAjuda ? "Voltar à confirmação" : "Voltar ao início"} className="grid size-10 shrink-0 place-items-center text-beringela">
+                <Link href={voltarDaAjuda ?? "/"} aria-label={voltarDaAjuda ? "Voltar à confirmação" : "Voltar ao início"} className="grid size-toque shrink-0 place-items-center text-beringela">
                   <ArrowLeft className="size-6" aria-hidden />
                 </Link>
               )}
@@ -489,21 +489,21 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   onClick={() => setConfirmarApagar(true)}
                   disabled={enviando}
                   title={enviando ? "Espere o Merc terminar de responder" : undefined}
-                  className="flex h-10 items-center gap-1 px-3 text-legenda font-semibold text-perigo disabled:opacity-50"
+                  className="flex min-h-toque items-center gap-1 px-3 text-legenda font-semibold text-perigo disabled:opacity-50"
                 >
                   <Trash2 className="size-4" aria-hidden />
                   Apagar conversa
                 </button>
               )}
               {!pagina && (
-                <button type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-10 place-items-center text-beringela">
+                <button type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-toque place-items-center text-beringela">
                   <X className="size-6" aria-hidden />
                 </button>
               )}
             </header>
 
             {estado.avisoIa && (
-              <p className="flex items-start gap-2 bg-selecao px-4 py-2 text-legenda leading-[18px] text-beringela">
+              <p className="flex items-start gap-2 bg-selecao px-4 py-2 text-legenda leading-[18px] [overflow-wrap:anywhere] text-beringela">
                 <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
                 {estado.avisoIa}
               </p>
@@ -542,7 +542,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                 <div className="space-y-3">
                   <div className="flex items-start gap-2">
                     <MascoteAki tamanho={28} className="mt-1 shrink-0" />
-                    <p className="rounded-card rounded-tl-none bg-fundo px-3 py-2 text-base leading-6">
+                    <p className="min-w-0 rounded-card rounded-tl-none bg-fundo px-3 py-2 text-base leading-6 [overflow-wrap:anywhere] break-words">
                       {estado.boasVindas ?? "Oi! Eu sou o Merc. Posso ajudar a achar coisas à venda e a anunciar."}
                     </p>
                   </div>
@@ -554,7 +554,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   {podeEscrever && estado.sugestoes.length > 0 && (
                     <div className="flex flex-wrap gap-2" aria-label="Sugestões">
                       {estado.sugestoes.map((s) => (
-                        <Chip key={s} onClick={() => void enviar(s)} disabled={enviando} className="text-left whitespace-normal">
+                        <Chip key={s} tamanho="toque" onClick={() => void enviar(s)} disabled={enviando} className="text-left">
                           {s}
                         </Chip>
                       ))}
@@ -566,7 +566,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
               {mensagens.map((m, i) =>
                 m.papel === "usuario" ? (
                   <div key={`u${m.id ?? i}`} className="flex justify-end">
-                    <p className="max-w-[85%] rounded-card rounded-br-none bg-selecao px-3 py-2 text-base leading-6 whitespace-pre-wrap">
+                    <p className="max-w-[85%] min-w-0 rounded-card rounded-br-none bg-selecao px-3 py-2 text-base leading-6 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
                       {m.conteudo.foto && (
                         <span className="mb-1 flex items-center gap-1 text-legenda text-texto-suave">
                           <Camera className="size-4" aria-hidden /> Foto enviada
@@ -610,19 +610,19 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                 <div className="mb-2 flex items-center gap-2">
                   {/* eslint-disable-next-line @next/next/no-img-element -- prévia local da foto (objectURL) */}
                   <img src={foto.previa} alt="Foto escolhida" className="size-16 rounded-campo object-cover" />
-                  <span className="flex-1 text-sm text-texto-suave">
+                  <span className="min-w-0 flex-1 text-sm [overflow-wrap:anywhere] text-texto-suave">
                     {usarNoAnuncio && rascunhoId
                       ? "A foto vai para o Merc e fica no seu anúncio."
                       : "A foto vai junto com a mensagem e não fica guardada."}
                   </span>
-                  <button type="button" onClick={tirarFoto} aria-label="Tirar a foto" className="grid size-10 place-items-center text-perigo">
+                  <button type="button" onClick={tirarFoto} aria-label="Tirar a foto" className="grid size-toque place-items-center text-perigo">
                     <X className="size-5" aria-hidden />
                   </button>
                 </div>
               )}
               {foto && rascunhoId && (
                 <div className="mb-2">
-                  <Chip ativo={usarNoAnuncio} onClick={() => setUsarNoAnuncio((v) => !v)}>
+                  <Chip ativo={usarNoAnuncio} tamanho="toque" onClick={() => setUsarNoAnuncio((v) => !v)}>
                     Usar esta foto no anúncio
                   </Chip>
                 </div>
@@ -639,7 +639,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     type="button"
                     onClick={() => inputFoto.current?.click()}
                     disabled={!podeEscrever || enviando || preparandoFoto}
-                    className="flex h-10 shrink-0 flex-col items-center justify-center rounded-campo border border-borda px-2 text-legenda leading-4 font-semibold text-beringela disabled:opacity-50"
+                    className="flex min-h-toque min-w-toque shrink-0 flex-col items-center justify-center rounded-campo border border-borda px-2 text-legenda leading-4 font-semibold text-beringela disabled:opacity-50"
                   >
                     {preparandoFoto ? <Loader2 className="size-5 animate-spin motion-reduce:animate-none" aria-hidden /> : <Camera className="size-5" aria-hidden />}
                     Foto
@@ -662,10 +662,11 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     rows={1}
                     disabled={!podeEscrever}
                     placeholder={podeEscrever ? "Escreva para o Merc" : DESCANSANDO}
-                    className={`${classesCampo} max-h-32 min-h-10 flex-1 resize-none py-2 leading-6`}
+                    className={`${classesCampo} max-h-32 min-h-toque flex-1 resize-none py-2 leading-6`}
                   />
                   <Botao
                     type="submit"
+                    tamanho="acao"
                     carregando={enviando}
                     textoCarregando="…"
                     disabled={!podeEscrever || (!texto.trim() && !foto)}

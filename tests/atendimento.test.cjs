@@ -173,3 +173,40 @@ test('AtendimentoConta exibe canais de contato da equipe e acesso à Ajuda sem b
   assert.match(html, /href="\/ajuda"/);
   assert.doesNotMatch(html, /bg-laranja/);
 });
+
+test('ContatoSuporte aplica quebra de URLs e tokens longos para evitar overflow horizontal', () => {
+  const React = require('react');
+  const { renderToStaticMarkup: render } = require('react-dom/server');
+  const { ContatoSuporte } = carregar('src/components/paginas/contato-suporte.tsx');
+  const html = render(React.createElement(ContatoSuporte, {
+    contato: {
+      whatsapp: '5589999990000',
+      email: 'ajuda@mercadodaregiao.com.br',
+      texto: 'Acesse https://mercadodaregiao.com.br/atendimento/token-muito-longo-para-quebrar-em-320px',
+    },
+  }));
+  assert.match(html, /<section[^>]*min-w-0/);
+  assert.match(html, /class="[^"]*break-words[^"]*\[overflow-wrap:anywhere\]|\[overflow-wrap:anywhere\][^"]*break-words/);
+});
+
+test('ConversaAtendimento mantém indicador visual de expansão no resumo de privacidade com toque >= 44px', async () => {
+  const React = require('react');
+  const { renderToStaticMarkup: render } = require('react-dom/server');
+  const { ConversaAtendimento } = carregar('src/components/atendimento/conversa.tsx', {
+    '@/lib/supabase/server': { createClient: async () => ({}) },
+    '@/lib/dados/atendimento': {
+      lerMensagensAtendimento: async () => ({
+        mensagens: [{ id: '1', autor: 'equipe', texto: 'https://mercadodaregiao.com.br/longo', criado_em: '2026-11-23T12:00:00Z' }],
+        error: null,
+        anterior: null,
+      }),
+    },
+    '@/lib/admin/formato': { quando: (v) => v },
+    './atualizar': { AtualizarConversa: () => React.createElement('button', { type: 'button' }, 'Atualizar') },
+    './form-mensagem': { FormMensagemAtendimento: () => React.createElement('form') },
+  });
+  const html = render(await ConversaAtendimento({ id: conversa, caminho: `/minha-conta/atendimento/${conversa}`, aki: true }));
+  assert.match(html, /<details class="group /);
+  assert.match(html, /<summary class="[^"]*min-h-toque[^"]*">.*group-open:rotate-180.*Privacidade da conversa/s);
+  assert.match(html, /\[overflow-wrap:anywhere\]/);
+});

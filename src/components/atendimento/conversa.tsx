@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { quando } from "@/lib/admin/formato";
 import { lerMensagensAtendimento, type MensagemAtendimento } from "@/lib/dados/atendimento";
@@ -17,9 +18,12 @@ export async function ConversaAtendimento({ id, caminho, antes, equipe, aki, cad
       <h2 id="titulo-conversa" className="text-lg font-semibold text-beringela">Conversa privada</h2>
       <AtualizarConversa recentes={!cursor} />
     </div>
-    <details className="border-b border-borda text-sm text-texto-suave">
-      <summary className="flex min-h-toque w-fit max-w-full cursor-pointer items-center rounded-campo pr-2 font-semibold focus-visible:outline-3 focus-visible:outline-laranja-escuro">Privacidade da conversa</summary>
-      <p className="max-w-[65ch] pb-3">Apenas {cadastro ? "a pessoa que pediu ajuda" : "o anunciante"} e a administração têm acesso. Não compartilhe senhas, documentos ou códigos.{!equipe && aki && " Mensagens enviadas ao Merc podem ser processadas pelo provedor de IA."}</p>
+    <details className="group border-b border-borda text-sm text-texto-suave">
+      <summary className="flex min-h-toque w-fit max-w-full cursor-pointer list-none items-center gap-1.5 rounded-campo pr-2 font-semibold focus-visible:outline-3 focus-visible:outline-laranja-escuro [&::-webkit-details-marker]:hidden">
+        <ChevronDown className="size-4 shrink-0 transition-transform duration-150 group-open:rotate-180 motion-reduce:transition-none" aria-hidden />
+        <span>Privacidade da conversa</span>
+      </summary>
+      <p className="max-w-[65ch] pb-3 [overflow-wrap:anywhere]">Apenas {cadastro ? "a pessoa que pediu ajuda" : "o anunciante"} e a administração têm acesso. Não compartilhe senhas, documentos ou códigos.{!equipe && aki && " Mensagens enviadas ao Merc podem ser processadas pelo provedor de IA."}</p>
     </details>
     {error ? <p role="alert" className="text-base text-perigo">Não foi possível carregar as mensagens. Use Atualizar para tentar novamente.</p> : <>
       {(cursor || anterior) && <nav aria-label="Histórico da conversa" className="flex flex-wrap gap-2">
