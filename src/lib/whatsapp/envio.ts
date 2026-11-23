@@ -1,4 +1,5 @@
 import "server-only";
+import { hashIdWhatsapp } from "@/lib/whatsapp/evolution";
 
 // Envio de avisos por WhatsApp (Evolution). Só precisa do servidor Evolution: não usa Turnstile nem código OTP.
 export type ConfiguracaoEnvio = { url: string; chave: string; instancia: string };
@@ -24,6 +25,7 @@ export async function enviarTexto(
   texto: string,
   config: ConfiguracaoEnvio,
   conferir?: () => Promise<boolean>,
+  confirmarId?: (hash: string) => void,
 ): Promise<ResultadoEnvio> {
   try {
     const estado = await fetch(`${config.url}/instance/connectionState/${config.instancia}`, {
@@ -44,6 +46,9 @@ export async function enviarTexto(
     // Uma falha de rede/servidor pode ocorrer depois de a mensagem sair. Nunca repetir automaticamente.
     if (!r.ok) return r.status >= 400 && r.status < 500 ? "falha" : "incerto";
     const d = await r.json();
-    return !d.error && d.key?.fromMe === true && typeof d.key?.id === "string" && d.key.id.length > 0 ? "enviado" : "incerto";
+    if (d.error || d.key?.fromMe !== true || typeof d.key?.id !== "string" || d.key.id.length === 0) return "incerto";
+    const id = hashIdWhatsapp(d.key.id);
+    if (id) confirmarId?.(id);
+    return "enviado";
   } catch { return "incerto"; }
 }

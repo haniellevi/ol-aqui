@@ -151,7 +151,9 @@ revoke all on function public.radar_piloto_modo(timestamptz),
 revoke all on function public.salvar_preferencia_whatsapp_radar_tipo(text,boolean) from public, anon, authenticated, service_role;
 grant execute on function public.salvar_preferencia_whatsapp_radar_tipo(text,boolean) to authenticated;
 
-create or replace function public.whatsapp_sair(p_numero text, p_comando text)
+alter table public.whatsapp_respostas add column radar_ocorreu_em timestamptz;
+
+create function public.whatsapp_radar_sair(p_numero text, p_comando text, p_ocorreu_em timestamptz)
 returns boolean language plpgsql security definer
 set search_path = public, extensions
 as $$
@@ -190,12 +192,18 @@ begin
            radar_autorizacao_id = gen_random_uuid()
      where pa.usuario_id = alvo.id and pa.canal = 'whatsapp' and pa.ligado
        and pa.tipo in ('pedido_novo', 'proposta_nova', 'proposta_escolhida');
+    -- A autorização já foi revogada. A coleta que detém uma linha a reavalia no envio.
+    with livres as materialized (
+      select f.id from public.whatsapp_fila f
+       where f.usuario_id = alvo.id and f.estado = 'pendente'
+         and (split_part(f.chave,':',1) in ('radar_pedido_novo','radar_proposta_nova','radar_proposta_escolhida')
+              or public.radar_eh_pergunta_whatsapp(f.chave))
+       for update skip locked
+    )
     update public.whatsapp_fila f set estado = 'cancelada', erro = 'saiu'
-     where f.usuario_id = alvo.id and f.estado = 'pendente'
-       and (f.chave like 'radar_pedido_novo:%'
-            or f.chave like 'radar_proposta_nova:%'
-            or f.chave like 'radar_proposta_escolhida:%');
-    insert into public.whatsapp_respostas (usuario_id, comando, criado_em) values (alvo.id, p_comando, instante);
+      from livres where f.id = livres.id;
+    insert into public.whatsapp_respostas (usuario_id, comando, criado_em, radar_ocorreu_em)
+    values (alvo.id, p_comando, instante, case when p_ocorreu_em <= instante + interval '1 minute' then p_ocorreu_em end);
   end loop;
   delete from public.whatsapp_ultima_mensagem where numero = any(variantes);
   if achou then
@@ -211,9 +219,28 @@ begin
 end $$;
 
 
+create or replace function public.whatsapp_sair(p_numero text, p_comando text)
+returns boolean language sql security definer set search_path = '' as $$
+  select public.whatsapp_radar_sair(p_numero,p_comando,null);
+$$;
+revoke all on function public.whatsapp_radar_sair(text,text,timestamptz) from public, anon, authenticated, service_role;
+
 alter table public.whatsapp_fila
   add column radar_piloto_id uuid,
-  add column radar_autorizacao_id uuid;
+  add column radar_autorizacao_id uuid,
+  add column radar_comprovante_pergunta text;
+
+-- Identidade derivada do ID de entrada. Contexto temporário existe só para SIM anterior à confirmação do provedor.
+create table public.whatsapp_radar_eventos (
+  evento text primary key check (evento ~ '^[a-f0-9]{64}$'),
+  registrado_em timestamptz not null default clock_timestamp(),
+  pergunta_id uuid references public.whatsapp_fila(id) on delete cascade,
+  citada text check (citada ~ '^[a-f0-9]{64}$')
+);
+create index whatsapp_radar_eventos_tempo_idx on public.whatsapp_radar_eventos(registrado_em);
+create index whatsapp_radar_eventos_pergunta_idx on public.whatsapp_radar_eventos(pergunta_id) where pergunta_id is not null;
+alter table public.whatsapp_radar_eventos enable row level security;
+revoke all on public.whatsapp_radar_eventos from public, anon, authenticated, service_role;
 
 create function public.radar_enfileirar_whatsapp(
   p_usuario text, p_regiao uuid, p_tipo text, p_evento_em timestamptz,
@@ -275,6 +302,7 @@ returns boolean language sql stable set search_path = '' as $$
     select from public.radar_piloto_controle c
     join public.perfis p on p.id = p_item.usuario_id
     where c.id and public.radar_eh_pergunta_whatsapp(p_item.chave)
+      and p_item.criado_em > p_quando - interval '7 days'
       and public.config('radar.whatsapp_ativo',null,'false') = 'true'::jsonb
       and p.whatsapp_verificado_em is not null
       and split_part(p_item.chave,':',2) =
@@ -318,6 +346,47 @@ revoke all on function public.radar_enfileirar_whatsapp(text,uuid,text,timestamp
   public.radar_eh_pergunta_whatsapp(text), public.radar_piloto_permite_pergunta(public.whatsapp_fila,timestamptz),
   public.radar_fila_permite(public.whatsapp_fila,timestamptz) from public, anon, authenticated, service_role;
 
+
+create function public.radar_texto_whatsapp_com_saida(modelo text, vars jsonb)
+returns text language plpgsql set search_path = '' as $$
+declare
+  modelo_static text;
+  partes_sair text[];
+  corpo_wa text;
+  rodape_wa text;
+  texto_cheio text;
+  texto_wa text;
+  sufixo_sair constant text := ' Responda SAIR para parar estes avisos.';
+begin
+  -- Verifica instrução de saída SOMENTE no texto estático do modelo (antes de substituir {pedido}/{loja}),
+  -- trocando marcadores por token alfanumérico neutro (XVARX) para impedir falso positivo colado (SAIR{loja}/{pedido}SAIR)
+  -- ou atravessando variáveis (Digite {loja} SAIR).
+  modelo_static := regexp_replace(modelo, '\{[^{}]*\}', 'XVARX', 'g');
+  if modelo_static ~* '(\m(responda|envie|mande|digite|escreva)\s+["''“”]?sair\M|\msair\s+(para\s+(parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)\M)' then
+    texto_cheio := public.mensagem_montar(modelo, vars, 4000);
+    if char_length(texto_cheio) <= 1000 then
+      texto_wa := texto_cheio;
+    else
+      partes_sair := regexp_match(
+        modelo,
+        '^(.*?)(\s*(?:[^.!?{}]*\m(?:responda|envie|mande|digite|escreva)\s+["''“”]?sair\M|\msair\s+(?:para\s+(?:parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)\M)[^{}]*)$',
+        'i'
+      );
+      rodape_wa := case when partes_sair is not null then btrim(regexp_replace(partes_sair[2], '\s+', ' ', 'g')) else null end;
+      if rodape_wa is not null and char_length(rodape_wa) between 5 and 200 then
+        corpo_wa := public.mensagem_montar(partes_sair[1], vars, 4000);
+        texto_wa := rtrim(left(corpo_wa, 1000 - 1 - char_length(rodape_wa))) || ' ' || rodape_wa;
+      else
+        texto_wa := rtrim(left(texto_cheio, 1000 - char_length(sufixo_sair))) || sufixo_sair;
+      end if;
+    end if;
+  else
+    texto_cheio := public.mensagem_montar(modelo, vars, 4000);
+    texto_wa := rtrim(left(texto_cheio, 1000 - char_length(sufixo_sair))) || sufixo_sair;
+  end if;
+  return texto_wa;
+end $$;
+revoke all on function public.radar_texto_whatsapp_com_saida(text,jsonb) from public, anon, authenticated, service_role;
 
 create or replace function public.radar_avisar_pedido_novo()
 returns trigger language plpgsql security definer
@@ -420,7 +489,7 @@ begin
          select 1 from public.preferencias_avisos pa
           where pa.usuario_id = dono and pa.tipo = 'pedido_novo' and pa.canal = 'whatsapp' and pa.ligado) then
       begin
-        texto_wa := public.mensagem_montar(modelo_wa.texto, jsonb_build_object('cidade', vars->>'cidade'), 1000);
+        texto_wa := public.radar_texto_whatsapp_com_saida(modelo_wa.texto, jsonb_build_object('cidade', vars->>'cidade'));
         perform public.radar_enfileirar_whatsapp(dono, new.microrregiao_id, 'pedido_novo', evento_em, texto_wa, '/radar/' || new.id::text,
           'radar_pedido_novo:' || new.id::text || ':' || vitrine_alvo::text);
       exception when others then
@@ -443,12 +512,6 @@ declare
   vars      jsonb;
   ligados       jsonb;
   modelo_wa     public.modelos_mensagem;
-  modelo_static text;
-  partes_sair   text[];
-  corpo_wa      text;
-  rodape_wa     text;
-  texto_cheio   text;
-  sufixo_sair   text := ' Responda SAIR para parar estes avisos.';
   texto_wa      text;
 begin
   select * into p from public.radar_pedidos x where x.id = new.pedido_id;
@@ -488,32 +551,7 @@ begin
      where x.chave = 'proposta_nova' and x.canal = 'whatsapp';
     if modelo_wa.id is not null and modelo_wa.ativo then
       begin
-        -- Verifica instrução de saída SOMENTE no texto estático do modelo (antes de substituir {pedido}/{loja}),
-        -- trocando marcadores por token alfanumérico neutro (XVARX) para impedir falso positivo colado (SAIR{loja}/{pedido}SAIR)
-        -- ou atravessando variáveis (Digite {loja} SAIR).
-        modelo_static := regexp_replace(modelo_wa.texto, '\{[^{}]*\}', 'XVARX', 'g');
-        if modelo_static ~* '(\m(responda|envie|mande|digite|escreva)\s+["''“”]?sair\M|\msair\s+(para\s+(parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)\M)' then
-          texto_cheio := public.mensagem_montar(modelo_wa.texto, vars, 4000);
-          if char_length(texto_cheio) <= 1000 then
-            texto_wa := texto_cheio;
-          else
-            partes_sair := regexp_match(
-              modelo_wa.texto,
-              '^(.*?)(\s*(?:[^.!?{}]*\m(?:responda|envie|mande|digite|escreva)\s+["''“”]?sair\M|\msair\s+(?:para\s+(?:parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)\M)[^{}]*)$',
-              'i'
-            );
-            rodape_wa := case when partes_sair is not null then btrim(regexp_replace(partes_sair[2], '\s+', ' ', 'g')) else null end;
-            if rodape_wa is not null and char_length(rodape_wa) between 5 and 200 then
-              corpo_wa := public.mensagem_montar(partes_sair[1], vars, 4000);
-              texto_wa := rtrim(left(corpo_wa, 1000 - 1 - char_length(rodape_wa))) || ' ' || rodape_wa;
-            else
-              texto_wa := rtrim(left(texto_cheio, 1000 - char_length(sufixo_sair))) || sufixo_sair;
-            end if;
-          end if;
-        else
-          texto_cheio := public.mensagem_montar(modelo_wa.texto, vars, 4000);
-          texto_wa := rtrim(left(texto_cheio, 1000 - char_length(sufixo_sair))) || sufixo_sair;
-        end if;
+        texto_wa := public.radar_texto_whatsapp_com_saida(modelo_wa.texto, vars);
         perform public.radar_enfileirar_whatsapp(
           p.comprador_id, p.microrregiao_id, 'proposta_nova', evento_em, texto_wa, '/radar/pedido/' || p.id::text,
           'radar_proposta_nova:' || p.id::text || ':' || new.id::text
@@ -543,12 +581,6 @@ declare
   vars      jsonb;
   ligados       jsonb;
   modelo_wa     public.modelos_mensagem;
-  modelo_static text;
-  partes_sair   text[];
-  corpo_wa      text;
-  rodape_wa     text;
-  texto_cheio   text;
-  sufixo_sair   text := ' Responda SAIR para parar estes avisos.';
   texto_wa      text;
 begin
   if uid is null then
@@ -605,7 +637,7 @@ begin
        where x.chave = 'proposta_escolhida' and x.canal = 'whatsapp';
       if modelo_wa.id is not null and modelo_wa.ativo then
         begin
-          texto_wa := public.mensagem_montar(modelo_wa.texto, vars, 1000);
+          texto_wa := public.radar_texto_whatsapp_com_saida(modelo_wa.texto, vars);
           perform public.radar_enfileirar_whatsapp(
             v.dono_id, p.microrregiao_id, 'proposta_escolhida', evento_em, texto_wa, '/radar/' || p.id::text,
             'radar_proposta_escolhida:' || p.id::text || ':' || rp.id::text
@@ -730,7 +762,7 @@ begin
     select f.id, case when public.radar_eh_pergunta_whatsapp(f.chave) then 'radar_pergunta_invalida'
                       else 'radar_piloto_inapto' end as motivo
       from public.whatsapp_fila f
-     where f.estado = 'pendente'
+     where f.estado = 'pendente' and f.criado_em <= p_quando
        and (split_part(f.chave,':',1) in ('radar_pedido_novo','radar_proposta_nova','radar_proposta_escolhida')
             or public.radar_eh_pergunta_whatsapp(f.chave))
        and not public.radar_fila_permite(f,p_quando)
@@ -798,9 +830,9 @@ begin
                    where pa.usuario_id = f.usuario_id and pa.tipo = 'pedido_novo' and pa.canal = 'app' and not pa.ligado) then
       motivo := 'radar_desligado';
     elsif pedido.id is null or not (
-            pedido.status = 'aberto' and pedido.expira_em > now()
+            pedido.status = 'aberto' and pedido.expira_em > clock_timestamp()
             and pedido.total_propostas < pedido.max_propostas
-            and (pedido.modo_contato <> 'propostas_prazo' or (pedido.propostas_ate is not null and pedido.propostas_ate > now()))) then
+            and (pedido.modo_contato <> 'propostas_prazo' or (pedido.propostas_ate is not null and pedido.propostas_ate > clock_timestamp()))) then
       motivo := 'pedido_fechado';
     elsif public.radar_categoria_pedido(pedido.categoria_id, pedido.categoria) is null
        or not exists (
@@ -835,7 +867,7 @@ begin
        or not exists (select 1 from public.modelos_mensagem m where m.chave = 'proposta_nova' and m.canal = 'whatsapp' and m.ativo) then
       motivo := 'radar_desligado';
     elsif pedido.id is null or proposta.id is null
-       or not (pedido.status = 'aberto' and pedido.expira_em > now() and proposta.status = 'ativa') then
+       or not (pedido.status = 'aberto' and pedido.expira_em > clock_timestamp() and proposta.status = 'ativa') then
       motivo := 'pedido_fechado';
     elsif not exists (
       select 1 from public.perfis pf
@@ -862,7 +894,7 @@ begin
        or not exists (select 1 from public.modelos_mensagem m where m.chave = 'proposta_escolhida' and m.canal = 'whatsapp' and m.ativo) then
       motivo := 'radar_desligado';
     elsif pedido.id is null or proposta.id is null
-       or not (pedido.status = 'aberto' and pedido.expira_em > now() and proposta.status = 'ativa' and proposta.escolhida) then
+       or not (pedido.status = 'aberto' and pedido.expira_em > clock_timestamp() and proposta.status = 'ativa' and proposta.escolhida) then
       motivo := 'pedido_fechado';
     elsif not exists (
       select 1 from public.vitrines_lojas v
@@ -892,6 +924,13 @@ begin
 
   if motivo is null then
     select case
+      when not exists (
+        select from public.radar_pedidos rp where rp.id = pedido.id and rp.status = 'aberto'
+          and rp.expira_em > clock_timestamp()
+          and (f.chave not like 'radar_pedido_novo:%' or (
+            rp.total_propostas < rp.max_propostas and
+            (rp.modo_contato <> 'propostas_prazo' or rp.propostas_ate > clock_timestamp())))
+      ) then 'pedido_fechado'
       when public.config('radar.whatsapp_ativo',null,'false') is distinct from 'true'::jsonb then 'radar_desligado'
       when not public.radar_piloto_permite_item(f,pedido.microrregiao_id,substr(split_part(f.chave,':',1),7),clock_timestamp())
         then case when exists (select from public.preferencias_avisos a
@@ -910,7 +949,17 @@ begin
   return 'cancelada';
 end $$;
 
-create or replace function public.whatsapp_mensagem_recebida(p_numero text, p_intencao text, p_hash text)
+create function public.radar_escopo_whatsapp(tipos text[])
+returns text language sql immutable set search_path = '' as $$
+  select case when 'pedido_novo'=any(tipos) then
+    case when tipos && array['proposta_nova','proposta_escolhida'] then 'pedidos e propostas do Radar'
+         else 'pedidos do Radar' end
+    else 'avisos de propostas do Radar' end;
+$$;
+revoke all on function public.radar_escopo_whatsapp(text[]) from public, anon, authenticated, service_role;
+
+create function public.whatsapp_radar_processar(p_numero text, p_intencao text, p_hash text,
+  p_evento text, p_ocorreu_em timestamptz, p_citada text)
 returns text
 language plpgsql security definer
 set search_path = public, extensions
@@ -925,14 +974,17 @@ declare
   tem_retomavel boolean;
   instante timestamptz;
   modo text;
-  tem_propostas boolean;
+  ativos text[];
+  retomados text[];
+  conta_count integer;
+  pergunta public.whatsapp_fila;
   sino_desligado boolean;
   pref_mudou_em timestamptz;
   ultima_saida timestamptz;
+  limite_saida timestamptz;
   ultimo_voltar timestamptz;
   ultima_pergunta timestamptz;
   saiu boolean;
-  pergunta_pendente boolean;
   hash_anterior text;
   recebido_anterior timestamptz;
   resultado text;
@@ -950,17 +1002,17 @@ begin
                     else array[p_numero, substr(p_numero, 1, 4) || '9' || substr(p_numero, 5)] end;
   numero13 := case when length(p_numero) = 13 then p_numero else substr(p_numero, 1, 4) || '9' || substr(p_numero, 5) end;
 
-  select pf.id into uid from public.perfis pf
-   where pf.whatsapp = any(variantes) and pf.whatsapp_verificado_em is not null
-     and not exists (select 1 from public.contas_revogadas r where r.usuario_id = pf.id)
-   order by pf.id limit 1;
-  if uid is null then return 'sem_conta'; end if;
+  select count(*), min(pf.id) into conta_count, uid from public.perfis pf
+   where pf.whatsapp = any(variantes) and pf.whatsapp_verificado_em is not null;
+  if conta_count = 0 then return 'sem_conta'; end if;
+  if conta_count <> 1 then return 'ambiguo'; end if;
 
   perform 1 from public.radar_piloto_controle where id for share;
   perform pg_advisory_xact_lock(hashtext('whatsapp_voltar:' || uid));
   instante := clock_timestamp();
-  if not exists (select from public.perfis pf where pf.id = uid and pf.whatsapp = any(variantes)
-                 and pf.whatsapp_verificado_em is not null)
+  if (select count(*) from public.perfis where whatsapp = any(variantes) and whatsapp_verificado_em is not null) <> 1
+     or not exists (select from public.perfis pf where pf.id = uid and pf.whatsapp = any(variantes)
+                    and pf.whatsapp_verificado_em is not null)
      or exists (select from public.contas_revogadas r where r.usuario_id = uid) then return 'sem_conta'; end if;
   modo := public.radar_piloto_modo(instante);
 
@@ -980,31 +1032,27 @@ begin
   radar_ligado := public.config('radar.whatsapp_ativo', null, 'false') is not distinct from 'true'::jsonb
     and (modo = 'legado' or (modo = 'fechado' and public.radar_piloto_participante(
       uid,(select p.microrregiao_id from public.perfis p where p.id=uid),instante)));
-  select coalesce(bool_or(pa.ligado),false),
+  select coalesce(bool_or(pa.ligado and (modo='legado' or pa.consentido_em is not null)),false),
          coalesce(bool_or(pa.retomar_apos_sair and pa.consentido_em is not null),false),
-         coalesce(bool_or(pa.tipo <> 'pedido_novo' and (pa.ligado or pa.retomar_apos_sair)),false),
          max(pa.atualizado_em)
-    into pref_ligada, tem_retomavel, tem_propostas, pref_mudou_em
+    into pref_ligada, tem_retomavel, pref_mudou_em
     from public.preferencias_avisos pa
    where pa.usuario_id = uid and pa.canal = 'whatsapp'
      and pa.tipo in ('pedido_novo','proposta_nova','proposta_escolhida');
 
-  select exists (
-    select from public.preferencias_avisos pa
-     where pa.usuario_id = uid and pa.canal = 'whatsapp'
-       and pa.tipo in ('pedido_novo','proposta_nova','proposta_escolhida')
-       and pa.retomar_apos_sair and pa.consentido_em is not null
-       and not exists (select from public.preferencias_avisos a
-          where a.usuario_id = uid and a.canal = 'app' and a.tipo = pa.tipo and not a.ligado)
-  ) into pode_retomar;
-  sino_desligado := not pode_retomar and (tem_retomavel or (pref_ligada and not exists (
-    select from public.preferencias_avisos pa where pa.usuario_id = uid and pa.canal = 'whatsapp' and pa.ligado
-      and pa.tipo in ('pedido_novo','proposta_nova','proposta_escolhida')
-      and not exists (select from public.preferencias_avisos a where a.usuario_id = uid and a.canal = 'app'
-                      and a.tipo = pa.tipo and not a.ligado))));
+  select array_agg(pa.tipo) filter (where pa.ligado and (modo='legado' or pa.consentido_em is not null)),
+         array_agg(pa.tipo) filter (where pa.retomar_apos_sair and pa.consentido_em is not null)
+    into ativos, retomados
+    from public.preferencias_avisos pa
+   where pa.usuario_id = uid and pa.canal = 'whatsapp'
+     and pa.tipo in ('pedido_novo','proposta_nova','proposta_escolhida')
+     and not exists (select from public.preferencias_avisos a where a.usuario_id = uid and a.canal = 'app'
+                     and a.tipo = pa.tipo and not a.ligado);
+  pode_retomar := retomados is not null;
+  sino_desligado := not pode_retomar and (tem_retomavel or (pref_ligada and ativos is null));
 
-  escopo_texto := case when tem_propostas then 'pedidos e propostas do Radar' else 'pedidos do Radar' end;
-  select max(r.criado_em) into ultima_saida from public.whatsapp_respostas r
+  select max(r.criado_em), max(greatest(r.criado_em,r.radar_ocorreu_em))
+    into ultima_saida, limite_saida from public.whatsapp_respostas r
    where r.usuario_id = uid and r.comando in ('SAIR', 'PARAR', 'STOP', 'CANCELAR');
   select max(r.criado_em) into ultimo_voltar from public.whatsapp_respostas r
    where r.usuario_id = uid and r.comando = 'VOLTAR';
@@ -1012,43 +1060,53 @@ begin
    where r.usuario_id = uid and r.comando = 'PERGUNTA_VOLTAR';
   saiu := ultima_saida is not null and (ultimo_voltar is null or ultimo_voltar < ultima_saida)
           and (pref_mudou_em is null or pref_mudou_em <= ultima_saida);
-  pergunta_pendente := ultima_pergunta is not null and ultima_pergunta > instante - interval '7 days'
-    and not exists (select 1 from public.whatsapp_respostas r
-                     where r.usuario_id = uid and r.criado_em > ultima_pergunta
-                       and r.comando in ('VOLTAR', 'SAIR', 'PARAR', 'STOP', 'CANCELAR'));
-
-  if p_intencao = 'sim' and pergunta_pendente then
-    select coalesce((select f.estado in ('pendente','enviando','enviada','incerta')
-                         and public.radar_piloto_permite_pergunta(f,instante)
-      from public.whatsapp_fila f where f.usuario_id=uid and public.radar_eh_pergunta_whatsapp(f.chave)
-        and split_part(f.chave,':',2)=numero13
-        and f.criado_em > instante - interval '7 days'
-      order by f.criado_em desc limit 1),false) into pergunta_pendente;
+  if p_intencao = 'sim' then
+    -- O ID citado, quando comprovado, liga causalmente a resposta à pergunta mais recente.
+    if p_citada is null or p_evento is null or not radar_ligado then return 'nada'; end if;
+    select f.* into pergunta from public.whatsapp_fila f
+     where f.usuario_id=uid and public.radar_eh_pergunta_whatsapp(f.chave)
+       and split_part(f.chave,':',2)=numero13
+     order by f.criado_em desc, f.id desc limit 1;
+    if pergunta.id is null or not public.radar_piloto_permite_pergunta(pergunta,instante) then return 'nada'; end if;
+    if pergunta.estado = 'enviando' then
+      update public.whatsapp_radar_eventos e set pergunta_id=pergunta.id, citada=p_citada
+       where e.evento=p_evento;
+      return 'aguarda_comprovante';
+    end if;
+    if pergunta.estado <> 'enviada' or pergunta.radar_comprovante_pergunta is distinct from p_citada then return 'nada'; end if;
   end if;
 
-  if p_intencao = 'voltar' or (p_intencao = 'sim' and pergunta_pendente) then
+  if p_intencao in ('voltar','sim') then
     if not radar_ligado then
       perform public.whatsapp_resposta_automatica(uid, p_numero, 'pausado', 'No momento os avisos do Radar pelo WhatsApp estão pausados.');
       return 'pausado';
     end if;
     if not tem_retomavel and not pref_ligada then
-      perform public.whatsapp_resposta_automatica(uid, p_numero, 'orientacao', 'Para receber pedidos do Radar no WhatsApp, ligue em Minha conta > Notificações no Mercado da Região.');
+      perform public.whatsapp_resposta_automatica(uid, p_numero, 'orientacao', 'Para receber avisos do Radar no WhatsApp, confirme cada aviso em Minha conta > Notificações no Mercado da Região.');
       return 'orientacao';
     end if;
     if sino_desligado then
       perform public.whatsapp_resposta_automatica(
         uid, p_numero, 'sino',
         case
-          when tem_propostas then 'Para voltar a receber pedidos e propostas do Radar pelo WhatsApp, ligue antes os avisos no app em Minha conta > Notificações. Depois responda VOLTAR.'
+          when not exists (select from public.preferencias_avisos a where a.usuario_id=uid and a.canal='whatsapp' and a.tipo='pedido_novo' and (a.ligado or a.retomar_apos_sair)) then 'Para voltar a receber pedidos e propostas do Radar pelo WhatsApp, ligue antes os avisos no app em Minha conta > Notificações. Depois responda VOLTAR.'
           else 'Para voltar a receber pedidos do Radar pelo WhatsApp, ligue antes o aviso de pedido novo no app em Minha conta > Notificações. Depois responda VOLTAR.'
         end
       );
       return 'sino_desligado';
     end if;
     if pref_ligada and not pode_retomar then
+      escopo_texto := public.radar_escopo_whatsapp(ativos);
       perform public.whatsapp_resposta_automatica(uid, p_numero, 'ja_ativo', format('Você já recebe os %s pelo WhatsApp, das 8h às 20h. Para parar, responda SAIR.', escopo_texto));
       return 'ja_ativo';
     end if;
+    if p_intencao = 'voltar' and (p_evento is null or p_ocorreu_em is null or limite_saida is null
+       or p_ocorreu_em <= limite_saida or p_ocorreu_em > instante or p_ocorreu_em <= instante - interval '7 days') then
+      perform public.whatsapp_resposta_automatica(uid, p_numero, 'orientacao',
+        'Para voltar a receber, ligue cada aviso em Minha conta > Notificações no Mercado da Região.');
+      return 'orientacao';
+    end if;
+    escopo_texto := public.radar_escopo_whatsapp(retomados);
     update public.preferencias_avisos pa
        set ligado = true, atualizado_em = instante, retomar_apos_sair = false, radar_autorizacao_id = gen_random_uuid()
      where pa.usuario_id = uid and pa.canal = 'whatsapp'
@@ -1064,13 +1122,81 @@ begin
   if p_intencao = 'sim' then return 'nada'; end if;
 
   if saiu and not pref_ligada and radar_ligado and pode_retomar then
+    escopo_texto := public.radar_escopo_whatsapp(retomados);
     if ultima_pergunta is not null and ultima_pergunta > instante - interval '7 days' then
       return 'ja_perguntou';
     end if;
-    resultado := public.whatsapp_resposta_automatica(uid, p_numero, 'pergunta', format('Oi! Você pediu para não receber %s pelo WhatsApp. Quer voltar a receber? Responda SIM.', escopo_texto));
+    resultado := public.whatsapp_resposta_automatica(uid, p_numero, 'pergunta', format('Oi! Você pediu para não receber %s pelo WhatsApp. Quer voltar a receber? Use Responder nesta mensagem e escreva SIM.', escopo_texto));
     if resultado <> 'enviada' then return resultado; end if;
     insert into public.whatsapp_respostas (usuario_id, comando) values (uid, 'PERGUNTA_VOLTAR');
     return 'pergunta';
   end if;
   return 'nada';
 end $$;
+
+
+-- Contrato anterior (incluindo rollback do Worker): sem identidade/hora, VOLTAR/SIM não ativam.
+create or replace function public.whatsapp_mensagem_recebida(p_numero text, p_intencao text, p_hash text)
+returns text language sql security definer set search_path = '' as $$
+  select public.whatsapp_radar_processar(p_numero,p_intencao,p_hash,null,null,null);
+$$;
+
+create function public.whatsapp_radar_evento(p_numero text, p_intencao text, p_comando text,
+  p_evento text, p_ocorreu_em timestamptz, p_citada text)
+returns text language plpgsql security definer set search_path = '' as $$
+begin
+  if p_evento is null or p_evento !~ '^[a-f0-9]{64}$' or p_intencao is null or p_intencao not in ('sair','voltar','sim')
+     or (p_citada is not null and (p_intencao <> 'sim' or p_citada !~ '^[a-f0-9]{64}$')) then
+    raise exception 'Evento inválido.' using errcode = '22023';
+  end if;
+  with antigos as materialized (
+    select evento from public.whatsapp_radar_eventos
+     where registrado_em < statement_timestamp() - interval '14 days'
+     order by registrado_em limit 100 for update skip locked
+  )
+  delete from public.whatsapp_radar_eventos a using antigos where a.evento=antigos.evento;
+  insert into public.whatsapp_radar_eventos(evento) values (p_evento) on conflict do nothing;
+  if not found then return 'evento_repetido'; end if;
+
+  if p_intencao = 'sair' then
+    return case when public.whatsapp_radar_sair(p_numero,p_comando,p_ocorreu_em) then 'saiu' else 'sem_conta' end;
+  end if;
+  return public.whatsapp_radar_processar(p_numero,p_intencao,p_evento,p_evento,p_ocorreu_em,p_citada);
+end $$;
+
+create function public.whatsapp_radar_resultado_enviado(p_id uuid, p_comprovante text)
+returns text language plpgsql security definer set search_path = '' as $$
+declare
+  f public.whatsapp_fila;
+  e record;
+  resultado text;
+begin
+  if p_comprovante is null or p_comprovante !~ '^[a-f0-9]{64}$' then
+    raise exception 'Comprovante inválido.' using errcode = '22023';
+  end if;
+  select * into f from public.whatsapp_fila where id=p_id;
+  if f.id is null or not public.radar_eh_pergunta_whatsapp(f.chave) then
+    return public.whatsapp_fila_resultado(p_id,'enviado');
+  end if;
+
+  -- Mesma ordem do webhook: controle, conta, depois a fila. Nunca aguarda conta mantendo trava da fila.
+  perform 1 from public.radar_piloto_controle where id for share;
+  perform pg_advisory_xact_lock(hashtext('whatsapp_voltar:' || f.usuario_id));
+  resultado := public.whatsapp_fila_resultado(p_id,'enviado');
+  if resultado <> 'enviada' then return resultado; end if;
+  update public.whatsapp_fila set radar_comprovante_pergunta=p_comprovante where id=p_id;
+  for e in select evento, citada from public.whatsapp_radar_eventos
+    where pergunta_id=p_id and citada=p_comprovante order by registrado_em, evento
+  loop
+    perform public.whatsapp_radar_processar(f.numero,'sim',e.evento,e.evento,null,e.citada);
+  end loop;
+  update public.whatsapp_radar_eventos set pergunta_id=null, citada=null where pergunta_id=p_id;
+  return resultado;
+end $$;
+
+revoke all on function public.whatsapp_radar_processar(text,text,text,text,timestamptz,text),
+  public.whatsapp_radar_evento(text,text,text,text,timestamptz,text),
+  public.whatsapp_radar_resultado_enviado(uuid,text)
+  from public, anon, authenticated, service_role;
+grant execute on function public.whatsapp_radar_evento(text,text,text,text,timestamptz,text),
+  public.whatsapp_radar_resultado_enviado(uuid,text) to service_role;

@@ -74,7 +74,7 @@ def verificar_radar_piloto(container, sql, checked, fixture):
     """))
 
     cenarios = [(tipo, destino, numero, False) for tipo, (destino, numero) in fila_prefixos.items()]
-    cenarios.append(('pedido_novo', shop, '5589998990011', True))
+    cenarios.extend((tipo, destino, numero, True) for tipo, (destino, numero) in fila_prefixos.items())
     for indice, (tipo, destino, numero, pelo_site) in enumerate(cenarios, start=1):
         def evento(numero_pedido):
             criar = sessao(buyer, pedido(numero_pedido))
@@ -100,8 +100,8 @@ def verificar_radar_piloto(container, sql, checked, fixture):
                 if pelo_site:
                     checked(sql("begin; " + sessao(destino, f"select salvar_preferencia_whatsapp_radar_tipo('{tipo}',true);") + " commit;"))
                 else:
-                    checked(sql(f"""do $$ begin assert whatsapp_mensagem_recebida(
-                        '{numero}','voltar',repeat('e',64))='voltou'; end $$;"""))
+                    checked(sql(f"""do $$ begin assert whatsapp_radar_evento(
+                        '{numero}','voltar',null,encode(sha256(gen_random_uuid()::text::bytea),'hex'),clock_timestamp(),null)='voltou'; end $$;"""))
             checked(produtor.result(timeout=15))
 
         checked(sql(f"""
@@ -122,12 +122,79 @@ def verificar_radar_piloto(container, sql, checked, fixture):
             select id into strict item from whatsapp_fila where usuario_id='{destino}'
               and split_part(chave,':',1)='{tag}' order by criado_em desc limit 1;
             update whatsapp_fila set estado='enviando' where id=item and estado='pendente';
-            assert found;
+            assert found, 'aviso novo de {tipo} após reativação deveria estar pendente no cenário {indice}';
             assert whatsapp_fila_confirmar_envio(item)='pode';
             perform whatsapp_fila_resultado(item,'enviado');
           end $$;
         """))
 
+        if not pelo_site:
+            preparar, produzir = evento(50 + indice)
+            if preparar:
+                chave = 'ped' if tipo == 'proposta_nova' else 'prop'
+                identificador = valor(f"begin; {preparar}\n\\echo :{chave}\ncommit;")
+                produzir = produzir.replace(f":'{chave}'", f"'{identificador}'")
+            consultar = f"select count(*) as n from whatsapp_fila where usuario_id='{destino}' and split_part(chave,':',1)='{tag}' \\gset\n\\echo :n"
+            antes = valor(consultar)
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                with transacao("select id from radar_piloto_controle for update;") as sess:
+                    evento_tardio = pool.submit(sql, "begin; set local application_name='radar899-antes'; " + produzir + " commit;")
+                    esperar_bloqueio('radar899-antes')
+                    for ligado in ('false','true'):
+                        sess.stdin.write(sessao(destino, f"select salvar_preferencia_whatsapp_radar_tipo('{tipo}',{ligado});") + "\n")
+                    sess.stdin.flush()
+                checked(evento_tardio.result(timeout=15))
+            assert antes == valor(consultar), (tipo, 'evento anterior não pode aproveitar autorização posterior')
+
+    # C1: a coleta pode ter travado tipos diferentes da mesma loja. O SAIR precisa confirmar sem esperar.
+    checked(sql(f"""insert into whatsapp_fila(usuario_id,numero,texto,chave,enviar_apos)
+      values ('{shop}','5589998990011','Pedido teste','radar_pedido_novo:89900000-0000-4000-f000-000000000001:teste',now()),
+             ('{shop}','5589998990011','Escolha teste','radar_proposta_escolhida:89900000-0000-4000-f000-000000000002:teste',now());"""))
+    with transacao("select id from whatsapp_fila where chave like '%89900000-0000-4000-f000-00000000000%' for update;"):
+        checked(sql("set statement_timeout='1500ms'; select whatsapp_sair('5589998990011','SAIR');"))
+        checked(sql(f"""do $$ begin
+          assert not exists(select from preferencias_avisos where usuario_id='{shop}' and canal='whatsapp' and ligado), 'C1 saída confirmada enquanto lote travado';
+        end $$;"""))
+    checked(sql("select whatsapp_fila_pegar_em(1,clock_timestamp());"))
+    checked(sql("begin; " + sessao(shop, "select salvar_preferencia_whatsapp_radar_tipo('pedido_novo',true);") + " commit;"))
+
+    # I1: rodada que começou antes do ingresso vê a pendência posterior sem descartá-la.
+    checked(sql(f"""insert into whatsapp_fila(usuario_id,numero,texto,chave,enviar_apos)
+      values ('{shop}','5589998990011','Barreira teste','radar_pedido_novo:89900000-0000-4000-f000-000000000003:teste',now());"""))
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with transacao("select id from whatsapp_fila where chave like '%89900000-0000-4000-f000-000000000003%' for update;"):
+            coleta = pool.submit(sql, "begin; set local application_name='radar899-coleta'; select whatsapp_fila_pegar_em(1,now()); commit;")
+            esperar_bloqueio('radar899-coleta')
+            checked(sql(f"""update radar_piloto_participantes set inicio_em=clock_timestamp() where usuario_id='{shop}';
+              begin; {sessao(buyer, pedido(85))} reset role; commit;"""))
+        checked(coleta.result(timeout=15))
+    checked(sql(f"""do $$ begin assert (select estado='pendente' from whatsapp_fila
+      where usuario_id='{shop}' and chave like 'radar_pedido_novo:%' order by criado_em desc limit 1), 'I1 estoque novo não cancelado'; end $$;"""))
+
+    # I2: cada tipo faz a decisão final após a trava. O prazo de propostas só corta o pedido novo.
+    checked(sql(f"begin; {sessao(shop, "select salvar_preferencia_whatsapp_radar_tipo('proposta_escolhida',true);")} commit;"))
+    checked(sql(f"""begin; {sessao(buyer, pedido(86))}
+      {sessao(shop, proposta(":'ped'::uuid"))}
+      {sessao(buyer, "select * from escolher_proposta(:'prop'::uuid);")} reset role;
+      update whatsapp_fila set estado='enviando' where split_part(chave,':',2)=:'ped';
+      commit;"""))
+    ids = json.loads(valor(r"""select jsonb_object_agg(split_part(chave,':',1),id)::text as ids
+      from whatsapp_fila where estado='enviando' and split_part(chave,':',1) like 'radar_%'
+      \gset
+      \echo :ids"""))
+    assert set(ids) == {'radar_pedido_novo','radar_proposta_nova','radar_proposta_escolhida'}, ids
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        with transacao("select id from whatsapp_fila where id in (" + ",".join(f"'{v}'" for v in ids.values()) + ") for update;"):
+            consultas = [pool.submit(sql, f"begin; set local application_name='radar899-final{i}'; select whatsapp_fila_confirmar_envio('{item}'); commit;")
+                         for i, item in enumerate(ids.values())]
+            for i in range(3):
+                esperar_bloqueio(f'radar899-final{i}')
+            checked(sql(f"""update radar_pedidos set expira_em=clock_timestamp()
+              where id::text=(select split_part(chave,':',2) from whatsapp_fila where id='{ids['radar_pedido_novo']}');"""))
+        for chamada in consultas:
+            resposta = chamada.result(timeout=15)
+            checked(resposta)
+            assert 'cancelada' in resposta.stdout, resposta
     with ThreadPoolExecutor(max_workers=1) as pool:
         with transacao("""select id from radar_piloto_controle for update;
                           update radar_piloto_controle set modo='pausado';"""):

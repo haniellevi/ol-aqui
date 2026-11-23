@@ -64,12 +64,13 @@ test('5xx, timeout ou resposta sem key.fromMe é incerto; 4xx é falha', async (
 });
 
 test('sucesso: envia o texto e o número certos, sem seguir redirecionamento, e confirma a mensagem de saída', async () => {
-  const e = envio(), c = e.configuracaoEnvio(); const chamadas = [];
+  const e = envio(), c = e.configuracaoEnvio(); const chamadas = []; const comprovantes = [];
   global.fetch = async (url, op) => {
     chamadas.push([url, op]);
     return { ok: true, json: async () => (url.includes('connectionState') ? { instance: { state: 'open' } } : { key: { id: 'abc', fromMe: true } }) };
   };
-  assert.equal(await e.enviarTexto('5585999990001', 'Sua loja foi verificada https://exemplo.test/x', c), 'enviado');
+  assert.equal(await e.enviarTexto('5585999990001', 'Sua loja foi verificada https://exemplo.test/x', c, undefined, (hash) => comprovantes.push(hash)), 'enviado');
+  assert.match(comprovantes[0], /^[a-f0-9]{64}$/);
   assert.equal(chamadas.length, 2);
   assert.ok(chamadas[1][0].endsWith('/message/sendText/olaki'));
   const corpo = JSON.parse(chamadas[1][1].body);
@@ -80,7 +81,7 @@ test('sucesso: envia o texto e o número certos, sem seguir redirecionamento, e 
 });
 
 // --- Rota ---
-function rota({ segredoOk = true, linhas = [], resultados = [], configurar = true, pegarErro = false, decisoes = {} } = {}) {
+function rota({ segredoOk = true, linhas = [], resultados = [], configurar = true, pegarErro = false, decisoes = {}, comprovante } = {}) {
   const estado = { pausas: [], envios: [], rpcs: [], ordem: [] };
   const fila = [...resultados];
   const mod = carregar('src/app/api/interno/whatsapp-fila/route.ts', {
@@ -90,9 +91,12 @@ function rota({ segredoOk = true, linhas = [], resultados = [], configurar = tru
     '@/lib/formato': { SITE: 'https://site.exemplo.test' },
     '@/lib/whatsapp/envio': {
       configuracaoEnvio: () => { if (!configurar) throw Error('Envio indisponível.'); return { url: 'https://w.test', chave: 'k', instancia: 'i' }; },
-      enviarTexto: async (numero, texto, _config, conferir) => {
+      enviarTexto: async (numero, texto, _config, conferir, confirmarId) => {
         if (conferir && !(await conferir())) return 'recusado';
-        estado.envios.push([numero, texto]); estado.ordem.push('envio'); return fila.shift() ?? 'enviado';
+        estado.envios.push([numero, texto]); estado.ordem.push('envio');
+        const resultado = fila.shift() ?? 'enviado';
+        if (resultado === 'enviado' && comprovante) confirmarId(comprovante);
+        return resultado;
       },
     },
     '@/lib/supabase/admin': {
@@ -333,3 +337,13 @@ test('rota: RPC de conferência com erro (data nula + error) ou exceção não e
   }
 });
 
+
+test('C2: fila entrega o comprovante só quando há sucesso indicado pelo provedor', async () => {
+  const comprovante = 'a'.repeat(64);
+  const {mod, estado} = rota({ linhas: [linha(1), linha(2)], resultados: ['enviado','incerto'], comprovante });
+  assert.equal((await mod.POST(req)).corpo.ok, true);
+  assert.deepEqual(estado.rpcs.filter(([nome]) => ['whatsapp_radar_resultado_enviado','whatsapp_fila_resultado'].includes(nome)), [
+    ['whatsapp_radar_resultado_enviado', { p_id:'id-1', p_comprovante:comprovante }],
+    ['whatsapp_fila_resultado', { p_id:'id-2', p_resultado:'incerto' }],
+  ]);
+});

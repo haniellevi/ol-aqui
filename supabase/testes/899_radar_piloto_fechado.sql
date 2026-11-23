@@ -27,7 +27,7 @@ begin;
 select id as reg899 from microrregioes where slug='corrente-pi' \gset
 select id as cat899 from categorias where slug='sofas-e-poltronas' \gset
 update configuracoes set valor = 'true' where chave='radar.whatsapp_ativo' and microrregiao_id is null;
-update configuracoes set valor = '100' where chave in ('radar.pedidos_por_dia','radar.pedidos_abertos_max','radar.avisos_lojas_por_comprador_dia') and microrregiao_id is null;
+update configuracoes set valor = '100' where chave in ('radar.pedidos_por_dia','radar.pedidos_abertos_max','radar.avisos_lojas_por_comprador_dia','radar.avisos_lojas_por_dia') and microrregiao_id is null;
 insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em) values
   ('user_899buyer',:'reg899','Comprador fictício','Corrente','5589998990010',now()),
   ('user_899shop',:'reg899','Loja fictícia','Corrente','5589998990011',now()),
@@ -43,6 +43,8 @@ set local role authenticated;
 set local request.jwt.claim.sub='user_899out';
 select salvar_preferencia_whatsapp_radar_tipo('pedido_novo',true);
 reset role;
+update modelos_mensagem set texto='Atualização do Radar. Abra o aplicativo para conferir.'
+ where canal='whatsapp' and chave in ('pedido_novo','proposta_escolhida');
 update radar_piloto_controle set modo='fechado',rodada_id='89900000-0000-4000-d000-000000000001',
   microrregiao_id=:'reg899',inicio_em=statement_timestamp(),piso_fila_em=statement_timestamp(),fim_em=clock_timestamp()+interval '30 days';
 insert into radar_piloto_participantes(rodada_id,usuario_id,microrregiao_id,inicio_em,fim_em)
@@ -77,6 +79,8 @@ do $$ begin
   assert not exists(select from whatsapp_fila where usuario_id='user_899out'), 'loja com preferência ativa fora da coorte não recebe';
   assert (select count(*)=3 and count(distinct split_part(chave,':',1))=3 from whatsapp_fila
           where usuario_id in ('user_899buyer','user_899shop')), 'três gatilhos, sem duplicar proposta escolhida';
+  assert (select count(*)=2 and bool_and(texto like 'Atualização do Radar.%Responda SAIR para parar estes avisos.')
+          from whatsapp_fila where usuario_id='user_899shop'), 'I6 os dois produtores mantêm a personalização e a saída';
   assert exists(select from notificacoes where usuario_id='user_899out' and tipo='pedido_novo'), 'sino de fora preservado';
 end $$;
 
@@ -112,6 +116,6 @@ update radar_piloto_controle set modo='fechado',piso_fila_em=clock_timestamp();
 do $$ begin
   assert whatsapp_mensagem_recebida('5589998990010','sim',repeat('c',64))='nada';
   assert not (select ligado from preferencias_avisos where usuario_id='user_899buyer' and tipo='proposta_nova' and canal='whatsapp');
-  assert whatsapp_mensagem_recebida('5589998990010','voltar',repeat('d',64))='voltou';
+  assert whatsapp_radar_evento('5589998990010','voltar',null,repeat('d',64),clock_timestamp(),null)='voltou';
 end $$;
 rollback;

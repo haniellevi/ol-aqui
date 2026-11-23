@@ -30,9 +30,11 @@ export async function POST(req: Request) {
     const linhas = (data as Linha[]).slice(0, POR_RODADA);
     const total = { enviadas: 0, falhas: 0, incertas: 0, erros_resultado: 0, devolvidas: 0, canceladas: 0 };
 
-    async function gravarResultado(id: string, resultado: "enviado" | "incerto" | "falha") {
+    async function gravarResultado(id: string, resultado: "enviado" | "incerto" | "falha", comprovante?: string) {
       try {
-        const { error: erroResultado } = await db.rpc("whatsapp_fila_resultado", { p_id: id, p_resultado: resultado });
+        const { error: erroResultado } = comprovante && resultado === "enviado"
+          ? await db.rpc("whatsapp_radar_resultado_enviado", { p_id: id, p_comprovante: comprovante })
+          : await db.rpc("whatsapp_fila_resultado", { p_id: id, p_resultado: resultado });
         if (erroResultado) { total.erros_resultado++; console.error("whatsapp-fila: erro ao gravar o resultado do envio"); }
       } catch {
         total.erros_resultado++;
@@ -73,7 +75,9 @@ export async function POST(req: Request) {
 
       const texto = linha.link ? `${linha.texto} ${SITE}${linha.link}` : linha.texto;
       let resultado: "enviado" | "incerto" | "falha" | "recusado";
-      try { resultado = await enviarTexto(linha.numero, texto, config, conferir); } catch { resultado = "incerto"; }
+      let comprovante: string | undefined;
+      try { resultado = await enviarTexto(linha.numero, texto, config, conferir, (hash) => { comprovante = hash; }); }
+      catch { resultado = "incerto"; }
 
       if (resultado === "recusado") {
         // O banco já guardou o motivo (cancelada) ou a linha não está mais "enviando" (ignorada): nada a gravar aqui.
@@ -89,7 +93,7 @@ export async function POST(req: Request) {
       if (resultado === "enviado") total.enviadas++; else if (resultado === "falha") total.falhas++; else total.incertas++;
       // Sem resultado salvo, a linha fica "enviando" e o banco a trata como incerta depois de 10 minutos (nunca repete).
       // O supabase-js devolve { error } em vez de lançar; nada de texto do erro nem de telefone no log.
-      await gravarResultado(linha.id, resultado);
+      await gravarResultado(linha.id, resultado, comprovante);
     }
     return NextResponse.json({ ok: true, ...total });
   } catch {

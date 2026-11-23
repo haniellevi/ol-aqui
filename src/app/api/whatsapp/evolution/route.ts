@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 
 // Webhook de entrada da Evolution (mensagens recebidas). Só mensagem de pessoa com número legível faz efeito:
 // SAIR (ou PARAR, STOP, CANCELAR, frase curta de saída) desliga o aviso do Radar por WhatsApp e cancela a fila dele.
-// VOLTAR, SIM e as outras mensagens vão para o banco (whatsapp_mensagem_recebida), que decide e responde no máximo
-// uma vez por tipo e dia (a confirmação da volta sai uma por ativação). Vai só o resumo (sha256) do texto, para ver mensagem repetida. Texto e número não são registrados.
+// A entrada normal preserva a identidade, a hora de origem e a referência da resposta quando disponíveis.
+// IDs e texto bruto não são registrados. O banco decide quando uma mensagem autoriza a reativação.
 export async function POST(req: Request) {
   const segredo = segredoEvolution();
   if (!segredo) return NextResponse.json({ ok: false }, { status: 503 });
@@ -34,7 +34,16 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ ok: false }, { status: 503 });
   }
-  const { error } = pedido.intencao === "sair"
+  const { error } = pedido.evento && pedido.intencao !== "outra"
+    ? await db.rpc("whatsapp_radar_evento", {
+      p_numero: pedido.numero,
+      p_intencao: pedido.intencao,
+      p_comando: pedido.intencao === "sair" ? pedido.comando : null,
+      p_evento: pedido.evento.id,
+      p_ocorreu_em: pedido.evento.ocorreuEm,
+      p_citada: pedido.intencao === "sim" ? pedido.evento.citada : null,
+    })
+    : pedido.intencao === "sair"
     ? await db.rpc("whatsapp_sair", { p_numero: pedido.numero, p_comando: pedido.comando })
     : await db.rpc("whatsapp_mensagem_recebida", { p_numero: pedido.numero, p_intencao: pedido.intencao, p_hash: pedido.hash });
   if (error) {

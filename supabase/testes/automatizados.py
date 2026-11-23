@@ -80,6 +80,7 @@ try:
 
     radar_fechado = (root/'supabase/testes/899_radar_piloto_fechado.sql').read_text()
     checked(sql(radar_fechado))
+    checked(sql((root/"supabase/testes/899_radar_revisao.sql").read_text()))
     checked(sql((root/'supabase/testes/898_radar_ciclo_whatsapp.sql').read_text()))
     print('PASS: ciclo WhatsApp do Radar (proposta_nova, proposta_escolhida, fechar_pedido_radar, janela, SAIR/VOLTAR e permissões)', flush=True)
     checked(sql("""delete from public.pagamentos where asaas_cobranca_id='pay_reserva890';
@@ -240,13 +241,14 @@ try:
     def pergunta_870(i):
         return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','outra', encode(sha256(convert_to('pergunta{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
     def volta_870(i):
-        return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','sim', encode(sha256(convert_to('sim{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
+        return sql(f"begin; select whatsapp_radar_evento('5589999971001','sim',null,encode(sha256(convert_to('sim{i}','UTF8')),'hex'),clock_timestamp(),repeat('f',64)); select pg_sleep(0.2); commit;")
     def voltar_870(i):
         return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','voltar', encode(sha256(convert_to('voltar{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:
         perguntas=list(pool.map(pergunta_870,range(4)))
     for result in perguntas: checked(result)
     checked(sql("do $$ begin assert (select count(*)=1 from whatsapp_respostas where usuario_id='user_870conc' and comando='PERGUNTA_VOLTAR'), 'pergunta duplicada'; end $$;"))
+    checked(sql("update whatsapp_fila set estado='enviada', enviada_em=clock_timestamp(), radar_comprovante_pergunta=repeat('f',64) where chave like 'whatsapp_resposta:5589999971001:pergunta:%';"))
     with ThreadPoolExecutor(max_workers=4) as pool:
         voltas=list(pool.map(volta_870,range(4)))
     for result in voltas: checked(result)

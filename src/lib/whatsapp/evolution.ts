@@ -107,7 +107,12 @@ export function numeroDaConversa(key: ChaveDaMensagem): string | null {
   return numeroDoRemetente(key.remoteJid);
 }
 
-type MensagemRecebida = { key: ChaveDaMensagem & { fromMe?: unknown }; texto: unknown };
+type MensagemRecebida = {
+  key: ChaveDaMensagem & { fromMe?: unknown; id?: unknown };
+  texto: unknown;
+  timestamp: unknown;
+  citada: unknown;
+};
 
 /** Lê o evento só se for mensagem recebida (messages.upsert, fromMe falso). Outros eventos e mensagens nossas: null. */
 function mensagemRecebida(corpo: unknown): MensagemRecebida | null {
@@ -115,12 +120,16 @@ function mensagemRecebida(corpo: unknown): MensagemRecebida | null {
   const { event, data } = corpo as { event?: unknown; data?: unknown };
   if (typeof event !== "string" || event.toLowerCase().replace(/_/g, ".") !== "messages.upsert") return null;
   if (!data || typeof data !== "object") return null;
-  const { key, message } = data as {
-    key?: ChaveDaMensagem & { fromMe?: unknown };
-    message?: { conversation?: unknown; extendedTextMessage?: { text?: unknown } };
+  const { key, message, messageTimestamp } = data as {
+    key?: MensagemRecebida["key"];
+    messageTimestamp?: unknown;
+    message?: { conversation?: unknown; extendedTextMessage?: { text?: unknown; contextInfo?: { stanzaId?: unknown } } };
   };
   if (!key || key.fromMe !== false) return null;
-  return { key, texto: message?.conversation ?? message?.extendedTextMessage?.text };
+  return {
+    key, texto: message?.conversation ?? message?.extendedTextMessage?.text,
+    timestamp: messageTimestamp, citada: message?.extendedTextMessage?.contextInfo?.stanzaId,
+  };
 }
 
 /** Pedido de saída com número legível: { numero, comando }. Qualquer outra coisa: null. */
@@ -175,9 +184,28 @@ export function hashDaMensagem(texto: string): string {
   return createHash("sha256").update(fraseDaMensagem(texto)).digest("hex");
 }
 
-export type PedidoDeMensagem =
+export function hashIdWhatsapp(id: unknown, escopo = ""): string | null {
+  return typeof id === "string" && /^[\x21-\x7e]{1,128}$/.test(id)
+    ? createHash("sha256").update(escopo + "\0" + id).digest("hex") : null;
+}
+
+function eventoDaMensagem(msg: MensagemRecebida, numero: string) {
+  const canonico = numero.length === 13 ? numero : numero.slice(0, 4) + "9" + numero.slice(4);
+  const id = hashIdWhatsapp(msg.key.id, canonico);
+  if (!id) return undefined;
+  const segundos = typeof msg.timestamp === "string" && /^[0-9]{1,10}$/.test(msg.timestamp)
+    ? Number(msg.timestamp) : msg.timestamp;
+  return {
+    id, citada: hashIdWhatsapp(msg.citada),
+    ocorreuEm: typeof segundos === "number" && Number.isInteger(segundos) && segundos > 0 && segundos <= 9999999999
+      ? new Date(segundos * 1000).toISOString() : null,
+  };
+}
+
+export type PedidoDeMensagem = (
   | { numero: string; intencao: "sair"; comando: ComandoSaida }
-  | { numero: string; intencao: "voltar" | "sim" | "outra"; hash: string };
+  | { numero: string; intencao: "voltar" | "sim" | "outra"; hash: string }
+) & { evento?: ReturnType<typeof eventoDaMensagem> };
 
 /**
  * Mensagem recebida de pessoa com número legível e com texto, com a intenção dela. Mensagem nossa, de grupo, sem número
@@ -189,9 +217,11 @@ export function pedidoDeMensagem(corpo: unknown): PedidoDeMensagem | null {
   const numero = numeroDaConversa(msg.key);
   if (!numero) return null;
   const intencao = intencaoDaMensagem(msg.texto);
+  const evento = intencao === "outra" ? undefined : eventoDaMensagem(msg, numero);
+  const dados = evento ? { numero, evento } : { numero };
   if (intencao === "sair") {
     const comando = comandoDeSaida(msg.texto);
-    return comando ? { numero, intencao, comando } : null;
+    return comando ? { ...dados, intencao, comando } : null;
   }
-  return { numero, intencao, hash: hashDaMensagem(msg.texto) };
+  return { ...dados, intencao, hash: hashDaMensagem(msg.texto) };
 }

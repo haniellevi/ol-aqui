@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useOptimistic, useRef, useState, useTransition } from "react";
 import { salvarPreferenciaWhatsappRadar } from "@/app/(conta)/minha-conta/notificacoes/actions";
 import { Botao } from "@/components/ui/botao";
 import { TIPOS_AVISO_WHATSAPP_RADAR, type PreferenciaWhatsappRadar, type TipoAvisoWhatsappRadar } from "@/lib/tipos-radar";
@@ -12,7 +12,13 @@ const nomes: Record<TipoAvisoWhatsappRadar, string> = {
 };
 
 export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: PreferenciaWhatsappRadar }) {
-  const [tipos, setTipos] = useState(inicial.tipos);
+  const [tipos, aplicarTipo] = useOptimistic(inicial.tipos, (atuais, mudanca: { tipo: TipoAvisoWhatsappRadar; ligado: boolean }) => ({
+    ...atuais,
+    [mudanca.tipo]: {
+      ligado: mudanca.ligado,
+      confirmado_para_piloto: mudanca.ligado || atuais[mudanca.tipo].confirmado_para_piloto,
+    },
+  }));
   const [retorno, setRetorno] = useState<{ tipo: TipoAvisoWhatsappRadar; ok: boolean; texto: string } | null>(null);
   const trava = useRef(false);
   const rotulos = useRef<Partial<Record<TipoAvisoWhatsappRadar, HTMLParagraphElement | null>>>({});
@@ -23,15 +29,10 @@ export function PreferenciaWhatsappRadarBotao({ inicial }: { inicial: Preferenci
     trava.current = true;
     setRetorno(null);
     iniciar(async () => {
+      aplicarTipo({ tipo, ligado });
       try {
         const r = await salvarPreferenciaWhatsappRadar(tipo, ligado);
-        if (r.ok) {
-          if (confirmar) rotulos.current[tipo]?.focus();
-          setTipos((atuais) => ({
-            ...atuais,
-            [tipo]: { ligado, confirmado_para_piloto: ligado || atuais[tipo].confirmado_para_piloto },
-          }));
-        }
+        if (r.ok && confirmar) rotulos.current[tipo]?.focus();
         setRetorno({ tipo, ok: r.ok, texto: r.ok ? r.mensagem : r.erro });
       } catch {
         setRetorno({ tipo, ok: false, texto: "Não conseguimos salvar este aviso. Tente novamente." });

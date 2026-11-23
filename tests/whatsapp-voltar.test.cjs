@@ -53,10 +53,11 @@ test('intenção: VOLTAR só com a frase inteira; SIM só com a palavra; o resto
 
 test('pedido de mensagem: pessoa com número legível; mensagem nossa, grupo, status e outros eventos não valem', () => {
   const hVoltar = lib.hashDaMensagem('voltar');
-  assert.deepEqual(lib.pedidoDeMensagem(mensagem({ texto: 'voltar' })), { numero: NUMERO, intencao: 'voltar', hash: hVoltar });
-  assert.deepEqual(lib.pedidoDeMensagem(mensagem({ texto: 'Sim', extendida: true })), { numero: NUMERO, intencao: 'sim', hash: lib.hashDaMensagem('Sim') });
+  const evento = { id: lib.hashIdWhatsapp('MSG1', NUMERO), citada: null, ocorreuEm: null };
+  assert.deepEqual(lib.pedidoDeMensagem(mensagem({ texto: 'voltar' })), { numero: NUMERO, intencao: 'voltar', hash: hVoltar, evento });
+  assert.deepEqual(lib.pedidoDeMensagem(mensagem({ texto: 'Sim', extendida: true })), { numero: NUMERO, intencao: 'sim', hash: lib.hashDaMensagem('Sim'), evento });
   assert.deepEqual(lib.pedidoDeMensagem(mensagem({ texto: 'quero um sofá' })), { numero: NUMERO, intencao: 'outra', hash: lib.hashDaMensagem('quero um sofá') });
-  assert.deepEqual(lib.pedidoDeMensagem(mensagem({ texto: 'SAIR' })), { numero: NUMERO, intencao: 'sair', comando: 'SAIR' });
+  assert.deepEqual(lib.pedidoDeMensagem(mensagem({ texto: 'SAIR' })), { numero: NUMERO, intencao: 'sair', comando: 'SAIR', evento });
   // Sem texto (foto, figurinha, reação) não é pedido: não chama o banco
   assert.equal(lib.pedidoDeMensagem({ event: 'messages.upsert', data: { key: { remoteJid: `${NUMERO}@s.whatsapp.net`, fromMe: false }, message: { imageMessage: {} } } }), null);
   assert.equal(lib.pedidoDeMensagem(mensagem({ texto: '   ' })), null);
@@ -75,18 +76,27 @@ test('resumo da mensagem: igual para o mesmo texto normalizado, diferente para o
   assert.doesNotMatch(lib.hashDaMensagem('oi'), /oi/);
 });
 
-test('rota: VOLTAR, SIM e outra mensagem vão ao banco com a intenção e o resumo; SAIR continua em whatsapp_sair', async () => {
+test('rota preserva metadados dos comandos e mantém os contratos antigos quando faltam IDs', async () => {
   const chamadas = [];
-  const db = { rpc: async (...a) => { chamadas.push(a); return { data: 'nada', error: null }; } };
-  const POST = rota(db);
+  const POST = rota({ rpc: async (...a) => { chamadas.push(a); return { data: 'nada', error: null }; } });
   await comSegredo(SEGREDO, async () => {
-    for (const texto of ['voltar', 'sim', 'quero um sofá', 'SAIR']) {
-      assert.equal((await POST(pedido(mensagem({ texto }))).then((r) => r.status)), 200, texto);
+    const voltar = mensagem({ texto: 'voltar' });
+    voltar.data.messageTimestamp = 1785000001;
+    const sim = mensagem({ texto: 'sim', extendida: true });
+    sim.data.key.id = 'MSG2';
+    sim.data.messageTimestamp = '1785000002';
+    sim.data.message.extendedTextMessage.contextInfo = { stanzaId: 'PERGUNTA1' };
+    const antiga = mensagem({ texto: 'SAIR' });
+    delete antiga.data.key.id;
+    for (const entrada of [voltar, sim, mensagem({ texto: 'quero um sofá' }), antiga]) {
+      assert.equal((await POST(pedido(entrada))).status, 200);
     }
   });
   assert.deepEqual(chamadas, [
-    ['whatsapp_mensagem_recebida', { p_numero: NUMERO, p_intencao: 'voltar', p_hash: lib.hashDaMensagem('voltar') }],
-    ['whatsapp_mensagem_recebida', { p_numero: NUMERO, p_intencao: 'sim', p_hash: lib.hashDaMensagem('sim') }],
+    ['whatsapp_radar_evento', { p_numero: NUMERO, p_intencao: 'voltar', p_comando: null, p_evento: lib.hashIdWhatsapp('MSG1', NUMERO),
+      p_ocorreu_em: new Date(1785000001000).toISOString(), p_citada: null }],
+    ['whatsapp_radar_evento', { p_numero: NUMERO, p_intencao: 'sim', p_comando: null, p_evento: lib.hashIdWhatsapp('MSG2', NUMERO),
+      p_ocorreu_em: new Date(1785000002000).toISOString(), p_citada: lib.hashIdWhatsapp('PERGUNTA1') }],
     ['whatsapp_mensagem_recebida', { p_numero: NUMERO, p_intencao: 'outra', p_hash: lib.hashDaMensagem('quero um sofá') }],
     ['whatsapp_sair', { p_numero: NUMERO, p_comando: 'SAIR' }],
   ]);
@@ -128,4 +138,20 @@ test('rota: falha do banco na volta responde 503 e o log não traz número nem t
   assert.equal(erros.length, 1);
   assert.doesNotMatch(erros[0], new RegExp(NUMERO));
   assert.doesNotMatch(erros[0], /voltar/);
+});
+
+test('Evolution identifica evento, hora de origem e ID da mensagem citada sem guardar IDs brutos', () => {
+  const entrada = mensagem({ texto: 'SIM', extendida: true });
+  entrada.data.key.id = 'EVENTO01';
+  entrada.data.messageTimestamp = 1785000001;
+  entrada.data.message.extendedTextMessage.contextInfo = { stanzaId: 'PERGUNTA01' };
+  const pedido = lib.pedidoDeMensagem(entrada);
+  assert.match(pedido.evento.id, /^[a-f0-9]{64}$/);
+  assert.match(pedido.evento.citada, /^[a-f0-9]{64}$/);
+  assert.equal(pedido.evento.ocorreuEm, new Date(1785000001000).toISOString());
+  assert.deepEqual(lib.pedidoDeMensagem(entrada), pedido);
+  entrada.data.key.id = 'EVENTO02';
+  assert.notEqual(lib.pedidoDeMensagem(entrada).evento.id, pedido.evento.id);
+  delete entrada.data.messageTimestamp;
+  assert.equal(lib.pedidoDeMensagem(entrada).evento.ocorreuEm, null);
 });
