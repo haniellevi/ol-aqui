@@ -191,6 +191,31 @@ select pg_temp.confere898((select char_length(texto) <= 1000
   from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2_barreira' || ':' || :'prop2_barreira'),
   'barreira entre marcadores impede falso positivo em "Digite {loja} SAIR." e anexa rodapé padrão');
 
+-- Marcador colado antes ou depois do comando (SAIR{loja} / {pedido}SAIR) não cria falso positivo de fronteira de palavra
+update modelos_mensagem set texto = 'Chegou proposta para {pedido}. Para parar, digite SAIR{loja}.' where chave = 'proposta_nova' and canal = 'whatsapp';
+set local role authenticated;
+set local request.jwt.claim.sub = 'user_898comp2';
+select criar_pedido_radar_site('89800000-0000-4000-a000-000000000015', 'Sapateira 898', 'Corrente', 'propostas_prazo', 72, null, :'sofas'::uuid) ->> 'id' as ped2_colado1 \gset
+set local request.jwt.claim.sub = 'user_898loja2';
+select proposta_id as prop2_colado_a from propor_radar(:'ped2_colado1'::uuid, '89800000-0000-4000-c000-000000000002'::uuid, null, 47000, 'Sapateira') \gset
+reset role;
+select pg_temp.confere898((select char_length(texto) <= 1000
+  and texto = 'Chegou proposta para Sapateira 898. Para parar, digite SAIRLoja 898 Dois. Responda SAIR para parar estes avisos.'
+  from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2_colado1' || ':' || :'prop2_colado_a'),
+  'marcador colado após SAIR ("SAIR{loja}") não passa como instrução e recebe rodapé padrão');
+
+update modelos_mensagem set texto = 'Chegou proposta para {loja}: digite {pedido}SAIR para parar.' where chave = 'proposta_nova' and canal = 'whatsapp';
+set local role authenticated;
+set local request.jwt.claim.sub = 'user_898comp2';
+select criar_pedido_radar_site('89800000-0000-4000-a000-000000000016', 'Poltrona 898', 'Corrente', 'propostas_prazo', 72, null, :'sofas'::uuid) ->> 'id' as ped2_colado2 \gset
+set local request.jwt.claim.sub = 'user_898loja2';
+select proposta_id as prop2_colado_b from propor_radar(:'ped2_colado2'::uuid, '89800000-0000-4000-c000-000000000002'::uuid, null, 48000, 'Poltrona') \gset
+reset role;
+select pg_temp.confere898((select char_length(texto) <= 1000
+  and texto = 'Chegou proposta para Loja 898 Dois: digite Poltrona 898SAIR para parar. Responda SAIR para parar estes avisos.'
+  from whatsapp_fila where chave = 'radar_proposta_nova:' || :'ped2_colado2' || ':' || :'prop2_colado_b'),
+  'marcador colado antes de SAIR ("{pedido}SAIR") não passa como instrução e recebe rodapé padrão');
+
 -- Modelo de até 1.000 chars com {pedido} grande (estouraria 1.000 após variáveis) preserva espaço para SAIR completo no fim
 update modelos_mensagem
    set texto = repeat('A', 935) || ' {loja} "{pedido}". Responda SAIR para parar estes avisos.'

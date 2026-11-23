@@ -199,8 +199,9 @@ begin
     if modelo_wa.id is not null and modelo_wa.ativo then
       begin
         -- Verifica instrução de saída SOMENTE no texto estático do modelo (antes de substituir {pedido}/{loja}),
-        -- usando delimitador-barreira (\x01) para impedir que a instrução atravesse marcadores.
-        modelo_static := regexp_replace(modelo_wa.texto, '\{[^{}]*\}', chr(1), 'g');
+        -- trocando marcadores por token alfanumérico neutro (XVARX) para impedir falso positivo colado (SAIR{loja}/{pedido}SAIR)
+        -- ou atravessando variáveis (Digite {loja} SAIR).
+        modelo_static := regexp_replace(modelo_wa.texto, '\{[^{}]*\}', 'XVARX', 'g');
         if modelo_static ~* '(\m(responda|envie|mande|digite|escreva)\s+["''“”]?sair\M|\msair\s+(para\s+(parar|cancelar|desativar|n[aã]o\s+receber)|aqui\s+para\s+parar)\M)' then
           texto_cheio := public.mensagem_montar(modelo_wa.texto, vars, 4000);
           if char_length(texto_cheio) <= 1000 then
