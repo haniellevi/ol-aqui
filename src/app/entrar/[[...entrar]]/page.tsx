@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { classesBotao } from "@/components/ui/botao";
 import { SignIn } from "@clerk/nextjs";
 import { LINK_ENTRAR_PERFIL, LINK_PRIVACIDADE, LINK_TERMOS } from "@/lib/rotas";
 import { objetivoAssistente, tentativaAssistente } from "@/lib/assistente";
@@ -17,7 +19,7 @@ export const metadata = { title: "Entrar" };
 // os botões, sem sombra e com títulos menores. Os valores de cor e fonte vêm do ClerkProvider.
 const APARENCIA_LOGIN = {
   elements: {
-    rootBox: { width: "100%" },
+    rootBox: { width: "100%", "& :focus-visible": { outline: "3px solid var(--color-laranja-escuro)", outlineOffset: "2px" } },
     cardBox: { width: "100%", boxShadow: "none", border: "1px solid var(--color-borda)" },
     card: { boxShadow: "none", padding: "1rem", gap: "1rem" },
     logoBox: { display: "none" },
@@ -29,7 +31,10 @@ const APARENCIA_LOGIN = {
     formFieldRow: { flexDirection: "column", alignItems: "stretch" },
     formFieldLabel: { fontSize: "0.875rem", fontWeight: 600 },
     formFieldInput: { minHeight: "2.75rem", fontSize: "1rem" },
-    formButtonPrimary: { minHeight: "2.75rem", fontSize: "0.875rem" },
+    formButtonPrimary: { minHeight: "3rem", fontSize: "0.875rem", background: "var(--color-laranja)", color: "var(--color-beringela)", boxShadow: "none", borderRadius: "var(--radius-campo)", "&::after": { backgroundImage: "none", boxShadow: "none" } },
+    formFieldInputShowPasswordButton: { minWidth: "2.75rem", minHeight: "2.75rem" },
+    formFieldAction: { display: "inline-flex", alignItems: "center", minHeight: "2.75rem" },
+    footerActionLink: { display: "inline-flex", alignItems: "center", minHeight: "2.75rem" },
     footer: { background: "transparent", fontSize: "0.8125rem" },
   },
 };
@@ -58,7 +63,10 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   const depoisDeCriar = (assistido || retorno.pathname === "/confirmar-celular") ? destino
     : destino === "/" ? LINK_ENTRAR_PERFIL : `${LINK_ENTRAR_PERFIL}?redirect_url=${encodeURIComponent(destino)}`;
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-3 px-4 py-4 sm:gap-4 sm:py-8">
+    <main className="entrada-local mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-3 px-4 py-4 sm:gap-4 sm:py-8">
+      <Link href="/" className={`${classesBotao("texto", false, "", "toque")} self-start`}>
+        <ArrowLeft aria-hidden className="size-4" /> Voltar ao início
+      </Link>
       <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região, aqui a sua cidade aparece" width={200} height={52} priority />
       <SignIn
         path="/entrar"
@@ -68,13 +76,13 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
         signUpForceRedirectUrl={depoisDeCriar}
         appearance={APARENCIA_LOGIN}
       />
-      <p className="max-w-xs text-center text-xs leading-relaxed text-texto-suave">
+      <p className="max-w-xs text-center text-legenda leading-relaxed text-texto-suave">
         Ao criar sua conta, você vai ler e aceitar os{" "}
-        <Link href={LINK_TERMOS} className="font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_TERMOS} className="inline-flex min-h-toque items-center font-semibold text-laranja-escuro underline underline-offset-4">
           Termos de uso
         </Link>{" "}
         e a{" "}
-        <Link href={LINK_PRIVACIDADE} className="font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_PRIVACIDADE} className="inline-flex min-h-toque items-center font-semibold text-laranja-escuro underline underline-offset-4">
           Política de privacidade
         </Link>
         .
