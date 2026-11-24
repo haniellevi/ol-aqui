@@ -16,7 +16,7 @@ export function VincularAssistente({ dono, objetivo, tentativa, destino }: { don
     }
   }, [dono, objetivo, tentativa]);
   useEffect(vincular, [vincular]);
-  return destino ? <Botao href={destino} onClick={vincular}>Completar minha conta</Botao> : null;
+  return destino ? <Botao tamanho="acao" href={destino} onClick={vincular}>Completar minha conta</Botao> : null;
 }
 
 export function RetomarRadar({ dono, tentativa }: { dono: string; tentativa: string }) {
@@ -24,8 +24,8 @@ export function RetomarRadar({ dono, tentativa }: { dono: string; tentativa: str
   useEffect(() => {
     setHref(destinoRadarAssistente(progressoAtual(dono), tentativa));
   }, [dono, tentativa]);
-  return href ? <Botao href={href}>Continuar no Radar</Botao>
-    : <Botao disabled>Continuar no Radar</Botao>;
+  return href ? <Botao tamanho="acao" href={href}>Continuar no Radar</Botao>
+    : <Botao tamanho="acao" disabled>Continuar no Radar</Botao>;
 }
 
 export function RegistrarAnuncio({ dono, tentativa, id, passo, pagamento }: { dono: string; tentativa: string; id: string; passo: SlugPasso; pagamento?: string }) {
@@ -61,7 +61,7 @@ export function AbrirRadarAssistido({ busca, dono, texto = "Publicar pedido no R
 }
 
 export function EscolherRadar({ dono, tentativa, href }: { dono: string | null; tentativa: string; href: string }) {
-  return <Botao href={href} onClick={() => {
+  return <Botao href={href} tamanho="acao" onClick={() => {
     const atual = progressoAtual(dono);
     if (atual?.tentativa === tentativa) salvarProgresso(dono, { ...atual, radar: atual.radar ?? {} });
   }}>Publicar pedido no Radar</Botao>;

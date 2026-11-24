@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Botao } from "@/components/ui/botao";
 import { OBJETIVOS, linkAssistente, type ObjetivoAssistente, type ProgressoAssistente } from "@/lib/assistente";
 import { EVENTO_ASSISTENTE, marcarConviteVisto, progressoAtual, salvarProgresso } from "./progresso";
 
-export function EntradaAssistente({ dono }: { dono: string | null }) {
+export function EntradaAssistente({ dono, ocultarContinuar = false }: { dono: string | null; ocultarContinuar?: boolean }) {
   const titulo = useRef<HTMLHeadingElement>(null);
+  const gatilho = useRef<HTMLButtonElement>(null);
+  const ajudaAberta = useRef(false);
   const [aberto, setAberto] = useState(false);
   const [estado, setEstado] = useState<{ atual: ProgressoAssistente | null } | null>(null);
 
@@ -24,7 +27,11 @@ export function EntradaAssistente({ dono }: { dono: string | null }) {
     };
   }, [dono]);
 
-  useEffect(() => { if (aberto) titulo.current?.focus(); }, [aberto]);
+  useEffect(() => {
+    if (aberto) titulo.current?.focus();
+    else if (ajudaAberta.current) gatilho.current?.focus();
+    ajudaAberta.current = aberto;
+  }, [aberto]);
 
   function viuConvite() {
     marcarConviteVisto();
@@ -46,10 +53,10 @@ export function EntradaAssistente({ dono }: { dono: string | null }) {
   return (
     <section aria-label="Assistente de primeiros passos" className="flex flex-wrap items-center gap-2">
       {aberto ? (
-        <div className="flex w-full flex-col gap-2 rounded-card border border-borda bg-cartao p-3">
+        <div className="flex w-full flex-col gap-2 rounded-card border border-borda bg-cartao p-3" onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setAberto(false); } }}>
           <div className="flex items-center justify-between gap-2">
             <h2 ref={titulo} tabIndex={-1} className="text-base font-semibold">O que você quer fazer hoje?</h2>
-            <button type="button" aria-label="Fechar ajuda" className="grid size-12 shrink-0 place-items-center rounded-campo text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro" onClick={() => setAberto(false)}><X className="size-5" aria-hidden /></button>
+            <Button variant="ghost" size="icon-lg" aria-label="Fechar ajuda" onClick={() => setAberto(false)}><X className="size-5" aria-hidden /></Button>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {(Object.keys(OBJETIVOS) as ObjetivoAssistente[]).map((objetivo) => (
@@ -59,8 +66,8 @@ export function EntradaAssistente({ dono }: { dono: string | null }) {
         </div>
       ) : (
         <>
-          {estado?.atual && <Botao tamanho="toque" href={linkAssistente(estado.atual.objetivo, estado.atual.tentativa) + (estado.atual.radar ? "&radar=1" : "")}>Continuar</Botao>}
-          <Botao variante="texto" tamanho="toque" disabled={!estado} onClick={() => { viuConvite(); setAberto(true); }}>Preciso de ajuda</Botao>
+          {!ocultarContinuar && estado?.atual && <Botao tamanho="toque" href={linkAssistente(estado.atual.objetivo, estado.atual.tentativa) + (estado.atual.radar ? "&radar=1" : "")}>Continuar</Botao>}
+          <Botao ref={gatilho} variante="texto" tamanho="toque" disabled={!estado} onClick={() => { viuConvite(); setAberto(true); }}>Preciso de ajuda</Botao>
         </>
       )}
     </section>

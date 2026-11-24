@@ -26,6 +26,7 @@ import {
 } from "./abrir";
 import { RespostaAki } from "./resposta-aki";
 import { classesCampo } from "@/components/ui/input";
+import { Dialog, DialogConversaContent, DialogTitle } from "@/components/ui/dialog";
 import { Alert } from "@/components/ui/alert";
 
 // Balão flutuante do Merc + folha de conversa (DESIGN-SYSTEM.md: folha rounded-t-folha, shadow-2,
@@ -94,6 +95,8 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
   const lista = useRef<HTMLDivElement>(null);
   const caixa = useRef<HTMLTextAreaElement>(null);
   const completoCarregado = useRef(false);
+  const gatilho = useRef<HTMLElement | null>(null);
+  const fechar = useRef<HTMLButtonElement>(null);
 
   // estado leve ao montar: o Merc existe nesta região? (desligado no painel = sem balão)
   // Na tela cheia a conversa abre direto (estado completo, logo abaixo).
@@ -148,6 +151,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
   const podeAgora = !!estado?.pode;
   const abrir = useCallback(
     (pedido?: PedidoAbrirAki) => {
+      gatilho.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       setAberto(true);
       setDica(null);
       mostrarDicaAki(null);
@@ -175,19 +179,6 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
     window.addEventListener(EVENTO_DICA_AKI, ouvir);
     return () => window.removeEventListener(EVENTO_DICA_AKI, ouvir);
   }, []);
-
-  // folha aberta: Esc fecha e a página de trás não rola (na tela cheia não há o que fechar)
-  useEffect(() => {
-    if (!aberto || pagina) return;
-    const tecla = (e: KeyboardEvent) => e.key === "Escape" && setAberto(false);
-    window.addEventListener("keydown", tecla);
-    const antes = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", tecla);
-      document.body.style.overflow = antes;
-    };
-  }, [aberto, pagina]);
 
   useEffect(() => {
     lista.current?.scrollTo({ top: lista.current.scrollHeight, behavior: "smooth" });
@@ -392,7 +383,10 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
 
   // telas com barra fixa embaixo (passos do anúncio, página do anúncio): o balão sobe para não cobrir
   const elevado = caminho.startsWith("/anunciar/") || caminho.startsWith("/anuncio/");
-  const semAtalhoMovel = caminho.startsWith(`${LINK_ATENDIMENTO}/`) || caminho.startsWith("/anunciar/") ? "max-md:hidden" : "";
+  // No celular, a ação da página tem precedência sobre o atalho flutuante.
+  const semAtalhoMovel = [
+    `${LINK_ATENDIMENTO}/`, "/anunciar/", "/c/", "/categorias", "/loja/", "/ajuda", "/anuncio/",
+  ].some((rota) => caminho.startsWith(rota)) ? "max-md:hidden" : "";
   const posicao = elevado
     ? "bottom-[calc(8rem+env(safe-area-inset-bottom))] md:bottom-28"
     : "bottom-[calc(var(--spacing-barra-nav)+1rem+env(safe-area-inset-bottom))] md:bottom-6";
@@ -405,8 +399,11 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
   const motivoTexto = estado.logado && !estado.pode ? mensagemBloqueio(estado.motivo) : null;
   const vazio = mensagens.length === 0;
 
+  const Conteiner = pagina ? "section" : DialogConversaContent;
+  const Titulo = pagina ? "h1" : DialogTitle;
+
   return (
-    <>
+    <Dialog open={!pagina && aberto} onOpenChange={setAberto}>
       <input
         ref={inputFoto}
         type="file"
@@ -450,20 +447,11 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
       )}
 
       {aberto && (
-        <div className={pagina ? "contents" : "fixed inset-0 z-50"} role="presentation">
-          {!pagina && (
-            <button type="button" aria-label="Fechar o Merc" className="absolute inset-0 bg-beringela/40" onClick={() => setAberto(false)} />
-          )}
-          <section
-            role={pagina ? undefined : "dialog"}
-            aria-modal={pagina ? undefined : true}
-            aria-labelledby="aki-titulo"
-            className={
-              pagina
-                ? "mx-auto flex h-dvh w-full max-w-2xl flex-col bg-cartao md:border-x md:border-borda"
-                : "absolute inset-x-0 bottom-0 mx-auto flex h-[88dvh] max-w-lg flex-col rounded-t-folha bg-cartao shadow-2 md:bottom-6 md:right-6 md:left-auto md:h-[min(720px,85dvh)] md:w-[420px] md:rounded-folha"
-            }
-          >
+        <Conteiner
+          {...(!pagina ? { initialFocus: fechar, finalFocus: () => gatilho.current?.isConnected ? gatilho.current : false } : {})}
+          aria-labelledby="aki-titulo"
+          className={pagina ? "mx-auto flex h-dvh w-full max-w-2xl flex-col bg-cartao md:border-x md:border-borda" : undefined}
+        >
             <header className={`flex items-center gap-2 border-b border-borda py-1 pr-1 ${pagina ? "pl-1" : "pl-4"}`}>
               {pagina && (
                 <Link href={voltarDaAjuda ?? "/"} aria-label={voltarDaAjuda ? "Voltar à confirmação" : "Voltar ao início"} className="grid size-toque shrink-0 place-items-center text-beringela">
@@ -472,15 +460,9 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
               )}
               <MascoteAki tamanho={32} />
               <div className="min-w-0 flex-1">
-                {pagina ? (
-                  <h1 id="aki-titulo" className="text-lg leading-6 font-semibold">
-                    Merc
-                  </h1>
-                ) : (
-                  <h2 id="aki-titulo" className="text-lg leading-6 font-semibold">
-                    Merc
-                  </h2>
-                )}
+                <Titulo id="aki-titulo" className="text-lg leading-6 font-semibold">
+                  Merc
+                </Titulo>
                 <p className="text-legenda leading-[18px] text-texto-suave">Ajudante do Mercado da Região</p>
               </div>
               {estado.logado && mensagens.length > 0 && (
@@ -496,7 +478,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                 </button>
               )}
               {!pagina && (
-                <button type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-toque place-items-center text-beringela">
+                <button ref={fechar} type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-toque place-items-center text-beringela">
                   <X className="size-6" aria-hidden />
                 </button>
               )}
@@ -680,9 +662,8 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                 <p className="text-center text-legenda text-texto-suave">Entre na sua conta para conversar com o Merc.</p>
               )}
             </footer>
-          </section>
-        </div>
+        </Conteiner>
       )}
-    </>
+    </Dialog>
   );
 }

@@ -63,7 +63,7 @@ export function CampoBusca({
         <button
           type="submit"
           aria-label="Buscar"
-          className={cn(buttonVariants({ variant: "ghost", size: "icon-lg" }), "size-auto h-full aspect-square")}
+          className={cn(buttonVariants({ variant: "ghost", size: "icon-lg" }), "size-toque shrink-0")}
         >
           <Search className="size-5" aria-hidden />
         </button>

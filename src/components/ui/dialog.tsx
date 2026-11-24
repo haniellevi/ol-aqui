@@ -86,6 +86,19 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// Conversa: a mesma folha de antes, com foco, rolagem e isolamento do Dialog.
+function DialogConversaContent({ className, ...props }: DialogPrimitive.Popup.Props) {
+  return (
+    <DialogPortal>
+      <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-beringela/40" />
+      <DialogPrimitive.Popup
+        className={cn("fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[88dvh] max-w-lg flex-col rounded-t-folha bg-cartao shadow-2 outline-none md:bottom-6 md:right-6 md:left-auto md:h-[min(720px,85dvh)] md:w-[420px] md:rounded-folha", className)}
+        {...props}
+      />
+    </DialogPortal>
+  )
+}
+
 function DialogFooter({
   className,
   showCloseButton = false,
@@ -140,6 +153,7 @@ export {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogConversaContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,

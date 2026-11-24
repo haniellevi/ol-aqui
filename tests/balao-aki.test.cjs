@@ -42,6 +42,11 @@ function renderBalao({ modo = 'balao', estados = {} } = {}) {
   ];
   let indice = 0;
   const { BalaoAki } = carregar('src/components/aki/balao-aki.tsx', {
+    "@/components/ui/dialog": {
+      Dialog: ({ children }) => React.createElement(React.Fragment, null, children),
+      DialogConversaContent: ({ children }) => React.createElement("section", { role: "dialog" }, children),
+      DialogTitle: ({ children, ...props }) => React.createElement("h2", props, children),
+    },
     react: {
       ...React,
       useState: (inicial) => {
@@ -128,4 +133,41 @@ test('RespostaAki usa botões de avaliação >= 44px e quebra URLs longas nas me
   assert.match(html, /aria-label="Ajudou"[^>]*class="[^"]*size-toque/);
   assert.match(html, /aria-label="Não ajudou"[^>]*class="[^"]*size-toque/);
   assert.doesNotMatch(html, /\bsize-10\b/);
+});
+
+// P0: a busca pode ocultar o atalho, nunca o contêiner da conversa.
+test("busca mobile mantém contêiner do assistente visível e conversa usa portal modal", () => {
+  const fs = require("node:fs");
+  const css = fs.readFileSync("src/app/globals.css", "utf8");
+  assert.doesNotMatch(css, /[^{}]*\.assistente-publico[^{}]*\{[^{}]*display:\s*none/s);
+  assert.match(css, /\[data-comprador\][^{}]*\[data-aki-atalho\]/);
+  const balao = fs.readFileSync("src/components/aki/balao-aki.tsx", "utf8");
+  assert.match(balao, /pagina \? \"section\" : DialogConversaContent/);
+  assert.doesNotMatch(balao, /document\.body\.style\.overflow\s*=/);
+  const dialog = fs.readFileSync("src/components/ui/dialog.tsx", "utf8");
+  assert.match(dialog, /function DialogConversaContent[\s\S]*?<DialogPortal>[\s\S]*?<DialogPrimitive\.Popup/);
+});
+
+test("folha de conversa preserva posicionamento mesmo sem className do consumidor", () => {
+  const { DialogConversaContent } = carregar("src/components/ui/dialog.tsx", {
+    "@base-ui/react/dialog": { Dialog: {
+      Portal: ({ children }) => React.createElement(React.Fragment, null, children),
+      Backdrop: (props) => React.createElement("div", props),
+      Popup: (props) => React.createElement("section", props),
+    } },
+  });
+  const html = render(React.createElement(DialogConversaContent, { className: undefined }, "Exemplo"));
+  assert.match(html, /<section class=\"[^\"]*fixed[^\"]*h-\[88dvh\]/);
+});
+
+test("entrada na própria tentativa não repete Continuar", () => {
+  function entrada(ocultarContinuar) {
+    let i = 0;
+    const valores = [false, { atual: { objetivo: "procurar", tentativa: "exemplo", dono: null } }];
+    const { EntradaAssistente } = carregar("src/components/assistente/entrada.tsx", { react: { ...React, useState: () => [valores[i++], () => {}], useEffect: () => {}, useRef: () => ({current:null}) } });
+    return render(React.createElement(EntradaAssistente, {dono:null, ocultarContinuar}));
+  }
+  assert.match(entrada(false), /Continuar/);
+  assert.doesNotMatch(entrada(true), /Continuar/);
+  assert.match(entrada(true), /Preciso de ajuda/);
 });

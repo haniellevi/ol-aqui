@@ -13,11 +13,11 @@ export const classesCampo =
 // Campo com peça junto (ex.: a busca com a lupa): a caixa vai no grupo e a entrada fica sem borda.
 // Altura fixa de 44px também com mouse (DESIGN.md, seção 4: barra de busca).
 export const classesGrupoCampo =
-  "relative flex h-controle w-full min-w-0 items-center rounded-campo border border-input bg-card pl-3 transition-colors " +
+  "relative flex min-h-controle w-full min-w-0 items-center rounded-campo border border-input bg-card pl-3 transition-colors " +
   "focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30"
 
 export const classesEntradaGrupo =
-  "h-full min-w-0 flex-1 bg-transparent text-lg font-normal pointer-fine:md:text-base text-foreground outline-none placeholder:text-muted-foreground"
+  "min-h-toque min-w-0 flex-1 bg-transparent text-lg font-normal pointer-fine:md:text-base text-foreground outline-none placeholder:text-muted-foreground"
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (

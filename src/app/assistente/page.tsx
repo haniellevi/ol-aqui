@@ -43,7 +43,7 @@ export default async function PaginaAssistente({ searchParams }: { searchParams:
     if (!conta) {
       conteudo = <>
         <h1 className="text-titulo font-semibold">Não conseguimos abrir sua conta</h1>
-        <Botao href={destino}>Tentar de novo</Botao>
+        <Botao tamanho="acao" href={destino}>Tentar de novo</Botao>
       </>;
     } else if (!conta.perfil.whatsapp || !conta.perfil.whatsapp_verificado_em || (await termosPendentes()).length > 0) {
       pendencia = `/completar-perfil?redirect_url=${encodeURIComponent(destino)}`;
@@ -57,12 +57,12 @@ export default async function PaginaAssistente({ searchParams }: { searchParams:
     } else if (conta.vitrine?.status === "suspensa") {
       conteudo = <>
         <h1 className="text-titulo font-semibold">Sua conta de vendedor está suspensa</h1>
-        <Botao href="/minha-conta/atendimento">Falar com o suporte</Botao>
+        <Botao tamanho="acao" href="/minha-conta/atendimento">Falar com o suporte</Botao>
       </>;
     } else if (objetivo === "loja" && conta.vitrine?.tipo !== "loja") {
       conteudo = <>
         <h1 className="text-titulo font-semibold">Cadastre sua loja para anunciar</h1>
-        <Botao href={comAssistente("/quero-vender/loja", tentativa)}>Cadastrar minha loja</Botao>
+        <Botao tamanho="acao" href={comAssistente("/quero-vender/loja", tentativa)}>Cadastrar minha loja</Botao>
       </>;
     } else if (!conta.vitrine) {
       conteudo = <>
@@ -73,14 +73,14 @@ export default async function PaginaAssistente({ searchParams }: { searchParams:
       conteudo = <>
         <h1 className="text-titulo font-semibold">O anúncio sairá pela loja {conta.vitrine.nome}</h1>
         <form action={anunciarPelaVitrinePropria.bind(null, tentativa, objetivo)}>
-          <Botao type="submit" larguraTotal>Anunciar pela loja</Botao>
+          <Botao tamanho="acao" type="submit" larguraTotal>Anunciar pela loja</Botao>
         </form>
       </>;
     } else {
       conteudo = <>
         <h1 className="text-titulo font-semibold">Vamos preparar seu anúncio</h1>
         <form action={anunciarPelaVitrinePropria.bind(null, tentativa, objetivo)}>
-          <Botao type="submit" larguraTotal>Continuar para o anúncio</Botao>
+          <Botao tamanho="acao" type="submit" larguraTotal>Continuar para o anúncio</Botao>
         </form>
       </>;
     }
@@ -91,7 +91,7 @@ export default async function PaginaAssistente({ searchParams }: { searchParams:
       <Image src="/logo/mercado-da-regiao-logo.svg" alt="Mercado da Região" width={200} height={52} priority />
       {conteudo}
       {userId && <VincularAssistente dono={userId} objetivo={objetivo} tentativa={tentativa} destino={pendencia} />}
-      <EntradaAssistente dono={userId} />
+      <EntradaAssistente dono={userId} ocultarContinuar />
     </main>
   );
 }
