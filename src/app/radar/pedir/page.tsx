@@ -5,9 +5,8 @@ import { tentativaAssistente } from "@/lib/assistente";
 // confirmou digita o WhatsApp no próprio formulário.
 // Sem login a pessoa também escreve o pedido (região do visitante, sem IA); no fim o formulário
 // guarda o rascunho e manda entrar. Volta por ?retomar=1 já no resumo (src/lib/rascunho-radar.ts).
-import Link from "next/link";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { ChevronLeft, Smartphone } from "lucide-react";
+import { Smartphone } from "lucide-react";
 import { garantirPerfil, sincronizarPerfil } from "@/lib/perfil";
 import { meuPerfilEVitrine } from "@/lib/dados/conta";
 import { listarCategorias } from "@/lib/dados/categorias";
@@ -19,7 +18,8 @@ import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { FormPedido } from "@/components/radar/form-pedido";
 import { estadoRadarIA } from "@/lib/radar-ia/uso";
-import { LINK_VOLTAR } from "@/components/radar/util";
+import { TaskFrame } from "@/components/ui/task-frame";
+import { AvisoTermos } from "@/components/paginas/aviso-termos";
 import { Alert } from "@/components/ui/alert";
 import { dddDaRegiao } from "@/lib/telefone-regiao";
 
@@ -98,17 +98,7 @@ export default async function PedirRadarPage({ searchParams }: { searchParams: P
 
 function Moldura({ children }: { children: React.ReactNode }) {
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-6">
-      <header className="flex flex-col gap-1">
-        <Link href={LINK_RADAR} className={LINK_VOLTAR}>
-          <ChevronLeft className="size-5" aria-hidden />
-          Radar
-        </Link>
-        <h1 className="text-facil-titulo font-semibold text-beringela">Estou procurando…</h1>
-        <p className="text-facil text-texto-suave">Diga o que precisa. As lojas da região te respondem.</p>
-      </header>
-      {children}
-    </main>
+    <TaskFrame><AvisoTermos />{children}</TaskFrame>
   );
 }
 
@@ -118,6 +108,7 @@ function ErroConta() {
       <Botao href="/radar/pedir" larguraTotal tamanho="grande">
         Tentar de novo
       </Botao>
+      <Botao href={LINK_RADAR} variante="secundario" tamanho="grande">Voltar ao Radar</Botao>
     </Vazio>
   );
 }

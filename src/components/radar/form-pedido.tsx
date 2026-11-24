@@ -16,7 +16,7 @@ import { criarPedido } from "@/app/radar/actions";
 import { iaDoPedido } from "@/app/radar/ia-actions";
 import { comPrazo } from "@/lib/radar-ia/prazo";
 import type { ParecidoIA, PerguntaIA } from "@/lib/radar-ia/tipos";
-import { linkMeuPedidoRadar } from "@/lib/rotas";
+import { linkMeuPedidoRadar, LINK_RADAR } from "@/lib/rotas";
 import { guardarRascunho, lerRascunho, limparRascunho, LINK_RETOMAR_PEDIDO } from "@/lib/rascunho-radar";
 import { centavosDoTexto } from "@/lib/formato";
 import { useCampoTelefone } from "@/components/ui/use-campo-telefone";
@@ -105,6 +105,7 @@ export function FormPedido({ dono, assistente, confirmar, textoInicial, categori
   const [detalhes, setDetalhes] = useState(detalhesInicial.slice(0, 1000));
   const [categoriaId, setCategoriaId] = useState<string | null>(categoriaInicial);
   const [precoMin, setPrecoMin] = useState(precoMinInicial);
+  const [precosAbertos, setPrecosAbertos] = useState(Boolean(precoMinInicial || precoMaxInicial));
   const [precoMax, setPrecoMax] = useState(precoMaxInicial);
   const [area, setArea] = useState<string[]>(cidadesIniciais);
   const [visibilidade, setVisibilidade] = useState<Visibilidade>(visibilidadeInicial);
@@ -145,6 +146,7 @@ export function FormPedido({ dono, assistente, confirmar, textoInicial, categori
     setCategoriaId(r.categoriaId);
     setPrecoMin(r.precoMin);
     setPrecoMax(r.precoMax);
+    setPrecosAbertos(Boolean(r.precoMin || r.precoMax));
     setArea(area.ids);
     setVisibilidade(r.visibilidade);
     if (r.prazoHoras != null && regras.prazosHoras.includes(r.prazoHoras)) setPrazo(r.prazoHoras);
@@ -163,12 +165,13 @@ export function FormPedido({ dono, assistente, confirmar, textoInicial, categori
   // Com erro, o foco vai para o campo do erro (ou para o aviso).
   useEffect(() => {
     if (!erro) return;
+    if (erro.campo?.startsWith("preco") && !precosAbertos) { setPrecosAbertos(true); return; }
     const campos: Record<string, string> = { preco_min_centavos: "preco_min", preco_max_centavos: "preco_max", preco: "preco_max" };
     const nome = campos[erro.campo ?? ""] ?? erro.campo;
     const alvo = nome ? formulario.current?.elements.namedItem(nome) : null;
     if (alvo instanceof HTMLElement) alvo.focus();
     else formulario.current?.querySelector<HTMLElement>('[role="alert"]')?.focus();
-  }, [erro]);
+  }, [erro, precosAbertos]);
 
   function irPara(n: NumeroPasso) {
     trocouPasso.current = true;
@@ -307,8 +310,8 @@ export function FormPedido({ dono, assistente, confirmar, textoInicial, categori
   const precoTexto = faixaPreco(centavosDoTexto(precoMin), centavosDoTexto(precoMax));
 
   return (
-    <form ref={formulario} onSubmit={aoEnviarFormulario} noValidate>
-      <fieldset disabled={enviando || pensando} className="flex min-w-0 flex-col gap-6">
+    <form ref={formulario} onSubmit={aoEnviarFormulario} noValidate className="flex min-h-0 flex-1 flex-col">
+      <fieldset disabled={enviando || pensando} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto pb-4">
         {retomado === "sem_rascunho" ? (
           <Alert variant="warning" role="status" className="text-facil">Não achamos o pedido que você começou. Escreva de novo, é rápido.</Alert>
         ) : retomado && passo === TOTAL_PASSOS_PEDIDO ? (
@@ -318,9 +321,9 @@ export function FormPedido({ dono, assistente, confirmar, textoInicial, categori
           </Alert>
         ) : null}
         <IndicadorPasso passo={passo} />
-        <h2 ref={pergunta} id="pergunta-passo" tabIndex={-1} className="text-3xl font-semibold text-beringela outline-none">
+        <h1 ref={pergunta} id="pergunta-passo" tabIndex={-1} className="text-3xl font-semibold text-beringela outline-none">
           {etapaIA?.tipo === "pergunta" ? perguntasIA[etapaIA.indice]?.pergunta : etapaIA?.tipo === "parecidos" ? TITULO_PARECIDOS : PERGUNTAS[passo]}
-        </h2>
+        </h1>
 
         {etapaIA?.tipo === "pergunta" && perguntasIA[etapaIA.indice] && (
           <PerguntasIA pergunta={perguntasIA[etapaIA.indice]} onResponder={responderIA} onPular={avancarIA} />
@@ -328,7 +331,7 @@ export function FormPedido({ dono, assistente, confirmar, textoInicial, categori
         {etapaIA?.tipo === "parecidos" && <ParecidosIA parecidos={parecidosIA} onContinuar={avancarIA} />}
 
         {passo === 1 && !etapaIA && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
             <Campo
               tamanho="grande"
               rotulo="Em poucas palavras"
@@ -359,15 +362,18 @@ export function FormPedido({ dono, assistente, confirmar, textoInicial, categori
               placeholder="Cor, tamanho, marca, se aceita usado..."
               erro={erroDe("detalhes")}
             />
-            <fieldset className="flex flex-col gap-2">
-              <legend className={`${ROTULO_GRUPO} mb-2`}>
-                Quanto quer pagar? <span className="font-normal text-texto-suave">(opcional)</span>
-              </legend>
-              <div className="grid grid-cols-2 gap-3">
-                <Campo tamanho="grande" rotulo="De" name="preco_min" prefixo="R$" inputMode="decimal" value={precoMin} onChange={(e) => setPrecoMin(e.target.value)} placeholder="0" erro={erroDe("preco_min_centavos")} />
-                <Campo tamanho="grande" rotulo="Até" name="preco_max" prefixo="R$" inputMode="decimal" value={precoMax} onChange={(e) => setPrecoMax(e.target.value)} placeholder="0" erro={erroDe("preco_max_centavos", "preco")} />
-              </div>
-            </fieldset>
+            <details open={precosAbertos} onToggle={(e) => setPrecosAbertos(e.currentTarget.open)}>
+              <summary className="min-h-toque cursor-pointer content-center rounded-campo text-facil font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro">Preço (opcional)</summary>
+              <fieldset className="flex flex-col gap-2">
+                <legend className={`${ROTULO_GRUPO} mb-2`}>
+                  Quanto quer pagar? <span className="font-normal text-texto-suave">(opcional)</span>
+                </legend>
+                <div className="grid grid-cols-2 gap-3">
+                  <Campo tamanho="grande" rotulo="De" name="preco_min" prefixo="R$" inputMode="decimal" value={precoMin} onChange={(e) => setPrecoMin(e.target.value)} placeholder="0" erro={erroDe("preco_min_centavos")} />
+                  <Campo tamanho="grande" rotulo="Até" name="preco_max" prefixo="R$" inputMode="decimal" value={precoMax} onChange={(e) => setPrecoMax(e.target.value)} placeholder="0" erro={erroDe("preco_max_centavos", "preco")} />
+                </div>
+              </fieldset>
+            </details>
             <Seletor
               tamanho="grande"
               rotulo="Categoria"
@@ -464,23 +470,25 @@ export function FormPedido({ dono, assistente, confirmar, textoInicial, categori
           </Alert>
         )}
 
+      </fieldset>
+      <fieldset disabled={enviando || pensando} className="shrink-0 border-t border-borda bg-fundo pt-2 pb-[env(safe-area-inset-bottom)]">
         <div className="flex flex-col gap-2">
-          <div className={`grid gap-3 ${passo > 1 && !etapaIA ? "grid-cols-[auto_1fr]" : "grid-cols-1"}`}>
-            {(passo > 1 || etapaIA) && (
+          <div className="flex flex-wrap gap-3 [&>*]:min-w-fit [&>*]:flex-1">
+            {passo === 1 && !etapaIA ? <Botao href={LINK_RADAR} variante="secundario" icone={<ArrowLeft />} tamanho="grande">Voltar</Botao> : (
               <Botao variante="secundario" icone={<ArrowLeft />} onClick={voltar} tamanho="grande">
                 Voltar
               </Botao>
             )}
             {etapaIA ? null : passo < TOTAL_PASSOS_PEDIDO ? (
-              <Botao key="continuar" type="submit" icone={<ArrowRight />} tamanho="grande" className="w-full" carregando={pensando} textoCarregando="Um momento...">
+              <Botao key="continuar" type="submit" icone={<ArrowRight />} tamanho="grande" carregando={pensando} textoCarregando="Um momento...">
                 Continuar
               </Botao>
             ) : anonimo ? (
-              <Botao key="entrar" type="submit" icone={<LogIn />} tamanho="grande" className="w-full">
+              <Botao key="entrar" type="submit" icone={<LogIn />} tamanho="grande">
                 Entrar para publicar
               </Botao>
             ) : (
-              <Botao key="publicar" type="submit" carregando={enviando} textoCarregando="Publicando..." icone={<Megaphone />} tamanho="grande" className="w-full">
+              <Botao key="publicar" type="submit" carregando={enviando} textoCarregando="Publicando..." icone={<Megaphone />} tamanho="grande">
                 Publicar pedido
               </Botao>
             )}
@@ -501,7 +509,7 @@ export function FormPedido({ dono, assistente, confirmar, textoInicial, categori
 function IndicadorPasso({ passo }: { passo: NumeroPasso }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-facil font-semibold text-texto-suave">
+      <p className="text-sm text-texto-suave">
         Passo {passo} de {TOTAL_PASSOS_PEDIDO} · {NOMES_PASSOS_PEDIDO[passo - 1]}
       </p>
       <ol className="flex gap-1" aria-hidden>

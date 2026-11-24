@@ -2,6 +2,8 @@ import { formatarNome } from "@/lib/formatar-nome";
 // components/radar/radar-de-negocios.tsx
 // Radar de Negócios: a "lista quente" invertida do Mercado da Região.
 // "Propor" abre a tela do pedido (/radar/[id]) com a folha de proposta: anúncio ou foto, preço e mensagem.
+import { Vazio } from "@/components/ui/vazio";
+import { Fragment } from "react";
 import { Voltar } from "@/components/ui/voltar";
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -91,11 +93,26 @@ export function RadarDeNegocios({
   const restantes = propostasRestantes;
   const podePropor = temAcesso && (restantes === null || restantes > 0);
 
+  const avisoPlano = !temAcesso || restantes !== null ? <>
+    {!temAcesso && (linkVerificar
+      ? <AvisoVerificar href={linkVerificar} titulo="Esses clientes já querem comprar." className="mx-4 mt-4" />
+      : <FaixaUpgrade planos={planos} titulo="Esses clientes já querem comprar." />)}
+    {temAcesso && restantes !== null && (
+      restantes > 0 ? (
+        <p className="mx-4 mt-4 rounded-card bg-fundo px-4 py-3 text-base text-beringela">
+          Você ainda pode enviar <strong>{restantes}</strong> {restantes === 1 ? "oferta" : "ofertas"} {emTeste ? "durante o teste" : "neste mês"}.
+        </p>
+      ) : (
+        <FaixaUpgrade planos={planos} titulo="Você atingiu o limite de novas ofertas do plano." />
+      )
+    )}
+  </> : null;
+
   // Usa os mesmos tamanhos de texto e controles das demais áreas do site.
   return (
     <main className="mx-auto min-h-dvh max-w-5xl bg-fundo pb-6">
-      <div className="px-4 pt-3"><Voltar /></div>
-      <header className=" border-b border-borda bg-cartao px-4 py-3">
+      <div className="flex items-center justify-between gap-3 px-4 pt-3"><Voltar /><AtualizarRadar /></div>
+      <header className="border-b border-borda bg-cartao px-4 py-3">
         <div className="flex items-center gap-2">
           <Radar className="size-5 text-laranja-escuro" aria-hidden />
           <h1 className="text-titulo font-semibold text-beringela">Radar de Negócios</h1>
@@ -103,7 +120,7 @@ export function RadarDeNegocios({
         <p className="mt-0.5 text-base text-texto-suave">
           {pedidos.length} {pedidos.length === 1 ? "pedido aberto nesta página" : "pedidos abertos nesta página"}
         </p>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-3">{abas}<AtualizarRadar /></div>
+        <div className="mt-3">{abas}</div>
 
         <form action="/radar" method="get" className="mt-4 flex flex-wrap items-end gap-3">
           <input type="hidden" name="aba" value="regiao" />
@@ -128,28 +145,19 @@ export function RadarDeNegocios({
         {nicho === "meu_nicho" && <p className="mt-2 text-base text-texto-suave">Pedidos nas categorias dos seus anúncios no ar.</p>}
       </header>
 
-      {!temAcesso && (linkVerificar
-        ? <AvisoVerificar href={linkVerificar} titulo="Esses clientes já querem comprar." className="mx-4 mt-4" />
-        : <FaixaUpgrade planos={planos} titulo="Esses clientes já querem comprar." />)}
-      {temAcesso && restantes !== null && (
-        restantes > 0 ? (
-          <p className="mx-4 mt-4 rounded-card bg-fundo px-4 py-3 text-base text-beringela">
-            Você ainda pode enviar <strong>{restantes}</strong> {restantes === 1 ? "oferta" : "ofertas"} {emTeste ? "durante o teste" : "neste mês"}.
-          </p>
-        ) : (
-          <FaixaUpgrade planos={planos} titulo="Você atingiu o limite de novas ofertas do plano." />
-        )
-      )}
-
       <ul className="grid grid-cols-1 items-start gap-3 px-4 pt-3 md:grid-cols-2">
-        {pedidos.map((p) => (
-          <li key={p.id}>
-            <CartaoPedido pedido={p} temAcesso={temAcesso} podePropor={podePropor} linkVerificar={linkVerificar} />
-          </li>
+        {pedidos.map((p, indice) => (
+          <Fragment key={p.id}>
+            <li>
+              <CartaoPedido pedido={p} temAcesso={temAcesso} podePropor={podePropor} linkVerificar={linkVerificar} />
+            </li>
+            {avisoPlano && indice === Math.min(1, pedidos.length - 1) && <li className="md:col-span-2">{avisoPlano}</li>}
+          </Fragment>
         ))}
         {pedidos.length === 0 && (
-          <li className="rounded-card border border-dashed border-borda bg-cartao p-8 text-center text-base text-texto-suave">
-            Nenhum pedido aberto para este filtro nesta página.
+          <li className="md:col-span-2">
+            <Vazio titulo="Nenhum pedido aberto para este filtro nesta página."><Botao href="/radar?aba=regiao" variante="secundario">Ver todas as categorias</Botao></Vazio>
+            {avisoPlano}
           </li>
         )}
       </ul>
@@ -289,11 +297,11 @@ function CartaoPedido({
               Eu sei onde tem
             </Botao>
           ) : !temAcesso && linkVerificar ? (
-            <Botao href={linkVerificar} icone={<ShieldCheck />} className={ACAO_CARTAO}>
+            <Botao href={linkVerificar} variante="secundario" icone={<ShieldCheck />} className={ACAO_CARTAO}>
               Verificar minha loja
             </Botao>
           ) : !temAcesso || !liberado ? (
-            <Botao href={`${LINK_PLANOS}?origem=radar`} icone={<Lock />} className={ACAO_CARTAO}>
+            <Botao href={`${LINK_PLANOS}?origem=radar`} variante="secundario" icone={<Lock />} className={ACAO_CARTAO}>
               Desbloquear e mandar oferta
             </Botao>
           ) : esgotado ? (
