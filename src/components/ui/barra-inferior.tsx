@@ -22,7 +22,7 @@ const ITENS: Item[] = [
 
 // A página reserva o espaço embaixo com pb-reserva-nav md:pb-0 (ver os layouts).
 
-export function BarraInferior({ loja = null, destacarAtalho = true }: { loja?: AtalhoLoja | null; destacarAtalho?: boolean }) {
+export function BarraInferior({ loja = null, destacarAtalho = false }: { loja?: AtalhoLoja | null; destacarAtalho?: boolean }) {
   const caminho = usePathname() ?? "/";
   const itens = ITENS.map((item) => {
     if (loja && item.href === "/anunciar") {

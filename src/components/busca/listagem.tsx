@@ -97,8 +97,8 @@ export async function Listagem({
   const grade = estado.visualizacao === "grade";
 
   return (
-    <main data-comprador={caminho === "/busca" ? "" : undefined} className={`mx-auto flex w-full max-w-6xl flex-col md:gap-4 md:px-4 md:py-4 ${caminho === "/busca" ? "gap-2 px-4 py-2" : "gap-3 px-4 py-3"}`}>
-      <Voltar />
+    <main data-comprador={caminho === "/busca" ? "" : undefined} className={`mx-auto flex w-full max-w-6xl flex-col md:gap-4 md:px-4 md:py-4 ${caminho === "/busca" ? "gap-2 px-4 py-2" : "gap-2 px-4 py-2"}`}>
+      {!categoriaPeloEndereco && <Voltar />}
       {topo}
       <ResultadosBusca
         caminho={caminho}

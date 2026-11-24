@@ -261,33 +261,13 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
   .linha-cabecalho:has(.conta-cabecalho > :nth-child(2)) .logo-nome { display: none; }
   .linha-cabecalho:has(.conta-cabecalho > :nth-child(2)) .logo-simbolo { display: block; }
 
-  .publico:has([data-comprador]) .linha-cabecalho {
-    height: auto;
-    min-height: 3rem;
-    justify-content: space-between;
-    padding-inline: 0.625rem;
-  }
-
-  .publico:has([data-comprador]) .cidade-cabecalho {
-    height: auto;
-    min-height: 3rem;
-    max-width: 100%;
-    margin-left: 0;
-    padding-inline: 0.25rem;
-    border: 0;
-  }
-
-  .publico:has([data-comprador]) .cidade-cabecalho-nome {
-    min-width: 0;
-    overflow: visible;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
   .publico:has([data-comprador]) :is([data-aki-atalho], [data-aki-dica], .conta-cabecalho),
   .publico:has([data-detalhe-anuncio]) > :is(.cabecalho-publico, .navegacao-inferior) {
     display: none;
   }
+
+  /* Conta e avisos continuam acessíveis também nas páginas de descoberta. */
+  .publico .linha-cabecalho .conta-cabecalho { display: flex; }
 
   .publico:has([data-detalhe-anuncio]) > #conteudo { padding-bottom: 0; }
   .publico:has([data-comprador]) .navegacao-inferior :is(a, button) { font-size: 0.75rem; }

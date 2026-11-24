@@ -24,8 +24,8 @@ export type CardAnuncioProps = {
   semLink?: boolean;
 };
 
-// Card do anúncio (modelo pedido em 12/11/2026, no jeito da OLX): foto quadrada com "Patrocinado" num canto
-// e o coração no outro; título em até 2 linhas; preço antigo riscado (só se for maior); preço logo abaixo;
+// Card do anúncio (modelo pedido em 12/11/2026, no jeito da OLX): foto 4:3 com "Patrocinado" num canto
+// e o coração no outro; preço em primeiro plano, título em até 2 linhas e cidade legível;
 // "Hoje, 18:58 · Corrente - PI"; e, bem leve, a loja ou o vendedor verificado. O card inteiro é tocável.
 export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = false, horizontal = false, voltarHref, semLink = false }: CardAnuncioProps) {
   const caminho = linkAnuncio(a.id, a.titulo, a.slug);
@@ -34,7 +34,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
   const antes = precoAntesValido(a.preco_antes_centavos, a.preco_centavos);
   const pfVerificado = a.vendedor_pago && a.vitrine_tipo === "pf" && a.vendedor_pf_verificado;
   const fotoHorizontal = "aspect-auto w-17 shrink-0 md:w-56";
-  const fotoVertical = "aspect-square w-full";
+  const fotoVertical = "aspect-[4/3] w-full";
   const foto = horizontal ? fotoHorizontal : compacto ? `${fotoVertical} max-md:aspect-auto max-md:w-17 max-md:shrink-0` : fotoVertical;
   const conteudo = (
     <>
@@ -61,43 +61,38 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
           </Badge>
         )}
       </div>
-      <div className={`flex min-w-0 flex-1 flex-col px-2.5 pt-2 pb-2.5 ${horizontal ? "md:px-4 md:py-3" : ""} ${compacto ? "max-md:justify-center max-md:px-2 max-md:py-1" : ""}`}>
-        <h3 className={`line-clamp-2 text-base leading-5 font-normal text-texto [overflow-wrap:anywhere] ${horizontal ? "md:text-xl md:leading-6" : "md:text-lg md:leading-6"} ${compacto ? "max-md:text-sm max-md:leading-4" : ""}`}>{formatarNome(a.titulo)}</h3>
-        <p className={`mt-1 flex flex-wrap items-baseline gap-x-1.5 ${compacto ? "max-md:mt-0.5" : ""}`}>
+      <div className={`flex min-w-0 flex-1 flex-col px-2.5 pt-1 pb-2 ${horizontal ? "md:px-4 md:py-3" : ""} ${compacto ? "max-md:justify-center max-md:px-2 max-md:py-1" : ""}`}>
+        <p className={`flex flex-wrap items-baseline gap-x-1.5 ${compacto ? "max-md:mt-0.5" : ""}`}>
           {antes != null && (
             <s className="text-legenda leading-4 text-texto-suave tabular-nums">
               <span className="sr-only">Antes: </span>
               {preco(antes)}
             </s>
           )}
-          <span className={`text-lg leading-6 font-bold text-beringela tabular-nums ${horizontal ? "md:text-xl" : ""}`}>
+          <span className={`text-lg leading-5 font-bold text-beringela tabular-nums ${horizontal ? "md:text-xl" : ""}`}>
             {antes != null && <span className="sr-only">Agora: </span>}
             {preco(a.preco_centavos)}
           </span>
         </p>
-        <span className={`pt-1 text-legenda leading-[18px] text-texto-suave [overflow-wrap:anywhere] ${compacto ? "max-md:mt-0 max-md:pt-0 max-md:text-legenda max-md:leading-4" : ""}`}>
-          {quando && (compacto ? (
-            <span className="hidden md:inline">
+        <h3 className={`line-clamp-2 text-base leading-5 font-normal text-texto [overflow-wrap:anywhere] ${horizontal ? "md:text-xl md:leading-6" : "md:text-lg md:leading-6"} ${compacto ? "max-md:text-sm max-md:leading-4" : ""}`}>{formatarNome(a.titulo)}</h3>
+        <span className={`text-legenda leading-4 text-texto-suave [overflow-wrap:anywhere] ${compacto ? "max-md:mt-0 max-md:pt-0 max-md:text-legenda max-md:leading-4" : ""}`}>
+          {quando && (
+            <span className="sr-only md:not-sr-only">
               <time dateTime={a.criado_em} suppressHydrationWarning>{quando}</time>
               {" · "}
             </span>
-          ) : (
-            <>
-              <time dateTime={a.criado_em} suppressHydrationWarning>{quando}</time>
-              {" · "}
-            </>
-          ))}
+          )}
           {cidadeUf(formatarNome(a.cidade), a.uf)}
           {compacto && a.destaque && <span className="ml-1.5 font-semibold text-beringela md:hidden">Patrocinado</span>}
           {compacto && (pfVerificado || a.vitrine_selo) && <ShieldCheck className="ml-1 inline size-3.5 text-verde-escuro md:hidden" aria-label={a.vitrine_selo ? "Loja verificada" : "Vendedor verificado"} role="img" />}
         </span>
         {pfVerificado ? (
-          <span className={`flex items-start gap-1 text-legenda leading-[18px] text-texto-suave ${compacto ? "max-md:hidden" : ""}`}>
+          <span className={`flex items-start gap-1 text-legenda leading-4 text-texto-suave ${compacto ? "max-md:hidden" : ""}`}>
             <ShieldCheck className="size-4 shrink-0 text-verde-escuro" aria-hidden />
             <span>Vendedor individual verificado</span>
           </span>
         ) : a.vitrine_tipo === "loja" ? (
-          <span className={`flex min-w-0 items-start gap-1 text-legenda leading-[18px] text-texto-suave ${compacto ? "max-md:hidden" : ""}`}>
+          <span className={`flex min-w-0 items-start gap-1 text-legenda leading-4 text-texto-suave ${compacto ? "max-md:hidden" : ""}`}>
             {a.vitrine_selo && <ShieldCheck className="size-4 shrink-0 text-verde-escuro" aria-hidden />}
             <span className="min-w-0 [overflow-wrap:anywhere]">
               {formatarNome(a.vitrine_nome)}

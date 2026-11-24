@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Chip } from "@/components/ui/chip";
-import { CirculoCategoria } from "@/components/ui/icone-categoria";
 import { CampoBusca } from "@/components/busca/campo-busca";
 import { linkCategoria } from "@/lib/formato";
 import { linkCanonico } from "@/lib/categorias-arvore";
@@ -40,33 +39,28 @@ export function CabecalhoCategoria({ achada, q, sp = {} }: { achada: CategoriaEn
                   {c.nome}
                 </Link>
               ) : (
-                <span aria-current="page" className="min-w-0 text-beringela [overflow-wrap:anywhere]">
+                <h1 aria-current="page" className="min-w-0 text-titulo font-semibold text-beringela [overflow-wrap:anywhere]">
                   {c.nome}
-                </span>
+                </h1>
               )}
             </li>
           ))}
         </ol>
       </nav>
 
-      <div className="flex min-w-0 items-center gap-2">
-        <CirculoCategoria nome={caminho[0].icone} />
-        <h1 className="min-w-0 text-titulo font-semibold [overflow-wrap:anywhere]">{categoria.nome}</h1>
-      </div>
-
       <CampoBusca valor={q} manter={sp} caminho={caminhoBusca} id="busca-categoria" />
 
       {grupo && chips.length > 0 && (
         <nav aria-label={`Dentro de ${grupo.nome}`} className="min-w-0">
-          <ul className="flex flex-wrap gap-2 py-1">
-            <li>
+          <ul className="flex gap-2 overflow-x-auto py-1 [scrollbar-width:thin]">
+            <li className="shrink-0">
               <Chip href={comParametros(linkCanonico(caminhoGrupo), { ...filtrosGerais, q })} tamanho="toque" ativo={grupo === categoria}>
                 Tudo
               </Chip>
             </li>
-            {chips.map((f) => (
-              <li key={f.id} className="max-w-full">
-                <Chip href={linkFilha(f.slug)} tamanho="toque" ativo={f.id === categoria.id} className="max-w-full">
+            {[...chips].sort((a, b) => Number(b.id === categoria.id) - Number(a.id === categoria.id)).map((f) => (
+              <li key={f.id} className="shrink-0">
+                <Chip href={linkFilha(f.slug)} tamanho="toque" ativo={f.id === categoria.id} className="shrink-0">
                   {f.nome}
                 </Chip>
               </li>

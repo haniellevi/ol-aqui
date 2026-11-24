@@ -17,7 +17,7 @@ export function CarregandoGrade({ rotulo = "Carregando os anúncios" }: { rotulo
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 8 }, (_, i) => (
           <div key={i} className="flex flex-col gap-2 rounded-card bg-card p-2 shadow-1">
-            <Skeleton className="aspect-square w-full" />
+            <Skeleton className="aspect-[4/3] w-full" />
             <Skeleton className="h-4 w-4/5" />
             <Skeleton className="h-4 w-2/5" />
           </div>

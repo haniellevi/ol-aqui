@@ -171,7 +171,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const pino = coordenadasValidas(v.lat, v.lng);
   const mapaHref = !nova || v.status !== "ativa" ? null : pino ? "#mapa-loja" : linkComoChegar({ lat: v.lat, lng: v.lng, endereco: v.endereco, cidade: v.cidade });
   const capaComLogo = v.banner_tipo === "foto" && !!v.banner_url && v.banner_aki_posicao != null && !!v.logo_url;
-  const temBarra = nova && (!!whatsapp || !!mapaHref);
+  const temBarra = !!whatsapp || !!mapaHref;
   const informacoes = v.status === "ativa" ? v : {
     ...v, instagram: null, endereco: null, lat: null, lng: null, site_url: null, telefone_publico: null,
   };
@@ -226,7 +226,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           </div>
           <div className="flex min-w-0 flex-wrap items-start gap-2">
             {whatsapp && (
-              <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "min-w-0 flex-1 px-3 sm:flex-none", "toque")}>
+              <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "hidden min-w-0 flex-1 px-3 md:inline-flex md:flex-none", "acao")}>
                 <MessageCircle className="size-4 shrink-0" aria-hidden />
                 Chamar no WhatsApp
               </a>
@@ -296,13 +296,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
               </Vazio>
             ) : (
             <Vazio titulo="Esta loja ainda não tem anúncio no ar." texto="Volte daqui a pouco ou veja outros anúncios da região.">
-              {whatsapp && (
-                <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" className={classesBotao("whatsapp", true, "", "toque")}>
-                  <MessageCircle className="size-5" aria-hidden />
-                  Perguntar no WhatsApp
-                </a>
-              )}
-              <Botao href="/busca" variante={whatsapp ? "secundario" : "primario"} tamanho="toque" larguraTotal>
+              <Botao href="/busca" variante="secundario" tamanho="toque" larguraTotal>
                 Ver anúncios da região
               </Botao>
             </Vazio>

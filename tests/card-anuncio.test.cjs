@@ -43,12 +43,12 @@ const { CardAnuncio } = carregar('src/components/anuncio/card-anuncio.tsx', mock
 const base = { id: '60000000-0000-4000-a000-000000000001', slug: 'moto-titan', titulo: 'Moto Titan 160', preco_centavos: 1450000, cidade: 'Corrente', capa: null, criado_em: new Date().toISOString(), destaque: false, vitrine_nome: 'Moto Peças', vitrine_selo: false, vitrine_tipo: 'loja' };
 const desenhar = (a, props = {}) => render(React.createElement(CardAnuncio, { anuncio: { ...base, ...a }, ...props }));
 
-test('card: título antes do preço, preço riscado com "Antes:" e linha "Hoje, hh:mm · Corrente - PI"', () => {
+test('card: preço antes do título, preço riscado com "Antes:" e linha "Hoje, hh:mm · Corrente - PI"', () => {
   const html = desenhar({ preco_antes_centavos: 1590000, uf: 'PI' });
-  assert.ok(html.indexOf('Moto Titan 160') < html.indexOf('R$ 14.500'), 'título vem antes do preço');
+  assert.ok(html.indexOf('R$ 14.500') < html.indexOf('Moto Titan 160'), 'preço vem antes do título');
   assert.match(html, /<s [^>]*><span class="sr-only">Antes: <\/span>R\$ 15\.900<\/s>/);
   assert.match(html, /<span class="sr-only">Agora: <\/span>R\$ 14\.500/);
-  assert.match(html, /<time[^>]*>Hoje, \d\d:\d\d<\/time> · Corrente - PI/);
+  assert.match(html, /<time[^>]*>Hoje, \d\d:\d\d<\/time> · <\/span>Corrente - PI/);
   assert.match(html, /Moto Peças/);
   assert.doesNotMatch(html, /há \d/);
 });
@@ -58,7 +58,7 @@ test('card: preço antes menor ou igual, ou "a combinar", não aparece riscado; 
   assert.doesNotMatch(desenhar({ preco_antes_centavos: 1000000 }), /<s /);
   const combinar = desenhar({ preco_centavos: null, preco_antes_centavos: 1000000 });
   assert.doesNotMatch(combinar, /<s /); assert.match(combinar, /A combinar/); assert.doesNotMatch(combinar, /Agora:/);
-  assert.match(desenhar({}), /<\/time> · Corrente<\/span>/);
+  assert.match(desenhar({}), /<\/time> · <\/span>Corrente<\/span>/);
 });
 
 test('card: um selo só, "Patrocinado" para destaque pago (nunca "Destaque"); coração fora do link', () => {
@@ -96,3 +96,5 @@ test('card: foto preenche a área sem distorção em todos os formatos', () => {
     assert.doesNotMatch(html, /object-contain/);
   }
 });
+
+ test('card vertical reserva foto 4:3 e mantém lista compacta lateral', () => { assert.match(desenhar({}), /aspect-\[4\/3\]/); assert.match(desenhar({}, {horizontal:true}), /aspect-auto w-17/); });

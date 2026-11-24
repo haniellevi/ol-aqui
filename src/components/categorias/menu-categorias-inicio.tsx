@@ -8,7 +8,7 @@ import { linkCategoria } from "@/lib/formato";
 
 type CategoriaMenu = { id: string; slug: string; nome: string; icone: string };
 
-const item = "flex min-h-toque min-w-0 items-center gap-2 rounded-campo px-3 py-1.5 text-sm font-medium text-beringela hover:bg-selecao focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-laranja-escuro";
+const item = "flex min-h-toque min-w-0 items-center gap-2 rounded-campo px-3 py-1.5 text-sm font-semibold text-beringela hover:bg-selecao focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-laranja-escuro";
 
 export function MenuCategoriasInicio({ categorias }: { categorias: CategoriaMenu[] }) {
   const menu = useRef<HTMLDetailsElement>(null);
@@ -36,7 +36,7 @@ export function MenuCategoriasInicio({ categorias }: { categorias: CategoriaMenu
       }}
     >
       <summary ref={botao} title="Categorias" className="flex min-h-toque min-w-toque cursor-pointer items-center justify-center list-none gap-1.5 rounded-campo border border-borda bg-cartao px-2 text-sm font-semibold text-beringela hover:bg-selecao focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro sm:px-3 [&::-webkit-details-marker]:hidden">
-        <LayoutGrid className="size-4 shrink-0 min-[360px]:max-[479px]:hidden" aria-hidden />
+        <LayoutGrid className="size-4 shrink-0" aria-hidden />
         <span className="max-[359px]:sr-only">Categorias</span>
         <ChevronDown className="hidden size-4 shrink-0 group-open:rotate-180 min-[480px]:block" aria-hidden />
       </summary>

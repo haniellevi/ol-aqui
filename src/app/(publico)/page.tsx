@@ -24,7 +24,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { LojasDaRegiao } from "@/components/vitrine/lojas-da-regiao";
 import { LojasEmDestaque } from "@/components/destaques/lojas-em-destaque";
 import { blocosHome } from "@/lib/dados/paginas";
-import { CriarAnuncioInicio, RadarInicio } from "@/components/paginas/acoes-inicio";
+import { RadarInicio } from "@/components/paginas/acoes-inicio";
 import { RodapeInicio } from "@/components/paginas/rodape-inicio";
 import { linkPedirRadar } from "@/lib/rotas";
 import type { AnuncioCard } from "@/lib/tipos";
@@ -116,7 +116,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
   const tituloAnterior = blocoLojas?.titulo ?? null;
   const tituloLojas = textoDe(
     ["LOJAS DESTAQUE DA REGIÃO", "Lojas de {lugar}", "Lojas da região"].includes(tituloAnterior ?? "") ? null : tituloAnterior,
-    "DESTAQUES DA REGIÃO",
+    "Destaques da Região",
     lugar,
   );
   const base = linkFiltros(filtros);
@@ -126,20 +126,24 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
     return `${base}${base.includes("?") ? "&" : "?"}pagina=${n}#anuncios`;
   };
 
+  const blocoVitrines = (
+    <div className="flex min-w-0 flex-col gap-3">
+      {regiao && blocoLojas ? (
+        <LojasDaRegiao regiao={regiao} arvore={enxugarArvore(todasCategorias)} titulo={tituloLojas} />
+      ) : (
+        <Botao href="/lojas" variante="secundario" tamanho="toque" className="self-start">Ver todas as lojas</Botao>
+      )}
+    </div>
+  );
+
   return (
     <div data-comprador data-inicio className={estilos.fundo}>
       <div className="border-b border-borda bg-cartao">
         <div className="mx-auto flex w-full max-w-7xl items-center gap-2 px-4 py-2 sm:gap-3">
-          <MenuCategoriasInicio categorias={categorias.map(({ id, slug, nome, icone }) => ({ id, slug, nome, icone }))} />
           <div className={`min-w-0 flex-1 ${estilos.busca}`}>
             <CampoBusca id="busca-inicio" placeholder="Buscar" sugestoes regiao={regiao?.slug} />
           </div>
-          <CriarAnuncioInicio />
         </div>
-      </div>
-
-      <div className="mx-auto w-full max-w-7xl px-4 [&:not(:empty)]:pt-2">
-        <EntradaAssistente dono={userId} />
       </div>
 
       <main className="mx-auto grid w-full max-w-7xl items-start gap-3 px-4 py-3 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-x-4">
@@ -147,31 +151,38 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
           <SalvarAoVoltar logado={logado} />
         </Suspense>
 
-        <div className="flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-start-2">
+        <div className="flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-start-1">
           <div className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <div className="sr-only md:not-sr-only md:flex md:flex-wrap md:items-baseline md:justify-between md:gap-x-3 md:gap-y-1">
               <h1 id="titulo-inicio" className="text-titulo font-semibold text-balance text-beringela">
                 Anúncios em {lugar}
               </h1>
               {total > 0 && <p className="text-legenda text-texto-suave">{total.toLocaleString("pt-BR")} {total === 1 ? "anúncio" : "anúncios"}</p>}
             </div>
-            <div role="group" aria-label="Filtros rápidos" className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:flex-wrap">
-              {cidade && (
-                <Chip href={linkFiltros({ ...filtros, minha: !filtros.minha })} ativo={filtros.minha} tamanho="toque" icone={<MapPin />} scroll={false}>
-                  Só em {formatarNome(cidade)}
-                </Chip>
-              )}
-              <Chip href={linkFiltros({ ...filtros, ate: !filtros.ate })} ativo={filtros.ate} tamanho="toque" scroll={false}>
-                Até R$ 100
-              </Chip>
-              <Chip href={linkFiltros({ ...filtros, menorPreco: !filtros.menorPreco })} ativo={filtros.menorPreco} tamanho="toque" icone={<ArrowDownWideNarrow />} scroll={false}>
-                Menor preço
-              </Chip>
-              {filtrando && (
-                <Link href="/" scroll={false} className="inline-flex min-h-toque shrink-0 items-center rounded-campo px-2 text-rotulo font-semibold text-laranja-escuro underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
-                  Limpar filtros
-                </Link>
-              )}
+            <div className="flex items-center gap-2">
+              <MenuCategoriasInicio categorias={categorias.map(({ id, slug, nome, icone }) => ({ id, slug, nome, icone }))} />
+              {radar && <Botao href={linkPedirRadar()} tamanho="acao">{chamadaRadar?.botao ?? "Pedir no Radar"}</Botao>}
+              {(total > 0 || filtrando) && <details className="group min-w-0">
+                <summary className="flex min-h-toque min-w-toque cursor-pointer items-center justify-center rounded-campo px-2 text-rotulo font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro">Filtros{filtrando ? " ativos" : ""}</summary>
+                  <div role="group" aria-label="Filtros rápidos" className="absolute inset-x-4 z-20 flex flex-wrap gap-2 rounded-card border border-borda bg-cartao p-3 shadow-2">
+                    {cidade && (
+                      <Chip href={linkFiltros({ ...filtros, minha: !filtros.minha })} ativo={filtros.minha} tamanho="toque" icone={<MapPin />} scroll={false}>
+                        Só em {formatarNome(cidade)}
+                      </Chip>
+                    )}
+                    <Chip href={linkFiltros({ ...filtros, ate: !filtros.ate })} ativo={filtros.ate} tamanho="toque" scroll={false}>
+                      Até R$ 100
+                    </Chip>
+                    <Chip href={linkFiltros({ ...filtros, menorPreco: !filtros.menorPreco })} ativo={filtros.menorPreco} tamanho="toque" icone={<ArrowDownWideNarrow />} scroll={false}>
+                      Menor preço
+                    </Chip>
+                    {filtrando && (
+                      <Link href="/" scroll={false} className="inline-flex min-h-toque shrink-0 items-center rounded-campo px-2 text-rotulo font-semibold text-laranja-escuro underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-laranja-escuro">
+                        Limpar filtros
+                      </Link>
+                    )}
+                  </div>
+              </details>}
             </div>
           </div>
 
@@ -210,7 +221,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                           : textoDe(bloco.titulo, "Mais recentes em {lugar}", lugar)}
                       </h2>
                       <GradeAnuncios
-                        anuncios={normais}
+                        anuncios={normais.slice(0, 6)}
                         prioridade={destaques.length ? 0 : 2}
                         acao={coracao}
                         medirEm="inicio"
@@ -239,6 +250,8 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
                           )
                         }
                       />
+                      {blocoVitrines}
+                      {normais.length > 6 && <GradeAnuncios anuncios={normais.slice(6)} prioridade={0} acao={coracao} medirEm="inicio" voltarHref={voltarHref} className="xl:grid-cols-4" />}
                       <div className="flex flex-wrap justify-center gap-3">
                         {pagina > 1 && <Botao href={linkPagina(pagina - 1)} variante="secundario">Anterior</Botao>}
                         {total > pagina * POR_VEZ && pagina < 9999 && (
@@ -257,18 +270,13 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<P
 
         </div>
 
-        <div className="flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-start-1">
-          {regiao && blocoLojas ? (
-            <LojasDaRegiao regiao={regiao} arvore={enxugarArvore(todasCategorias)} titulo={tituloLojas} />
-          ) : (
-            <Botao href="/lojas" variante="secundario" tamanho="toque" className="self-start">Ver todas as lojas</Botao>
-          )}
-        </div>
+        {!ativos.some((bloco) => bloco.chave === "recentes") && blocoVitrines}
 
-        <aside className={`${chamadaRadar ? "flex" : "hidden lg:flex"} min-w-0 flex-col gap-3 lg:sticky lg:top-20 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start`}>
+        <aside className={`flex min-w-0 flex-col gap-3 lg:sticky lg:top-20 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start`}>
+          <EntradaAssistente dono={userId} />
           {chamadaRadar && <RadarInicio {...chamadaRadar} />}
           <nav aria-labelledby="titulo-atalhos" className="hidden rounded-card border border-borda bg-cartao p-2 lg:block">
-            <h2 id="titulo-atalhos" className="px-2 pt-1 pb-1 text-legenda font-semibold tracking-wide text-texto-suave uppercase">Para você</h2>
+            <h2 id="titulo-atalhos" className="px-2 pt-1 pb-1 text-legenda font-semibold text-texto-suave">Para você</h2>
             <ul className="flex flex-col">
               <li><Link href="/minha-conta/favoritos" className={estilos.itemLado}><Heart className="size-5 shrink-0 text-beringela" aria-hidden />Favoritos</Link></li>
               <li><a href="#vistos" className={estilos.itemLado}><Clock className="size-5 shrink-0 text-beringela" aria-hidden />Vistos há pouco</a></li>

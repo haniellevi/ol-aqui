@@ -31,22 +31,15 @@ export default async function PaginaCategorias() {
           {categorias.map((p) => (
             <li key={p.id} className="min-w-0 rounded-card border border-borda bg-cartao">
               <section aria-labelledby={`cat-${p.slug}`}>
-                <Link
-                  href={linkCategoria(p.slug)}
-                  className="flex min-h-12 items-center gap-2 rounded-campo px-3 py-2 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
-                >
-                  <CirculoCategoria nome={p.icone} className="size-8" />
-                  <h2 id={`cat-${p.slug}`} className="min-w-0 flex-1 text-base font-semibold [overflow-wrap:anywhere]">
-                    {p.nome}
-                  </h2>
-                  <ChevronRight className="size-4 shrink-0 text-laranja-escuro" aria-hidden />
-                </Link>
                 {p.filhas.length > 0 && (
-                  <details className="group border-t border-borda">
-                    <summary aria-label={`Subcategorias de ${p.nome}`} className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-campo px-3 text-sm font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro [&::-webkit-details-marker]:hidden">
-                      Subcategorias <ChevronDown className="size-4 shrink-0 group-open:rotate-180" aria-hidden />
+                  <details className="group">
+                    <summary className="flex min-h-toque cursor-pointer list-none items-center gap-2 rounded-campo px-3 text-base font-semibold text-beringela hover:bg-fundo focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-laranja-escuro [&::-webkit-details-marker]:hidden">
+                      <CirculoCategoria nome={p.icone} className="size-8" />
+                      <h2 id={`cat-${p.slug}`} className="min-w-0 flex-1 [overflow-wrap:anywhere]">{p.nome}</h2>
+                      <ChevronDown className="size-4 shrink-0 group-open:rotate-180" aria-hidden />
                     </summary>
                     <ul className="border-t border-borda px-1 pb-1">
+                      <li><Link href={linkCategoria(p.slug)} className="flex min-h-toque items-center rounded-campo px-3 text-base font-semibold text-beringela focus-visible:outline-3 focus-visible:outline-laranja-escuro">Ver tudo em {p.nome}</Link></li>
                       {p.filhas.map((f) => (
                         <li key={f.id}>
                           <Link
@@ -60,6 +53,18 @@ export default async function PaginaCategorias() {
                       ))}
                     </ul>
                   </details>
+                )}
+                {p.filhas.length === 0 && (
+                <Link
+                  href={linkCategoria(p.slug)}
+                  className="flex min-h-toque items-center gap-2 rounded-campo px-3 py-1 hover:bg-fundo focus-visible:outline-3 focus-visible:outline-laranja-escuro"
+                >
+                  <CirculoCategoria nome={p.icone} className="size-8" />
+                  <h2 id={`cat-${p.slug}`} className="min-w-0 flex-1 text-base font-semibold [overflow-wrap:anywhere]">
+                    {p.nome}
+                  </h2>
+                  <ChevronRight className="size-4 shrink-0 text-laranja-escuro" aria-hidden />
+                </Link>
                 )}
               </section>
             </li>

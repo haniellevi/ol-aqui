@@ -299,7 +299,7 @@ Rótulo longo quebra linha e o botão cresce; nunca cortar o texto para caber.
 
 - **Símbolo:** o M beringela segurando o pin laranja. Não muda.
 - **Nome escrito:** "Mercado da Região" em **uma linha, tudo beringela**, Figtree Bold. Em fundo escuro, tudo branco. O laranja fica só no pin.
-- No cabeçalho do celular: logo com 32 px de altura (símbolo com cerca de 24 px e nome com cerca de 15 px; com 30/17 px o logo passaria de 180 px e a cidade não caberia em 360 px). Com a conta aberta (conversas, avisos e conta à direita), só o símbolo.
+- No cabeçalho abaixo de 640 px: símbolo com 32 px, preservando cidade, entrada/conta e avisos legíveis; o link mantém o nome acessível completo. A partir de 640 px: logo com 32 px de altura (símbolo com cerca de 24 px e nome com cerca de 15 px; com 30/17 px o logo passaria de 180 px e a cidade não caberia em 360 px). Com a conta aberta (conversas, avisos e conta à direita), só o símbolo.
 - Abaixo de 24 px de altura, só o símbolo.
 - Não esticar, inclinar, recolorir, sombrear nem tirar o pin.
 - Demais regras (área livre, franquia por cidade, grafia): [docs/MARCA.md](docs/MARCA.md).
@@ -370,9 +370,9 @@ Página para ver as peças: `/admin/pecas`.
 
 ### Como cada peça do negócio deve ser
 
-- **`CardAnuncio`:** foto 4:3; coração no canto da foto (alvo de 44 px); **preço 16 px em 700**; título 14 px em até 2 linhas; cidade e data em 12 px `texto-suave`; no máximo um selo; "Patrocinado" escrito; card inteiro tocável. Duas colunas no celular, 4 a 5 no computador.
+- **`CardAnuncio`:** foto 4:3; preço antes do título; coração no canto da foto (alvo de 44 px); **preço 16 px em 700**; título 14 px em até 2 linhas; cidade em 12 px `texto-suave`; data visível no computador e disponível ao leitor de tela no celular; no máximo um selo; "Patrocinado" escrito; card inteiro tocável. Duas colunas no celular, 4 a 5 no computador.
 - **`CampoBusca`:** uma só por tela, 44 px, texto "O que você procura?". Fundo branco com `borda-campo`; não é laranja. O botão de buscar é a lupa à direita (44 px). Página com `CampoBusca` próprio esconde a busca do cabeçalho (`globals.css`).
-- **Barra de busca do Início:** Categorias à esquerda, busca com largura flexível (lupa em `selecao`) e "Criar anúncio" em laranja à direita. O texto de orientação da busca é "Buscar", para caber no celular; o rótulo acessível continua "O que você procura?". Abaixo de 360 px, o controle de categorias mostra só o ícone e mantém o nome acessível.
+- **Barra de busca do Início:** Busca ocupa a linha inteira (lupa em `selecao`). Categorias, Radar e filtros ficam na linha seguinte; Anunciar permanece na navegação inferior e no cabeçalho desktop. O texto de orientação da busca é "Buscar", para caber no celular; o rótulo acessível continua "O que você procura?". Abaixo de 360 px, Categorias mostra o ícone e mantém o nome acessível.
 - **`FaixaCategorias`:** uma só lista de categorias por tela, rolável na horizontal com `scroll-snap`, ícone com nome, estado ativo em `selecao` com texto beringela.
 - **Filtros rápidos:** uma linha rolável de `Chip` logo abaixo da busca.
 - **`LojasDaRegiao`:** um só bloco de lojas por tela, com logo redondo, nome, selo "Loja verificada" **com a palavra escrita**, quantidade de anúncios e acesso à vitrine.

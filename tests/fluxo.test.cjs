@@ -57,7 +57,7 @@ test('início apresenta região, busca GET acessível e destinos das categorias'
 });
 test('início mantém os destaques regionais no feed, com tipo de loja e um só "Ver todas"', async () => {
   const html = await htmlInicio({ lojas: LOJAS, categoriasLojas: new Map([['l1', ['c21', 'c21']], ['l2', ['c1']]]), anuncios: [{ id: 'a1', titulo: 'Mesa' }] });
-  assert.match(html, /id="titulo-lojas"[^>]*>DESTAQUES DA REGIÃO<\/h2><a\b[^>]*href="\/lojas"[^>]*>(<span[^>]*>)?Ver todas<\//);
+  assert.match(html, /id="titulo-lojas"[^>]*>Destaques da Região<\/h2><a\b[^>]*href="\/lojas"[^>]*>(<span[^>]*>)?Ver todas<\//);
   assert.equal((html.match(/href="\/lojas"/g) ?? []).length, 1);
   assert.doesNotMatch(html, /busca-loja|Buscar loja/);
   assert.match(html, /role="group" aria-label="Tipo de loja"/);
@@ -88,22 +88,14 @@ test('início com o bloco de lojas desligado mantém um acesso ao catálogo', as
   assert.match(html, /Ver todas as lojas/);
   assert.doesNotMatch(html, /id="titulo-lojas"|href="\/loja\/multi"/);
 });
-test('início mantém Criar anúncio na barra e guarda a explicação do Radar em um painel fechado', async () => {
-  for (const anuncios of [[], [{ id: 'a1', titulo: 'Mesa da região' }]]) {
-    const html = await htmlInicio({ anuncios });
-    assert.match(html, /<section aria-label="Radar"/);
-    assert.equal((html.match(/href="\/radar\/pedir"/g) ?? []).length, 1);
-    assert.match(html, /Procurando algo\?/);
-    assert.match(html, /<details class="group"><summary aria-label="Como funciona o Radar"/);
-    assert.match(html, /href="\/radar\?como-funciona=1"/);
-    assert.match(html, /podem responder com ofertas/);
-    assert.match(html, />Criar anúncio</);
-    assert.doesNotMatch(html, /titulo-vender|>Anunciar<|>Exemplo<|Anunciar grátis|Tem algo parado em casa/);
-    assert.ok(html.indexOf('action="/busca"') < html.indexOf('href="/anunciar"'));
-    assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('titulo-lojas'));
-    assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('aria-label="Filtros rápidos"'));
-    assert.ok(html.indexOf('aria-label="Filtros rápidos"') < html.indexOf('titulo-recentes'));
-  }
+test('início libera a linha de busca e preserva categorias, Radar e ajuda após anúncios', async () => {
+  const html = await htmlInicio({ anuncios: [{ id: 'a1', titulo: 'Mesa da região' }] });
+  assert.doesNotMatch(html, />Criar anúncio</);
+  assert.match(html, /href="\/radar\/pedir"/);
+  assert.match(html, /aria-label="Categorias de anúncios"/);
+  assert.ok(html.indexOf('action="/busca"') < html.indexOf('Categorias de anúncios'));
+  assert.match(html, /Como funciona o Radar/);
+  assert.match(html, /aria-label="Filtros rápidos"/);
 });
 test('início vazio mostra a grade vazia com saída para anunciar', async () => {
   const html = await htmlInicio();
@@ -133,10 +125,10 @@ test('início respeita textos, ordem e visibilidade definidos no painel', async 
   assert.match(html, /Anuncie em Corrente e região\./);
   assert.match(html, /Pedido em Corrente e região\?/);
   assert.match(html, /Criar &lt;pedido&gt;/);
-  assert.ok(html.indexOf('href="/anunciar"') < html.indexOf('href="/radar/pedir"'));
+  assert.ok(html.indexOf('href="/radar/pedir"') < html.indexOf('titulo-lojas'));
   const oculto = await htmlInicio({ blocos: blocos.map(b => ({ ...b, ativo: b.chave !== 'radar' })) });
   assert.doesNotMatch(oculto, /href="\/radar\/pedir"|Pedido em/);
-  assert.match(oculto, />Criar anúncio</);
+  assert.doesNotMatch(oculto, />Criar anúncio</);
 });
 test('início sem região mantém busca e não inventa localização', async () => {
   const pagina = inicio({ regiao: null });
