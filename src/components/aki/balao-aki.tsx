@@ -385,7 +385,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
   const elevado = caminho.startsWith("/anunciar/") || caminho.startsWith("/anuncio/");
   // No celular, a ação da página tem precedência sobre o atalho flutuante.
   const semAtalhoMovel = [
-    `${LINK_ATENDIMENTO}/`, "/anunciar/", "/c/", "/categorias", "/loja/", "/ajuda", "/anuncio/",
+    `${LINK_ATENDIMENTO}/`, "/anunciar/", "/c/", "/categorias", "/loja/", "/ajuda", "/anuncio/", "/radar",
   ].some((rota) => caminho.startsWith(rota)) ? "max-md:hidden" : "";
   const posicao = elevado
     ? "bottom-[calc(8rem+env(safe-area-inset-bottom))] md:bottom-28"
