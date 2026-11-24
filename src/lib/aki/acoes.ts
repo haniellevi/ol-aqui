@@ -35,7 +35,7 @@ export async function avaliarResposta(mensagemId: number, nota: -1 | 0 | 1, come
     p_comentario: typeof comentario === "string" ? comentario.slice(0, 500) : null,
   });
   if (error) return { ok: false, erro: traduzirErro(error).mensagem };
-  return { ok: true, mensagem: nota === 0 ? "Avaliação tirada." : "Obrigado! Isso ajuda o Merc a melhorar." };
+  return { ok: true, mensagem: nota === 0 ? "Avaliação tirada." : "Obrigado! Isso ajuda a Lia a melhorar." };
 }
 
 /**
@@ -63,7 +63,7 @@ export async function apagarMinhasConversas(): Promise<RespostaAcao> {
   const { error } = await db.from("robo_conversas").delete().eq("usuario_id", userId);
   if (error) return { ok: false, erro: traduzirErro(error).mensagem };
   revalidatePath("/minha-conta/privacidade");
-  return { ok: true, mensagem: "Pronto. Suas conversas com o Merc foram apagadas." };
+  return { ok: true, mensagem: "Pronto. Suas conversas com a Lia foram apagadas." };
 }
 
 /**

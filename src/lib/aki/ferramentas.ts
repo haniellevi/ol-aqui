@@ -366,12 +366,12 @@ async function salvarRascunho(args: Record<string, unknown>, ctx: ContextoFerram
   if (id !== undefined && id !== null && id !== "") {
     if (!ehId(id)) return falha("rascunho_id inválido.");
     if (!ctx.rascunhosPermitidos.has(id)) {
-      return falha("Esse rascunho não foi aberto nesta conversa. Não mude: crie um rascunho novo (sem rascunho_id) ou peça para a pessoa abrir o Merc pelo passo Fotos do anúncio.");
+      return falha("Esse rascunho não foi aberto nesta conversa. Não mude: crie um rascunho novo (sem rascunho_id) ou peça para a pessoa abrir a Lia pelo passo Fotos do anúncio.");
     }
     const a = await meuAnuncio(id);
     if (!a) return falha("Rascunho não encontrado.");
     if (a.status !== "rascunho") {
-      return falha("Esse anúncio já foi publicado. O Merc só mexe em rascunho: a pessoa edita pelo botão Editar em Meus anúncios.");
+      return falha("Esse anúncio já foi publicado. A Lia só mexe em rascunho: a pessoa edita pelo botão Editar em Meus anúncios.");
     }
     categoriaAtual = a.categoria_id;
   } else if (!conta.podePublicar) {

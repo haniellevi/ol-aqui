@@ -28,7 +28,7 @@ export default function NaoEncontrado() {
             Estou procurando…
           </Botao>
           <Botao href={LINK_AKI} variante="texto">
-            Perguntar ao Merc
+            Fale com a Lia
           </Botao>
           <Botao href={LINK_AJUDA} variante="texto">
             Ver a Ajuda

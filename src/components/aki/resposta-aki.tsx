@@ -193,7 +193,7 @@ function Avaliacao({ mensagem, aoAvaliar, atendimentoHref }: {
           </Botao>
         </form>
       )}
-      {agradecido && <p className="text-legenda text-verde-escuro">Obrigado! Isso ajuda o Merc a melhorar.</p>}
+      {agradecido && <p className="text-legenda text-verde-escuro">Obrigado! Isso ajuda a Lia a melhorar.</p>}
     </div>
   );
 }

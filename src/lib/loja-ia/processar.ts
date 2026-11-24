@@ -29,10 +29,10 @@ async function resultado(trabalho: Trabalho, db: Banco) {
       const sugestoes = await montarSugestoes(data as EvidenciaFonte[], async evidencias => {
         try {
           const geradas = await gerarSugestoesMerc(evidencias, trabalho.dono_id, db);
-          if (geradas.length === 0) motivo = "O Merc não encontrou dados suficientes para sugerir mais informações.";
+          if (geradas.length === 0) motivo = "A Lia não encontrou dados suficientes para sugerir mais informações.";
           return geradas;
         } catch {
-          motivo = "O Merc não conseguiu completar as sugestões agora.";
+          motivo = "A Lia não conseguiu completar as sugestões agora.";
           return [];
         }
       });

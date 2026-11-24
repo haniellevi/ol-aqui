@@ -265,7 +265,7 @@ export function EnvioFotos({
         if (anterior?.previa) URL.revokeObjectURL(anterior.previa);
         mudar(() => lista);
         setFotoAki(null);
-        setAviso("A versão do Merc foi salva no anúncio.");
+        setAviso("A versão da Lia foi salva no anúncio.");
       }
     } finally {
       operacao.current = false;
@@ -387,8 +387,8 @@ export function EnvioFotos({
                   {podeEditarComAki && item.estado === "pronta" && item.url && (
                     <button type="button" className={`${BOTAO_MINI} col-span-2 flex items-center justify-center gap-1 text-sm font-semibold`}
                       disabled={travado || (fotoAki !== null && itens.some((f) => f.url === fotoAki))} onClick={() => setFotoAki(item.url ?? null)}
-                      aria-label={`Melhorar ${nome} com o Merc`}>
-                      <Sparkles className="size-4" aria-hidden /> Melhorar com o Merc
+                      aria-label={`Melhorar ${nome} com a Lia`}>
+                      <Sparkles className="size-4" aria-hidden /> Melhorar com a Lia
                     </button>
                   )}
                   <button

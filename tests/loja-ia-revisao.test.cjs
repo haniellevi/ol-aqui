@@ -67,7 +67,7 @@ test('gera capa e salva a escolha no rascunho', async () => {
  const p = { ...props, gerarCapa:async()=>ok({id:'gerada',url:'/gerada'}), salvar:async(_id,_rev,e)=>{ chamadas.push(e); return ok({ ...rascunho, revisao:2, campos:{...campos,capa:{...campos.capa,valor:e.capa,editado:true}} }); } };
  const render = () => { cursor = 0; return RevisaoLojaIa(p); };
  function achar(elemento, texto) { if (!elemento || typeof elemento !== 'object') return null; if (elemento.props?.children === texto && elemento.props?.onClick) return elemento; for (const filho of React.Children.toArray(elemento.props?.children)) { const achou = achar(filho, texto); if (achou) return achou; } return null; }
- const botao = achar(render(), 'Criar modelo de capa do Merc'); assert.ok(botao); botao.props.onClick();
+ const botao = achar(render(), 'Criar modelo de capa da Lia'); assert.ok(botao); botao.props.onClick();
  await new Promise(resolve => setImmediate(resolve));
  assert.deepEqual(chamadas, [{capa:'gerada'}]);
  const html = renderToStaticMarkup(render()); assert.match(html, /value="gerada" selected=""/);

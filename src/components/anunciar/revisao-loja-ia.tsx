@@ -151,7 +151,7 @@ export function RevisaoLojaIa({ assistente, rascunho: inicial, cidades, whatsapp
           <img src={imagensDisponiveis[valores[campo]]} alt={`Prévia ${campo === "logo" ? "do logo" : "da capa"} da loja`} className="h-32 max-w-full object-contain" />
         </a>}
         {detalhes(campo)}
-        {campo === "capa" && gerarCapa && <Botao type="button" tamanho="toque" variante="secundario" onClick={() => void executar("gerarCapa")}>Criar modelo de capa do Merc</Botao>}
+        {campo === "capa" && gerarCapa && <Botao type="button" tamanho="toque" variante="secundario" onClick={() => void executar("gerarCapa")}>Criar modelo de capa da Lia</Botao>}
         {erroCampo(campo) && <p role="alert" className="text-sm text-perigo">{erroCampo(campo)}</p>}
       </div>)}
       <Botao href={linkMaps} target="_blank" rel="noreferrer" variante="texto" tamanho="toque" className="self-start">Conferir no Google Maps</Botao>

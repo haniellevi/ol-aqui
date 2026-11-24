@@ -46,8 +46,8 @@ export default async function PaginaDadosLoja({ searchParams }: { searchParams: 
             <div className="flex min-w-0 items-start gap-3">
               <Sparkles className="mt-0.5 size-5 shrink-0 text-beringela" aria-hidden />
               <div>
-                <h2 id="criar-loja-ia" className="text-lg font-semibold text-beringela">Rascunho com o Merc</h2>
-                <p className="mt-0.5 text-sm text-texto-suave">O Merc usa suas informações para montar a vitrine. Você revisa tudo antes de publicar.</p>
+                <h2 id="criar-loja-ia" className="text-lg font-semibold text-beringela">Rascunho com a Lia</h2>
+                <p className="mt-0.5 text-sm text-texto-suave">A Lia usa suas informações para montar a vitrine. Você revisa tudo antes de publicar.</p>
               </div>
             </div>
             <form action={abrirRascunho.bind(null, assistente)} className="sm:w-48 sm:shrink-0">

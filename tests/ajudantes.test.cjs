@@ -175,7 +175,7 @@ test('passo do anúncio usa a loja do próprio anúncio (rascunho do Merc com ou
   assert.deepEqual(pedidas, [undefined, propria.id]);
 });
 
-test('passo Fotos: ajudante não vê "Cadastrar com o Merc pela foto"', async () => {
+test('passo Fotos: ajudante não vê "Cadastrar com a Lia pela foto"', async () => {
   const pagina = (ajudante) => carregar('src/app/(conta)/anunciar/fotos/page.tsx', {
     '../_carregar': { carregarPasso: async () => ({ anuncio: { id, fotos: [] }, editar: false, conta: { vitrine: { tipo: 'loja', microrregiao_id: 'r' }, ...(ajudante ? { ajudante: true } : {}) } }) },
     '@/lib/dados/config': { lerConfigNumero: async () => 1 },
@@ -184,8 +184,8 @@ test('passo Fotos: ajudante não vê "Cadastrar com o Merc pela foto"', async ()
     '@/components/anunciar/envio-fotos': { EnvioFotos: () => null },
     '@/components/aki/botao-abrir-aki': { BotaoAbrirAki: ({ children }) => React.createElement('button', null, children) },
   }).default({ searchParams: Promise.resolve({}) });
-  assert.match(render(await pagina(false)), /Cadastrar com o Merc/);
-  assert.doesNotMatch(render(await pagina(true)), /Cadastrar com o Merc/);
+  assert.match(render(await pagina(false)), /Cadastrar com a Lia/);
+  assert.doesNotMatch(render(await pagina(true)), /Cadastrar com a Lia/);
 });
 
 // Etapa P5b-2a: super admin edita o anúncio de outra pessoa.

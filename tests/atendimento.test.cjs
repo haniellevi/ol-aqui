@@ -25,7 +25,7 @@ test('atendimento guarda a mensagem antes da IA e só a chama se o anunciante es
   assert.deepEqual(await humano.enviar(false), { ok: true, dados: { destino: 'equipe', mensagem: 'Mensagem enviada.' } });
   assert.deepEqual(humano.chamadas.map(c => c[0]), ['enviar_mensagem_atendimento']);
   const assistido = envio();
-  assert.deepEqual(await assistido.enviar(true), { ok: true, dados: { destino: 'aki', mensagem: 'O Merc respondeu na conversa.' } });
+  assert.deepEqual(await assistido.enviar(true), { ok: true, dados: { destino: 'aki', mensagem: 'A Lia respondeu na conversa.' } });
   assert.deepEqual(assistido.chamadas.map(c => c[0]), ['enviar_mensagem_atendimento', 'aki']);
   assert.deepEqual(assistido.chamadas[1], ['aki', 'user_anunciante', 42]);
 });

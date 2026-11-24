@@ -18,7 +18,7 @@ export function CadastroLojaAki({ nome, aplicar }: { nome: string; aplicar: (dad
     try {
       setResposta(await pedirAoAki<RespostaCadastroAki>({ tipo: "cadastro", nome, contexto }));
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "O Merc está indisponível. Tente novamente.");
+      setErro(e instanceof Error ? e.message : "A Lia está indisponível. Tente novamente.");
     } finally {
       setOcupado(false);
     }
@@ -26,13 +26,13 @@ export function CadastroLojaAki({ nome, aplicar }: { nome: string; aplicar: (dad
 
   return (
     <details className="rounded-card border border-borda bg-fundo px-3">
-      <summary className="min-h-toque cursor-pointer rounded-campo py-3 text-sm font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-offset-2">Pedir ajuda ao Merc</summary>
+      <summary className="min-h-toque cursor-pointer rounded-campo py-3 text-sm font-semibold text-beringela focus-visible:outline-2 focus-visible:outline-offset-2">Pedir ajuda à Lia</summary>
       <div className="flex flex-col gap-3 pb-3">
         <Campo tamanho="toque" name="contexto_aki" rotulo="O que sua loja vende ou faz?" placeholder="Ex.: Vendo peças e acessórios para motos"
           value={contexto} onChange={(e) => { setContexto(e.target.value); setResposta(null); }}
-          maxLength={1500} disabled={ocupado} dica="Conte um pouco sobre a loja para o Merc sugerir uma categoria e uma descrição." />
+          maxLength={1500} disabled={ocupado} dica="Conte um pouco sobre a loja para a Lia sugerir uma categoria e uma descrição." />
         <Botao type="button" variante="secundario" tamanho="toque" disabled={!contexto.trim()} carregando={ocupado}
-          textoCarregando="Merc está preparando..." onClick={sugerir}>Pedir sugestões</Botao>
+          textoCarregando="A Lia está preparando..." onClick={sugerir}>Pedir sugestões</Botao>
         {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
         <div aria-live="polite">
           {resposta && "pergunta" in resposta && <p>{resposta.pergunta} Acrescente a resposta ao texto acima.</p>}

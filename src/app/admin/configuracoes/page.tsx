@@ -23,7 +23,7 @@ type Config = {
 
 const AREAS = [
   { nome: "Comercial", texto: "Preços, planos e destaques.", links: [["Planos", "/admin/planos"], ["Destaques", "/admin/destaques"], ["Teste grátis e avulsos", "/admin/configuracoes?grupo=planos"]] },
-  { nome: "Merc", texto: "Modelo, orçamento e qualidade das respostas.", links: [["Configurar Merc", "/admin/robo"]] },
+  { nome: "Lia", texto: "Modelo, orçamento e qualidade das respostas.", links: [["Configurar Lia", "/admin/robo"]] },
   { nome: "IA do site", texto: "Modelo de IA de cada recurso: moderação, categorias, anúncios, lojas e Radar.", links: [["Modelos de IA", "/admin/configuracoes?grupo=ia"]] },
   { nome: "Conteúdo", texto: "Página inicial, ajuda e documentos.", links: [["Textos e página inicial", "/admin/textos"]] },
   { nome: "Região", texto: "Região atendida e cidades disponíveis.", links: [["Regiões e cidades", "/admin/regioes"]] },
@@ -74,7 +74,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
       <Link href="/admin/configuracoes" className="mb-3 inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro hover:underline">Todas as configurações</Link>
       <Titulo>{NOMES_GRUPO[grupoAtual] ?? "Ajustes avançados"}</Titulo>
       {erroConfigs && <Aviso tipo="erro">Não foi possível carregar os ajustes. Tente novamente.</Aviso>}
-      {grupoAtual === "robo" && <p className="mb-4 text-sm text-texto-suave">Modelo, orçamento e textos ficam em <Link href="/admin/robo" className="font-semibold underline">Configurar Merc</Link>.</p>}
+      {grupoAtual === "robo" && <p className="mb-4 text-sm text-texto-suave">Modelo, orçamento e textos ficam em <Link href="/admin/robo" className="font-semibold underline">Configurar Lia</Link>.</p>}
       {grupoAtual === "ia" && <p className="mb-4 text-sm text-texto-suave">Cada recurso usa o modelo escolhido aqui. Sem escolha, usa o GPT-6 Luna. Se o modelo falhar, o recurso segue como antes da IA: o anúncio ou a loja vai para a revisão da equipe e o Radar funciona sem IA.</p>}
       {grupoAtual === "radar" && <p className="mb-4 text-sm text-texto-suave">Os textos dos avisos ficam em <Link href="/admin/mensagens" className="font-semibold underline">Mensagens automáticas</Link>.</p>}
 

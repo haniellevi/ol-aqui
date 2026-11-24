@@ -14,8 +14,8 @@ import { createClient } from "@/lib/supabase/server";
 // campo de escrever ficar embaixo, sem a barra de navegação por cima; a seta do topo volta ao Início.
 
 export const metadata: Metadata = {
-  title: "Merc, o ajudante do Mercado da Região",
-  description: "Converse com o Merc: ele ajuda a achar coisas à venda na região e a montar seu anúncio.",
+  title: "Lia, a ajudante do Mercado da Região",
+  description: "Converse com a Lia. Ela ajuda a achar coisas à venda na região e a montar seu anúncio.",
   alternates: { canonical: "/aki" },
 };
 
@@ -35,7 +35,7 @@ export default async function PaginaAki({ searchParams }: {
   const conversa = userId ? await atendimentoCadastro(await createClient(), { dono: userId }) : null;
   if (atendimento === "1" && (conversa?.data || conversa?.error)) {
     return <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-4 bg-fundo px-4 py-4">
-      <Botao href={chat} variante="texto" tamanho="toque" icone={<ChevronLeft />} className="-ml-2 self-start px-2">Voltar ao Merc</Botao>
+      <Botao href={chat} variante="texto" tamanho="toque" icone={<ChevronLeft />} className="-ml-2 self-start px-2">Voltar à Lia</Botao>
       <h1 className="text-titulo font-semibold text-beringela">Atendimento com a equipe</h1>
       {conversa.data ? <>
         <p role="status" className="text-sm text-texto-suave">{conversa.data.aguarda_equipe ? "Aguardando resposta da equipe." : "A equipe respondeu."}</p>

@@ -9,7 +9,7 @@ const ESTADO_BASE = {
   logado: true,
   pode: true,
   motivo: null,
-  avisoIa: 'O Merc usa IA.',
+  avisoIa: 'A Lia usa IA.',
   boasVindas: 'Olá! Acesse https://mercadodaregiao.com.br/exemplo-boas-vindas-longo',
   sugestoes: ['Preciso de ajuda com https://mercadodaregiao.com.br/sugestao-longa'],
   maxCaracteres: 500,
@@ -67,14 +67,15 @@ function renderBalao({ modo = 'balao', estados = {} } = {}) {
   return render(React.createElement(BalaoAki, { modo }));
 }
 
-test('BalaoAki fechado garante toque >= 44px no atalho e no convite do Merc', () => {
+test('BalaoAki fechado garante toque >= 44px no atalho e no convite da Lia', () => {
   const html = renderBalao({
     modo: 'balao',
-    estados: { aberto: false, dica: { texto: 'Quer ajuda do Merc?', pedido: {} } },
+    estados: { aberto: false, dica: { texto: 'Quer ajuda da Lia?', pedido: {} } },
   });
   assert.match(html, /data-aki-atalho[^>]*min-h-toque/);
+  assert.match(html, /aria-label="Abrir conversa com a Lia"[^>]*>.*Lia<\/button>/);
   assert.match(html, /data-aki-dica/);
-  assert.match(html, /aria-label="Fechar o convite do Merc" class="[^"]*size-toque/);
+  assert.match(html, /aria-label="Fechar o convite da Lia" class="[^"]*size-toque/);
   assert.doesNotMatch(html, /\b(?:h-10|min-h-10|size-10)\b/);
 });
 
@@ -102,7 +103,9 @@ test('BalaoAki aberto usa alvos >= 44px, Enviar de 48px e quebra de URLs longas'
   assert.doesNotMatch(htmlPagina, /\b(?:h-10|min-h-10|size-10)\b/);
 
   const htmlFolhaVazia = renderBalao({ modo: 'balao', estados: { aberto: true, mensagens: [] } });
-  assert.match(htmlFolhaVazia, /aria-label="Fechar" class="[^"]*size-toque/);
+  assert.match(htmlFolhaVazia, /aria-label="Fechar conversa com a Lia" class="[^"]*size-toque/);
+  assert.match(htmlFolhaVazia, /<h2 id="aki-titulo"[^>]*>Lia<\/h2>/);
+  assert.match(htmlFolhaVazia, /<label[^>]*for="aki-texto"[^>]*>Mensagem para a Lia<\/label>/);
   assert.match(htmlFolhaVazia, /\[overflow-wrap:anywhere\]/);
   assert.match(htmlFolhaVazia, /break-words/);
 });

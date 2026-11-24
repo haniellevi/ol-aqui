@@ -80,9 +80,9 @@ export const NOMES_GRUPO: Record<string, string> = {
   radar: "Radar de Negócios",
   moderacao: "Moderação",
   cobranca: "Cobrança",
-  robo: "Robô Merc",
+  robo: "Assistente Lia",
   ia: "Modelos de IA",
-  aki_lojistas: "Merc para lojistas",
+  aki_lojistas: "Lia para lojistas",
   conversas: "Conversas",
   geral: "Geral",
 };

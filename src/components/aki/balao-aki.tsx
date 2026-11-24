@@ -129,7 +129,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
       const r = await fetch(`${API}?completo=1`, { cache: "no-store" });
       const e = (await r.json()) as EstadoAki;
       // falha no servidor (a rota responde motivo "erro") não é "Merc desligado": mostra "Tentar de novo"
-      if (!r.ok || e.motivo === "erro") throw new Error("estado do Merc falhou");
+      if (!r.ok || e.motivo === "erro") throw new Error("estado da Lia falhou");
       setEstado(e);
       setMensagens(e.mensagens ?? []);
       setConversaId(e.conversaId);
@@ -345,7 +345,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
       <section aria-labelledby="aki-titulo" className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-4 px-4 text-center">
         <MascoteAki tamanho={64} />
         <h1 id="aki-titulo" className="text-titulo font-semibold">
-          {carregandoPagina ? "Abrindo o Merc…" : falhouEstado ? "Não deu para abrir o Merc" : "O Merc está descansando"}
+          {carregandoPagina ? "Abrindo a Lia…" : falhouEstado ? "Não deu para abrir a Lia" : "A Lia está descansando"}
         </h1>
         {carregandoPagina ? (
           <Loader2 className="size-6 animate-spin text-texto-suave motion-reduce:animate-none" aria-hidden />
@@ -427,7 +427,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           >
             {dica.texto}
           </button>
-          <button type="button" onClick={fecharDica} aria-label="Fechar o convite do Merc" className="grid size-toque shrink-0 place-items-center text-texto-suave">
+          <button type="button" onClick={fecharDica} aria-label="Fechar o convite da Lia" className="grid size-toque shrink-0 place-items-center text-texto-suave">
             <X className="size-5" aria-hidden />
           </button>
         </div>
@@ -440,9 +440,10 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
           data-aki-atalho
           className={`fixed right-4 z-30 flex min-h-toque items-center gap-2 rounded-full bg-cartao pl-2 pr-4 text-sm font-semibold text-beringela shadow-2 active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro md:right-6 ${posicao} ${semAtalhoMovel}`}
           aria-haspopup="dialog"
+          aria-label="Abrir conversa com a Lia"
         >
           <MascoteAki tamanho={30} />
-          Merc
+          Lia
         </button>
       )}
 
@@ -461,7 +462,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
               <MascoteAki tamanho={32} />
               <div className="min-w-0 flex-1">
                 <Titulo id="aki-titulo" className="text-lg leading-6 font-semibold">
-                  Merc
+                  Lia
                 </Titulo>
                 <p className="text-legenda leading-[18px] text-texto-suave">Ajudante do Mercado da Região</p>
               </div>
@@ -470,7 +471,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   type="button"
                   onClick={() => setConfirmarApagar(true)}
                   disabled={enviando}
-                  title={enviando ? "Espere o Merc terminar de responder" : undefined}
+                  title={enviando ? "Espere a Lia terminar de responder" : undefined}
                   className="flex min-h-toque items-center gap-1 px-3 text-legenda font-semibold text-perigo disabled:opacity-50"
                 >
                   <Trash2 className="size-4" aria-hidden />
@@ -478,7 +479,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                 </button>
               )}
               {!pagina && (
-                <button ref={fechar} type="button" onClick={() => setAberto(false)} aria-label="Fechar" className="grid size-toque place-items-center text-beringela">
+                <button ref={fechar} type="button" onClick={() => setAberto(false)} aria-label="Fechar conversa com a Lia" className="grid size-toque place-items-center text-beringela">
                   <X className="size-6" aria-hidden />
                 </button>
               )}
@@ -493,15 +494,15 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
 
             {voltarDaAjuda && (
               <div className="border-b border-borda bg-fundo px-4 py-3 text-sm text-texto-suave">
-                <p>Conte ao Merc o que aconteceu com a confirmação do WhatsApp. Nunca envie o código pelo bate-papo.</p>
-                <p>Ao tocar em <strong>Não ajudou</strong>, a equipe recebe sua pergunta e a resposta do Merc.</p>
+                <p>Conte à Lia o que aconteceu com a confirmação do WhatsApp. Nunca envie o código pelo bate-papo.</p>
+                <p>Ao tocar em <strong>Não ajudou</strong>, a equipe recebe sua pergunta e a resposta da Lia.</p>
                 {atendimentoAberto && <Botao href={atendimentoHref} variante="texto" tamanho="toque" className="-ml-3 px-3">Ver atendimento com a equipe</Botao>}
               </div>
             )}
 
             {confirmarApagar && (
               <div role="alertdialog" aria-label="Apagar conversa" className="space-y-2 bg-perigo-fundo px-4 py-3">
-                <p className="text-sm text-perigo">Apagar toda a sua conversa com o Merc? Não dá para desfazer.</p>
+                <p className="text-sm text-perigo">Apagar toda a sua conversa com a Lia? Não dá para desfazer.</p>
                 <div className="flex gap-2">
                   <Botao variante="perigo" carregando={apagando} textoCarregando="Apagando…" disabled={enviando} onClick={() => void apagarConversa()}>
                     Apagar
@@ -525,7 +526,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   <div className="flex items-start gap-2">
                     <MascoteAki tamanho={28} className="mt-1 shrink-0" />
                     <p className="min-w-0 rounded-card rounded-tl-none bg-fundo px-3 py-2 text-base leading-6 [overflow-wrap:anywhere] break-words">
-                      {estado.boasVindas ?? "Oi! Eu sou o Merc. Posso ajudar a achar coisas à venda e a anunciar."}
+                      {estado.boasVindas ?? "Oi! Eu sou a Lia. Posso ajudar a achar coisas à venda e a anunciar."}
                     </p>
                   </div>
                   {!estado.logado && (
@@ -594,7 +595,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   <img src={foto.previa} alt="Foto escolhida" className="size-16 rounded-campo object-cover" />
                   <span className="min-w-0 flex-1 text-sm [overflow-wrap:anywhere] text-texto-suave">
                     {usarNoAnuncio && rascunhoId
-                      ? "A foto vai para o Merc e fica no seu anúncio."
+                      ? "A foto vai para a Lia e fica no seu anúncio."
                       : "A foto vai junto com a mensagem e não fica guardada."}
                   </span>
                   <button type="button" onClick={tirarFoto} aria-label="Tirar a foto" className="grid size-toque place-items-center text-perigo">
@@ -627,7 +628,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     Foto
                   </button>
                   <label htmlFor="aki-texto" className="sr-only">
-                    Mensagem para o Merc
+                    Mensagem para a Lia
                   </label>
                   <textarea
                     id="aki-texto"
@@ -643,7 +644,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                     maxLength={estado.maxCaracteres}
                     rows={1}
                     disabled={!podeEscrever}
-                    placeholder={podeEscrever ? "Escreva para o Merc" : DESCANSANDO}
+                    placeholder={podeEscrever ? "Escreva para a Lia" : DESCANSANDO}
                     className={`${classesCampo} max-h-32 min-h-toque flex-1 resize-none py-2 leading-6`}
                   />
                   <Botao
@@ -659,7 +660,7 @@ export function BalaoAki({ modo = "balao", voltarDaAjuda, atendimentoHref, atend
                   </Botao>
                 </form>
               ) : (
-                <p className="text-center text-legenda text-texto-suave">Entre na sua conta para conversar com o Merc.</p>
+                <p className="text-center text-legenda text-texto-suave">Entre na sua conta para conversar com a Lia.</p>
               )}
             </footer>
         </Conteiner>

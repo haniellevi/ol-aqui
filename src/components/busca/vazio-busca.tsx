@@ -31,7 +31,7 @@ export function VazioBusca({
       {dono === undefined ? (
         <Botao href={pedido} tamanho="toque" larguraTotal icone={<Radar />}>Pedir no Radar</Botao>
       ) : <AbrirRadarAssistido busca={{ ...filtros, q: t }} dono={dono} texto="Pedir no Radar" tamanho="toque" />}
-      <BotaoAbrirAki tamanho="toque" pedido={{ texto: t ? `Procuro ${t}` : "" }}>Perguntar ao Merc</BotaoAbrirAki>
+      <BotaoAbrirAki tamanho="toque" pedido={{ texto: t ? `Procuro ${t}` : "" }}>Fale com a Lia</BotaoAbrirAki>
       {limparHref ? (
         <Botao href={limparHref} variante="secundario" tamanho="toque" larguraTotal>
           Tirar os filtros

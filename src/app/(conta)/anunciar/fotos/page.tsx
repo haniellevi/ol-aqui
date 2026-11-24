@@ -35,7 +35,7 @@ export default async function PassoFotos({ searchParams }: { searchParams: Param
       />
       {/* O Merc só cadastra na loja própria (P5b): o ajudante não vê o botão. */}
       {!editar && !conta.ajudante && (
-        <BotaoAbrirAki tamanho="toque" pedido={{ foto: true, rascunhoId: anuncio.id }}>Cadastrar com o Merc pela foto</BotaoAbrirAki>
+        <BotaoAbrirAki tamanho="toque" pedido={{ foto: true, rascunhoId: anuncio.id }}>Cadastrar com a Lia pela foto</BotaoAbrirAki>
       )}
       <EnvioFotos id={anuncio.id} editar={editar} daRevisao={daRevisao} fotosIniciais={anuncio.fotos} maximo={maximo} minimo={minimo ?? 0} podeEditarComAki={conta.vitrine.tipo === "loja" && !conta.ajudante} />
       {!equipe && anuncio.status === "rascunho" && <DescartarAnuncio tamanho="toque" id={anuncio.id} titulo={anuncio.titulo} rascunho />}

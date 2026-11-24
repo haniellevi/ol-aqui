@@ -25,12 +25,12 @@ export function ApagarConversasAki() {
   return (
     <>
       <Botao variante="perigo" larguraTotal icone={<Trash2 />} onClick={() => { setResultado(null); setConfirmar(true); }}>
-        Apagar minhas conversas com o Merc
+        Apagar minhas conversas com a Lia
       </Botao>
       <AlertDialog open={confirmar} onOpenChange={(abrir) => { if (!abrir && !apagando) setConfirmar(false); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Apagar todas as conversas com o Merc?</AlertDialogTitle>
+            <AlertDialogTitle>Apagar todas as conversas com a Lia?</AlertDialogTitle>
             <AlertDialogDescription>Não dá para desfazer.</AlertDialogDescription>
           </AlertDialogHeader>
           {resultado && !resultado.ok && <Alert variant="destructive">{resultado.texto}</Alert>}

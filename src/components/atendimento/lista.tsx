@@ -30,7 +30,7 @@ export function ListaAtendimentos({ dados, caminho, link, pagina, total, equipe 
     ) : <ul className="divide-y divide-borda overflow-hidden rounded-card border border-borda bg-cartao" aria-label="Conversas de atendimento">
       {dados.map(c => {
         const titulo = c.anuncio_id ? formatarNome(c.anuncios?.titulo) || "Anúncio sem título" : "Confirmação do WhatsApp";
-        const situacao = c.aguarda_equipe ? "Aguardando equipe" : c.aki_ativo ? "Atendimento com Merc" : "Atendimento da equipe";
+        const situacao = c.aguarda_equipe ? "Aguardando equipe" : c.aki_ativo ? "Atendimento com a Lia" : "Atendimento da equipe";
         const resumo = <>
           <span className="block text-base font-semibold text-beringela">{titulo}</span>
           <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-legenda text-texto-suave">

@@ -46,7 +46,7 @@ export async function delegarAtendimento(id: string, conversa: string, ativo: bo
   if (!ehUuid(id) || !ehUuid(conversa) || typeof ativo !== "boolean" || !Number.isSafeInteger(versao)) notFound();
   const { error } = await supabase.rpc("delegar_atendimento_aki", { p_conversa: conversa, p_ativo: ativo, p_versao: versao });
   if (error) aviso(id, "erro", traduzirErro(error).mensagem, true);
-  aviso(id, "ok", ativo ? "O Merc pode responder nesta conversa." : "A equipe retomou o atendimento.", true);
+  aviso(id, "ok", ativo ? "A Lia pode responder nesta conversa." : "A equipe retomou o atendimento.", true);
 }
 
 /** P5b-2a: super admin abre a edição do anúncio de outra pessoa (motivo, 2 horas, aviso ao dono). O banco confere tudo. */

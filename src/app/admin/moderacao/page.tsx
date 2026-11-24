@@ -65,7 +65,7 @@ export default async function ModeracaoPage({
 
       <Cartao className="mb-4 space-y-2 text-sm">
         <h2 className="font-semibold">Análise automática {iaAtivaR.data === true ? "ligada" : "desligada"}</h2>
-        <p>A análise automática pode concluir pendências da regra anterior. Anúncios retidos por termos sexuais ou violentos aguardam a equipe. O orçamento da IA é compartilhado com o Merc e pode ser ajustado em Configurações.</p>
+        <p>A análise automática pode concluir pendências da regra anterior. Anúncios retidos por termos sexuais ou violentos aguardam a equipe. O orçamento da IA é compartilhado com a Lia e pode ser ajustado em Configurações.</p>
         {(iaR.error || iaAtivaR.error) && <p className="text-perigo">Não foi possível consultar a análise automática agora.</p>}
         {analisesIA.length > 0 && <details>
           <summary className="min-h-toque cursor-pointer py-3 font-semibold">Últimas análises</summary>

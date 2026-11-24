@@ -45,13 +45,13 @@ export function FormMensagemAtendimento({ id, ofereceAki }: { id: string; oferec
       onChange={(e) => { chave.current = null; setAviso(null); setTexto(e.target.value); }}
       className={`${classesCampo} min-h-20 resize-y py-2 leading-6`} />
     {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
-    <p role="status" className="text-sm text-texto-suave empty:hidden">{pendente ? destino === "aki" ? "O Merc está respondendo..." : "Enviando mensagem..." : aviso}</p>
-    {ofereceAki && <p id="aviso-ia-atendimento" className="text-legenda text-texto-suave">O Merc usa IA para tirar dúvidas rápidas.</p>}
+    <p role="status" className="text-sm text-texto-suave empty:hidden">{pendente ? destino === "aki" ? "A Lia está respondendo..." : "Enviando mensagem..." : aviso}</p>
+    {ofereceAki && <p id="aviso-ia-atendimento" className="text-legenda text-texto-suave">A Lia usa IA para tirar dúvidas rápidas.</p>}
     <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
       {ofereceAki && <Botao type="button" variante="secundario" tamanho="toque" className="w-full sm:w-auto" disabled={pendente} carregando={pendente && destino === "equipe"} textoCarregando="Enviando..."
         onClick={() => { if (formulario.current?.reportValidity()) enviar(false); }}>Falar com a equipe</Botao>}
       <Botao type="submit" tamanho="acao" className="w-full sm:w-auto" disabled={pendente} carregando={pendente && destino === (ofereceAki ? "aki" : "equipe")} textoCarregando={ofereceAki ? "Aguarde..." : "Enviando..."}>
-        {ofereceAki ? "Enviar ao Merc" : "Enviar mensagem"}
+        {ofereceAki ? "Enviar à Lia" : "Enviar mensagem"}
       </Botao>
     </div>
   </form>;

@@ -294,7 +294,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
         </Bloco>
 
         {/* 5. Custo do Merc */}
-        <Bloco id="aki" filtros={filtros} titulo="Custo do robô Merc" sub="Custo gravado em cada resposta do Merc (inclui os testes do painel).">
+        <Bloco id="aki" filtros={filtros} titulo="Custo da assistente Lia" sub="Custo gravado em cada resposta da Lia (inclui os testes do painel).">
           {!rel.aki ? (
             <Falhou />
           ) : aki.length === 0 ? (
@@ -310,7 +310,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
               <Cartao>
                 <h3 className="mb-3 text-base font-semibold text-beringela">Custo por mês</h3>
                 <Barras
-                  rotulo="Custo do Merc por mês"
+                  rotulo="Custo da Lia por mês"
                   cor="beringela"
                   itens={aki.map((m) => ({
                     rotulo: nomeMes(m.mes),

@@ -140,7 +140,7 @@ export async function aplicarBannerAki(id: string, posicao: number, logo: string
     if (!userId) return SEM_LOGIN;
     if (!v) return SO_LOJA;
     // P5b-2b: a arte do Merc gasta a IA do plano; fica com o dono.
-    if (v.ajudante) return { ok: false, erro: { mensagem: "Só o dono da loja usa a capa feita pelo Merc." } };
+    if (v.ajudante) return { ok: false, erro: { mensagem: "Só o dono da loja usa a capa feita pela Lia." } };
     if (!ehUuid(id) || !Number.isInteger(posicao) || posicao < 0 || posicao > 100) {
       return { ok: false, erro: { mensagem: "Confira a arte e a posição do logo." } };
     }
@@ -153,7 +153,7 @@ export async function aplicarBannerAki(id: string, posicao: number, logo: string
     atualizar(v.slug);
     return { ok: true, dados: undefined };
   } catch {
-    return { ok: false, erro: { mensagem: "Não foi possível salvar o banner do Merc. Tente novamente." } };
+    return { ok: false, erro: { mensagem: "Não foi possível salvar o banner da Lia. Tente novamente." } };
   }
 }
 

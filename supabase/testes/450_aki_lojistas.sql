@@ -107,14 +107,16 @@ begin
   assert not has_table_privilege('authenticated', 'public.contas_bloqueadas', 'select');
 end $$;
 reset role;
--- O robô se chama Merc: nenhum texto ativo para o público ou para a equipe fala em Aki.
+-- A Lia se apresenta com o nome atual. Documentos assinados conservam o texto da versão.
 do $$
 begin
   assert not exists(select 1 from public.configuracoes where valor::text ~ '\mAki\M' or descricao ~ '\mAki\M');
   assert not exists(select 1 from public.ajuda_perguntas where concat_ws(' ', pergunta, resposta) ~ '\mAki\M');
   assert not exists(select 1 from public.documentos_legais where ativo and concat_ws(' ', titulo, conteudo) ~ '\mAki\M');
   assert not exists(select 1 from public.modelos_mensagem where concat_ws(' ', titulo, texto, titulo_padrao, texto_padrao) ~ '\mAki\M');
-  assert (select valor #>> '{}' from public.configuracoes where chave = 'robo.boas_vindas' and microrregiao_id is null) ~ '\mMerc\M';
-  assert pg_get_functiondef('public.abrir_atendimento_cadastro(bigint)'::regprocedure) like '%Resposta do Merc sem texto.%';
+  assert (select valor #>> '{}' from public.configuracoes where chave = 'robo.boas_vindas' and microrregiao_id is null) like 'Oi! Eu sou a Lia, a assistente do Mercado da Região.%';
+  assert exists(select 1 from public.ajuda_perguntas where categoria = 'conta' and pergunta = 'Quem é a Lia?' and resposta like 'A Lia é a assistente do Mercado da Região,%');
+  assert pg_get_functiondef('public.abrir_atendimento_cadastro(bigint)'::regprocedure) like '%Resposta da Lia sem texto.%';
+  assert pg_get_functiondef('public.loja_ia_publicar(uuid,integer,jsonb,jsonb)'::regprocedure) like '%Escolha o modelo da Lia ou deixe a capa em branco.%';
 end $$;
 rollback;

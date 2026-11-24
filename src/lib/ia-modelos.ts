@@ -40,8 +40,8 @@ export const MODELOS_FIXOS_IA: { nome: string; modelo: string; motivo: string }[
   { nome: "Busca que entende", modelo: "TypeSafe JEV (jev-latest)", motivo: "O JEV responde perguntas de julgamento com resposta fechada. Os modelos de texto acima não falam esse protocolo." },
   { nome: "Sugestão de categoria", modelo: "TypeSafe JEV (jev-latest)", motivo: "Mesmo motivo: é um julgamento (escolher a categoria certa) feito pelo protocolo do JEV." },
   { nome: "Radar: perguntas, novidades e \"já comprei\"", modelo: "TypeSafe JEV (jev-latest)", motivo: "São julgamentos do JEV. Só a parte que escreve textos do Radar troca de modelo." },
-  { nome: "Merc lojista: foto do produto", modelo: "OpenAI GPT Image (gpt-image-2 ou gpt-image-1.5)", motivo: "Só modelo de imagem gera foto. A escolha entre os dois fica em Merc para lojistas." },
-  { nome: "Merc lojista e robô Merc: conversa", modelo: "Escolhido em outras telas", motivo: "O texto do Merc lojista fica em Merc para lojistas. O robô Merc fica em Configurar Merc." },
+  { nome: "Lia para lojistas: foto do produto", modelo: "OpenAI GPT Image (gpt-image-2 ou gpt-image-1.5)", motivo: "Só modelo de imagem gera foto. A escolha entre os dois fica em Lia para lojistas." },
+  { nome: "Lia: conversa e ajuda a lojistas", modelo: "Escolhido em outras telas", motivo: "O modelo de texto para lojistas fica em Lia para lojistas. A conversa fica em Configurar Lia." },
 ];
 
 export function modeloDaLista(recurso: RecursoIA, valor: unknown): ModeloIA | null {

@@ -100,7 +100,7 @@ export async function POST(req: Request) {
         try {
           await responder({ userId, pedido: { texto, conversaId, foto, rascunhoId, ajudaWhatsapp: corpo.ajudaWhatsapp === true }, ajustes, emitir, sinal: req.signal });
         } catch {
-          emitir({ tipo: "erro", mensagem: "O Merc não conseguiu responder agora. Tente de novo." });
+          emitir({ tipo: "erro", mensagem: "A Lia não conseguiu responder agora. Tente de novo." });
         } finally {
           aberto = false;
           try {
@@ -115,6 +115,6 @@ export async function POST(req: Request) {
       headers: { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store, no-transform", "x-accel-buffering": "no" },
     });
   } catch {
-    return umEvento({ tipo: "erro", mensagem: "O Merc não conseguiu responder agora. Tente de novo." }, 500);
+    return umEvento({ tipo: "erro", mensagem: "A Lia não conseguiu responder agora. Tente de novo." }, 500);
   }
 }

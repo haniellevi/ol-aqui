@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { FormMensagemAtendimento } from "./form-mensagem";
 import { AtualizarConversa } from "./atualizar";
 
-const AUTOR: Record<MensagemAtendimento["autor"], string> = { equipe: "Equipe Mercado da Região", anunciante: "Anunciante", aki: "Merc · IA" };
+const AUTOR: Record<MensagemAtendimento["autor"], string> = { equipe: "Equipe Mercado da Região", anunciante: "Anunciante", aki: "Lia · IA" };
 
 export async function ConversaAtendimento({ id, caminho, antes, equipe, aki, cadastro = false }: {
   id: string; caminho: string; antes?: string; equipe?: boolean; aki: boolean; cadastro?: boolean;
@@ -23,7 +23,7 @@ export async function ConversaAtendimento({ id, caminho, antes, equipe, aki, cad
         <ChevronDown className="size-4 shrink-0 transition-transform duration-150 group-open:rotate-180 motion-reduce:transition-none" aria-hidden />
         <span>Privacidade da conversa</span>
       </summary>
-      <p className="max-w-[65ch] pb-3 [overflow-wrap:anywhere]">Apenas {cadastro ? "a pessoa que pediu ajuda" : "o anunciante"} e a administração têm acesso. Não compartilhe senhas, documentos ou códigos.{!equipe && aki && " Mensagens enviadas ao Merc podem ser processadas pelo provedor de IA."}</p>
+      <p className="max-w-[65ch] pb-3 [overflow-wrap:anywhere]">Apenas {cadastro ? "a pessoa que pediu ajuda" : "o anunciante"} e a administração têm acesso. Não compartilhe senhas, documentos ou códigos.{!equipe && aki && " Mensagens enviadas à Lia podem ser processadas pelo provedor de IA."}</p>
     </details>
     {error ? <p role="alert" className="text-base text-perigo">Não foi possível carregar as mensagens. Use Atualizar para tentar novamente.</p> : <>
       {(cursor || anterior) && <nav aria-label="Histórico da conversa" className="flex flex-wrap gap-2">

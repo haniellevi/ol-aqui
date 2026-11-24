@@ -210,7 +210,7 @@ export async function salvarFotos(id: string, fotos: string[], fotosAntes?: stri
   const fotosAtuais = (atual.data.fotos ?? []) as string[];
   // Uma resposta perdida pode ter sido gravada. Repetir a mesma lista é seguro.
   if (JSON.stringify(fotosAtuais) === JSON.stringify(fotos)) return { ok: true, dados: undefined };
-  return { ok: false, fotosAtuais, erro: { mensagem: "As fotos mudaram em outra janela ou pelo Merc. A lista salva foi atualizada nesta tela. Confira e tente novamente." } };
+  return { ok: false, fotosAtuais, erro: { mensagem: "As fotos mudaram em outra janela ou pela Lia. A lista salva foi atualizada nesta tela. Confira e tente novamente." } };
 }
 
 /* ----------------------------- Categoria ----------------------------- */
