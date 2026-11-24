@@ -15,6 +15,22 @@
 .painel-admin textarea { resize: vertical; }
 .painel-admin input[type="checkbox"] { flex-shrink: 0; }
 
+/* A moldura local amplia o toque sem alterar as peças compartilhadas. */
+.painel-admin :is(a, button, summary):focus-visible {
+  outline: 3px solid var(--color-laranja-escuro);
+  outline-offset: -2px;
+}
+.painel-admin [data-slot="table-container"] {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-borda-campo) transparent;
+}
+.painel-admin [data-slot="table-head"] { font-weight: 600; }
+.painel-admin .admin-nav-mobile { padding-bottom: env(safe-area-inset-bottom); }
+.painel-admin .admin-nav-rolagem {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-borda-campo) var(--color-fundo);
+}
+
 @media (min-width: 48rem) and (pointer: fine) {
   .painel-admin .admin-campo,
   .painel-admin .olaki-acao {

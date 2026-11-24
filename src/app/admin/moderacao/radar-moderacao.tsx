@@ -3,6 +3,8 @@ import { quando, reais } from "@/lib/admin/formato";
 import { Aviso, Cartao, estiloCampo } from "@/components/admin/ui";
 import { classesBotao } from "@/components/ui/botao";
 import { BotaoDecisao } from "./botao-decisao";
+import Link from "next/link";
+import { Vazio } from "@/components/ui/vazio";
 import { moderarRadar } from "./actions";
 
 // Radar na moderação: pedidos e propostas mais recentes, com ocultar / devolver / remover e o motivo.
@@ -55,14 +57,14 @@ export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string 
 
   return (
     <section id="radar" className="mt-8 scroll-mt-20">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Radar: pedidos mais novos</h2>
+      <h2 className="mb-3 text-sm font-semibold text-texto-suave">Radar: pedidos mais novos</h2>
       {(erro || ok) && (
         <div className="mb-3">
           <Aviso tipo={erro ? "erro" : "ok"}>{erro ?? ok}</Aviso>
         </div>
       )}
-      {pedidosR.error && <Aviso tipo="erro">Não foi possível carregar os pedidos. Recarregue para tentar novamente.</Aviso>}
-      {!pedidosR.error && pedidos.length === 0 && <Cartao className="text-sm text-texto-suave">Nenhum pedido no Radar ainda.</Cartao>}
+      {pedidosR.error && <Aviso tipo="erro">Não foi possível carregar os pedidos. <Link href="/admin/moderacao#radar" className={classesBotao("secundario")}>Tentar de novo</Link></Aviso>}
+      {!pedidosR.error && pedidos.length === 0 && <Vazio titulo="Nenhum pedido no Radar ainda"><Link href="/admin/moderacao" className={classesBotao("secundario")}>Voltar à fila</Link></Vazio>}
       <div className="space-y-4">
         {pedidos.map((p) => {
           const tirado = p.fechado_motivo === "moderacao";
@@ -80,9 +82,9 @@ export async function RadarModeracao({ erro, ok }: { erro?: string; ok?: string 
         })}
       </div>
 
-      <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Radar: propostas mais novas</h2>
-      {propostasR.error && <Aviso tipo="erro">Não foi possível carregar as propostas. Recarregue para tentar novamente.</Aviso>}
-      {!propostasR.error && propostas.length === 0 && <Cartao className="text-sm text-texto-suave">Nenhuma proposta ainda.</Cartao>}
+      <h2 className="mb-3 mt-8 text-sm font-semibold text-texto-suave">Radar: propostas mais novas</h2>
+      {propostasR.error && <Aviso tipo="erro">Não foi possível carregar as propostas. <Link href="/admin/moderacao#radar" className={classesBotao("secundario")}>Tentar de novo</Link></Aviso>}
+      {!propostasR.error && propostas.length === 0 && <Vazio titulo="Nenhuma proposta ainda"><Link href="/admin/moderacao" className={classesBotao("secundario")}>Voltar à fila</Link></Vazio>}
       <div className="space-y-4">
         {propostas.map((r) => (
           <Cartao key={r.id}>
@@ -117,7 +119,7 @@ function FormModerar({ tipo, id, oculto }: { tipo: "pedido" | "proposta"; id: st
         <input type="hidden" name="tipo" value={tipo} />
         <input type="hidden" name="id" value={id} />
         <input name="motivo" maxLength={300} placeholder="Motivo (o dono vê e fica no histórico)" className={estiloCampo} aria-label="Motivo" />
-        <label className="flex min-h-10 items-center gap-3 text-sm text-texto">
+        <label className="flex min-h-toque items-center gap-3 text-sm text-texto">
           <input type="checkbox" name="confirmar_remover" value="sim" className="size-5 accent-laranja-escuro" />
           Sim, remover de vez{tipo === "pedido" ? " (apaga também as propostas)" : ""}. Não dá para desfazer.
         </label>

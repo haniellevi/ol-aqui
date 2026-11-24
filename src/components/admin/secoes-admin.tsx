@@ -21,14 +21,14 @@ export function SecoesAdmin() {
   if (entrada === "/admin/configuracoes") {
     // Página mais funda (ex.: /admin/categorias/sugeridas) já tem o próprio "voltar" para a página de cima.
     const funda = caminho.split("/").filter(Boolean).length > 2;
-    return caminho !== entrada && !funda ?<Link href={entrada} className="mb-4 inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro hover:underline">Voltar às configurações</Link> : null;
+    return caminho !== entrada && !funda ?<Link href={entrada} className="mb-4 inline-flex min-h-toque items-center text-sm font-semibold text-laranja-escuro hover:underline">Voltar às configurações</Link> : null;
   }
   const secoes = SECOES[entrada];
   if (!secoes) return null;
   const atual = [...secoes].reverse().find(s => caminho === s.href || (s.href !== "/admin" && caminho.startsWith(`${s.href}/`)))?.href;
-  return <nav aria-label="Seções desta área" className="mb-5 flex gap-2 overflow-x-auto pb-1">
+  return <nav aria-label="Seções desta área" className="admin-abas mb-5 flex gap-2 overflow-x-auto pb-1">
     {secoes.map(s => <Link key={s.href} href={s.href} aria-current={atual === s.href ? "page" : undefined}
-      className={`inline-flex min-h-10 shrink-0 items-center rounded-campo border px-4 text-sm font-semibold ${atual === s.href ? "border-laranja-escuro bg-selecao text-beringela" : "border-borda bg-cartao text-beringela hover:bg-fundo"}`}>
+      className={`inline-flex min-h-toque shrink-0 items-center rounded-campo border px-4 text-sm font-semibold ${atual === s.href ? "border-laranja-escuro bg-selecao text-beringela" : "border-borda bg-cartao text-beringela hover:bg-fundo"}`}>
       {s.nome}
     </Link>)}
   </nav>;

@@ -36,7 +36,7 @@ export function NavAdmin({ pendencias, papel, inicio, aberta = true }: { pendenc
     <SidebarProvider defaultOpen={aberta} className="contents" style={{ "--sidebar-width": "14rem" } as React.CSSProperties}>
       <Sidebar collapsible="icon" className="border-sidebar-border">
         <SidebarHeader className="h-16 flex-row items-center justify-between gap-2 px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <Link href={inicio} className="flex items-center gap-2 group-data-[collapsible=icon]:hidden focus-visible:outline-2 focus-visible:outline-laranja-escuro">
+          <Link href={inicio} className="flex min-h-toque items-center gap-2 group-data-[collapsible=icon]:hidden focus-visible:outline-2 focus-visible:outline-laranja-escuro">
             <Image src="/logo/mercado-da-regiao-marca.svg" alt="Mercado da Região" width={179} height={36} />
             <span className="text-legenda text-texto-suave">Painel</span>
           </Link>
@@ -53,7 +53,7 @@ export function NavAdmin({ pendencias, papel, inicio, aberta = true }: { pendenc
                       render={<Link href={href} aria-current={ativo ? "page" : undefined} />}
                       isActive={ativo}
                       tooltip={rotulo}
-                      className="admin-menu-item h-9 gap-2.5 px-3 text-base text-texto-suave data-active:text-beringela [&_svg]:size-[1.125rem] data-active:[&_svg]:text-laranja-escuro"
+                      className="admin-menu-item min-h-toque gap-2.5 px-3 text-base text-texto-suave data-active:text-beringela [&_svg]:size-5 data-active:[&_svg]:text-laranja-escuro"
                     >
                       <Icone aria-hidden />
                       <span>{rotulo}</span>
@@ -73,7 +73,7 @@ export function NavAdmin({ pendencias, papel, inicio, aberta = true }: { pendenc
           <SidebarMenu>
             <SidebarMenuItem>
               <SignOutButton redirectUrl="/">
-                <SidebarMenuButton type="button" tooltip="Sair" className="admin-menu-item h-9 gap-2.5 px-3 text-base text-beringela">
+                <SidebarMenuButton type="button" tooltip="Sair" className="admin-menu-item min-h-toque gap-2.5 px-3 text-base text-beringela">
                   <LogOut aria-hidden />
                   <span>Sair</span>
                 </SidebarMenuButton>
@@ -83,11 +83,13 @@ export function NavAdmin({ pendencias, papel, inicio, aberta = true }: { pendenc
         </SidebarFooter>
       </Sidebar>
     </SidebarProvider>
-    <div className="fixed inset-x-0 bottom-0 z-20 flex border-t border-borda bg-cartao shadow-2 md:hidden">
+    <div className="admin-nav-mobile fixed inset-x-0 bottom-0 z-20 border-t border-borda bg-cartao shadow-2 md:hidden">
+    <p className="px-4 pt-1 text-legenda text-texto-suave">Deslize o menu para ver mais opções ↔</p>
+    <div className="flex">
     <nav
       ref={barra}
       aria-label="Painel administrativo"
-      className="flex min-w-0 flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none]"
+      className="flex min-w-0 flex-1 overflow-x-auto overscroll-x-contain admin-nav-rolagem gap-2"
     >
       {itens.map(({ href, rotulo, curto, icone: Icone }: (typeof ITENS)[number] & { curto?: string }) => {
         const ativo = ehAtivo(href);
@@ -127,6 +129,7 @@ export function NavAdmin({ pendencias, papel, inicio, aberta = true }: { pendenc
         Sair
       </button>
     </SignOutButton>
+    </div>
     </div>
     </>
   );

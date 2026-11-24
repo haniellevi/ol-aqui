@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Vazio } from "@/components/ui/vazio";
 import { redirect } from "next/navigation";
 import { Aviso, Cartao, Titulo, estiloBotao, estiloBotaoSec, estiloCampo } from "@/components/admin/ui";
 import { ROTULO_ANUNCIO } from "@/components/conta/situacao-anuncios";
@@ -83,17 +85,17 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
         <form method="get" action={LINK_ADMIN_ANUNCIOS} className="grid items-end gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
           {filtro.status && <input type="hidden" name="status" value={filtro.status} />}
           {loja && <input type="hidden" name="loja" value={loja} />}
-          <label className="min-w-0 text-sm font-medium">
+          <label className="min-w-0 text-sm font-semibold">
             Buscar anúncio
             <input type="search" name="q" placeholder="Título ou ID do anúncio" defaultValue={busca} maxLength={100} className={estiloCampo} />
           </label>
-          <label className="min-w-0 text-sm font-medium">
+          <label className="min-w-0 text-sm font-semibold">
             Região
-            <select name="regiao" defaultValue={regiao} className={estiloCampo}>
+            <NativeSelect name="regiao" defaultValue={regiao} className="mt-1">
               <option value="">Todas</option>
               {regioes.data?.map((item) => <option key={item.id} value={item.id}>{item.nome}</option>)}
               {regiao && !regioes.data?.some((item) => item.id === regiao) && <option value={regiao}>Região selecionada</option>}
-            </select>
+            </NativeSelect>
           </label>
           <button className={estiloBotao} type="submit">Buscar</button>
           {regioes.error && <p className="text-legenda text-perigo sm:col-span-full">Não foi possível carregar as regiões.</p>}
@@ -119,13 +121,11 @@ export default async function AnunciosAdminPage({ searchParams }: { searchParams
           {error ? "Lista de anúncios" : `${inteiro(total)} ${total === 1 ? "anúncio" : "anúncios"}`}
         </h2>
         {error ? (
-          <Aviso tipo="erro">Não foi possível carregar os anúncios. Atualize a página para tentar novamente.</Aviso>
+          <Aviso tipo="erro">Não foi possível carregar os anúncios. <Link href={endereco(filtro.status, busca, regiao, loja)} className={estiloBotaoSec}>Tentar de novo</Link></Aviso>
         ) : anuncios.length === 0 ? (
-          <Cartao>
-            <p className="text-sm text-texto-suave">
-              {busca || regiao || loja ? "Nenhum anúncio com estes filtros." : filtro.status ? "Nenhum anúncio nesta situação." : "Nenhum anúncio cadastrado."}
-            </p>
-          </Cartao>
+          <Vazio titulo={busca || regiao || loja ? "Nenhum anúncio com estes filtros" : filtro.status ? "Nenhum anúncio nesta situação" : "Nenhum anúncio cadastrado"}>
+            <Link href={LINK_ADMIN_ANUNCIOS} className={estiloBotaoSec}>Ver todos os anúncios</Link>
+          </Vazio>
         ) : (
           <ul className="space-y-3">
             {anuncios.map((anuncio) => {

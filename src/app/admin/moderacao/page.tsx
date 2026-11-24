@@ -8,6 +8,7 @@ import { BotaoDecisao } from "./botao-decisao";
 import { BotaoTirarBanner } from "./botao-tirar-banner";
 import { RadarModeracao } from "./radar-moderacao";
 import { Badge } from "@/components/ui/badge";
+import { Vazio } from "@/components/ui/vazio";
 
 export const metadata = { title: "Moderação" };
 
@@ -67,7 +68,7 @@ export default async function ModeracaoPage({
         <p>A análise automática pode concluir pendências da regra anterior. Anúncios retidos por termos sexuais ou violentos aguardam a equipe. O orçamento da IA é compartilhado com o Merc e pode ser ajustado em Configurações.</p>
         {(iaR.error || iaAtivaR.error) && <p className="text-perigo">Não foi possível consultar a análise automática agora.</p>}
         {analisesIA.length > 0 && <details>
-          <summary className="cursor-pointer font-semibold">Últimas análises</summary>
+          <summary className="min-h-toque cursor-pointer py-3 font-semibold">Últimas análises</summary>
           <p className="mt-2 text-texto-suave">Este é o histórico de análises, incluindo anúncios já revisados pela equipe. Um anúncio pode aparecer mais de uma vez se foi alterado. As pendências atuais ficam abaixo.</p>
           <ul className="mt-2 space-y-2">
             {analisesIA.slice(0, 20).map((a, i) => <li key={`${a.anuncio_id}-${i}`}>
@@ -84,10 +85,10 @@ export default async function ModeracaoPage({
         </div>
       )}
 
-      {erroFila && <Aviso tipo="erro">Não foi possível carregar toda a fila. Recarregue a página para conferir as pendências.</Aviso>}
-      {vazio && <Cartao className="text-sm text-texto-suave">Nada esperando revisão. Tudo em dia.</Cartao>}
+      {erroFila && <Aviso tipo="erro">Não foi possível carregar toda a fila. <a href="/admin/moderacao" className={estiloBotaoSec}>Tentar de novo</a></Aviso>}
+      {vazio && <Vazio titulo="Nada esperando revisão" texto="Tudo em dia. Você pode conferir os anúncios publicados."><Link href={LINK_ADMIN_ANUNCIOS} className={estiloBotaoSec}>Ver anúncios</Link></Vazio>}
 
-      {anuncios.length > 0 && <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-texto-suave">Anúncios em análise</h2>}
+      {anuncios.length > 0 && <h2 className="mb-3 text-sm font-semibold text-texto-suave">Anúncios em análise</h2>}
       <div className="space-y-4">
         {anuncios.map((a) => {
           const loja = Array.isArray(a.vitrines_lojas) ? a.vitrines_lojas[0] : a.vitrines_lojas;
@@ -140,7 +141,7 @@ export default async function ModeracaoPage({
         })}
       </div>
 
-      {pedidos.length > 0 && <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Pedidos do Radar em análise</h2>}
+      {pedidos.length > 0 && <h2 className="mb-3 mt-8 text-sm font-semibold text-texto-suave">Pedidos do Radar em análise</h2>}
       <div className="space-y-4">
         {pedidos.map((p) => (
           <Cartao key={p.id}>
@@ -163,7 +164,7 @@ export default async function ModeracaoPage({
       <RadarModeracao erro={erro} ok={ok} />
 
       {banners.length > 0 && (
-        <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Fotos de banner das lojas (mais novas)</h2>
+        <h2 className="mb-3 mt-8 text-sm font-semibold text-texto-suave">Fotos de banner das lojas (mais novas)</h2>
       )}
       <div className="space-y-4">
         {banners.map((b) => (
@@ -180,7 +181,7 @@ export default async function ModeracaoPage({
             </p>
             <form action={tirarFotoBanner} className="mt-4 space-y-2">
               <input type="hidden" name="id" value={b.id} />
-              <input name="motivo" maxLength={300} placeholder="Motivo (o dono da loja vê)" className={estiloCampo} />
+              <input name="motivo" aria-label="Motivo para retirar o banner" maxLength={300} placeholder="Motivo (o dono da loja vê)" className={estiloCampo} />
               <BotaoTirarBanner />
             </form>
           </Cartao>
@@ -188,7 +189,7 @@ export default async function ModeracaoPage({
       </div>
 
       {denunciasSoltas.length > 0 && (
-        <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-texto-suave">Denúncias de itens ainda no ar</h2>
+        <h2 className="mb-3 mt-8 text-sm font-semibold text-texto-suave">Denúncias de itens ainda no ar</h2>
       )}
       <div className="space-y-3">
         {denunciasSoltas.map((d) => (

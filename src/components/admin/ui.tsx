@@ -27,16 +27,13 @@ export function Numero({ rotulo, valor, detalhe, alerta }: { rotulo: string; val
 }
 
 // Mesma caixa de campo do resto do app (components/ui/input), com a folga do rótulo em cima.
-export const estiloCampo = `${classesCampo} admin-campo mt-1 h-10`;
+export const estiloCampo = `${classesCampo} admin-campo mt-1 h-controle`;
 // Mesmas classes do <Botao>; painel.css compacta controles somente com mouse.
 export const estiloBotao = classesBotao("primario");
 export const estiloBotaoSec = classesBotao("secundario");
 export const estiloBotaoPerigo = classesBotao("perigo");
-// "Aprovar" na moderação: verde-escuro com texto branco (5,4:1). Nunca o verde claro atrás de texto.
-export const estiloBotaoAprovar =
-  "olaki-acao inline-flex min-h-10 select-none items-center justify-center gap-2 rounded-campo bg-verde-escuro px-4 text-base font-semibold leading-5 text-white " +
-  "transition-colors active:brightness-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro " +
-  "disabled:cursor-not-allowed disabled:opacity-60";
+// Aprovar usa a ação secundária oficial, sem competir com a ação principal.
+export const estiloBotaoAprovar = estiloBotaoSec;
 
 export function Aviso({ tipo, children }: { tipo: "ok" | "erro"; children: React.ReactNode }) {
   return (
