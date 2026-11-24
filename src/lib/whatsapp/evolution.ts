@@ -107,7 +107,12 @@ export function numeroDaConversa(key: ChaveDaMensagem): string | null {
   return numeroDoRemetente(key.remoteJid);
 }
 
-type MensagemRecebida = { key: ChaveDaMensagem & { fromMe?: unknown }; texto: unknown };
+type MensagemRecebida = {
+  key: ChaveDaMensagem & { fromMe?: unknown; id?: unknown };
+  texto: unknown;
+  timestamp: unknown;
+  citada: unknown;
+};
 
 /** Lê o evento só se for mensagem recebida (messages.upsert, fromMe falso). Outros eventos e mensagens nossas: null. */
 function mensagemRecebida(corpo: unknown): MensagemRecebida | null {
@@ -115,12 +120,21 @@ function mensagemRecebida(corpo: unknown): MensagemRecebida | null {
   const { event, data } = corpo as { event?: unknown; data?: unknown };
   if (typeof event !== "string" || event.toLowerCase().replace(/_/g, ".") !== "messages.upsert") return null;
   if (!data || typeof data !== "object") return null;
-  const { key, message } = data as {
-    key?: ChaveDaMensagem & { fromMe?: unknown };
-    message?: { conversation?: unknown; extendedTextMessage?: { text?: unknown } };
+  const { key, message, messageTimestamp, contextInfo } = data as {
+    key?: MensagemRecebida["key"];
+    messageTimestamp?: unknown;
+    contextInfo?: { stanzaId?: unknown };
+    message?: { conversation?: unknown; extendedTextMessage?: { text?: unknown; contextInfo?: { stanzaId?: unknown } } };
   };
   if (!key || key.fromMe !== false) return null;
-  return { key, texto: message?.conversation ?? message?.extendedTextMessage?.text };
+  const externa = contextInfo?.stanzaId;
+  const interna = message?.extendedTextMessage?.contextInfo?.stanzaId;
+  // A Evolution 2.3.7 publica a citação ao lado de message.conversation.
+  const citada = externa != null && interna != null && externa !== interna ? null : externa ?? interna;
+  return {
+    key, texto: message?.conversation ?? message?.extendedTextMessage?.text,
+    timestamp: messageTimestamp, citada,
+  };
 }
 
 /** Pedido de saída com número legível: { numero, comando }. Qualquer outra coisa: null. */
@@ -150,7 +164,7 @@ export type IntencaoMensagem = "sair" | "voltar" | "sim" | "outra";
 const FRASES_VOLTAR = new Set([
   "voltar", "volta", "quero voltar", "ativar", "ativa", "reativar", "quero receber", "quero receber de novo", "voltar a receber", "religar",
 ]);
-// "sim" (e as parecidas) só conta como volta quando há uma pergunta de volta pendente (decide o banco). Fora disso não faz nada.
+// "sim" (e as parecidas) só reativa quando cita uma pergunta válida com comprovante de envio.
 const FRASES_SIM = new Set(["sim", "s", "sim quero", "pode", "quero", "ligar"]);
 
 function fraseDaMensagem(texto: string): string {
@@ -175,9 +189,29 @@ export function hashDaMensagem(texto: string): string {
   return createHash("sha256").update(fraseDaMensagem(texto)).digest("hex");
 }
 
-export type PedidoDeMensagem =
-  | { numero: string; intencao: "sair"; comando: ComandoSaida }
-  | { numero: string; intencao: "voltar" | "sim" | "outra"; hash: string };
+export function hashIdWhatsapp(id: unknown, escopo = ""): string | null {
+  return typeof id === "string" && /^[\x21-\x7e]{1,128}$/.test(id)
+    ? createHash("sha256").update(escopo + "\0" + id).digest("hex") : null;
+}
+
+function horaDaMensagem(timestamp: unknown): string | null {
+  const segundos = typeof timestamp === "string" && /^[0-9]{1,10}$/.test(timestamp)
+    ? Number(timestamp) : timestamp;
+  return typeof segundos === "number" && Number.isInteger(segundos) && segundos > 0 && segundos <= 9999999999
+    ? new Date(segundos * 1000).toISOString() : null;
+}
+
+function eventoDaMensagem(msg: MensagemRecebida, numero: string) {
+  const canonico = numero.length === 13 ? numero : numero.slice(0, 4) + "9" + numero.slice(4);
+  const id = hashIdWhatsapp(msg.key.id, canonico);
+  if (!id) return undefined;
+  return { id, citada: hashIdWhatsapp(msg.citada), ocorreuEm: horaDaMensagem(msg.timestamp) };
+}
+
+export type PedidoDeMensagem = (
+  | { numero: string; intencao: "sair"; comando: ComandoSaida; ocorreuEm?: string }
+  | { numero: string; intencao: "voltar" | "sim" | "outra"; hash: string }
+) & { evento?: ReturnType<typeof eventoDaMensagem> };
 
 /**
  * Mensagem recebida de pessoa com número legível e com texto, com a intenção dela. Mensagem nossa, de grupo, sem número
@@ -189,9 +223,12 @@ export function pedidoDeMensagem(corpo: unknown): PedidoDeMensagem | null {
   const numero = numeroDaConversa(msg.key);
   if (!numero) return null;
   const intencao = intencaoDaMensagem(msg.texto);
+  const evento = intencao === "outra" ? undefined : eventoDaMensagem(msg, numero);
+  const dados = evento ? { numero, evento } : { numero };
   if (intencao === "sair") {
     const comando = comandoDeSaida(msg.texto);
-    return comando ? { numero, intencao, comando } : null;
+    const ocorreuEm = evento ? null : horaDaMensagem(msg.timestamp);
+    return comando ? { ...dados, intencao, comando, ...(ocorreuEm ? { ocorreuEm } : {}) } : null;
   }
-  return { numero, intencao, hash: hashDaMensagem(msg.texto) };
+  return { ...dados, intencao, hash: hashDaMensagem(msg.texto) };
 }

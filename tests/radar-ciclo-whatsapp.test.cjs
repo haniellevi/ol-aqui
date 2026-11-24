@@ -27,7 +27,7 @@ test('fila WhatsApp: envia proposta_nova ao comprador e cancela proposta_escolhi
     '@/lib/supabase/admin': {
       supabaseAdmin: () => ({
         rpc: async (nome, args) => {
-          if (nome === 'whatsapp_fila_pegar') {
+          if (nome === 'whatsapp_radar_fila_pegar') {
             return {
               data: [
                 {
@@ -73,7 +73,7 @@ test('fila WhatsApp: envia proposta_nova ao comprador e cancela proposta_escolhi
       texto: `Loja Centro mandou uma proposta no Radar do Mercado da Região para “Sofá”. https://mercadodaregiao.test/radar/pedido/${PEDIDO_ID}`,
     },
   ]);
-  assert.deepEqual(resultados, [{ p_id: 'fila-prop-nova', p_resultado: 'enviado' }]);
+  assert.deepEqual(resultados, [{ p_id: 'fila-prop-nova', p_resultado: 'enviado', p_worker_atual: true }]);
 });
 
 test('webhook Evolution: encaminha SAIR e VOLTAR de comprador ou lojista (inclusive @lid)', async () => {
@@ -164,14 +164,12 @@ test('actions Radar: escolherProposta e fecharPedido chamam as RPCs corretas e r
   ]);
 });
 
-test('preferência Radar WhatsApp: estado parcial de conta antiga permite desligar em 1 clique e action mapeia permissões', async () => {
+test('preferência Radar WhatsApp: grava só o tipo escolhido e a tela distingue reconfirmação', async () => {
   const fs = require('node:fs');
   const componente = fs.readFileSync(require.resolve('../src/components/conta/preferencia-whatsapp-radar.tsx'), 'utf8');
-  assert.match(componente, /Receber avisos do Radar no WhatsApp/);
-  assert.match(componente, /Ligado \(só pedidos\)/);
-  assert.match(componente, /só os avisos de pedidos novos no WhatsApp/);
-  assert.match(componente, /propostas novas/i);
-  assert.match(componente, /proposta da loja escolhida/i);
+  assert.match(componente, /Confirmar/);
+  assert.match(componente, /Propostas nos meus pedidos/);
+  assert.match(componente, /Minha proposta foi escolhida/);
   assert.match(componente, /SAIR/);
 
   const dadosRadar = carregar('src/lib/dados/radar.ts', {
@@ -179,7 +177,7 @@ test('preferência Radar WhatsApp: estado parcial de conta antiga permite deslig
     '@/lib/dados/config': {},
     '@/lib/supabase/server': {
       createClient: async () => ({
-        rpc: async () => ({ data: { ligado: true, parcial: true, confirmado: true, ativo: false }, error: null }),
+        rpc: async () => ({ data: { ligado: true, parcial: true, confirmado: true, ativo: false, modo: 'fechado', pode_ligar: false, tipos: { pedido_novo: { ligado: true }, proposta_nova: 'inválido' } }, error: null }),
       }),
     },
   });
@@ -188,6 +186,13 @@ test('preferência Radar WhatsApp: estado parcial de conta antiga permite deslig
     parcial: true,
     confirmado: true,
     ativo: false,
+    modo: 'fechado',
+    pode_ligar: false,
+    tipos: {
+      pedido_novo: { ligado: true, confirmado_para_piloto: false },
+      proposta_nova: { ligado: false, confirmado_para_piloto: false },
+      proposta_escolhida: { ligado: false, confirmado_para_piloto: false },
+    },
   });
 
   const chamadas = [];
@@ -204,20 +209,23 @@ test('preferência Radar WhatsApp: estado parcial de conta antiga permite deslig
     },
   });
 
-  const desligarParcial = await ambiente(false).salvarPreferenciaWhatsappRadar(false);
+  const desligarParcial = await ambiente(false).salvarPreferenciaWhatsappRadar('pedido_novo', false);
   assert.equal(desligarParcial.ok, true);
-  assert.deepEqual(chamadas[0], ['salvar_preferencia_whatsapp_radar_completa', { p_ligado: false }]);
+  assert.deepEqual(chamadas[0], ['salvar_preferencia_whatsapp_radar_tipo', { p_tipo: 'pedido_novo', p_ligado: false }]);
 
-  const ok = await ambiente(true).salvarPreferenciaWhatsappRadar(true);
+  const ok = await ambiente(true).salvarPreferenciaWhatsappRadar('proposta_nova', true);
   assert.equal(ok.ok, true);
-  assert.match(ok.mensagem, /Avisos do Radar por WhatsApp ligados/);
-  assert.deepEqual(chamadas[1], ['salvar_preferencia_whatsapp_radar_completa', { p_ligado: true }]);
+  assert.match(ok.mensagem, /Aviso ligado/);
+  assert.deepEqual(chamadas[1], ['salvar_preferencia_whatsapp_radar_tipo', { p_tipo: 'proposta_nova', p_ligado: true }]);
 
-  const semTel = await ambiente(null, { code: '42501', message: 'Confirme' }).salvarPreferenciaWhatsappRadar(true);
+  const semTel = await ambiente(null, { code: '42501', message: 'Confirme' }).salvarPreferenciaWhatsappRadar('proposta_nova', true);
   assert.equal(semTel.ok, false);
   assert.match(semTel.erro, /Confirme seu WhatsApp/);
 
-  const pausado = await ambiente(null, { code: '55000', message: 'Indisponivel' }).salvarPreferenciaWhatsappRadar(true);
+  const pausado = await ambiente(null, { code: '55000', message: 'Indisponivel' }).salvarPreferenciaWhatsappRadar('proposta_nova', true);
   assert.equal(pausado.ok, false);
   assert.match(pausado.erro, /ainda não está disponível/);
+  const antes = chamadas.length;
+  assert.equal((await ambiente(true).salvarPreferenciaWhatsappRadar('invalido', true)).ok, false);
+  assert.equal(chamadas.length, antes);
 });

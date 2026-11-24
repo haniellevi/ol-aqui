@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 // Principal = laranja com texto beringela (nunca branco no laranja). Laranja nunca vira cor de letra.
 export const buttonVariants = cva(
   "olaki-acao group/button inline-flex shrink-0 select-none items-center justify-center gap-2 rounded-campo border border-transparent bg-clip-padding font-semibold outline-none " +
-    "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro " +
+    "focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-laranja-escuro " +
     "disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:pointer-events-none aria-disabled:opacity-60 " +
     "aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {

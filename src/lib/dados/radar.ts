@@ -18,6 +18,7 @@ import type {
   PreferenciaWhatsappRadar,
   PropostaRecebida,
   RegrasRadar,
+  TipoAvisoWhatsappRadar,
 } from "@/lib/tipos-radar";
 
 // Leituras do Radar. Tudo passa pelas funções do banco com a sessão da pessoa:
@@ -253,5 +254,20 @@ export async function minhaPreferenciaWhatsappRadar(): Promise<PreferenciaWhatsa
   const { data, error } = await db.rpc("minha_preferencia_whatsapp_radar");
   if (error || !data || typeof data !== "object") throw new Error("Não foi possível carregar o aviso por WhatsApp.");
   const d = data as Record<string, unknown>;
-  return { ligado: d.ligado === true, parcial: d.parcial === true, confirmado: d.confirmado === true, ativo: d.ativo === true };
+  const porTipo = d.tipos && typeof d.tipos === "object" ? d.tipos as Record<string, unknown> : {};
+  function lerTipo(tipo: TipoAvisoWhatsappRadar) {
+    const valor = porTipo[tipo];
+    const estado = valor && typeof valor === "object" ? valor as Record<string, unknown> : {};
+    return { ligado: estado.ligado === true, confirmado_para_piloto: estado.confirmado_para_piloto === true };
+  }
+  return {
+    ligado: d.ligado === true, parcial: d.parcial === true, confirmado: d.confirmado === true, ativo: d.ativo === true,
+    modo: d.modo === "legado" || d.modo === "fechado" ? d.modo : "pausado",
+    pode_ligar: d.pode_ligar === true,
+    tipos: {
+      pedido_novo: lerTipo("pedido_novo"),
+      proposta_nova: lerTipo("proposta_nova"),
+      proposta_escolhida: lerTipo("proposta_escolhida"),
+    },
+  };
 }

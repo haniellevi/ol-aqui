@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 import subprocess, time, uuid
 from concurrent.futures import ThreadPoolExecutor
+from radar_piloto_concorrencia import verificar_radar_piloto
 root = Path(__file__).resolve().parents[2]
 container = 'olaki-test-' + uuid.uuid4().hex[:10]
 def run(*args, **kwargs):
@@ -76,6 +77,10 @@ try:
     checked(sql((root/'supabase/testes/891_convite_envio.sql').read_text()))
     checked(sql((root/'supabase/testes/895_cupons_promocionais.sql').read_text()))
     checked(sql((root/'supabase/testes/890_voucher_lancamento.sql').read_text()))
+
+    radar_fechado = (root/'supabase/testes/899_radar_piloto_fechado.sql').read_text()
+    checked(sql(radar_fechado))
+    checked(sql((root/"supabase/testes/899_radar_revisao.sql").read_text()))
     checked(sql((root/'supabase/testes/898_radar_ciclo_whatsapp.sql').read_text()))
     print('PASS: ciclo WhatsApp do Radar (proposta_nova, proposta_escolhida, fechar_pedido_radar, janela, SAIR/VOLTAR e permissões)', flush=True)
     checked(sql("""delete from public.pagamentos where asaas_cobranca_id='pay_reserva890';
@@ -228,21 +233,22 @@ try:
     checked(sql("""
       insert into perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
         select 'user_870conc', id, 'Loja 870 simultânea', 'Corrente', '5589999971001', now() from microrregioes where slug='corrente-pi';
-      insert into preferencias_avisos(usuario_id,tipo,canal,ligado) values ('user_870conc','pedido_novo','whatsapp',false);
+      insert into preferencias_avisos(usuario_id,tipo,canal,ligado,consentido_em,retomar_apos_sair) values ('user_870conc','pedido_novo','whatsapp',false,now(),true);
       insert into whatsapp_respostas(usuario_id,comando) values ('user_870conc','SAIR');
       update configuracoes set valor='true'::jsonb where chave='radar.whatsapp_ativo' and microrregiao_id is null;
     """))
     # Cada chamada tem resumo diferente, para a trava (e não o bloqueio de repetida) é o que segura as simultâneas
     def pergunta_870(i):
-        return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','outra', encode(sha256(convert_to('pergunta{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
+        return sql(f"begin; select whatsapp_radar_mensagem_com_contexto('5589999971001',encode(sha256(convert_to('pergunta{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
     def volta_870(i):
-        return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','sim', encode(sha256(convert_to('sim{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
+        return sql(f"begin; select whatsapp_radar_evento('5589999971001','sim',null,encode(sha256(convert_to('sim{i}','UTF8')),'hex'),clock_timestamp(),repeat('f',64)); select pg_sleep(0.2); commit;")
     def voltar_870(i):
         return sql(f"begin; select whatsapp_mensagem_recebida('5589999971001','voltar', encode(sha256(convert_to('voltar{i}','UTF8')),'hex')); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=4) as pool:
         perguntas=list(pool.map(pergunta_870,range(4)))
     for result in perguntas: checked(result)
     checked(sql("do $$ begin assert (select count(*)=1 from whatsapp_respostas where usuario_id='user_870conc' and comando='PERGUNTA_VOLTAR'), 'pergunta duplicada'; end $$;"))
+    checked(sql("update whatsapp_fila set estado='enviada', enviada_em=clock_timestamp(), radar_comprovante_pergunta=repeat('f',64) where chave like 'whatsapp_resposta:5589999971001:pergunta:%';"))
     with ThreadPoolExecutor(max_workers=4) as pool:
         voltas=list(pool.map(volta_870,range(4)))
     for result in voltas: checked(result)
@@ -546,5 +552,11 @@ try:
         checked(renovacao.result())
     checked(sql("do $$ begin assert (select count(*)=11 from public.anuncios where vitrine_id='89000000-0000-4000-a000-000000000009' and status='ativo'), 'rotina pausou anúncio após renovação'; end $$;"))
     print('PASS: renovação concorrente impede pausa de anúncios', flush=True)
+    verificar_radar_piloto(container, sql, checked, radar_fechado)
+    print('PASS: autorização da fila sob SAIR/VOLTAR concorrentes nos três produtores e opt-in durante fechamento', flush=True)
+    evolution = run('node', 'supabase/testes/radar_evolution_local.cjs', container, cwd=root)
+    checked(evolution)
+    print(evolution.stdout, end='', flush=True)
+
 finally:
     run('docker','stop',container)

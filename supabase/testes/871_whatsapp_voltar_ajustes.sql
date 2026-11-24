@@ -35,6 +35,15 @@ insert into preferencias_avisos (usuario_id, tipo, canal, ligado) values
   ('user_871sim', 'pedido_novo', 'whatsapp', false),
   ('user_871lim', 'pedido_novo', 'whatsapp', false);
 
+-- Duas contas entram já saídas com prova; as demais exercitam SAIR na própria sequência.
+update preferencias_avisos
+set consentido_em=now(), retomar_apos_sair=usuario_id in ('user_871ciclo','user_871sino'),
+    ligado=usuario_id in ('user_871sim','user_871lim')
+where usuario_id like 'user_871%' and canal='whatsapp';
+insert into preferencias_avisos(usuario_id,tipo,canal,ligado,consentido_em)
+values ('user_871hash','pedido_novo','whatsapp',true,now());
+insert into whatsapp_respostas(usuario_id,comando) values ('user_871ciclo','SAIR'),('user_871sino','SAIR');
+
 -- [1] VOLTAR -> SAIR -> VOLTAR no mesmo dia: volta nas duas vezes e a segunda confirmação sai
 set local role service_role;
 select whatsapp_mensagem_recebida('5589999980001', 'voltar', pg_temp.h871('voltar')) as c1 \gset

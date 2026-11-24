@@ -179,8 +179,17 @@ export type Notificacao = {
 /** Um aviso que a pessoa pode ligar ou desligar (Minha conta > Notificações). */
 export type PreferenciaAviso = { tipo: string; nome: string; explicacao: string; ligado: boolean };
 
-/** Avisos do Radar por WhatsApp: se há algum tipo ligado (e se é só parcial de conta antiga), celular confirmado e recurso ativo no painel. */
-export type PreferenciaWhatsappRadar = { ligado: boolean; parcial?: boolean; confirmado: boolean; ativo: boolean };
+export const TIPOS_AVISO_WHATSAPP_RADAR = ["pedido_novo", "proposta_nova", "proposta_escolhida"] as const;
+export type TipoAvisoWhatsappRadar = (typeof TIPOS_AVISO_WHATSAPP_RADAR)[number];
+export type PreferenciaWhatsappRadar = {
+  ligado: boolean;
+  parcial: boolean;
+  confirmado: boolean;
+  ativo: boolean;
+  modo: "legado" | "fechado" | "pausado";
+  pode_ligar: boolean;
+  tipos: Record<TipoAvisoWhatsappRadar, { ligado: boolean; confirmado_para_piloto: boolean }>;
+};
 
 /* ----------------------------- Respostas ----------------------------- */
 
