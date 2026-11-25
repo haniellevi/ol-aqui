@@ -42,12 +42,12 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
       {AREAS.map(area => <Cartao key={area.nome}>
         <h2 className="text-lg font-semibold text-beringela">{area.nome}</h2>
         <p className="mb-3 mt-1 text-sm text-texto-suave">{area.texto}</p>
-        <div className="flex flex-wrap gap-3">{area.links.map(([nome, href]) => <Link key={href} href={href} className="inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro hover:underline">{nome}</Link>)}</div>
+        <div className="flex flex-wrap gap-3">{area.links.map(([nome, href]) => <Link key={href} href={href} className="inline-flex min-h-toque items-center text-sm font-semibold text-laranja-escuro hover:underline">{nome}</Link>)}</div>
       </Cartao>)}
     </div>
     <details className="mt-5 rounded-card border border-borda bg-cartao p-4">
-      <summary className="cursor-pointer font-semibold text-beringela">Ajustes avançados</summary>
-      <nav aria-label="Ajustes avançados" className="mt-3 flex flex-wrap gap-3">{Object.entries(NOMES_GRUPO).map(([id, nome]) => <Link key={id} href={`/admin/configuracoes?grupo=${id}`} className="inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro hover:underline">{nome}</Link>)}</nav>
+      <summary className="min-h-toque cursor-pointer py-3 font-semibold text-beringela">Ajustes avançados</summary>
+      <nav aria-label="Ajustes avançados" className="mt-3 flex flex-wrap gap-3">{Object.entries(NOMES_GRUPO).map(([id, nome]) => <Link key={id} href={`/admin/configuracoes?grupo=${id}`} className="inline-flex min-h-toque items-center text-sm font-semibold text-laranja-escuro hover:underline">{nome}</Link>)}</nav>
     </details>
   </>;
   const [{ data: configs, error: erroConfigs }, { data: regioes }, { data: planos }, { data: modelos }] = await Promise.all([
@@ -71,7 +71,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
 
   return (
     <>
-      <Link href="/admin/configuracoes" className="mb-3 inline-flex min-h-10 items-center text-sm font-semibold text-laranja-escuro hover:underline">Todas as configurações</Link>
+      <Link href="/admin/configuracoes" className="mb-3 inline-flex min-h-toque items-center text-sm font-semibold text-laranja-escuro hover:underline">Todas as configurações</Link>
       <Titulo>{NOMES_GRUPO[grupoAtual] ?? "Ajustes avançados"}</Titulo>
       {erroConfigs && <Aviso tipo="erro">Não foi possível carregar os ajustes. Tente novamente.</Aviso>}
       {grupoAtual === "robo" && <p className="mb-4 text-sm text-texto-suave">Modelo, orçamento e textos ficam em <Link href="/admin/robo" className="font-semibold underline">Configurar Lia</Link>.</p>}
@@ -84,7 +84,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
             key={g}
             href={`/admin/configuracoes?grupo=${g}`}
             aria-current={g === grupoAtual ? "page" : undefined}
-            className={`inline-flex h-10 shrink-0 items-center rounded-campo border px-4 text-sm font-semibold text-beringela active:brightness-90 ${
+            className={`inline-flex min-h-toque shrink-0 items-center rounded-campo border px-4 text-sm font-semibold text-beringela active:brightness-90 ${
               g === grupoAtual ? "border-laranja-escuro bg-selecao" : "border-borda bg-cartao"
             }`}
           >
@@ -110,12 +110,12 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
               {permiteExcecaoRegional(c.chave) && excecoes.length > 0 && (
                 <ul className="mt-4 space-y-2">
                   {excecoes.map((e) => (
-                    <li key={e.id} className="flex min-h-10 flex-wrap items-center gap-3 rounded-card bg-selecao pl-3 pr-1 text-sm text-beringela">
+                    <li key={e.id} className="flex min-h-toque flex-wrap items-center gap-3 rounded-card bg-selecao pl-3 pr-1 text-sm text-beringela">
                       <span className="font-semibold">{nomesRegiao.get(e.microrregiao_id!) ?? "Região"}:</span>
                       <span className="truncate font-mono text-legenda">{nomeValor(tipoDe(e.valor), e.valor, opcoesDe(c.chave))}</span>
                       <form action={removerExcecao} className="ml-auto">
                         <input type="hidden" name="id" value={e.id} />
-                        <button className="h-10 px-3 text-sm font-semibold text-perigo underline">remover</button>
+                        <button className="min-h-toque px-3 text-sm font-semibold text-perigo underline">remover</button>
                       </form>
                     </li>
                   ))}
@@ -147,7 +147,7 @@ export default async function ConfiguracoesPage({ searchParams }: { searchParams
             {lista.filter(e => e.chave === c.chave && e.microrregiao_id !== null).map(e => <div key={e.id} className="mt-2">
               <p className="text-sm font-semibold">{nomesRegiao.get(e.microrregiao_id!) ?? "Região"}</p>
               <FormConfig id={e.id} chave={e.chave} tipo={tipoDe(e.valor)} valor={e.valor} />
-              <form action={removerExcecao}><input type="hidden" name="id" value={e.id} /><button className="min-h-10 text-sm text-perigo underline">Usar texto geral</button></form>
+              <form action={removerExcecao}><input type="hidden" name="id" value={e.id} /><button className="min-h-toque text-sm text-perigo underline">Usar texto geral</button></form>
             </div>)}
             <FormExcecao chave={c.chave} tipo={tipoDe(c.valor)} valor={c.valor} regioes={regioes ?? []} />
           </div>)}
