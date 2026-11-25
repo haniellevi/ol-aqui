@@ -2,12 +2,15 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Botao } from "@/components/ui/botao";
+import Link from "next/link";
+import { Botao, classesBotao } from "@/components/ui/botao";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useConfirmar } from "@/components/ui/confirmar";
 import { descartarLojaIa, sairDaLoja } from "@/app/(conta)/minha-conta/lojas/autosservico-actions";
+import { escolherLoja } from "@/app/(conta)/_loja/actions";
 import { Aviso } from "./aviso";
 
-export function EncerrarAcesso({ id, revisao }: { id: string; revisao?: number }) {
+export function EncerrarAcesso({ id, revisao, gerenciar = false }: { id: string; revisao?: number; gerenciar?: boolean }) {
   const confirmar = useConfirmar();
   const router = useRouter();
   const trava = useRef(false);
@@ -34,6 +37,17 @@ export function EncerrarAcesso({ id, revisao }: { id: string; revisao?: number }
   }
   return <div className="flex flex-col gap-2">
     {erro && <Aviso tipo="erro">{erro}</Aviso>}
-    <Botao variante="perigo" carregando={ocupado} textoCarregando="Aguarde..." onClick={executar}>{acao}</Botao>
+    {gerenciar ? <DropdownMenu>
+      <DropdownMenuTrigger disabled={ocupado} className={classesBotao("secundario")}>Cuidar da loja</DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <form action={escolherLoja}>
+          <input type="hidden" name="loja" value={id} />
+          <input type="hidden" name="voltar" value="/minha-conta/loja" />
+          <DropdownMenuItem nativeButton render={<button type="submit" />}>Editar vitrine completa</DropdownMenuItem>
+        </form>
+        <DropdownMenuItem render={<Link href={`/minha-conta/lojas/${id}`} />}>Editar loja e propostas</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" disabled={ocupado} onClick={executar}>{acao}</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu> : <Botao variante="perigo" carregando={ocupado} textoCarregando="Aguarde..." onClick={executar}>{acao}</Botao>}
   </div>;
 }

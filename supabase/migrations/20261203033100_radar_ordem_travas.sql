@@ -80,4 +80,3 @@ begin
          faz_entrega = p_faz_entrega, entrega_obs = entrega_limpa
    where id = p_loja;
 end $$;
-

@@ -65,7 +65,7 @@ export default async function MinhasLojas() {
                   )}
                   {loja.dono && <Botao href={`/minha-conta/lojas/${loja.id}`} variante="secundario">Gerenciar equipe</Botao>}
                 </div>
-                {!loja.dono && <EncerrarAcesso id={loja.id} />}
+                {!loja.dono && <EncerrarAcesso id={loja.id} gerenciar />}
               </li>
             ))}
           </ul>

@@ -145,4 +145,3 @@ begin
       and (i.estado = 'pronta' or (i.estado = 'reservada' and i.criada_em > now() - interval '5 minutes'));
   return next;
 end $$;
-

@@ -22,6 +22,24 @@ PF usa `excluir_minha_loja` e `restaurar_minha_loja`, inclusive confirmação `E
 
 Este documento não autoriza conexão ou mudança em produção. Conferir primeiro a sequência de migrações e executar somente com autorização separada. Fazer backup conforme a operação existente antes da aplicação, dentro de uma janela que comporte o bloqueio de escrita da tabela durante a migração.
 
+As migrações A (`20261203030000`), B (`20261203031000`) e D (`20261203033000`, seguida da correção `20261203033100`) são de execução única por versão. Conferir o histórico de migrações e aplicar somente versões pendentes, em ordem A/B/C/D/correção. Não repetir esses arquivos como SQL avulso para recuperar uma falha. Uma transação interrompida deve ter seu estado conferido antes da recuperação; uma versão já confirmada exige uma nova migração compensatória revisada. C (`20261203032000`) tem teste específico de reaplicação das sete funções e preservação da agenda; essa prova não torna A/B/D reaplicáveis.
+
+Antes de A, detectar configurações promocionais preexistentes, inclusive exceções regionais, sem extrair valores ou substituir personalizações:
+
+```sql
+select chave, count(*) as quantidade
+from public.configuracoes
+where chave='robo.lojista_creditos_promocional'
+   or (chave='vitrine_ia.melhorias_mes' and valor ? 'promocional')
+group by chave;
+select plano_codigo, count(*) as quantidade
+from public.destaque_creditos_plano
+where plano_codigo='promocional'
+group by plano_codigo;
+```
+
+Se a versão A ainda não constar do histórico, qualquer linha nesses resultados indica catálogo divergente que precisa de revisão antes da aplicação. Preservar as configurações personalizadas e preparar uma adaptação dirigida testada, sem executar o INSERT avulso nem sobrescrever valores. Se A já constar do histórico, não repetir sua execução. O upgrade Slim (Item 25) e o destino de provas após liberação (Item 26) seguem com as decisões registradas, sem alteração por este ajuste de navegação ou preflight.
+
 ```sql
 -- Resultado esperado: zero linhas. Qualquer divergência de catálogo exige revisão.
 select tgname from pg_trigger
