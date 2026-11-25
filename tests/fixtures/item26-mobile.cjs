@@ -11,6 +11,7 @@ async function main() {
   await fs.writeFile(path.join(out,'style.css'),css.css);
   const { RevisaoRetencao } = carregar('src/app/admin/compliance/retencoes.tsx',{'./retencoes-actions':{registrarRetencao:async()=>null}});
   const item = {tipo:'anuncio',id:'26000000-0000-4000-b000-000000000001',titulo:'Prova sintética com título longo para conferir a quebra no celular',estado_comercial:'excluido',estado:'revisao_manual_pendente',motivo:'Ofício sintético encerrado. Destino depende de decisão manual.',autor:'user_sintetico26',criado_em:'2026-11-25T12:00:00Z',ultima_revisao:null};
+  Object.assign(item,{retencao_id:'42',retencao_motivo:'Ofício sintético de preservação do anúncio.',retencao_em:'2026-11-24T12:00:00Z'});
   const body = renderToStaticMarkup(React.createElement(RevisaoRetencao,{item,consulta:item.id}));
   await fs.writeFile(path.join(out,'index.html'),`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"><title>Revisão sintética</title><body><main class="p-4"><h1 class="mb-4 text-titulo font-semibold">Revisão manual</h1>${body}</main></body></html>`);
 }

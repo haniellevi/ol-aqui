@@ -205,7 +205,7 @@ export function DadosConta({ d, relatorio = false, emails }: { d: DadosComplianc
                 <p className="text-sm text-texto-suave">
                   Criado {quando(a.criado_em)} · IP gravado* {a.criado_ip ?? "—"} · mudou {quando(a.atualizado_em)}
                 </p>
-                {a.congelado_motivo && <p className="text-sm font-semibold text-perigo">Congelado: {a.congelado_motivo}</p>}
+                {a.congelado_motivo && <p className="text-sm text-texto-suave">Marcador de preservação: {a.congelado_motivo}. Pode permanecer após a liberação jurídica; confira o estado do episódio na fila de retenções.</p>}
                 <p className="font-mono text-legenda text-texto-suave">{a.id}</p>
               </li>
             ))}

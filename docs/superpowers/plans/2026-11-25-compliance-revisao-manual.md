@@ -33,4 +33,6 @@ Prazo vencido, referências compartilhadas, mídia, retry e concorrência devem 
 
 ## Verificação e desvios
 
+Revisão funcional posterior: corrigir episódios de retenção usando o ID existente da auditoria, permitir congelamento legítimo de ativo após liberação e conferir episódio no envio. A migração nova 20261203034100 sucede a candidata original; não altera migrações anteriores. Fortalecer motivo/instante e última revisão, separar as fixtures de concorrência e esclarecer marcadores legados e confirmação. Isolar o cenário sintético 898 em commit próprio, preservando asserções e código WhatsApp, e executar novamente a suíte integral sem omitir esse cenário.
+
 A action foi observada falhando antes de existir; os testes de banco inicialmente revelaram incompatibilidade da fixture com a lixeira existente, corrigida no ensaio. A suíte completa foi executada e falhou em `898_radar_ciclo_whatsapp.sql`, na asserção de janela de envio; um controle com runner e migrações V26, sem esta implementação, reproduziu a mesma falha. A execução complementar das demais suítes mantém esse salto explícito no log, sem alterar o runner versionado para ignorar testes. Capturas Orca falharam por ausência de frame; Chromium local gerou as capturas sanitizadas.

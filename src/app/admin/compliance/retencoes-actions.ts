@@ -15,10 +15,12 @@ export async function registrarRetencao(_: EstadoRetencao, form: FormData): Prom
     const tipo = String(form.get("tipo") ?? "");
     const acao = String(form.get("acao") ?? "");
     const motivo = String(form.get("motivo") ?? "").trim();
+    const retencao = String(form.get("retencao") ?? "");
     if (!ehUuid(consulta) || !ehUuid(item) || !["anuncio", "pedido"].includes(tipo) || !["liberar", "revisar"].includes(acao)) return { erro: "Atualize a consulta e escolha o item novamente." };
     if (motivo.length < 3 || motivo.length > 300) return { erro: "Escreva um motivo de 3 a 300 caracteres." };
+    if (!/^(?:legado|[1-9]\d{0,18})$/.test(retencao)) return { erro: "Atualize a consulta para conferir a retenção atual." };
     const { data, error } = await supabase.rpc(acao === "liberar" ? "compliance_liberar_retencao" : "compliance_revisar_retencao", {
-      p_consulta: consulta, p_tipo: tipo, p_item: item, p_motivo: motivo,
+      p_consulta: consulta, p_tipo: tipo, p_item: item, p_motivo: motivo, p_retencao: retencao,
     });
     if (error) return { erro: traduzirErro(error).mensagem };
     if (typeof data !== "string") return { erro: "Não deu para confirmar o registro. Atualize e tente novamente." };
