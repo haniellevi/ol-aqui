@@ -34,6 +34,25 @@ async function main() {
   pages.configuracoes = `<main class="p-4">${renderToStaticMarkup(await config({ searchParams: Promise.resolve({}) }))}</main>`;
   const { RetirarProposta } = carregar('src/components/radar/retirar-proposta.tsx', { ...baseMocks, '@/app/radar/actions': {} });
   pages.retirar = `<main class="p-4"><h1>Oferta sintética no Radar</h1>${renderToStaticMarkup(React.createElement(RetirarProposta, { id: '22200000-0000-4000-a000-000000000001' }))}</main>`;
+  const conta = { perfil: { id: 'sintetico', nome: 'Pessoa Sintética', cidade: 'Corrente' }, vitrine: null,
+    plano: { codigo: 'promocional', nome: 'Promocional', limite_anuncios: null }, limite: null, ativos: 0, rascunhos: 0, podePublicar: false,
+    promocional: { codigo: 'SINTETICO', ativado_em: '2026-11-24T00:00:00Z', vence_em: '2026-12-24T00:00:00Z' } };
+  const contaPage = carregar('src/app/(conta)/minha-conta/page.tsx', { ...baseMocks,
+    '@/lib/dados/conta': { meuPerfilEVitrine: async () => conta }, '@/lib/dados/radar': { avisosNaoLidos: async () => 0 },
+    '@clerk/nextjs': { SignOutButton: ({ children }) => children },
+  }).default;
+  pages.conta = renderToStaticMarkup(await contaPage());
+  for (const modo of ['gerente', 'pf', 'lixeira', 'rascunho']) {
+    const rpc = async nome => ({ error: null, data: nome === 'minhas_lojas' ? (modo === 'gerente' ? [{ id: '22200000-0000-4000-a000-000000000001', nome: 'Loja Sintética', dono: false }] : [])
+      : nome === 'minha_loja_exclusao' ? { na_lixeira: modo === 'lixeira', pode_restaurar: true, apagar_apos: '2026-12-24T00:00:00Z' }
+      : modo === 'rascunho' ? { id: '22200000-0000-4000-a000-000000000001', revisao: 0, estado: 'coleta', entrada: { nome: 'Loja Sintética' } } : null });
+    const p = carregar('src/app/(conta)/minha-conta/lojas/page.tsx', { ...baseMocks,
+      '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ ...conta, vitrine: ['pf', 'lixeira'].includes(modo) ? { tipo: 'pf' } : null }) },
+      '@/lib/supabase/server': { createClient: async () => ({ rpc }) }, '@/app/(conta)/_loja/actions': { escolherLoja: () => {} },
+      '@/app/(conta)/minha-conta/lojas/autosservico-actions': {},
+    }).default;
+    pages[modo] = renderToStaticMarkup(await p());
+  }
   for (const [name, html] of Object.entries(pages)) await fs.writeFile(path.join(out, `${name}.html`), `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="style.css"><title>Fixture D22 ${name}</title><body>${html}</body></html>`);
 }
 main().catch(e => { console.error(e); process.exitCode = 1; });

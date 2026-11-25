@@ -17,7 +17,7 @@ def verificar_retirada_concorrente(container, sql, checked, fixture):
                 if p.poll() is not None:
                     raise AssertionError('Sessão sintética não chegou à barreira')
             try:
-                yield
+                yield p
             finally:
                 p.stdin.write('commit;\n\\q\n')
                 p.stdin.flush()
@@ -59,3 +59,38 @@ def verificar_retirada_concorrente(container, sql, checked, fixture):
         checked(sql(f"do $$ begin assert (select {estado} from public.radar_propostas where id='{proposta_id}'); end $$;"))
         # Não deixa os anúncios sintéticos alterarem contagens globais de outros cenários.
         checked(sql(f"delete from public.radar_pedidos where comprador_id='{comprador}'; delete from public.vitrines_lojas where id='{loja}'; delete from public.perfis where id like 'user_d{numero}%';"))
+
+    # B trava a loja para sair; D não pode segurar o convite enquanto espera essa loja.
+    for saida_primeiro, numero, editar in [(True, '225', False), (False, '226', False), (True, '227', True), (False, '228', True)]:
+        setup = fixture.split('-- Gerente sintético')[0].replace('d22', 'd' + numero).replace('22200000', numero + '00000').replace('55899922', '55899' + numero).replace('Loja sintética', 'Loja sintética ' + numero)
+        checked(sql(setup + '\ncommit;'))
+        loja = numero + '00000-0000-4000-b000-000000000001'
+        gerente = 'user_d' + numero + '3'
+        checked(sql(f"insert into convites_gerente_loja(vitrine_id,token_hash,telefone_hash,final_telefone,aceito_por,aceito_em) values('{loja}',sha256('{numero}token'),sha256('{numero}fone'),'0003','{gerente}',now());"))
+        ids = sql(f"select id from radar_propostas where vitrine_id='{loja}';")
+        checked(ids)
+        proposta = re.search(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', ids.stdout).group(0)
+        identidade = f"set local role authenticated; set local request.jwt.claim.sub='{gerente}';"
+        retirar = (f"select editar_loja_gerenciada('{loja}','Endereço sintético',null,null,null,null,false,null);"
+                   if editar else f"select retirar_proposta_radar('{proposta}');")
+        sair = f"select sair_da_loja('{loja}');"
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            primeira = f"select id from vitrines_lojas where id='{loja}' for update;" if saida_primeiro else identidade + retirar
+            with transacao(primeira) as sessao:
+                futuro = pool.submit(sql, "begin; set local application_name='item22_race'; set local statement_timeout='12s';" + identidade + (retirar if saida_primeiro else sair) + 'commit;')
+                esperar()
+                if saida_primeiro:
+                    sessao.stdin.write(identidade + sair + '\n\\echo SAIU\n')
+                    sessao.stdin.flush()
+                    while sessao.stdout.readline().strip() != 'SAIU':
+                        if sessao.poll() is not None:
+                            raise AssertionError('Saída e retirada devem serializar sem deadlock')
+            resultado = futuro.result(timeout=15)
+        if saida_primeiro:
+            assert resultado.returncode != 0 and ('Proposta não encontrada' in resultado.stderr or 'Seu acesso a esta loja' in resultado.stderr), resultado.stderr
+        else:
+            checked(resultado)
+        estado = 'ativa' if saida_primeiro or editar else 'retirada'
+        checked(sql(f"do $$ begin assert (select status='{estado}' from radar_propostas where id='{proposta}'); assert (select revogado_em is not null from convites_gerente_loja where vitrine_id='{loja}' and aceito_por='{gerente}'); end $$;"))
+        checked(sql(f"delete from radar_pedidos where comprador_id='user_d{numero}2'; delete from vitrines_lojas where id='{loja}'; delete from perfis where id like 'user_d{numero}%';"))
+    print('PASS: saída de gerente contra retirada e edição nas duas ordens, com revogação efetiva', flush=True)

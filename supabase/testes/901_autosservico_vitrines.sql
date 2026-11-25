@@ -40,11 +40,27 @@ do $$ begin
  assert (select dono_id='user_auto901' from voucher_atribuicoes where vitrine_id=(select id from vitrines_lojas where dono_retido_id='user_auto901')), 'atribuição histórica preservada';
 end $$;
 set local role authenticated;
+-- A/B juntas: pagamento e atribuição na loja retida não prendem o novo resgate pessoal.
+reset role;
+insert into voucher_campanhas(codigo,duracao_dias,valido_ate) values('RETOMADA901',30,now()+interval '1 day');
+set local role authenticated;
+select resgatar_voucher('RETOMADA901');
+reset role;
+do $$ begin
+ assert not exists(select 1 from vitrines_lojas where dono_id='user_auto901'), 'conta continua sem vitrine após resgate';
+ assert exists(select 1 from voucher_atribuicoes where dono_id='user_auto901' and acesso_promocional and vitrine_id is null and concedido_ate>now()), 'cupom pessoal após purga';
+ assert exists(select 1 from voucher_atribuicoes where dono_id='user_auto901' and vitrine_id=(select id from vitrines_lojas where dono_retido_id='user_auto901')), 'atribuição histórica não redistribuída';
+ assert not has_column_privilege('authenticated','vitrines_lojas','dono_retido_id','select');
+ assert not has_column_privilege('authenticated','vitrines_lojas','purgada_em','select');
+end $$;
+set local role authenticated;
 select quero_vender('pf');
 select excluir_minha_loja('EXCLUIR');
 select restaurar_minha_loja();
 reset role;
-do $$ begin assert (select status='ativa' from vitrines_lojas where dono_id='user_auto901'); end $$;
+do $$ begin
+ assert (select status='ativa' and (plano_efetivo(vitrines_lojas)).codigo='promocional' from vitrines_lojas where dono_id='user_auto901'), 'nova PF conserva cupom pessoal';
+end $$;
 -- Rascunhos próprios em todos os estados anteriores à publicação; somente sua fila e mídias.
 create function pg_temp.recusa(comando text,codigo text) returns void language plpgsql as $$
 begin execute comando; raise exception 'Aceitou operação proibida';
