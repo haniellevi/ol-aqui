@@ -115,6 +115,13 @@ export default async function PaginaPronto({ searchParams }: { searchParams: Par
           Compartilhar no WhatsApp
         </Botao>
         <BotaoNovoRascunho variante="secundario" texto="Anunciar outro" />
+        {!ajudante && <details>
+          <summary className="flex min-h-toque cursor-pointer items-center text-base font-semibold text-laranja-escuro">Criar produto parecido</summary>
+          <div className="flex flex-col gap-3 py-3">
+            <p className="text-sm text-texto-suave">Começa um novo rascunho com título e categoria. Confira fotos, preço e localização antes de publicar.</p>
+            <BotaoNovoRascunho variante="secundario" parecidoDe={anuncio.id} texto="Criar novo rascunho parecido" />
+          </div>
+        </details>}
         {!ajudante && (
           <Botao tamanho="toque" href={linkDestacar(anuncio.id)} variante="texto" larguraTotal icone={<Sparkles />}>
             Destacar anúncio

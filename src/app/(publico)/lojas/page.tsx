@@ -9,7 +9,7 @@ import { Vazio } from "@/components/ui/vazio";
 import { SeloLoja } from "@/components/vitrine/selos";
 import { AvatarVitrine } from "@/components/vitrine/avatar-vitrine";
 import { lugarDaRegiao } from "@/components/busca/parametros";
-import { anunciosCatalogo, lojasCatalogo } from "@/lib/dados/catalogo";
+import { anunciosCatalogo, lojasComOferta } from "@/lib/dados/catalogo";
 import { listarCategorias } from "@/lib/dados/categorias";
 import { regiaoAtual } from "@/lib/dados/regiao";
 import { linkLoja } from "@/lib/formato";
@@ -30,7 +30,7 @@ export default async function CatalogoLojas({ searchParams }: {
   const paginaLojas = numeroPagina(params.lojas);
   const paginaProdutos = numeroPagina(params.produtos);
   const [lojas, produtos] = regiao ? await Promise.all([
-    lojasCatalogo(regiao, nicho, LIMITE, (paginaLojas - 1) * LIMITE, false, busca),
+    lojasComOferta(regiao, nicho, LIMITE, (paginaLojas - 1) * LIMITE, false, busca),
     busca ? Promise.resolve([]) : anunciosCatalogo(regiao, "lojas", LIMITE, nicho, (paginaProdutos - 1) * LIMITE),
   ]) : [[], []];
 
@@ -77,6 +77,7 @@ export default async function CatalogoLojas({ searchParams }: {
           Limpar busca
         </Botao>
       )}
+      <p className="text-sm text-texto-suave">Lojas com produtos primeiro; depois, proximidade e verificação.</p>
       <section id="lojas" aria-labelledby="titulo-lojas" className="scroll-mt-20 space-y-2">
         <h2 id="titulo-lojas" className="sr-only">Lojas encontradas</h2>
         {lojas.length === 0 ? (
@@ -95,6 +96,7 @@ export default async function CatalogoLojas({ searchParams }: {
                     <strong className="text-base font-semibold text-beringela">{formatarNome(l.nome)}</strong>
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-texto-suave">
                       {l.cidade}{l.verificada && <SeloLoja />}
+                      <span>{l.produtos_ativos > 0 ? `${l.produtos_ativos} ${l.produtos_ativos === 1 ? "produto ativo" : "produtos ativos"}` : "Ainda sem produtos ativos"}</span>
                     </span>
                   </span>
                   <ChevronRight className="size-4 shrink-0 text-laranja-escuro" aria-hidden />

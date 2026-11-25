@@ -1,3 +1,4 @@
+import { KitLoja } from "@/components/marketing/kit-loja";
 import type { Metadata } from "next";
 import { AvisoSerieMetrica } from "@/components/metricas/aviso-serie";
 import Link from "next/link";
@@ -44,6 +45,7 @@ export default async function PaginaMarketing() {
   return (
     <PaginaConta larga>
       <TopoConta titulo="Meu Marketing" texto={<span className="[overflow-wrap:anywhere]">{nome}</span>} voltar={LINK_MINHA_LOJA} textoVoltar="Minha loja" />
+      <KitLoja modelo={loja.banner_modelo} cor={loja.banner_cor} nome={nome} slug={loja.slug} cidade={loja.cidade} logo={loja.logo_url} capa={loja.banner_tipo === "foto" ? loja.banner_url : null} />
       <AvisoSerieMetrica />
       {dados === null ? <Aviso tipo="atencao">Não conseguimos carregar as recomendações agora. <Link href={LINK_LOJA_MARKETING} className="underline">Tentar novamente</Link></Aviso> : <>
         <section aria-labelledby="titulo-criativos" className="flex flex-col gap-3">

@@ -288,3 +288,11 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
 
   html:has([data-detalhe-anuncio], [data-passo-anuncio]) { scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
 }
+
+/* O kit imprime somente a identidade e o QR local, sem navegação da conta. */
+@media print {
+  body:has([data-kit-preview]) * { visibility: hidden; }
+  body:has([data-kit-preview]) [data-kit-preview],
+  body:has([data-kit-preview]) [data-kit-preview] * { visibility: visible; }
+  body:has([data-kit-preview]) [data-kit-preview] { position: absolute; inset: 0; width: 100%; }
+}

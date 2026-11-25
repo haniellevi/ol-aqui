@@ -15,17 +15,19 @@ export function BotaoNovoRascunho({
   avulso = false,
   assistente,
   sugestao,
+  parecidoDe,
 }: {
   variante?: "primario" | "secundario";
   texto?: string;
   avulso?: boolean;
   assistente?: string;
+  parecidoDe?: string;
   sugestao?: { vitrineId: string; titulo: string; categoriaId?: string };
 }) {
   const chave = useRef<string | null>(null);
   const [estado, onSubmit, enviando, enviar] = useEnvioAnuncio(async (_antes, dados) => {
     chave.current ??= crypto.randomUUID();
-    return novoRascunho({ avulso, chave: chave.current, assistente: assistente ?? String(dados.get("assistente") ?? ""), sugestao });
+    return novoRascunho({ avulso, chave: chave.current, assistente: assistente ?? String(dados.get("assistente") ?? ""), sugestao, parecidoDe });
   });
   return (
     <form action={enviar} onSubmit={onSubmit} aria-busy={enviando} inert={enviando} className="flex flex-col has-[[role=alert]]:gap-2">

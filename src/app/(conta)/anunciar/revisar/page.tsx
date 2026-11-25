@@ -1,3 +1,4 @@
+import { BotaoNovoRascunho } from "@/components/anunciar/botao-novo-rascunho";
 import { RegistrarAnuncio } from "@/components/assistente/retomar";
 import { comAssistente } from "@/lib/assistente";
 import { formatarNome } from "@/lib/formatar-nome";
@@ -237,6 +238,13 @@ export default async function PassoRevisar({ searchParams }: { searchParams: Par
       </div>
 
       {/* P6: rascunho → "Descartar rascunho"; publicado (fim da edição) → "Excluir anúncio". A equipe usa a lixeira do painel. */}
+      {editar && !conta.ajudante && !equipe && <details className="border-t border-borda pt-3">
+        <summary className="flex min-h-toque cursor-pointer items-center text-base font-semibold text-laranja-escuro">Criar produto parecido</summary>
+        <div className="flex flex-col gap-3 py-3">
+          <p className="text-sm text-texto-suave">Cria um novo rascunho com título e categoria. Adicione fotos, preço e localização e revise antes de publicar. Este anúncio continua igual.</p>
+          <BotaoNovoRascunho variante="secundario" texto="Criar novo rascunho parecido" parecidoDe={anuncio.id} />
+        </div>
+      </details>}
       {!equipe && <DescartarAnuncio tamanho="toque" id={anuncio.id} titulo={anuncio.titulo} rascunho={anuncio.status === "rascunho"} temPagamento={temPagamento} />}
 
       <BotaoPublicar assistente={assistente} id={anuncio.id} editar={editar} formId={FORM} modo={modo} linkAvulso={hrefAvulso} />

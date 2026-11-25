@@ -14,7 +14,7 @@ function fronteiras(op = {}) {
     '@clerk/nextjs/server': { auth: async () => ({ userId: op.semLogin ? null : 'user_loja' }) },
     '@/lib/supabase/server': { createClient: async () => db },
     '@/lib/dados/anuncios': { anuncioDaLoja: async () => op.semAnuncio ? null : { ...anuncio, ...op.anuncio }, anunciosDaLoja: async () => [] },
-    '@/lib/dados/conta': { contaDaLoja: async () => conta },
+    '@/lib/dados/conta': { contaDaLoja: async () => ({...conta,...op.conta}) },
     '@/lib/dados/loja-ativa': { lojasQueCuido: async () => [], lojaEscolhida: async () => ({ id: 'loja', nome: 'Loja', dono: true }) },
     '@/components/conta/seletor-loja': { SeletorLoja: () => null },
     '@/lib/dados/categorias': { categoriaPorId: async (id) => op.categorias?.[id] ?? null, categoriaDoAnuncio: async (id) => op.categorias?.[id] ?? null },
@@ -403,4 +403,20 @@ test('campo "Preço antes" só aparece na edição e quando o banco já tem a co
   assert.match(comCampo, /name="tem_preco_antes" value="1"/);
   assert.doesNotMatch(render(React.createElement(FormPreco, { ...props, editar: false, precoAntesInicial: null })), /Preço antes/);
   assert.doesNotMatch(render(React.createElement(FormPreco, { ...props, editar: true })), /Preço antes/);
+});
+
+test('criar parecido gera novo rascunho revisável sem fotos, localização ou identificadores do original',async()=>{
+ const t=fronteiras({anuncio:{status:'ativo',titulo:'Sofá',descricao:'Bom estado',categoria_id:null,preco_centavos:50000,fotos:['privada'],cidade:'Outra',slug:'sofa-antigo'}});
+ await assert.rejects(t.a.novoRascunho({parecidoDe:id}),/redirect:.*fotos/);
+ const novo=t.gravacoes[0]; assert.equal(novo.status,'rascunho');assert.equal(novo.titulo,'Sofá');
+ for(const campo of ['id','slug','fotos','cidade','bairro','publicado_em','vendido_pelo_olaki']) assert.equal(Object.hasOwn(novo,campo),false,campo);
+});
+test('criar parecido recusa anúncio de outra loja e não grava',async()=>{
+ const t=fronteiras({anuncio:{vitrine_id:'outra',titulo:'Segredo'}});
+ assert.match((await t.a.novoRascunho({parecidoDe:id})).erro.mensagem,/Anúncio não encontrado/);assert.equal(t.gravacoes.length,0);
+});
+
+test('criar parecido preserva limite vigente e bloqueia equipe ou ajudante',async()=>{
+ const limite=fronteiras({conta:{podePublicar:false}});await assert.rejects(limite.a.novoRascunho({parecidoDe:id}),/redirect:\/anunciar/);assert.equal(limite.gravacoes.length,0);
+ for(const flag of ['ajudante','equipe']) {const t=fronteiras({conta:{[flag]:true}});assert.match((await t.a.novoRascunho({parecidoDe:id})).erro.mensagem,/não encontrado/);assert.equal(t.gravacoes.length,0);}
 });

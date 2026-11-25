@@ -185,3 +185,13 @@ test('marketing artes: preserva nome de 80 e título de 90 caracteres sem espaç
     assert.equal(bytes.readUInt32BE(20), formato === 'feed' ? 1350 : 1920);
   }
 });
+
+ test('kit da loja usa identidade e QR canônico sem depender dos produtos',async()=>{
+ const r=rota({semAnuncio:true,loja:{nome:'Casa & Centro',cidade:'Corrente',whatsapp:'5589999990000'}});
+ const resp=await r.get('', 'loja');
+ assert.equal(resp.status,200);
+ assert.match(r.desenho.html,/Casa &amp; Centro/);
+ assert.match(r.desenho.html,/data:image\/png;base64/);
+ assert.doesNotMatch(r.desenho.html,/5589999990000|wa.me/);
+ assert.equal(r.chamadas.some(c=>c[0]==='marketing'),false);
+ });

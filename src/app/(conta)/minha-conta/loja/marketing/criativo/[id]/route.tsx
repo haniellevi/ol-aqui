@@ -3,6 +3,9 @@ import { auth } from "@clerk/nextjs/server";
 import { ImageResponse } from "next/og";
 import { minhaVitrineCompleta } from "@/lib/dados/vitrine-completa";
 import { meuMarketingLoja } from "@/lib/dados/marketing-loja";
+import * as QRCode from "qrcode";
+import { linkLoja, urlAbsoluta } from "@/lib/formato";
+import { ArteLoja } from "@/components/marketing/arte-loja";
 import { preco, SITE } from "@/lib/formato";
 
 export const runtime = "nodejs";
@@ -66,6 +69,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const loja = await minhaVitrineCompleta(true);
     if (!loja || loja.tipo !== "loja" || loja.status !== "ativa" || loja.pasta_montagem) return falha("Loja ativa não encontrada.", 404);
     const { id } = await params;
+    if (id === "loja") {
+      const url = urlAbsoluta(linkLoja(loja.slug));
+      const [qr, logo, capa] = await Promise.all([
+        QRCode.toDataURL(url, { width: 512, margin: 4 }),
+        loja.logo_url ? carregarFoto(loja.logo_url).catch(() => null) : null,
+        loja.banner_tipo === "foto" && loja.banner_url ? carregarFoto(loja.banner_url).catch(() => null) : null,
+      ]);
+      const headers = { ...PRIVADO, "Content-Type": "image/png", "Content-Disposition": 'attachment; filename="mercado-da-regiao-loja-feed.png"' };
+      const imagem = new ImageResponse(<ArteLoja nome={loja.nome} cidade={loja.cidade} url={url} logo={logo} capa={capa} qr={qr} />, { width: 1080, height: 1350, headers });
+      return new Response(await imagem.arrayBuffer(), { headers });
+    }
     const marketing = await meuMarketingLoja(loja.id);
     if (!marketing) return falha("Não foi possível carregar as recomendações. Tente novamente.", 503);
     const anuncio = marketing.criativos.find((criativo) => criativo.id === id);

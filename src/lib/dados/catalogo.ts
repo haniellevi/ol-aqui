@@ -60,3 +60,11 @@ export async function categoriasDasLojas(ids: string[]): Promise<Map<string, str
     return mapa;
   }, mapa);
 }
+
+/** Oferta ordenada antes de paginar, sem excluir lojas válidas vazias. */
+export async function lojasComOferta(regiao: Regiao, nicho: string | null, limite: number, offset = 0, destaques = false, busca = "") {
+  const db = await createClient();
+  const { data, error } = await db.rpc("catalogo_lojas_oferta", { ...recorte(regiao, nicho, limite, offset), p_destaques: destaques, p_busca: busca });
+  if (error || !Array.isArray(data)) throw new Error("Não foi possível carregar o catálogo de lojas.");
+  return data as (LojaCatalogo & { produtos_ativos: number })[];
+}

@@ -1,3 +1,4 @@
+import { AvisoSerieMetrica } from "@/components/metricas/aviso-serie";
 import { formatarNome } from "@/lib/formatar-nome";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -79,6 +80,8 @@ export default async function PaginaDesempenhoLoja({ searchParams }: Props) {
         textoVoltar="Minha loja"
       />
 
+      <AvisoSerieMetrica />
+      <p className="text-sm text-texto-suave">Visita é uma abertura da loja; clique no WhatsApp é uma intenção de contato. Venda só é declarada quando você marca um anúncio como vendido e informa se vendeu pelo Mercado da Região. Esses números não confirmam vendas e a atividade sem consentimento não entra na série atual.</p>
       <nav aria-label="Período" className="flex flex-wrap gap-2">
         <Chip href={`?dias=7&produtos=${periodoProdutos}`} ativo={dias === 7}>Últimos 7 dias</Chip>
         <Chip href={`?dias=30&produtos=${periodoProdutos}`} ativo={dias === 30}>Últimos 30 dias</Chip>

@@ -4,7 +4,7 @@ const {loja,produto}=require('./fixtures/loja.cjs');
 const caminho='src/app/(publico)/loja/[slug]/';
 const nav={notFound(){throw Error('404');},useRouter(){return {push(){},refresh(){}};}};
 function dados(op={}) {let chamadas=[]; const banco={rpc:async(n,p)=>{chamadas.push([n,p]);if(op.rede)throw Error('offline');return {data:op.data,error:op.error??null};},from:()=>({select(){return this;},eq:async()=>({data:op.config??[],error:op.error??null})})};return {chamadas,...carregar('src/lib/dados/vitrine-completa.ts',{'@/lib/supabase/server':{createClient:async()=>banco},'@clerk/nextjs/server':{}})};}
-function tela(op={}) {return carregar(caminho+'page.tsx',{'next/navigation':nav,'@/lib/dados/vitrine-completa':{vitrinePublica:async()=>{if(op.erroLoja)throw Error('interno');return op.v===null?null:{...loja,...op.v};},anunciosVitrine:async()=>{if(op.erroProdutos)throw Error('interno');return op.anuncios??[produto(1),produto(2),produto(3)];},anunciosPorPaginaVitrine:async()=>{if(op.erroConfig)throw Error('interno');return op.tamanho??2;},vitrineNovaAtiva:async()=>!!op.nova},'@clerk/nextjs/server':{auth:async()=>({userId:op.usuario??null})},'@/lib/dados/favoritos':{favoritosEntre:async(ids)=>{op.idsFavoritos=ids;return op.favoritos===undefined?new Set():op.favoritos;}},'@/app/(conta)/minha-conta/favoritos/actions':{definirFavorito:async()=>({ok:true,dados:{favorito:true}})}});}
+function tela(op={}) {return carregar(caminho+'page.tsx',{'next/navigation':nav,'@/lib/dados/busca-vitrine':{buscarProdutosVitrine:async(...args)=>{op.buscaArgs=args;return op.resultados??[];}},'@/lib/dados/vitrine-completa':{vitrinePublica:async()=>{if(op.erroLoja)throw Error('interno');return op.v===null?null:{...loja,...op.v};},anunciosVitrine:async()=>{if(op.erroProdutos)throw Error('interno');return op.anuncios??[produto(1),produto(2),produto(3)];},anunciosPorPaginaVitrine:async()=>{if(op.erroConfig)throw Error('interno');return op.tamanho??2;},vitrineNovaAtiva:async()=>!!op.nova},'@clerk/nextjs/server':{auth:async()=>({userId:op.usuario??null})},'@/lib/dados/favoritos':{favoritosEntre:async(ids)=>{op.idsFavoritos=ids;return op.favoritos===undefined?new Set():op.favoritos;}},'@/app/(conta)/minha-conta/favoritos/actions':{definirFavorito:async()=>({ok:true,dados:{favorito:true}})}});}
 async function html(op={}) {return render(await tela(op).default({params:Promise.resolve({slug:'loja-teste'}),searchParams:Promise.resolve(op.sp??{})}));}
 test('loja: leitura distingue inexistente de falha e rejeita resposta malformada',async()=>{
  assert.equal(await dados({data:null}).vitrinePublica('loja-teste'),null);
@@ -114,4 +114,16 @@ test('vitrine: vendedor já identificado no topo não se repete nos cards',async
  const artigos=h.match(/<article[\s\S]*?<\/article>/g)??[];
  assert.ok(artigos.length>0);
  for(const a of artigos) assert.ok(!a.includes(loja.nome));
+});
+
+test('loja: busca só ocupa espaço a partir de oito produtos e preserva ordem',async()=>{
+ assert.doesNotMatch(await html({v:{total_anuncios:6}}),/Buscar nesta loja/);
+ assert.match(await html({v:{total_anuncios:8},sp:{ordem:'menor_preco'}}),/Buscar nesta loja/);
+});
+
+test('loja: busca sem resultado tem saída, termo e filtros sem repetir seções',async()=>{
+ const op={v:{total_anuncios:8,e_dono:true},nova:true,sp:{q:' sofá ',ordem:'menor_preco',nova:'1'}};
+ const h=await html(op);assert.match(h,/Nenhum produto encontrado/);assert.match(h,/Ver todos os produtos/);
+ assert.match(h,/name="nova" value="1"/);assert.match(h,/name="ordem" value="menor_preco"/);
+ assert.deepEqual(op.buscaArgs,[loja.id,'sofá','menor_preco',1]);
 });

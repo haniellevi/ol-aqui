@@ -89,6 +89,8 @@ try:
                 'conta antiga com pedido_novo=true deve preservar consentimento existente';
             end $$;
             delete from public.perfis where id in ('user_pre898','user_pre898ant');"""))
+    checked(sql((root/'supabase/testes/912_kit_catalogo.sql').read_text()))
+    print('PASS: kit catálogo, oferta, busca e isolamento público', flush=True)
     if '--item34' in sys.argv:
         checked(sql((root/'supabase/testes/911_admin_lancamento.sql').read_text()))
         print('PASS: Admin lançamento, acesso, períodos, coortes e supressão', flush=True)

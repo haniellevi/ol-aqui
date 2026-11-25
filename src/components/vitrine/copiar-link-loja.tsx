@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import { Copy } from "lucide-react";
 import { Botao, type TamanhoBotao } from "@/components/ui/botao";
 
@@ -16,6 +17,6 @@ export function CopiarLinkLoja({ url, tamanho }: { url: string; tamanho?: Tamanh
     <p role="status" className={estado === "copiado" || estado === "manual" ? "text-sm text-texto-suave" : "sr-only"}>
       {estado === "copiado" ? "Link copiado." : estado === "manual" ? "Não foi possível copiar automaticamente. Selecione o link abaixo." : ""}
     </p>
-    {estado === "manual" && <label className="flex flex-col gap-1 text-sm">Link da loja<input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="h-10 min-w-0 rounded-campo border border-borda bg-cartao px-3 text-base focus-visible:outline-3 focus-visible:outline-laranja-escuro" /></label>}
+    {estado === "manual" && <label className="flex flex-col gap-1 text-sm">Link da loja<Input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="min-w-0" /></label>}
   </div>;
 }

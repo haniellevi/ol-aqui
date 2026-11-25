@@ -20,7 +20,9 @@ export function CampoBusca({
   sugestoes = false,
   regiao = "",
   placeholder,
+  camposOcultos = {},
 }: {
+  camposOcultos?: Record<string, string>;
   valor?: string;
   /** Mostra o rótulo como título acima (Início). Senão fica só para o leitor de tela. */
   rotuloVisivel?: boolean;
@@ -43,6 +45,7 @@ export function CampoBusca({
       {Object.entries(manterFiltros(manter)).flatMap(([k, v]) =>
         (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean).map((valor, i) => <input key={`${k}-${i}`} type="hidden" name={k} value={valor} />),
       )}
+      {Object.entries(camposOcultos).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
       <div className={classesGrupoCampo}>
         {sugestoes ? (
           <EntradaComSugestoes key={`${regiao}|${valor}`} id={id} valor={valor} autoFocus={autoFocus} className={classesEntradaGrupo} placeholder={placeholder ?? "O que você procura?"} />

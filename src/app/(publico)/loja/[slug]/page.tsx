@@ -1,3 +1,5 @@
+import { CampoBusca } from "@/components/busca/campo-busca";
+import { buscarProdutosVitrine } from "@/lib/dados/busca-vitrine";
 import { StoreDetails } from "@/components/ui/store-details";
 import { formatarNome } from "@/lib/formatar-nome";
 import { Voltar } from "@/components/ui/voltar";
@@ -36,7 +38,7 @@ import { ehTelefoneGuardado } from "@/lib/telefone";
 // → "Ver mais produtos" (?pagina=2...) → informações da loja.
 // O que o plano mostra (foto, seções, fixados) já vem decidido pelo banco.
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ ordem?: string | string[]; pagina?: string | string[]; nova?: string | string[] }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ ordem?: string | string[]; pagina?: string | string[]; q?: string | string[]; nova?: string | string[] }> };
 export const dynamic = "force-dynamic";
 const grade = "lg:grid-cols-3! xl:grid-cols-3!";
 
@@ -50,8 +52,9 @@ function lerPagina(v: string | string[] | undefined): number {
 }
 
 /** Endereço da vitrine com ordem e página (página 1 e ordem padrão ficam de fora). previa = ?nova=1 do dono. */
-function linkPagina(base: string, ordem: OrdemVitrine, pagina: number, previa = false) {
+function linkPagina(base: string, ordem: OrdemVitrine, pagina: number, previa = false, busca = "") {
   const q = new URLSearchParams();
+  if (busca) q.set("q", busca);
   if (previa) q.set("nova", "1");
   if (ordem === "menor_preco") q.set("ordem", ordem);
   if (pagina > 1) q.set("pagina", String(pagina));
@@ -130,7 +133,8 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   if (!v) notFound();
   const ordem = lerOrdem(sp.ordem);
   const pagina = lerPagina(sp.pagina);
-  const produtos = await Promise.all([anunciosVitrine(v.id, ordem, pagina), anunciosPorPaginaVitrine(v.microrregiao_id)]).catch(() => null);
+  const busca = v.total_anuncios >= 8 && typeof sp.q === "string" ? sp.q.trim().replace(/\s+/g, " ").slice(0, 120) : "";
+  const produtos = await Promise.all([busca ? buscarProdutosVitrine(v.id, busca, ordem, pagina) : anunciosVitrine(v.id, ordem, pagina), anunciosPorPaginaVitrine(v.microrregiao_id)]).catch(() => null);
   const [todos, porPagina] = produtos ?? [[], 120];
   // na_pagina = false: o produto veio só porque está numa seção (fora desta página)
   const anuncios = todos.filter((a) => a.na_pagina);
@@ -142,7 +146,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
     : null;
 
   const porId = new Map(todos.map((a) => [a.id, a]));
-  const primeira = pagina === 1;
+  const primeira = pagina === 1 && !busca;
   // Produtos fixados: bloco próprio no topo da loja (só na 1ª página e na ordem "Mais novos")
   const fixados = primeira && ordem === "recentes" ? anuncios.filter((a) => a.fixado != null) : [];
   const secoes = (primeira && ordem === "recentes" ? v.secoes : [])
@@ -153,7 +157,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
     .filter((s) => s.itens.length > 0);
   const grupos = agrupar(fixados.length > 0 ? anuncios.filter((a) => a.fixado == null) : anuncios);
   const inicio = (pagina - 1) * porPagina;
-  const temMais = inicio + anuncios.length < v.total_anuncios;
+  const temMais = busca ? anuncios.length >= porPagina : inicio + anuncios.length < v.total_anuncios;
   const desdeTexto = desde(v.criado_em);
   const base = linkLoja(v.slug);
 
@@ -163,7 +167,7 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   const { userId } = nova ? await auth() : { userId: null };
   // Todos os produtos mostrados (inclusive os de seções fora desta página).
   const favoritos = nova && v.status === "ativa" && userId ? await favoritosEntre(todos.map((a) => a.id), userId) : new Set<string>();
-  const entrarHref = `/entrar?redirect_url=${encodeURIComponent(linkPagina(base, ordem, pagina, previa))}`;
+  const entrarHref = `/entrar?redirect_url=${encodeURIComponent(linkPagina(base, ordem, pagina, previa, busca))}`;
   const acao = nova && v.status === "ativa"
     ? (a: CardAnuncioProps["anuncio"]) => (
         <FavoritoCard anuncioId={a.id} titulo={formatarNome(a.titulo)} inicial={favoritos ? favoritos.has(a.id) : null} logado={!!userId} entrarHref={entrarHref} />
@@ -213,8 +217,8 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           <li className="flex shrink-0"><Chip href="#informacoes-loja" tamanho="toque" className="whitespace-nowrap">Informações</Chip></li>
           {!nova && <li className="flex shrink-0"><Chip href="#produtos-loja" tamanho="toque" className="whitespace-nowrap">Ver anúncios ({inteiro(v.total_anuncios)})</Chip></li>}
           {v.total_anuncios > 1 && <>
-            <li className="flex shrink-0"><Chip href={linkPagina(base, "recentes", 1, previa)} tamanho="toque" ativo={ordem === "recentes"} scroll={false} replace className="whitespace-nowrap">Vitrine da loja</Chip></li>
-            <li className="flex shrink-0"><Chip href={linkPagina(base, "menor_preco", 1, previa)} tamanho="toque" ativo={ordem === "menor_preco"} scroll={false} replace className="whitespace-nowrap">Menor preço</Chip></li>
+            <li className="flex shrink-0"><Chip href={linkPagina(base, "recentes", 1, previa, busca)} tamanho="toque" ativo={ordem === "recentes"} scroll={false} replace className="whitespace-nowrap">Vitrine da loja</Chip></li>
+            <li className="flex shrink-0"><Chip href={linkPagina(base, "menor_preco", 1, previa, busca)} tamanho="toque" ativo={ordem === "menor_preco"} scroll={false} replace className="whitespace-nowrap">Menor preço</Chip></li>
           </>}
           {abas.map((a) => <li key={a.href} className="flex shrink-0"><Chip href={a.href} tamanho="toque" className="whitespace-nowrap">{a.nome}</Chip></li>)}
         </ul>
@@ -222,8 +226,10 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
 
       <div className="flex min-w-0 flex-col gap-4 px-4 md:px-0 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start">
         <div id="produtos-loja" className="flex min-w-0 scroll-mt-28 flex-col gap-3">
+          {v.total_anuncios >= 8 && <CampoBusca caminho={base} valor={busca} placeholder="Buscar nesta loja" manter={{ ordem }} camposOcultos={previa ? { nova: "1" } : {}} />}
+          {busca && anuncios.length > 0 && <Botao href={linkPagina(base, ordem, 1, previa)} variante="texto">Ver todos os produtos</Botao>}
           <h2 className="sr-only">{inteiro(v.total_anuncios)} anúncios nesta vitrine</h2>
-          {!produtos ? <Vazio titulo="Não conseguimos carregar os anúncios" texto="As informações da loja continuam disponíveis. Tente carregar os produtos novamente."><Botao href={linkPagina(base, ordem, pagina, previa)} tamanho="toque" larguraTotal>Tentar novamente</Botao></Vazio> : anuncios.length === 0 && pagina > 1 ? (
+          {!produtos ? <Vazio titulo="Não conseguimos carregar os anúncios" texto="As informações da loja continuam disponíveis. Tente carregar os produtos novamente."><Botao href={linkPagina(base, ordem, pagina, previa, busca)} tamanho="toque" larguraTotal>Tentar novamente</Botao></Vazio> : busca && anuncios.length === 0 ? <Vazio titulo="Nenhum produto encontrado" texto="Tente outro nome ou volte à vitrine completa."><Botao href={linkPagina(base, ordem, 1, previa)} variante="secundario">Ver todos os produtos</Botao></Vazio> : anuncios.length === 0 && pagina > 1 ? (
             <Vazio titulo="Não tem mais produtos aqui." texto="Volte para o começo da loja.">
               <Botao href={linkPagina(base, ordem, 1, previa)} variante="primario" tamanho="toque" larguraTotal>
                 Ver o começo da loja
@@ -274,16 +280,16 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
               {(temMais || pagina > 1) && (
                 <nav aria-label="Páginas de produtos" className="flex flex-col gap-3">
                   <p className="text-base text-texto-suave tabular-nums">
-                    Produtos {inteiro(inicio + 1)} a {inteiro(inicio + anuncios.length)} de {inteiro(v.total_anuncios)}.
+                    {busca ? `Resultados ${inteiro(inicio + 1)} a ${inteiro(inicio + anuncios.length)}` : `Produtos ${inteiro(inicio + 1)} a ${inteiro(inicio + anuncios.length)} de ${inteiro(v.total_anuncios)}.`}
                   </p>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     {temMais && (
-                      <Botao href={linkPagina(base, ordem, pagina + 1, previa)} variante="secundario" tamanho="toque" larguraTotal className="sm:w-auto">
+                      <Botao href={linkPagina(base, ordem, pagina + 1, previa, busca)} variante="secundario" tamanho="toque" larguraTotal className="sm:w-auto">
                         Ver mais produtos
                       </Botao>
                     )}
                     {pagina > 1 && (
-                      <Botao href={linkPagina(base, ordem, pagina - 1, previa)} variante="secundario" tamanho="toque" larguraTotal className="sm:w-auto">
+                      <Botao href={linkPagina(base, ordem, pagina - 1, previa, busca)} variante="secundario" tamanho="toque" larguraTotal className="sm:w-auto">
                         Página anterior
                       </Botao>
                     )}

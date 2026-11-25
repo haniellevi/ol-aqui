@@ -105,6 +105,7 @@ export async function novoRascunho(opcoes?: {
   avulso?: boolean;
   chave?: string;
   assistente?: string;
+  parecidoDe?: string;
   sugestao?: { vitrineId: string; titulo: string; categoriaId?: string };
 }): Promise<EstadoForm> {
   const conta = await contaDaLoja();
@@ -128,6 +129,13 @@ export async function novoRascunho(opcoes?: {
     }
     // Busca pode estar filtrada por uma categoria principal. Só folhas recebem anúncios.
     preenchimento = { titulo, ...(categoria && categoria.filhas.length === 0 ? { categoria_id: sugestao.categoriaId } : {}) };
+  }
+  if (opcoes?.parecidoDe) {
+    const original = ehUuid(opcoes.parecidoDe) && !conta.ajudante && !conta.equipe ? await abrir(opcoes.parecidoDe) : null;
+    if (!original || original.vitrine_id !== conta.vitrine.id || !original.titulo?.trim()) return { erro: { mensagem: NAO_ACHOU } };
+    // Pré-preenchimento mínimo. Fotos, localização, preço e condições precisam ser revistos para o novo produto.
+    const categoria = original.categoria_id ? await categoriaPorId(original.categoria_id) : null;
+    preenchimento = { titulo: original.titulo.trim().slice(0, 90), ...(categoria && categoria.filhas.length === 0 ? { categoria_id: original.categoria_id! } : {}) };
   }
   const db = await createClient();
   const { data, error } = await db

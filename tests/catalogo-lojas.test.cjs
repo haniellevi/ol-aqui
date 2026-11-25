@@ -29,7 +29,7 @@ async function pagina(params, lojas = []) {
     '@/lib/dados/regiao': { regiaoAtual: async () => regiao },
     '@/lib/dados/categorias': { listarCategorias: async () => [{ id:'moveis',slug:'moveis',nome:'Móveis',filhas:[] }] },
     '@/lib/dados/catalogo': {
-      lojasCatalogo: async (...args) => { consultas.push(['lojas', args]); return lojas; },
+      lojasComOferta: async (...args) => { consultas.push(['lojas', args]); return lojas; },
       anunciosCatalogo: async (...args) => { consultas.push(['produtos', args]); return []; },
     },
     '@/components/anuncio/grade-anuncios': { GradeAnuncios: () => React.createElement('div',null,'Produtos da região') },
@@ -59,4 +59,9 @@ test('catálogo: resultado vazio mostra o termo escapado e permite limpar a busc
   assert.match(html, /Nenhuma loja encontrada/);
   assert.match(html, /&lt;loja&gt;/);
   assert.match(html, /Limpar busca/);
+});
+
+test('catálogo: oferta ativa e vazio têm indicação honesta com rota direta',async()=>{
+ const {html}=await pagina({},[{id:'a',slug:'cheia',nome:'Cheia',cidade:'Corrente',produtos_ativos:8,total:2},{id:'b',slug:'vazia',nome:'Vazia',cidade:'Corrente',produtos_ativos:0,total:2}]);
+ assert.match(html,/8 produtos ativos/);assert.match(html,/Ainda sem produtos ativos/);assert.match(html,/href="\/loja\/vazia"/);
 });
