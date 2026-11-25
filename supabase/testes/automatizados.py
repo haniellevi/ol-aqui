@@ -71,6 +71,10 @@ try:
             end $$;
             delete from public.perfis where id in ('user_pre898','user_pre898ant');"""))
     checked(sql("""do $$ begin
+      assert to_regprocedure('public.voucher_atribuir_nova_loja()') is null,
+        'função histórica de voucher não pode voltar';
+      assert not exists(select 1 from pg_trigger where tgname='voucher_nova_loja' and not tgisinternal),
+        'gatilho histórico de voucher não pode voltar';
       assert (select texto='Mensagem personalizada de teste.' and texto_padrao like '%plano gratuito%' from public.modelos_mensagem where chave='plano_vencendo' and canal='whatsapp'), 'padrão ou personalização alterados incorretamente';
       assert (select texto=texto_padrao and texto like '%plano gratuito%' from public.modelos_mensagem where chave='plano_vencendo' and canal='notificacao'), 'texto padrão não foi atualizado';
     end $$;"""))

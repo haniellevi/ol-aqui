@@ -59,6 +59,12 @@ try:
         checked(sql('begin;\n' + migration.read_text() + '\ncommit;'))
         checked(sql(regression))
         print(f'PASS: origem, falhas, credenciais, ACL e agenda; aplicação {attempt + 1}', flush=True)
+    # A mesma origem e agenda devem sobreviver às migrações posteriores da candidata.
+    for path in sorted((ROOT / 'supabase/migrations').glob('*.sql')):
+        if path.name > MIGRATION:
+            checked(sql('begin;\n' + path.read_text() + '\ncommit;'))
+    checked(sql(regression))
+    print('PASS: contrato cron preservado após todas as migrações posteriores', flush=True)
     # Ausência inesperada não pode criar função com grants padrão.
     absent = sql('begin; drop function public.limpeza_disparar();\n' + migration.read_text() + '\nrollback;')
     if absent.returncode == 0 or 'Preflight necessário' not in absent.stderr:
