@@ -1,6 +1,6 @@
 # Medição interna, contrato v1
 
-Base V27, Onda A. Nenhum destino externo é implementado ou carregado. `DESTINOS` em `src/lib/metricas/contrato.ts` fixa GA4 e Meta em falso. Uma integração futura precisa de decisão própria, adaptador com allowlist e configuração versionada por ambiente; não basta trocar essa constante.
+Base V27, Onda A. Nenhum destino externo é carregado ou ativado. `DESTINOS` em `src/lib/metricas/contrato.ts` fixa GA4 e Meta em falso. Item 36 acrescenta configuração tipada por ambiente e adaptadores de ensaio com transporte injetado, sem SDK/rede e sem ligação aos coletores. A superfície externa é mais restrita que a interna; veja [integração futura e gates](INTEGRACOES-MEDICAO.md). Não basta trocar essa constante para ativar.
 
 ## Preferência e gates
 

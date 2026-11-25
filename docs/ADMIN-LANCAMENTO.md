@@ -28,9 +28,9 @@ Comparação somente entre períodos de mesma duração já encerrados. Dia atua
 
 Sem histórico adequado, estão indisponíveis: primeira publicação em 48h, tempo até primeira proposta, funil por sessão entre superfícies, retenção, latência/ingestão e custos de campanha. O MVP usa ações/fatos observáveis e caminhos existentes de aprofundamento; não cria rastreador para preencher lacunas.
 
-## Preparação GA4, sem ativação
+## Preparação GA4 e Meta, sem ativação
 
-`configuracaoGa4(id,ambiente)` valida sintaxe conservadora G- com letras maiúsculas/números e ambiente conhecido, retornando sempre `habilitado=false`. Isso não comprova existência ou propriedade do ID. Interface é rascunho local efêmero, sem gravação, credencial, tag, GTM ou transporte padrão; não é uma configuração ativa por ambiente. Meta aparece como módulo futuro desligado. `DESTINOS` de A continua falso.
+O Admin usa `configuracaoExterna(destino,ambiente,entrada)` para GA4 e Meta: estados não configurado, inválido, desativado e pronto para homologar, sempre com envio bloqueado. Configuração tipada versionada mantém preparação false em local/homologação/produção, sem IDs reais. Formato não comprova existência ou propriedade. Interface é rascunho efêmero, sem gravação, credencial, SDK ou transporte padrão. `DESTINOS` de A continua falso. [Contrato restrito, consentimentos, operação futura e limites](INTEGRACOES-MEDICAO.md).
 
 `criarSimuladorGa4(transporteSintetico)` só admite ambiente `simulacao`, estatística aceita, ID sintaticamente válido e ocorrência UUID ainda não tentada. Revalida envelope estrito de A e neutraliza rota. Deduplicação é em memória por instância, sem fila, retry ou persistência; mesmo transporte que lança exceção não recebe segunda tentativa da ocorrência. Não é integrado aos coletores e não possui implementação fetch/gtag/dataLayer. Em homologação/produção não chama nem transporte injetado.
 
