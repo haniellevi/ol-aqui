@@ -58,7 +58,7 @@ export function RastreioVisitas() {
   const escolher = (p: Preferencia) => { salvarPreferencia(p); setAberto(false); };
   if (!rotaNeutra(caminho) && caminho !== "/privacidade") return null;
   return (
-    <section aria-label="Preferências de privacidade" className="border-b border-borda bg-cartao p-4 text-base text-texto">
+    <section aria-label="Preferências de privacidade" className="border-b border-borda bg-cartao p-4 pb-reserva-nav text-base text-texto md:pb-4">
       {aberto ? <div className="mx-auto flex max-w-xl flex-col gap-3">
         <h2 className="text-lg font-semibold text-beringela">Você escolhe o que compartilhar</h2>
         <p>Estatísticas ajudam a entender visitas e interesse nos anúncios. Marketing permite futuras medições de campanhas, que estão desligadas. Você pode recusar e continuar usando o site.</p>
