@@ -2,6 +2,7 @@
 \set QUIET on
 -- Etapa P4: métricas do produto (números diários, termos, aparições, favoritar, tempo até sair e leituras).
 begin;
+set local timezone='America/Fortaleza';
 reset role;
 set local request.jwt.claim.role='';
 set local request.jwt.claim.sub='';
