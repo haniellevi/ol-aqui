@@ -195,7 +195,7 @@ test('sugestões priorizam a categoria escolhida antes de ampliar para outras', 
   // A busca digitada é contada depois da resposta, com o total da consulta principal (0 = sem resultado).
   assert.equal(depois.length, 1); assert.equal(buscas.length, 0);
   await depois[0]();
-  assert.deepEqual(buscas, [['fiat', 'r', 'carros', 0]]);
+  assert.deepEqual(buscas, [['fiat', 'r', 'carros', 0, false]]);
 });
 
 

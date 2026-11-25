@@ -10,20 +10,23 @@ const LOJA = '49000000-0000-4000-a000-000000000001', P1 = '49100000-0000-4000-a0
 function acao(op = {}) {
   const chamadas = [];
   const a = carregar('src/app/(publico)/loja/[slug]/actions.ts', {
-    'next/headers': { headers: async () => new Headers(op.semIp ? {} : { 'x-forwarded-for': '10.0.0.9, 10.0.0.1' }) },
+    'next/headers': { cookies: async () => ({ get: () => ({ value: '91000000-0000-4000-a000-000000000001' }) }) },
+    '@/lib/metricas/gate-servidor': { permiteEstatistica: async () => !op.negado },
     '@clerk/nextjs/server': { auth: async () => ({ userId: op.usuario ?? null }) },
     '@/lib/supabase/admin': { supabaseAdmin: () => ({ rpc: async (n, args) => { chamadas.push([n, args]); if (op.rede) throw Error('x'); return { data: op.data ?? true, error: op.erro ?? null }; } }) },
   });
   return { a, chamadas };
 }
-test('painel da loja: ação conta pelo servidor com o IP do visitante e nunca lança erro', async () => {
+test('painel da loja: ação conta pelo servidor com navegador consentido e nunca lança erro', async () => {
   let { a, chamadas } = acao({ usuario: 'user_9' });
   assert.equal(await a.registrarEventoLoja(LOJA, 'visita'), true);
-  assert.deepEqual(chamadas[0], ['registrar_evento_loja', { p_vitrine: LOJA, p_tipo: 'visita', p_visitante: '10.0.0.9', p_usuario: 'user_9' }]);
+  assert.deepEqual(chamadas[0], ['registrar_evento_loja', { p_vitrine: LOJA, p_tipo: 'visita', p_visitante: '91000000-0000-4000-a000-000000000001', p_usuario: 'user_9' }]);
   assert.equal(await a.registrarEventoLoja('nao-uuid', 'visita'), false);
   assert.equal(await a.registrarEventoLoja(LOJA, 'compra'), false); assert.equal(chamadas.length, 1);
   ({ a, chamadas } = acao({ semIp: true, data: false }));
-  assert.equal(await a.registrarEventoLoja(LOJA, 'clique_mapa'), false); assert.equal(chamadas[0][1].p_visitante, null);
+  assert.equal(await a.registrarEventoLoja(LOJA, 'clique_mapa'), false); assert.equal(chamadas[0][1].p_visitante, '91000000-0000-4000-a000-000000000001');
+  ({ a, chamadas } = acao({ negado: true }));
+  assert.equal(await a.registrarEventoLoja(LOJA, 'visita'), false); assert.equal(chamadas.length, 0);
   ({ a } = acao({ rede: true })); assert.equal(await a.registrarEventoLoja(LOJA, 'clique_whatsapp'), false);
   ({ a } = acao({ erro: { message: 'x' } })); assert.equal(await a.registrarEventoLoja(LOJA, 'visita'), false);
 });

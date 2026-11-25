@@ -28,6 +28,8 @@ try:
     init = (root/'supabase/testes/00_simula_supabase.sql').read_text()
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
+        # Ensaiar atualização: contrato legado antes de sua desativação intencional.
+        if p.name == '20261203035000_medicao_consentida.sql' and '--item31' not in sys.argv: continue
         if p.name == '20261203034000_compliance_revisao_manual.sql':
             checked(sql((root/'supabase/testes/902_compliance_preflight.sql').read_text()))
         if p.name == '20261203031000_autosservico_vitrines.sql':
@@ -86,6 +88,10 @@ try:
                 'conta antiga com pedido_novo=true deve preservar consentimento existente';
             end $$;
             delete from public.perfis where id in ('user_pre898','user_pre898ant');"""))
+    if '--item31' in sys.argv:
+        checked(sql((root/'supabase/testes/910_medicao_consentida.sql').read_text()))
+        print('PASS: medição consentida, contagem, repetição, allowlist e privilégios', flush=True)
+        sys.exit(0)
     checked(sql("""do $$ begin
       assert to_regprocedure('public.voucher_atribuir_nova_loja()') is null,
         'função histórica de voucher não pode voltar';
@@ -599,6 +605,11 @@ try:
 
     verificar_compliance_concorrente(container, sql, checked, (root/"supabase/testes/902_compliance_revisao_manual.sql").read_text())
     print("PASS: liberação/limpeza concorrentes, retry e rollback Item 26", flush=True)
+
+    checked(sql('begin;\n'+(root/'supabase/migrations/20261203035000_medicao_consentida.sql').read_text()+'\ncommit;'))
+    checked(sql((root/'supabase/testes/910_medicao_consentida.sql').read_text()))
+    checked(sql((root/'supabase/testes/160_busca_filtros.sql').read_text()))
+    print('PASS: atualização Item 31 sobre legado testado, nova coorte e busca legítima preservada', flush=True)
 
 finally:
     run('docker','stop',container)
