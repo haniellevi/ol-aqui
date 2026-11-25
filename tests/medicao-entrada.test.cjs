@@ -9,7 +9,7 @@ function ambiente(rota,aceito=true,bloqueado=false){
  Object.defineProperty(doc,'cookie',{get:()=>[...cookies].map(([k,v])=>`${k}=${v}`).join('; '),set:s=>{const [par]=s.split(';');const i=par.indexOf('='),key=par.slice(0,i);if(bloqueado&&key==='mr_medicao_visitante')return;if(s.includes('Max-Age=0'))cookies.delete(key);else cookies.set(key,par.slice(i+1))}});
  const store=m=>({getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)});
  Object.assign(global,{document:doc,location:{protocol:'http:',search:'?origem=radio'},window:{location:{pathname:rota},addEventListener:(...a)=>eventos.addEventListener(...a),removeEventListener:(...a)=>eventos.removeEventListener(...a),dispatchEvent:e=>eventos.dispatchEvent(e)},localStorage:store(local),sessionStorage:store(sessao),matchMedia:()=>({matches:true})});
- return {cookies,local,sessao,clear(){for(const k of ['document','location','window','localStorage','sessionStorage','matchMedia'])delete global[k]}};
+ return {cookies,local,sessao,permitirCookie(){bloqueado=false},clear(){for(const k of ['document','location','window','localStorage','sessionStorage','matchMedia'])delete global[k]}};
 }
 function montar(file,fn,props,mocks){
  const refs=[],deps=[];let cursor=0;
@@ -54,4 +54,17 @@ test('sessão observada expira sem pageview, conserva origem e explicita cópia 
   a.sessao.set('mr_medicao_sessao',JSON.stringify(copy));
   assert.equal(c.sessaoPageviews(1001,'?origem=whatsapp').id,first.id,'Cópia do sessionStorage pode compartilhar o fluxo; não é isolamento de aba');
  }finally{a.clear()}
+});
+test('novo objeto de vistos no mesmo anúncio não recupera montagem pré-aceite nem falha de preparação',()=>{
+ for(const aceito of [false,true]){
+  const a=ambiente('/anuncio/exemplo',aceito,true),calls=[];
+  try{
+   const props={anuncioId:'91000000-0000-4000-a000-000000000020',visto:{}};
+   const m=montar('src/app/(anuncio-publico)/anuncio/[idslug]/registrar-visita.tsx','RegistrarVisita',props,{'./actions':{registrarEvento:async()=>{calls.push('evento');return true}},'@/lib/vistos':{guardarVisto:()=>{}}});
+   m();assert.equal(calls.length,0);
+   a.permitirCookie();
+   carregar('src/lib/metricas/cliente.ts').salvarPreferencia({v:1,estatistica:true,marketing:false});
+   props.visto={};m();assert.equal(calls.length,0,'Rerender de dados não é uma nova navegação ou aceite retroativo');
+  }finally{a.clear()}
+ }
 });

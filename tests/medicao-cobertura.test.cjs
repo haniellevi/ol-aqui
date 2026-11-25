@@ -12,6 +12,11 @@ test('painel explicita população observável e não compara tráfego sem rollo
  assert.match(html,/30 min sem pageview/);assert.match(html,/copiado entre abas/);
  assert.match(html,/textuais/);assert.match(html,/Referer/);assert.match(html,/implantação real não confirmada/);
  assert.doesNotMatch(html,/Sessões por aba/);
+ const dado={...lancamento,rollout_inicio:'2026-11-01T10:00:00Z',rollout_fim:'2026-11-02T10:00:00Z'};
+ const periodo={de:'2026-11-19',ate:'2026-11-24',anteriorDe:'2026-11-13',anteriorAte:'2026-11-18',aviso:null};
+ const numeros=[];const visitar=e=>{if(!e||typeof e!=='object')return;if(e.props?.rotulo==='Sessões observadas')numeros.push(e.props);React.Children.forEach(e.props?.children,visitar)};
+ visitar(PainelLancamento({atual:dado,anterior:dado,periodo}));
+ assert.equal(numeros[0].detalhe,'0%','Rollout confirmado permite comparação fechada e posterior ao corte');
 });
 test('leitor de rollout compara instantes com offsets diferentes',()=>{
  const {lancamento}=require('./fixtures/lancamento.cjs');
