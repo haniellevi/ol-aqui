@@ -28,6 +28,7 @@ export function BannerLoja({
   prioridade = false,
   mostrarLogoModelo = true,
   modeloCompacto = false,
+  compacto = false,
   className = "",
 }: {
   tipo: BannerTipo;
@@ -41,12 +42,14 @@ export function BannerLoja({
   posicaoAki?: number | null;
   mostrarLogoModelo?: boolean;
   modeloCompacto?: boolean;
+  /** Apenas vitrine pública: faixa compacta sem alterar as prévias de edição. */
+  compacto?: boolean;
   className?: string;
 }) {
   const [falhou, setFalhou] = useState<string | null>(null);
   if (tipo === "foto" && url && falhou !== url) {
     return (
-      <div className={`relative aspect-[3/1] w-full overflow-hidden bg-borda ${className}`}>
+      <div className={`relative w-full overflow-hidden bg-borda ${compacto ? "h-16 md:h-16" : "aspect-[3/1]"} ${className}`}>
         {/* eslint-disable-next-line @next/next/no-img-element -- foto do Storage; img simples é leve no 3G */}
         <img
           src={url}
@@ -73,7 +76,7 @@ export function BannerLoja({
   return (
     <div
       aria-hidden={modeloCompacto || undefined}
-      className={`relative w-full overflow-hidden ${modeloCompacto ? "grid h-14 place-items-center md:h-20" : "flex aspect-[3/1] items-center justify-center gap-3 px-6"} ${className}`}
+      className={`relative w-full overflow-hidden ${compacto ? "grid h-16 place-items-center" : modeloCompacto ? "grid h-14 place-items-center md:h-20" : "flex aspect-[3/1] items-center justify-center gap-3 px-6"} ${className}`}
       style={{
         backgroundColor: fundo,
         backgroundImage: desenho,

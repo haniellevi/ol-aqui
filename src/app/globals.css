@@ -250,11 +250,13 @@ input, textarea { caret-color: var(--color-laranja-escuro); }
 .publico:has(#conteudo form[role="search"]) .busca-cabecalho { display: none; }
 
 @media (width < 48rem) {
+  .publico:has([data-vitrine-loja] [data-barra-loja]) > .navegacao-inferior { display: none; }
+  .publico:has([data-vitrine-loja] [data-barra-loja]) > #conteudo { padding-bottom: 0; }
   .publico:has([data-barra-loja]) [data-aki-atalho] {
-    bottom: calc(var(--spacing-barra-nav) + 4.75rem + env(safe-area-inset-bottom));
+    bottom: calc(4.75rem + env(safe-area-inset-bottom));
   }
   .publico:has([data-barra-loja]) [data-aki-dica] {
-    bottom: calc(var(--spacing-barra-nav) + 8.5rem + env(safe-area-inset-bottom));
+    bottom: calc(8.5rem + env(safe-area-inset-bottom));
   }
 
   /* Logo de uma linha (~160px) + conversas, avisos e conta não deixam espaço para a cidade: fica só o símbolo. */

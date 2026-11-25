@@ -14,6 +14,7 @@ export function GradeAnuncios({
   compacto = false,
   horizontal = false,
   voltarHref,
+  mostrarVendedor = true,
 }: {
   anuncios: CardAnuncioProps["anuncio"][];
   /** O que mostrar quando não há anúncios (ex.: <Vazio ...>). */
@@ -28,6 +29,7 @@ export function GradeAnuncios({
   compacto?: boolean;
   horizontal?: boolean;
   voltarHref?: string;
+  mostrarVendedor?: boolean;
 }) {
   if (anuncios.length === 0) return <>{vazio ?? null}</>;
   const colunas = horizontal ? "grid-cols-1 gap-2 md:gap-3" : compacto
@@ -41,7 +43,7 @@ export function GradeAnuncios({
         {anuncios.map((a, i) => (
           <li key={a.id} className="flex">
             <div className="flex w-full flex-col [&>article]:flex-1">
-              <CardAnuncio anuncio={a} prioridade={i < prioridade} acao={acao?.(a)} compacto={compacto} horizontal={horizontal} voltarHref={voltarHref} />
+              <CardAnuncio anuncio={a} prioridade={i < prioridade} acao={acao?.(a)} compacto={compacto} horizontal={horizontal} voltarHref={voltarHref} mostrarVendedor={mostrarVendedor} />
             </div>
           </li>
         ))}

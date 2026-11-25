@@ -1,9 +1,10 @@
+import { StoreDetails } from "@/components/ui/store-details";
 import { formatarNome } from "@/lib/formatar-nome";
 import { Voltar } from "@/components/ui/voltar";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { Clock, MapPin, MessageCircle, Pencil, Plus } from "lucide-react";
+import { MessageCircle, Pencil, Plus } from "lucide-react";
 import { anunciosPorPaginaVitrine, anunciosVitrine, vitrineNovaAtiva, vitrinePublica } from "@/lib/dados/vitrine-completa";
 import { favoritosEntre } from "@/lib/dados/favoritos";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
@@ -125,7 +126,7 @@ function agrupar(anuncios: AnuncioVitrine[]) {
 export default async function PaginaLoja({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const v = await vitrinePublica(slug).catch(() => undefined);
-  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8"><Voltar /><h1 className="text-titulo font-semibold text-balance">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} tamanho="toque" larguraTotal>Tentar novamente</Botao></main>;
+  if (v === undefined) return <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8"><Voltar /><h1 className="line-clamp-2 text-titulo font-semibold text-balance">Não conseguimos carregar a loja</h1><p className="text-texto-suave">Tente novamente em instantes.</p><Botao href={linkPagina(linkLoja(slug), lerOrdem(sp.ordem), lerPagina(sp.pagina))} tamanho="toque" larguraTotal>Tentar novamente</Botao></main>;
   if (!v) notFound();
   const ordem = lerOrdem(sp.ordem);
   const pagina = lerPagina(sp.pagina);
@@ -183,102 +184,45 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
   ];
 
   return (
-    <main className={`mx-auto flex w-full max-w-6xl flex-col gap-4 md:px-4 md:pt-4 ${temBarra ? "pb-18 md:pb-8" : "pb-8"}`}>
-      <div className="px-4 pt-3 md:px-0 md:pt-0"><Voltar /></div>
+    <main data-vitrine-loja className={`mx-auto flex w-full max-w-6xl flex-col md:px-4 md:pt-3 ${temBarra ? "pb-18 md:pb-8" : "pb-8"}`}>
       {v.status !== "ativa" && (
-        <Alert variant="warning" role="status" className="mx-4 mt-3 md:mx-0 md:mt-0">
+        <Alert variant="warning" role="status" className="mx-4 md:mx-0">
           Prévia da vitrine fora do ar ({v.status === "suspensa" ? "suspensa" : v.status === "montagem" ? "em montagem" : "plano vencido"}). Visível apenas para o responsável e a equipe Mercado da Região.
         </Alert>
       )}
-
-      {/* Topo */}
-      <header className="overflow-hidden bg-cartao shadow-1 md:rounded-card">
-        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={formatarNome(v.nome)} logo={v.logo_url} posicaoAki={v.banner_aki_posicao ?? null} modeloCompacto mostrarLogoModelo={capaComLogo} prioridade className={v.banner_aki_posicao == null ? "max-h-72" : undefined} />
-        <div className={`flex min-w-0 flex-col gap-2 px-4 pb-3 ${capaComLogo ? "pt-3" : ""}`}>
-          <div className={`grid min-w-0 items-start gap-2 ${capaComLogo ? "" : "grid-cols-[auto_minmax(0,1fr)]"}`}>
-            {!capaComLogo && (
-              <span className="relative z-10 -mt-5 rounded-full border-3 border-cartao bg-cartao">
-                <AvatarVitrine nome={v.nome} logo={v.logo_url} tamanho="lg" />
-              </span>
-            )}
-            <div className="flex min-w-0 flex-col gap-1 pt-1 [overflow-wrap:anywhere]">
-              <h1 className="text-titulo leading-tight font-semibold text-beringela">{formatarNome(v.nome)}</h1>
-              <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-texto-suave">
-                <span className="inline-flex min-w-0 items-start gap-1">
-                  <MapPin className="size-4 shrink-0" aria-hidden />
-                  <span className="min-w-0">{[v.bairro, v.cidade].filter(Boolean).join(", ")}</span>
-                </span>
-                {v.categoria_loja && <span>{v.categoria_loja}</span>}
-              </p>
-              {(v.selo || situacao || desdeTexto) && (
-                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-texto-suave">
-                  {v.selo && <SeloLoja />}
-                  {situacao && (
-                    <p className={`inline-flex min-w-0 items-center gap-1 font-semibold ${situacao.aberto ? "text-verde-escuro" : "text-perigo"}`} suppressHydrationWarning>
-                      <Clock className="size-4 shrink-0" aria-hidden />
-                      {situacao.texto}
-                    </p>
-                  )}
-                  {desdeTexto && <span>{desdeTexto}</span>}
-                </div>
-              )}
-            </div>
+      <header className="overflow-hidden bg-cartao md:rounded-card">
+        <BannerLoja tipo={v.banner_tipo} url={v.banner_url} modelo={v.banner_modelo} cor={v.banner_cor} nome={formatarNome(v.nome)} logo={v.logo_url} posicaoAki={v.banner_aki_posicao ?? null} modeloCompacto compacto mostrarLogoModelo={capaComLogo} prioridade />
+        <div className="flex min-w-0 items-center gap-2 px-4 py-1">
+          {!capaComLogo && <AvatarVitrine nome={v.nome} logo={v.logo_url} tamanho="md" />}
+          <div className="flex min-w-0 flex-1 flex-col gap-1 [overflow-wrap:anywhere]">
+            <h1 className="line-clamp-2 text-titulo leading-tight font-semibold text-beringela">{formatarNome(v.nome)}</h1>
+            <p className="flex flex-wrap items-center gap-x-2 text-sm text-texto-suave">
+              <span>{v.cidade}</span>
+              {situacao && <span className={situacao.aberto ? "text-verde-escuro" : "text-perigo"} suppressHydrationWarning>{situacao.aberto ? "Aberto agora" : "Fechado agora"}</span>}
+              {v.selo && <SeloLoja />}
+            </p>
           </div>
-          <div className="flex min-w-0 flex-wrap items-start gap-2">
-            {whatsapp && (
-              <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "hidden min-w-0 flex-1 px-3 md:inline-flex md:flex-none", "acao")}>
-                <MessageCircle className="size-4 shrink-0" aria-hidden />
-                Chamar no WhatsApp
-              </a>
-            )}
-            {!whatsapp && <p className="flex min-h-11 items-center text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
-            {v.status === "ativa" && <CopiarLinkLoja url={urlAbsoluta(linkLoja(v.slug))} tamanho="toque" />}
-            {v.e_dono && (
-              <Botao href={LINK_MINHA_LOJA} variante="secundario" tamanho="toque" icone={<Pencil />}>
-                Editar minha vitrine
-              </Botao>
-            )}
-          </div>
-          {!nova && (
-            <nav aria-label="Nesta loja" className="flex flex-wrap gap-2">
-              <Chip href="#produtos-loja" tamanho="toque">Ver anúncios ({inteiro(v.total_anuncios)})</Chip>
-              <Chip href="#informacoes-loja" tamanho="toque">Informações da loja</Chip>
-            </nav>
-          )}
+          {whatsapp && <a href={whatsapp} data-medir="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Chamar a loja no WhatsApp (abre em nova aba)" className={classesBotao("whatsapp", false, "hidden shrink-0 md:inline-flex", "acao")}><MessageCircle className="size-5" aria-hidden />Chamar no WhatsApp</a>}
         </div>
       </header>
 
-      {nova && (
-        <nav aria-label="Categorias desta loja" className="olaki-material sticky top-13 z-20 -mt-4 md:top-14 md:mt-0 md:rounded-card">
-          <ul className="flex gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none]">
-            {abas.map((a) => (
-              <li key={a.href} className="flex">
-                <Chip href={a.href} tamanho="toque" className="max-w-[75vw]">{a.nome}</Chip>
-              </li>
-            ))}
-            <li className="flex">
-              <Chip href="#informacoes-loja" tamanho="toque">Informações</Chip>
-            </li>
-          </ul>
-        </nav>
-      )}
+      <nav aria-label={nova ? "Categorias desta loja" : "Nesta loja"} className="olaki-material sticky top-13 z-20 min-w-0 md:top-14 md:rounded-card">
+        <ul className="flex gap-2 overflow-x-auto px-4 py-2 md:px-0">
+          <li className="flex shrink-0"><Voltar /></li>
+          <li className="flex shrink-0"><Chip href="/busca" tamanho="toque" className="whitespace-nowrap">Ver região</Chip></li>
+          <li className="flex shrink-0"><Chip href="#informacoes-loja" tamanho="toque" className="whitespace-nowrap">Informações</Chip></li>
+          {!nova && <li className="flex shrink-0"><Chip href="#produtos-loja" tamanho="toque" className="whitespace-nowrap">Ver anúncios ({inteiro(v.total_anuncios)})</Chip></li>}
+          {v.total_anuncios > 1 && <>
+            <li className="flex shrink-0"><Chip href={linkPagina(base, "recentes", 1, previa)} tamanho="toque" ativo={ordem === "recentes"} scroll={false} replace className="whitespace-nowrap">Vitrine da loja</Chip></li>
+            <li className="flex shrink-0"><Chip href={linkPagina(base, "menor_preco", 1, previa)} tamanho="toque" ativo={ordem === "menor_preco"} scroll={false} replace className="whitespace-nowrap">Menor preço</Chip></li>
+          </>}
+          {abas.map((a) => <li key={a.href} className="flex shrink-0"><Chip href={a.href} tamanho="toque" className="whitespace-nowrap">{a.nome}</Chip></li>)}
+        </ul>
+      </nav>
 
-      <div className="flex flex-col gap-4 px-4 md:px-0 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start">
-        <div id="produtos-loja" className="flex min-w-0 scroll-mt-28 flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-            <h2 className="text-lg font-semibold tabular-nums">{inteiro(v.total_anuncios)} {v.total_anuncios === 1 ? "anúncio" : "anúncios"} {v.status === "ativa" ? "no ar" : "nesta vitrine"}</h2>
-            {v.total_anuncios > 1 && (
-              <nav aria-label="Ordem dos produtos" className="flex flex-wrap items-center gap-2">
-                <Chip href={linkPagina(base, "recentes", 1, previa)} tamanho="toque" ativo={ordem === "recentes"} scroll={false} replace>
-                  Vitrine da loja
-                </Chip>
-                <Chip href={linkPagina(base, "menor_preco", 1, previa)} tamanho="toque" ativo={ordem === "menor_preco"} scroll={false} replace>
-                  Menor preço
-                </Chip>
-              </nav>
-            )}
-          </div>
-
+      <div className="flex min-w-0 flex-col gap-4 px-4 md:px-0 lg:grid lg:grid-cols-[1fr_20rem] lg:items-start">
+        <div id="produtos-loja" className="flex min-w-0 scroll-mt-28 flex-col gap-3">
+          <h2 className="sr-only">{inteiro(v.total_anuncios)} anúncios nesta vitrine</h2>
           {!produtos ? <Vazio titulo="Não conseguimos carregar os anúncios" texto="As informações da loja continuam disponíveis. Tente carregar os produtos novamente."><Botao href={linkPagina(base, ordem, pagina, previa)} tamanho="toque" larguraTotal>Tentar novamente</Botao></Vazio> : anuncios.length === 0 && pagina > 1 ? (
             <Vazio titulo="Não tem mais produtos aqui." texto="Volte para o começo da loja.">
               <Botao href={linkPagina(base, ordem, 1, previa)} variante="primario" tamanho="toque" larguraTotal>
@@ -304,27 +248,27 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           ) : (
             <>
               {fixados.length > 0 && (
-                <section aria-labelledby="destaques-loja" className="flex flex-col gap-3">
+                <section aria-labelledby="destaques-loja" className="flex flex-col gap-2">
                   <h2 id="destaques-loja" className="scroll-mt-32 text-lg font-semibold [overflow-wrap:anywhere]">
                     Destaques da loja
                   </h2>
-                  <GradeAnuncios medirEm="loja" className={grade} anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} acao={acao} />
+                  <GradeAnuncios mostrarVendedor={false} medirEm="loja" className={grade} anuncios={fixados.map((a) => paraCard(a, v))} prioridade={2} acao={acao} />
                 </section>
               )}
               {secoes.map((s) => (
-                <section key={s.id} aria-labelledby={`secao-${s.id}`} className="flex flex-col gap-3">
+                <section key={s.id} aria-labelledby={`secao-${s.id}`} className="flex flex-col gap-2">
                   <h2 id={`secao-${s.id}`} className="scroll-mt-32 text-lg font-semibold [overflow-wrap:anywhere]">
                     {s.nome}
                   </h2>
-                  <GradeAnuncios medirEm="loja" className={grade} anuncios={s.itens.map((a) => paraCard(a, v))} acao={acao} />
+                  <GradeAnuncios mostrarVendedor={false} medirEm="loja" className={grade} anuncios={s.itens.map((a) => paraCard(a, v))} acao={acao} />
                 </section>
               ))}
-              {ordem === "menor_preco" ? <section aria-labelledby="ordem-preco" className="flex flex-col gap-3"><h2 id="ordem-preco" className="text-lg font-semibold">Do menor para o maior preço</h2><GradeAnuncios medirEm="loja" className={grade} anuncios={anuncios.map((a) => paraCard(a, v))} acao={acao} /></section> : grupos.map((g, i) => (
-                <section key={g.nome} aria-labelledby={`grupo-${i}`} className="flex flex-col gap-3">
+              {ordem === "menor_preco" ? <section aria-labelledby="ordem-preco" className="flex flex-col gap-2"><h2 id="ordem-preco" className="text-lg font-semibold">Do menor para o maior preço</h2><GradeAnuncios mostrarVendedor={false} medirEm="loja" className={grade} anuncios={anuncios.map((a) => paraCard(a, v))} acao={acao} /></section> : grupos.map((g, i) => (
+                <section key={g.nome} aria-labelledby={`grupo-${i}`} className="flex flex-col gap-2">
                   <h2 id={`grupo-${i}`} className="scroll-mt-32 text-lg font-semibold [overflow-wrap:anywhere]">
                     {g.nome} <span className="text-base font-normal text-texto-suave">({inteiro(g.itens.length)})</span>
                   </h2>
-                  <GradeAnuncios medirEm="loja" className={grade} anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} acao={acao} />
+                  <GradeAnuncios mostrarVendedor={false} medirEm="loja" className={grade} anuncios={g.itens.map((a) => paraCard(a, v))} prioridade={i === 0 && secoes.length === 0 && fixados.length === 0 ? 2 : 0} acao={acao} />
                 </section>
               ))}
               {(temMais || pagina > 1) && (
@@ -350,8 +294,17 @@ export default async function PaginaLoja({ params, searchParams }: Props) {
           )}
         </div>
 
-        <aside id="informacoes-loja" className="flex min-w-0 scroll-mt-32 flex-col gap-4">
-          <InformacoesLoja v={informacoes} agora={agora} mapa={nova} />
+        <aside className="min-w-0">
+          <StoreDetails>
+            <div className="flex min-w-0 flex-col gap-3">
+              <h2 className="text-lg font-semibold [overflow-wrap:anywhere]">{formatarNome(v.nome)}</h2>
+              <p className="text-sm text-texto-suave [overflow-wrap:anywhere]">{[v.categoria_loja, v.bairro, desdeTexto].filter(Boolean).join(" · ")}</p>
+              {!whatsapp && <p className="text-sm text-texto-suave">Contato por WhatsApp indisponível nesta vitrine.</p>}
+              {v.status === "ativa" && <CopiarLinkLoja url={urlAbsoluta(linkLoja(v.slug))} tamanho="toque" />}
+              {v.e_dono && <Botao href={LINK_MINHA_LOJA} variante="secundario" tamanho="toque" icone={<Pencil />}>Editar minha vitrine</Botao>}
+              <InformacoesLoja v={informacoes} agora={agora} mapa={nova} />
+            </div>
+          </StoreDetails>
         </aside>
       </div>
       {temBarra && <BarraLoja whatsappHref={whatsapp} mapaHref={mapaHref} />}

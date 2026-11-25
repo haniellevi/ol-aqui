@@ -97,3 +97,21 @@ test('loja nova: prévia só para o dono com ?nova=1, preservada nos links; inat
  const dono=await html({sp:{nova:'1',ordem:'menor_preco'},v:{e_dono:true}});assert.match(dono,/Categorias desta loja/);assert.match(dono,/nova=1&amp;ordem=menor_preco/);
  const inativa=await html({sp:{nova:'1'},v:{e_dono:true,status:'suspensa'}});assert.doesNotMatch(inativa,/favoritos|wa.me|openstreetmap/);
 });
+
+test('vitrine comercial: detalhes progressivos, descoberta e isolamento condicional da barra',async()=>{
+ const h=await html({nova:true});
+ assert.match(h,/data-vitrine-loja/);
+ assert.match(h,/href="\/busca"[^>]*><span[^>]*>Ver região/);
+ assert.match(h,/<details[^>]*id="informacoes-loja"/);
+ assert.match(h,/<summary[^>]*>Informações da loja/);
+ const semContato=await html({nova:true,v:{whatsapp:null,endereco:null,lat:null,lng:null}});
+ assert.doesNotMatch(semContato,/data-barra-loja/);
+ assert.match(semContato,/Contato por WhatsApp indisponível/);
+});
+
+test('vitrine: vendedor já identificado no topo não se repete nos cards',async()=>{
+ const h=await html({nova:true});
+ const artigos=h.match(/<article[\s\S]*?<\/article>/g)??[];
+ assert.ok(artigos.length>0);
+ for(const a of artigos) assert.ok(!a.includes(loja.nome));
+});

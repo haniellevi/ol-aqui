@@ -425,3 +425,9 @@ Cada onda é uma tarefa própria, pequena e testável. Nunca "refazer o site int
 - Não há pesquisa com usuários reais nem números de uso. As decisões vêm de fontes públicas e da comparação com OLX e Mercado Livre (o Facebook Marketplace exige login e não foi medido).
 - O tamanho de 14 px foi escolha do Raniel entre três opções; a pesquisa de público recomendava 16 px. **Validar com as cinco pessoas do teste de corredor** (docs/USABILIDADE.md), em especial as de mais de 50 anos. Se travarem na leitura, subir a régua um degrau.
 - Custo medido da letra maior num celular de 360 px: 3,6 anúncios visíveis sem rolar (eram 3,9 no compacto; seriam 3,3 com 16 px).
+
+### Vitrine comercial pública (Item 32)
+
+A vitrine usa faixa de identidade de 64 px, nome completo, cidade, selo e situação atual. Uma faixa horizontal mantém retorno, descoberta, informações, ordem e seções, com itens sem encolhimento. Dados secundários e compartilhamento ficam em detalhes expansíveis; no desktop, os detalhes abrem ao lado da grade. Só quando houver barra comercial, a navegação inferior global e sua reserva somem no mobile. A barra comercial ocupa o fundo com área segura e a página reserva seu espaço. BannerLoja recebe modo compacto optativo, sem mudar as prévias da conta. Cards oficiais permanecem 4:3, duas colunas no mobile.
+
+Na vitrine, CardAnuncio/GradeAnuncios aceitam `mostrarVendedor={false}` (padrão `true` em qualquer outra tela), pois a loja já está identificada no topo. O título do topo ocupa até duas linhas e o nome completo também está nos detalhes.

@@ -2,7 +2,7 @@ import { MapPin, MessageCircle } from "lucide-react";
 import { classesBotao } from "@/components/ui/botao";
 
 // Barra fixa embaixo da vitrine no celular (vitrine com IA, etapa 2): WhatsApp + Mapa.
-// Fica acima da barra de navegação, no mesmo lugar da barra do anúncio. No computador some:
+// Substitui a navegação global apenas nesta vitrine mobile. No computador some:
 // o topo da loja já tem o WhatsApp e o mapa fica ao lado dos produtos.
 // Links comuns: funcionam sem JavaScript.
 
@@ -10,7 +10,7 @@ export function BarraLoja({ whatsappHref, mapaHref }: { whatsappHref: string | n
   if (!whatsappHref && !mapaHref) return null;
   const externo = mapaHref?.startsWith("http");
   return (
-    <div data-barra-loja className="olaki-material fixed inset-x-0 bottom-[calc(var(--spacing-barra-nav)+env(safe-area-inset-bottom))] z-20 px-4 py-2 md:hidden">
+    <div data-barra-loja className="olaki-material fixed inset-x-0 bottom-0 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-20 px-4 py-2 md:hidden">
       <div className="mx-auto flex max-w-6xl items-center gap-2">
         {whatsappHref && (
           <a

@@ -22,12 +22,14 @@ export type CardAnuncioProps = {
   voltarHref?: string;
   /** Prévia de revisão: o anúncio ainda pode não ter uma página pública. */
   semLink?: boolean;
+  /** A vitrine já identifica a loja acima da grade. Demais usos preservam o vendedor. */
+  mostrarVendedor?: boolean;
 };
 
 // Card do anúncio (modelo pedido em 12/11/2026, no jeito da OLX): foto 4:3 com "Patrocinado" num canto
 // e o coração no outro; preço em primeiro plano, título em até 2 linhas e cidade legível;
 // "Hoje, 18:58 · Corrente - PI"; e, bem leve, a loja ou o vendedor verificado. O card inteiro é tocável.
-export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = false, horizontal = false, voltarHref, semLink = false }: CardAnuncioProps) {
+export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = false, horizontal = false, voltarHref, semLink = false, mostrarVendedor = true }: CardAnuncioProps) {
   const caminho = linkAnuncio(a.id, a.titulo, a.slug);
   const href = voltarHref ? `${caminho}?${new URLSearchParams({ voltar: voltarHref })}` : caminho;
   const quando = quandoCard(a.criado_em);
@@ -86,7 +88,7 @@ export function CardAnuncio({ anuncio: a, prioridade = false, acao, compacto = f
           {compacto && a.destaque && <span className="ml-1.5 font-semibold text-beringela md:hidden">Patrocinado</span>}
           {compacto && (pfVerificado || a.vitrine_selo) && <ShieldCheck className="ml-1 inline size-3.5 text-verde-escuro md:hidden" aria-label={a.vitrine_selo ? "Loja verificada" : "Vendedor verificado"} role="img" />}
         </span>
-        {pfVerificado ? (
+        {!mostrarVendedor ? null : pfVerificado ? (
           <span className={`flex items-start gap-1 text-legenda leading-4 text-texto-suave ${compacto ? "max-md:hidden" : ""}`}>
             <ShieldCheck className="size-4 shrink-0 text-verde-escuro" aria-hidden />
             <span>Vendedor individual verificado</span>
