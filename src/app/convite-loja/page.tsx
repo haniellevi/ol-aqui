@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 export default async function ConviteLoja({ searchParams }: { searchParams: Promise<{ codigo?: string | string[] }> }) {
   const { codigo } = await searchParams;
   if (typeof codigo !== "string" || !ehUuid(codigo)) {
-    return <PaginaConta><TopoConta titulo="Convite inválido" voltar={null} texto="Peça um novo link ao dono da loja." /></PaginaConta>;
+    return <PaginaConta><TopoConta titulo="Convite inválido" voltar="/" textoVoltar="Voltar ao início" texto="Peça um novo link ao dono da loja." /><Botao href="/ajuda" variante="texto">Preciso de ajuda com o convite</Botao></PaginaConta>;
   }
 
   const destino = `/convite-loja?codigo=${codigo}`;
@@ -32,9 +32,11 @@ export default async function ConviteLoja({ searchParams }: { searchParams: Prom
   if (!userId) {
     return (
       <PaginaConta>
-        <TopoConta titulo="Convite para gerenciar uma loja" voltar={null}
+        <TopoConta titulo="Convite para gerenciar uma loja" voltar="/" textoVoltar="Voltar ao início"
           texto="Entre ou crie sua conta no Mercado da Região. Confirme o mesmo WhatsApp informado por quem enviou o convite." />
-        <Botao href={`/entrar${retorno}`} larguraTotal>Entrar ou criar conta</Botao>
+        <p className="text-base text-texto-suave">Depois de entrar, confirme seu WhatsApp e confira a loja antes de aceitar. Os dados do convite aparecem apenas para a conta autorizada.</p>
+        <Botao href={`/entrar${retorno}`} tamanho="acao" larguraTotal>Entrar ou criar conta</Botao>
+        <Botao href="/ajuda" variante="texto">Preciso de ajuda com o convite</Botao>
       </PaginaConta>
     );
   }
@@ -47,7 +49,7 @@ export default async function ConviteLoja({ searchParams }: { searchParams: Prom
 
   return (
     <PaginaConta>
-      <TopoConta titulo={data ? `Gerenciar ${formatarNome(data.nome)}` : "Convite para gerenciar uma loja"} voltar={null} />
+      <TopoConta titulo={data ? `Gerenciar ${formatarNome(data.nome)}` : "Convite para gerenciar uma loja"} voltar="/" textoVoltar="Voltar ao início" />
       {error ? <Aviso tipo="erro">Não foi possível consultar o convite. Atualize a página para tentar novamente.</Aviso>
         : data ? (
           <>
@@ -62,6 +64,7 @@ export default async function ConviteLoja({ searchParams }: { searchParams: Prom
             </SignOutButton>
           </>
         )}
+      <Botao href="/ajuda" variante="texto">Preciso de ajuda com o convite</Botao>
     </PaginaConta>
   );
 }

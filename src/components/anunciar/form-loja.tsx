@@ -1,9 +1,9 @@
 "use client";
 
-import { linkAssistente } from "@/lib/assistente";
+import { LojaPronta } from "./loja-pronta";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { CheckCircle2, Loader2, MessageCircle, Plus, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { Botao } from "@/components/ui/botao";
 import { CadastroLojaAki } from "@/components/aki/cadastro-loja-aki";
 import { Campo } from "@/components/ui/campo";
@@ -34,7 +34,7 @@ function limparSlug(t: string): string {
     .slice(0, 60);
 }
 
-const dataCurta = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long" });
+
 
 export function FormLoja({
   cidades,
@@ -90,37 +90,7 @@ export function FormLoja({
   }, [slug]);
 
   const feito = estado?.feito;
-  if (feito) {
-    const url = urlAbsoluta(linkLoja(feito.slug));
-    const enderecoCurto = url.replace(/^https?:\/\//, "");
-    const compartilhar = `https://wa.me/?text=${encodeURIComponent(`Conheça minha loja no Mercado da Região: *${feito.nome}* ${url}`)}`;
-    return (
-      <section aria-labelledby="titulo-pronta" className="flex flex-col items-start gap-3 rounded-card border border-borda bg-cartao p-4 sm:p-5" aria-live="polite">
-        <span className="grid size-10 place-items-center rounded-campo bg-sucesso-fundo text-verde-escuro" aria-hidden>
-          <CheckCircle2 className="size-5" />
-        </span>
-        <h1 id="titulo-pronta" className="text-titulo font-semibold text-beringela">
-          Sua loja foi criada
-        </h1>
-        <a href={linkLoja(feito.slug)} className="inline-flex min-h-toque items-center break-all text-sm font-semibold text-laranja-escuro underline underline-offset-4">{enderecoCurto}</a>
-        <p className="text-sm text-texto-suave">Acompanhe a conferência dos dados, links e contato em Minha loja.</p>
-        {feito.teste_expira_em && new Date(feito.teste_expira_em).getTime() > Date.now() && (
-          <p className="text-sm text-texto-suave">Teste grátis até {dataCurta.format(new Date(feito.teste_expira_em))}.</p>
-        )}
-        <div className="grid w-full gap-2 sm:grid-cols-2">
-          <Botao href={assistente ? linkAssistente("loja", assistente) : "/anunciar"} tamanho="toque" icone={<Plus />}>
-            Criar primeiro anúncio
-          </Botao>
-          <Botao href="/minha-conta/loja/banner" variante="secundario" tamanho="toque">
-            Criar banner com a Lia
-          </Botao>
-          <Botao href={compartilhar} variante="secundario" tamanho="toque" icone={<MessageCircle />} target="_blank" rel="noopener noreferrer">
-            Compartilhar no WhatsApp
-          </Botao>
-        </div>
-      </section>
-    );
-  }
+  if (feito) return <LojaPronta slug={feito.slug} assistente={assistente} testeAte={feito.teste_expira_em} />;
 
   const erroDe = (campo: string) => estado?.campos?.[campo];
   const sugestao = situacao === "ocupado" ? limparSlug(`${slug}-${slugDoTitulo(cidade)}`) : null;

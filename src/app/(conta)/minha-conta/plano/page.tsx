@@ -19,6 +19,7 @@ import { Aviso } from "@/components/conta/aviso";
 import { dataPorExtenso, diaMesCurto, resumoPlano } from "@/components/conta/resumo-plano";
 import { minhaCortesiaRadar } from "@/lib/dados/radar";
 import { EscolherPlano } from "@/components/cobranca/escolher-plano";
+import { cupomDoLink } from "@/lib/cupons";
 import { Voucher } from "./voucher";
 import { Badge, type TomSelo } from "@/components/ui/badge";
 
@@ -98,7 +99,7 @@ async function lerPagamentos(vitrineId: string, pagina: number): Promise<{ lista
   }
 }
 
-type Params = Promise<{ plano?: string | string[]; p?: string | string[]; pagina?: string | string[] }>;
+type Params = Promise<{ cupom?: string | string[]; plano?: string | string[]; p?: string | string[]; pagina?: string | string[] }>;
 
 export default async function PaginaMeuPlano({ searchParams }: { searchParams: Params }) {
   const busca = await searchParams;
@@ -128,10 +129,11 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
     return (
       <PaginaConta>
         <TopoConta titulo="Meu plano" />
+        {plano && <BeneficiosPromocionais plano={plano} />}
         {resumo && promocional && <PrazoPromocional acesso={promocional} titulo={`Plano ${resumo.nome}`} uso={resumo.uso} />}
-        <Voucher codigos={vouchers ?? []} />
-        <Vazio titulo="Você ainda não vende no Mercado da Região" texto={resumo ? "Escolha como quer vender para usar os recursos do seu plano." : "Escolha como quer vender e seu plano aparece aqui."}>
-          <Botao href="/quero-vender" tamanho="acao" larguraTotal>Quero vender</Botao>
+        <Voucher codigos={vouchers ?? []} codigoInicial={cupomDoLink(busca.cupom)} />
+        <Vazio titulo={resumo ? "Seu benefício já está ativo" : "Você ainda não vende no Mercado da Região"} texto={resumo ? "Crie sua vitrine para publicar produtos e compartilhar o link da sua loja." : "Escolha como quer vender e seu plano aparece aqui."}>
+          <Botao href={resumo ? "/quero-vender/loja" : "/quero-vender"} tamanho="acao" larguraTotal>{resumo ? "Criar minha vitrine" : "Quero vender"}</Botao>
         </Vazio>
       </PaginaConta>
     );
@@ -275,11 +277,14 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
         )}
       </section>
 
+      {planoPromocional && conta.plano && <BeneficiosPromocionais plano={conta.plano} />}
+      {planoPromocional && vitrine.tipo === "loja" && <Botao href="/minha-conta/loja" variante="secundario">Preparar minha vitrine</Botao>}
+      {planoPromocional && vitrine.tipo === "loja" && !vitrine.selo_loja_verificada && <Botao href="/minha-conta/loja/verificar" variante="texto">Conferir verificação da loja</Botao>}
       {!planoPromocional && promocional && <PrazoPromocional acesso={promocional} titulo="Cupom promocional" bloqueado={suspensa} pago={!suspensa && (conta.plano?.preco_centavos ?? 0) > 0} />}
-      <Voucher codigos={vouchers ?? []} />
+      <Voucher codigos={vouchers ?? []} codigoInicial={cupomDoLink(busca.cupom)} />
 
       {/* Planos à venda, com período e como o pagamento entra (antes de pagar) */}
-      {assinatura && !suspensa && (
+      {assinatura && !suspensa && (!planoPromocional || pagamentoPedido || planoPedido) && (
         <section aria-labelledby="planos" className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id="planos" tabIndex={-1} className="scroll-mt-24 text-lg font-semibold">
@@ -378,4 +383,16 @@ function PrazoPromocional({ acesso, titulo, uso, bloqueado, pago }: { acesso: Ac
       </CardContent>
     </Card>
   );
+}
+
+function BeneficiosPromocionais({ plano }: { plano: Plano }) {
+  return <section aria-label="Recursos do benefício" className="flex flex-col gap-2 text-base">
+    <h2 className="text-lg font-semibold">O que seu benefício libera</h2>
+    {plano.descricao && <p>{plano.descricao}</p>}
+    <ul className="list-disc pl-5">
+      <li>{plano.limite_anuncios === null ? "Anúncios sem limite de quantidade" : `Até ${plano.limite_anuncios} anúncios no ar`}</li>
+      {plano.acesso_radar && <li>Radar de Negócios, após a verificação e conforme as regras do plano.</li>}
+    </ul>
+    <p className="text-sm text-texto-suave">Confira a vigência abaixo. Ao terminar, valem os recursos do seu plano disponível na conta.</p>
+  </section>;
 }

@@ -6,7 +6,7 @@ import { Campo } from "@/components/ui/campo";
 import { Seletor } from "@/components/conta/seletor";
 import { Botao, classesBotao } from "@/components/ui/botao";
 import { AvisoErro } from "./aviso-erro";
-import { enviarFoto } from "@/lib/fotos";
+import { enviarFoto, reduzirFoto } from "@/lib/fotos";
 import { dadosLojaIa, type RespostaLojaIa } from "@/lib/loja-ia/tipos";
 
 export type EntradaColetaLojaIa = {
@@ -93,8 +93,12 @@ export function FormLojaIa({ andamento = "/quero-vender/loja/criar-com-ia", rasc
     setEnviandoImagem(tipo);
     setErro("");
     try {
-      const envio = dadosLojaIa(await prepararEnvio(rascunho.id, { nome: arquivo.name, tipo: arquivo.type, tamanho: arquivo.size }, tipo));
-      if (!await enviarFoto(arquivo, envio.urlEnvio)) throw new Error("Não foi possível enviar a imagem. Tente novamente.");
+      const reduzida = await reduzirFoto(arquivo, { qualidade: 0.9 });
+      // Uma imagem pequena já otimizada não precisa crescer nem perder qualidade.
+      const foto = reduzida.blob.size < arquivo.size ? reduzida.blob : arquivo;
+      const nome = foto === arquivo ? arquivo.name : `${tipo}.${reduzida.formato}`;
+      const envio = dadosLojaIa(await prepararEnvio(rascunho.id, { nome, tipo: foto.type, tamanho: foto.size }, tipo));
+      if (!await enviarFoto(foto, envio.urlEnvio)) throw new Error("Não foi possível enviar a imagem. Tente novamente.");
       const { id } = dadosLojaIa(await finalizarEnvio(rascunho.id, envio.id));
       const atualizada = { ...entrada, materiais: [...entrada.materiais, id] };
       setEntrada(atualizada);

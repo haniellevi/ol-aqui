@@ -1,6 +1,6 @@
 "use client";
 
-import { linkAssistente } from "@/lib/assistente";
+import { LojaPronta } from "./loja-pronta";
 import { useState } from "react";
 import type { EstadoLoja } from "@/app/(conta)/quero-vender/actions";
 import { dadosLojaIa, type CamposRascunho, type FonteLoja, type RascunhoLoja, type RespostaLojaIa } from "@/lib/loja-ia/tipos";
@@ -43,15 +43,7 @@ export function formularioRevisao(valores: Valores): FormData {
 }
 
 export function LojaIaConcluida({ slug, assistente }: { slug: string; assistente?: string }) {
-  return (
-    <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4 sm:p-5" aria-live="polite">
-      <h1 className="text-titulo font-semibold text-beringela">Sua loja foi criada</h1>
-      <div className="flex flex-wrap gap-2 [&>*]:grow">
-        <Botao href={assistente ? linkAssistente("loja", assistente) : "/anunciar"} tamanho="toque">Criar primeiro anúncio</Botao>
-        <Botao href={`/loja/${encodeURIComponent(slug)}`} variante="secundario" tamanho="toque">Ver minha loja</Botao>
-      </div>
-    </section>
-  );
+  return <LojaPronta slug={slug} assistente={assistente} />;
 }
 
 export function RevisaoLojaIa({ assistente, rascunho: inicial, cidades, whatsappInicial, avisoTeste, salvar, retentar, confirmar, imagens, linkMaps, gerarCapa, revogarWhatsapp }: Props) {

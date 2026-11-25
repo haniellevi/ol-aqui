@@ -89,15 +89,19 @@ test('botão abre o seletor e envio confirmado atualiza materiais e prévia', as
     },
   };
   const chamadas = [];
+  let uploadOk = true;
   const ok = dados => ({ ok: true, dados });
   const { FormLojaIa: Formulario } = carregar('src/components/anunciar/form-loja-ia.tsx', {
     react,
-    '@/lib/fotos': { enviarFoto: async () => { chamadas.push('upload'); return true; } },
+    '@/lib/fotos': {
+      reduzirFoto: async () => { chamadas.push('reduzir'); return { blob: { size: 40, type: 'image/webp' }, formato: 'webp' }; },
+      enviarFoto: async foto => { assert.equal(foto.size, 40); chamadas.push('upload'); return uploadOk; },
+    },
   });
   const p = {
     ...props,
     rascunho: { ...props.rascunho, entrada: { ...entrada, nome: 'Loja', cidade: 'Cidade', redesConcluidas: true } },
-    prepararEnvio: async (_id, arquivo, tipo) => { chamadas.push(tipo); return ok({ id: 'original', urlEnvio: '/envio', token: '' }); },
+    prepararEnvio: async (_id, arquivo, tipo) => { assert.deepEqual(arquivo, { nome: 'logo.webp', tipo: 'image/webp', tamanho: 40 }); chamadas.push(tipo); return ok({ id: 'original', urlEnvio: '/envio', token: '' }); },
     finalizarEnvio: async () => ok({ id: 'normalizada' }),
     salvar: async (_id, _revisao, dados) => { chamadas.push(dados.materiais); return ok({ revisao: 2 }); },
   };
@@ -117,8 +121,16 @@ test('botão abre o seletor e envio confirmado atualiza materiais e prévia', as
   achar(arvore, el => el.props?.onClick && React.Children.toArray(el.props.children).join('') === 'Enviar logo').props.onClick();
   seletor.props.onChange({ target: { files: [{ name: 'logo.png', type: 'image/png', size: 100 }], value: 'logo.png' } });
   await new Promise(resolve => setImmediate(resolve));
-  assert.deepEqual(chamadas, ['seletor', 'logo', 'upload', ['normalizada']]);
+  assert.deepEqual(chamadas, ['seletor', 'reduzir', 'logo', 'upload', ['normalizada']]);
   assert.match(renderToStaticMarkup(render()), /src="\/api\/loja\/imagem\/normalizada\/revisao\?rascunho=rascunho"/);
+  chamadas.length = 0;
+  arvore = render();
+  uploadOk = false;
+  achar(arvore, el => el.props?.['aria-label'] === 'Selecionar logo').props.onChange({ target: { files: [{ name: 'logo.png', type: 'image/png', size: 100 }], value: 'logo.png' } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(chamadas, ['reduzir', 'logo', 'upload']);
+  assert.match(renderToStaticMarkup(render()), /Não foi possível enviar a imagem/);
+  assert.match(renderToStaticMarkup(render()), /normalizada/);
   chamadas.length = 0;
   arvore = render();
   achar(arvore, el => el.props?.['aria-label'] === 'Selecionar foto').props.onChange({ target: { files: [{ name: 'foto.gif', type: 'image/gif', size: 100 }], value: 'foto.gif' } });

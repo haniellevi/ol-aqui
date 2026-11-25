@@ -334,7 +334,7 @@ export function EnvioFotos({
             const nome = `Foto ${i + 1}${i === 0 ? " (capa)" : ""}`;
             return (
               <li key={item.chave} className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-2">
-                <div className="relative aspect-square overflow-hidden rounded-campo bg-borda">
+                <div className="relative aspect-4/3 overflow-hidden rounded-campo bg-borda">
                   {src && (
                     // eslint-disable-next-line @next/next/no-img-element -- prévia local (blob:) ou foto do Storage
                     <img src={src} alt={nome} className="absolute inset-0 size-full object-cover" />

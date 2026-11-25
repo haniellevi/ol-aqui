@@ -10,3 +10,8 @@ export const diaDoCupom = new Intl.DateTimeFormat("en-CA", {
 export function diaLimiteCupom(validoAte: string | null): string {
   return validoAte ? diaDoCupom.format(new Date(Date.parse(validoAte) - 1)) : "";
 }
+
+/** Apenas sugere o código. O resgate continua exigindo envio explícito. */
+export function cupomDoLink(entrada: string | string[] | undefined): string | null {
+  return typeof entrada === "string" ? normalizarCodigoCupom(entrada) : null;
+}

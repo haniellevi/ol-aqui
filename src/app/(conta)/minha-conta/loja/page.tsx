@@ -10,6 +10,8 @@ import { fraseHistorico } from "@/lib/historico";
 import { linkLoja, preco } from "@/lib/formato";
 import { formatarNome } from "@/lib/formatar-nome";
 import { LINK_DESTACAR_LOJA, LINK_LOJA_BANNER, LINK_LOJA_CATEGORIAS, LINK_LOJA_DESEMPENHO, LINK_LOJA_FIXADOS, LINK_LOJA_HISTORICO, LINK_LOJA_INFORMACOES, LINK_LOJA_SECOES, LINK_LOJA_VERIFICAR, linkDestacarLoja } from "@/lib/rotas";
+import { LojaPronta } from "@/components/anunciar/loja-pronta";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
@@ -129,6 +131,18 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
         <Botao href="#dados-da-loja" variante="texto" tamanho="toque">Editar dados</Botao>
       </div>
 
+      {v.status === "ativa" && <Card>
+        <CardHeader><h2 className="text-lg font-semibold">Prepare sua loja para divulgar</h2></CardHeader>
+        <CardContent>
+          <ol className="flex list-decimal flex-col gap-2 pl-5 text-base">
+            <li><Link href="#dados-da-loja" className="inline-flex min-h-toque items-center text-laranja-escuro underline">Confira nome, foto e contato</Link></li>
+            <li><Link href={LINK_LOJA_INFORMACOES} className="inline-flex min-h-toque items-center text-laranja-escuro underline">{v.endereco ? "Confira endereço e horários" : "Adicione endereço e horários"}</Link></li>
+            <li><Link href="/minha-conta/anuncios" className="inline-flex min-h-toque items-center text-laranja-escuro underline">Confira seus anúncios e publique o primeiro</Link></li>
+            <li><Link href={linkLoja(v.slug)} className="inline-flex min-h-toque items-center text-laranja-escuro underline">Abra a vitrine e compartilhe o link</Link></li>
+          </ol>
+        </CardContent>
+      </Card>}
+
       {/* P5c: loja montada pela equipe (só ela vê) e loja recém-recebida pelo dono. */}
       {v.status === "montagem" ? (
         <Aviso tipo="info">Loja em montagem: só a equipe vê. Ela vai ao ar quando o dono aceitar o convite. Nome e endereço mudam no painel.</Aviso>
@@ -149,7 +163,10 @@ export default async function PaginaMinhaLoja({ searchParams }: { searchParams: 
           <FormTerminarRecebimento loja={v.id} />
         </>
       ) : !ajudante && typeof recebida === "string" && fraseRecebida(recebida) && (
-        <Aviso tipo="ok">{fraseRecebida(recebida)}</Aviso>
+        <>
+          <Aviso tipo="ok">{fraseRecebida(recebida)}</Aviso>
+          <LojaPronta slug={v.slug} recebida />
+        </>
       )}
       {v.status === "montagem" ? null : ajudante ? (
         <Aviso tipo="info">Você ajuda nesta loja. Nome, WhatsApp, plano, Destacar e excluir a loja ficam com o dono.</Aviso>
