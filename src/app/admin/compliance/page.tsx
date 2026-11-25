@@ -13,6 +13,7 @@ import { Botao } from "@/components/ui/botao";
 import { Vazio } from "@/components/ui/vazio";
 import { DadosConta } from "./dados-conta";
 import { FormAbrirConsulta, FormBusca, FormRelatorio } from "./formularios";
+import { RevisaoRetencao, type Retencao } from "./retencoes";
 
 export const metadata = { title: "Compliance jurídico" };
 export const dynamic = "force-dynamic";
@@ -79,6 +80,9 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
   ]);
   // e-mail do login (fica no Clerk): só depois que o banco gravou que a conta foi aberta
   const emails = conta && dados?.ok ? await emailsDaConta(conta) : undefined;
+  const paginaRetencoes = Math.min(100000, Math.max(0, Number.parseInt(um(sp.retencoes), 10) || 0));
+  const fila = await supabase.rpc("compliance_fila_retencoes", { p_consulta: consulta.id, p_pagina: paginaRetencoes });
+  const retencoes = (Array.isArray(fila.data) ? fila.data : []) as Retencao[];
   const linkConta = (usuario: string) =>
     `${LINK_ADMIN_COMPLIANCE}?c=${consulta.id}${termo ? `&q=${encodeURIComponent(termo)}` : ""}&conta=${encodeURIComponent(usuario)}`;
 
@@ -89,10 +93,22 @@ export default async function CompliancePage({ searchParams }: { searchParams: P
       <Cartao className="mb-6">
         <p className="text-sm text-texto-suave">Consulta aberta · vale até {quando(consulta.vence_em)}</p>
         <p className="mt-1 break-words text-base font-semibold text-beringela">Motivo: {consulta.motivo}</p>
-        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="mt-2 inline-flex min-h-10 items-center font-semibold text-laranja-escuro underline underline-offset-4">
+        <Link href={LINK_ADMIN_COMPLIANCE} prefetch={false} className="mt-2 inline-flex min-h-toque items-center font-semibold text-laranja-escuro underline underline-offset-4">
           Começar outra consulta (outro motivo)
         </Link>
       </Cartao>
+
+      <section aria-labelledby="retencoes-titulo" className="mb-6 space-y-4">
+        <h2 id="retencoes-titulo" className="text-lg font-semibold">Retenções e revisão manual</h2>
+        <p className="text-base">Liberar registra o fim da retenção jurídica. A preservação continua até uma decisão manual sobre o destino, sem usar o prazo antigo da lixeira.</p>
+        {fila.error ? <Aviso tipo="erro">Não deu para consultar as retenções. Atualize a página para tentar novamente.</Aviso>
+          : retencoes.length ? retencoes.slice(0, 50).map(item => <RevisaoRetencao key={`${item.tipo}-${item.id}`} item={item} consulta={consulta.id} />)
+          : <Vazio titulo="Nenhuma retenção nesta página" texto="Você pode continuar a consulta abaixo." />}
+        <nav aria-label="Páginas de retenções" className="flex flex-wrap gap-3">
+          {paginaRetencoes > 0 && <Botao href={`${LINK_ADMIN_COMPLIANCE}?c=${consulta.id}&retencoes=${paginaRetencoes - 1}`} variante="secundario">Página anterior</Botao>}
+          {retencoes.length > 50 && <Botao href={`${LINK_ADMIN_COMPLIANCE}?c=${consulta.id}&retencoes=${paginaRetencoes + 1}`} variante="secundario">Próxima página</Botao>}
+        </nav>
+      </section>
 
       <Cartao className="mb-6">
         <FormBusca consulta={consulta.id} termo={termo} />

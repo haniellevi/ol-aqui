@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from radar_piloto_concorrencia import verificar_radar_piloto
 from item22_retirada_concorrencia import verificar_retirada_concorrente
 from autosservico_concorrencia import verificar_autosservico
+from item26_compliance_concorrencia import verificar_compliance_concorrente
 root = Path(__file__).resolve().parents[2]
 container = 'olaki-test-' + uuid.uuid4().hex[:10]
 def run(*args, **kwargs):
@@ -27,6 +28,8 @@ try:
     init = (root/'supabase/testes/00_simula_supabase.sql').read_text()
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
+        if p.name == '20261203034000_compliance_revisao_manual.sql':
+            checked(sql((root/'supabase/testes/902_compliance_preflight.sql').read_text()))
         if p.name == '20261203031000_autosservico_vitrines.sql':
             checked(sql((root/'supabase/testes/901_autosservico_recuperacao.sql').read_text()))
         if p.name == '20261202120000_voucher_lancamento.sql':
@@ -102,6 +105,12 @@ try:
     print("PASS: retirada de proposta Item 22", flush=True)
     verificar_retirada_concorrente(container, sql, checked, (root/"supabase/testes/899_item22_retirar_proposta.sql").read_text())
     print("PASS: escolha e retirada serializadas nas duas ordens", flush=True)
+    checked(sql((root/"supabase/testes/902_compliance_revisao_manual.sql").read_text()))
+    print("PASS: revisão manual Compliance Item 26", flush=True)
+    if '--item26' in sys.argv:
+        verificar_compliance_concorrente(container, sql, checked, (root/"supabase/testes/902_compliance_revisao_manual.sql").read_text())
+        print("PASS: liberação/limpeza concorrentes, retry e rollback Item 26", flush=True)
+        raise SystemExit(0)
     if '--item22' in sys.argv:
         raise SystemExit(0)
     radar_fechado = (root/'supabase/testes/899_radar_piloto_fechado.sql').read_text()
@@ -587,6 +596,9 @@ try:
     evolution = run('node', 'supabase/testes/radar_evolution_local.cjs', container, cwd=root)
     checked(evolution)
     print(evolution.stdout, end='', flush=True)
+
+    verificar_compliance_concorrente(container, sql, checked, (root/"supabase/testes/902_compliance_revisao_manual.sql").read_text())
+    print("PASS: liberação/limpeza concorrentes, retry e rollback Item 26", flush=True)
 
 finally:
     run('docker','stop',container)

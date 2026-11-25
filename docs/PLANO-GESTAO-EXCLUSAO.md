@@ -140,6 +140,16 @@ Decidido com o Raniel em 10/11/2026. Base para os próximos PRs (um por etapa).
 
 ## Riscos
 
+### Item 26: liberação jurídica e revisão operacional (decisão e825)
+
+"Manter sob revisão manual": o administrador já autorizado a consultar Compliance pode registrar a liberação jurídica, com motivo obrigatório, dentro de uma consulta válida. O evento `admin_gestao_eventos.acao=compliance_liberar_retencao` contém `detalhes.estado=revisao_manual_pendente`, tipo e UUID do item, estado comercial original e consulta; motivo, autor e instante ficam nas colunas auditáveis existentes. Retry devolve o mesmo evento, sem sobrescrever o motivo original. Observações posteriores usam `compliance_revisar_retencao` e referenciam o evento original.
+
+Os marcadores legados (`congelado`, `congelado_motivo`, `status_antes_exclusao`) continuam como **trava técnica da preservação operacional**, mesmo após registrar a liberação jurídica. Isso mantém as rotas antigas de limpeza, exclusão de conta, purga de loja, retirada de referência e verificação de mídia compartilhada protegidas. O estado jurídico é lido pela trilha de liberação, não pela ausência desses marcadores. Nenhum prazo é renovado ou inventado. Anúncio excluído continua excluído; pedido congelado/arquivado continua indisponível publicamente; anúncio ativo mantém seu estado comercial e política anterior. Liberação de anúncio não libera a retenção própria de pedido relacionado, nem libera proposta escolhida.
+
+A fila da consulta Compliance mostra o estado, motivo, autor, instante e última revisão, com ação para registrar liberação ou revisar. A revisão permite acrescentar motivo e observações, permanecendo explicitamente pendente. Itens excluídos/congelados em revisão não podem ter status, evidência ou mídia alterados pelas ações antigas de restauração/moderação.
+
+**Decisão posterior necessária:** definir uma operação manual de conclusão com destino explícito, incluindo elegibilidade da restauração para pausado e tratamento de pedidos Radar, referências compartilhadas e outras retenções. A restauração atual não possui essa confirmação de conclusão; por isso não encerra esta revisão. Não há nesta entrega conclusão, descarte automático ou atalho para purga. Reverter o frontend preserva migração, eventos e travas; não apagar eventos nem remover marcadores como rollback.
+
 - **Produção:** as migrations mexem em dados reais. Cada etapa precisa de backup e teste antes de aplicar.
 - **Clerk:** adiar o `deleteUser` muda o webhook atual. O retry do webhook ainda não foi ensaiado de verdade (`preparacao-piloto/privacidade.md`).
 - **Prazo de 5 anos do financeiro:** confirmar com o contador.
