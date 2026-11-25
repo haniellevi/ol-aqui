@@ -1,3 +1,4 @@
+import { PropostasRetiraveisLoja } from "@/components/radar/propostas-retiraveis-loja";
 import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -37,6 +38,7 @@ export default async function GerenciarLoja({ params }: { params: Promise<{ id: 
         <TopoConta titulo={formatarNome(loja.nome)} texto="Edite endereço, horários, descrição e entrega da vitrine." voltar={voltar} textoVoltar="Minhas lojas" />
         <FormInformacoes dados={{ ...dados, instagram: null, formas_pagamento: [] }}
           formasDoPainel={[]} salvarComoGerente={salvarVitrineGerenciada.bind(null, id)} />
+        <PropostasRetiraveisLoja loja={id} />
       </PaginaConta>
     );
   }
@@ -48,6 +50,7 @@ export default async function GerenciarLoja({ params }: { params: Promise<{ id: 
       <TopoConta titulo={`Equipe de ${formatarNome(loja.nome)}`} voltar={voltar} textoVoltar="Minhas lojas"
         texto="Gerentes cuidam dos anúncios da loja (criar, editar, publicar, pausar e lixeira) e da Minha loja: capa, logo, cidade, endereço, horários, seções, produtos no topo e desempenho. Nome e WhatsApp da loja, acessos, plano, cobrança, Destacar, excluir a loja e o que usa IA ficam com o dono." />
       <FormConvidarGerente loja={id} />
+      <PropostasRetiraveisLoja loja={id} />
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Gerentes e convites</h2>
         {erroEquipe ? <Aviso tipo="erro">Não foi possível carregar a equipe.</Aviso> : convites.length ? (

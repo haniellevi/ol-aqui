@@ -14,6 +14,7 @@ const exigeLogin = createRouteMatcher([
   "/quero-vender(.*)",
   "/minha-conta(.*)",
   "/destacar(.*)",
+  "/conversas(.*)",
 ]);
 const pedidoAberto = createRouteMatcher(["/radar/pedir"]);
 

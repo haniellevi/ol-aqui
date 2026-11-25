@@ -89,7 +89,7 @@ export function ListaMinhasPropostas({ propostas }: { propostas: MinhaPropostaRa
         <li key={p.id}>
           <Link href={linkPedidoRadarLoja(p.pedido_id)} className={CARTAO}>
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              {p.status === "oculta" ? (
+              {p.status === "retirada" ? <Badge variant="secondary">Proposta retirada</Badge> : p.status === "oculta" ? (
                 <Badge variant="destructive" className="whitespace-normal">
                   <ShieldAlert aria-hidden />
                   Tirada pela equipe{p.moderado_motivo ? `: ${p.moderado_motivo}` : ""}

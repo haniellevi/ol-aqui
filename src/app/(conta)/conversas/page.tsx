@@ -1,5 +1,6 @@
+import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { MessageSquare } from "lucide-react";
 import { Vazio } from "@/components/ui/vazio";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
@@ -10,6 +11,8 @@ export const metadata: Metadata = { title: "Conversas" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaConversas() {
+  const { userId } = await auth();
+  if (!userId) redirect("/entrar?redirect_url=/conversas");
   if (!(await conversasLigadas())) notFound();
   const conversas = await minhasConversas();
   const novas = conversas.filter((c) => c.nao_lidas > 0).length;

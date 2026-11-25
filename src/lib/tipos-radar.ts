@@ -114,7 +114,7 @@ export type PropostaRecebida = {
   anuncio_preco_centavos: number | null;
   anuncio_capa: string | null;
   escolhida: boolean;
-  status: "ativa" | "oculta";
+  status: "ativa" | "oculta" | "retirada";
   criado_em: string;
   atualizado_em: string;
 };
@@ -132,7 +132,7 @@ export type MinhaPropostaRadar = {
   mensagem: string | null;
   foto_url: string | null;
   anuncio_id: string | null;
-  status: "ativa" | "oculta";
+  status: "ativa" | "oculta" | "retirada";
   moderado_motivo: string | null;
   escolhida: boolean;
   criado_em: string;
@@ -149,7 +149,7 @@ export type MinhaPropostaNoPedido = {
   mensagem: string | null;
   foto_url: string | null;
   anuncio_id: string | null;
-  status: "ativa" | "oculta";
+  status: "ativa" | "oculta" | "retirada";
   moderado_motivo: string | null;
   escolhida: boolean;
 };

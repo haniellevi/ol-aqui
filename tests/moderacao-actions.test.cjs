@@ -87,6 +87,21 @@ test('Decisão recusada pelo banco não é apresentada como sucesso', async () =
   assert.equal(calls.length, 1);
 });
 
+test('Banner: falha do banco volta com aviso amigável e nunca usa Storage', async () => {
+  const { actions, form } = contexto({ erro: { code: '23514', message: 'Esta foto não está mais disponível.' } });
+  await assert.rejects(actions.tirarFotoBanner(form), /\/admin\/moderacao\?falha=Esta foto não está mais disponível/);
+});
+
+test('Banner: ID inválido não chama RPC e autorização vem antes da entrada', async () => {
+  const { actions, form, calls } = contexto();
+  form.set('id', 'invalido');
+  await assert.rejects(actions.tirarFotoBanner(form), /Loja não encontrada/);
+  assert.deepEqual(calls, []);
+  const negado = contexto({ autorizado: false });
+  await assert.rejects(negado.actions.tirarFotoBanner(negado.form), /Sem permissão/);
+  assert.deepEqual(negado.calls, []);
+});
+
 test('Botão envia a ação vinculada e bloqueia todas as decisões enquanto salva', () => {
   const action = async () => {};
   const outra = async () => {};

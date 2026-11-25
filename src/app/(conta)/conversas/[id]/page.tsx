@@ -1,5 +1,6 @@
+import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { PaginaConta, TopoConta } from "@/components/conta/topo-conta";
 import { JanelaConfirmar } from "@/components/ui/confirmar";
@@ -24,6 +25,8 @@ function linkWhatsappCliente(numero: string | null, nome: string): string | null
 
 export default async function PaginaConversa({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const { userId } = await auth();
+  if (!userId) redirect(`/entrar?redirect_url=${encodeURIComponent(`/conversas/${id}`)}`);
   if (!(await conversasLigadas())) notFound();
   const [d, mensagens] = await Promise.all([detalheConversa(id), mensagensDaConversa(id)]);
   if (!d) notFound();

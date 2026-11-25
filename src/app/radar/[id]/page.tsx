@@ -1,3 +1,5 @@
+import { RetirarProposta } from "@/components/radar/retirar-proposta";
+import { JanelaConfirmar } from "@/components/ui/confirmar";
 // /radar/[id]: o pedido visto por quem vende, com a folha "Propor".
 // Quem decide se pode propor é o banco (propor_radar); aqui só escolhemos o que mostrar.
 import { formatarNome } from "@/lib/formatar-nome";
@@ -140,7 +142,7 @@ export default async function PedidoLojaPage({
       <FolhaPropor
         pedidoId={pedido.id}
         modoPrazo={modoPrazo}
-        podeEditar={aberto && minha?.status !== "oculta" && !minha?.escolhida}
+        podeEditar={aberto && (!minha || minha.status === "ativa") && !minha?.escolhida}
         podeChamar={aberto && !modoPrazo && minha?.status === "ativa"}
         abrirLogo={propor === "1" && aberto}
         anuncios={anuncios}
@@ -203,7 +205,8 @@ export default async function PedidoLojaPage({
       {minha && (
         <section className="flex flex-col gap-2 rounded-card border border-borda bg-cartao p-3 sm:p-4">
           <h2 className="text-2xl font-semibold text-beringela">Sua proposta</h2>
-          {minha.status === "oculta" ? (
+          {aceitaIndicacao && minha.status === "ativa" && !minha.escolhida && <><JanelaConfirmar /><RetirarProposta id={minha.id} /></>}
+          {minha.status === "retirada" ? <p className="text-lg text-texto-suave">Proposta retirada. O histórico foi preservado.</p> : minha.status === "oculta" ? (
             <p className="inline-flex items-start gap-2 text-lg font-semibold text-perigo">
               <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
               Tirada pela equipe{minha.moderado_motivo ? `: ${minha.moderado_motivo}` : ""}

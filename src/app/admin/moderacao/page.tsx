@@ -86,7 +86,7 @@ export default async function ModeracaoPage({
       )}
 
       {erroFila && <Aviso tipo="erro">Não foi possível carregar toda a fila. <a href="/admin/moderacao" className={estiloBotaoSec}>Tentar de novo</a></Aviso>}
-      {vazio && <Vazio titulo="Nada esperando revisão" texto="Tudo em dia. Você pode conferir os anúncios publicados."><Link href={LINK_ADMIN_ANUNCIOS} className={estiloBotaoSec}>Ver anúncios</Link></Vazio>}
+      {vazio && <Vazio titulo="Nada esperando revisão" texto="Tudo em dia. Confira a fila novamente mais tarde.">{papel === "administrador" ? <Link href={LINK_ADMIN_ANUNCIOS} className={estiloBotaoSec}>Ver anúncios</Link> : <Link href="/admin/moderacao" className={estiloBotaoSec}>Atualizar fila</Link>}</Vazio>}
 
       {anuncios.length > 0 && <h2 className="mb-3 text-sm font-semibold text-texto-suave">Anúncios em análise</h2>}
       <div className="space-y-4">

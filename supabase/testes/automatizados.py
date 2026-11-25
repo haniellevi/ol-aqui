@@ -2,9 +2,10 @@
 """Banco sem portas, volume persistente ou acesso à rede. Nunca usa credenciais externas."""
 from pathlib import Path
 import re
-import subprocess, time, uuid
+import subprocess, time, uuid, sys
 from concurrent.futures import ThreadPoolExecutor
 from radar_piloto_concorrencia import verificar_radar_piloto
+from item22_retirada_concorrencia import verificar_retirada_concorrente
 root = Path(__file__).resolve().parents[2]
 container = 'olaki-test-' + uuid.uuid4().hex[:10]
 def run(*args, **kwargs):
@@ -78,6 +79,12 @@ try:
     checked(sql((root/'supabase/testes/895_cupons_promocionais.sql').read_text()))
     checked(sql((root/'supabase/testes/890_voucher_lancamento.sql').read_text()))
 
+    checked(sql((root/"supabase/testes/899_item22_retirar_proposta.sql").read_text()))
+    print("PASS: retirada de proposta Item 22", flush=True)
+    verificar_retirada_concorrente(container, sql, checked, (root/"supabase/testes/899_item22_retirar_proposta.sql").read_text())
+    print("PASS: escolha e retirada serializadas nas duas ordens", flush=True)
+    if '--item22' in sys.argv:
+        raise SystemExit(0)
     radar_fechado = (root/'supabase/testes/899_radar_piloto_fechado.sql').read_text()
     checked(sql(radar_fechado))
     checked(sql((root/"supabase/testes/899_radar_revisao.sql").read_text()))

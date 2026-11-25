@@ -76,8 +76,9 @@ export async function tirarFotoBanner(form: FormData): Promise<void> {
   const { supabase } = await exigirTela("moderacao");
   const id = String(form.get("id") ?? "");
   const motivo = String(form.get("motivo") ?? "").trim().slice(0, 300);
+  if (!ehUuid(id)) voltar("Loja não encontrada.");
   const { data, error } = await supabase.rpc("moderar_banner_vitrine", { p_vitrine: id, p_motivo: motivo || null });
-  if (error) throw new Error(error.message);
+  if (error) voltar(traduzirErro(error).mensagem);
   const caminho = caminhoNoBucket(typeof data === "string" ? data : null);
   if (caminho) {
     try {

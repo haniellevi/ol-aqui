@@ -193,6 +193,24 @@ function atualizarPedido(pedidoId: string) {
   revalidatePath("/radar");
 }
 
+/** Retira a oferta sem apagar o histórico compartilhado nem devolver a cota usada. */
+export async function retirarProposta(propostaId: string): Promise<RespostaSimples> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, erro: SEM_LOGIN };
+  if (!ehUuid(propostaId)) return { ok: false, erro: "Proposta não encontrada." };
+  try {
+    const db = await createClient();
+    const { data, error } = await db.rpc("retirar_proposta_radar", { p_proposta: propostaId });
+    if (error) return { ok: false, ...mensagemDe(error) };
+    if (typeof data !== "string" || !ehUuid(data)) return { ok: false, erro: "Não foi possível confirmar a retirada. Atualize e tente novamente." };
+    atualizarPedido(data);
+    revalidatePath("/minha-conta", "layout");
+    return { ok: true, mensagem: "Proposta retirada. O histórico foi preservado." };
+  } catch {
+    return { ok: false, erro: "Não foi possível retirar a proposta. Tente novamente." };
+  }
+}
+
 /** Comprador estende o prazo do pedido (o banco confere dono, limite e situação). */
 export async function estenderPedido(id: string): Promise<Resultado<{ expiraEm: string }>> {
   const { userId } = await auth();

@@ -264,7 +264,7 @@ function CartaoPedido({
                 <p className="mt-2">Comprador: ••••••• · (89) 9••••-••••</p>
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="inline-flex items-center gap-2 rounded-full bg-beringela/90 px-4 py-2 text-base font-semibold text-white">
+                <span className="inline-flex items-center gap-2 rounded-full bg-beringela px-4 py-2 text-base font-semibold text-white">
                   <Lock className="size-4" aria-hidden />
                   Exclusivo para lojistas assinantes
                 </span>
@@ -331,7 +331,7 @@ function FaixaUpgrade({ planos, titulo }: { planos: PlanoResumo[]; titulo: strin
   return (
     <section className="mx-4 mt-4 flex flex-col gap-3 rounded-card bg-beringela p-4 text-white">
       <p className="text-base font-bold">{titulo}</p>
-      <p className="text-base text-white/85">
+      <p className="text-base text-white">
         Assine {lista || "um plano com Radar"} para ver os detalhes e mandar sua oferta antes da concorrência.
       </p>
       <Botao href={`${LINK_PLANOS}?origem=radar`} larguraTotal>
