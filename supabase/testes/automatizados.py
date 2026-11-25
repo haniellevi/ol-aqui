@@ -81,6 +81,7 @@ try:
     checked(sql("update public.modelos_mensagem set texto=texto_padrao where chave='plano_vencendo' and canal='whatsapp';"))
     checked(sql((root/'supabase/testes/891_convite_envio.sql').read_text()))
     checked(sql((root/'supabase/testes/896_cupom_beneficios.sql').read_text()))
+    checked(sql((root/'supabase/testes/897_cupom_matriz_paga.sql').read_text()))
     checked(sql((root/'supabase/testes/895_cupons_promocionais.sql').read_text()))
     checked(sql((root/'supabase/testes/890_voucher_lancamento.sql').read_text()))
 
