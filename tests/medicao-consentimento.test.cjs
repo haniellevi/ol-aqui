@@ -28,16 +28,17 @@ test('contrato rejeita texto livre e propriedades extras, aceita faixa mínima',
   assert.deepEqual(contrato.eventoPermitido({ nome:'search_completed', rota:'/busca', faixa:'zero' }), { nome:'search_completed', rota:'/busca', faixa:'zero', fonte:'interno', coorte:'consentida_v1' });
 });
 test('gate do servidor bloqueia ausência, retirada e rota sensível antes de qualquer coletor', async () => {
-  let valor, ref = 'https://teste.invalid/busca?q=sentinela';
+  let valor, ref = 'https://teste.invalid/busca?q=sentinela', prefetch = '';
   const gate = carregar('src/lib/metricas/gate-servidor.ts', {
     'next/headers': {
       cookies: async () => ({ get: () => valor ? { value: encodeURIComponent(JSON.stringify(valor)) } : undefined }),
-      headers: async () => new Headers({ host:'teste.invalid', referer:ref }),
+      headers: async () => new Headers({ host:'teste.invalid', referer:ref, 'next-router-prefetch':prefetch }),
     },
   });
   assert.equal(await gate.permiteEstatistica(), false);
   valor = {v:1, estatistica:false, marketing:true}; assert.equal(await gate.permiteEstatistica(), false);
   valor = {v:1, estatistica:true, marketing:false}; assert.equal(await gate.permiteEstatistica(), true);
+  prefetch='1';assert.equal(await gate.permiteEstatistica(), false);prefetch='';
   ref = 'https://teste.invalid/minha-conta'; assert.equal(await gate.permiteEstatistica(), false);
   ref = 'https://outro.invalid/busca'; assert.equal(await gate.permiteEstatistica(), false);
   valor.estatistica=false; ref='https://teste.invalid/'; assert.equal(await gate.permiteEstatistica(), false);
