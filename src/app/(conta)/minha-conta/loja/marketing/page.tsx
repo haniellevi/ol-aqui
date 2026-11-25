@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AvisoSerieMetrica } from "@/components/metricas/aviso-serie";
 import Link from "next/link";
 import { Download, Megaphone, TrendingUp } from "lucide-react";
 import { minhaVitrineCompleta, vitrineNovaAtiva } from "@/lib/dados/vitrine-completa";
@@ -43,6 +44,7 @@ export default async function PaginaMarketing() {
   return (
     <PaginaConta larga>
       <TopoConta titulo="Meu Marketing" texto={<span className="[overflow-wrap:anywhere]">{nome}</span>} voltar={LINK_MINHA_LOJA} textoVoltar="Minha loja" />
+      <AvisoSerieMetrica />
       {dados === null ? <Aviso tipo="atencao">Não conseguimos carregar as recomendações agora. <Link href={LINK_LOJA_MARKETING} className="underline">Tentar novamente</Link></Aviso> : <>
         <section aria-labelledby="titulo-criativos" className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">

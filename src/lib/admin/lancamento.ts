@@ -15,6 +15,7 @@ export function variacao(atual: number, anterior: number): string {
 
 export type Lancamento = {
   gerado_em: string; corte: string | null; de: string; ate: string;
+  rollout_inicio: string | null; rollout_fim: string | null;
   medicao: Medicao;
   oferta: { lojas: number; sem_anuncios: number; anuncios: number };
   ativacao: { maduras: number; com_oferta: number };
@@ -37,7 +38,8 @@ export function lerLancamento(data: unknown): Lancamento | null {
   const d = data as Lancamento;
   if (!lerMedicao(d.medicao)) return null;
   if (![d.gerado_em,d.de,d.ate].every(s => typeof s === "string" && Number.isFinite(Date.parse(s)))) return null;
-  if (![d.corte,d.ultima_visita].every(s => s === null || (typeof s === "string" && Number.isFinite(Date.parse(s))))) return null;
+  if (![d.corte,d.ultima_visita,d.rollout_inicio,d.rollout_fim].every(s => s === null || (typeof s === "string" && Number.isFinite(Date.parse(s))))) return null;
+  if (d.rollout_fim && (!d.rollout_inicio || Date.parse(d.rollout_fim)<Date.parse(d.rollout_inicio))) return null;
   for (const [obj, keys] of [[d.oferta,["lojas","sem_anuncios","anuncios"]],[d.ativacao,["maduras","com_oferta"]],[d.radar,["maduros","com_proposta","sem_proposta"]],[d.negocio,["publicados","vendas_declaradas","contatos","cupons","receita_centavos"]]] as const) {
     if (!obj || !keys.every(k => numero((obj as Record<string,unknown>)[k]))) return null;
   }

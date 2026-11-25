@@ -21,3 +21,5 @@ Origem é catálogo fechado, com prioridade de `origem` sobre `utm_source` e val
 ## Composição preservada
 
 B mantém `registrarEventoLoja` e `MedirAparicoes` gated por A; C mantém primeiro anúncio, regra V26 e cupom só preenchido. Preferências são conteúdo no fim da página, com reserva do token de navegação mobile para permitir revisar/retirar escolhas acima da barra fixa. Nenhuma sobreposição de arquivos entre as três ondas foi encontrada.
+
+Revisão Item 34: os limites civis de busca/resumo são explícitos em Fortaleza. Sessões são fluxos de pageview no sessionStorage, copiáveis entre abas, sem promessa de isolamento. Marco SQL e rollout da aplicação são campos distintos; rollout nulo impede comparação homogênea de tráfego. Consultas textuais com Referer válido são a população da procura. Séries diárias sobreviventes podem ser mistas e perder linhas por cascata. Ver MEDICAO.md e ADMIN-LANCAMENTO.md atualizados.

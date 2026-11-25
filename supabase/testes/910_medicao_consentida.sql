@@ -54,3 +54,38 @@ do $$ begin
   assert public.admin_visitas(current_date,current_date)->'por_campanha'='[]'::jsonb;
 end $$;
 rollback;
+
+-- Relógio controlado somente nesta transação: RPC real em sessão UTC à noite local.
+begin;
+set local timezone='UTC';
+do $$ begin
+ execute replace(pg_get_functiondef('public.registrar_busca_consentida(uuid,text,text)'::regprocedure),
+   'now()', '''2001-01-10T02:59:00Z''::timestamptz');
+ perform public.registrar_busca_consentida(null,null,'zero');
+ assert exists(select 1 from public.buscas_faixas_dia where dia='2001-01-09' and faixa='zero'),
+   'Busca às 23:59 Fortaleza caiu no dia UTC seguinte';
+end $$;
+rollback;
+begin;
+set local timezone='UTC';
+do $$ begin
+ execute replace(pg_get_functiondef('public.registrar_busca_consentida(uuid,text,text)'::regprocedure),
+   'now()', '''2001-01-10T03:00:00Z''::timestamptz');
+ perform public.registrar_busca_consentida(null,null,'zero');
+ assert exists(select 1 from public.buscas_faixas_dia where dia='2001-01-10' and faixa='zero'), 'Meia-noite local não abriu o novo dia';
+end $$;
+rollback;
+begin;
+set local timezone='UTC';
+select id as reg from microrregioes where slug='corrente-pi' \gset
+insert into perfis(id,microrregiao_id,nome,cidade,e_admin) values('user_civil910',:'reg','Admin fictício','Corrente',true);
+insert into visitas(visitante,caminho,origem,coorte,sessao,ocorrencia,criado_em) values
+ ('91000000-0000-4000-a000-000000000010','/','direto','consentida_v1','91000000-0000-4000-a000-000000000010','91000000-0000-4000-a000-000000000010','2001-01-10T02:59:00Z'),
+ ('91000000-0000-4000-a000-000000000011','/','direto','consentida_v1','91000000-0000-4000-a000-000000000011','91000000-0000-4000-a000-000000000011','2001-01-10T03:00:00Z');
+set local role authenticated;
+set local request.jwt.claim.sub='user_civil910';
+do $$ begin
+ assert public.admin_medicao_resumo('2001-01-09','2001-01-09')->>'pageviews'='1', 'Resumo direto dependeu do fuso da sessão';
+ assert public.admin_medicao_resumo('2001-01-10','2001-01-10')->>'pageviews'='1';
+end $$;
+rollback;

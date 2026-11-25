@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Botao } from "@/components/ui/botao";
 import { CHAVE_CONSENTIMENTO, EVENTO_CONSENTIMENTO, NEGADO, type Preferencia } from "@/lib/metricas/consentimento";
-import { limparIdentificadores, podeMedir, preferenciaAtual, salvarPreferencia } from "@/lib/metricas/cliente";
-import { origemPermitida, rotaNeutra } from "@/lib/metricas/contrato";
+import { limparIdentificadores, podeMedir, preferenciaAtual, prepararIdentidadeMedicao, salvarPreferencia, sessaoPageviews } from "@/lib/metricas/cliente";
+import { rotaNeutra } from "@/lib/metricas/contrato";
 
 export function RastreioVisitas() {
   const caminho = usePathname();
@@ -33,18 +33,14 @@ export function RastreioVisitas() {
     const controller = new AbortController();
     const enviar = () => {
       if (!podeMedir() || document.visibilityState !== "visible" || ultima.current === caminho) return;
+      // Uma tentativa por navegação elegível, inclusive se storage/cookie falhar. Sem fila.
+      ultima.current = caminho;
       try {
-        let visitante = localStorage.getItem("mr_visitante");
-        const primeira = !visitante || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(visitante);
-        if (primeira) { visitante = crypto.randomUUID(); localStorage.setItem("mr_visitante", visitante); }
-        for (const path of ["/anuncio", "/loja"]) document.cookie = `mr_medicao_visitante=${visitante}; Path=${path}; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
-        let sessao: { id: string; em: number; origem: string | null } | null = null;
-        try { sessao = JSON.parse(sessionStorage.getItem("mr_medicao_sessao") ?? "null"); } catch { /* refaz */ }
-        if (!sessao || !/^[0-9a-f-]{36}$/.test(sessao.id) || !Number.isFinite(sessao.em) || Date.now() < sessao.em || Date.now() - sessao.em > 30 * 60 * 1000) sessao = { id: crypto.randomUUID(), em: Date.now(), origem: origemPermitida(location.search).origem };
-        sessao.origem = origemPermitida(`origem=${encodeURIComponent(sessao.origem ?? "")}`).origem;
-        sessao.em = Date.now();
-        sessionStorage.setItem("mr_medicao_sessao", JSON.stringify(sessao));
-        ultima.current = caminho;
+        const identidade = prepararIdentidadeMedicao(true);
+        if (!identidade) return;
+        const { visitante, primeira } = identidade;
+        const sessao = sessaoPageviews(Date.now(), location.search);
+        if (!sessao) return;
         void fetch("/api/visita", {
           method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal,
           body: JSON.stringify({ visitante, sessao: sessao.id, ocorrencia: crypto.randomUUID(), caminho: rotaNeutra(caminho), origem: sessao.origem, primeira, celular: matchMedia("(pointer: coarse)").matches }),

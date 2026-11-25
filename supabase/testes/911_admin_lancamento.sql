@@ -23,6 +23,7 @@ do $$ declare r jsonb; begin
  assert (r->'ativacao'->>'com_oferta')::int=0;
  assert (r->'negocio'->>'publicados')::int=0;
  assert r->>'de'='2001-01-01';
+ assert r->'rollout_inicio'='null'::jsonb and r->'rollout_fim'='null'::jsonb,'Marco SQL não comprova rollout da aplicação';
  assert public.admin_lancamento('1999-01-01','1999-01-31')->'radar'->>'maduros'='0';
  begin perform public.admin_lancamento('2001-02-01','2001-01-01');raise exception 'Intervalo aceito';
  exception when invalid_parameter_value then null;end;

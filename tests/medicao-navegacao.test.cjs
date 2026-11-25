@@ -39,6 +39,12 @@ test('coletor real: ausente, aceite, re-render, SPA, revisita, rota sensível e 
     await render('/entrar');assert.equal(chamadas.length,3);
     cliente.salvarPreferencia({v:1,estatistica:false,marketing:false});await render('/busca');assert.equal(chamadas.length,3);assert.equal(local.has('mr_visitante'),false);
     cliente.salvarPreferencia({v:1,estatistica:true,marketing:false});await render();assert.equal(chamadas.length,4);
+    const storageAntes=global.localStorage;
+    global.localStorage={...storageAntes,getItem(){throw Error('storage bloqueado')}};
+    await render('/lojas');assert.equal(chamadas.length,4);
+    global.localStorage=storageAntes;
+    doc.dispatchEvent(new Event('visibilitychange'));await new Promise(r=>setTimeout(r,5));
+    assert.equal(chamadas.length,4,'Falha de preparação não cria retry automático ao voltar à visibilidade');
     assert.ok(!JSON.stringify(chamadas).includes('sentinela'));
   } finally {
     for(const f of limpezas)f?.();global.fetch=originalFetch;

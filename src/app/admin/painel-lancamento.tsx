@@ -4,6 +4,7 @@ import { Botao } from "@/components/ui/botao";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { variacao, type Lancamento, type periodoLancamento } from "@/lib/admin/lancamento";
 import { PreparacaoGa4 } from "./preparacao-ga4";
+import { AvisoSerieMetrica } from "@/components/metricas/aviso-serie";
 
 type Props = { atual: Lancamento | null; anterior: Lancamento | null; periodo: ReturnType<typeof periodoLancamento> };
 const n = (v: number) => v.toLocaleString("pt-BR");
@@ -21,8 +22,8 @@ export function PainelLancamento({atual:r,anterior,periodo:p}: Props) {
   const periodoFechado = !!r && p.ate < diaLocal(r.gerado_em);
   const comparacao = (campo: keyof Lancamento["negocio"]) => !periodoFechado ? "Período aberto: comparação indisponível" : anterior && r ? `${variacao(r.negocio[campo],anterior.negocio[campo])} ante período anterior` : "Comparação indisponível";
   // O dia do corte é misto. Só comparar duas janelas integralmente posteriores.
-  const diaCorte = r?.corte ? new Intl.DateTimeFormat("en-CA", {timeZone:"America/Fortaleza"}).format(new Date(r.corte)) : null;
-  const comparaTrafego = !!(periodoFechado && anterior && diaCorte && p.anteriorDe>diaCorte && anterior.corte===r?.corte);
+  const diaCorte = r?.corte && r.rollout_fim ? diaLocal(Date.parse(r.corte)>Date.parse(r.rollout_fim) ? r.corte : r.rollout_fim) : null;
+  const comparaTrafego = !!(periodoFechado && anterior && diaCorte && p.anteriorDe>diaCorte && anterior.corte===r?.corte && anterior.rollout_fim===r?.rollout_fim);
   return <div className="space-y-6">
     <nav aria-label="Áreas de resultados" className="flex flex-wrap gap-2">{links.map(([href,label])=><Botao key={href} href={href} variante="secundario">{label}</Botao>)}</nav>
     <Cartao>
@@ -46,9 +47,9 @@ export function PainelLancamento({atual:r,anterior,periodo:p}: Props) {
       </section>
       <section aria-labelledby="trafego-consentido">
         <h2 id="trafego-consentido" className="mb-2 text-lg font-semibold text-beringela">Tráfego consentido</h2>
-        <p className="mb-3 text-sm text-texto-suave">Fonte interna · coorte consentida_v1. Navegadores não representam pessoas; sessões são por aba. {r.medicao.sem_dados ? "Sem observações: isso não prova ausência de visitantes." : "Apenas navegações com estatística aceita."}</p>
-        <div className="grid gap-3 sm:grid-cols-3">{([['pageviews','Páginas vistas'],['navegadores','Navegadores'],['sessoes','Sessões por aba']] as const).map(([k,label])=><Numero key={k} rotulo={label} valor={n(r.medicao[k])} detalhe={comparaTrafego && anterior ? variacao(r.medicao[k],anterior.medicao[k]) : "Comparação de tráfego indisponível: janela sem base ou cruza o corte."}/>)}</div>
-        <p className="mt-2 text-sm text-texto-suave">Corte: {r.corte ? data(r.corte) : "não disponível"}. O dia do corte é misto. Série legada separada em Visitas; não somar populações.</p>
+        <p className="mb-3 text-sm text-texto-suave">Fonte interna · coorte consentida_v1. Navegadores não representam pessoas. Sessão observada: fluxo no sessionStorage, renovado após 30 min sem pageview despachado. Leitura e interação não renovam o relógio; o armazenamento pode ser copiado entre abas, sem isolamento garantido. Conta fluxos observados no período, inclusive iniciados antes dele. {r.medicao.sem_dados ? "Sem observações: isso não prova ausência de visitantes." : "Apenas navegações com estatística aceita."}</p>
+        <div className="grid gap-3 sm:grid-cols-3">{([['pageviews','Páginas vistas'],['navegadores','Navegadores'],['sessoes','Sessões observadas']] as const).map(([k,label])=><Numero key={k} rotulo={label} valor={n(r.medicao[k])} detalhe={comparaTrafego && anterior ? variacao(r.medicao[k],anterior.medicao[k]) : "Comparação de tráfego indisponível: período aberto, sem base ou implantação não confirmada."}/>)}</div>
+        <p className="mt-2 text-sm text-texto-suave">Marco SQL: {r.corte ? data(r.corte) : "não disponível"}. {r.rollout_inicio && r.rollout_fim ? `Implantação da aplicação: ${data(r.rollout_inicio)} a ${data(r.rollout_fim)}.` : "Janela da implantação real não confirmada; não comparar como série homogênea."} O dia do corte e a transição podem ser mistos. Série legada separada em Visitas; não somar populações.</p>
       </section>
       <Tabela titulo="Origem das páginas vistas" colunas={["Origem de catálogo","Páginas vistas"]} linhas={r.origens.map(o=>[o.origem,o.pageviews])}/>
       <section aria-labelledby="fatos-lancamento">
@@ -57,11 +58,12 @@ export function PainelLancamento({atual:r,anterior,periodo:p}: Props) {
           <Numero rotulo="Anúncios publicados" valor={n(r.negocio.publicados)} detalhe={comparacao('publicados')}/>
           <Numero rotulo="Cupons resgatados" valor={n(r.negocio.cupons)} detalhe={comparacao('cupons')}/>
           <Numero rotulo="Recebimentos confirmados" valor={(r.negocio.receita_centavos/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} detalhe={`Empresa, produção. ${comparacao('receita_centavos')}`}/>
-          <Numero rotulo="Contatos observados" valor={n(r.negocio.contatos)} detalhe="Cliques WhatsApp de anúncios, série diária existente; não inclui lojas. Sem comparação entre períodos que cruzam o corte."/>
+          <Numero rotulo="Contatos observados" valor={n(r.negocio.contatos)} detalhe="Soma diária sobrevivente de cliques WhatsApp de anúncios, potencialmente entre regimes de coleta diferentes; não inclui lojas nem comprova venda. Sem comparação temporal."/>
           <Numero rotulo="Vendas declaradas" valor={n(r.negocio.vendas_declaradas)} detalhe="Vendedor informou venda pelo site no período; não é transação comprovada nem derivada de cliques."/>
           <Numero rotulo="Lojas ativas" valor={n(r.oferta.lojas)} detalhe="Fotografia atual; não comparar como aquisição do período."/>
         </div>
       </section>
+      <AvisoSerieMetrica />
       <Cartao>
         <h2 className="text-lg font-semibold text-beringela">Lojas e Radar: coortes observáveis</h2>
         <p className="mt-3 text-base">{n(r.ativacao.com_oferta)} de {n(r.ativacao.maduras)} lojas criadas no período, ativas hoje e com pelo menos 48 horas, têm anúncio no ar agora.</p>
@@ -70,7 +72,7 @@ export function PainelLancamento({atual:r,anterior,periodo:p}: Props) {
         <p className="mt-2 text-sm text-texto-suave">Pedidos abertos, atendidos ou encerrados; análise e recusados ficam fora. Propostas retiradas não contam. Não equivale à taxa de resposta em 24h. Base zero significa sem coorte elegível, sem taxa. Tempo até primeira proposta e funil de sessão entre telas: indisponíveis.</p>
       </Cartao>
       <Tabela titulo="Procura sem resultado" colunas={["Categoria","Região","Consultas","Sem resultado"]} linhas={r.demanda.map(d=>[d.categoria,d.regiao,d.buscas,d.sem_resultado])}/>
-      <p className="text-sm text-texto-suave">Busca principal consentida_v1, por categoria/região no período. Sem termos livres. Mostramos até 20 grupos com cinco ou mais buscas sem resultado e cinco ou mais com resultado (ou nenhuma). Grupos pequenos são suprimidos; vazio pode significar supressão ou ausência. Nenhuma taxa é calculada sobre a lista truncada.</p>
+      <p className="text-sm text-texto-suave">Consultas textuais consentidas da busca principal, com Referer público do mesmo site aceito pelo servidor, por categoria/região no período. Filtros sem texto, entrada direta sem Referer e chegada de outro site ficam fora por desenho conservador. Não representa toda a procura. Sem termos livres. Mostramos até 20 grupos com cinco ou mais buscas sem resultado e cinco ou mais com resultado (ou nenhuma). Grupos pequenos são suprimidos; vazio pode significar supressão ou ausência. Nenhuma taxa é calculada sobre a lista truncada.</p>
       <Tabela titulo="Oferta atual por categoria e cidade" colunas={["Categoria","Cidade","Anúncios no ar"]} linhas={r.catalogo.map(c=>[c.categoria,c.cidade,c.anuncios])}/>
       <p className="text-sm text-texto-suave">Até 20 combinações com menor oferta publicada, em vitrines ativas, sem depender do período. Categorias sem anúncio não aparecem nesta lista; consulte Produtos e Relatórios para ampliar o recorte.</p>
       <Cartao>

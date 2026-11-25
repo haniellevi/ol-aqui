@@ -40,6 +40,8 @@ begin
  select jsonb_build_object(
    'de',p_de,'ate',p_ate,'gerado_em',now(),
    'corte',(select mm.inicio from public.metricas_marcos mm where codigo='consentida_v1'),
+   'rollout_inicio',(select mm.aplicacao_inicio from public.metricas_marcos mm where codigo='consentida_v1'),
+   'rollout_fim',(select mm.aplicacao_fim from public.metricas_marcos mm where codigo='consentida_v1'),
    'medicao',public.admin_medicao_resumo(p_de,p_ate),
    'ultima_visita',(select max(criado_em) from public.visitas where coorte='consentida_v1'),
    'oferta',jsonb_build_object('lojas',(select count(*) from lojas),'sem_anuncios',(select count(*) from lojas where not oferta),

@@ -74,7 +74,7 @@ export function GeradorLink({ site, origens, destinos, lojas }: { site: string; 
 
       </div>
 
-      <p className="mt-3 text-sm text-texto-suave">Somente origens ativas do catálogo aprovado são atribuídas. Campanha, mídia, conteúdo e termo livres ficam sem atribuição. O QR é gerado neste navegador.</p>
+      <p className="mt-3 text-sm text-texto-suave">Somente origens ativas do catálogo aprovado são atribuídas. A origem é fixada no início do fluxo de pageviews e o banco confere se o código continua ativo. Abrir outro link com origem ou UTM não reatribui o fluxo vigente, que renova após 30 min sem pageview. Campanha, mídia, conteúdo e termo livres ficam sem atribuição. O QR é gerado neste navegador.</p>
       {link ? (
         <div className="mt-4 flex flex-col gap-3 @2xl/painel:flex-row @2xl/painel:items-start">
           {qr && (

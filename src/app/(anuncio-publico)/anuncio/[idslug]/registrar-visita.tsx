@@ -2,11 +2,11 @@
 import { useEffect, useRef } from "react";
 import { registrarEvento } from "./actions";
 import { guardarVisto, type AnuncioVisto } from "@/lib/vistos";
-import { podeMedir } from "@/lib/metricas/cliente";
+import { prepararIdentidadeMedicao } from "@/lib/metricas/cliente";
 export function RegistrarVisita({ anuncioId, visto }: { anuncioId: string; visto?: AnuncioVisto }) {
   const feito = useRef<string | null>(null);
   useEffect(() => {
-    if (!podeMedir() || feito.current === anuncioId) return;
+    if (feito.current === anuncioId || !prepararIdentidadeMedicao()) return;
     feito.current = anuncioId;
     void registrarEvento(anuncioId, "visualizacao").catch(() => undefined);
     if (visto) guardarVisto(visto);

@@ -28,7 +28,7 @@ revoke all on function public.registrar_visita(text,text,text,text,text,boolean,
 revoke all on function public.registrar_evento(uuid,text,text,text,text) from anon,authenticated;
 
 create table public.buscas_faixas_dia (
-  dia date not null default current_date,
+  dia date not null default ((now() at time zone 'America/Fortaleza')::date),
   microrregiao_id uuid references public.microrregioes(id),
   categoria_id uuid references public.categorias(id),
   faixa text not null check(faixa in ('zero','1-10','11+')),
@@ -48,7 +48,7 @@ begin
   if p_faixa is null or p_faixa not in ('zero','1-10','11+') then return; end if;
   if p_microrregiao is not null and not exists(select 1 from public.microrregioes where id=p_microrregiao) then return; end if;
   select id into cat from public.categorias where slug=p_categoria_slug;
-  insert into public.buscas_faixas_dia(microrregiao_id,categoria_id,faixa) values(p_microrregiao,cat,p_faixa)
+  insert into public.buscas_faixas_dia(dia,microrregiao_id,categoria_id,faixa) values((now() at time zone 'America/Fortaleza')::date,p_microrregiao,cat,p_faixa)
     on conflict (dia,coalesce(microrregiao_id,'00000000-0000-0000-0000-000000000000'::uuid),coalesce(categoria_id,'00000000-0000-0000-0000-000000000000'::uuid),faixa)
     do update set vezes=buscas_faixas_dia.vezes+1;
 end $$;
@@ -81,10 +81,14 @@ end $$;
 revoke select on public.anuncios_termos_dia,public.buscas_termos,public.robo_buscas_vazias,public.visitas from authenticated;
 
 comment on column public.visitas.coorte is 'legado: população sem gate anterior; consentida_v1: páginas opcionais. Nunca somar como série homogênea.';
-comment on column public.visitas.sessao is 'Aba consentida com 30 min de inatividade; distinto de navegador e pessoa.';
+comment on column public.visitas.sessao is 'Fluxo no sessionStorage, renovado após 30 min sem despacho de pageview; pode ser copiado entre abas. Não é pessoa nem aba isolada.';
 
 -- As séries diárias antigas conservam os contadores; o dia da mudança é misto.
-create table public.metricas_marcos (codigo text primary key, inicio timestamptz not null default now());
+create table public.metricas_marcos (
+  codigo text primary key, inicio timestamptz not null default now(),
+  aplicacao_inicio timestamptz, aplicacao_fim timestamptz,
+  check(aplicacao_fim is null or (aplicacao_inicio is not null and aplicacao_fim>=aplicacao_inicio))
+);
 insert into public.metricas_marcos(codigo) values('consentida_v1');
 alter table public.metricas_marcos enable row level security;
 revoke all on public.metricas_marcos from public,anon,authenticated;
@@ -97,7 +101,7 @@ begin
   if not public.e_admin() then raise exception 'Acesso restrito.' using errcode='42501'; end if;
   return (select jsonb_build_object('fonte','interno','coorte','consentida_v1','pageviews',count(*),
     'navegadores',count(distinct visitante),'sessoes',count(distinct sessao),'sem_dados',count(*)=0)
-    from public.visitas where coorte='consentida_v1' and criado_em >= p_de::timestamptz and criado_em < (p_ate+1)::timestamptz);
+    from public.visitas where coorte='consentida_v1' and criado_em >= (p_de::timestamp at time zone 'America/Fortaleza') and criado_em < ((p_ate+1)::timestamp at time zone 'America/Fortaleza'));
 end $$;
 revoke all on function public.admin_medicao_resumo(date,date) from public,anon;
 grant execute on function public.admin_medicao_resumo(date,date) to authenticated,service_role;

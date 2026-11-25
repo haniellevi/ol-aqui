@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AvisoSerieMetrica } from "@/components/metricas/aviso-serie";
 import { exigirAdmin } from "@/lib/admin/auth";
 import { inteiro } from "@/lib/admin/formato";
 import { Aviso, Cartao, Titulo } from "@/components/admin/ui";
@@ -66,7 +67,8 @@ export default async function PaginaProdutos({ searchParams }: { searchParams: P
 
   return (
     <>
-      <Titulo sub="Quantas pessoas viram e chamaram por categoria, região e produto. Só números: nenhuma pessoa aparece aqui.">Produtos</Titulo>
+      <Titulo sub="Observações de abertura e contato por categoria, região e produto. Só números agregados.">Produtos</Titulo>
+      <AvisoSerieMetrica />
 
       <nav aria-label="Período" className="mb-3 flex flex-wrap gap-2">
         {PERIODOS.map((p) => (
