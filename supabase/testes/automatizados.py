@@ -31,6 +31,7 @@ try:
         # Ensaiar atualização: contrato legado antes de sua desativação intencional.
         if p.name == '20261203035000_medicao_consentida.sql' and not any(x in sys.argv for x in ['--item31','--item34']): continue
         if p.name == '20261203035200_admin_lancamento.sql' and not any(x in sys.argv for x in ['--item31','--item34']): continue
+        if p.name == '20261203035400_medicao_retencao.sql' and not any(x in sys.argv for x in ['--item31','--item34']): continue
         if p.name == '20261203034000_compliance_revisao_manual.sql':
             checked(sql((root/'supabase/testes/902_compliance_preflight.sql').read_text()))
         if p.name == '20261203031000_autosservico_vitrines.sql':
@@ -92,7 +93,9 @@ try:
     checked(sql((root/'supabase/testes/912_kit_catalogo.sql').read_text()))
     print('PASS: kit catálogo, oferta, busca e isolamento público', flush=True)
     if '--item34' in sys.argv:
+        checked(sql((root/'supabase/testes/910_medicao_consentida.sql').read_text()))
         checked(sql((root/'supabase/testes/911_admin_lancamento.sql').read_text()))
+        checked(sql((root/'supabase/testes/913_medicao_retencao.sql').read_text()))
         print('PASS: Admin lançamento, acesso, períodos, coortes e supressão', flush=True)
         sys.exit(0)
     if '--item31' in sys.argv:
@@ -620,6 +623,9 @@ try:
     checked(sql((root/'supabase/migrations/20261203035200_admin_lancamento.sql').read_text()))
     checked(sql((root/'supabase/testes/911_admin_lancamento.sql').read_text()))
     print('PASS: Admin lançamento final, autorização e supressão', flush=True)
+    checked(sql((root/'supabase/migrations/20261203035400_medicao_retencao.sql').read_text()))
+    checked(sql((root/'supabase/testes/913_medicao_retencao.sql').read_text()))
+    print('PASS: retenção opcional 180 dias, legado, transição, fatos e repetição', flush=True)
 
 finally:
     run('docker','stop',container)

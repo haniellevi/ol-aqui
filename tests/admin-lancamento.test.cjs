@@ -81,3 +81,13 @@ test('Resultados preserva acesso por papel, consulta duas janelas e mantém atua
  assert.equal(calls.length,2);assert.equal(calls[0].name,'admin_lancamento');
  assert.ok(tree.props.children[1].props.atual);assert.equal(tree.props.children[1].props.anterior,null);
 });
+test('tráfego fora da retenção não recebe comparação como se fosse base completa',()=>{
+ const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+ const {lancamento}=require('./fixtures/lancamento.cjs');
+ const {PainelLancamento}=carregar('src/app/admin/painel-lancamento.tsx',{'next/link':{__esModule:true,default:({children,...p})=>React.createElement('a',p,children)},'./preparacao-ga4':{PreparacaoGa4:()=>null}});
+ const atual={...lancamento,gerado_em:'2030-01-01T12:00:00Z',corte:'2028-01-01T12:00:00Z',rollout_inicio:'2028-01-01T12:00:00Z',rollout_fim:'2028-01-02T12:00:00Z'};
+ const periodo={de:'2029-01-08',ate:'2029-01-14',anteriorDe:'2029-01-01',anteriorAte:'2029-01-07',aviso:null};
+ const render=p=>renderToStaticMarkup(React.createElement(PainelLancamento,{atual,anterior:atual,periodo:p})).match(/<section aria-labelledby="trafego-consentido">([\s\S]*?)<\/section>/)[1];
+ assert.match(render(periodo),/Comparação de tráfego indisponível/);
+ assert.doesNotMatch(render({...periodo,de:'2029-12-08',ate:'2029-12-14',anteriorDe:'2029-12-01',anteriorAte:'2029-12-07'}),/Comparação de tráfego indisponível/);
+});

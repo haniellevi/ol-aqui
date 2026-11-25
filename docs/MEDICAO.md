@@ -38,7 +38,26 @@ Eventos e agregados diários de produto/loja continuam nos mesmos recursos. `met
 
 `buscas_faixas_dia` inicia série independente. Coleta antiga de termos do site/Lia é encerrada. Histórico não é apagado; acesso direto autenticado a termos/visitas é retirado, e RPCs de relatórios mantêm o formato com termos vazios ou categorias. Meu Marketing conserva sugestões e contagens antigas, usando nome da categoria em lugar de termo pessoal. Não atribuir a essa série nova a demanda histórica por palavras.
 
-Não foi ampliada retenção nem instituída purga. O caminho novo não executa limpeza probabilística de visitas. Limpeza determinística, prazo para novos agregados e disposição do histórico ficam para decisão explícita do responsável; até lá não habilitar novos destinos nem ampliar campos. Verificar política publicada no painel antes de disponibilizar a candidata, sem substituir os documentos/aceites de conta nesta frente.
+### Retenção aprovada: 180 dias civis
+
+A migração aditiva 35400 define `medicao_limpar_opcionais()` sem parâmetro de relógio. Uma execução diária às 06:15 UTC (03:15 em Fortaleza), pelo job SQL interno único `olaki-medicao-retencao`, remove métricas cujo dia é **anterior a hoje menos 180 dias**, sempre em America/Fortaleza. Idades de 179 e 180 dias permanecem; 181 é elegível. A remoção ocorre na próxima execução bem-sucedida, não no aniversário exato em horas. Falhas ou agendamento ausente atrasam a remoção e devem ser monitorados pelo operador. A instalação não dispara a rotina; não há HTTP, chamada a fornecedor nem dependência de nova visita.
+
+| Fonte/colunas | Limpeza e delimitação |
+| --- | --- |
+| `visitas` (`criado_em`, `coorte`, navegador/sessão/ocorrência e demais campos da linha) | Apaga somente `coorte='consentida_v1'` anterior à meia-noite do corte. `legado` permanece, mesmo com sessão preenchida. |
+| `buscas_faixas_dia` (`dia`, `vezes`, região/categoria/faixa) | Apaga dias elegíveis da coorte explícita `consentida_v1`, inclusive quando rollout ainda está nulo. |
+| `eventos_anuncio` (`criado_em`, `tipo`, `visitante_hash`) | Apaga visualização, clique WhatsApp e compartilhar apenas nos dias completos seguros; `favoritar` permanece como fato. |
+| `eventos_loja` (`criado_em`, `visitante_hash`, tipo visita/WhatsApp/mapa) | Apaga somente eventos dos dias completos seguros. |
+| `anuncios_aparicoes_dia` (`dia`, aparições e soma de posição por página) | Apaga linhas dos dias completos seguros. |
+| `anuncios_numeros_dia` | Zera somente aparições, soma de posição, visualizações, cliques e compartilhamentos dos dias completos seguros. Preserva a linha e a coluna `favoritos`. Não apaga a linha mista. |
+
+Dia completo seguro começa no dia seguinte ao maior dia entre `metricas_marcos.inicio` e `aplicacao_fim`, com início/fim finitos, ordenados e fim não futuro. Enquanto a implantação estiver sem confirmação, eventos e agregados sem coorte permanecem. Os dias do SQL, da implantação e anteriores ficam preservados: não se consegue separar com segurança população antiga e nova nessas células. Isso é uma exceção real de histórico/transição. Não somar essas populações como série homogênea. O Admin bloqueia comparação de tráfego quando a janela anterior ultrapassa o limite de dados retidos, mesmo se ainda restar alguma observação.
+
+Não há nova retenção mais curta efetiva nessas fontes no código inventariado. A limpeza legada de visitas usa `visitas.guardar_dias` (padrão 400) de forma probabilística dentro da RPC antiga; a nova rotina não altera seu valor, não amplia esse prazo nem chama a RPC antiga. Exclusões em cascata preexistentes de anúncios/lojas continuam podendo reduzir o histórico antes dos 180 dias.
+
+Ficam fora da rotina: termos e séries anteriores (`anuncios_termos_dia`, `buscas_termos`, `robo_buscas_vazias`), acumulados vitalícios mistos em `anuncios.visualizacoes`/`cliques_whatsapp`, favoritos/fatos de conta, venda declarada, pagamentos, vouchers, pedidos/propostas, logs, documentos/aceites e provas/snapshots de compliance. Acumulados sem dia e históricos mistos não permitem subtrair só a parcela nova; ficam classificados como histórico misto, sem criar espelho nem recalcular fatos. A rotina não reabre, publica ou restaura dados. Não altera termos já aceitos nem liga GA4/Meta.
+
+O proprietário aprovou a correção da política pelo fluxo administrativo atual com novo aceite. Publicar nova versão com texto e resumo revisados, preservando versões e aceites anteriores, sem atribuir aceite de estatística pelo aceite do documento. A preferência mínima continua `{v:1,estatistica,marketing}` por 180 dias, independente da retenção das métricas. Não afirmar conformidade jurídica.
 
 ## Integração B/C
 
@@ -68,4 +87,4 @@ Referência de plataforma: [sessionStorage e cópia pelo opener](https://develop
 
 Antes de implantação autorizada: registrar separadamente horário da migração, início/fim reais do rollout da aplicação, versão da aplicação e eventuais pausas. Os campos aplicacao_inicio/aplicacao_fim não recebem defaults, não vêm do primeiro evento e só devem ser preenchidos pelo operador a partir da evidência real. Preservar a janela de transição em relatórios; não mover agregados existentes para outro dia por suposição. Produção e esse preenchimento não foram executados.
 
-Rollback conservador: usar versão compatível que negue coleta opcional no gate comum, preservar schema/coortes/índices/histórico e corrigir por migração aditiva autorizada. Não reativar coleta antiga sem consentimento, termos livres ou acesso histórico removido. Snapshot e ensaio operacional de rollback dependem de autorização futura; não há botão de rollback automático entregue nesta frente.
+Rollback conservador: usar versão compatível que negue coleta opcional no gate comum, preservar schema/coortes/índices/histórico e corrigir por migração aditiva autorizada. Não reativar coleta antiga sem consentimento, termos livres ou acesso histórico removido. O pacote operacional do Item 38 inclui snapshot cifrado e ensaio local de reversão conservadora, sem executar produção. Manter a retenção agendada se compatível; se precisar suspender o job por falha, bloquear coleta opcional e registrar a suspensão. Não restaurar métricas corretamente expiradas.
