@@ -1,3 +1,6 @@
+import { meuPerfilEVitrine } from "@/lib/dados/conta";
+import { ExcluirLoja, LojaNaLixeira } from "@/components/conta/excluir-loja";
+import { EncerrarAcesso } from "@/components/conta/encerrar-acesso";
 import { formatarNome } from "@/lib/formatar-nome";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
@@ -13,17 +16,27 @@ export type LojaDaConta = { id: string; nome: string; dono: boolean };
 
 export default async function MinhasLojas() {
   const db = await createClient();
+  const conta = await meuPerfilEVitrine(true);
+  const pf = conta?.vitrine?.tipo === "pf";
+  const { data: exclusao, error: erroExclusao } = pf ? await db.rpc("minha_loja_exclusao") : { data: null, error: null };
   const [{ data, error }, { data: rascunhoDados, error: erroRascunho }] = await Promise.all([db.rpc("minhas_lojas"), db.rpc("loja_ia_obter")]);
   const rascunho = rascunhoDados?.id && rascunhoDados?.entrada ? rascunhoDados as RascunhoLoja : null;
   const lojas = (data ?? []) as LojaDaConta[];
   return (
     <PaginaConta>
       <TopoConta titulo="Minhas lojas" texto="Encontre sua loja e as vitrines que você ajuda a gerenciar." />
+      {pf && <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Minha vitrine de vendedor</h2>
+        {erroExclusao ? <Aviso tipo="erro">Não foi possível carregar sua vitrine. Atualize a página.</Aviso>
+          : exclusao?.na_lixeira ? <LojaNaLixeira apagarApos={exclusao.apagar_apos} podeRestaurar={exclusao.pode_restaurar === true} pf />
+          : <ExcluirLoja temPagamentos={exclusao?.tem_pagamentos === true} pf />}
+      </section>}
       {erroRascunho && <Aviso tipo="erro">Não foi possível verificar seu rascunho. Atualize a página para tentar novamente.</Aviso>}
       {rascunho && <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
         <div><h2 className="text-lg font-semibold">{rascunho.entrada.nome ? `Rascunho de ${formatarNome(rascunho.entrada.nome)}` : "Rascunho da loja"}</h2>
           <p className="text-sm text-texto-suave">{rascunho.estado === "coleta" ? "Continue preenchendo as informações." : rascunho.estado === "processando" ? "Estamos preparando seu rascunho." : "Seu rascunho está pronto para revisão."}</p></div>
-        <Botao href="/quero-vender/loja/criar-com-ia">{rascunho.estado === "coleta" ? "Continuar cadastro" : "Abrir rascunho"}</Botao>
+        <Botao href="/quero-vender/loja/criar-com-ia" tamanho="acao">{rascunho.estado === "coleta" ? "Continuar cadastro" : "Abrir rascunho"}</Botao>
+        <EncerrarAcesso id={rascunho.id} revisao={rascunho.revisao} />
       </section>}
       {error ? <Aviso tipo="erro">Não foi possível carregar suas lojas. Atualize a página para tentar novamente.</Aviso>
         : lojas.length ? (
@@ -50,20 +63,13 @@ export default async function MinhasLojas() {
                       <Botao type="submit" variante="secundario">Cuidar dos anúncios</Botao>
                     </form>
                   )}
-                  {/* P5b-2b: o ajudante cuida da Minha loja da loja escolhida. */}
-                  {!loja.dono && (
-                    <form action={escolherLoja}>
-                      <input type="hidden" name="loja" value={loja.id} />
-                      <input type="hidden" name="voltar" value="/minha-conta/loja" />
-                      <Botao type="submit" variante="secundario">Cuidar da loja</Botao>
-                    </form>
-                  )}
                   {loja.dono && <Botao href={`/minha-conta/lojas/${loja.id}`} variante="secundario">Gerenciar equipe</Botao>}
                 </div>
+                {!loja.dono && <EncerrarAcesso id={loja.id} />}
               </li>
             ))}
           </ul>
-        ) : !rascunho ? (
+        ) : !rascunho && !pf ? (
           <Vazio titulo="Você ainda não tem lojas aqui" texto="Quando você abrir uma loja ou aceitar um convite para gerenciar uma vitrine, ela aparece aqui.">
             <Botao href="/quero-vender/loja">Abrir minha loja</Botao>
           </Vazio>

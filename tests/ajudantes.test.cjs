@@ -89,6 +89,8 @@ test('P5c: Meus anúncios marca o rascunho pronto da loja em montagem', async ()
 
 test('Minhas lojas: ajudante ganha o botão "Cuidar dos anúncios"', async () => {
   const { default: Pagina } = carregar('src/app/(conta)/minha-conta/lojas/page.tsx', {
+    '@/lib/dados/conta': { meuPerfilEVitrine: async () => ({ vitrine: null }) },
+    '@/components/conta/encerrar-acesso': { EncerrarAcesso: () => 'Sair desta loja' },
     '@/lib/supabase/server': { createClient: async () => ({ rpc: async nome => ({ data: nome === 'minhas_lojas' ? [propria, ajudada] : null, error: null }) }) },
     '@/app/(conta)/_loja/actions': { escolherLoja() {} },
   });

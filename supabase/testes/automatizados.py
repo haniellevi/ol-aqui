@@ -6,6 +6,7 @@ import subprocess, time, uuid, sys
 from concurrent.futures import ThreadPoolExecutor
 from radar_piloto_concorrencia import verificar_radar_piloto
 from item22_retirada_concorrencia import verificar_retirada_concorrente
+from autosservico_concorrencia import verificar_autosservico
 root = Path(__file__).resolve().parents[2]
 container = 'olaki-test-' + uuid.uuid4().hex[:10]
 def run(*args, **kwargs):
@@ -26,6 +27,8 @@ try:
     init = (root/'supabase/testes/00_simula_supabase.sql').read_text()
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
+        if p.name == '20261203031000_autosservico_vitrines.sql':
+            checked(sql((root/'supabase/testes/901_autosservico_recuperacao.sql').read_text()))
         if p.name == '20261202120000_voucher_lancamento.sql':
             checked(sql("update public.modelos_mensagem set texto='Mensagem personalizada de teste.' where chave='plano_vencendo' and canal='whatsapp';"))
         if p.name == '20261202130000_cupons_promocionais.sql':
@@ -61,6 +64,16 @@ try:
                 ('user_pre898ant','pedido_novo','whatsapp',true);
               commit;"""))
         checked(sql('begin;\n'+p.read_text()+'\ncommit;'))
+        if p.name == '20261203031000_autosservico_vitrines.sql':
+            checked(sql("""do $$ begin
+              assert (select dono_id is null and dono_retido_id='user_pre901' and purgada_em is not null
+                from vitrines_lojas where slug like 'encerrada-%' and dono_retido_id='user_pre901'), 'recuperação antiga';
+              assert (select dono_id='user_pre902' and purgada_em is null from vitrines_lojas where dono_id='user_pre902'), 'suspensão verdadeira preservada';
+              assert (select dono_id='user_pre903' and purgada_em is null from vitrines_lojas where dono_id='user_pre903'), 'ativa preservada';
+            end $$;
+            delete from pagamentos where asaas_cobranca_id='pay_pre901';
+            delete from vitrines_lojas where dono_id in ('user_pre902','user_pre903') or dono_retido_id='user_pre901';
+            delete from perfis where id in ('user_pre901','user_pre902','user_pre903');"""))
         if p.name == '20261203010000_radar_fechar_ciclo_whatsapp.sql':
             checked(sql("""do $$ begin
               assert not exists (select 1 from public.preferencias_avisos
@@ -159,6 +172,9 @@ try:
     checked(sql((root/'supabase/testes/450_aki_lojistas.sql').read_text()))
     print('PASS: cadastro assistido, créditos, falhas, renovação, isolamento e banner gratuito do Aki', flush=True)
     checked(sql((root/'supabase/testes/450_lixeira_contas_lojas.sql').read_text()))
+    checked(sql((root/'supabase/testes/901_autosservico_vitrines.sql').read_text()))
+    verificar_autosservico(sql, checked)
+    print('PASS: autosserviço e titular liberado após retenção', flush=True)
     print('PASS: lixeira de 30 dias para conta e loja, cancelamento, suspensão em cascata e limpeza com provas preservadas', flush=True)
     checked(sql((root/'supabase/testes/460_vitrine_ia_base.sql').read_text()))
     print('PASS: vitrine com IA, base: nicho da loja, buscas somadas, categoria sugerida e chave desligada', flush=True)
