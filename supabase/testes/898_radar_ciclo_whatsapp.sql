@@ -302,6 +302,12 @@ select proposta_id as prop4_1 from propor_radar(:'ped4'::uuid, '89800000-0000-40
 set local request.jwt.claim.sub = 'user_898comp';
 select * from escolher_proposta(:'prop4_1'::uuid);
 reset role;
+-- Esta seção verifica somente os dois avisos da proposta ped4. Mensagens dos
+-- cenários anteriores (e pedido_novo do próprio ped4) não disputam o lote global
+-- de cinco posições na janela simulada. Tudo é sintético e revertido no rollback.
+update whatsapp_fila set estado='cancelada', erro='isolamento_898_secao5'
+ where estado='pendente' and chave not in
+   ('radar_proposta_nova:' || :'ped4' || ':' || :'prop4_1', 'radar_proposta_escolhida:' || :'ped4' || ':' || :'prop4_1');
 update whatsapp_fila set enviar_apos = (:'t_janela'::timestamptz) - interval '1 hour'
  where chave in ('radar_proposta_nova:' || :'ped4' || ':' || :'prop4_1', 'radar_proposta_escolhida:' || :'ped4' || ':' || :'prop4_1');
 
