@@ -53,7 +53,16 @@ async function lerConta(exigirLeitura = false, lojaAjudada?: string): Promise<Mi
   if (exigirLeitura && (perfil.id !== userId || (vitrine && !lojaAjudada && vitrine.dono_id !== userId))) throw new Error("Não foi possível confirmar sua conta.");
 
   if (!vitrine) {
-    return { perfil, vitrine: null, plano: null, limite: 0, ativos: 0, rascunhos: 0, podePublicar: false };
+    // Benefício pertence à conta; não depende de uma vitrine publicável.
+    const promocional = !lojaAjudada
+      ? await (exigirLeitura ? lerAcessoPromocional(db) : seguro(() => lerAcessoPromocional(db), null))
+      : null;
+    const { data: plano, error } = promocional
+      ? await db.from("planos").select("*").eq("codigo", "promocional").maybeSingle<Plano>()
+      : { data: null, error: null };
+    if (error) throw new Error("Não foi possível carregar seu plano.");
+    return { perfil, vitrine: null, plano, limite: plano ? plano.limite_anuncios : 0, ativos: 0, rascunhos: 0, podePublicar: false,
+      ...(promocional ? { promocional } : {}) };
   }
 
   const agoraIso = new Date().toISOString();

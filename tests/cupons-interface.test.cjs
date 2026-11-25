@@ -217,7 +217,7 @@ test('Meu plano mostra formulário e benefício antes de a conta criar uma vitri
     '@/lib/cobranca-destaque': {},
     '@/lib/dados/cobranca': {},
     '@/lib/dados/radar': {},
-    '@/components/cobranca/escolher-plano': {},
+    '@/components/cobranca/escolher-plano': { EscolherPlano: () => null },
     '@/components/ui/botao': { Botao: marcador('Quero vender') },
     '@/components/ui/vazio': { Vazio: ({ children }) => children },
     '@/components/conta/topo-conta': { PaginaConta: ({ children }) => children, TopoConta: marcador('Meu plano') },
@@ -316,9 +316,9 @@ test('Meu plano mostra o prazo já iniciado quando a vitrine está suspensa', as
     '@/lib/supabase/server': { createClient: async () => db },
     '@/lib/asaas': { asaasConfigurado: () => false },
     '@/lib/cobranca-destaque': {},
-    '@/lib/dados/cobranca': { minhaAssinatura: async () => ({ vitrine_id: vitrine.id, situacao: 'suspensa' }), opcoesAssinatura: async () => [] },
+    '@/lib/dados/cobranca': { minhaAssinatura: async () => ({ vitrine_id: vitrine.id, situacao: vitrine.status === 'suspensa' ? 'suspensa' : 'ativa' }), opcoesAssinatura: async () => [] },
     '@/lib/dados/radar': { minhaCortesiaRadar: async () => null },
-    '@/components/cobranca/escolher-plano': {},
+    '@/components/cobranca/escolher-plano': { EscolherPlano: () => null },
     '@/components/ui/botao': { Botao: ({ children }) => children },
     '@/components/ui/vazio': {},
     '@/components/conta/topo-conta': { PaginaConta: ({ children }) => children, TopoConta: () => null },
@@ -331,4 +331,48 @@ test('Meu plano mostra o prazo já iniciado quando a vitrine está suspensa', as
   assert.match(html, /Cupom promocional/);
   assert.match(html, /18 de dezembro de 2026/);
   assert.match(html, /Os bloqueios da sua conta continuam/);
+  vitrine.status = 'ativa';
+  plano.preco_centavos = 9990;
+  const pago = renderToStaticMarkup(await PaginaMeuPlano({ searchParams: Promise.resolve({}) }));
+  assert.match(pago, /Seu plano atual continua valendo/);
+  assert.doesNotMatch(pago, /Os bloqueios da sua conta continuam/);
+});
+
+test('conta sem vitrine lê plano e prazo promocional sem liberar publicação', async () => {
+  const promocional = { codigo: 'BENEF', ativado_em: '2026-11-20T00:00:00Z', vence_em: '2027-01-20T00:00:00Z' };
+  const plano = { codigo: 'promocional', nome: 'Promocional', limite_anuncios: 90 };
+  const db = {
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) }),
+    rpc: (nome) => nome === 'meus_contatos_vitrine'
+      ? { maybeSingle: async () => ({ data: null }) }
+      : Promise.resolve({ data: nome === 'meu_perfil' ? { id: 'user_sintetico' } : nome === 'meu_promocional' ? [promocional] : [plano] }),
+  };
+  db.from = (tabela) => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: tabela === 'planos' ? plano : null }) }) }) });
+  const { meuPerfilEVitrine } = carregar('src/lib/dados/conta.ts', {
+    'server-only': {}, react: { cache: f => f },
+    '@clerk/nextjs/server': { auth: async () => ({ userId: 'user_sintetico' }) },
+    '@/lib/supabase/server': { createClient: async () => db },
+    '@/lib/dados/seguro': { seguro: async f => f() },
+    '@/lib/dados/vitrines': { COLUNAS_VITRINE: 'id' }, '@/lib/dados/loja-ativa': {},
+  });
+  const conta = await meuPerfilEVitrine(true);
+  assert.equal(conta.plano.codigo, 'promocional');
+  assert.deepEqual(conta.promocional, promocional);
+  assert.equal(conta.podePublicar, false);
+  assert.equal(conta.limite, 90);
+});
+
+test('master configura créditos promocionais e admin comum recebe recusa', async () => {
+  for (const master of [false, true]) {
+    let gravado = false;
+    const db = { from: () => ({ select: async () => ({ data: [] }), upsert: async () => { gravado = true; return {}; } }) };
+    const { salvarCreditosDestaque } = carregar('src/app/admin/destaques/actions.ts', {
+      '@/lib/admin/auth': { exigirAdmin: async () => ({ supabase: db, userId: 'sintetico' }),
+        exigirSuperAdmin: async () => { if (!master) throw new Error('Acesso restrito.'); } },
+      'next/cache': { revalidatePath() {} }, '@/lib/pagamentos/asaas': {},
+    });
+    const resposta = await salvarCreditosDestaque(null, form({ 'c:promocional:subir': '4' }));
+    assert.equal(gravado, master);
+    assert.ok(master ? resposta.ok : resposta.erro);
+  }
 });

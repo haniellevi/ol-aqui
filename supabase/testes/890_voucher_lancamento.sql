@@ -8,6 +8,7 @@ do $$ begin
     'reserva anterior sumiu depois que a campanha encerrou';
 end $$;
 reset role;
+update public.pagamentos set status='cancelado' where asaas_cobranca_id='pay_reserva890';
 update public.voucher_campanhas set duracao_dias=13 where codigo='RESERVA890';
 set local role authenticated;
 do $$ begin
@@ -60,7 +61,10 @@ select id,microrregiao_id,'assinatura','slim',2990,'pendente',6,'pay_voucher890'
 from public.vitrines_lojas where dono_id='user_pagovoucher890';
 select public.confirmar_pagamento('pay_voucher890');
 set local role authenticated;
-select public.resgatar_voucher('TESTE890');
+do $$ begin
+ begin perform public.resgatar_voucher('TESTE890'); raise exception 'cupom consumido durante plano pago';
+ exception when invalid_parameter_value then assert sqlerrm like '%plano atual%'; end;
+end $$;
 reset role;
 
 do $$ declare v public.vitrines_lojas; begin
@@ -68,26 +72,40 @@ do $$ declare v public.vitrines_lojas; begin
   assert (public.plano_efetivo(v)).codigo='full' and v.plano_expira_em=now()+interval '19 days', 'datas ou Full legado alterados';
   select * into v from public.vitrines_lojas where dono_id='user_pagovoucher890';
   assert v.plano='slim' and v.plano_proximo is null and v.plano_expira_em>=now()+interval '179 days', 'período pago foi alterado';
-  assert (public.plano_efetivo(v)).codigo='promocional', 'pagamento impediu ativação imediata';
+  assert (public.plano_efetivo(v)).codigo='slim', 'cupom alterou plano pago';
   assert (select count(*)=1 from public.pagamentos where vitrine_id=v.id), 'cupom gerou pagamento';
 end $$;
 
+-- Após estorno, pode ativar sem perder uma atribuição nem mudar pagamentos.
+select public.cancelar_pagamento('pay_voucher890','estornado');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','user_pagovoucher890',true);
+select public.resgatar_voucher('TESTE890');
+do $$ begin
+ assert (select vence_em-ativado_em=interval '2160 hours' from public.meu_promocional()), 'wrapper não preservou 90 dias';
+end $$;
+reset role;
+-- Compra posterior ao cupom tem prioridade, e o estorno conserva a concessão.
+insert into public.pagamentos(vitrine_id,microrregiao_id,tipo,plano_codigo,valor_centavos,status,meses,asaas_cobranca_id)
+select id,microrregiao_id,'assinatura','slim',2990,'pendente',1,'pay_depois_voucher890'
+from public.vitrines_lojas where dono_id='user_pagovoucher890';
+select public.confirmar_pagamento('pay_depois_voucher890');
+do $$ begin
+ assert (select (public.plano_efetivo(v)).codigo='slim' from public.vitrines_lojas v where dono_id='user_pagovoucher890');
+end $$;
+select public.cancelar_pagamento('pay_depois_voucher890','estornado');
+set local role authenticated;
+do $$ begin
+ assert (select codigo='TESTE890' from public.meu_promocional()), 'estorno revogou cupom anterior';
+end $$;
+reset role;
+-- O Full legado foi conservado acima. Simulamos seu vencimento antes do próximo cupom.
+select set_config('olaki.sistema','1',true);
+update public.vitrines_lojas set plano_expira_em=now()-interval '1 second' where dono_id='user_legado890';
+select set_config('olaki.sistema','',true);
 set local role authenticated;
 select set_config('request.jwt.claim.sub','user_adminvoucher890',true);
 select public.voucher_admin_configurar((select id from public.voucher_campanhas where codigo='TESTE890'),false,now()-interval '1 day');
-select set_config('request.jwt.claim.sub','user_pagovoucher890',true);
-do $$ begin
-  assert (select vence_em-ativado_em=interval '2160 hours' from public.meu_promocional()), 'wrapper não preservou o padrão de 90 dias';
-end $$;
-reset role;
-select public.cancelar_pagamento('pay_voucher890','estornado');
-set local role authenticated;
-do $$ begin
-  assert (select codigo='TESTE890' from public.meu_promocional()), 'estorno revogou cupom';
-end $$;
-reset role;
-set local role authenticated;
-select set_config('request.jwt.claim.sub','user_adminvoucher890',true);
 select public.voucher_admin_criar('TRANSFER890',2);
 select set_config('request.jwt.claim.sub','user_legado890',true);
 select public.resgatar_voucher('TRANSFER890');

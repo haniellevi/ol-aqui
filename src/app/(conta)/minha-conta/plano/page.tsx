@@ -275,7 +275,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
         )}
       </section>
 
-      {!planoPromocional && promocional && <PrazoPromocional acesso={promocional} titulo="Cupom promocional" bloqueado />}
+      {!planoPromocional && promocional && <PrazoPromocional acesso={promocional} titulo="Cupom promocional" bloqueado={suspensa} pago={!suspensa && (conta.plano?.preco_centavos ?? 0) > 0} />}
       <Voucher codigos={vouchers ?? []} />
 
       {/* Planos à venda, com período e como o pagamento entra (antes de pagar) */}
@@ -363,7 +363,7 @@ export default async function PaginaMeuPlano({ searchParams }: { searchParams: P
   );
 }
 
-function PrazoPromocional({ acesso, titulo, uso, bloqueado }: { acesso: AcessoPromocional; titulo: string; uso?: string; bloqueado?: boolean }) {
+function PrazoPromocional({ acesso, titulo, uso, bloqueado, pago }: { acesso: AcessoPromocional; titulo: string; uso?: string; bloqueado?: boolean; pago?: boolean }) {
   return (
     <Card role="region" aria-labelledby="prazo-promocional">
       <CardHeader>
@@ -373,6 +373,7 @@ function PrazoPromocional({ acesso, titulo, uso, bloqueado }: { acesso: AcessoPr
         <p>Ativado em {dataPorExtenso(acesso.ativado_em)}</p>
         <p>Vale até <strong>{dataPorExtenso(acesso.vence_em)}</strong></p>
         {uso && <p>{uso}</p>}
+        {pago && <p className="text-texto-suave">Seu plano atual continua valendo. O prazo do cupom também continua correndo, sem somar dias à assinatura.</p>}
         {bloqueado && <p className="text-texto-suave">Os bloqueios da sua conta continuam. O prazo do cupom já está correndo.</p>}
       </CardContent>
     </Card>

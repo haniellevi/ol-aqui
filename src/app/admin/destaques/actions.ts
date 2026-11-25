@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { exigirAdmin } from "@/lib/admin/auth";
+import { exigirAdmin, exigirSuperAdmin } from "@/lib/admin/auth";
 import { centavosDe, inteiroOuNulo } from "@/lib/admin/formato";
 import type { EstadoForm } from "@/lib/admin/estado";
 import { ehSlugAnuncio, ehUuid, idDoLinkAnuncio } from "@/lib/formato";
@@ -62,7 +62,7 @@ export async function salvarCreditosDestaque(_: EstadoForm, form: FormData): Pro
     for (const [chave, valor] of form.entries()) {
       const m = /^c:([a-z0-9_]{2,30}):(subir|busca|home|loja)$/.exec(chave);
       if (!m) continue;
-      if (m[1] === "promocional") return { erro: "Escolha um plano da lista." };
+      if (m[1] === "promocional") await exigirSuperAdmin();
       const n = inteiroOuNulo(valor) ?? 0;
       if (n > 1000) return { erro: "No máximo 1000 por mês." };
       linhas.push({ plano_codigo: m[1], tipo: m[2] as SlugDestaque, quantidade_mes: n, atualizado_por: userId });

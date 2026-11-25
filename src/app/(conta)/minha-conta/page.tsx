@@ -132,7 +132,7 @@ export default async function PaginaMinhaConta() {
 
           {!vitrine && (
             <section className="flex flex-col gap-3 rounded-card border border-borda bg-cartao p-4">
-              <p className="text-base font-semibold">Tem algo para vender? Anuncie de graça para a região.</p>
+              <p className="text-base font-semibold">{conta.promocional ? "Seu cupom já está ativo. Crie sua vitrine para começar a anunciar." : "Tem algo para vender? Anuncie de graça para a região."}</p>
               <Botao href="/quero-vender" tamanho="acao" larguraTotal icone={<Tag />}>
                 Quero vender
               </Botao>

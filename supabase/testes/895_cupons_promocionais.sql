@@ -172,6 +172,8 @@ end $$;
 reset role;
 select set_config('olaki.sistema','1',true);
 update public.perfis set whatsapp='5589999990895',whatsapp_verificado_em=now() where id='user_cliente895';
+-- Full vigente tem prioridade; fixamos recursos para manter o teste de conversão.
+update public.planos set vitrine_secoes_max=4,vitrine_fixados_max=2 where codigo='full';
 update public.vitrines_lojas set plano='full',plano_expira_em=now()+interval '30 days' where dono_id='user_cliente895';
 select set_config('olaki.sistema','',true);
 update public.configuracoes set valor='"https://abc.supabase.co"' where chave='fotos.origem' and microrregiao_id is null;

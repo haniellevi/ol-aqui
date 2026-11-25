@@ -80,6 +80,7 @@ try:
     end $$;"""))
     checked(sql("update public.modelos_mensagem set texto=texto_padrao where chave='plano_vencendo' and canal='whatsapp';"))
     checked(sql((root/'supabase/testes/891_convite_envio.sql').read_text()))
+    checked(sql((root/'supabase/testes/896_cupom_beneficios.sql').read_text()))
     checked(sql((root/'supabase/testes/895_cupons_promocionais.sql').read_text()))
     checked(sql((root/'supabase/testes/890_voucher_lancamento.sql').read_text()))
 
@@ -533,8 +534,9 @@ try:
         return sql("begin; set local role authenticated; set local request.jwt.claim.sub='user_voucherpag890'; select public.resgatar_voucher('CONCORRE890'); select pg_sleep(0.2); commit;")
     with ThreadPoolExecutor(max_workers=2) as pool:
         resultados=list(pool.map(confirmar_ou_resgatar,['confirmar','resgatar']))
-    for resultado in resultados: checked(resultado)
-    checked(sql("do $$ begin assert (select v.plano='slim' and a.reservado_em is null and a.resgatado_em is not null and a.acesso_promocional from public.vitrines_lojas v join public.voucher_atribuicoes a on a.dono_id=v.dono_id join public.voucher_campanhas c on c.id=a.campanha_id where v.dono_id='user_voucherpag890' and c.codigo='CONCORRE890'), 'confirmação concorrente alterou o benefício'; end $$;"))
+    checked(resultados[0])
+    assert resultados[1].returncode != 0 and ('plano atual' in resultados[1].stderr or 'pagamento de plano pendente' in resultados[1].stderr), resultados[1].stderr
+    checked(sql("do $$ begin assert (select v.plano='slim' and (public.plano_efetivo(v)).codigo='slim' from public.vitrines_lojas v where v.dono_id='user_voucherpag890'), 'confirmação concorrente perdeu plano pago'; assert not exists(select 1 from public.voucher_atribuicoes where dono_id='user_voucherpag890'), 'recusa concorrente consumiu cupom'; end $$;"))
     print('PASS: confirmação e resgate simultâneos preservam o plano pago', flush=True)
     checked(sql("""insert into public.perfis(id,microrregiao_id,nome,cidade,whatsapp,whatsapp_verificado_em)
       select 'user_limiteconc890',id,'Loja limite concorrente','Corrente','5589999900899',now() from public.microrregioes where slug='corrente-pi';

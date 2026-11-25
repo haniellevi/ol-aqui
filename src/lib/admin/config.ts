@@ -126,6 +126,7 @@ const LIMITES_AKI_LOJISTA: Record<string, number> = {
   "robo.lojista_creditos_gratis": 1000,
   "robo.lojista_creditos_slim": 1000,
   "robo.lojista_creditos_full": 1000,
+  "robo.lojista_creditos_promocional": 1000,
   "robo.lojista_tentativas_dia": 1000,
   "robo.max_geracoes_imagem_mes": 100000,
 };
