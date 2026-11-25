@@ -1,15 +1,15 @@
 "use server";
 
 import { definirFavorito } from "@/app/(conta)/minha-conta/favoritos/actions";
+import { permiteEstatistica } from "@/lib/metricas/gate-servidor";
 import { auth } from "@clerk/nextjs/server";
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { garantirPerfil } from "@/lib/perfil";
 import { traduzirErro } from "@/lib/erros";
 import { ehUuid } from "@/lib/formato";
 import type { Resultado, TipoEvento } from "@/lib/tipos";
-import { normalizarTermo } from "@/lib/metricas/termos";
 
 // Ações da página do anúncio: contar visita/clique, favoritar e denunciar.
 // Quem decide o que vale é o banco (registrar_evento, RLS de favoritos e denúncias).
@@ -20,22 +20,21 @@ const TIPOS: TipoEvento[] = ["visualizacao", "clique_whatsapp", "compartilhar"];
  * Conta uma visualização ou clique no WhatsApp. O banco ignora repetição do mesmo visitante,
  * o próprio dono e anúncio fora do ar. Nunca lança erro (a pessoa não precisa saber).
  */
-export async function registrarEvento(anuncioId: string, tipo: TipoEvento, termo?: string | null): Promise<boolean> {
+export async function registrarEvento(anuncioId: string, tipo: TipoEvento): Promise<boolean> {
   if (!ehUuid(anuncioId) || !TIPOS.includes(tipo)) return false;
   try {
-    const h = await headers();
-    // A chamada sai do servidor: informa ao banco quem é o visitante (IP que a Vercel recebeu)
-    // e o usuário logado. O banco guarda só um resumo embaralhado, nunca o IP.
-    // O navegador (user-agent) não entra: o visitante pode trocá-lo à vontade.
-    const ip = (h.get("x-forwarded-for")?.split(",")[0] ?? h.get("x-real-ip") ?? "").trim().slice(0, 100);
+    if (!(await permiteEstatistica())) return false;
+    // A conta serve apenas para excluir o dono; não entra no hash da medição.
+    const visitante = (await cookies()).get("mr_medicao_visitante")?.value;
+    if (!visitante || !/^[0-9a-f-]{36}$/.test(visitante)) return false;
     const { userId } = await auth();
     const { data, error } = await supabaseAdmin().rpc("registrar_evento", {
       anuncio_id: anuncioId,
       tipo,
-      visitante: ip || null,
+      visitante,
       usuario: userId ?? null,
       // Palavra da busca: só conta junto com a visualização (o banco normaliza de novo).
-      termo: tipo === "visualizacao" ? normalizarTermo(termo) : null,
+      termo: null,
     });
     return !error && data === true;
   } catch {

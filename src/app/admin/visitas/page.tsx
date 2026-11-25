@@ -62,7 +62,7 @@ export default async function VisitasPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <Titulo>Visitas e origem</Titulo>
+      <Titulo>Visitas e origem (legado)</Titulo>
 
       <nav aria-label="Período" className="mb-4 flex gap-2">
         {PERIODOS.map((p) => (
@@ -84,7 +84,7 @@ export default async function VisitasPage({ searchParams }: { searchParams: Prom
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <Numero rotulo="Pessoas" valor={inteiro(r.pessoas)} detalhe={`${inteiro(r.novas)} vieram pela primeira vez`} />
+            <Numero rotulo="Navegadores" valor={inteiro(r.pessoas)} detalhe={`${inteiro(r.novas)} vieram pela primeira vez`} />
             <Numero rotulo="Páginas vistas" valor={inteiro(r.visitas)} />
             <Numero rotulo="No celular" valor={pct(r.celular, r.visitas)} />
             <Numero rotulo="Contas criadas" valor={inteiro(r.contas_novas)} detalhe={`${inteiro(r.contas_com_origem)} com origem conhecida`} />

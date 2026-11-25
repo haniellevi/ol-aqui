@@ -12,10 +12,11 @@ export function podeMedir() {
   return typeof window !== "undefined" && preferenciaAtual().estatistica && !!rotaNeutra(window.location.pathname);
 }
 export function limparIdentificadores() {
-  for (const chave of ["mr_visitante", "mr_primeira_origem", "mr_origem_conta_ok"]) {
+  for (const path of ["/", "/anuncio", "/loja"]) document.cookie = `mr_medicao_visitante=; Path=${path}; Max-Age=0; SameSite=Lax`;
+  for (const chave of ["mr_visitante", "mr_primeira_origem", "mr_origem_conta_ok", "mr-vistos-v1"]) {
     try { localStorage.removeItem(chave); } catch { /* storage indisponível */ }
   }
-  for (const chave of ["mr_sessao_origem", "mr_medicao_sessao", "mr_busca_aberta"]) {
+  for (const chave of ["mr_sessao_origem", "mr_medicao_sessao", "olaki.buscaAberta"]) {
     try { sessionStorage.removeItem(chave); } catch { /* storage indisponível */ }
   }
 }

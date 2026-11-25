@@ -1,22 +1,13 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-
-/**
- * Soma uma busca do site em buscas_termos (dia, região, termo e categoria; sem pessoa).
- * Serve ao alerta "muita gente buscou isso" (docs/PLANO-VITRINE-IA.md). Nunca derruba a busca:
- * sem a chave do servidor ou com erro no banco, a contagem simplesmente não acontece.
- */
-export async function registrarBusca(termo: string, microrregiaoId: string | null, categoriaSlug: string | null, total: number) {
-  const t = termo.trim();
-  if (t.length < 2) return;
+// Mantém a assinatura; nenhum texto livre chega ao banco.
+export async function registrarBusca(_termo: string, microrregiaoId: string | null, categoriaSlug: string | null, total: number, permitido = false) {
+  // Gate avaliado na requisição, antes de after(), onde cookies já não estão disponíveis.
+  if (!permitido || !Number.isFinite(total)) return;
   try {
-    await supabaseAdmin().rpc("registrar_busca", {
-      p_termo: t.slice(0, 120),
-      p_microrregiao: microrregiaoId,
-      p_categoria_slug: categoriaSlug,
-      p_total: Number.isFinite(total) ? Math.max(0, Math.trunc(total)) : null,
+    await supabaseAdmin().rpc("registrar_busca_consentida", {
+      p_microrregiao: microrregiaoId, p_categoria_slug: categoriaSlug,
+      p_faixa: total === 0 ? "zero" : total <= 10 ? "1-10" : "11+",
     });
-  } catch {
-    // contagem é secundária
-  }
+  } catch { /* não interrompe a busca */ }
 }

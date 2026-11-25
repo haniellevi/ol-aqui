@@ -5,7 +5,8 @@ import { rotaNeutra } from "./contrato";
 
 export async function permiteEstatistica(): Promise<boolean> {
   try {
-    if (!lerPreferencia((await cookies()).get(CHAVE_CONSENTIMENTO)?.value ? decodeURIComponent((await cookies()).get(CHAVE_CONSENTIMENTO)!.value) : null).estatistica) return false;
+    const valor = (await cookies()).get(CHAVE_CONSENTIMENTO)?.value;
+    if (!lerPreferencia(valor ? decodeURIComponent(valor) : null).estatistica) return false;
     const h = await headers();
     const origem = h.get("referer");
     if (!origem) return false;

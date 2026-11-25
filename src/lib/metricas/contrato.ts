@@ -10,7 +10,7 @@ export function rotaNeutra(valor: unknown): string | null {
   if (/^\/categoria\/[^/]+$/.test(p)) return "/categoria/:categoria";
   return null;
 }
-const ORIGENS = new Set(["instagram", "whatsapp", "google", "radio", "qr_loja", "facebook", "direto"]);
+const ORIGENS = new Set(["instagram", "whatsapp", "google", "radio", "qr_loja", "facebook", "panfleto", "indicacao", "outro_site", "direto"]);
 export function origemPermitida(query: string) {
   const q = new URLSearchParams(query);
   const origem = q.get("origem") ?? q.get("utm_source");

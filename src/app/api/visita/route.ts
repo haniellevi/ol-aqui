@@ -1,57 +1,21 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@/lib/supabase/server";
-
-// Página vista no site (sem IP e sem dado pessoal: só um código aleatório do navegador).
-// O banco decide a origem (link marcado, site de onde veio ou direto) e ignora robô e /admin.
-
-type Corpo = {
-  visitante?: unknown;
-  caminho?: unknown;
-  origem?: unknown;
-  campanha?: unknown;
-  referencia?: unknown;
-  celular?: unknown;
-  primeira?: unknown;
-  /** origem do primeiro clique, para guardar na conta nova (uma vez) */
-  conta?: { origem?: unknown; campanha?: unknown };
-};
-
-const texto = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
-
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { permiteEstatistica } from "@/lib/metricas/gate-servidor";
+import { origemPermitida, rotaNeutra } from "@/lib/metricas/contrato";
+import { ehBot } from "@/lib/metricas/aparicoes";
 export async function POST(req: Request) {
+  if (!(await permiteEstatistica()) || ehBot(req.headers.get("user-agent"))) return NextResponse.json({ ok: false }, { status: 403 });
   const bruto = await req.text();
   if (bruto.length > 2000) return NextResponse.json({ ok: false }, { status: 413 });
-  let corpo: Corpo;
-  try {
-    corpo = JSON.parse(bruto) as Corpo;
-  } catch {
-    return NextResponse.json({ ok: false }, { status: 400 });
-  }
-  const visitante = texto(corpo.visitante, 40);
-  const caminho = texto(corpo.caminho, 200);
-  if (!visitante || !caminho) return NextResponse.json({ ok: false }, { status: 400 });
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("registrar_visita", {
-    p_visitante: visitante,
-    p_caminho: caminho,
-    p_origem: texto(corpo.origem, 60),
-    p_campanha: texto(corpo.campanha, 80),
-    p_referencia: texto(corpo.referencia, 100),
-    p_celular: corpo.celular !== false,
-    p_primeira: corpo.primeira === true,
+  let c;
+  try { c = JSON.parse(bruto); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
+  const uuid = (v: unknown) => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v);
+  const rota = rotaNeutra(c?.caminho);
+  if (!rota || !uuid(c?.visitante) || !uuid(c?.sessao) || !uuid(c?.ocorrencia)) return NextResponse.json({ ok: false }, { status: 400 });
+  const origem = origemPermitida(`origem=${encodeURIComponent(c.origem ?? "")}`).origem;
+  const { error } = await supabaseAdmin().rpc("registrar_visita_consentida", {
+    p_visitante: c.visitante, p_sessao: c.sessao, p_ocorrencia: c.ocorrencia, p_caminho: rota,
+    p_origem: origem, p_celular: c.celular === true, p_primeira: c.primeira === true,
   });
-  if (error) return NextResponse.json({ ok: false }, { status: 500 });
-
-  let contaMarcada = false;
-  const origemConta = texto(corpo.conta?.origem, 60);
-  if (origemConta) {
-    const { userId } = await auth();
-    if (userId) {
-      const r = await supabase.rpc("marcar_origem_conta", { p_origem: origemConta, p_campanha: texto(corpo.conta?.campanha, 80) });
-      contaMarcada = !r.error;
-    }
-  }
-  return NextResponse.json({ ok: true, origem: typeof data === "string" ? data : null, contaMarcada });
+  return NextResponse.json({ ok: !error }, { status: error ? 500 : 200 });
 }

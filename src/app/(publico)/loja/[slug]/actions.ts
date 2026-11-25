@@ -1,7 +1,8 @@
 "use server";
 
+import { permiteEstatistica } from "@/lib/metricas/gate-servidor";
 import { auth } from "@clerk/nextjs/server";
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ehUuid } from "@/lib/formato";
 
@@ -16,13 +17,14 @@ const TIPOS: TipoEventoLoja[] = ["visita", "clique_whatsapp", "clique_mapa"];
 export async function registrarEventoLoja(vitrineId: string, tipo: TipoEventoLoja): Promise<boolean> {
   if (!ehUuid(vitrineId) || !TIPOS.includes(tipo)) return false;
   try {
-    const h = await headers();
-    const ip = (h.get("x-forwarded-for")?.split(",")[0] ?? h.get("x-real-ip") ?? "").trim().slice(0, 100);
+    if (!(await permiteEstatistica())) return false;
+    const visitante = (await cookies()).get("mr_medicao_visitante")?.value;
+    if (!visitante || !/^[0-9a-f-]{36}$/.test(visitante)) return false;
     const { userId } = await auth();
     const { data, error } = await supabaseAdmin().rpc("registrar_evento_loja", {
       p_vitrine: vitrineId,
       p_tipo: tipo,
-      p_visitante: ip || null,
+      p_visitante: visitante,
       p_usuario: userId ?? null,
     });
     return !error && data === true;

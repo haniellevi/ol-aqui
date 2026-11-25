@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { permiteEstatistica } from "@/lib/metricas/gate-servidor";
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ehBot, validarAparicoes, type PaginaAparicao } from "@/lib/metricas/aparicoes";
@@ -11,6 +12,7 @@ import { ehBot, validarAparicoes, type PaginaAparicao } from "@/lib/metricas/apa
 
 export async function registrarAparicoes(pagina: PaginaAparicao, ids: string[], inicio = 0): Promise<boolean> {
   try {
+    if (!(await permiteEstatistica())) return false;
     const h = await headers();
     if (ehBot(h.get("user-agent"))) return false;
     const valido = validarAparicoes(pagina, ids, inicio);

@@ -264,9 +264,7 @@ export async function responder({ userId, pedido, ajustes, emitir, sinal }: Entr
       ...historico.flatMap((m) => (m.papel === "assistente" ? rascunhosDaResposta(m.conteudo) : [])),
     ]),
     saida,
-    registrarBuscaVazia: async (termo, categoria) => {
-      await admin.rpc("robo_registrar_busca_vazia", { p_termo: termo, p_microrregiao: regiao.id || null, p_categoria: categoria });
-    },
+    registrarBuscaVazia: async () => { /* Conversa é rota sensível: sem telemetria opcional. */ },
   };
 
   const controle = new AbortController();

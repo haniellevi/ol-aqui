@@ -3,9 +3,10 @@ import { Voltar } from "@/components/ui/voltar";
 import type { ReactNode } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { after } from "next/server";
 import { buscarAnuncios } from "@/lib/dados/anuncios";
 import { registrarBusca } from "@/lib/dados/buscas";
+import { permiteEstatistica } from "@/lib/metricas/gate-servidor";
+import { after } from "next/server";
 import { listarCategorias, type CategoriaEncontrada } from "@/lib/dados/categorias";
 import { listarCidades, regiaoAtual } from "@/lib/dados/regiao";
 import { GradeAnuncios } from "@/components/anuncio/grade-anuncios";
@@ -66,7 +67,8 @@ export async function Listagem({
   // Conta a busca digitada (só a 1ª página), depois de responder: alimenta o alerta de demanda.
   if (!temErro && (termoDigitado || estado.q) && estado.pagina === 1) {
     const termo = termoDigitado || estado.q;
-    after(() => registrarBusca(termo, regiao?.id ?? null, slugCategoria, total));
+    const permitido = await permiteEstatistica();
+    after(() => registrarBusca(termo, regiao?.id ?? null, slugCategoria, total, permitido));
   }
 
   // Nada achado: procura algo parecido (sem filtros; depois em outras regiões).

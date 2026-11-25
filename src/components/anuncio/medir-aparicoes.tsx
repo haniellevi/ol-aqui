@@ -1,5 +1,6 @@
 "use client";
 
+import { podeMedir } from "@/lib/metricas/cliente";
 import { useEffect, useRef } from "react";
 import { registrarAparicoes } from "@/lib/metricas/acoes";
 import { lotesDeAparicoes, type PaginaAparicao } from "@/lib/metricas/aparicoes";
@@ -13,7 +14,7 @@ export function MedirAparicoes({ pagina, ids }: { pagina: PaginaAparicao; ids: s
     if (!chave || enviado.current === chave) return;
     const lista = chave.split(",");
     const enviar = () => {
-      if (enviado.current === chave) return;
+      if (!podeMedir() || enviado.current === chave) return;
       enviado.current = chave;
       // Lista com mais de 60 cards (ex.: loja com 120) vai em partes, cada uma com sua posição inicial.
       for (const lote of lotesDeAparicoes(lista)) void registrarAparicoes(pagina, lote.ids, lote.inicio).catch(() => undefined);
