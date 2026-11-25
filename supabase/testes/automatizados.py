@@ -29,7 +29,8 @@ try:
     checked(run('docker','exec','-i',container,'psql','-X','-q','-U','postgres','-v','ON_ERROR_STOP=1',input=init))
     for p in sorted((root/'supabase/migrations').glob('*.sql')):
         # Ensaiar atualização: contrato legado antes de sua desativação intencional.
-        if p.name == '20261203035000_medicao_consentida.sql' and '--item31' not in sys.argv: continue
+        if p.name == '20261203035000_medicao_consentida.sql' and not any(x in sys.argv for x in ['--item31','--item34']): continue
+        if p.name == '20261203035200_admin_lancamento.sql' and not any(x in sys.argv for x in ['--item31','--item34']): continue
         if p.name == '20261203034000_compliance_revisao_manual.sql':
             checked(sql((root/'supabase/testes/902_compliance_preflight.sql').read_text()))
         if p.name == '20261203031000_autosservico_vitrines.sql':
@@ -88,6 +89,10 @@ try:
                 'conta antiga com pedido_novo=true deve preservar consentimento existente';
             end $$;
             delete from public.perfis where id in ('user_pre898','user_pre898ant');"""))
+    if '--item34' in sys.argv:
+        checked(sql((root/'supabase/testes/911_admin_lancamento.sql').read_text()))
+        print('PASS: Admin lançamento, acesso, períodos, coortes e supressão', flush=True)
+        sys.exit(0)
     if '--item31' in sys.argv:
         checked(sql((root/'supabase/testes/910_medicao_consentida.sql').read_text()))
         print('PASS: medição consentida, contagem, repetição, allowlist e privilégios', flush=True)
@@ -610,6 +615,9 @@ try:
     checked(sql((root/'supabase/testes/910_medicao_consentida.sql').read_text()))
     checked(sql((root/'supabase/testes/160_busca_filtros.sql').read_text()))
     print('PASS: atualização Item 31 sobre legado testado, nova coorte e busca legítima preservada', flush=True)
+    checked(sql((root/'supabase/migrations/20261203035200_admin_lancamento.sql').read_text()))
+    checked(sql((root/'supabase/testes/911_admin_lancamento.sql').read_text()))
+    print('PASS: Admin lançamento final, autorização e supressão', flush=True)
 
 finally:
     run('docker','stop',container)

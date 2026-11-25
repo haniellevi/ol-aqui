@@ -6,31 +6,22 @@ import { Copy, Download } from "lucide-react";
 import { Cartao, estiloCampo } from "@/components/admin/ui";
 import { CampoBusca, type OpcaoBusca } from "@/components/admin/campo-busca";
 import { Botao } from "@/components/ui/botao";
+import { linkComOrigem } from "@/lib/metricas/links";
 
 // Monta o link com a origem marcada (ex.: para o post do Instagram, o anúncio na rádio
 // ou o QR colado no balcão da loja) e o QR code pronto para baixar.
 
 type Destino = { valor: string; nome: string };
 
-const campanhaDe = (t: string) =>
-  t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "").slice(0, 60);
-
 export function GeradorLink({ site, origens, destinos, lojas }: { site: string; origens: OpcaoBusca[]; destinos: Destino[]; lojas: OpcaoBusca[] }) {
   const [origem, setOrigem] = useState(origens[0]?.valor ?? "");
   const [destino, setDestino] = useState(destinos[0]?.valor ?? "/");
   const [loja, setLoja] = useState("");
-  const [campanha, setCampanha] = useState("");
   const [qr, setQr] = useState("");
   const [copiado, setCopiado] = useState(false);
 
   const caminho = destino === "loja" ? (loja ? `/loja/${loja}` : "") : destino;
-  const link = useMemo(() => {
-    if (!caminho || !origem) return "";
-    const q = new URLSearchParams({ origem });
-    const c = campanhaDe(campanha);
-    if (c) q.set("campanha", c);
-    return `${site}${caminho}?${q.toString()}`;
-  }, [site, caminho, origem, campanha]);
+  const link = useMemo(() => linkComOrigem(site, caminho, origem, origens.map(o=>o.valor)), [site, caminho, origem, origens]);
 
   useEffect(() => {
     let vivo = true;
@@ -80,12 +71,10 @@ export function GeradorLink({ site, origens, destinos, lojas }: { site: string; 
             </div>
           </div>
         )}
-        <label className="text-sm font-medium text-beringela">
-          Nome da campanha (opcional)
-          <input value={campanha} onChange={(e) => setCampanha(e.target.value)} maxLength={60} placeholder="ex.: radio corrente novembro" className={estiloCampo} />
-        </label>
+
       </div>
 
+      <p className="mt-3 text-sm text-texto-suave">Somente origens ativas do catálogo aprovado são atribuídas. Campanha, mídia, conteúdo e termo livres ficam sem atribuição. O QR é gerado neste navegador.</p>
       {link ? (
         <div className="mt-4 flex flex-col gap-3 @2xl/painel:flex-row @2xl/painel:items-start">
           {qr && (
@@ -99,7 +88,7 @@ export function GeradorLink({ site, origens, destinos, lojas }: { site: string; 
                 {copiado ? "Copiado" : "Copiar link"}
               </Botao>
               {qr && (
-                <a href={qr} download={`qr-${origem}${campanhaDe(campanha) ? `-${campanhaDe(campanha)}` : ""}.png`}
+                <a href={qr} download={`qr-${origem}.png`}
                    className="olaki-acao olaki-controle-pequeno inline-flex min-h-8 items-center gap-1.5 rounded-campo px-2.5 text-legenda font-semibold text-laranja-escuro hover:underline">
                   <Download className="size-4" aria-hidden /> Baixar QR code
                 </a>
@@ -108,7 +97,7 @@ export function GeradorLink({ site, origens, destinos, lojas }: { site: string; 
           </div>
         </div>
       ) : (
-        <p className="mt-3 text-sm text-texto-suave">Escolha a loja para montar o link.</p>
+        <p className="mt-3 text-sm text-texto-suave">Escolha um destino e uma origem ativa do catálogo aprovado para montar o link.</p>
       )}
     </Cartao>
   );
